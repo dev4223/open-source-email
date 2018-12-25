@@ -6,7 +6,8 @@
 
     <color name="blackPrimary">#026ca0</color>
     <color name="blackPrimaryDark">#004c7d</color>
-    <color name="blackAccent">#b27d00</color>
+    <!-- blackAccent orig: #b27d00 -->
+    <color name="blackAccent">#c70045</color>
 
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
