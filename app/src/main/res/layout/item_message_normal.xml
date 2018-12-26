@@ -402,16 +402,6 @@
             app:layout_constraintTop_toBottomOf="@id/tvCc" />
 
         <TextView
-            android:id="@+id/tvTimeExTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="@string/title_received"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvBcc" />
-
-        <TextView
             android:id="@+id/tvTimeEx"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -419,9 +409,10 @@
             android:layout_marginEnd="8dp"
             android:text="12:34:56"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?attr/colorUnread"
             android:textIsSelectable="true"
             app:layout_constraintEnd_toStartOf="@+id/tvSizeExTitle"
-            app:layout_constraintStart_toEndOf="@id/tvTimeExTitle"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvBcc" />
 
         <TextView
@@ -610,7 +601,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="btnHtml,ibQuotes,ibImages" />
+            app:constraint_referenced_ids="btnHtml,ibQuotes,ibImages"
+            tools:layout_editor_absoluteY="681dp" />
 
         <TextView
             android:id="@+id/tvBody"
@@ -662,7 +654,7 @@
             android:id="@+id/grpAddress"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc,tvTimeExTitle,tvTimeEx,tvSizeExTitle,tvSizeEx,tvSubjectEx" />
+            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc,tvTimeEx,tvSizeExTitle,tvSizeEx,tvSubjectEx" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/grpHeaders"
