@@ -180,9 +180,7 @@ public class MessageHelper {
         if (message.replying != null)
             replying = db.message().getMessage(message.replying);
 
-        if (replying == null)
-            imessage.addHeader("References", message.msgid);
-        else {
+        if (replying != null) {
             imessage.addHeader("In-Reply-To", replying.msgid);
             imessage.addHeader("References", (replying.references == null ? "" : replying.references + " ") + replying.msgid);
         }
@@ -463,6 +461,17 @@ public class MessageHelper {
             } else
                 formatted.add(address.toString());
         return TextUtils.join(", ", formatted);
+    }
+
+    static String getSortKey(Address[] addresses) {
+        if (addresses == null || addresses.length == 0)
+            return null;
+        InternetAddress address = (InternetAddress) addresses[0];
+        String personal = address.getPersonal();
+        if (TextUtils.isEmpty(personal))
+            return address.getAddress();
+        else
+            return personal;
     }
 
     String getHtml() throws MessagingException, IOException {

@@ -62,7 +62,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -160,7 +159,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageView ivThread;
         private TextView tvPreview;
         private TextView tvError;
-        private ProgressBar pbLoading;
+        private ContentLoadingProgressBar pbLoading;
 
         private ImageView ivExpanderAddress;
         private TextView tvFromEx;
@@ -175,7 +174,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvKeywords;
 
         private TextView tvHeaders;
-        private ProgressBar pbHeaders;
+        private ContentLoadingProgressBar pbHeaders;
         private TextView tvNoInternetHeaders;
 
         private RecyclerView rvAttachment;
@@ -187,7 +186,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibQuotes;
         private ImageButton ibImages;
         private TextView tvBody;
-        private ProgressBar pbBody;
+        private ContentLoadingProgressBar pbBody;
         private TextView tvNoInternetBody;
 
         private Group grpAddress;
@@ -451,13 +450,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             if (debug) {
-                String text = message.error +
-                        "\n" + message.uid + "/" + message.id + " " + df.format(new Date(message.received)) +
+                String text = "error=" + message.error +
+                        "\n uid=" + message.uid + " id=" + message.id + " " + df.format(new Date(message.received)) +
                         "\n" + (message.ui_hide ? "HIDDEN " : "") +
-                        "seen=" + message.seen + "/" + message.ui_seen + "/" + message.unseen +
+                        "seen=" + message.seen + "/" + message.ui_seen + " unseen=" + message.unseen +
                         " found=" + message.ui_found +
-                        "\n" + message.msgid +
-                        "\n" + message.thread;
+                        "\n msgid=" + message.msgid +
+                        "\n thread=" + message.thread +
+                        "\n sender=" + message.sender;
 
                 tvError.setText(text);
                 tvError.setVisibility(View.VISIBLE);

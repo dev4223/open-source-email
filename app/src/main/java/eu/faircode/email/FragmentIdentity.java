@@ -21,14 +21,15 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
+import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,7 +44,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -56,6 +56,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
@@ -73,16 +74,21 @@ import androidx.fragment.app.FragmentTransaction;
 
 public class FragmentIdentity extends FragmentEx {
     private ViewGroup view;
+
     private EditText etName;
-    private EditText etDisplay;
-    private Spinner spAccount;
-    private Button btnAdvanced;
-    private TextView tvEmail;
     private EditText etEmail;
-    private EditText etReplyTo;
-    private EditText etBcc;
-    private CheckBox cbDeliveryReceipt;
-    private CheckBox cbReadReceipt;
+
+    private Spinner spAccount;
+
+    private EditText etDisplay;
+    private Button btnColor;
+    private View vwColor;
+    private ImageView ibColorDefault;
+    private EditText etSignature;
+    private ImageButton ibPro;
+
+    private Button btnAdvanced;
+    private TextView tvProvider;
     private Spinner spProvider;
     private EditText etDomain;
     private Button btnAutoConfig;
@@ -93,19 +99,20 @@ public class FragmentIdentity extends FragmentEx {
     private EditText etUser;
     private TextInputLayout tilPassword;
 
-    private Button btnColor;
-    private View vwColor;
-    private ImageView ibColorDefault;
-    private EditText etSignature;
-    private ImageButton ibPro;
-
     private CheckBox cbSynchronize;
     private CheckBox cbPrimary;
+
+    private EditText etReplyTo;
+    private EditText etBcc;
+    private CheckBox cbDeliveryReceipt;
+    private CheckBox cbReadReceipt;
     private Spinner spSent;
 
     private Button btnSave;
-    private ProgressBar pbSave;
-    private ProgressBar pbWait;
+    private ContentLoadingProgressBar pbSave;
+    private ContentLoadingProgressBar pbWait;
+
+    private Group grpAuthorize;
     private Group grpAdvanced;
 
     private long id = -1;
@@ -127,29 +134,24 @@ public class FragmentIdentity extends FragmentEx {
         setSubtitle(R.string.title_edit_identity);
         setHasOptionsMenu(true);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        final boolean insecure = prefs.getBoolean("insecure", false);
-
         view = (ViewGroup) inflater.inflate(R.layout.fragment_identity, container, false);
 
         // Get controls
         etName = view.findViewById(R.id.etName);
+        etEmail = view.findViewById(R.id.etEmail);
         spAccount = view.findViewById(R.id.spAccount);
+        etDisplay = view.findViewById(R.id.etDisplay);
+        btnColor = view.findViewById(R.id.btnColor);
+        vwColor = view.findViewById(R.id.vwColor);
+        ibColorDefault = view.findViewById(R.id.ibColorDefault);
+        etSignature = view.findViewById(R.id.etSignature);
+        ibPro = view.findViewById(R.id.ibPro);
 
         btnAdvanced = view.findViewById(R.id.btnAdvanced);
-        etDisplay = view.findViewById(R.id.etDisplay);
-        tvEmail = view.findViewById(R.id.tvEmail);
-        etEmail = view.findViewById(R.id.etEmail);
-        etReplyTo = view.findViewById(R.id.etReplyTo);
-        etBcc = view.findViewById(R.id.etBcc);
-        cbDeliveryReceipt = view.findViewById(R.id.cbDeliveryReceipt);
-        cbReadReceipt = view.findViewById(R.id.cbReadReceipt);
-
+        tvProvider = view.findViewById(R.id.tvProvider);
         spProvider = view.findViewById(R.id.spProvider);
-
         etDomain = view.findViewById(R.id.etDomain);
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
-
         etHost = view.findViewById(R.id.etHost);
         cbStartTls = view.findViewById(R.id.cbStartTls);
         cbInsecure = view.findViewById(R.id.cbInsecure);
@@ -157,19 +159,20 @@ public class FragmentIdentity extends FragmentEx {
         etUser = view.findViewById(R.id.etUser);
         tilPassword = view.findViewById(R.id.tilPassword);
 
-        btnColor = view.findViewById(R.id.btnColor);
-        vwColor = view.findViewById(R.id.vwColor);
-        ibColorDefault = view.findViewById(R.id.ibColorDefault);
-        etSignature = view.findViewById(R.id.etSignature);
-        ibPro = view.findViewById(R.id.ibPro);
-
         cbSynchronize = view.findViewById(R.id.cbSynchronize);
         cbPrimary = view.findViewById(R.id.cbPrimary);
+
+        etReplyTo = view.findViewById(R.id.etReplyTo);
+        etBcc = view.findViewById(R.id.etBcc);
+        cbDeliveryReceipt = view.findViewById(R.id.cbDeliveryReceipt);
+        cbReadReceipt = view.findViewById(R.id.cbReadReceipt);
         spSent = view.findViewById(R.id.spSent);
 
         btnSave = view.findViewById(R.id.btnSave);
         pbSave = view.findViewById(R.id.pbSave);
         pbWait = view.findViewById(R.id.pbWait);
+
+        grpAuthorize = view.findViewById(R.id.grpAuthorize);
         grpAdvanced = view.findViewById(R.id.grpAdvanced);
 
         // Wire controls
@@ -177,11 +180,10 @@ public class FragmentIdentity extends FragmentEx {
         spAccount.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                btnAdvanced.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
+                grpAuthorize.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
                 if (position == 0)
                     grpAdvanced.setVisibility(View.GONE);
                 tilPassword.setPasswordVisibilityToggleEnabled(position == 0);
-                btnSave.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
 
                 Integer tag = (Integer) adapterView.getTag();
                 if (tag != null && tag.equals(position))
@@ -231,98 +233,6 @@ public class FragmentIdentity extends FragmentEx {
             }
         });
 
-        spProvider.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                Integer tag = (Integer) adapterView.getTag();
-                if (tag != null && tag.equals(position))
-                    return;
-                adapterView.setTag(position);
-
-                Provider provider = (Provider) adapterView.getSelectedItem();
-
-                // Set associated host/port/starttls
-                etHost.setText(provider.smtp_host);
-                etPort.setText(position == 0 ? null : Integer.toString(provider.smtp_port));
-                cbStartTls.setChecked(provider.smtp_starttls);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
-
-        btnAutoConfig.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                etDomain.setEnabled(false);
-                btnAutoConfig.setEnabled(false);
-
-                Bundle args = new Bundle();
-                args.putString("domain", etDomain.getText().toString());
-
-                new SimpleTask<SRVRecord>() {
-                    @Override
-                    protected SRVRecord onLoad(Context context, Bundle args) throws Throwable {
-                        String domain = args.getString("domain");
-                        Record[] records = new Lookup("_submission._tcp." + domain, Type.SRV).run();
-                        if (records != null)
-                            for (int i = 0; i < records.length; i++) {
-                                SRVRecord srv = (SRVRecord) records[i];
-                                Log.i("SRV=" + srv);
-                                return srv;
-                            }
-
-                        throw new IllegalArgumentException(getString(R.string.title_no_settings));
-                    }
-
-                    @Override
-                    protected void onLoaded(Bundle args, SRVRecord srv) {
-                        etDomain.setEnabled(true);
-                        btnAutoConfig.setEnabled(true);
-                        if (srv != null) {
-                            etHost.setText(srv.getTarget().toString(true));
-                            etPort.setText(Integer.toString(srv.getPort()));
-                            cbStartTls.setChecked(srv.getPort() == 587);
-                        }
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        etDomain.setEnabled(true);
-                        btnAutoConfig.setEnabled(true);
-                        if (ex instanceof IllegalArgumentException)
-                            Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                        else
-                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                    }
-                }.load(FragmentIdentity.this, args);
-            }
-        });
-
-        btnAdvanced.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int visibility = (grpAdvanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                grpAdvanced.setVisibility(visibility);
-                cbInsecure.setVisibility(insecure ? visibility : View.GONE);
-                if (visibility == View.VISIBLE)
-                    new Handler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((ScrollView) view).smoothScrollTo(0, etDisplay.getTop());
-                        }
-                    });
-            }
-        });
-
-        cbStartTls.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                etPort.setHint(checked ? "587" : "465");
-            }
-        });
-
         vwColor.setBackgroundColor(color);
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -364,6 +274,122 @@ public class FragmentIdentity extends FragmentEx {
             }
         });
 
+        btnAdvanced.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int visibility = (grpAdvanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+                grpAdvanced.setVisibility(visibility);
+                if (visibility == View.VISIBLE)
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((ScrollView) view).smoothScrollTo(0, tvProvider.getTop());
+                        }
+                    });
+            }
+        });
+
+        spProvider.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                Integer tag = (Integer) adapterView.getTag();
+                if (tag != null && tag.equals(position))
+                    return;
+                adapterView.setTag(position);
+
+                Provider provider = (Provider) adapterView.getSelectedItem();
+
+                // Set associated host/port/starttls
+                etHost.setText(provider.smtp_host);
+                etPort.setText(position == 0 ? null : Integer.toString(provider.smtp_port));
+                cbStartTls.setChecked(provider.smtp_starttls);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        etDomain.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                btnAutoConfig.setEnabled(text.length() > 0);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        btnAutoConfig.setEnabled(false);
+
+        btnAutoConfig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                etDomain.setEnabled(false);
+                btnAutoConfig.setEnabled(false);
+
+                Bundle args = new Bundle();
+                args.putString("domain", etDomain.getText().toString());
+
+                new SimpleTask<SRVRecord>() {
+                    @Override
+                    protected SRVRecord onLoad(Context context, Bundle args) throws Throwable {
+                        String dns = "_submission._tcp." + args.getString("domain");
+                        Lookup lookup = new Lookup(dns, Type.SRV);
+                        // https://dns.watch/
+                        SimpleResolver resolver = new SimpleResolver("84.200.69.80");
+                        lookup.setResolver(resolver);
+                        Log.i("Lookup dns=" + dns + " @" + resolver.getAddress());
+                        Record[] records = lookup.run();
+                        if (lookup.getResult() != Lookup.SUCCESSFUL)
+                            throw new IllegalArgumentException(lookup.getErrorString());
+                        Log.i("Found dns=" + (records == null ? -1 : records.length));
+                        if (records != null)
+                            for (int i = 0; i < records.length; i++) {
+                                SRVRecord srv = (SRVRecord) records[i];
+                                Log.i("SRV=" + srv);
+                                return srv;
+                            }
+
+                        throw new IllegalArgumentException(getString(R.string.title_no_settings));
+                    }
+
+                    @Override
+                    protected void onLoaded(Bundle args, SRVRecord srv) {
+                        etDomain.setEnabled(true);
+                        btnAutoConfig.setEnabled(true);
+                        if (srv != null) {
+                            etHost.setText(srv.getTarget().toString(true));
+                            etPort.setText(Integer.toString(srv.getPort()));
+                            cbStartTls.setChecked(srv.getPort() == 587);
+                        }
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        etDomain.setEnabled(true);
+                        btnAutoConfig.setEnabled(true);
+                        if (ex instanceof IllegalArgumentException)
+                            Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                        else
+                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    }
+                }.load(FragmentIdentity.this, args);
+            }
+        });
+
+        cbStartTls.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                etPort.setHint(checked ? "587" : "465");
+            }
+        });
+
         cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -383,8 +409,8 @@ public class FragmentIdentity extends FragmentEx {
                 Bundle args = new Bundle();
                 args.putLong("id", id);
                 args.putString("name", etName.getText().toString());
-                args.putString("display", etDisplay.getText().toString());
                 args.putString("email", etEmail.getText().toString());
+                args.putString("display", etDisplay.getText().toString());
                 args.putString("replyto", etReplyTo.getText().toString());
                 args.putString("bcc", etBcc.getText().toString());
                 args.putBoolean("delivery_receipt", cbDeliveryReceipt.isChecked());
@@ -408,38 +434,43 @@ public class FragmentIdentity extends FragmentEx {
                     protected Void onLoad(Context context, Bundle args) throws Throwable {
                         long id = args.getLong("id");
                         String name = args.getString("name");
-                        long account = args.getLong("account");
-                        String display = args.getString("display");
                         String email = args.getString("email");
-                        String replyto = args.getString("replyto");
-                        String bcc = args.getString("bcc");
-                        boolean delivery_receipt = args.getBoolean("delivery_receipt");
-                        boolean read_receipt = args.getBoolean("read_receipt");
+                        long account = args.getLong("account");
+
+                        String display = args.getString("display");
+                        Integer color = args.getInt("color");
+                        String signature = args.getString("signature");
+
+                        int auth_type = args.getInt("auth_type");
                         String host = args.getString("host");
                         boolean starttls = args.getBoolean("starttls");
                         boolean insecure = args.getBoolean("insecure");
                         String port = args.getString("port");
                         String user = args.getString("user");
                         String password = args.getString("password");
-                        Integer color = args.getInt("color");
-                        String signature = args.getString("signature");
-                        int auth_type = args.getInt("auth_type");
                         boolean synchronize = args.getBoolean("synchronize");
                         boolean primary = args.getBoolean("primary");
+
+                        String replyto = args.getString("replyto");
+                        String bcc = args.getString("bcc");
+                        boolean delivery_receipt = args.getBoolean("delivery_receipt");
+                        boolean read_receipt = args.getBoolean("read_receipt");
                         EntityFolder sent = (EntityFolder) args.getSerializable("sent");
 
                         if (TextUtils.isEmpty(name))
-                            throw new IllegalArgumentException(getContext().getString(R.string.title_no_name));
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_name));
                         if (TextUtils.isEmpty(email))
-                            throw new IllegalArgumentException(getContext().getString(R.string.title_no_email));
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_email));
+                        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches())
+                            throw new IllegalArgumentException(context.getString(R.string.title_email_invalid));
                         if (TextUtils.isEmpty(host))
-                            throw new IllegalArgumentException(getContext().getString(R.string.title_no_host));
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_host));
                         if (TextUtils.isEmpty(port))
                             port = (starttls ? "587" : "465");
                         if (TextUtils.isEmpty(user))
-                            throw new IllegalArgumentException(getContext().getString(R.string.title_no_user));
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_user));
                         if (synchronize && TextUtils.isEmpty(password) && !insecure)
-                            throw new IllegalArgumentException(getContext().getString(R.string.title_no_password));
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_password));
 
                         email = email.toLowerCase();
 
@@ -495,24 +526,26 @@ public class FragmentIdentity extends FragmentEx {
                             if (identity == null)
                                 identity = new EntityIdentity();
                             identity.name = name;
+                            identity.email = email;
                             identity.account = account;
                             identity.display = display;
-                            identity.email = email;
-                            identity.replyto = replyto;
-                            identity.bcc = bcc;
-                            identity.delivery_receipt = delivery_receipt;
-                            identity.read_receipt = read_receipt;
+                            identity.color = color;
+                            identity.signature = signature;
+
+                            identity.auth_type = auth_type;
                             identity.host = host;
                             identity.starttls = starttls;
                             identity.insecure = insecure;
                             identity.port = Integer.parseInt(port);
                             identity.user = user;
                             identity.password = password;
-                            identity.color = color;
-                            identity.signature = signature;
-                            identity.auth_type = auth_type;
                             identity.synchronize = synchronize;
                             identity.primary = (identity.synchronize && primary);
+
+                            identity.replyto = replyto;
+                            identity.bcc = bcc;
+                            identity.delivery_receipt = delivery_receipt;
+                            identity.read_receipt = read_receipt;
                             identity.store_sent = false;
                             identity.sent_folder = (sent == null ? null : sent.id);
                             identity.error = null;
@@ -531,7 +564,7 @@ public class FragmentIdentity extends FragmentEx {
                         }
 
                         if (reload)
-                            ServiceSynchronize.reload(getContext(), "save identity");
+                            ServiceSynchronize.reload(context, "save identity");
 
                         return null;
                     }
@@ -567,8 +600,10 @@ public class FragmentIdentity extends FragmentEx {
         tilPassword.setPasswordVisibilityToggleEnabled(id < 0);
         btnSave.setVisibility(View.GONE);
         btnAdvanced.setVisibility(View.GONE);
-        grpAdvanced.setVisibility(View.GONE);
         pbSave.setVisibility(View.GONE);
+
+        grpAuthorize.setVisibility(View.GONE);
+        grpAdvanced.setVisibility(View.GONE);
 
         return view;
     }
@@ -601,21 +636,24 @@ public class FragmentIdentity extends FragmentEx {
             protected void onLoaded(Bundle args, final EntityIdentity identity) {
                 if (savedInstanceState == null) {
                     etName.setText(identity == null ? null : identity.name);
-                    etDisplay.setText(identity == null ? null : identity.display);
                     etEmail.setText(identity == null ? null : identity.email);
-                    etReplyTo.setText(identity == null ? null : identity.replyto);
-                    etBcc.setText(identity == null ? null : identity.bcc);
-                    cbDeliveryReceipt.setChecked(identity == null ? false : identity.delivery_receipt);
-                    cbReadReceipt.setChecked(identity == null ? false : identity.read_receipt);
+
+                    etDisplay.setText(identity == null ? null : identity.display);
+                    etSignature.setText(identity == null || identity.signature == null ? null : Html.fromHtml(identity.signature));
+
                     etHost.setText(identity == null ? null : identity.host);
                     cbStartTls.setChecked(identity == null ? false : identity.starttls);
                     cbInsecure.setChecked(identity == null ? false : identity.insecure);
                     etPort.setText(identity == null ? null : Long.toString(identity.port));
                     etUser.setText(identity == null ? null : identity.user);
                     tilPassword.getEditText().setText(identity == null ? null : identity.password);
-                    etSignature.setText(identity == null || identity.signature == null ? null : Html.fromHtml(identity.signature));
                     cbSynchronize.setChecked(identity == null ? true : identity.synchronize);
                     cbPrimary.setChecked(identity == null ? true : identity.primary);
+
+                    etReplyTo.setText(identity == null ? null : identity.replyto);
+                    etBcc.setText(identity == null ? null : identity.bcc);
+                    cbDeliveryReceipt.setChecked(identity == null ? false : identity.delivery_receipt);
+                    cbReadReceipt.setChecked(identity == null ? false : identity.read_receipt);
 
                     color = (identity == null || identity.color == null ? Color.TRANSPARENT : identity.color);
 
@@ -787,7 +825,7 @@ public class FragmentIdentity extends FragmentEx {
                                 DB db = DB.getInstance(context);
                                 db.identity().setIdentityTbd(id);
 
-                                ServiceSynchronize.reload(getContext(), "delete identity");
+                                ServiceSynchronize.reload(context, "delete identity");
 
                                 return null;
                             }

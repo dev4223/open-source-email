@@ -34,7 +34,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -57,8 +56,8 @@ public class FragmentFolder extends FragmentEx {
     private EditText etKeepDays;
     private CheckBox cbKeepAll;
     private Button btnSave;
-    private ProgressBar pbSave;
-    private ProgressBar pbWait;
+    private ContentLoadingProgressBar pbSave;
+    private ContentLoadingProgressBar pbWait;
 
     private long id = -1;
     private long account = -1;
@@ -171,7 +170,7 @@ public class FragmentFolder extends FragmentEx {
                             keep_days = sync_days;
 
                         boolean reload;
-                        DB db = DB.getInstance(getContext());
+                        DB db = DB.getInstance(context);
                         try {
                             db.beginTransaction();
 
@@ -233,7 +232,7 @@ public class FragmentFolder extends FragmentEx {
                         }
 
                         if (reload)
-                            ServiceSynchronize.reload(getContext(), "save folder");
+                            ServiceSynchronize.reload(context, "save folder");
 
                         return null;
                     }
@@ -308,7 +307,7 @@ public class FragmentFolder extends FragmentEx {
                             protected Void onLoad(Context context, Bundle args) {
                                 long id = args.getLong("id");
 
-                                DB db = DB.getInstance(getContext());
+                                DB db = DB.getInstance(context);
                                 int count = db.operation().getOperationCount(id, null);
                                 if (count > 0)
                                     throw new IllegalArgumentException(
@@ -316,7 +315,7 @@ public class FragmentFolder extends FragmentEx {
                                                     R.plurals.title_notification_operations, count, count));
                                 db.folder().setFolderTbd(id);
 
-                                ServiceSynchronize.reload(getContext(), "delete folder");
+                                ServiceSynchronize.reload(context, "delete folder");
 
                                 return null;
                             }

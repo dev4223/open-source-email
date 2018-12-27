@@ -29,14 +29,12 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -53,7 +51,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -68,6 +65,7 @@ import com.sun.mail.imap.IMAPStore;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.SRVRecord;
+import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
@@ -95,6 +93,7 @@ public class FragmentAccount extends FragmentEx {
     private EditText etDomain;
     private Button btnAutoConfig;
 
+    private Button btnAuthorize;
     private EditText etHost;
     private CheckBox cbStartTls;
     private CheckBox cbInsecure;
@@ -102,26 +101,22 @@ public class FragmentAccount extends FragmentEx {
     private EditText etUser;
     private TextInputLayout tilPassword;
 
-    private Button btnAuthorize;
-
-    private Button btnAdvanced;
-
     private TextView tvName;
     private EditText etName;
-    private EditText etPrefix;
     private Button btnColor;
     private View vwColor;
     private ImageView ibColorDefault;
-    private CheckBox cbNotify;
 
+    private Button btnAdvanced;
     private CheckBox cbSynchronize;
     private CheckBox cbPrimary;
+    private CheckBox cbNotify;
     private CheckBox cbBrowse;
     private EditText etInterval;
+    private EditText etPrefix;
 
     private Button btnCheck;
-    private ProgressBar pbCheck;
-
+    private ContentLoadingProgressBar pbCheck;
     private TextView tvIdle;
 
     private ArrayAdapter<EntityFolder> adapter;
@@ -132,8 +127,8 @@ public class FragmentAccount extends FragmentEx {
     private Spinner spJunk;
 
     private Button btnSave;
-    private ProgressBar pbSave;
-    private ProgressBar pbWait;
+    private ContentLoadingProgressBar pbSave;
+    private ContentLoadingProgressBar pbWait;
 
     private Group grpServer;
     private Group grpAuthorize;
@@ -159,9 +154,6 @@ public class FragmentAccount extends FragmentEx {
         setSubtitle(R.string.title_edit_account);
         setHasOptionsMenu(true);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        final boolean insecure = prefs.getBoolean("insecure", false);
-
         view = (ViewGroup) inflater.inflate(R.layout.fragment_account, container, false);
 
         // Get controls
@@ -170,6 +162,7 @@ public class FragmentAccount extends FragmentEx {
         etDomain = view.findViewById(R.id.etDomain);
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
 
+        btnAuthorize = view.findViewById(R.id.btnAuthorize);
         etHost = view.findViewById(R.id.etHost);
         etPort = view.findViewById(R.id.etPort);
         cbStartTls = view.findViewById(R.id.cbStartTls);
@@ -177,22 +170,19 @@ public class FragmentAccount extends FragmentEx {
         etUser = view.findViewById(R.id.etUser);
         tilPassword = view.findViewById(R.id.tilPassword);
 
-        btnAuthorize = view.findViewById(R.id.btnAuthorize);
-
-        btnAdvanced = view.findViewById(R.id.btnAdvanced);
-
         etName = view.findViewById(R.id.etName);
         tvName = view.findViewById(R.id.tvName);
-        etPrefix = view.findViewById(R.id.etPrefix);
         btnColor = view.findViewById(R.id.btnColor);
         vwColor = view.findViewById(R.id.vwColor);
         ibColorDefault = view.findViewById(R.id.ibColorDefault);
-        cbNotify = view.findViewById(R.id.cbNotify);
 
+        btnAdvanced = view.findViewById(R.id.btnAdvanced);
         cbSynchronize = view.findViewById(R.id.cbSynchronize);
         cbPrimary = view.findViewById(R.id.cbPrimary);
+        cbNotify = view.findViewById(R.id.cbNotify);
         cbBrowse = view.findViewById(R.id.cbBrowse);
         etInterval = view.findViewById(R.id.etInterval);
+        etPrefix = view.findViewById(R.id.etPrefix);
 
         btnCheck = view.findViewById(R.id.btnCheck);
         pbCheck = view.findViewById(R.id.pbCheck);
@@ -222,8 +212,6 @@ public class FragmentAccount extends FragmentEx {
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long itemid) {
                 Provider provider = (Provider) adapterView.getSelectedItem();
                 grpServer.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
-                cbStartTls.setVisibility(position == 1 && insecure ? View.VISIBLE : View.GONE);
-                cbInsecure.setVisibility(position == 1 && insecure ? View.VISIBLE : View.GONE);
                 grpAuthorize.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
 
                 btnAuthorize.setVisibility(provider.type == null ? View.GONE : View.VISIBLE);
@@ -259,6 +247,23 @@ public class FragmentAccount extends FragmentEx {
             }
         });
 
+        etDomain.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
+                btnAutoConfig.setEnabled(text.length() > 0);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        btnAutoConfig.setEnabled(false);
+
         btnAutoConfig.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -271,8 +276,16 @@ public class FragmentAccount extends FragmentEx {
                 new SimpleTask<SRVRecord>() {
                     @Override
                     protected SRVRecord onLoad(Context context, Bundle args) throws Throwable {
-                        String domain = args.getString("domain");
-                        Record[] records = new Lookup("_imaps._tcp." + domain, Type.SRV).run();
+                        String dns = "_imaps._tcp." + args.getString("domain");
+                        Lookup lookup = new Lookup(dns, Type.SRV);
+                        // https://dns.watch/
+                        SimpleResolver resolver = new SimpleResolver("84.200.69.80");
+                        lookup.setResolver(resolver);
+                        Log.i("Lookup dns=" + dns + " @" + resolver.getAddress());
+                        Record[] records = lookup.run();
+                        if (lookup.getResult() != Lookup.SUCCESSFUL)
+                            throw new IllegalArgumentException(lookup.getErrorString());
+                        Log.i("Found dns=" + (records == null ? -1 : records.length));
                         if (records != null)
                             for (int i = 0; i < records.length; i++) {
                                 SRVRecord srv = (SRVRecord) records[i];
@@ -330,39 +343,6 @@ public class FragmentAccount extends FragmentEx {
             }
         });
 
-        btnAuthorize.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Provider provider = (Provider) spProvider.getSelectedItem();
-                Log.i("Authorize " + provider);
-
-                if ("com.google".equals(provider.type)) {
-                    String permission = Manifest.permission.GET_ACCOUNTS;
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O &&
-                            ContextCompat.checkSelfPermission(getContext(), permission) != PackageManager.PERMISSION_GRANTED) {
-                        Log.i("Requesting " + permission);
-                        requestPermissions(new String[]{permission}, ActivitySetup.REQUEST_PERMISSION);
-                    } else
-                        selectAccount();
-                }
-            }
-        });
-
-        btnAdvanced.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int visibility = (grpAdvanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-                grpAdvanced.setVisibility(visibility);
-                if (visibility == View.VISIBLE)
-                    new Handler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            ((ScrollView) view).smoothScrollTo(0, tvName.getTop());
-                        }
-                    });
-            }
-        });
-
         vwColor.setBackgroundColor(color);
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -394,6 +374,46 @@ public class FragmentAccount extends FragmentEx {
             }
         });
 
+        btnAuthorize.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Provider provider = (Provider) spProvider.getSelectedItem();
+                Log.i("Authorize " + provider);
+
+                if ("com.google".equals(provider.type)) {
+                    String permission = Manifest.permission.GET_ACCOUNTS;
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O &&
+                            ContextCompat.checkSelfPermission(getContext(), permission) != PackageManager.PERMISSION_GRANTED) {
+                        Log.i("Requesting " + permission);
+                        requestPermissions(new String[]{permission}, ActivitySetup.REQUEST_PERMISSION);
+                    } else
+                        selectAccount();
+                }
+            }
+        });
+
+        btnAdvanced.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int visibility = (grpAdvanced.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+                grpAdvanced.setVisibility(visibility);
+                if (visibility == View.VISIBLE)
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((ScrollView) view).smoothScrollTo(0, cbSynchronize.getTop());
+                        }
+                    });
+            }
+        });
+
+        cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                cbPrimary.setEnabled(checked);
+            }
+        });
+
         cbNotify.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -405,13 +425,6 @@ public class FragmentAccount extends FragmentEx {
                     fragmentTransaction.add(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
                     fragmentTransaction.commit();
                 }
-            }
-        });
-
-        cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                cbPrimary.setEnabled(checked);
             }
         });
 
@@ -451,13 +464,13 @@ public class FragmentAccount extends FragmentEx {
                         int auth_type = args.getInt("auth_type");
 
                         if (TextUtils.isEmpty(host))
-                            throw new Throwable(getContext().getString(R.string.title_no_host));
+                            throw new Throwable(context.getString(R.string.title_no_host));
                         if (TextUtils.isEmpty(port))
                             port = (starttls ? "143" : "993");
                         if (TextUtils.isEmpty(user))
-                            throw new Throwable(getContext().getString(R.string.title_no_user));
+                            throw new Throwable(context.getString(R.string.title_no_user));
                         if (TextUtils.isEmpty(password) && !insecure)
-                            throw new Throwable(getContext().getString(R.string.title_no_password));
+                            throw new Throwable(context.getString(R.string.title_no_password));
 
                         CheckResult result = new CheckResult();
                         result.folders = new ArrayList<>();
@@ -594,23 +607,24 @@ public class FragmentAccount extends FragmentEx {
 
                 Bundle args = new Bundle();
                 args.putLong("id", id);
+
+                args.putInt("auth_type", authorized == null ? Helper.AUTH_TYPE_PASSWORD : provider.getAuthType());
                 args.putString("host", etHost.getText().toString());
                 args.putBoolean("starttls", cbStartTls.isChecked());
                 args.putBoolean("insecure", cbInsecure.isChecked());
                 args.putString("port", etPort.getText().toString());
                 args.putString("user", etUser.getText().toString());
                 args.putString("password", tilPassword.getEditText().getText().toString());
-                args.putInt("auth_type", authorized == null ? Helper.AUTH_TYPE_PASSWORD : provider.getAuthType());
 
                 args.putString("name", etName.getText().toString());
-                args.putString("prefix", etPrefix.getText().toString());
                 args.putInt("color", color);
-                args.putBoolean("notify", cbNotify.isChecked());
 
                 args.putBoolean("synchronize", cbSynchronize.isChecked());
                 args.putBoolean("primary", cbPrimary.isChecked());
+                args.putBoolean("notify", cbNotify.isChecked());
                 args.putBoolean("browse", cbBrowse.isChecked());
                 args.putString("interval", etInterval.getText().toString());
+                args.putString("prefix", etPrefix.getText().toString());
 
                 args.putSerializable("drafts", drafts);
                 args.putSerializable("sent", sent);
@@ -622,23 +636,24 @@ public class FragmentAccount extends FragmentEx {
                     @Override
                     protected Void onLoad(Context context, Bundle args) throws Throwable {
                         long id = args.getLong("id");
+
+                        int auth_type = args.getInt("auth_type");
                         String host = args.getString("host");
                         boolean starttls = args.getBoolean("starttls");
                         boolean insecure = args.getBoolean("insecure");
                         String port = args.getString("port");
                         String user = args.getString("user");
                         String password = args.getString("password");
-                        int auth_type = args.getInt("auth_type");
 
                         String name = args.getString("name");
-                        String prefix = args.getString("prefix");
                         Integer color = args.getInt("color");
-                        boolean notify = args.getBoolean("notify");
 
                         boolean synchronize = args.getBoolean("synchronize");
                         boolean primary = args.getBoolean("primary");
+                        boolean notify = args.getBoolean("notify");
                         boolean browse = args.getBoolean("browse");
                         String interval = args.getString("interval");
+                        String prefix = args.getString("prefix");
 
                         EntityFolder drafts = (EntityFolder) args.getSerializable("drafts");
                         EntityFolder sent = (EntityFolder) args.getSerializable("sent");
@@ -647,22 +662,22 @@ public class FragmentAccount extends FragmentEx {
                         EntityFolder junk = (EntityFolder) args.getSerializable("junk");
 
                         if (TextUtils.isEmpty(host))
-                            throw new Throwable(getContext().getString(R.string.title_no_host));
+                            throw new Throwable(context.getString(R.string.title_no_host));
                         if (TextUtils.isEmpty(port))
                             port = (starttls ? "143" : "993");
                         if (TextUtils.isEmpty(user))
-                            throw new Throwable(getContext().getString(R.string.title_no_user));
+                            throw new Throwable(context.getString(R.string.title_no_user));
                         if (synchronize && TextUtils.isEmpty(password) && !insecure)
-                            throw new Throwable(getContext().getString(R.string.title_no_password));
+                            throw new Throwable(context.getString(R.string.title_no_password));
                         if (TextUtils.isEmpty(interval))
                             interval = "19";
                         if (synchronize && drafts == null)
-                            throw new Throwable(getContext().getString(R.string.title_no_drafts));
+                            throw new Throwable(context.getString(R.string.title_no_drafts));
 
-                        if (TextUtils.isEmpty(prefix))
-                            prefix = null;
                         if (Color.TRANSPARENT == color)
                             color = null;
+                        if (TextUtils.isEmpty(prefix))
+                            prefix = null;
 
                         long now = new Date().getTime();
                         Character separator = null;
@@ -713,23 +728,23 @@ public class FragmentAccount extends FragmentEx {
                             if (account == null)
                                 account = new EntityAccount();
 
+                            account.auth_type = auth_type;
                             account.host = host;
                             account.starttls = starttls;
                             account.insecure = insecure;
                             account.port = Integer.parseInt(port);
                             account.user = user;
                             account.password = password;
-                            account.auth_type = auth_type;
 
                             account.name = name;
-                            account.prefix = prefix;
                             account.color = color;
-                            account.notify = notify;
 
                             account.synchronize = synchronize;
                             account.primary = (account.synchronize && primary);
+                            account.notify = notify;
                             account.browse = browse;
                             account.poll_interval = Integer.parseInt(interval);
+                            account.prefix = prefix;
 
                             if (!update)
                                 account.created = now;
@@ -816,10 +831,10 @@ public class FragmentAccount extends FragmentEx {
                         }
 
                         if (reload)
-                            ServiceSynchronize.reload(getContext(), "save account");
+                            ServiceSynchronize.reload(context, "save account");
 
                         if (!synchronize) {
-                            NotificationManager nm = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                             nm.cancel("receive", account.id.intValue());
                         }
 
@@ -1070,7 +1085,7 @@ public class FragmentAccount extends FragmentEx {
                                 DB db = DB.getInstance(context);
                                 db.account().setAccountTbd(id);
 
-                                ServiceSynchronize.reload(getContext(), "delete account");
+                                ServiceSynchronize.reload(context, "delete account");
 
                                 return null;
                             }

@@ -187,6 +187,7 @@
     <string name="title_check">Check</string>
     <string name="title_no_name">Name missing</string>
     <string name="title_no_email">Email address missing</string>
+    <string name="title_email_invalid">Email address invalid</string>
     <string name="title_no_account">Account missing</string>
     <string name="title_no_host">Host name missing</string>
     <string name="title_no_user">User name missing</string>
@@ -333,6 +334,7 @@
     <string name="title_sort_on_time">Time</string>
     <string name="title_sort_on_unread">Unread</string>
     <string name="title_sort_on_starred">Starred</string>
+    <string name="title_sort_on_sender">Sender</string>
 
     <string name="title_zoom">Text size</string>
 

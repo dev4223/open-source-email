@@ -42,7 +42,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -90,7 +89,7 @@ public class FragmentMessages extends FragmentEx {
     private TextView tvNoEmail;
     private RecyclerView rvMessage;
     private BottomNavigationView bottom_navigation;
-    private ProgressBar pbWait;
+    private ContentLoadingProgressBar pbWait;
     private Group grpSupport;
     private Group grpHintSupport;
     private Group grpHintSwipe;
@@ -430,8 +429,8 @@ public class FragmentMessages extends FragmentEx {
             selectionTracker.addObserver(new SelectionTracker.SelectionObserver() {
                 @Override
                 public void onSelectionChanged() {
-                    swipeRefresh.setEnabled(false);
                     if (selectionTracker.hasSelection()) {
+                        swipeRefresh.setEnabled(false);
                         if (messages != null)
                             messages.removeObservers(getViewLifecycleOwner());
                         fabMore.show();
@@ -1057,7 +1056,10 @@ public class FragmentMessages extends FragmentEx {
 
                     @Override
                     protected void onLoaded(Bundle args, MessageTarget result) {
-                        moveAsk(result);
+                        if (EntityFolder.JUNK.equals(result.target.type))
+                            moveAskConfirmed(result);
+                        else
+                            moveAsk(result);
                     }
 
                     @Override
@@ -1561,6 +1563,8 @@ public class FragmentMessages extends FragmentEx {
             menu.findItem(R.id.menu_sort_on_unread).setChecked(true);
         else if ("starred".equals(sort))
             menu.findItem(R.id.menu_sort_on_starred).setChecked(true);
+        else if ("sender".equals(sort))
+            menu.findItem(R.id.menu_sort_on_sender).setChecked(true);
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -1584,6 +1588,12 @@ public class FragmentMessages extends FragmentEx {
 
             case R.id.menu_sort_on_starred:
                 prefs.edit().putString("sort", "starred").apply();
+                item.setChecked(true);
+                loadMessages();
+                return true;
+
+            case R.id.menu_sort_on_sender:
+                prefs.edit().putString("sort", "sender").apply();
                 item.setChecked(true);
                 loadMessages();
                 return true;
@@ -1673,6 +1683,7 @@ public class FragmentMessages extends FragmentEx {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String sort = prefs.getString("sort", "time");
         boolean debug = prefs.getBoolean("debug", false);
+        Log.i("Load messages type=" + viewType + " sort=" + sort + " debug=" + debug);
 
         // Sort changed
         if (messages != null)
