@@ -46,7 +46,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.android.colorpicker.ColorPickerDialog;
 import com.android.colorpicker.ColorPickerSwatch;
@@ -88,7 +87,6 @@ public class FragmentIdentity extends FragmentEx {
     private ImageButton ibPro;
 
     private Button btnAdvanced;
-    private TextView tvProvider;
     private Spinner spProvider;
     private EditText etDomain;
     private Button btnAutoConfig;
@@ -148,7 +146,6 @@ public class FragmentIdentity extends FragmentEx {
         ibPro = view.findViewById(R.id.ibPro);
 
         btnAdvanced = view.findViewById(R.id.btnAdvanced);
-        tvProvider = view.findViewById(R.id.tvProvider);
         spProvider = view.findViewById(R.id.spProvider);
         etDomain = view.findViewById(R.id.etDomain);
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
@@ -283,7 +280,7 @@ public class FragmentIdentity extends FragmentEx {
                     new Handler().post(new Runnable() {
                         @Override
                         public void run() {
-                            ((ScrollView) view).smoothScrollTo(0, tvProvider.getTop());
+                            ((ScrollView) view).smoothScrollTo(0, btnAdvanced.getTop());
                         }
                     });
             }
@@ -551,7 +548,7 @@ public class FragmentIdentity extends FragmentEx {
                             identity.error = null;
 
                             if (identity.primary)
-                                db.identity().resetPrimary();
+                                db.identity().resetPrimary(account);
 
                             if (update)
                                 db.identity().updateIdentity(identity);
@@ -879,7 +876,7 @@ public class FragmentIdentity extends FragmentEx {
             @Override
             protected void onLoaded(Bundle args, IdentityFolders result) {
                 EntityFolder none = new EntityFolder();
-                none.name = "";
+                none.name = "-";
                 result.folders.add(0, none);
 
                 adapter.clear();

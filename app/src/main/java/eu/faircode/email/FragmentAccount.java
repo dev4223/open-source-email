@@ -401,7 +401,7 @@ public class FragmentAccount extends FragmentEx {
                     new Handler().post(new Runnable() {
                         @Override
                         public void run() {
-                            ((ScrollView) view).smoothScrollTo(0, cbSynchronize.getTop());
+                            ((ScrollView) view).smoothScrollTo(0, btnAdvanced.getTop());
                         }
                     });
             }
@@ -1192,7 +1192,7 @@ public class FragmentAccount extends FragmentEx {
         EntityFolder.sort(getContext(), folders);
 
         EntityFolder none = new EntityFolder();
-        none.name = "";
+        none.name = "-";
         folders.add(0, none);
 
         adapter.clear();

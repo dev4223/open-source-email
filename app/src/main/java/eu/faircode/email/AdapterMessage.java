@@ -51,6 +51,7 @@ import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
+import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -418,7 +419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 flagged = (message.count - message.unflagged > 0);
             ivFlagged.setImageResource(flagged ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
             ivFlagged.setImageTintList(ColorStateList.valueOf(flagged ? colorAccent : textColorSecondary));
-            ivFlagged.setVisibility(View.VISIBLE);
+            ivFlagged.setVisibility(message.uid == null ? View.GONE : View.VISIBLE);
 
             tvFrom.setText(MessageHelper.getFormattedAddresses(outgoing ? message.to : message.from, false));
             tvSize.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
@@ -523,7 +524,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvKeywords.setText(TextUtils.join(" ", message.keywords));
                 tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
-                tvHeaders.setText(show_headers ? message.headers : null);
+                if (show_headers && message.headers != null) {
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(message.headers);
+                    int index = 0;
+                    for (String line : message.headers.split("\n")) {
+                        if (line.length() > 0 && !Character.isWhitespace(line.charAt(0))) {
+                            int colon = line.indexOf(':');
+                            if (colon > 0)
+                                ssb.setSpan(new StyleSpan(Typeface.BOLD), index, index + colon, 0);
+                        }
+                        index += line.length() + 1;
+                    }
+
+                    tvHeaders.setText(ssb);
+                } else
+                    tvHeaders.setText(null);
 
                 for (int i = 0; i < bnvActions.getMenu().size(); i++)
                     bnvActions.getMenu().getItem(i).setVisible(false);
