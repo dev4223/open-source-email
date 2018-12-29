@@ -419,7 +419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 flagged = (message.count - message.unflagged > 0);
             ivFlagged.setImageResource(flagged ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
             ivFlagged.setImageTintList(ColorStateList.valueOf(flagged ? colorAccent : textColorSecondary));
-            ivFlagged.setVisibility(message.uid == null ? View.GONE : View.VISIBLE);
+            ivFlagged.setVisibility(message.uid == null ? View.INVISIBLE : View.VISIBLE);
 
             tvFrom.setText(MessageHelper.getFormattedAddresses(outgoing ? message.to : message.from, false));
             tvSize.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
@@ -880,7 +880,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         body = message.read(context);
                     } catch (IOException ex) {
                         Log.e(ex);
-                        body = ex.toString();
+                        body = "";
                         db.message().setMessageContent(message.id, false, null);
                     }
 
@@ -1718,7 +1718,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.confirm = prefs.getBoolean("confirm", false);
         this.debug = prefs.getBoolean("debug", false);
 
-        this.dp24 = Math.round(24 * context.getResources().getDisplayMetrics().density);
+        this.dp24 = Helper.dp2pixels(24, context);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);

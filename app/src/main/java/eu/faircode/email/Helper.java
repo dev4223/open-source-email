@@ -176,6 +176,11 @@ public class Helper {
         return intent;
     }
 
+    static int dp2pixels(int dp, Context context) {
+        float scale = context.getResources().getDisplayMetrics().density;
+        return Math.round(dp * scale);
+    }
+
     static int resolveColor(Context context, int attr) {
         int[] attrs = new int[]{attr};
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs);
@@ -568,8 +573,11 @@ public class Helper {
 
     static String canonicalAddress(String address) {
         String[] a = address.split("@");
-        if (a.length > 0)
-            a[0] = a[0].split("\\+")[0];
+        if (a.length > 0) {
+            String[] extra = a[0].split("\\+");
+            if (extra.length > 0)
+                a[0] = extra[0];
+        }
         return TextUtils.join("@", a);
     }
 

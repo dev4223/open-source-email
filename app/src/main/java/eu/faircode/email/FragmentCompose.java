@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -57,6 +58,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -69,6 +71,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
@@ -298,6 +301,29 @@ public class FragmentCompose extends FragmentEx {
             }
         });
 
+        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                int bottom = view.getBottom()
+                        - edit_bar.getHeight()
+                        - Helper.dp2pixels(56, view.getContext()); // full bottom navigation
+                int remain = bottom - etBody.getTop();
+                int threshold = Helper.dp2pixels(100, view.getContext());
+                Log.i("Reduce remain=" + remain + " threshold=" + threshold);
+
+                boolean reduce = (remain < threshold);
+                boolean reduced = (bottom_navigation.getLabelVisibilityMode() == LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED);
+                if (reduce != reduced) {
+                    bottom_navigation.setLabelVisibilityMode(reduce
+                            ? LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED
+                            : LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
+                    ViewGroup.LayoutParams params = bottom_navigation.getLayoutParams();
+                    params.height = Helper.dp2pixels(reduce ? 36 : 56, view.getContext());
+                    bottom_navigation.setLayoutParams(params);
+                }
+            }
+        });
+
         ((ActivityBase) getActivity()).addBackPressedListener(onBackPressedListener);
 
         setHasOptionsMenu(true);
@@ -499,13 +525,15 @@ public class FragmentCompose extends FragmentEx {
         }
 
         private void check() {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                        checkInternet();
-                }
-            });
+            Activity activity = getActivity();
+            if (activity != null)
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                            checkInternet();
+                    }
+                });
         }
     };
 
@@ -1834,8 +1862,7 @@ public class FragmentCompose extends FragmentEx {
                 }
             }
 
-            float scale = getContext().getResources().getDisplayMetrics().density;
-            int px = Math.round(12 * scale);
+            int px = Helper.dp2pixels(12, getContext());
             Drawable d = getContext().getResources().getDrawable(R.drawable.baseline_broken_image_24, getContext().getTheme());
             d.setBounds(0, 0, px, px);
             return d;

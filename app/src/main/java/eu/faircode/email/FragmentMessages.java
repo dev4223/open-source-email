@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -464,7 +465,7 @@ public class FragmentMessages extends FragmentEx {
                     return 0;
 
                 TupleMessageEx message = ((AdapterMessage) rvMessage.getAdapter()).getCurrentList().get(pos);
-                if (message == null ||
+                if (message == null || message.uid == null ||
                         (values.containsKey("expanded") && values.get("expanded").contains(message.id)) ||
                         EntityFolder.DRAFTS.equals(message.folderType) ||
                         EntityFolder.OUTBOX.equals(message.folderType))
@@ -497,7 +498,7 @@ public class FragmentMessages extends FragmentEx {
                 boolean inbox = (EntityFolder.ARCHIVE.equals(message.folderType) || EntityFolder.TRASH.equals(message.folderType));
 
                 View itemView = viewHolder.itemView;
-                int margin = Math.round(12 * (getContext().getResources().getDisplayMetrics().density));
+                int margin = Helper.dp2pixels(12, getContext());
 
                 if (dX > margin) {
                     // Right swipe
@@ -1396,13 +1397,15 @@ public class FragmentMessages extends FragmentEx {
         }
 
         private void check() {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                        adapter.checkInternet();
-                }
-            });
+            Activity activity = getActivity();
+            if (activity != null)
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                            adapter.checkInternet();
+                    }
+                });
         }
     };
 
@@ -1582,17 +1585,18 @@ public class FragmentMessages extends FragmentEx {
                 try {
                     db.beginTransaction();
 
-                    for (EntityMessage message : db.message().getMessageSeen(outbox)) {
-                        EntityIdentity identity = db.identity().getIdentity(message.identity);
-                        EntityFolder sent = db.folder().getFolderByType(identity.account, EntityFolder.SENT);
-                        if (sent != null) {
-                            message.folder = sent.id;
-                            message.uid = null;
-                            db.message().updateMessage(message);
-                            Log.i("Appending sent msgid=" + message.msgid);
-                            EntityOperation.queue(db, message, EntityOperation.ADD); // Could already exist
+                    for (EntityMessage message : db.message().getMessageSeen(outbox))
+                        if (message.identity != null) {
+                            EntityIdentity identity = db.identity().getIdentity(message.identity);
+                            EntityFolder sent = db.folder().getFolderByType(identity.account, EntityFolder.SENT);
+                            if (sent != null) {
+                                message.folder = sent.id;
+                                message.uid = null;
+                                db.message().updateMessage(message);
+                                Log.i("Appending sent msgid=" + message.msgid);
+                                EntityOperation.queue(db, message, EntityOperation.ADD); // Could already exist
+                            }
                         }
-                    }
 
                     db.setTransactionSuccessful();
                 } finally {
@@ -1823,20 +1827,21 @@ public class FragmentMessages extends FragmentEx {
 
                                 boolean trashable = false;
                                 boolean archivable = false;
-                                for (EntityMessage message : messages) {
-                                    EntityFolder folder = db.folder().getFolder(message.folder);
-                                    if (!EntityFolder.DRAFTS.equals(folder.type) &&
-                                            !EntityFolder.OUTBOX.equals(folder.type) &&
-                                            // allow sent
-                                            !EntityFolder.TRASH.equals(folder.type) &&
-                                            !EntityFolder.JUNK.equals(folder.type))
-                                        trashable = true;
-                                    if (!EntityFolder.isOutgoing(folder.type) &&
-                                            !EntityFolder.TRASH.equals(folder.type) &&
-                                            !EntityFolder.JUNK.equals(folder.type) &&
-                                            !EntityFolder.ARCHIVE.equals(folder.type))
-                                        archivable = true;
-                                }
+                                for (EntityMessage message : messages)
+                                    if (message.uid != null) {
+                                        EntityFolder folder = db.folder().getFolder(message.folder);
+                                        if (!EntityFolder.DRAFTS.equals(folder.type) &&
+                                                !EntityFolder.OUTBOX.equals(folder.type) &&
+                                                // allow sent
+                                                !EntityFolder.TRASH.equals(folder.type) &&
+                                                !EntityFolder.JUNK.equals(folder.type))
+                                            trashable = true;
+                                        if (!EntityFolder.isOutgoing(folder.type) &&
+                                                !EntityFolder.TRASH.equals(folder.type) &&
+                                                !EntityFolder.JUNK.equals(folder.type) &&
+                                                !EntityFolder.ARCHIVE.equals(folder.type))
+                                            archivable = true;
+                                    }
 
                                 return new Boolean[]{trashable, archivable};
                             }
