@@ -147,6 +147,7 @@ public class ServiceSynchronize extends LifecycleService {
     private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
     private static final long STOP_DELAY = 5000L; // milliseconds
+    private static final long YIELD_DURATION = 200L; // milliseconds
 
     static final int PI_WHY = 1;
     static final int PI_CLEAR = 2;
@@ -184,9 +185,14 @@ public class ServiceSynchronize extends LifecycleService {
             @Override
             public void onChanged(final List<TupleMessageEx> messages) {
                 executor.submit(new Runnable() {
+                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                    PowerManager.WakeLock wl = pm.newWakeLock(
+                            PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":notify");
+
                     @Override
                     public void run() {
                         try {
+                            wl.acquire();
                             Log.i("Notification messages=" + messages.size());
 
                             Widget.update(ServiceSynchronize.this, messages.size());
@@ -258,9 +264,16 @@ public class ServiceSynchronize extends LifecycleService {
                             }
                         } catch (Throwable ex) {
                             Log.e(ex);
+                        } finally {
+                            wl.release();
                         }
                     }
                 });
+
+                try {
+                    Thread.sleep(YIELD_DURATION);
+                } catch (InterruptedException ignored) {
+                }
             }
         });
     }
@@ -293,97 +306,106 @@ public class ServiceSynchronize extends LifecycleService {
 
         super.onStartCommand(intent, flags, startId);
 
-        if (action != null) {
-            final String[] parts = action.split(":");
-            switch (parts[0]) {
-                case "why":
-                    Intent why = new Intent(Intent.ACTION_VIEW);
-                    why.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq2"));
-                    why.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (action != null)
+            try {
+                final String[] parts = action.split(":");
+                switch (parts[0]) {
+                    case "why":
+                        Intent why = new Intent(Intent.ACTION_VIEW);
+                        why.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq2"));
+                        why.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                    PackageManager pm = getPackageManager();
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                    if (prefs.getBoolean("why", false) || why.resolveActivity(pm) == null) {
-                        Intent view = new Intent(this, ActivityView.class);
-                        view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(view);
-                    } else {
-                        prefs.edit().putBoolean("why", true).apply();
-                        startActivity(why);
-                    }
-                    break;
-
-                case "init":
-                    // Network events will manage the service
-                    serviceManager.service_init();
-                    break;
-
-                case "reload":
-                    serviceManager.queue_reload(true, intent.getStringExtra("reason"));
-                    break;
-
-                case "clear":
-                    executor.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            DB.getInstance(ServiceSynchronize.this).message().ignoreAll();
+                        PackageManager pm = getPackageManager();
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                        if (prefs.getBoolean("why", false) || why.resolveActivity(pm) == null) {
+                            Intent view = new Intent(this, ActivityView.class);
+                            view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(view);
+                        } else {
+                            prefs.edit().putBoolean("why", true).apply();
+                            startActivity(why);
                         }
-                    });
-                    break;
+                        break;
 
-                case "seen":
-                case "archive":
-                case "trash":
-                case "ignore":
-                    executor.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            long id = Long.parseLong(parts[1]);
+                    case "init":
+                        // Network events will manage the service
+                        serviceManager.service_init();
+                        break;
 
-                            DB db = DB.getInstance(ServiceSynchronize.this);
-                            try {
-                                db.beginTransaction();
+                    case "reload":
+                        serviceManager.service_reload(intent.getStringExtra("reason"));
+                        break;
 
-                                EntityMessage message = db.message().getMessage(id);
-                                switch (parts[0]) {
-                                    case "seen":
-                                        EntityOperation.queue(db, message, EntityOperation.SEEN, true);
-                                        break;
-
-                                    case "archive":
-                                        EntityFolder archive = db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE);
-                                        if (archive == null)
-                                            archive = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
-                                        if (archive != null)
-                                            EntityOperation.queue(db, message, EntityOperation.MOVE, archive.id);
-                                        break;
-
-                                    case "trash":
-                                        EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
-                                        if (trash != null)
-                                            EntityOperation.queue(db, message, EntityOperation.MOVE, trash.id);
-                                        break;
-
-                                    case "ignore":
-                                        db.message().setMessageUiIgnored(message.id, true);
-                                        break;
-
-                                    default:
-                                        Log.w("Unknown action: " + parts[0]);
+                    case "clear":
+                        executor.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    DB.getInstance(ServiceSynchronize.this).message().ignoreAll();
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
                                 }
-
-                                db.setTransactionSuccessful();
-                            } finally {
-                                db.endTransaction();
                             }
-                        }
-                    });
-                    break;
+                        });
+                        break;
 
-                default:
-                    Log.w("Unknown action: " + action);
+                    case "seen":
+                    case "archive":
+                    case "trash":
+                    case "ignore":
+                        executor.submit(new Runnable() {
+                            @Override
+                            public void run() {
+                                DB db = DB.getInstance(ServiceSynchronize.this);
+                                try {
+                                    db.beginTransaction();
+
+                                    long id = Long.parseLong(parts[1]);
+                                    EntityMessage message = db.message().getMessage(id);
+
+                                    switch (parts[0]) {
+                                        case "seen":
+                                            EntityOperation.queue(db, message, EntityOperation.SEEN, true);
+                                            break;
+
+                                        case "archive":
+                                            EntityFolder archive = db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE);
+                                            if (archive == null)
+                                                archive = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+                                            if (archive != null)
+                                                EntityOperation.queue(db, message, EntityOperation.MOVE, archive.id);
+                                            break;
+
+                                        case "trash":
+                                            EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+                                            if (trash != null)
+                                                EntityOperation.queue(db, message, EntityOperation.MOVE, trash.id);
+                                            break;
+
+                                        case "ignore":
+                                            db.message().setMessageUiIgnored(message.id, true);
+                                            break;
+
+                                        default:
+                                            Log.w("Unknown action: " + parts[0]);
+                                    }
+
+                                    db.setTransactionSuccessful();
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                } finally {
+                                    db.endTransaction();
+                                }
+                            }
+                        });
+                        break;
+
+                    default:
+                        Log.w("Unknown action: " + action);
+                }
+            } catch (Throwable ex) {
+                Log.e(ex);
             }
-        }
 
         return START_STICKY;
     }
@@ -1228,6 +1250,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                 }
                                             }
                                         });
+                                        state.yield();
                                     }
                                 }
                             };
@@ -1501,11 +1524,17 @@ public class ServiceSynchronize extends LifecycleService {
 
                         if (ex instanceof MessageRemovedException ||
                                 ex instanceof FolderNotFoundException ||
-                                ex instanceof SendFailedException) {
+                                ex instanceof SendFailedException ||
+                                ex instanceof IllegalArgumentException) {
                             Log.w("Unrecoverable", ex);
 
                             // There is no use in repeating
                             db.operation().deleteOperation(op.id);
+
+                            if (message != null &&
+                                    ex instanceof MessageRemovedException)
+                                db.message().deleteMessage(message.id);
+
                             continue;
                         } else if (ex instanceof MessagingException) {
                             // Socket timeout is a recoverable condition (send message)
@@ -1848,8 +1877,6 @@ public class ServiceSynchronize extends LifecycleService {
             throw new MessageRemovedException();
 
         StringBuilder sb = new StringBuilder();
-        if (BuildConfig.DEBUG)
-            sb.append(imessage.getFlags().toString()).append("\n");
 
         Enumeration<Header> headers = imessage.getAllHeaders();
         while (headers.hasMoreElements()) {
@@ -2441,7 +2468,7 @@ public class ServiceSynchronize extends LifecycleService {
         return message;
     }
 
-    private static void downloadMessage(
+    static void downloadMessage(
             Context context,
             EntityFolder folder, IMAPFolder ifolder, IMAPMessage imessage,
             long id, boolean download) throws MessagingException, IOException {
@@ -2527,41 +2554,47 @@ public class ServiceSynchronize extends LifecycleService {
 
         @Override
         public void onAvailable(Network network) {
-            try {
-                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                EntityLog.log(ServiceSynchronize.this, "Available " + network + " " + cm.getNetworkInfo(network));
+            synchronized (this) {
+                try {
+                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                    EntityLog.log(ServiceSynchronize.this, "Available " + network + " " + cm.getNetworkInfo(network));
 
-                if (!started && suitableNetwork())
-                    queue_reload(true, "connect " + network);
-            } catch (Throwable ex) {
-                Log.e(ex);
+                    if (!started && suitableNetwork())
+                        queue_reload(true, "connect " + network);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
             }
         }
 
         @Override
         public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
-            try {
-                if (!started) {
-                    EntityLog.log(ServiceSynchronize.this, "Network " + network + " capabilities " + capabilities);
-                    if (suitableNetwork())
-                        queue_reload(true, "connect " + network);
+            synchronized (this) {
+                try {
+                    if (!started) {
+                        EntityLog.log(ServiceSynchronize.this, "Network " + network + " capabilities " + capabilities);
+                        if (suitableNetwork())
+                            queue_reload(true, "capabilities " + network);
+                    }
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            } catch (Throwable ex) {
-                Log.e(ex);
             }
         }
 
         @Override
         public void onLost(Network network) {
-            try {
-                EntityLog.log(ServiceSynchronize.this, "Lost " + network);
+            synchronized (this) {
+                try {
+                    EntityLog.log(ServiceSynchronize.this, "Lost " + network);
 
-                if (started && !suitableNetwork()) {
-                    lastLost = new Date().getTime();
-                    queue_reload(false, "disconnect " + network);
+                    if (started && !suitableNetwork()) {
+                        lastLost = new Date().getTime();
+                        queue_reload(false, "disconnect " + network);
+                    }
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            } catch (Throwable ex) {
-                Log.e(ex);
             }
         }
 
@@ -2588,10 +2621,22 @@ public class ServiceSynchronize extends LifecycleService {
             EntityLog.log(ServiceSynchronize.this, "Service init");
         }
 
+        private void service_reload(String reason) {
+            synchronized (this) {
+                try {
+                    serviceManager.queue_reload(true, reason);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+            }
+        }
+
         private void service_destroy() {
-            EntityLog.log(ServiceSynchronize.this, "Service destroy");
-            if (started)
-                queue_reload(false, "service destroy");
+            synchronized (this) {
+                EntityLog.log(ServiceSynchronize.this, "Service destroy");
+                if (started)
+                    queue_reload(false, "service destroy");
+            }
         }
 
         private void start() {
@@ -2684,6 +2729,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                     }
                                                 }
                                             });
+                                            state.yield();
                                         }
                                     }
                                 };
@@ -2775,6 +2821,8 @@ public class ServiceSynchronize extends LifecycleService {
             EntityLog.log(ServiceSynchronize.this, "Queue reload " +
                     " doStop=" + doStop + " doStart=" + doStart + " queued=" + queued + " " + reason);
 
+            started = doStart;
+
             queued++;
             queue.submit(new Runnable() {
                 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -2830,7 +2878,10 @@ public class ServiceSynchronize extends LifecycleService {
                 }
             });
 
-            started = doStart;
+            try {
+                Thread.sleep(YIELD_DURATION);
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 
@@ -2881,7 +2932,7 @@ public class ServiceSynchronize extends LifecycleService {
         void yield() {
             try {
                 // Give interrupted thread some time to acquire wake lock
-                Thread.sleep(500L);
+                Thread.sleep(YIELD_DURATION);
             } catch (InterruptedException ignored) {
             }
         }
