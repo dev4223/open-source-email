@@ -52,13 +52,14 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.android.colorpicker.ColorPickerDialog;
 import com.android.colorpicker.ColorPickerSwatch;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
-import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -110,6 +111,8 @@ public class FragmentIdentity extends FragmentEx {
 
     private Button btnSave;
     private ContentLoadingProgressBar pbSave;
+    private TextView tvError;
+
     private ContentLoadingProgressBar pbWait;
 
     private Group grpAuthorize;
@@ -149,8 +152,10 @@ public class FragmentIdentity extends FragmentEx {
 
         btnAdvanced = view.findViewById(R.id.btnAdvanced);
         spProvider = view.findViewById(R.id.spProvider);
+
         etDomain = view.findViewById(R.id.etDomain);
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
+
         etHost = view.findViewById(R.id.etHost);
         cbStartTls = view.findViewById(R.id.cbStartTls);
         cbInsecure = view.findViewById(R.id.cbInsecure);
@@ -169,6 +174,8 @@ public class FragmentIdentity extends FragmentEx {
 
         btnSave = view.findViewById(R.id.btnSave);
         pbSave = view.findViewById(R.id.pbSave);
+        tvError = view.findViewById(R.id.tvError);
+
         pbWait = view.findViewById(R.id.pbWait);
 
         grpAuthorize = view.findViewById(R.id.grpAuthorize);
@@ -348,8 +355,6 @@ public class FragmentIdentity extends FragmentEx {
             }
         });
 
-        btnAutoConfig.setEnabled(false);
-
         btnAutoConfig.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -387,8 +392,8 @@ public class FragmentIdentity extends FragmentEx {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        if (ex instanceof IOException)
-                            Snackbar.make(view, R.string.title_no_settings, Snackbar.LENGTH_LONG).show();
+                        if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
+                            Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                         else
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                     }
@@ -413,10 +418,6 @@ public class FragmentIdentity extends FragmentEx {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.setViewsEnabled(view, false);
-                btnSave.setEnabled(false);
-                pbSave.setVisibility(View.VISIBLE);
-
                 EntityAccount account = (EntityAccount) spAccount.getSelectedItem();
 
                 String name = etName.getText().toString();
@@ -429,10 +430,10 @@ public class FragmentIdentity extends FragmentEx {
                 Bundle args = new Bundle();
                 args.putLong("id", id);
                 args.putString("name", name);
-                args.putString("email", etEmail.getText().toString());
+                args.putString("email", etEmail.getText().toString().trim());
                 args.putString("display", etDisplay.getText().toString());
-                args.putString("replyto", etReplyTo.getText().toString());
-                args.putString("bcc", etBcc.getText().toString());
+                args.putString("replyto", etReplyTo.getText().toString().trim());
+                args.putString("bcc", etBcc.getText().toString().trim());
                 args.putBoolean("delivery_receipt", cbDeliveryReceipt.isChecked());
                 args.putBoolean("read_receipt", cbReadReceipt.isChecked());
                 args.putLong("account", account == null ? -1 : account.id);
@@ -450,6 +451,21 @@ public class FragmentIdentity extends FragmentEx {
                 args.putSerializable("sent", (EntityFolder) spSent.getSelectedItem());
 
                 new SimpleTask<Void>() {
+                    @Override
+                    protected void onInit(Bundle args) {
+                        Helper.setViewsEnabled(view, false);
+                        btnSave.setEnabled(false);
+                        pbSave.setVisibility(View.VISIBLE);
+                        tvError.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    protected void onCleanup(Bundle args) {
+                        Helper.setViewsEnabled(view, true);
+                        btnSave.setEnabled(true);
+                        pbSave.setVisibility(View.GONE);
+                    }
+
                     @Override
                     protected Void onLoad(Context context, Bundle args) throws Throwable {
                         long id = args.getLong("id");
@@ -596,18 +612,18 @@ public class FragmentIdentity extends FragmentEx {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.setViewsEnabled(view, true);
-                        btnSave.setEnabled(true);
-                        pbSave.setVisibility(View.GONE);
-
                         if (ex instanceof IllegalArgumentException)
                             Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                        else
-                            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                    .setMessage(Helper.formatThrowable(ex))
-                                    .setPositiveButton(android.R.string.cancel, null)
-                                    .create()
-                                    .show();
+                        else {
+                            tvError.setText(Helper.formatThrowable(ex));
+                            tvError.setVisibility(View.VISIBLE);
+                            new Handler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((ScrollView) view).smoothScrollTo(0, tvError.getBottom());
+                                }
+                            });
+                        }
                     }
                 }.load(FragmentIdentity.this, args);
             }
@@ -619,11 +635,13 @@ public class FragmentIdentity extends FragmentEx {
 
         // Initialize
         Helper.setViewsEnabled(view, false);
+        btnAutoConfig.setEnabled(false);
         cbInsecure.setVisibility(View.GONE);
         tilPassword.setPasswordVisibilityToggleEnabled(id < 0);
         btnSave.setVisibility(View.GONE);
         btnAdvanced.setVisibility(View.GONE);
         pbSave.setVisibility(View.GONE);
+        tvError.setVisibility(View.GONE);
 
         grpAuthorize.setVisibility(View.GONE);
         grpAdvanced.setVisibility(View.GONE);

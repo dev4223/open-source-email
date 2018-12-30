@@ -306,9 +306,9 @@ public class FragmentCompose extends FragmentEx {
             public void onGlobalLayout() {
                 int bottom = view.getBottom()
                         - edit_bar.getHeight()
-                        - Helper.dp2pixels(56, view.getContext()); // full bottom navigation
+                        - Helper.dp2pixels(view.getContext(), 56); // full bottom navigation
                 int remain = bottom - etBody.getTop();
-                int threshold = Helper.dp2pixels(100, view.getContext());
+                int threshold = Helper.dp2pixels(view.getContext(), 100);
                 Log.i("Reduce remain=" + remain + " threshold=" + threshold);
 
                 boolean reduce = (remain < threshold);
@@ -318,7 +318,7 @@ public class FragmentCompose extends FragmentEx {
                             ? LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED
                             : LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
                     ViewGroup.LayoutParams params = bottom_navigation.getLayoutParams();
-                    params.height = Helper.dp2pixels(reduce ? 36 : 56, view.getContext());
+                    params.height = Helper.dp2pixels(view.getContext(), reduce ? 36 : 56);
                     bottom_navigation.setLayoutParams(params);
                 }
             }
@@ -1002,10 +1002,6 @@ public class FragmentCompose extends FragmentEx {
     }
 
     private void onAction(int action) {
-        busy = true;
-        Helper.setViewsEnabled(view, false);
-        getActivity().invalidateOptionsMenu();
-
         EntityIdentity identity = (EntityIdentity) spIdentity.getSelectedItem();
 
         Bundle args = new Bundle();
@@ -1603,6 +1599,20 @@ public class FragmentCompose extends FragmentEx {
 
     private SimpleTask<EntityMessage> actionLoader = new SimpleTask<EntityMessage>() {
         @Override
+        protected void onInit(Bundle args) {
+            busy = true;
+            Helper.setViewsEnabled(view, false);
+            getActivity().invalidateOptionsMenu();
+        }
+
+        @Override
+        protected void onCleanup(Bundle args) {
+            busy = false;
+            Helper.setViewsEnabled(view, true);
+            getActivity().invalidateOptionsMenu();
+        }
+
+        @Override
         protected EntityMessage onLoad(final Context context, Bundle args) throws Throwable {
             // Get data
             long id = args.getLong("id");
@@ -1807,10 +1817,6 @@ public class FragmentCompose extends FragmentEx {
             int action = args.getInt("action");
             Log.i("Loaded action id=" + (draft == null ? null : draft.id) + " action=" + action);
 
-            busy = false;
-            Helper.setViewsEnabled(view, true);
-            getActivity().invalidateOptionsMenu();
-
             etTo.setText(MessageHelper.getFormattedAddresses(draft.to, true));
             etCc.setText(MessageHelper.getFormattedAddresses(draft.cc, true));
             etBcc.setText(MessageHelper.getFormattedAddresses(draft.bcc, true));
@@ -1833,10 +1839,6 @@ public class FragmentCompose extends FragmentEx {
 
         @Override
         protected void onException(Bundle args, Throwable ex) {
-            busy = false;
-            Helper.setViewsEnabled(view, true);
-            getActivity().invalidateOptionsMenu();
-
             if (ex instanceof MessageRemovedException)
                 finish();
             else if (ex instanceof IllegalArgumentException)
@@ -1862,7 +1864,7 @@ public class FragmentCompose extends FragmentEx {
                 }
             }
 
-            int px = Helper.dp2pixels(12, getContext());
+            int px = Helper.dp2pixels(getContext(), 12);
             Drawable d = getContext().getResources().getDrawable(R.drawable.baseline_broken_image_24, getContext().getTheme());
             d.setBounds(0, 0, px, px);
             return d;

@@ -498,7 +498,7 @@ public class FragmentMessages extends FragmentEx {
                 boolean inbox = (EntityFolder.ARCHIVE.equals(message.folderType) || EntityFolder.TRASH.equals(message.folderType));
 
                 View itemView = viewHolder.itemView;
-                int margin = Helper.dp2pixels(12, getContext());
+                int margin = Helper.dp2pixels(getContext(), 12);
 
                 if (dX > margin) {
                     // Right swipe
@@ -1489,7 +1489,6 @@ public class FragmentMessages extends FragmentEx {
                 folder >= 0 && viewType != AdapterMessage.ViewType.SEARCH);
         menu.findItem(R.id.menu_sort_on).setVisible(
                 viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
-        menu.findItem(R.id.menu_zoom).setVisible(viewType == AdapterMessage.ViewType.THREAD);
         menu.findItem(R.id.menu_folders).setVisible(primary >= 0);
         menu.findItem(R.id.menu_folders).setIcon(connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
         menu.findItem(R.id.menu_move_sent).setVisible(outbox);
@@ -1855,7 +1854,7 @@ public class FragmentMessages extends FragmentEx {
 
                             @Override
                             protected void onException(Bundle args, Throwable ex) {
-
+                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
                         }.load(FragmentMessages.this, args);
                     }

@@ -129,19 +129,28 @@ public class Provider {
 
     static Provider fromDomain(Context context, String domain) throws IOException {
         try {
-            return Provider.fromISPDB(domain);
+            return Provider.fromISPDB(context, domain);
         } catch (Throwable ex) {
             Log.w(ex);
             try {
-                return Provider.fromDNS(domain);
+                return Provider.fromDNS(context, domain);
             } catch (UnknownHostException ex1) {
                 Log.w(ex1);
-                throw new IllegalArgumentException(context.getString(R.string.title_no_settings));
+                throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
             }
         }
     }
 
-    private static Provider fromISPDB(String domain) throws IOException, XmlPullParserException {
+    private static Provider fromISPDB(Context context, String domain) throws IOException, XmlPullParserException {
+        Provider provider = new Provider(domain);
+        if ("gmail.com".equals(domain)) {
+            provider.documentation = new StringBuilder();
+            provider.documentation
+                    .append("<a href=\"https://www.google.com/settings/security/lesssecureapps\">")
+                    .append(context.getString(R.string.title_setup_setting_gmail))
+                    .append("</a>");
+        }
+
         // https://wiki.mozilla.org/Thunderbird:Autoconfiguration:ConfigFileFormat
         URL url = new URL("https://autoconfig.thunderbird.net/v1.1/" + domain);
         Log.i("Fetching " + url);
@@ -162,7 +171,6 @@ public class Provider {
         boolean smtp = false;
         String href = null;
         String title = null;
-        Provider provider = new Provider(domain);
         int eventType = xml.getEventType();
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
@@ -315,7 +323,7 @@ public class Provider {
         return provider;
     }
 
-    private static Provider fromDNS(String domain) throws TextParseException, UnknownHostException {
+    private static Provider fromDNS(Context context, String domain) throws TextParseException, UnknownHostException {
         // https://tools.ietf.org/html/rfc6186
         SRVRecord imap = lookup("_imaps._tcp." + domain);
         SRVRecord smtp = lookup("_submission._tcp." + domain);
@@ -335,8 +343,8 @@ public class Provider {
     private static SRVRecord lookup(String dns) throws TextParseException, UnknownHostException {
         Lookup lookup = new Lookup(dns, Type.SRV);
 
-        // https://dns.watch/
-        SimpleResolver resolver = new SimpleResolver("84.200.69.80");
+        // https://dns.watch/ 84.200.69.80
+        SimpleResolver resolver = new SimpleResolver("8.8.8.8");
         lookup.setResolver(resolver);
         Log.i("Lookup dns=" + dns + " @" + resolver.getAddress());
         Record[] records = lookup.run();

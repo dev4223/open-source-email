@@ -28,7 +28,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -112,7 +111,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private FragmentManager fragmentManager;
     private ViewType viewType;
     private boolean outgoing;
-    private int zoom;
     private boolean internet;
     private IProperties properties;
 
@@ -126,6 +124,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean debug;
 
     private int dp24;
+    private float textSize;
     private int colorPrimary;
     private int colorAccent;
     private int textColorSecondary;
@@ -412,13 +411,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else
                 ivExpander.setVisibility(View.GONE);
 
-            boolean flagged;
-            if (viewType == ViewType.THREAD)
-                flagged = (message.unflagged == 0);
-            else
-                flagged = (message.count - message.unflagged > 0);
-            ivFlagged.setImageResource(flagged ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-            ivFlagged.setImageTintList(ColorStateList.valueOf(flagged ? colorAccent : textColorSecondary));
+            int flagged = (message.count - message.unflagged);
+            ivFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
+            ivFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
             ivFlagged.setVisibility(message.uid == null ? View.INVISIBLE : View.VISIBLE);
 
             tvFrom.setText(MessageHelper.getFormattedAddresses(outgoing ? message.to : message.from, false));
@@ -446,7 +441,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvCount.setVisibility(View.GONE);
                 ivThread.setVisibility(View.GONE);
             } else {
-                tvCount.setText(Integer.toString(message.count));
+                tvCount.setText(Integer.toString(message.visible));
                 ivThread.setVisibility(View.VISIBLE);
             }
 
@@ -474,6 +469,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTime.setTypeface(null, typeface);
             tvSubject.setTypeface(null, typeface);
             tvCount.setTypeface(null, typeface);
+
+            if (textSize != 0) {
+                tvFrom.setTextSize(textSize);
+                tvSubject.setTextSize(textSize);
+            }
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
             tvFrom.setTextColor(colorUnseen);
@@ -544,20 +544,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bnvActions.getMenu().getItem(i).setVisible(false);
                 bnvActions.setVisibility(View.VISIBLE);
 
-                TypedArray ta;
-                if (zoom == 0)
-                    ta = context.obtainStyledAttributes(
-                            R.style.TextAppearance_AppCompat_Small, new int[]{android.R.attr.textSize});
-                else if (zoom == 2)
-                    ta = context.obtainStyledAttributes(
-                            R.style.TextAppearance_AppCompat_Large, new int[]{android.R.attr.textSize});
-                else
-                    ta = context.obtainStyledAttributes(
-                            R.style.TextAppearance_AppCompat_Medium, new int[]{android.R.attr.textSize});
-                float textSize = ta.getDimension(0, 0);
                 if (textSize != 0)
-                    tvBody.setTextSize(textSize / context.getResources().getDisplayMetrics().density);
-                ta.recycle();
+                    tvBody.setTextSize(textSize);
 
                 Spanned body = properties.getBody(message.id);
                 tvBody.setText(body);
@@ -1702,7 +1690,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.fragmentManager = fragmentManager;
         this.viewType = viewType;
         this.outgoing = outgoing;
-        this.zoom = zoom;
         this.internet = (Helper.isMetered(context, false) != null);
         this.properties = properties;
 
@@ -1718,7 +1705,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.confirm = prefs.getBoolean("confirm", false);
         this.debug = prefs.getBoolean("debug", false);
 
-        this.dp24 = Helper.dp2pixels(24, context);
+        this.dp24 = Helper.dp2pixels(context, 24);
+        this.textSize = Helper.getTextSize(context, zoom);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
@@ -1738,7 +1726,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void setZoom(int zoom) {
-        this.zoom = zoom;
+        textSize = Helper.getTextSize(context, zoom);
         notifyDataSetChanged();
     }
 
