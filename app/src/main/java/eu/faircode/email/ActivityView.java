@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -380,7 +380,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                     new SimpleTask<Long>() {
                         @Override
-                        protected Long onLoad(Context context, Bundle args) {
+                        protected Long onExecute(Context context, Bundle args) {
                             DB db = DB.getInstance(context);
 
                             db.message().resetSearch();
@@ -392,7 +392,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         }
 
                         @Override
-                        protected void onLoaded(Bundle args, Long archive) {
+                        protected void onExecuted(Bundle args, Long archive) {
                             Bundle sargs = new Bundle();
                             sargs.putLong("folder", archive);
                             sargs.putString("search", args.getString("search"));
@@ -409,7 +409,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
                         }
-                    }.load(ActivityView.this, args);
+                    }.execute(ActivityView.this, args);
                 } else {
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
@@ -537,7 +537,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private void checkCrash() {
         new SimpleTask<Long>() {
             @Override
-            protected Long onLoad(Context context, Bundle args) throws Throwable {
+            protected Long onExecute(Context context, Bundle args) throws Throwable {
                 File file = new File(context.getCacheDir(), "crash.log");
                 if (file.exists()) {
                     StringBuilder sb = new StringBuilder();
@@ -563,7 +563,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
 
             @Override
-            protected void onLoaded(Bundle args, Long id) {
+            protected void onExecuted(Bundle args, Long id) {
                 if (id != null)
                     startActivity(
                             new Intent(ActivityView.this, ActivityCompose.class)
@@ -578,7 +578,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     Toast.makeText(ActivityView.this, ex.toString(), Toast.LENGTH_LONG).show();
             }
-        }.load(this, new Bundle());
+        }.execute(this, new Bundle());
     }
 
     private class UpdateInfo {
@@ -597,7 +597,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         new SimpleTask<UpdateInfo>() {
             @Override
-            protected UpdateInfo onLoad(Context context, Bundle args) throws Throwable {
+            protected UpdateInfo onExecute(Context context, Bundle args) throws Throwable {
                 StringBuilder json = new StringBuilder();
                 HttpsURLConnection urlConnection = null;
                 try {
@@ -649,7 +649,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
 
             @Override
-            protected void onLoaded(Bundle args, UpdateInfo info) {
+            protected void onExecuted(Bundle args, UpdateInfo info) {
                 if (info == null)
                     return;
 
@@ -671,7 +671,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 if (BuildConfig.DEBUG)
                     Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.load(this, new Bundle());
+        }.execute(this, new Bundle());
     }
 
     private void updateShortcuts() {
@@ -803,13 +803,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         new SimpleTask<Long>() {
             @Override
-            protected Long onLoad(Context context, Bundle args) {
+            protected Long onExecute(Context context, Bundle args) {
                 long account = args.getLong("account");
                 return DB.getInstance(context).folder().getFolderByType(account, EntityFolder.INBOX).id;
             }
 
             @Override
-            protected void onLoaded(Bundle args, Long folder) {
+            protected void onExecuted(Bundle args, Long folder) {
                 long account = args.getLong("account");
 
                 getSupportFragmentManager().popBackStack("unified", 0);
@@ -825,7 +825,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.load(this, args);
+        }.execute(this, args);
     }
 
     private void onMenuSetup() {
@@ -908,12 +908,12 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private void onDebugInfo() {
         new SimpleTask<Long>() {
             @Override
-            protected Long onLoad(Context context, Bundle args) throws IOException {
+            protected Long onExecute(Context context, Bundle args) throws IOException {
                 return Helper.getDebugInfo(context, R.string.title_debug_info_remark, null, null).id;
             }
 
             @Override
-            protected void onLoaded(Bundle args, Long id) {
+            protected void onExecuted(Bundle args, Long id) {
                 startActivity(new Intent(ActivityView.this, ActivityCompose.class)
                         .putExtra("action", "edit")
                         .putExtra("id", id));
@@ -927,13 +927,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     Toast.makeText(ActivityView.this, ex.toString(), Toast.LENGTH_LONG).show();
             }
 
-        }.load(this, new Bundle());
+        }.execute(this, new Bundle());
     }
 
     private void onCleanup() {
         new SimpleTask<Void>() {
             @Override
-            protected Void onLoad(Context context, Bundle args) {
+            protected Void onExecute(Context context, Bundle args) {
                 JobDaily.cleanup(ActivityView.this);
                 return null;
             }
@@ -942,7 +942,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.load(this, new Bundle());
+        }.execute(this, new Bundle());
     }
 
     private void onShowLog() {
@@ -1171,7 +1171,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         new SimpleTask<PendingIntent>() {
             @Override
-            protected PendingIntent onLoad(Context context, Bundle args) throws Throwable {
+            protected PendingIntent onExecute(Context context, Bundle args) throws Throwable {
                 // Get arguments
                 long id = args.getLong("id");
                 Intent data = args.getParcelable("data");
@@ -1291,7 +1291,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
 
             @Override
-            protected void onLoaded(Bundle args, PendingIntent pi) {
+            protected void onExecuted(Bundle args, PendingIntent pi) {
                 if (pi != null)
                     try {
                         Log.i("PGP executing pi=" + pi);
@@ -1312,7 +1312,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.load(ActivityView.this, args);
+        }.execute(ActivityView.this, args);
     }
 
     @Override
@@ -1326,7 +1326,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                     new SimpleTask<Void>() {
                         @Override
-                        protected Void onLoad(Context context, Bundle args) throws Throwable {
+                        protected Void onExecute(Context context, Bundle args) throws Throwable {
                             long id = args.getLong("id");
                             Uri uri = args.getParcelable("uri");
 
@@ -1372,7 +1372,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         }
 
                         @Override
-                        protected void onLoaded(Bundle args, Void data) {
+                        protected void onExecuted(Bundle args, Void data) {
                             Toast.makeText(ActivityView.this, R.string.title_attachment_saved, Toast.LENGTH_LONG).show();
                         }
 
@@ -1383,7 +1383,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                             else
                                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
                         }
-                    }.load(this, args);
+                    }.execute(this, args);
                 }
             } else if (requestCode == REQUEST_DECRYPT) {
                 if (data != null)

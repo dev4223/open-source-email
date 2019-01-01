@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -2025,10 +2025,12 @@ public class ServiceSynchronize extends LifecycleService {
 
                         db.folder().setFolderLevel(folder.id, level);
 
+                        // Compatibility
                         if ("Inbox_sub".equals(folder.type))
                             db.folder().setFolderType(folder.id, EntityFolder.USER);
-                        else if (EntityFolder.USER.equals(folder.type) &&
-                                type != null && !EntityFolder.USER.equals(type))
+                        if (EntityFolder.USER.equals(folder.type) && EntityFolder.SYSTEM.equals(type))
+                            db.folder().setFolderType(folder.id, type);
+                        if (EntityFolder.SYSTEM.equals(folder.type) && EntityFolder.USER.equals(type))
                             db.folder().setFolderType(folder.id, type);
                     }
                 }
@@ -2088,7 +2090,7 @@ public class ServiceSynchronize extends LifecycleService {
             Log.i(folder.name + " local old=" + old);
 
             // Get list of local uids
-            List<Long> uids = db.message().getUids(folder.id, sync_time);
+            List<Long> uids = db.message().getUids(folder.id, null);
             Log.i(folder.name + " local count=" + uids.size());
 
             // Reduce list of local uids
@@ -2120,6 +2122,15 @@ public class ServiceSynchronize extends LifecycleService {
                     reportError(account, folder, ex);
                     db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                 }
+
+            long[] auids = Helper.toLongArray(uids);
+            Message[] iuids = ifolder.getMessagesByUID(auids);
+            for (int i = 0; i < iuids.length; i++)
+                if (iuids[i] != null)
+                    uids.remove(auids[i]);
+
+            long getuid = SystemClock.elapsedRealtime();
+            Log.i(folder.name + " remote getuid=" + (SystemClock.elapsedRealtime() - getuid) + " ms");
 
             // Delete local messages not at remote
             Log.i(folder.name + " delete=" + uids.size());
@@ -2237,6 +2248,7 @@ public class ServiceSynchronize extends LifecycleService {
 
             if (state.running)
                 db.folder().setFolderInitialized(folder.id);
+            db.folder().setFolderSync(folder.id, new Date().getTime());
 
             db.folder().setFolderError(folder.id, null);
         } finally {
@@ -2377,7 +2389,7 @@ public class ServiceSynchronize extends LifecycleService {
             message.cc = helper.getCc();
             message.bcc = helper.getBcc();
             message.reply = helper.getReply();
-            message.subject = imessage.getSubject();
+            message.subject = helper.getSubject();
             message.size = helper.getSize();
             message.content = false;
             message.received = imessage.getReceivedDate().getTime();

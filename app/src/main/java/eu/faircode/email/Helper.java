@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.accounts.Account;
@@ -189,7 +189,7 @@ public class Helper {
             else
                 ta = context.obtainStyledAttributes(
                         R.style.TextAppearance_AppCompat_Medium, new int[]{android.R.attr.textSize});
-            return ta.getDimension(0, 0) / context.getResources().getDisplayMetrics().density;
+            return ta.getDimension(0, 0);
         } finally {
             if (ta != null)
                 ta.recycle();
@@ -253,12 +253,12 @@ public class Helper {
                         public void onClick(DialogInterface dialog, int which) {
                             new SimpleTask<Long>() {
                                 @Override
-                                protected Long onLoad(Context context, Bundle args) throws Throwable {
+                                protected Long onExecute(Context context, Bundle args) throws Throwable {
                                     return getDebugInfo(context, R.string.title_crash_info_remark, ex, null).id;
                                 }
 
                                 @Override
-                                protected void onLoaded(Bundle args, Long id) {
+                                protected void onExecuted(Bundle args, Long id) {
                                     context.startActivity(
                                             new Intent(context, ActivityCompose.class)
                                                     .putExtra("action", "edit")
@@ -272,7 +272,7 @@ public class Helper {
                                     else
                                         Toast.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                                 }
-                            }.load(context, owner, new Bundle());
+                            }.execute(context, owner, new Bundle());
                         }
                     })
                     .show();

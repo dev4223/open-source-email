@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -52,6 +52,7 @@ import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -111,6 +112,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private FragmentManager fragmentManager;
     private ViewType viewType;
     private boolean outgoing;
+    private int zoom;
     private boolean internet;
     private IProperties properties;
 
@@ -151,6 +153,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvFrom;
         private TextView tvSize;
         private TextView tvTime;
+        private ImageView ivDraft;
         private ImageView ivAnswered;
         private ImageView ivAttachments;
         private TextView tvSubject;
@@ -209,6 +212,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom = itemView.findViewById(R.id.tvFrom);
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
+            ivDraft = itemView.findViewById(R.id.ivDraft);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
             tvSubject = itemView.findViewById(R.id.tvSubject);
@@ -293,6 +297,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setText(null);
             tvSize.setText(null);
             tvTime.setText(null);
+            ivDraft.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
             ivAttachments.setVisibility(View.GONE);
             tvSubject.setText(null);
@@ -338,6 +343,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFrom.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
                 tvSize.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
+                ivDraft.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
                 ivAttachments.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
                 tvSubject.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
@@ -361,7 +367,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 new SimpleTask<Drawable>() {
                     @Override
-                    protected Drawable onLoad(Context context, Bundle args) {
+                    protected Drawable onExecute(Context context, Bundle args) {
                         String uri = args.getString("uri");
                         if (avatars && !outgoing && uri != null)
                             try {
@@ -384,7 +390,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
 
                     @Override
-                    protected void onLoaded(Bundle args, Drawable avatar) {
+                    protected void onExecuted(Bundle args, Drawable avatar) {
                         if (avatar != null) {
                             if ((long) ivAvatar.getTag() == args.getLong("id")) {
                                 ivAvatar.setImageDrawable(avatar);
@@ -398,7 +404,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.load(context, owner, aargs);
+                }.execute(context, owner, aargs);
             } else
                 ivAvatar.setVisibility(View.GONE);
 
@@ -421,6 +427,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setVisibility(message.size == null || message.content ? View.GONE : View.VISIBLE);
             tvTime.setText(DateUtils.getRelativeTimeSpanString(context, message.received));
 
+            ivDraft.setVisibility(message.drafts > 0 ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
             tvNoInternetAttachments.setVisibility(View.GONE);
@@ -471,8 +478,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCount.setTypeface(null, typeface);
 
             if (textSize != 0) {
-                tvFrom.setTextSize(textSize);
-                tvSubject.setTextSize(textSize - 4);
+                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
             }
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
@@ -546,7 +553,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 bnvActions.setVisibility(View.VISIBLE);
 
                 if (textSize != 0)
-                    tvBody.setTextSize(textSize);
+                    tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
                 Spanned body = properties.getBody(message.id);
                 tvBody.setText(body);
@@ -559,7 +566,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (body == null && message.content) {
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
-                    bodyTask.load(context, owner, args);
+                    bodyTask.execute(context, owner, args);
                 }
 
                 // Observe attachments
@@ -583,7 +590,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (message.content) {
                             Bundle args = new Bundle();
                             args.putSerializable("message", message);
-                            bodyTask.load(context, owner, args);
+                            bodyTask.execute(context, owner, args);
                         }
                     }
                 };
@@ -596,23 +603,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 new SimpleTask<List<EntityFolder>>() {
                     @Override
-                    protected void onInit(Bundle args) {
+                    protected void onPreExecute(Bundle args) {
                         bnvActions.setHasTransientState(true);
                     }
 
                     @Override
-                    protected void onCleanup(Bundle args) {
+                    protected void onPostExecute(Bundle args) {
                         bnvActions.setHasTransientState(false);
                     }
 
                     @Override
-                    protected List<EntityFolder> onLoad(Context context, Bundle args) {
+                    protected List<EntityFolder> onExecute(Context context, Bundle args) {
                         long account = args.getLong("account");
                         return DB.getInstance(context).folder().getSystemFolders(account);
                     }
 
                     @Override
-                    protected void onLoaded(Bundle args, List<EntityFolder> folders) {
+                    protected void onExecuted(Bundle args, List<EntityFolder> folders) {
                         boolean hasJunk = false;
                         boolean hasTrash = false;
                         boolean hasArchive = false;
@@ -653,7 +660,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.load(context, owner, sargs);
+                }.execute(context, owner, sargs);
             } else
                 properties.setBody(message.id, null);
 
@@ -811,7 +818,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
-            bodyTask.load(context, owner, args);
+            bodyTask.execute(context, owner, args);
         }
 
         private void onShowImages(final TupleMessageEx message) {
@@ -836,14 +843,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
-            bodyTask.load(context, owner, args);
+            bodyTask.execute(context, owner, args);
         }
 
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
             private String body = null;
 
             @Override
-            protected void onInit(Bundle args) {
+            protected void onPreExecute(Bundle args) {
                 btnHtml.setHasTransientState(true);
                 ibQuotes.setHasTransientState(true);
                 ibImages.setHasTransientState(true);
@@ -852,7 +859,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             @Override
-            protected void onCleanup(Bundle args) {
+            protected void onPostExecute(Bundle args) {
                 btnHtml.setHasTransientState(false);
                 ibQuotes.setHasTransientState(false);
                 ibImages.setHasTransientState(false);
@@ -861,7 +868,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             @Override
-            protected SpannableStringBuilder onLoad(Context context, final Bundle args) {
+            protected SpannableStringBuilder onExecute(Context context, final Bundle args) {
                 DB db = DB.getInstance(context);
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                 if (body == null)
@@ -915,7 +922,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             @Override
-            protected void onLoaded(Bundle args, SpannableStringBuilder body) {
+            protected void onExecuted(Bundle args, SpannableStringBuilder body) {
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
 
                 boolean has_quotes = (body.getSpans(0, body.length(), StyledQuoteSpan.class).length > 0);
@@ -1059,7 +1066,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             new SimpleTask<Void>() {
                                 @Override
-                                protected Void onLoad(Context context, Bundle args) {
+                                protected Void onExecute(Context context, Bundle args) {
                                     long id = args.getLong("id");
 
                                     DB db = DB.getInstance(context);
@@ -1082,7 +1089,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 protected void onException(Bundle args, Throwable ex) {
                                     Helper.unexpectedError(context, owner, ex);
                                 }
-                            }.load(context, owner, args);
+                            }.execute(context, owner, args);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -1095,7 +1102,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<Boolean>() {
                 @Override
-                protected Boolean onLoad(Context context, Bundle args) {
+                protected Boolean onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
                     List<EntityAttachment> attachments = DB.getInstance(context).attachment().getAttachments(id);
                     for (EntityAttachment attachment : attachments)
@@ -1105,7 +1112,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                protected void onLoaded(Bundle args, Boolean available) {
+                protected void onExecuted(Bundle args, Boolean available) {
                     final Intent forward = new Intent(context, ActivityCompose.class)
                             .putExtra("action", "forward")
                             .putExtra("reference", data.message.id)
@@ -1129,18 +1136,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         private void onAnswer(final ActionData data) {
             new SimpleTask<List<EntityAnswer>>() {
                 @Override
-                protected List<EntityAnswer> onLoad(Context context, Bundle args) {
+                protected List<EntityAnswer> onExecute(Context context, Bundle args) {
                     return DB.getInstance(context).answer().getAnswers();
                 }
 
                 @Override
-                protected void onLoaded(Bundle args, List<EntityAnswer> answers) {
+                protected void onExecuted(Bundle args, List<EntityAnswer> answers) {
                     if (answers == null || answers.size() == 0) {
                         Snackbar snackbar = Snackbar.make(
                                 itemView,
@@ -1197,7 +1204,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, new Bundle());
+            }.execute(context, owner, new Bundle());
         }
 
         private void onUnseen(final ActionData data) {
@@ -1206,7 +1213,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<Void>() {
                 @Override
-                protected Void onLoad(Context context, Bundle args) {
+                protected Void onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
 
                     DB db = DB.getInstance(context);
@@ -1225,7 +1232,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                protected void onLoaded(Bundle args, Void ignored) {
+                protected void onExecuted(Bundle args, Void ignored) {
                     properties.setValue("expanded", data.message.id, false);
                     notifyDataSetChanged();
                 }
@@ -1234,7 +1241,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         private void onToggleFlag(TupleMessageEx message) {
@@ -1246,7 +1253,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<Void>() {
                 @Override
-                protected Void onLoad(Context context, Bundle args) {
+                protected Void onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
                     boolean flagged = args.getBoolean("flagged");
                     boolean thread = args.getBoolean("thread");
@@ -1265,7 +1272,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         private void onShowHeaders(ActionData data) {
@@ -1283,7 +1290,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 new SimpleTask<Void>() {
                     @Override
-                    protected Void onLoad(Context context, Bundle args) {
+                    protected Void onExecute(Context context, Bundle args) {
                         Long id = args.getLong("id");
                         DB db = DB.getInstance(context);
                         EntityMessage message = db.message().getMessage(id);
@@ -1295,7 +1302,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.load(context, owner, args);
+                }.execute(context, owner, args);
             } else
                 notifyDataSetChanged();
         }
@@ -1312,13 +1319,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<EntityFolder>() {
                 @Override
-                protected EntityFolder onLoad(Context context, Bundle args) {
+                protected EntityFolder onExecute(Context context, Bundle args) {
                     EntityMessage message = (EntityMessage) args.getSerializable("message");
                     return DB.getInstance(context).folder().getFolder(message.folder);
                 }
 
                 @Override
-                protected void onLoaded(final Bundle args, EntityFolder folder) {
+                protected void onExecuted(final Bundle args, EntityFolder folder) {
                     EntityMessage message = (EntityMessage) args.getSerializable("message");
 
                     List<String> keywords = Arrays.asList(message.keywords);
@@ -1354,7 +1361,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                     new SimpleTask<Void>() {
                                         @Override
-                                        protected Void onLoad(Context context, Bundle args) {
+                                        protected Void onExecute(Context context, Bundle args) {
                                             EntityMessage message = (EntityMessage) args.getSerializable("message");
                                             String[] keywords = args.getStringArray("keywords");
                                             boolean[] selected = args.getBooleanArray("selected");
@@ -1381,7 +1388,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         protected void onException(Bundle args, Throwable ex) {
                                             Helper.unexpectedError(context, owner, ex);
                                         }
-                                    }.load(context, owner, args);
+                                    }.execute(context, owner, args);
                                 }
                             })
                             .setNeutralButton(R.string.title_add, new DialogInterface.OnClickListener() {
@@ -1401,7 +1408,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                                         new SimpleTask<Void>() {
                                                             @Override
-                                                            protected Void onLoad(Context context, Bundle args) {
+                                                            protected Void onExecute(Context context, Bundle args) {
                                                                 EntityMessage message = (EntityMessage) args.getSerializable("message");
                                                                 String keyword = args.getString("keyword");
 
@@ -1415,7 +1422,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                             protected void onException(Bundle args, Throwable ex) {
                                                                 Helper.unexpectedError(context, owner, ex);
                                                             }
-                                                        }.load(context, owner, args);
+                                                        }.execute(context, owner, args);
                                                     }
                                                 }
                                             }).show();
@@ -1428,7 +1435,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         private void onDecrypt(ActionData data) {
@@ -1515,7 +1522,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                 new SimpleTask<Void>() {
                                     @Override
-                                    protected Void onLoad(Context context, Bundle args) {
+                                    protected Void onExecute(Context context, Bundle args) {
                                         long id = args.getLong("id");
 
                                         DB db = DB.getInstance(context);
@@ -1546,7 +1553,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     protected void onException(Bundle args, Throwable ex) {
                                         Helper.unexpectedError(context, owner, ex);
                                     }
-                                }.load(context, owner, args);
+                                }.execute(context, owner, args);
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
@@ -1561,7 +1568,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<List<EntityFolder>>() {
                 @Override
-                protected List<EntityFolder> onLoad(Context context, Bundle args) {
+                protected List<EntityFolder> onExecute(Context context, Bundle args) {
                     DB db = DB.getInstance(context);
 
                     EntityMessage message = db.message().getMessage(args.getLong("id"));
@@ -1582,7 +1589,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                protected void onLoaded(final Bundle args, List<EntityFolder> folders) {
+                protected void onExecuted(final Bundle args, List<EntityFolder> folders) {
                     View anchor = bnvActions.findViewById(R.id.action_move);
                     PopupMenu popupMenu = new PopupMenu(context, anchor);
 
@@ -1597,13 +1604,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             new SimpleTask<String>() {
                                 @Override
-                                protected String onLoad(Context context, Bundle args) {
+                                protected String onExecute(Context context, Bundle args) {
                                     long target = args.getLong("target");
                                     return DB.getInstance(context).folder().getFolder(target).name;
                                 }
 
                                 @Override
-                                protected void onLoaded(Bundle args, String folderName) {
+                                protected void onExecuted(Bundle args, String folderName) {
                                     long id = args.getLong("id");
                                     properties.move(id, folderName, false);
                                 }
@@ -1612,7 +1619,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 protected void onException(Bundle args, Throwable ex) {
                                     Helper.unexpectedError(context, owner, ex);
                                 }
-                            }.load(context, owner, args);
+                            }.execute(context, owner, args);
 
                             return true;
                         }
@@ -1625,7 +1632,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         private void onArchive(ActionData data) {
@@ -1638,7 +1645,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<Boolean>() {
                 @Override
-                protected Boolean onLoad(Context context, Bundle args) {
+                protected Boolean onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
                     List<EntityAttachment> attachments = DB.getInstance(context).attachment().getAttachments(id);
                     for (EntityAttachment attachment : attachments)
@@ -1648,7 +1655,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                protected void onLoaded(Bundle args, Boolean available) {
+                protected void onExecuted(Bundle args, Boolean available) {
                     final Intent reply = new Intent(context, ActivityCompose.class)
                             .putExtra("action", all ? "reply_all" : "reply")
                             .putExtra("reference", data.message.id);
@@ -1671,7 +1678,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.load(context, owner, args);
+            }.execute(context, owner, args);
         }
 
         ItemDetailsLookup.ItemDetails<Long> getItemDetails(@NonNull MotionEvent motionEvent) {
@@ -1691,6 +1698,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.fragmentManager = fragmentManager;
         this.viewType = viewType;
         this.outgoing = outgoing;
+        this.zoom = zoom;
         this.internet = (Helper.isMetered(context, false) != null);
         this.properties = properties;
 
@@ -1727,8 +1735,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void setZoom(int zoom) {
-        textSize = Helper.getTextSize(context, zoom);
-        notifyDataSetChanged();
+        if (this.zoom != zoom) {
+            this.zoom = zoom;
+            textSize = Helper.getTextSize(context, zoom);
+            notifyDataSetChanged();
+        }
     }
 
     void checkInternet() {

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import java.util.List;
@@ -53,7 +53,8 @@ public interface DaoAccount {
             "    AND folder.type <> '" + EntityFolder.TRASH + "'" +
             "    AND folder.type <> '" + EntityFolder.DRAFTS + "'" +
             "    AND folder.type <> '" + EntityFolder.OUTBOX + "'" +
-            "    AND NOT ui_seen) AS unseen" +
+            "    AND NOT ui_seen" +
+            "    AND NOT ui_hide) AS unseen" +
             " FROM account" +
             " WHERE synchronize = :synchronize")
     LiveData<List<TupleAccountEx>> liveAccounts(boolean synchronize, boolean threading);

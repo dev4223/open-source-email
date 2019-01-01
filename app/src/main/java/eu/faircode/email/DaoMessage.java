@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import java.util.List;
@@ -53,6 +53,7 @@ public interface DaoMessage {
             ", " + unseen_unified + " AS unseen" +
             ", " + unflagged_unified + " AS unflagged" +
             ", (SELECT COUNT(a.id) FROM attachment a WHERE a.message = message.id) AS attachments" +
+            ", SUM(CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END) AS drafts" +
             ", 0 AS duplicate" +
             ", COUNT(DISTINCT message.msgid) AS visible" +
             ", MAX(CASE WHEN folder.unified THEN message.received ELSE 0 END) AS dummy" +
@@ -90,6 +91,7 @@ public interface DaoMessage {
             ", " + unseen_folder + " AS unseen" +
             ", " + unflagged_folder + " AS unflagged" +
             ", (SELECT COUNT(a.id) FROM attachment a WHERE a.message = message.id) AS attachments" +
+            ", SUM(CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END) AS drafts" +
             ", COUNT(DISTINCT message.msgid) AS visible" +
             ", 0 AS duplicate" +
             ", MAX(CASE WHEN folder.id = :folder THEN message.received ELSE 0 END) AS dummy" +
@@ -120,6 +122,7 @@ public interface DaoMessage {
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
             ", (SELECT COUNT(a.id) FROM attachment a WHERE a.message = message.id) AS attachments" +
+            ", CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END AS drafts" +
             ", 1 AS visible" +
 
             ", ((folder.type = '" + EntityFolder.ARCHIVE + "' OR folder.type = '" + EntityFolder.SENT + "')" +
@@ -201,6 +204,7 @@ public interface DaoMessage {
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
             ", (SELECT COUNT(a.id) FROM attachment a WHERE a.message = message.id) AS attachments" +
+            ", CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END AS drafts" +
             ", 1 AS visible" +
             ", 0 AS duplicate" +
             " FROM message" +
@@ -217,6 +221,7 @@ public interface DaoMessage {
             ", 1 AS unseen" +
             ", 0 AS unflagged" +
             ", 0 AS attachments" +
+            ", 0 AS drafts" +
             ", 1 AS visible" +
             ", 0 AS duplicate" +
             " FROM message" +
@@ -245,9 +250,9 @@ public interface DaoMessage {
 
     @Query("SELECT uid FROM message" +
             " WHERE folder = :folder" +
-            " AND received >= :received" +
+            " AND (received IS NULL OR received >= :received)" +
             " AND NOT uid IS NULL")
-    List<Long> getUids(long folder, long received);
+    List<Long> getUids(long folder, Long received);
 
     @Insert
     long insertMessage(EntityMessage message);

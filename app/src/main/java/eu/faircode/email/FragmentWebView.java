@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -128,7 +128,7 @@ public class FragmentWebView extends FragmentEx {
         } else if (args.containsKey("id")) {
             new SimpleTask<String>() {
                 @Override
-                protected String onLoad(Context context, Bundle args) throws Throwable {
+                protected String onExecute(Context context, Bundle args) throws Throwable {
                     long id = args.getLong("id");
 
                     String html = EntityMessage.read(context, id);
@@ -174,7 +174,7 @@ public class FragmentWebView extends FragmentEx {
                 }
 
                 @Override
-                protected void onLoaded(Bundle args, String html) {
+                protected void onExecuted(Bundle args, String html) {
                     String from = args.getString("from");
                     webview.loadDataWithBaseURL("email://", html, "text/html", "UTF-8", null);
                     setSubtitle(from);
@@ -184,7 +184,7 @@ public class FragmentWebView extends FragmentEx {
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                 }
-            }.load(this, args);
+            }.execute(this, args);
         }
 
         ((ActivityBase) getActivity()).addBackPressedListener(onBackPressedListener);

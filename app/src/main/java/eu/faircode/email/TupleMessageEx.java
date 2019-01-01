@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 public class TupleMessageEx extends EntityMessage {
@@ -30,6 +30,7 @@ public class TupleMessageEx extends EntityMessage {
     public int unseen;
     public int unflagged;
     public int attachments;
+    public int drafts;
     public int visible;
     public boolean duplicate;
 
@@ -48,6 +49,7 @@ public class TupleMessageEx extends EntityMessage {
                     this.unseen == other.unseen &&
                     this.unflagged == other.unflagged &&
                     this.attachments == other.attachments &&
+                    this.drafts == other.drafts &&
                     this.visible == other.visible &&
                     this.duplicate == other.duplicate);
         }

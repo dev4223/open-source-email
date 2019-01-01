@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -145,7 +145,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
 
                 new SimpleTask<Void>() {
                     @Override
-                    protected Void onLoad(Context context, Bundle args) {
+                    protected Void onExecute(Context context, Bundle args) {
                         DB.getInstance(context).attachment().deleteAttachment(attachment.id);
                         EntityAttachment.getFile(context, attachment.id).delete();
                         return null;
@@ -155,7 +155,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.load(context, owner, args);
+                }.execute(context, owner, args);
 
             } else if (view.getId() == R.id.ivSave) {
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
@@ -239,7 +239,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
 
                         new SimpleTask<Void>() {
                             @Override
-                            protected Void onLoad(Context context, Bundle args) {
+                            protected Void onExecute(Context context, Bundle args) {
                                 long id = args.getLong("id");
                                 long message = args.getLong("message");
                                 long sequence = args.getInt("sequence");
@@ -265,7 +265,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                             protected void onException(Bundle args, Throwable ex) {
                                 Helper.unexpectedError(context, owner, ex);
                             }
-                        }.load(context, owner, args);
+                        }.execute(context, owner, args);
                     }
                 }
             }

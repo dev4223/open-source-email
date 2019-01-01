@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import java.util.List;
@@ -161,7 +161,8 @@ public interface DaoFolder {
 
     @Query("UPDATE folder" +
             " SET type = '" + EntityFolder.USER + "'" +
-            " WHERE account = :account")
+            " WHERE account = :account" +
+            " AND type <> '" + EntityFolder.SYSTEM + "'")
     int setFoldersUser(long account);
 
     @Query("UPDATE folder" +
@@ -189,6 +190,9 @@ public interface DaoFolder {
 
     @Query("UPDATE folder SET initialize = 0 WHERE id = :id")
     int setFolderInitialized(long id);
+
+    @Query("UPDATE folder SET last_sync = :last_sync WHERE id = :id")
+    int setFolderSync(long id, long last_sync);
 
     @Query("UPDATE folder SET tbc = 0 WHERE id = :id")
     int resetFolderTbc(long id);

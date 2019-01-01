@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -217,7 +217,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
                 if (checked)
                     new SimpleTask<Void>() {
                         @Override
-                        protected Void onLoad(Context context, Bundle args) {
+                        protected Void onExecute(Context context, Bundle args) {
                             DB db = DB.getInstance(context);
 
                             ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -245,7 +245,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                         }
-                    }.load(FragmentOptions.this, null);
+                    }.execute(FragmentOptions.this, null);
             }
         });
 

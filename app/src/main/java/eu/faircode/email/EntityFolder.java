@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018 by Marcel Bokhorst (M66B)
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
@@ -91,6 +91,7 @@ public class EntityFolder implements Serializable {
     public String state;
     public String sync_state;
     public String error;
+    public Long last_sync;
 
     static final String INBOX = "Inbox";
     static final String OUTBOX = "Outbox";
@@ -136,9 +137,9 @@ public class EntityFolder implements Serializable {
             USER
     );
 
-    static final int DEFAULT_INIT = 7; // days
-    static final int DEFAULT_SYNC = 1; // days
-    static final int DEFAULT_KEEP = 14; // days
+    static final int DEFAULT_INIT = 14; // days
+    static final int DEFAULT_SYNC = 7; // days
+    static final int DEFAULT_KEEP = 30; // days
 
     static final List<String> SYSTEM_FOLDER_SYNC = Arrays.asList(
             DRAFTS,
@@ -197,7 +198,8 @@ public class EntityFolder implements Serializable {
                     (this.tbd == null ? other.tbd == null : this.tbd.equals(other.tbd)) &&
                     (this.state == null ? other.state == null : this.state.equals(other.state)) &&
                     (this.sync_state == null ? other.sync_state == null : this.sync_state.equals(other.sync_state)) &&
-                    (this.error == null ? other.error == null : this.error.equals(other.error)));
+                    (this.error == null ? other.error == null : this.error.equals(other.error)) &&
+                    (this.last_sync == null ? other.last_sync == null : this.last_sync.equals(other.last_sync)));
         } else
             return false;
     }
