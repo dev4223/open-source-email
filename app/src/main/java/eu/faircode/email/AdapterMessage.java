@@ -479,7 +479,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (textSize != 0) {
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                if (zoom == 0)
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                else
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*8/10));
             }
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
