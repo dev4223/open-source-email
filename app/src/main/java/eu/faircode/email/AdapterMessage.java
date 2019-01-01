@@ -472,10 +472,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (textSize != 0) {
                 tvFrom.setTextSize(textSize);
-                tvSubject.setTextSize(textSize);
+                tvSubject.setTextSize(textSize - 4);
             }
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
+            tvSubject.setTextColor(colorUnseen);
             tvFrom.setTextColor(colorUnseen);
             tvSize.setTextColor(colorUnseen);
             tvTime.setTextColor(colorUnseen);
