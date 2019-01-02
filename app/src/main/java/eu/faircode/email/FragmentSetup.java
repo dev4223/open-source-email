@@ -293,6 +293,17 @@ public class FragmentSetup extends FragmentEx {
 
                         List<EntityFolder> folders = new ArrayList<>();
 
+                        EntityFolder inbox = new EntityFolder();
+                        inbox.name = "INBOX";
+                        inbox.type = EntityFolder.INBOX;
+                        inbox.level = 0;
+                        inbox.synchronize = true;
+                        inbox.unified = true;
+                        inbox.notify = true;
+                        inbox.sync_days = EntityFolder.DEFAULT_SYNC;
+                        inbox.keep_days = EntityFolder.DEFAULT_KEEP;
+                        folders.add(inbox);
+
                         {
                             Properties props = MessageHelper.getSessionProperties(auth_type, false);
                             Session isession = Session.getInstance(props, null);
@@ -338,7 +349,8 @@ public class FragmentSetup extends FragmentEx {
                                 }
 
                                 if (!drafts)
-                                    throw new IllegalArgumentException(context.getString(R.string.title_no_drafts));
+                                    throw new IllegalArgumentException(
+                                            context.getString(R.string.title_setup_no_settings));
                             } finally {
                                 if (istore != null)
                                     istore.close();
