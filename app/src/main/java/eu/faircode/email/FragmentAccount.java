@@ -1138,6 +1138,11 @@ public class FragmentAccount extends FragmentEx {
                 Log.i("Accounts=" + accounts.length);
                 for (final Account account : accounts)
                     if (name.equals(account.name)) {
+                        btnAuthorize.setEnabled(false);
+                        etUser.setEnabled(false);
+                        tilPassword.setEnabled(false);
+                        btnCheck.setEnabled(false);
+                        btnSave.setEnabled(false);
                         final Snackbar snackbar = Snackbar.make(view, R.string.title_authorizing, Snackbar.LENGTH_SHORT);
                         snackbar.show();
 
@@ -1157,15 +1162,21 @@ public class FragmentAccount extends FragmentEx {
                                             authorized = token;
                                             etUser.setText(account.name);
                                             tilPassword.getEditText().setText(token);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                        } finally {
+                                            btnAuthorize.setEnabled(true);
+                                            etUser.setEnabled(true);
+                                            tilPassword.setEnabled(true);
+                                            btnCheck.setEnabled(true);
+                                            btnSave.setEnabled(true);
                                             new Handler().postDelayed(new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     snackbar.dismiss();
                                                 }
                                             }, 1000);
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                            snackbar.setText(Helper.formatThrowable(ex));
                                         }
                                     }
                                 },
