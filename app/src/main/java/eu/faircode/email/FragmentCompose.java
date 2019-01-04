@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Typeface;
@@ -149,18 +150,24 @@ public class FragmentCompose extends FragmentEx {
 
     private AdapterAttachment adapter;
 
+    private boolean pro;
+    private boolean autosend;
+
     private long working = -1;
     private State state = State.NONE;
     private boolean autosave = false;
     private boolean busy = false;
-    private boolean pro = false;
 
     private OpenPgpServiceConnection pgpService;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         pro = Helper.isPro(getContext());
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        autosend = prefs.getBoolean("autosend", false);
     }
 
     @Override
@@ -275,15 +282,44 @@ public class FragmentCompose extends FragmentEx {
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int action = item.getItemId();
+                final int action = item.getItemId();
+
                 switch (action) {
                     case R.id.action_delete:
                         onDelete();
                         break;
+                    case R.id.action_send:
+                        if (autosend) {
+                            onAction(action);
+                            break;
+                        }
+
+                        try {
+                            String to = etTo.getText().toString();
+                            InternetAddress ato[] = (TextUtils.isEmpty(to) ? new InternetAddress[0] : InternetAddress.parse(to));
+                            if (ato.length == 0)
+                                throw new IllegalArgumentException(getString(R.string.title_to_missing));
+
+                            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                                    .setMessage(getString(R.string.title_ask_send,
+                                            MessageHelper.getFormattedAddresses(ato, false)))
+                                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            onAction(action);
+                                        }
+                                    })
+                                    .setNegativeButton(android.R.string.cancel, null)
+                                    .show();
+                        } catch (Throwable ex) {
+                            onAction(action);
+                        }
+                        break;
                     default:
                         onAction(action);
                 }
-                return false;
+
+                return true;
             }
         });
 
@@ -582,21 +618,26 @@ public class FragmentCompose extends FragmentEx {
         if (start == end)
             Snackbar.make(view, R.string.title_no_selection, Snackbar.LENGTH_LONG).show();
         else {
-            SpannableString s = new SpannableString(etBody.getText());
+            final SpannableString s = new SpannableString(etBody.getText());
+
             switch (id) {
                 case R.id.menu_bold:
                     s.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     break;
+
                 case R.id.menu_italic:
                     s.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     break;
+
                 case R.id.menu_clear:
                     for (Object span : s.getSpans(start, end, Object.class))
                         if (!(span instanceof ImageSpan))
                             s.removeSpan(span);
                     break;
+
                 case R.id.menu_link:
                     Uri uri = null;
+
                     ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                     if (cbm.hasPrimaryClip()) {
                         String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
@@ -604,12 +645,33 @@ public class FragmentCompose extends FragmentEx {
                         if (uri.getScheme() == null)
                             uri = null;
                     }
-                    if (uri == null)
-                        Snackbar.make(view, R.string.title_clipboard_empty, Snackbar.LENGTH_LONG).show();
-                    else
-                        s.setSpan(new URLSpan(uri.toString()), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    break;
+
+                    View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_link, null);
+                    final int fStart = start;
+                    final int fEnd = end;
+                    final EditText etLink = view.findViewById(R.id.etLink);
+                    etLink.setText(uri == null ? "https://" : uri.toString());
+                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                            .setView(view)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    s.setSpan(new URLSpan(etLink.getText().toString()), fStart, fEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    etBody.setText(s);
+                                    etBody.setSelection(fEnd);
+                                }
+                            })
+                            .show();
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            etLink.requestFocus();
+                        }
+                    });
+
+                    return;
             }
+
             etBody.setText(s);
             etBody.setSelection(end);
         }
@@ -1274,9 +1336,11 @@ public class FragmentCompose extends FragmentEx {
                         }
 
                         if ("reply".equals(action) || "reply_all".equals(action))
-                            result.draft.subject = context.getString(R.string.title_subject_reply, ref.subject);
+                            result.draft.subject = context.getString(R.string.title_subject_reply,
+                                    ref.subject == null ? "" : ref.subject);
                         else if ("forward".equals(action))
-                            result.draft.subject = context.getString(R.string.title_subject_forward, ref.subject);
+                            result.draft.subject = context.getString(R.string.title_subject_forward,
+                                    ref.subject == null ? "" : ref.subject);
 
                         if (answer > 0 && ("reply".equals(action) || "reply_all".equals(action))) {
                             String text = db.answer().getAnswer(answer).text;
@@ -1556,9 +1620,9 @@ public class FragmentCompose extends FragmentEx {
                                     new Handler().post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            if (TextUtils.isEmpty(etTo.getText()))
+                                            if (TextUtils.isEmpty(etTo.getText().toString().trim()))
                                                 etTo.requestFocus();
-                                            else if (TextUtils.isEmpty(etSubject.getText()))
+                                            else if (TextUtils.isEmpty(etSubject.getText().toString()))
                                                 etSubject.requestFocus();
                                             else
                                                 etBody.requestFocus();

@@ -65,9 +65,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
     private SwitchCompat swIdenticons;
     private SwitchCompat swPreview;
 
-    private SwitchCompat swLight;
-    private Button btnSound;
-
+    private SwitchCompat swPull;
     private SwitchCompat swSwipe;
     private SwitchCompat swActionbar;
     private SwitchCompat swAutoClose;
@@ -76,6 +74,10 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
     private SwitchCompat swAutoMove;
     private SwitchCompat swConfirm;
     private SwitchCompat swSender;
+    private SwitchCompat swAutoSend;
+
+    private SwitchCompat swLight;
+    private Button btnSound;
 
     private SwitchCompat swDebug;
 
@@ -103,9 +105,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
         swIdenticons = view.findViewById(R.id.swIdenticons);
         swPreview = view.findViewById(R.id.swPreview);
 
-        swLight = view.findViewById(R.id.swLight);
-        btnSound = view.findViewById(R.id.btnSound);
-
+        swPull = view.findViewById(R.id.swPull);
         swSwipe = view.findViewById(R.id.swSwipe);
         swActionbar = view.findViewById(R.id.swActionbar);
         swAutoClose = view.findViewById(R.id.swAutoClose);
@@ -114,6 +114,10 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
         swAutoMove = view.findViewById(R.id.swAutoMove);
         swConfirm = view.findViewById(R.id.swConfirm);
         swSender = view.findViewById(R.id.swSender);
+        swAutoSend = view.findViewById(R.id.swAutoSend);
+
+        swLight = view.findViewById(R.id.swLight);
+        btnSound = view.findViewById(R.id.btnSound);
 
         swDebug = view.findViewById(R.id.swDebug);
 
@@ -250,25 +254,11 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
             }
         });
 
-        swLight.setChecked(prefs.getBoolean("light", false));
-        swLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swPull.setChecked(prefs.getBoolean("pull", true));
+        swPull.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("light", checked).apply();
-            }
-        });
-
-        btnSound.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String sound = prefs.getString("sound", null);
-                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.title_advanced_sound));
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
-                startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_SOUND);
+                prefs.edit().putBoolean("pull", checked).apply();
             }
         });
 
@@ -333,6 +323,36 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("sender", checked).apply();
+            }
+        });
+
+        swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
+        swAutoSend.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autosend", !checked).apply();
+            }
+        });
+
+        swLight.setChecked(prefs.getBoolean("light", false));
+        swLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("light", checked).apply();
+            }
+        });
+
+        btnSound.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String sound = prefs.getString("sound", null);
+                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.title_advanced_sound));
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
+                startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_SOUND);
             }
         });
 
