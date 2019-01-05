@@ -89,7 +89,7 @@ public class FragmentMessages extends FragmentEx {
     private ImageButton ibHintSelect;
     private ImageButton ibHintCompact;
     private TextView tvNoEmail;
-    private RecyclerView rvMessage;
+    private FixedRecyclerView rvMessage;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
     private Group grpSupport;
@@ -193,7 +193,7 @@ public class FragmentMessages extends FragmentEx {
         ibHintSelect = view.findViewById(R.id.ibHintSelect);
         ibHintCompact = view.findViewById(R.id.ibHintCompact);
         tvNoEmail = view.findViewById(R.id.tvNoEmail);
-        rvMessage = view.findViewById(R.id.rvFolder);
+        rvMessage = view.findViewById(R.id.rvMessage);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
         pbWait = view.findViewById(R.id.pbWait);
         grpSupport = view.findViewById(R.id.grpSupport);
@@ -2049,6 +2049,8 @@ public class FragmentMessages extends FragmentEx {
         });
         snackbar.show();
 
+        final Context context = getContext().getApplicationContext();
+
         // Wait
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -2058,8 +2060,6 @@ public class FragmentMessages extends FragmentEx {
                 // Remove snackbar
                 if (snackbar.isShown())
                     snackbar.dismiss();
-
-                final Context context = getContext().getApplicationContext();
 
                 new Thread(new Runnable() {
                     @Override
