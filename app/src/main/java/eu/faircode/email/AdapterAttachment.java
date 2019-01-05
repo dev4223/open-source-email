@@ -128,7 +128,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
             progressbar.setVisibility(
                     attachment.progress == null || attachment.available ? View.GONE : View.VISIBLE);
 
-            tvType.setText(attachment.type + " " + attachment.cid);
+            tvType.setText(attachment.type + " " + attachment.cid + " " + attachment.encryption);
             tvType.setVisibility(debug ? View.VISIBLE : View.GONE);
         }
 
@@ -251,7 +251,7 @@ public class AdapterAttachment extends RecyclerView.Adapter<AdapterAttachment.Vi
                                     db.attachment().setProgress(id, 0);
 
                                     EntityMessage msg = db.message().getMessage(message);
-                                    EntityOperation.queue(db, msg, EntityOperation.ATTACHMENT, sequence);
+                                    EntityOperation.queue(context, db, msg, EntityOperation.ATTACHMENT, sequence);
 
                                     db.setTransactionSuccessful();
                                 } finally {

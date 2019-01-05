@@ -24,6 +24,8 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -62,6 +64,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -521,10 +524,12 @@ public class FragmentAccount extends FragmentEx {
                                     DB db = DB.getInstance(context);
                                     EntityFolder folder = db.folder().getFolderByName(id, ifolder.getFullName());
                                     if (folder == null) {
+                                        int sync = EntityFolder.SYSTEM_FOLDER_SYNC.indexOf(type);
                                         folder = new EntityFolder();
                                         folder.name = ifolder.getFullName();
                                         folder.type = (type == null ? EntityFolder.USER : type);
-                                        folder.synchronize = (type != null && EntityFolder.SYSTEM_FOLDER_SYNC.contains(type));
+                                        folder.synchronize = (sync >= 0);
+                                        folder.download = (sync < 0 ? true : EntityFolder.SYSTEM_FOLDER_DOWNLOAD.get(sync));
                                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                                     }
@@ -1210,7 +1215,12 @@ public class FragmentAccount extends FragmentEx {
                                             tilPassword.getEditText().setText(token);
                                         } catch (Throwable ex) {
                                             Log.e(ex);
-                                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                            if (ex instanceof OperationCanceledException ||
+                                                    ex instanceof AuthenticatorException ||
+                                                    ex instanceof IOException)
+                                                Snackbar.make(view, Helper.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                                            else
+                                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                                         } finally {
                                             btnAuthorize.setEnabled(true);
                                             etUser.setEnabled(true);

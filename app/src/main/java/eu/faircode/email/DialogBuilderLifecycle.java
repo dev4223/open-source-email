@@ -20,7 +20,11 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -30,6 +34,8 @@ import androidx.lifecycle.OnLifecycleEvent;
 public class DialogBuilderLifecycle extends AlertDialog.Builder implements LifecycleObserver {
     private LifecycleOwner owner;
     private AlertDialog dialog;
+    private CharSequence title = null;
+    private CharSequence message = null;
 
     public DialogBuilderLifecycle(Context context, LifecycleOwner owner) {
         super(context);
@@ -42,7 +48,40 @@ public class DialogBuilderLifecycle extends AlertDialog.Builder implements Lifec
     }
 
     @Override
+    public AlertDialog.Builder setTitle(int titleId) {
+        return setTitle(getContext().getString(titleId));
+    }
+
+    @Override
+    public AlertDialog.Builder setTitle(@Nullable CharSequence title) {
+        this.title = title;
+        return this;
+    }
+
+    @Override
+    public AlertDialog.Builder setMessage(int messageId) {
+        return setMessage(getContext().getString(messageId));
+    }
+
+    @Override
+    public AlertDialog.Builder setMessage(@Nullable CharSequence message) {
+        this.message = message;
+        return this;
+    }
+
+    @Override
     public AlertDialog create() {
+        if (title == null && message != null) {
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_message, null);
+            TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            tvMessage.setText(message);
+            setView(dview);
+        } else {
+            if (title != null)
+                super.setTitle(title);
+            if (message != null)
+                super.setMessage(message);
+        }
         dialog = super.create();
         owner.getLifecycle().addObserver(this);
         return dialog;
@@ -53,5 +92,7 @@ public class DialogBuilderLifecycle extends AlertDialog.Builder implements Lifec
         dialog.dismiss();
         owner = null;
         dialog = null;
+        title = null;
+        message = null;
     }
 }
