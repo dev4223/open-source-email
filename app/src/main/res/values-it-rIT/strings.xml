@@ -115,6 +115,7 @@
     <string name="title_advanced_automove">Conferma i messaggi in movimento</string>
     <string name="title_advanced_confirm">Conferma le azioni che potrebbero rivelare informazioni personali sensibili</string>
     <string name="title_advanced_sender">Consenti la modifica dell\'indirizzo mittente</string>
+    <string name="title_advanced_autosend">Confermare l\'invio dei messaggi</string>
     <string name="title_advanced_updates">Controlla aggiornamenti</string>
     <string name="title_advanced_debug">Debug</string>
     <string name="title_advanced_enabled_hint">Attiva o disattiva a livello globale la ricezione e l\'invio dei messaggi</string>
@@ -282,6 +283,7 @@
     <string name="title_attachments_missing">Allegati ancora in fase di caricamento</string>
     <string name="title_draft_deleted">Bozza eliminata</string>
     <string name="title_draft_saved">Bozza salvata</string>
+    <string name="title_ask_send">Inviare messaggio a %1$s?</string>
     <string name="title_queued">Invio messaggio in corso</string>
     <string name="title_encrypt">Crittografare</string>
     <string name="title_decrypt">Decifra</string>
@@ -358,6 +360,7 @@
     <string name="title_add">Aggiungi</string>
     <string name="title_browse">Esplora</string>
     <string name="title_report">Report</string>
+    <string name="title_no_ask_again">Non chiedere di nuovo</string>
     <string name="title_try">Prova FairEmail, un\'app email per Android open source e rispettosa della privacy</string>
     <string name="title_pro_feature">Questa è una funzionalità a pagamento</string>
     <string name="title_pro_list">Elenco delle funzionalità a pagamento</string>

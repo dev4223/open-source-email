@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -63,6 +64,7 @@ import android.view.ViewTreeObserver;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
@@ -151,7 +153,6 @@ public class FragmentCompose extends FragmentEx {
     private AdapterAttachment adapter;
 
     private boolean pro;
-    private boolean autosend;
 
     private long working = -1;
     private State state = State.NONE;
@@ -163,11 +164,7 @@ public class FragmentCompose extends FragmentEx {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         pro = Helper.isPro(getContext());
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        autosend = prefs.getBoolean("autosend", false);
     }
 
     @Override
@@ -289,6 +286,8 @@ public class FragmentCompose extends FragmentEx {
                         onDelete();
                         break;
                     case R.id.action_send:
+                        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        boolean autosend = prefs.getBoolean("autosend", false);
                         if (autosend) {
                             onAction(action);
                             break;
@@ -300,12 +299,20 @@ public class FragmentCompose extends FragmentEx {
                             if (ato.length == 0)
                                 throw new IllegalArgumentException(getString(R.string.title_to_missing));
 
+                            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
+                            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+                            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+                            tvMessage.setText(getString(R.string.title_ask_send,
+                                    MessageHelper.getFormattedAddresses(ato, false)));
+
                             new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                    .setMessage(getString(R.string.title_ask_send,
-                                            MessageHelper.getFormattedAddresses(ato, false)))
+                                    .setView(dview)
                                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
+                                            if (cbNotAgain.isChecked())
+                                                prefs.edit().putBoolean("autosend", true).apply();
                                             onAction(action);
                                         }
                                     })
@@ -692,6 +699,7 @@ public class FragmentCompose extends FragmentEx {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         PackageManager pm = getContext().getPackageManager();
         if (intent.resolveActivity(pm) == null)
             Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
@@ -777,7 +785,7 @@ public class FragmentCompose extends FragmentEx {
                 EntityMessage message = db.message().getMessage(id);
                 List<EntityAttachment> attachments = db.attachment().getAttachments(id);
                 for (EntityAttachment attachment : new ArrayList<>(attachments))
-                    if ("encrypted.asc".equals(attachment.name) || "signature.asc".equals(attachment.name))
+                    if (attachment.encryption != null)
                         attachments.remove(attachment);
 
                 // Build message
@@ -814,7 +822,7 @@ public class FragmentCompose extends FragmentEx {
 
                             // Delete previously encrypted data
                             for (EntityAttachment attachment : db.attachment().getAttachments(id))
-                                if ("encrypted.asc".equals(attachment.name) || "signature.asc".equals(attachment.name))
+                                if (attachment.encryption != null)
                                     db.attachment().deleteAttachment(attachment.id);
 
                             int seq = db.attachment().getAttachmentSequence(id);
@@ -824,6 +832,7 @@ public class FragmentCompose extends FragmentEx {
                             attachment1.sequence = seq + 1;
                             attachment1.name = "encrypted.asc";
                             attachment1.type = "application/octet-stream";
+                            attachment1.encryption = EntityAttachment.PGP_MESSAGE;
                             attachment1.id = db.attachment().insertAttachment(attachment1);
 
                             File file1 = EntityAttachment.getFile(context, attachment1.id);
@@ -848,6 +857,7 @@ public class FragmentCompose extends FragmentEx {
                             attachment2.sequence = seq + 2;
                             attachment2.name = "signature.asc";
                             attachment2.type = "application/octet-stream";
+                            attachment2.encryption = EntityAttachment.PGP_SIGNATURE;
                             attachment2.id = db.attachment().insertAttachment(attachment2);
 
                             File file2 = EntityAttachment.getFile(context, attachment2.id);
@@ -913,11 +923,22 @@ public class FragmentCompose extends FragmentEx {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == ActivityCompose.REQUEST_IMAGE) {
-                if (data != null)
-                    handleAddAttachment(data, true);
+                if (data != null) {
+                    Uri uri = data.getData();
+                    if (uri != null)
+                        handleAddAttachment(uri, true);
+                }
             } else if (requestCode == ActivityCompose.REQUEST_ATTACHMENT) {
-                if (data != null)
-                    handleAddAttachment(data, false);
+                if (data != null) {
+                    ClipData clipData = data.getClipData();
+                    if (clipData != null)
+                        for (int i = 0; i < clipData.getItemCount(); i++) {
+                            ClipData.Item item = clipData.getItemAt(i);
+                            Uri uri = item.getUri();
+                            if (uri != null)
+                                handleAddAttachment(uri, false);
+                        }
+                }
             } else if (requestCode == ActivityCompose.REQUEST_ENCRYPT) {
                 if (data != null) {
                     data.setAction(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
@@ -975,14 +996,10 @@ public class FragmentCompose extends FragmentEx {
         }
     }
 
-    private void handleAddAttachment(Intent data, final boolean image) {
-        Uri uri = data.getData();
-        if (uri == null)
-            return;
-
+    private void handleAddAttachment(Uri uri, final boolean image) {
         Bundle args = new Bundle();
         args.putLong("id", working);
-        args.putParcelable("uri", data.getData());
+        args.putParcelable("uri", uri);
 
         new SimpleTask<EntityAttachment>() {
             @Override
@@ -1420,6 +1437,7 @@ public class FragmentCompose extends FragmentEx {
                                 copy.name = attachment.name;
                                 copy.type = attachment.type;
                                 copy.cid = attachment.cid;
+                                copy.encryption = attachment.encryption;
                                 copy.size = attachment.size;
                                 copy.progress = attachment.progress;
                                 copy.available = attachment.available;
@@ -1455,14 +1473,14 @@ public class FragmentCompose extends FragmentEx {
                         }
                     }
 
-                    EntityOperation.queue(db, result.draft, EntityOperation.ADD);
+                    EntityOperation.queue(context, db, result.draft, EntityOperation.ADD);
                 } else {
                     // Existing draft
                     result.account = db.account().getAccount(result.draft.account);
                     if (!result.draft.content) {
                         if (result.draft.uid == null)
                             throw new IllegalStateException("Draft without uid");
-                        EntityOperation.queue(db, result.draft, EntityOperation.BODY);
+                        EntityOperation.queue(context, db, result.draft, EntityOperation.BODY);
                     }
                 }
 
@@ -1708,14 +1726,14 @@ public class FragmentCompose extends FragmentEx {
                     draft.content = false;
                     draft.ui_hide = true;
                     draft.id = db.message().insertMessage(draft);
-                    EntityOperation.queue(db, draft, EntityOperation.DELETE);
+                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
 
                     draft.id = id;
                     draft.account = aid;
                     draft.folder = db.folder().getFolderByType(aid, EntityFolder.DRAFTS).id;
                     draft.content = true;
                     draft.ui_hide = false;
-                    EntityOperation.queue(db, draft, EntityOperation.ADD);
+                    EntityOperation.queue(context, db, draft, EntityOperation.ADD);
                 }
 
                 // Convert data
@@ -1783,7 +1801,7 @@ public class FragmentCompose extends FragmentEx {
 
                 // Execute action
                 if (action == R.id.action_delete) {
-                    EntityOperation.queue(db, draft, EntityOperation.DELETE);
+                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
 
                     if (!empty) {
                         Handler handler = new Handler(context.getMainLooper());
@@ -1795,7 +1813,7 @@ public class FragmentCompose extends FragmentEx {
                     }
                 } else if (action == R.id.action_save || action == R.id.menu_encrypt) {
                     if (dirty) {
-                        EntityOperation.queue(db, draft, EntityOperation.ADD);
+                        EntityOperation.queue(context, db, draft, EntityOperation.ADD);
 
                         Handler handler = new Handler(context.getMainLooper());
                         handler.post(new Runnable() {
@@ -1820,7 +1838,7 @@ public class FragmentCompose extends FragmentEx {
                             throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
 
                     // Delete draft (cannot move to outbox)
-                    EntityOperation.queue(db, draft, EntityOperation.DELETE);
+                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
 
                     // Copy message to outbox
                     draft.id = null;
@@ -1839,11 +1857,11 @@ public class FragmentCompose extends FragmentEx {
                         Helper.copy(file, EntityAttachment.getFile(context, attachment.id));
                     }
 
-                    EntityOperation.queue(db, draft, EntityOperation.SEND);
+                    EntityOperation.queue(context, db, draft, EntityOperation.SEND);
 
                     if (draft.replying != null) {
                         EntityMessage replying = db.message().getMessage(draft.replying);
-                        EntityOperation.queue(db, replying, EntityOperation.ANSWERED, true);
+                        EntityOperation.queue(context, db, replying, EntityOperation.ANSWERED, true);
                     }
 
                     Handler handler = new Handler(context.getMainLooper());

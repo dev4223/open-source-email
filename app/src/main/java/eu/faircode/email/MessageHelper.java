@@ -23,8 +23,6 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
-import org.jsoup.Jsoup;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -220,7 +218,7 @@ public class MessageHelper {
 
         if (message.from != null && message.from.length > 0)
             for (EntityAttachment attachment : attachments)
-                if (attachment.available && "signature.asc".equals(attachment.name)) {
+                if (attachment.available && EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
                     InternetAddress from = (InternetAddress) message.from[0];
                     File file = EntityAttachment.getFile(context, attachment.id);
                     BufferedReader br = null;
@@ -240,7 +238,7 @@ public class MessageHelper {
                 }
 
         for (final EntityAttachment attachment : attachments)
-            if (attachment.available && "encrypted.asc".equals(attachment.name)) {
+            if (attachment.available && EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
                 Multipart multipart = new MimeMultipart("encrypted; protocol=\"application/pgp-encrypted\"");
 
                 BodyPart pgp = new MimeBodyPart();
@@ -290,7 +288,7 @@ public class MessageHelper {
                 body.append(identity.signature);
         }
 
-        String plain = Jsoup.parse(body.toString()).text();
+        String plain = HtmlHelper.getText(body.toString());
 
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html>").append("\n");
@@ -578,9 +576,15 @@ public class MessageHelper {
                 return result;
 
             if (content instanceof Multipart) {
+                boolean pgp = false;
                 Multipart multipart = (Multipart) content;
-                for (int i = 0; i < multipart.getCount(); i++)
-                    result.addAll(getAttachments(multipart.getBodyPart(i)));
+                for (int i = 0; i < multipart.getCount(); i++) {
+                    BodyPart part = multipart.getBodyPart(i);
+                    result.addAll(getAttachments(part, pgp));
+                    ContentType ct = new ContentType(part.getContentType());
+                    if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
+                        pgp = true;
+                }
             }
         } catch (IOException ex) {
             if (ex.getCause() instanceof MessagingException)
@@ -594,7 +598,7 @@ public class MessageHelper {
         return result;
     }
 
-    private static List<EntityAttachment> getAttachments(BodyPart part) throws
+    private static List<EntityAttachment> getAttachments(BodyPart part, boolean pgp) throws
             IOException, MessagingException {
         List<EntityAttachment> result = new ArrayList<>();
 
@@ -637,6 +641,7 @@ public class MessageHelper {
                 attachment.type = ct.getBaseType().toLowerCase();
                 attachment.size = part.getSize();
                 attachment.cid = (cid == null || cid.length == 0 ? null : cid[0]);
+                attachment.encryption = (pgp ? EntityAttachment.PGP_MESSAGE : null);
                 attachment.part = part;
 
                 // Try to guess a better content type
@@ -660,8 +665,13 @@ public class MessageHelper {
             }
         } else if (content instanceof Multipart) {
             Multipart multipart = (Multipart) content;
-            for (int i = 0; i < multipart.getCount(); i++)
-                result.addAll(getAttachments(multipart.getBodyPart(i)));
+            for (int i = 0; i < multipart.getCount(); i++) {
+                BodyPart cpart = multipart.getBodyPart(i);
+                result.addAll(getAttachments(cpart, pgp));
+                ContentType ct = new ContentType(cpart.getContentType());
+                if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
+                    pgp = true;
+            }
         }
 
         return result;

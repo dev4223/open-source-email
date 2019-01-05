@@ -53,15 +53,18 @@ import android.text.TextUtils;
 import android.util.LongSparseArray;
 
 import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.imap.protocol.FetchResponse;
+import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.UID;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.jsoup.Jsoup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -143,7 +146,6 @@ public class ServiceSynchronize extends LifecycleService {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long RECONNECT_BACKOFF = 90 * 1000L; // milliseconds
-    private static final int PREVIEW_SIZE = 250;
     private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
     private static final long STOP_DELAY = 5000L; // milliseconds
@@ -365,7 +367,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                                     switch (parts[0]) {
                                         case "seen":
-                                            EntityOperation.queue(db, message, EntityOperation.SEEN, true);
+                                            EntityOperation.queue(ServiceSynchronize.this, db, message, EntityOperation.SEEN, true);
                                             break;
 
                                         case "archive":
@@ -373,13 +375,13 @@ public class ServiceSynchronize extends LifecycleService {
                                             if (archive == null)
                                                 archive = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
                                             if (archive != null)
-                                                EntityOperation.queue(db, message, EntityOperation.MOVE, archive.id);
+                                                EntityOperation.queue(ServiceSynchronize.this, db, message, EntityOperation.MOVE, archive.id);
                                             break;
 
                                         case "trash":
                                             EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
                                             if (trash != null)
-                                                EntityOperation.queue(db, message, EntityOperation.MOVE, trash.id);
+                                                EntityOperation.queue(ServiceSynchronize.this, db, message, EntityOperation.MOVE, trash.id);
                                             break;
 
                                         case "ignore":
@@ -641,11 +643,11 @@ public class ServiceSynchronize extends LifecycleService {
 
                 if (message.content)
                     try {
-                        String html = message.read(ServiceSynchronize.this);
+                        String html = message.read(this);
                         StringBuilder sb = new StringBuilder();
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(message.subject).append("<br>");
-                        sb.append(Jsoup.parse(html).text());
+                        sb.append(HtmlHelper.getPreview(html));
                         mbuilder.setStyle(new Notification.BigTextStyle().bigText(Html.fromHtml(sb.toString())));
                     } catch (IOException ex) {
                         Log.e(ex);
@@ -1273,7 +1275,7 @@ public class ServiceSynchronize extends LifecycleService {
                     };
 
                     String id = BuildConfig.APPLICATION_ID + ".POLL." + account.id;
-                    PendingIntent pi = PendingIntent.getBroadcast(ServiceSynchronize.this, 0, new Intent(id), 0);
+                    PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(id), 0);
                     registerReceiver(alarm, new IntentFilter(id));
 
                     // Keep alive
@@ -1331,7 +1333,7 @@ public class ServiceSynchronize extends LifecycleService {
                     Log.e(account.name, ex);
                     reportError(account, null, ex);
 
-                    EntityLog.log(ServiceSynchronize.this, account.name + " " + Helper.formatThrowable(ex));
+                    EntityLog.log(this, account.name + " " + Helper.formatThrowable(ex));
                     db.account().setAccountError(account.id, Helper.formatThrowable(ex));
                 } finally {
                     // Stop watching for operations
@@ -1347,9 +1349,9 @@ public class ServiceSynchronize extends LifecycleService {
 
                     // Close store
                     try {
-                        EntityLog.log(ServiceSynchronize.this, account.name + " store closing");
+                        EntityLog.log(this, account.name + " store closing");
                         istore.close();
-                        EntityLog.log(ServiceSynchronize.this, account.name + " store closed");
+                        EntityLog.log(this, account.name + " store closed");
                     } catch (Throwable ex) {
                         Log.w(account.name, ex);
                     } finally {
@@ -1385,7 +1387,7 @@ public class ServiceSynchronize extends LifecycleService {
                             };
 
                             String id = BuildConfig.APPLICATION_ID + ".BACKOFF." + account.id;
-                            PendingIntent pi = PendingIntent.getBroadcast(ServiceSynchronize.this, 0, new Intent(id), 0);
+                            PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(id), 0);
                             registerReceiver(alarm, new IntentFilter(id));
 
                             AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -1699,9 +1701,6 @@ public class ServiceSynchronize extends LifecycleService {
             Folder itarget = istore.getFolder(target.name);
             itarget.appendMessages(new Message[]{icopy});
         }
-
-        if (EntityFolder.ARCHIVE.equals(folder.type))
-            db.message().setMessageUiHide(message.id, false);
     }
 
     private void doDelete(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException {
@@ -1816,7 +1815,7 @@ public class ServiceSynchronize extends LifecycleService {
                         message.uid = null;
                         db.message().updateMessage(message);
                         Log.i("Appending sent msgid=" + message.msgid);
-                        EntityOperation.queue(db, message, EntityOperation.ADD); // Could already exist
+                        EntityOperation.queue(this, db, message, EntityOperation.ADD); // Could already exist
                     }
                 }
 
@@ -1899,8 +1898,7 @@ public class ServiceSynchronize extends LifecycleService {
 
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         String html = helper.getHtml();
-        String text = (html == null ? null : Jsoup.parse(html).text());
-        String preview = (text == null ? null : text.substring(0, Math.min(text.length(), PREVIEW_SIZE)));
+        String preview = HtmlHelper.getPreview(html);
         message.write(this, html);
         db.message().setMessageContent(message.id, true, preview);
     }
@@ -2049,8 +2047,8 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void synchronizeMessages(EntityAccount account, EntityFolder folder, IMAPFolder ifolder, JSONArray jargs, ServiceState state) throws JSONException, MessagingException, IOException {
-        DB db = DB.getInstance(this);
+    private void synchronizeMessages(EntityAccount account, final EntityFolder folder, IMAPFolder ifolder, JSONArray jargs, ServiceState state) throws JSONException, MessagingException, IOException {
+        final DB db = DB.getInstance(this);
         try {
             int sync_days = jargs.getInt(0);
             int keep_days = jargs.getInt(1);
@@ -2093,7 +2091,7 @@ public class ServiceSynchronize extends LifecycleService {
             Log.i(folder.name + " local old=" + old);
 
             // Get list of local uids
-            List<Long> uids = db.message().getUids(folder.id, null);
+            final List<Long> uids = db.message().getUids(folder.id, null);
             Log.i(folder.name + " local count=" + uids.size());
 
             // Reduce list of local uids
@@ -2126,14 +2124,36 @@ public class ServiceSynchronize extends LifecycleService {
                     db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                 }
 
-            long[] auids = Helper.toLongArray(uids);
-            Message[] iuids = ifolder.getMessagesByUID(auids);
-            for (int i = 0; i < iuids.length; i++)
-                if (iuids[i] != null)
-                    uids.remove(auids[i]);
+            if (uids.size() > 0) {
+                ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+                    @Override
+                    public Object doCommand(IMAPProtocol protocol) {
+                        Log.i("Executing uid fetch count=" + uids.size());
+                        Response[] responses = protocol.command(
+                                "UID FETCH " + TextUtils.join(",", uids) + " (UID)", null);
 
-            long getuid = SystemClock.elapsedRealtime();
-            Log.i(folder.name + " remote getuid=" + (SystemClock.elapsedRealtime() - getuid) + " ms");
+                        for (int i = 0; i < responses.length; i++) {
+                            if (responses[i] instanceof FetchResponse) {
+                                FetchResponse fr = (FetchResponse) responses[i];
+                                UID uid = fr.getItem(UID.class);
+                                if (uid != null)
+                                    uids.remove(uid.uid);
+                            } else {
+                                if (responses[i].isOK())
+                                    Log.i(folder.name + " response=" + responses[i]);
+                                else {
+                                    Log.e(folder.name + " response=" + responses[i]);
+                                    db.folder().setFolderError(folder.id, responses[i].toString());
+                                }
+                            }
+                        }
+                        return null;
+                    }
+                });
+
+                long getuid = SystemClock.elapsedRealtime();
+                Log.i(folder.name + " remote uids=" + (SystemClock.elapsedRealtime() - getuid) + " ms");
+            }
 
             // Delete local messages not at remote
             Log.i(folder.name + " delete=" + uids.size());
@@ -2416,7 +2436,8 @@ public class ServiceSynchronize extends LifecycleService {
             int sequence = 1;
             for (EntityAttachment attachment : helper.getAttachments()) {
                 Log.i(folder.name + " attachment seq=" + sequence +
-                        " name=" + attachment.name + " type=" + attachment.type + " cid=" + attachment.cid);
+                        " name=" + attachment.name + " type=" + attachment.type +
+                        " cid=" + attachment.cid + " pgp=" + attachment.encryption);
                 if (!TextUtils.isEmpty(attachment.cid) &&
                         db.attachment().getAttachment(message.id, attachment.cid) != null) {
                     Log.i("Skipping duplicated CID");

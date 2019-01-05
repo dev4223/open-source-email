@@ -24,6 +24,8 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
 import android.accounts.AccountManagerFuture;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -336,11 +338,13 @@ public class FragmentSetup extends FragmentEx {
                                     }
 
                                     if (selectable && type != null) {
+                                        int sync = EntityFolder.SYSTEM_FOLDER_SYNC.indexOf(type);
                                         EntityFolder folder = new EntityFolder();
                                         folder.name = ifolder.getFullName();
                                         folder.type = type;
                                         folder.level = EntityFolder.getLevel(separator, folder.name);
-                                        folder.synchronize = EntityFolder.SYSTEM_FOLDER_SYNC.contains(type);
+                                        folder.synchronize = (sync >= 0);
+                                        folder.download = (sync < 0 ? true : EntityFolder.SYSTEM_FOLDER_DOWNLOAD.get(sync));
                                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                                         folders.add(folder);
@@ -352,7 +356,7 @@ public class FragmentSetup extends FragmentEx {
 
                                 if (!drafts)
                                     throw new IllegalArgumentException(
-                                            context.getString(R.string.title_setup_no_settings));
+                                            context.getString(R.string.title_setup_no_settings, dparts[1]));
                             } finally {
                                 if (istore != null)
                                     istore.close();
@@ -830,89 +834,101 @@ public class FragmentSetup extends FragmentEx {
     @Override
     public void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         if (requestCode == ActivitySetup.REQUEST_EXPORT || requestCode == ActivitySetup.REQUEST_IMPORT) {
-            if (resultCode == RESULT_OK && data != null) {
-                final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_password, null);
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setView(dview)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            if (resultCode == RESULT_OK && data != null)
+                fileSelected(requestCode == ActivitySetup.REQUEST_EXPORT, data);
+        } else if (requestCode == ActivitySetup.REQUEST_CHOOSE_ACCOUNT) {
+            if (resultCode == RESULT_OK && data != null)
+                accountSelected(data);
+        }
+    }
+
+    private void fileSelected(final boolean export, final Intent data) {
+        View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_password, null);
+        final TextInputLayout etPassword1 = dview.findViewById(R.id.tilPassword1);
+        final TextInputLayout etPassword2 = dview.findViewById(R.id.tilPassword2);
+
+        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setView(dview)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        String password1 = etPassword1.getEditText().getText().toString();
+                        String password2 = etPassword2.getEditText().getText().toString();
+
+                        if (TextUtils.isEmpty(password1))
+                            Snackbar.make(view, R.string.title_setup_password_missing, Snackbar.LENGTH_LONG).show();
+                        else {
+                            if (password1.equals(password2)) {
+                                if (export)
+                                    handleExport(data, password1);
+                                else
+                                    handleImport(data, password1);
+                            } else
+                                Snackbar.make(view, R.string.title_setup_password_different, Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                })
+                .show();
+    }
+
+    private void accountSelected(Intent data) {
+        String name = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+        String type = data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
+
+        AccountManager am = AccountManager.get(getContext());
+        Account[] accounts = am.getAccountsByType(type);
+        Log.i("Accounts=" + accounts.length);
+        for (final Account account : accounts)
+            if (name.equals(account.name)) {
+                etEmail.setEnabled(false);
+                tilPassword.setEnabled(false);
+                btnAuthorize.setEnabled(false);
+                btnQuick.setEnabled(false);
+                final Snackbar snackbar = Snackbar.make(view, R.string.title_authorizing, Snackbar.LENGTH_SHORT);
+                snackbar.show();
+
+                am.getAuthToken(
+                        account,
+                        Helper.getAuthTokenType(type),
+                        new Bundle(),
+                        getActivity(),
+                        new AccountManagerCallback<Bundle>() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                TextInputLayout etPassword1 = dview.findViewById(R.id.tilPassword1);
-                                TextInputLayout etPassword2 = dview.findViewById(R.id.tilPassword2);
+                            public void run(AccountManagerFuture<Bundle> future) {
+                                try {
+                                    Bundle bundle = future.getResult();
+                                    String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+                                    Log.i("Got token");
 
-                                String password1 = etPassword1.getEditText().getText().toString();
-                                String password2 = etPassword2.getEditText().getText().toString();
-
-                                if (TextUtils.isEmpty(password1))
-                                    Snackbar.make(view, R.string.title_setup_password_missing, Snackbar.LENGTH_LONG).show();
-                                else {
-                                    if (password1.equals(password2)) {
-                                        if (requestCode == ActivitySetup.REQUEST_EXPORT)
-                                            handleExport(data, password1);
-                                        else
-                                            handleImport(data, password1);
-                                    } else
-                                        Snackbar.make(view, R.string.title_setup_password_different, Snackbar.LENGTH_LONG).show();
+                                    etEmail.setText(account.name);
+                                    tilPassword.getEditText().setText(token);
+                                    auth_type = Helper.AUTH_TYPE_GMAIL;
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                    if (ex instanceof OperationCanceledException ||
+                                            ex instanceof AuthenticatorException ||
+                                            ex instanceof IOException)
+                                        Snackbar.make(view, Helper.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                                    else
+                                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                } finally {
+                                    etEmail.setEnabled(true);
+                                    tilPassword.setEnabled(true);
+                                    btnAuthorize.setEnabled(true);
+                                    btnQuick.setEnabled(true);
+                                    new Handler().postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            snackbar.dismiss();
+                                        }
+                                    }, 1000);
                                 }
                             }
-                        })
-                        .show();
+                        },
+                        null);
+                break;
             }
-        } else if (requestCode == ActivitySetup.REQUEST_CHOOSE_ACCOUNT) {
-            if (resultCode == RESULT_OK && data != null) {
-                String name = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-                String type = data.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
-
-                AccountManager am = AccountManager.get(getContext());
-                Account[] accounts = am.getAccountsByType(type);
-                Log.i("Accounts=" + accounts.length);
-                for (final Account account : accounts)
-                    if (name.equals(account.name)) {
-                        etEmail.setEnabled(false);
-                        tilPassword.setEnabled(false);
-                        btnAuthorize.setEnabled(false);
-                        btnQuick.setEnabled(false);
-                        final Snackbar snackbar = Snackbar.make(view, R.string.title_authorizing, Snackbar.LENGTH_SHORT);
-                        snackbar.show();
-
-                        am.getAuthToken(
-                                account,
-                                Helper.getAuthTokenType(type),
-                                new Bundle(),
-                                getActivity(),
-                                new AccountManagerCallback<Bundle>() {
-                                    @Override
-                                    public void run(AccountManagerFuture<Bundle> future) {
-                                        try {
-                                            Bundle bundle = future.getResult();
-                                            String token = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-                                            Log.i("Got token");
-
-                                            etEmail.setText(account.name);
-                                            tilPassword.getEditText().setText(token);
-                                            auth_type = Helper.AUTH_TYPE_GMAIL;
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                                        } finally {
-                                            etEmail.setEnabled(true);
-                                            tilPassword.setEnabled(true);
-                                            btnAuthorize.setEnabled(true);
-                                            btnQuick.setEnabled(true);
-                                            new Handler().postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    snackbar.dismiss();
-                                                }
-                                            }, 1000);
-                                        }
-                                    }
-                                },
-                                null);
-                        break;
-                    }
-            }
-        }
     }
 
     private void onMenuPrivacy() {

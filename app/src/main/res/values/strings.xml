@@ -42,8 +42,8 @@
     </plurals>
 
     <plurals name="title_moving_messages">
-        <item quantity="one">Move %1$d message to %2$s ?</item>
-        <item quantity="other">Move %1$d messages to %2$s ?</item>
+        <item quantity="one">Move %1$d message to %2$s?</item>
+        <item quantity="other">Move %1$d messages to %2$s?</item>
     </plurals>
 
     <string name="title_notification_failed">\'%1$s\' failed</string>
@@ -264,6 +264,8 @@
     <string name="title_show_headers">Show headers</string>
     <string name="title_manage_keywords">Manage keywords</string>
     <string name="title_add_keyword">Add keyword</string>
+    <string name="title_download_all">Download all</string>
+    <string name="title_save_all">Save all</string>
     <string name="title_show_html">Show original</string>
 
     <string name="title_trash">Trash</string>
@@ -283,6 +285,7 @@
     <string name="title_no_contacts">Contact picker not available</string>
     <string name="title_no_internet">No internet connection</string>
     <string name="title_attachment_saved">Attachment saved</string>
+    <string name="title_attachments_saved">Attachments saved</string>
     <string name="title_attachment_unavailable">Some attachments are not downloaded and will not be added, continue?</string>
     <string name="title_image_unavailable">Some images are not downloaded and will not be added, continue?</string>
     <string name="title_ask_delete">Delete message permanently?</string>
@@ -413,6 +416,7 @@
     <string name="title_add">Add</string>
     <string name="title_browse">Browse</string>
     <string name="title_report">Report</string>
+    <string name="title_no_ask_again">Do not ask this again</string>
 
     <string name="title_try">Try FairEmail, an open source, privacy friendly email app for Android</string>
 

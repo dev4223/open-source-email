@@ -12,6 +12,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -47,7 +49,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 29,
+        version = 30,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -79,6 +81,7 @@ public abstract class DB extends RoomDatabase {
     public abstract DaoLog log();
 
     private static DB sInstance;
+    private static ExecutorService executor = Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
 
     private static final String DB_NAME = "fairemail";
 
@@ -87,6 +90,7 @@ public abstract class DB extends RoomDatabase {
             sInstance = migrate(context, Room
                     .databaseBuilder(context.getApplicationContext(), DB.class, DB_NAME)
                     .openHelperFactory(new RequerySQLiteOpenHelperFactory())
+                    .setQueryExecutor(executor)
                     .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING));
 
             Log.i("sqlite version=" + exec(sInstance, "SELECT sqlite_version() AS sqlite_version"));
@@ -371,6 +375,14 @@ public abstract class DB extends RoomDatabase {
                     public void migrate(SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `folder` ADD COLUMN `last_sync` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(29, 30) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `attachment` ADD COLUMN `encryption` INTEGER");
+                        db.execSQL("UPDATE attachment SET encryption = " + EntityAttachment.PGP_MESSAGE + " where name = 'encrypted.asc'");
                     }
                 })
                 .build();

@@ -69,7 +69,6 @@ import android.widget.Toast;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.jsoup.Jsoup;
 import org.xml.sax.XMLReader;
 
 import java.io.IOException;
@@ -183,6 +182,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvNoInternetHeaders;
 
         private RecyclerView rvAttachment;
+        private Button btnDownloadAttachments;
+        private Button btnSaveAttachments;
         private TextView tvNoInternetAttachments;
 
         private BottomNavigationView bnvActions;
@@ -250,6 +251,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             adapter = new AdapterAttachment(context, owner, true);
             rvAttachment.setAdapter(adapter);
 
+            btnDownloadAttachments = itemView.findViewById(R.id.btnDownloadAttachments);
+            btnSaveAttachments = itemView.findViewById(R.id.btnSaveAttachments);
             tvNoInternetAttachments = itemView.findViewById(R.id.tvNoInternetAttachments);
 
             bnvActions = itemView.findViewById(R.id.bnvActions);
@@ -272,6 +275,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivFlagged.setOnClickListener(this);
             ivExpanderAddress.setOnClickListener(this);
             ivAddContact.setOnClickListener(this);
+            btnDownloadAttachments.setOnClickListener(this);
+            btnSaveAttachments.setOnClickListener(this);
             btnHtml.setOnClickListener(this);
             ibQuotes.setOnClickListener(this);
             ibImages.setOnClickListener(this);
@@ -284,6 +289,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivFlagged.setOnClickListener(null);
             ivExpanderAddress.setOnClickListener(null);
             ivAddContact.setOnClickListener(null);
+            btnDownloadAttachments.setOnClickListener(null);
+            btnSaveAttachments.setOnClickListener(null);
             btnHtml.setOnClickListener(null);
             ibQuotes.setOnClickListener(null);
             ibImages.setOnClickListener(null);
@@ -315,6 +322,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbHeaders.setVisibility(View.GONE);
             tvNoInternetHeaders.setVisibility(View.GONE);
 
+            btnDownloadAttachments.setVisibility(View.GONE);
+            btnSaveAttachments.setVisibility(View.GONE);
             tvNoInternetAttachments.setVisibility(View.GONE);
 
             bnvActions.setVisibility(View.GONE);
@@ -338,6 +347,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean show_headers = properties.getValue("headers", message.id);
 
             pbLoading.setVisibility(View.GONE);
+
+            itemView.setAlpha(message.uid == null ? LOW_LIGHT : 1.0f);
 
             if (viewType == ViewType.THREAD) {
                 ivFlagged.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
@@ -435,6 +446,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivDraft.setVisibility(message.drafts > 0 ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
+            btnDownloadAttachments.setVisibility(View.GONE);
+            btnSaveAttachments.setVisibility(View.GONE);
             tvNoInternetAttachments.setVisibility(View.GONE);
             tvSubject.setText(message.subject);
 
@@ -459,13 +472,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (debug) {
                 String text = "error=" + message.error +
-                        "\n uid=" + message.uid + " id=" + message.id + " " + df.format(new Date(message.received)) +
+                        "\nuid=" + message.uid + " id=" + message.id + " " + df.format(new Date(message.received)) +
                         "\n" + (message.ui_hide ? "HIDDEN " : "") +
-                        "seen=" + message.seen + "/" + message.ui_seen + " unseen=" + message.unseen +
+                        "seen=" + message.seen + "/" + message.ui_seen +
+                        " unseen=" + message.unseen +
                         " found=" + message.ui_found +
-                        "\n msgid=" + message.msgid +
-                        "\n thread=" + message.thread +
-                        "\n sender=" + message.sender;
+                        "\nmsgid=" + message.msgid +
+                        "\nthread=" + message.thread +
+                        "\nsender=" + message.sender;
 
                 tvError.setText(text);
                 tvError.setVisibility(View.VISIBLE);
@@ -586,13 +600,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         adapter.set(attachments);
 
+                        boolean download = false;
+                        boolean save = (attachments.size() > 1);
                         boolean downloading = false;
-                        for (EntityAttachment attachment : attachments)
-                            if (attachment.progress != null) {
+                        for (EntityAttachment attachment : attachments) {
+                            if (attachment.progress == null && !attachment.available)
+                                download = true;
+                            if (!attachment.available)
+                                save = false;
+                            if (attachment.progress != null)
                                 downloading = true;
-                                break;
-                            }
+                        }
 
+                        btnDownloadAttachments.setVisibility(download ? View.VISIBLE : View.GONE);
+                        btnSaveAttachments.setVisibility(save ? View.VISIBLE : View.GONE);
                         tvNoInternetAttachments.setVisibility(downloading && !internet ? View.VISIBLE : View.GONE);
 
                         if (message.content) {
@@ -697,6 +718,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else if (viewType == ViewType.THREAD) {
                 if (view.getId() == R.id.ivExpanderAddress)
                     onToggleAddresses(pos, message);
+                else if (view.getId() == R.id.btnDownloadAttachments)
+                    onDownloadAttachments(message);
+                else if (view.getId() == R.id.btnSaveAttachments)
+                    onSaveAttachments(message);
                 else if (view.getId() == R.id.btnHtml)
                     onShowHtml(message);
                 else if (view.getId() == R.id.ibQuotes)
@@ -794,6 +819,49 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean addresses = !properties.getValue("addresses", message.id);
             properties.setValue("addresses", message.id, addresses);
             notifyItemChanged(pos);
+        }
+
+        private void onDownloadAttachments(final TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) throws Throwable {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
+
+                        EntityMessage msg = db.message().getMessage(id);
+                        if (message != null)
+                            for (EntityAttachment attachment : db.attachment().getAttachments(message.id))
+                                if (attachment.progress == null && !attachment.available) {
+                                    db.attachment().setProgress(attachment.id, 0);
+                                    EntityOperation.queue(context, db, msg, EntityOperation.ATTACHMENT, attachment.sequence);
+                                }
+
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+
+                    return null;
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args);
+        }
+
+        private void onSaveAttachments(TupleMessageEx message) {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+            lbm.sendBroadcast(
+                    new Intent(ActivityView.ACTION_STORE_ATTACHMENTS)
+                            .putExtra("id", message.id));
         }
 
         private void onShowHtml(final TupleMessageEx message) {
@@ -1086,7 +1154,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                             return null;
 
                                         EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
-                                        EntityOperation.queue(db, message, EntityOperation.MOVE, junk.id);
+                                        EntityOperation.queue(context, db, message, EntityOperation.MOVE, junk.id);
 
                                         db.setTransactionSuccessful();
                                     } finally {
@@ -1235,7 +1303,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (message == null)
                             return null;
 
-                        EntityOperation.queue(db, message, EntityOperation.SEEN, false);
+                        EntityOperation.queue(context, db, message, EntityOperation.SEEN, false);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1283,7 +1351,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         List<EntityMessage> messages = db.message().getMessageByThread(
                                 message.account, message.thread, threading && thread ? null : id, message.folder);
                         for (EntityMessage threaded : messages)
-                            EntityOperation.queue(db, threaded, EntityOperation.FLAG, flagged);
+                            EntityOperation.queue(context, db, threaded, EntityOperation.FLAG, flagged);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1326,7 +1394,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
 
                     sb.append("\r\n");
-                    sb.append(Jsoup.parse(message.read(context)).text());
+                    sb.append(HtmlHelper.getText(message.read(context)));
 
                     return sb.toString();
                 }
@@ -1379,7 +1447,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (message == null)
                                 return null;
 
-                            EntityOperation.queue(db, message, EntityOperation.HEADERS);
+                            EntityOperation.queue(context, db, message, EntityOperation.HEADERS);
 
                             db.setTransactionSuccessful();
                         } finally {
@@ -1464,7 +1532,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                                 for (int i = 0; i < selected.length; i++)
                                                     if (dirty[i])
-                                                        EntityOperation.queue(db, message, EntityOperation.KEYWORD, keywords[i], selected[i]);
+                                                        EntityOperation.queue(context, db, message, EntityOperation.KEYWORD, keywords[i], selected[i]);
 
                                                 db.setTransactionSuccessful();
                                             } finally {
@@ -1503,7 +1571,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                                 String keyword = args.getString("keyword");
 
                                                                 DB db = DB.getInstance(context);
-                                                                EntityOperation.queue(db, message, EntityOperation.KEYWORD, keyword, true);
+                                                                EntityOperation.queue(context, db, message, EntityOperation.KEYWORD, keyword, true);
 
                                                                 return null;
                                                             }
@@ -1541,23 +1609,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View anchor = bnvActions.findViewById(R.id.action_more);
             PopupMenu popupMenu = new PopupMenu(context, anchor);
             popupMenu.inflate(R.menu.menu_message);
-            popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(data.message.uid != null && data.hasJunk);
+            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(data.hasJunk);
 
             popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(data.message.content);
             popupMenu.getMenu().findItem(R.id.menu_forward_raw).setVisible(data.message.content && data.message.headers != null);
 
             popupMenu.getMenu().findItem(R.id.menu_reply_all).setEnabled(data.message.content);
-
             popupMenu.getMenu().findItem(R.id.menu_answer).setEnabled(data.message.content);
 
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setVisible(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null);
+
+            popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(data.message.uid != null);
 
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
-            popupMenu.getMenu().findItem(R.id.menu_show_headers).setVisible(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.uid != null);
 
-            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setVisible(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(data.message.uid != null);
 
             popupMenu.getMenu().findItem(R.id.menu_decrypt).setEnabled(
                     data.message.content && data.message.to != null && data.message.to.length > 0);
@@ -1632,12 +1702,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                 // outbox
                                                 db.message().deleteMessage(id);
 
+                                                db.folder().setFolderError(message.folder, null);
                                                 db.identity().setIdentityError(message.identity, null);
 
                                                 NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
                                                 nm.cancel("send", message.identity.intValue());
                                             } else
-                                                EntityOperation.queue(db, message, EntityOperation.DELETE);
+                                                EntityOperation.queue(context, db, message, EntityOperation.DELETE);
 
                                             db.setTransactionSuccessful();
                                         } finally {
