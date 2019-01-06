@@ -25,7 +25,6 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
-import androidx.room.Update;
 
 @Dao
 public interface DaoAttachment {
@@ -60,15 +59,22 @@ public interface DaoAttachment {
     EntityAttachment getAttachment(long message, String cid);
 
     @Query("UPDATE attachment" +
-            " SET progress = :progress" +
+            " SET progress = :progress, available = 0" +
             " WHERE id = :id")
     void setProgress(long id, Integer progress);
 
+    @Query("UPDATE attachment" +
+            " SET size = :size, progress = NULL, available = 1" +
+            " WHERE id = :id")
+    void setDownloaded(long id, Integer size);
+
+    @Query("UPDATE attachment" +
+            " SET cid = :cid" +
+            " WHERE id = :id")
+    void setCid(long id, String cid);
+
     @Insert
     long insertAttachment(EntityAttachment attachment);
-
-    @Update
-    void updateAttachment(EntityAttachment attachment);
 
     @Query("DELETE FROM attachment" +
             " WHERE id = :id")

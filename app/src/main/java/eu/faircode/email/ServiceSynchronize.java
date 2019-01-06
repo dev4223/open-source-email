@@ -643,11 +643,11 @@ public class ServiceSynchronize extends LifecycleService {
 
                 if (message.content)
                     try {
-                        String html = message.read(this);
+                        String body = message.read(this);
                         StringBuilder sb = new StringBuilder();
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(message.subject).append("<br>");
-                        sb.append(HtmlHelper.getPreview(html));
+                        sb.append(HtmlHelper.getPreview(body));
                         mbuilder.setStyle(new Notification.BigTextStyle().bigText(Html.fromHtml(sb.toString())));
                     } catch (IOException ex) {
                         Log.e(ex);
@@ -1897,9 +1897,9 @@ public class ServiceSynchronize extends LifecycleService {
             throw new MessageRemovedException();
 
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-        String html = helper.getHtml();
-        String preview = HtmlHelper.getPreview(html);
-        message.write(this, html);
+        String body = helper.getHtml();
+        String preview = HtmlHelper.getPreview(body);
+        message.write(this, body);
         db.message().setMessageContent(message.id, true, preview);
     }
 
@@ -1919,9 +1919,14 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Download attachment
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-        EntityAttachment a = helper.getAttachments().get(sequence - 1);
-        attachment.part = a.part;
-        attachment.download(this, db);
+        List<EntityAttachment> attachments = helper.getAttachments();
+        if (sequence - 1 < attachments.size()) {
+            attachment.part = attachments.get(sequence - 1).part;
+            attachment.download(this, db);
+        } else {
+            db.attachment().setProgress(attachment.id, null);
+            throw new IllegalArgumentException("Attachment not found seq=" + sequence + " size=" + attachments.size());
+        }
     }
 
     private void synchronizeFolders(EntityAccount account, IMAPStore istore, ServiceState state) throws MessagingException {

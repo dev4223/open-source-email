@@ -177,6 +177,7 @@
     <string name="title_identity_delete">Möchten Sie diese Identität unwiderruflich löschen?</string>
     <string name="title_pop">POP wird nicht unterstützt</string>
     <string name="title_identity_sent_hint">Versendete E-Mails werden in den meisten Fällen automatisch im Gesendet-Ordner gespeichert</string>
+    <string name="title_edit_html">Als HTML bearbeiten</string>
     <string name="title_synchronize_now">Jetzt synchronisieren</string>
     <string name="title_delete_local">Lösche lokale Nachrichten</string>
     <string name="title_empty_trash">Papierkorb leeren</string>
@@ -333,6 +334,8 @@
     <string name="title_legend_external_image">Platzhalter für externe Bilder</string>
     <string name="title_legend_embedded_image">Platzhalter für eingebettete Bilder</string>
     <string name="title_legend_broken_image">Defekte Bilddatei</string>
+    <string name="title_legend_download_off">Nachrichteninhalt bei Bedarf herunterladen </string>
+    <string name="title_legend_download_on">Nachrichteninhalt automatisch herunterladen</string>
     <string name="title_legend_synchronize_on">Synchronisierung an</string>
     <string name="title_legend_synchronize_off">Synchronisierung aus</string>
     <string name="title_legend_primary">Hauptkonto/favorisierte E-Mail</string>
