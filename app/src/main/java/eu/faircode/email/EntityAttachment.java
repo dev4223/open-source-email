@@ -32,6 +32,7 @@ import java.io.OutputStream;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -69,6 +70,7 @@ public class EntityAttachment {
     public String name;
     @NonNull
     public String type;
+    public String disposition;
     public String cid; // Content-ID
     public Integer encryption;
     public Integer size;
@@ -78,6 +80,10 @@ public class EntityAttachment {
 
     @Ignore
     BodyPart part;
+
+    boolean isInline() {
+        return (disposition != null && disposition.equalsIgnoreCase(Part.INLINE));
+    }
 
     static File getFile(Context context, Long id) {
         File dir = new File(context.getFilesDir(), "attachments");
@@ -106,8 +112,7 @@ public class EntityAttachment {
         InputStream is = null;
         OutputStream os = null;
         try {
-            this.progress = null;
-            db.attachment().updateAttachment(this);
+            db.attachment().setProgress(this.id, null);
 
             is = this.part.getInputStream();
             os = new BufferedOutputStream(new FileOutputStream(file));
@@ -124,16 +129,12 @@ public class EntityAttachment {
             }
 
             // Store attachment data
-            this.size = size;
-            this.progress = null;
-            this.available = true;
-            db.attachment().updateAttachment(this);
+            db.attachment().setDownloaded(this.id, size);
 
             Log.i("Downloaded attachment size=" + this.size);
         } catch (IOException ex) {
             // Reset progress on failure
-            this.progress = null;
-            db.attachment().updateAttachment(this);
+            db.attachment().setProgress(this.id, null);
             throw ex;
         } finally {
             try {
@@ -154,6 +155,9 @@ public class EntityAttachment {
                     this.sequence.equals(other.sequence) &&
                     (this.name == null ? other.name == null : this.name.equals(other.name)) &&
                     this.type.equals(other.type) &&
+                    (this.disposition == null ? other.disposition == null : this.disposition.equals(other.disposition)) &&
+                    (this.cid == null ? other.cid == null : this.cid.equals(other.cid)) &&
+                    (this.encryption == null ? other.encryption == null : this.encryption.equals(other.encryption)) &&
                     (this.size == null ? other.size == null : this.size.equals(other.size)) &&
                     (this.progress == null ? other.progress == null : this.progress.equals(other.progress)) &&
                     this.available.equals(other.available));

@@ -326,7 +326,7 @@
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
-    <string name="title_attachments_missing">Attachments still loading</string>
+    <string name="title_attachments_missing">Not all attachments are downloaded</string>
     <string name="title_draft_deleted">Draft discarded</string>
     <string name="title_draft_saved">Draft saved</string>
     <string name="title_ask_send">Send message to %1$s?</string>
@@ -385,6 +385,8 @@
     <string name="title_legend_external_image">External image placeholder</string>
     <string name="title_legend_embedded_image">Embedded image placeholder</string>
     <string name="title_legend_broken_image">Broken image</string>
+    <string name="title_legend_download_off">Download message content on demand </string>
+    <string name="title_legend_download_on">Download message content automatically</string>
     <string name="title_legend_synchronize_on">Synchronize on</string>
     <string name="title_legend_synchronize_off">Synchronize off</string>
     <string name="title_legend_primary">Primary/starred</string>
