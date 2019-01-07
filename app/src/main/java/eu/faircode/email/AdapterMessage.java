@@ -388,11 +388,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (message.from != null && message.from.length > 0)
                     aargs.putString("from", message.from[0].toString());
 
-                ivAvatar.setTag(message.id);
-
                 new SimpleTask<Drawable>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
+                        ivAvatar.setTag(message.id);
                         ivAvatar.setVisibility(View.INVISIBLE);
                     }
 
@@ -434,7 +433,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.execute(context, owner, aargs);
+                }.execute(context, owner, aargs, "message:avatar");
             } else
                 ivAvatar.setVisibility(View.GONE);
 
@@ -604,7 +603,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (body == null && message.content) {
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
-                    bodyTask.execute(context, owner, args);
+                    bodyTask.execute(context, owner, args, "message:body");
                 }
 
                 // Observe attachments
@@ -642,7 +641,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (message.content) {
                             Bundle args = new Bundle();
                             args.putSerializable("message", message);
-                            bodyTask.execute(context, owner, args);
+                            bodyTask.execute(context, owner, args, "message:body");
                         }
                     }
                 };
@@ -712,7 +711,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.execute(context, owner, sargs);
+                }.execute(context, owner, sargs, "message:actions");
             } else
                 properties.setBody(message.id, null);
 
@@ -877,7 +876,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:attachment:download");
         }
 
         private void onSaveAttachments(TupleMessageEx message) {
@@ -917,7 +916,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
-            bodyTask.execute(context, owner, args);
+            bodyTask.execute(context, owner, args, "message:body");
         }
 
         private void onShowImages(final TupleMessageEx message) {
@@ -942,7 +941,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
-            bodyTask.execute(context, owner, args);
+            bodyTask.execute(context, owner, args, "message:body");
         }
 
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
@@ -1191,7 +1190,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 protected void onException(Bundle args, Throwable ex) {
                                     Helper.unexpectedError(context, owner, ex);
                                 }
-                            }.execute(context, owner, args);
+                            }.execute(context, owner, args, "message:spam");
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -1238,7 +1237,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:forward");
         }
 
         private void onAnswer(final ActionData data) {
@@ -1306,7 +1305,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, new Bundle());
+            }.execute(context, owner, new Bundle(), "message:answer");
         }
 
         private void onUnseen(final ActionData data) {
@@ -1346,7 +1345,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:unseen");
         }
 
         private void onToggleFlag(TupleMessageEx message) {
@@ -1388,7 +1387,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:flag");
         }
 
         private void onShare(ActionData data) {
@@ -1440,7 +1439,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:share");
 
         }
 
@@ -1483,7 +1482,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(context, owner, ex);
                     }
-                }.execute(context, owner, args);
+                }.execute(context, owner, args, "message:headers");
             } else
                 notifyDataSetChanged();
         }
@@ -1569,7 +1568,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         protected void onException(Bundle args, Throwable ex) {
                                             Helper.unexpectedError(context, owner, ex);
                                         }
-                                    }.execute(context, owner, args);
+                                    }.execute(context, owner, args, "message:keywords:managa");
                                 }
                             })
                             .setNeutralButton(R.string.title_add, new DialogInterface.OnClickListener() {
@@ -1603,7 +1602,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                             protected void onException(Bundle args, Throwable ex) {
                                                                 Helper.unexpectedError(context, owner, ex);
                                                             }
-                                                        }.execute(context, owner, args);
+                                                        }.execute(context, owner, args, "message:keyword:add");
                                                     }
                                                 }
                                             }).show();
@@ -1616,7 +1615,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:keywords");
         }
 
         private void onDecrypt(ActionData data) {
@@ -1745,7 +1744,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     protected void onException(Bundle args, Throwable ex) {
                                         Helper.unexpectedError(context, owner, ex);
                                     }
-                                }.execute(context, owner, args);
+                                }.execute(context, owner, args, "message:delete");
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
@@ -1824,7 +1823,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 protected void onException(Bundle args, Throwable ex) {
                                     Helper.unexpectedError(context, owner, ex);
                                 }
-                            }.execute(context, owner, args);
+                            }.execute(context, owner, args, "message:move");
 
                             return true;
                         }
@@ -1837,7 +1836,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:move:list");
         }
 
         private void onArchive(ActionData data) {
@@ -1883,7 +1882,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(context, owner, ex);
                 }
-            }.execute(context, owner, args);
+            }.execute(context, owner, args, "message:reply");
         }
 
         ItemDetailsLookup.ItemDetails<Long> getItemDetails(@NonNull MotionEvent motionEvent) {
