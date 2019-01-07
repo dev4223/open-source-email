@@ -41,7 +41,7 @@ None at this moment.
 * Resize images: this is not a feature directly related to email and there are plenty of apps that can do this for you.
 * Calendar events: opening the attached calendar file should open the related calendar app.
 * Executing filter rules: filter rules should be executed on the server because a battery powered device with possibly an unstable internet connection is not suitable for this.
-* Snooze/send timer: basically the same as executing filter rules. Snoozing and delayed sending is not supported by [IMAP](https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol). You could move messages to a "to do" folder instead.
+* Send timer: basically the same as executing filter rules. Delayed sending is not supported by [IMAP](https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol). You could move messages to a "to do" folder instead.
 * Badge count: there is no standard Android API for this and third party solutions might stop working anytime. For example *ShortcutBadger* [has lots of problems](https://github.com/leolin310148/ShortcutBadger/issues). You can use the provided widget instead.
 * Switch language: although it is possible to change the language of an app, Android is not designed for this. Better fix the translation in your language if needed, see [this FAQ](#user-content-faq26) about how to.
 * Select identities to show in unified inbox: this would add complexity for something which would hardly be used.
@@ -283,7 +283,8 @@ To encrypt a message before sending, just select the menu *Encrypt*. Similarly, 
 Encryption is [Autocrypt](https://autocrypt.org/) compatible. For security reasons received messages are not decrypted automatically.
 Encryption/decryption is a pro feature.
 
-Sending inline PGP encrypted messages is not supported, see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
+Inline PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
+see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
 
 S/MIME is not supported because it is not used much and because key management is complex.
 There are also [security concerns](https://security.stackexchange.com/a/83752).
@@ -294,7 +295,7 @@ Note that signed only or encrypted only messages are not supported, see here for
 * [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
 * [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
-If you like, you can verify a signature by opening the *signature.asc* attachment.
+If you want, you can verify a signature by opening the *signature.asc* attachment.
 
 <br />
 
@@ -942,6 +943,7 @@ but even Google's Chrome cannot handle this.
 <a name="faq60"></a>
 **(60) Did you know ... ?**
 
+* Did you know that starred messages are always synchronized/kept?
 * Did you know that you can long press the 'write message' icon to go to the drafts folder?
 * Did you know that you can long press the account name in the navigation menu to go to the inbox of that account?
 * Did you know there is an advanced option to mark messages read when they are moved and that archiving and trashing is also moving?
