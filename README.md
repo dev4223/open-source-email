@@ -37,7 +37,8 @@ This app starts a foreground service with a low priority status bar notification
 * Account/identity colors
 * Notifications per account
 * Notifications with message preview (requires Android 7 Nougat or later)
-* Snoozing messages
+* Snooze messages
+* Send messages after selected time
 * Reply templates
 * Search on server
 * Keyword management
@@ -53,6 +54,7 @@ This app starts a foreground service with a low priority status bar notification
 
 ## Secure
 
+* No data storage on third party servers
 * Allow encrypted connections only
 * Accept valid security certificates only
 * Authentication required

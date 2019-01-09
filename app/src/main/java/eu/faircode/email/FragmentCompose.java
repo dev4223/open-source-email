@@ -32,6 +32,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
@@ -50,9 +52,11 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
+import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
@@ -72,6 +76,7 @@ import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageView;
 import android.widget.MultiAutoCompleteTextView;
+import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -94,6 +99,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -166,6 +173,9 @@ public class FragmentCompose extends FragmentEx {
 
     private OpenPgpServiceConnection pgpService;
 
+    private static final int REDUCED_IMAGE_SIZE = 1920;
+    private static final int REDUCED_IMAGE_QUALITY = 90;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -214,8 +224,20 @@ public class FragmentCompose extends FragmentEx {
                 tvExtraPrefix.setText(at < 0 ? null : identity.email.substring(0, at));
                 tvExtraSuffix.setText(at < 0 ? null : identity.email.substring(at));
                 if (pro) {
-                    tvSignature.setText(identity == null || identity.signature == null ? null : Html.fromHtml(identity.signature));
-                    grpSignature.setVisibility(identity == null || TextUtils.isEmpty(identity.signature) ? View.GONE : View.VISIBLE);
+                    Spanned signature = null;
+                    if (identity != null && identity.signature != null)
+                        signature = Html.fromHtml(identity.signature, new Html.ImageGetter() {
+                            @Override
+                            public Drawable getDrawable(String source) {
+                                int px = Helper.dp2pixels(getContext(), 24);
+                                Drawable d = getContext().getResources()
+                                        .getDrawable(R.drawable.baseline_image_24, getContext().getTheme());
+                                d.setBounds(0, 0, px, px);
+                                return d;
+                            }
+                        }, null);
+                    tvSignature.setText(signature);
+                    grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
                 }
             }
 
@@ -288,8 +310,9 @@ public class FragmentCompose extends FragmentEx {
 
                 switch (action) {
                     case R.id.action_delete:
-                        onDelete();
+                        onActionDelete();
                         break;
+
                     case R.id.action_send:
                         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                         boolean autosend = prefs.getBoolean("autosend", false);
@@ -327,6 +350,7 @@ public class FragmentCompose extends FragmentEx {
                             onAction(action);
                         }
                         break;
+
                     default:
                         onAction(action);
                 }
@@ -496,7 +520,7 @@ public class FragmentCompose extends FragmentEx {
                 args.putString("subject", getArguments().getString("subject"));
                 args.putString("body", getArguments().getString("body"));
                 args.putParcelableArrayList("attachments", getArguments().getParcelableArrayList("attachments"));
-                draftLoader.execute(this, args, "draft:new");
+                draftLoader.execute(this, args, "compose:new");
             } else {
                 Bundle args = new Bundle();
                 args.putString("action", "edit");
@@ -504,7 +528,7 @@ public class FragmentCompose extends FragmentEx {
                 args.putLong("account", -1);
                 args.putLong("reference", -1);
                 args.putLong("answer", -1);
-                draftLoader.execute(this, args, "draft:edit");
+                draftLoader.execute(this, args, "compose:edit");
             }
         } else {
             working = savedInstanceState.getLong("working");
@@ -514,7 +538,7 @@ public class FragmentCompose extends FragmentEx {
             args.putLong("account", -1);
             args.putLong("reference", -1);
             args.putLong("answer", -1);
-            draftLoader.execute(this, args, "draft:instance");
+            draftLoader.execute(this, args, "compose:instance");
         }
     }
 
@@ -614,6 +638,9 @@ public class FragmentCompose extends FragmentEx {
             case R.id.menu_encrypt:
                 onAction(R.id.menu_encrypt);
                 return true;
+            case R.id.menu_send_after:
+                onMenuSendAfter();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -689,6 +716,82 @@ public class FragmentCompose extends FragmentEx {
         }
     }
 
+    private void onMenuSendAfter() {
+        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_duration, null);
+        final NumberPicker npHours = dview.findViewById(R.id.npHours);
+        final NumberPicker npDays = dview.findViewById(R.id.npDays);
+        final TextView tvTime = dview.findViewById(R.id.tvTime);
+        final long HOUR_MS = 3600L * 1000L;
+
+        npHours.setMinValue(0);
+        npHours.setMaxValue(24);
+
+        npDays.setMinValue(0);
+        npDays.setMaxValue(90);
+
+        NumberPicker.OnValueChangeListener valueChanged = new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                int hours = npHours.getValue();
+                int days = npDays.getValue();
+                long duration = (hours + days * 24) * HOUR_MS;
+                long time = new Date().getTime() / HOUR_MS * HOUR_MS + duration;
+                DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
+                tvTime.setText(df.format(time));
+                tvTime.setVisibility(duration == 0 ? View.INVISIBLE : View.VISIBLE);
+            }
+        };
+
+        npHours.setOnValueChangedListener(valueChanged);
+        npDays.setOnValueChangedListener(valueChanged);
+        valueChanged.onValueChange(null, 0, 0);
+
+        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setTitle(R.string.title_send_after)
+                .setView(dview)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            int hours = npHours.getValue();
+                            int days = npDays.getValue();
+                            long duration = (hours + days * 24) * HOUR_MS;
+                            long time = new Date().getTime() / HOUR_MS * HOUR_MS + duration;
+
+                            Bundle args = new Bundle();
+                            args.putLong("id", working);
+                            args.putLong("wakeup", time);
+
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    long id = args.getLong("id");
+                                    Long wakeup = args.getLong("wakeup");
+
+                                    DB db = DB.getInstance(context);
+                                    db.message().setMessageSnoozed(id, wakeup);
+
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onExecuted(Bundle args, Void data) {
+                                    onAction(R.id.action_send);
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                }
+                            }.execute(FragmentCompose.this, args, "compose:send:after");
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
+                    }
+                })
+                .show();
+    }
+
     private void onMenuImage() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -716,7 +819,7 @@ public class FragmentCompose extends FragmentEx {
         grpAddresses.setVisibility(grpAddresses.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
     }
 
-    private void onDelete() {
+    private void onActionDelete() {
         new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
                 .setMessage(R.string.title_ask_discard)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -848,7 +951,7 @@ public class FragmentCompose extends FragmentEx {
                                 os1 = new BufferedOutputStream(new FileOutputStream(file1));
                                 os1.write(bytes1);
 
-                                db.attachment().setDownloaded(attachment1.id, bytes1.length);
+                                db.attachment().setDownloaded(attachment1.id, (long) bytes1.length);
                             } finally {
                                 if (os1 != null)
                                     os1.close();
@@ -870,7 +973,7 @@ public class FragmentCompose extends FragmentEx {
                                 os2 = new BufferedOutputStream(new FileOutputStream(file2));
                                 os2.write(bytes2);
 
-                                db.attachment().setDownloaded(attachment2.id, bytes2.length);
+                                db.attachment().setDownloaded(attachment2.id, (long) bytes2.length);
                             } finally {
                                 if (os2 != null)
                                     os2.close();
@@ -915,7 +1018,7 @@ public class FragmentCompose extends FragmentEx {
                 else
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args, "encrypt");
+        }.execute(this, args, "compose:encrypt");
     }
 
     @Override
@@ -1015,11 +1118,25 @@ public class FragmentCompose extends FragmentEx {
             protected EntityAttachment onExecute(Context context, Bundle args) throws IOException {
                 Long id = args.getLong("id");
                 Uri uri = args.getParcelable("uri");
-                return addAttachment(context, id, uri, image);
+                EntityAttachment attachment = addAttachment(context, id, uri, image);
+
+                if ("image/jpeg".equals(attachment.type) || "image/png".equals(attachment.type)) {
+                    File file = EntityAttachment.getFile(context, attachment.id);
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+
+                    int scaleTo = REDUCED_IMAGE_SIZE;
+                    int factor = Math.min(options.outWidth / scaleTo, options.outWidth / scaleTo);
+                    if (factor > 0)
+                        args.putInt("factor", factor);
+                }
+
+                return attachment;
             }
 
             @Override
-            protected void onExecuted(Bundle args, EntityAttachment attachment) {
+            protected void onExecuted(Bundle args, final EntityAttachment attachment) {
                 if (image) {
                     File file = EntityAttachment.getFile(getContext(), attachment.id);
                     Drawable d = Drawable.createFromPath(file.getAbsolutePath());
@@ -1033,6 +1150,71 @@ public class FragmentCompose extends FragmentEx {
                     String html = Html.toHtml(s);
                     etBody.setText(Html.fromHtml(html, cidGetter, null));
                 }
+
+                final int factor = args.getInt("factor", 0);
+                if (factor > 0)
+                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                            .setMessage(getString(R.string.title_ask_resize, attachment.name))
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Bundle args = new Bundle();
+                                    args.putLong("id", attachment.id);
+                                    args.putInt("factor", factor);
+                                    args.putInt("quality", REDUCED_IMAGE_QUALITY);
+
+                                    new SimpleTask<Void>() {
+                                        @Override
+                                        protected Void onExecute(Context context, Bundle args) throws Throwable {
+                                            long id = args.getLong("id");
+                                            int factor = args.getInt("factor");
+                                            int quality = args.getInt("quality");
+
+                                            BitmapFactory.Options options = new BitmapFactory.Options();
+                                            options.inSampleSize = factor;
+
+                                            File file = EntityAttachment.getFile(context, id);
+                                            Bitmap scaled = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                                            if (scaled == null)
+                                                throw new IOException("Decode image failed");
+
+                                            Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight());
+
+                                            FileOutputStream out = null;
+                                            try {
+                                                out = new FileOutputStream(file);
+                                                scaled.compress("image/jpeg".equals(attachment.type)
+                                                                ? Bitmap.CompressFormat.JPEG
+                                                                : Bitmap.CompressFormat.PNG,
+                                                        quality, out);
+                                            } finally {
+                                                if (out != null)
+                                                    out.close();
+                                                scaled.recycle();
+                                            }
+
+                                            DB.getInstance(context).attachment().setDownloaded(id, file.length());
+
+                                            return null;
+                                        }
+
+                                        @Override
+                                        protected void onExecuted(Bundle args, Void data) {
+                                            etBody.requestLayout();
+                                        }
+
+                                        @Override
+                                        protected void onException(Bundle args, Throwable ex) {
+                                            if (ex instanceof IOException)
+                                                Snackbar.make(view, Helper.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                                            else
+                                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                        }
+                                    }.execute(FragmentCompose.this, args);
+                                }
+                            })
+                            .create()
+                            .show();
             }
 
             @Override
@@ -1043,7 +1225,7 @@ public class FragmentCompose extends FragmentEx {
                 else
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args, "add:attachment");
+        }.execute(this, args, "compose:attachment:add");
     }
 
     private void handleExit() {
@@ -1101,7 +1283,7 @@ public class FragmentCompose extends FragmentEx {
         dirty = false;
 
         Log.i("Run execute id=" + working);
-        actionLoader.execute(this, args, "action:" + action);
+        actionLoader.execute(this, args, "compose:action:" + action);
     }
 
     private boolean isEmpty() {
@@ -1166,7 +1348,7 @@ public class FragmentCompose extends FragmentEx {
             if (image)
                 attachment.disposition = Part.INLINE;
 
-            attachment.size = (s == null ? null : Integer.parseInt(s));
+            attachment.size = (s == null ? null : Long.parseLong(s));
             attachment.progress = 0;
 
             attachment.id = db.attachment().insertAttachment(attachment);
@@ -1186,7 +1368,7 @@ public class FragmentCompose extends FragmentEx {
                 is = context.getContentResolver().openInputStream(uri);
                 os = new BufferedOutputStream(new FileOutputStream(file));
 
-                int size = 0;
+                long size = 0;
                 byte[] buffer = new byte[EntityAttachment.ATTACHMENT_BUFFER_SIZE];
                 for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
                     size += len;
@@ -1194,7 +1376,7 @@ public class FragmentCompose extends FragmentEx {
 
                     // Update progress
                     if (attachment.size != null)
-                        db.attachment().setProgress(attachment.id, size * 100 / attachment.size);
+                        db.attachment().setProgress(attachment.id, (int) (size * 100 / attachment.size));
                 }
 
                 if (image) {
@@ -1658,7 +1840,7 @@ public class FragmentCompose extends FragmentEx {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args, "draft:check");
+        }.execute(this, args, "compose:check");
     }
 
     private void showDraft(EntityMessage draft) {
@@ -1689,18 +1871,47 @@ public class FragmentCompose extends FragmentEx {
                 final long reference = args.getLong("reference", -1);
 
                 String body = EntityMessage.read(context, id);
-                String quote = (reference < 0 ? null : HtmlHelper.getQuote(context, reference, true));
+                Spanned spannedBody = Html.fromHtml(body, cidGetter, null);
 
-                return new Spanned[]{
-                        Html.fromHtml(body, cidGetter, null),
-                        quote == null ? null : Html.fromHtml(quote,
-                                new Html.ImageGetter() {
-                                    @Override
-                                    public Drawable getDrawable(String source) {
-                                        return HtmlHelper.decodeImage(source, context, reference, false);
+                String quote = (reference < 0 ? null : HtmlHelper.getQuote(context, reference, true));
+                Spanned spannedReference = null;
+                if (quote != null) {
+                    Spanned spannedQuote = Html.fromHtml(quote,
+                            new Html.ImageGetter() {
+                                @Override
+                                public Drawable getDrawable(String source) {
+                                    Drawable image = HtmlHelper.decodeImage(source, context, reference, true);
+
+                                    float width = context.getResources().getDisplayMetrics().widthPixels -
+                                            Helper.dp2pixels(context, 12); // margins;
+                                    if (image.getIntrinsicWidth() > width) {
+                                        float scale = width / image.getIntrinsicWidth();
+                                        image.setBounds(0, 0,
+                                                Math.round(image.getIntrinsicWidth() * scale),
+                                                Math.round(image.getIntrinsicHeight() * scale));
                                     }
-                                },
-                                null)};
+
+                                    return image;
+                                }
+                            },
+                            null);
+
+                    int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+                    SpannableStringBuilder builder = new SpannableStringBuilder(spannedQuote);
+                    QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
+                    for (QuoteSpan quoteSpan : quoteSpans) {
+                        builder.setSpan(
+                                new StyledQuoteSpan(colorPrimary),
+                                builder.getSpanStart(quoteSpan),
+                                builder.getSpanEnd(quoteSpan),
+                                builder.getSpanFlags(quoteSpan));
+                        builder.removeSpan(quote);
+                    }
+
+                    spannedReference = builder;
+                }
+
+                return new Spanned[]{spannedBody, spannedReference};
             }
 
             @Override
@@ -1729,7 +1940,7 @@ public class FragmentCompose extends FragmentEx {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(FragmentCompose.this, args, "draft:show");
+        }.execute(FragmentCompose.this, args, "compose:show");
     }
 
     private SimpleTask<EntityMessage> actionLoader = new SimpleTask<EntityMessage>() {
@@ -1780,92 +1991,94 @@ public class FragmentCompose extends FragmentEx {
 
                 Log.i("Load action id=" + draft.id + " action=" + action);
 
-                // Move draft to new account
-                if (draft.account != aid && aid >= 0) {
-                    Long uid = draft.uid;
-                    String msgid = draft.msgid;
+                if (action != R.id.action_delete) {
+                    // Move draft to new account
+                    if (draft.account != aid && aid >= 0) {
+                        Long uid = draft.uid;
+                        String msgid = draft.msgid;
 
-                    draft.uid = null;
-                    draft.msgid = null;
-                    db.message().updateMessage(draft);
+                        draft.uid = null;
+                        draft.msgid = null;
+                        db.message().updateMessage(draft);
 
-                    draft.id = null;
-                    draft.uid = uid;
-                    draft.msgid = msgid;
-                    draft.content = false;
-                    draft.ui_hide = true;
-                    draft.id = db.message().insertMessage(draft);
-                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
+                        draft.id = null;
+                        draft.uid = uid;
+                        draft.msgid = msgid;
+                        draft.content = false;
+                        draft.ui_hide = true;
+                        draft.id = db.message().insertMessage(draft);
+                        EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
 
-                    draft.id = id;
-                    draft.account = aid;
-                    draft.folder = db.folder().getFolderByType(aid, EntityFolder.DRAFTS).id;
-                    draft.content = true;
-                    draft.ui_hide = false;
-                    EntityOperation.queue(context, db, draft, EntityOperation.ADD);
-                }
-
-                // Convert data
-                InternetAddress afrom[] = (identity == null ? null : new InternetAddress[]{new InternetAddress(identity.email, identity.name)});
-
-                InternetAddress ato[] = null;
-                InternetAddress acc[] = null;
-                InternetAddress abcc[] = null;
-
-                if (!TextUtils.isEmpty(to))
-                    try {
-                        ato = InternetAddress.parse(to);
-                    } catch (AddressException ignored) {
+                        draft.id = id;
+                        draft.account = aid;
+                        draft.folder = db.folder().getFolderByType(aid, EntityFolder.DRAFTS).id;
+                        draft.content = true;
+                        draft.ui_hide = false;
+                        EntityOperation.queue(context, db, draft, EntityOperation.ADD);
                     }
 
-                if (!TextUtils.isEmpty(cc))
-                    try {
-                        acc = InternetAddress.parse(cc);
-                    } catch (AddressException ignored) {
+                    // Get data
+                    InternetAddress afrom[] = (identity == null ? null : new InternetAddress[]{new InternetAddress(identity.email, identity.name)});
+
+                    InternetAddress ato[] = null;
+                    InternetAddress acc[] = null;
+                    InternetAddress abcc[] = null;
+
+                    if (!TextUtils.isEmpty(to))
+                        try {
+                            ato = InternetAddress.parse(to);
+                        } catch (AddressException ignored) {
+                        }
+
+                    if (!TextUtils.isEmpty(cc))
+                        try {
+                            acc = InternetAddress.parse(cc);
+                        } catch (AddressException ignored) {
+                        }
+
+                    if (!TextUtils.isEmpty(bcc))
+                        try {
+                            abcc = InternetAddress.parse(bcc);
+                        } catch (AddressException ignored) {
+                        }
+
+                    if (TextUtils.isEmpty(extra))
+                        extra = null;
+
+                    Long ident = (identity == null ? null : identity.id);
+                    dirty = dirty ||
+                            ((draft.identity == null ? ident != null : !draft.identity.equals(ident)) ||
+                                    (draft.extra == null ? extra != null : !draft.extra.equals(extra)) ||
+                                    !MessageHelper.equal(draft.from, afrom) ||
+                                    !MessageHelper.equal(draft.to, ato) ||
+                                    !MessageHelper.equal(draft.cc, acc) ||
+                                    !MessageHelper.equal(draft.bcc, abcc) ||
+                                    (draft.subject == null ? subject != null : !draft.subject.equals(subject)));
+
+                    // Update draft
+                    draft.identity = ident;
+                    draft.extra = extra;
+                    draft.sender = MessageHelper.getSortKey(afrom);
+                    draft.from = afrom;
+                    draft.to = ato;
+                    draft.cc = acc;
+                    draft.bcc = abcc;
+                    draft.subject = subject;
+                    draft.received = new Date().getTime();
+
+                    if (action == R.id.action_send)
+                        if (draft.replying != null || draft.forwarding != null)
+                            body += HtmlHelper.getQuote(context,
+                                    draft.replying == null ? draft.forwarding : draft.replying, false);
+
+                    dirty = (dirty || !body.equals(draft.read(context)));
+
+                    if (dirty) {
+                        db.message().updateMessage(draft);
+                        draft.write(context, body);
+                        db.message().setMessageContent(
+                                draft.id, true, HtmlHelper.getPreview(body));
                     }
-
-                if (!TextUtils.isEmpty(bcc))
-                    try {
-                        abcc = InternetAddress.parse(bcc);
-                    } catch (AddressException ignored) {
-                    }
-
-                if (TextUtils.isEmpty(extra))
-                    extra = null;
-
-                Long ident = (identity == null ? null : identity.id);
-                dirty = dirty ||
-                        ((draft.identity == null ? ident != null : !draft.identity.equals(ident)) ||
-                                (draft.extra == null ? extra != null : !draft.extra.equals(extra)) ||
-                                !MessageHelper.equal(draft.from, afrom) ||
-                                !MessageHelper.equal(draft.to, ato) ||
-                                !MessageHelper.equal(draft.cc, acc) ||
-                                !MessageHelper.equal(draft.bcc, abcc) ||
-                                (draft.subject == null ? subject != null : !draft.subject.equals(subject)));
-
-                // Update draft
-                draft.identity = ident;
-                draft.extra = extra;
-                draft.sender = MessageHelper.getSortKey(afrom);
-                draft.from = afrom;
-                draft.to = ato;
-                draft.cc = acc;
-                draft.bcc = abcc;
-                draft.subject = subject;
-                draft.received = new Date().getTime();
-
-                if (action == R.id.action_send)
-                    if (draft.replying != null || draft.forwarding != null)
-                        body += HtmlHelper.getQuote(context,
-                                draft.replying == null ? draft.forwarding : draft.replying, false);
-
-                dirty = (dirty || !body.equals(draft.read(context)));
-
-                if (dirty) {
-                    db.message().updateMessage(draft);
-                    draft.write(context, body);
-                    db.message().setMessageContent(
-                            draft.id, true, HtmlHelper.getPreview(body));
                 }
 
                 // Execute action
@@ -1917,33 +2130,31 @@ public class FragmentCompose extends FragmentEx {
                     draft.id = db.message().insertMessage(draft);
                     draft.write(getContext(), body);
 
-                    // Restore attachments
-                    for (EntityAttachment attachment : attachments) {
-                        File file = EntityAttachment.getFile(context, attachment.id);
-                        attachment.id = null;
-                        attachment.message = draft.id;
-                        attachment.id = db.attachment().insertAttachment(attachment);
-                        Helper.copy(file, EntityAttachment.getFile(context, attachment.id));
+                    // Move attachments
+                    for (EntityAttachment attachment : attachments)
+                        db.attachment().setMessage(attachment.id, draft.id);
+
+                    if (draft.ui_snoozed == null)
+                        EntityOperation.queue(context, db, draft, EntityOperation.SEND);
+
+                    if (draft.ui_snoozed == null) {
+                        Handler handler = new Handler(context.getMainLooper());
+                        handler.post(new Runnable() {
+                            public void run() {
+                                Toast.makeText(context, R.string.title_queued, Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
-
-                    EntityOperation.queue(context, db, draft, EntityOperation.SEND);
-
-                    if (draft.replying != null) {
-                        EntityMessage replying = db.message().getMessage(draft.replying);
-                        EntityOperation.queue(context, db, replying, EntityOperation.ANSWERED, true);
-                    }
-
-                    Handler handler = new Handler(context.getMainLooper());
-                    handler.post(new Runnable() {
-                        public void run() {
-                            Toast.makeText(context, R.string.title_queued, Toast.LENGTH_LONG).show();
-                        }
-                    });
                 }
 
                 db.setTransactionSuccessful();
             } finally {
                 db.endTransaction();
+            }
+
+            if (action == R.id.action_send && draft.ui_snoozed != null) {
+                Log.i("Delayed send id=" + draft.id + " at " + new Date(draft.ui_snoozed));
+                EntityMessage.snooze(getContext(), draft.id, draft.ui_snoozed);
             }
 
             return draft;
@@ -2037,7 +2248,16 @@ public class FragmentCompose extends FragmentEx {
                                 else {
                                     lld.addLevel(2, 2, image);
                                     lld.setLevel(2); // image
-                                    lld.setBounds(0, 0, image.getIntrinsicWidth(), image.getIntrinsicHeight());
+
+                                    float scale = 1.0f;
+                                    float width = getContext().getResources().getDisplayMetrics().widthPixels -
+                                            Helper.dp2pixels(getContext(), 12); // margins;
+                                    if (image.getIntrinsicWidth() > width)
+                                        scale = width / image.getIntrinsicWidth();
+
+                                    lld.setBounds(0, 0,
+                                            Math.round(image.getIntrinsicWidth() * scale),
+                                            Math.round(image.getIntrinsicHeight() * scale));
                                 }
                                 etBody.requestLayout();
                             }
@@ -2046,7 +2266,7 @@ public class FragmentCompose extends FragmentEx {
                             protected void onException(Bundle args, Throwable ex) {
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
-                        }.execute(FragmentCompose.this, args, source);
+                        }.execute(FragmentCompose.this, args, "compose:cid:" + source);
                     }
                 });
             } else
