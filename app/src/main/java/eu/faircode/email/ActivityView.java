@@ -232,6 +232,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     case R.string.menu_setup:
                         onReload();
                         break;
+                    case R.string.menu_operations:
+                        onShowLog();
+                        break;
                     case R.string.menu_faq:
                         onDebugInfo();
                         break;
@@ -239,7 +242,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         onCleanup();
                         break;
                     case R.string.menu_about:
-                        onShowLog();
+                        if (Helper.isPlayStoreInstall(ActivityView.this))
+                            return false;
+                        checkUpdate(true);
                         break;
                     default:
                         return false;
@@ -350,7 +355,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         checkFirst();
         checkCrash();
         if (!Helper.isPlayStoreInstall(this))
-            checkUpdate();
+            checkUpdate(false);
 
         pgpService = new OpenPgpServiceConnection(this, "org.sufficientlysecure.keychain");
         pgpService.bindToService();
@@ -428,7 +433,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
                         }
-                    }.execute(ActivityView.this, args);
+                    }.execute(ActivityView.this, args, "search:account:archive");
                 } else {
                     FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                     fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
@@ -598,7 +603,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     Toast.makeText(ActivityView.this, ex.toString(), Toast.LENGTH_LONG).show();
             }
-        }.execute(this, new Bundle());
+        }.execute(this, new Bundle(), "crash:log");
     }
 
     private class UpdateInfo {
@@ -606,12 +611,12 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         String html_url;
     }
 
-    private void checkUpdate() {
+    private void checkUpdate(boolean always) {
         long now = new Date().getTime();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!prefs.getBoolean("updates", true))
+        if (!always && !prefs.getBoolean("updates", true))
             return;
-        if (prefs.getLong("last_update_check", 0) + UPDATE_INTERVAL > now)
+        if (!always && prefs.getLong("last_update_check", 0) + UPDATE_INTERVAL > now)
             return;
         prefs.edit().putLong("last_update_check", now).apply();
 
@@ -691,7 +696,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 if (BuildConfig.DEBUG)
                     Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(this, new Bundle());
+        }.execute(this, new Bundle(), "update:check");
     }
 
     private void updateShortcuts() {
@@ -847,7 +852,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "menu:inbox");
     }
 
     private void onMenuSetup() {
@@ -949,7 +954,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     Toast.makeText(ActivityView.this, ex.toString(), Toast.LENGTH_LONG).show();
             }
 
-        }.execute(this, new Bundle());
+        }.execute(this, new Bundle(), "debug:info");
     }
 
     private void onCleanup() {
@@ -964,7 +969,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(this, new Bundle());
+        }.execute(this, new Bundle(), "cleanup:job");
     }
 
     private void onShowLog() {
@@ -1346,7 +1351,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(ActivityView.this, args);
+        }.execute(ActivityView.this, args, "decrypt");
     }
 
     @Override
@@ -1431,7 +1436,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 else
                     Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "attachment:save");
     }
 
     private void saveAttachments(Intent data) {
@@ -1501,6 +1506,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "attachments:save");
     }
 }

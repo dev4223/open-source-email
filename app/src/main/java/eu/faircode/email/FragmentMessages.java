@@ -117,6 +117,7 @@ public class FragmentMessages extends FragmentEx {
     private boolean pull;
     private boolean actionbar;
     private boolean autoclose;
+    private boolean addresses;
 
     private long primary = -1;
     private boolean outbox = false;
@@ -178,7 +179,7 @@ public class FragmentMessages extends FragmentEx {
         threading = prefs.getBoolean("threading", true);
         actionbar = prefs.getBoolean("actionbar", true);
         autoclose = prefs.getBoolean("autoclose", true);
-
+        addresses = prefs.getBoolean("addresses", true);
     }
 
     @Override
@@ -350,6 +351,8 @@ public class FragmentMessages extends FragmentEx {
                     public boolean getValue(String name, long id) {
                         if (values.containsKey(name))
                             return values.get(name).contains(id);
+                        else if ("addresses".equals(name))
+                            return !addresses;
                         return false;
                     }
 
@@ -1237,7 +1240,7 @@ public class FragmentMessages extends FragmentEx {
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                try {
+                                if (Helper.isPro(getContext())) {
                                     int hours = npHours.getValue();
                                     int days = npDays.getValue();
                                     long duration = (hours + days * 24) * HOUR_MS;
@@ -1276,8 +1279,10 @@ public class FragmentMessages extends FragmentEx {
                                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                                         }
                                     }.execute(FragmentMessages.this, args, "messages:snooze");
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
+                                } else {
+                                    FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                                    fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
+                                    fragmentTransaction.commit();
                                 }
                             }
                         })

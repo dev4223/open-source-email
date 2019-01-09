@@ -223,9 +223,9 @@ public class FragmentCompose extends FragmentEx {
                 int at = (identity == null ? -1 : identity.email.indexOf('@'));
                 tvExtraPrefix.setText(at < 0 ? null : identity.email.substring(0, at));
                 tvExtraSuffix.setText(at < 0 ? null : identity.email.substring(at));
+                Spanned signature = null;
                 if (pro) {
-                    Spanned signature = null;
-                    if (identity != null && identity.signature != null)
+                    if (identity != null && !TextUtils.isEmpty(identity.signature))
                         signature = Html.fromHtml(identity.signature, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
@@ -236,9 +236,9 @@ public class FragmentCompose extends FragmentEx {
                                 return d;
                             }
                         }, null);
-                    tvSignature.setText(signature);
-                    grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
                 }
+                tvSignature.setText(signature);
+                grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
             }
 
             @Override
@@ -752,7 +752,7 @@ public class FragmentCompose extends FragmentEx {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        try {
+                        if (Helper.isPro(getContext())) {
                             int hours = npHours.getValue();
                             int days = npDays.getValue();
                             long duration = (hours + days * 24) * HOUR_MS;
@@ -784,8 +784,10 @@ public class FragmentCompose extends FragmentEx {
                                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                                 }
                             }.execute(FragmentCompose.this, args, "compose:send:after");
-                        } catch (Throwable ex) {
-                            Log.e(ex);
+                        } else {
+                            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                            fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
+                            fragmentTransaction.commit();
                         }
                     }
                 })
@@ -1518,6 +1520,13 @@ public class FragmentCompose extends FragmentEx {
                         result.draft.subject = args.getString("subject", "");
                         body = args.getString("body", "");
                         body = body.replaceAll("\\r?\\n", "<br />");
+
+                        if (answer > 0) {
+                            String text = db.answer().getAnswer(answer).text;
+                            text = text.replace("$name$", "");
+                            text = text.replace("$email$", "");
+                            body = text + body;
+                        }
                     } else {
                         result.draft.thread = ref.thread;
 
@@ -1627,21 +1636,14 @@ public class FragmentCompose extends FragmentEx {
                         for (EntityAttachment attachment : attachments)
                             if (attachment.available &&
                                     ("forward".equals(action) || attachment.isInline())) {
-                                EntityAttachment copy = new EntityAttachment();
-                                copy.message = result.draft.id;
-                                copy.sequence = ++sequence;
-                                copy.name = attachment.name;
-                                copy.type = attachment.type;
-                                copy.disposition = attachment.disposition;
-                                copy.cid = attachment.cid;
-                                copy.encryption = attachment.encryption;
-                                copy.size = attachment.size;
-                                copy.progress = attachment.progress;
-                                copy.available = attachment.available;
-                                copy.id = db.attachment().insertAttachment(copy);
+                                long orig = attachment.id;
+                                attachment.id = null;
+                                attachment.message = result.draft.id;
+                                attachment.sequence = ++sequence;
+                                attachment.id = db.attachment().insertAttachment(attachment);
 
-                                File source = EntityAttachment.getFile(context, attachment.id);
-                                File target = EntityAttachment.getFile(context, copy.id);
+                                File source = EntityAttachment.getFile(context, orig);
+                                File target = EntityAttachment.getFile(context, attachment.id);
                                 Helper.copy(source, target);
                             }
 
