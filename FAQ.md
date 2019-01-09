@@ -52,10 +52,9 @@ Since FairEmail is meant to be privacy friendly, the following will not be added
 
 * Open links without confirmation
 * Show original message without confirmation
-* Hide addresses by default: addresses play an important role in determining if a message is authentic
-* Direct file/folder access: for security/privacy reasons (other) apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider)
+* Direct file/folder access: for security/privacy reasons (other) apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider), see also [this FAQ](#user-content-faq49)
 
-Confirmation or hiding the addresses section is just one tap, which is just a small price for better privacy.
+Confirmation is just one tap, which is just a small price for better privacy.
 Note that your contacts could unknowingly send malicious messages if they got infected with malware.
 
 
@@ -124,6 +123,7 @@ Note that your contacts could unknowingly send malicious messages if they got in
 * [(61) Why are some messages shown dimmed?](#user-content-faq61)
 * [(62) Which authentication methods are supported?](#user-content-faq62)
 * [(63) How are images resized for displaying on screens?](#user-content-faq63)
+* [(64) Can you add custom actions for swipe left/right?](#user-content-faq64)
 
 [I have another question.](#support)
 
@@ -199,7 +199,7 @@ you'll need to enable insecure connections in the account and/or identity settin
 <a name="faq5"></a>
 **(5) How can I customize the message view?**
 
-In the advanced settings you can enable or disable:
+In the display section of the advanced settings you can enable or disable:
 
 * *unified inbox*: to disable the unified inbox and to list the folders selected for the unified inbox instead
 * *conversation threading*: to disable conversation threading and to show individual messages instead
@@ -207,6 +207,7 @@ In the advanced settings you can enable or disable:
 * *show contact photos*: to hide contact photos
 * *show identicons*: to show generated contact avatars
 * *show message preview*: to show two lines of the message text
+* *Show address details by default*: to collapse the addresses section by default
 
 If the list of addresses is long, you can collapse the addresses section with the *less* icon at the top of the addresses section.
 
@@ -457,7 +458,7 @@ See [here](https://support.google.com/mail/answer/7126229) for details.
 
 Browse messages on the server will fetch messages from the email server in real time
 when you reach the end of the list of synchronized messages, even when the folder is set to not synchronize.
-You can disable this feature under *Setup* > *Advanced options* > *Browse messages on the server*.
+You can disable this feature in the advanced account settings.
 
 <br />
 
@@ -949,6 +950,7 @@ but even Google's Chrome cannot handle this.
 * Did you know there is an advanced option to mark messages read when they are moved and that archiving and trashing is also moving?
 * Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it? You'll need to set a primary account and an archive folder for this to work, so FairEmail knows where to search. There will be 'FairEmail' in the menu with copy, cut, etc.
 * Did you know that FairEmail has a tablet mode? Rotate your device in landscape mode and conversation threads will be opened in a second column if there is enough screen space.
+* Did you know that you can long press a reply template to create a draft message from the template?
 
 <br />
 
@@ -985,6 +987,15 @@ because [JavaMail for Android](https://javaee.github.io/javamail/Android) does n
 After adding an inline image or an image attachment you might be asked if you want to reduce the image size for displaying on a screens.
 If you answer "yes", the image will be resized to a maximum width and height of about 1920 pixels and saved with a compression ratio of 90 out of 100.
 Images are scaled down using whole number factors to reduce memory usage and to retain image quality.
+
+<br />
+
+<a name="faq64"></a>
+**(64) Can you add custom actions for swipe left/right?**
+
+The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.
+The most natural action in the context of FairEmail is to either archive or trash the message.
+Other actions, like adding stars to messages, reporting messages as spam and move messages are available via multiple selection.
 
 <br />
 
