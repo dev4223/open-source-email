@@ -392,6 +392,12 @@ public class ServiceSynchronize extends LifecycleService {
 
                                         case "snooze":
                                             db.message().setMessageSnoozed(message.id, null);
+
+                                            EntityFolder folder = db.folder().getFolder(message.folder);
+                                            if (EntityFolder.OUTBOX.equals(folder.type)) {
+                                                Log.i("Delayed send id=" + message.id);
+                                                EntityOperation.queue(ServiceSynchronize.this, db, message, EntityOperation.SEND);
+                                            }
                                             break;
 
                                         default:
@@ -557,7 +563,7 @@ public class ServiceSynchronize extends LifecycleService {
                 sb.append("<strong>").append(MessageHelper.getFormattedAddresses(message.from, false)).append("</strong>");
                 if (!TextUtils.isEmpty(message.subject))
                     sb.append(": ").append(message.subject);
-                sb.append(" ").append(df.format(new Date(message.received)));
+                sb.append(" ").append(df.format(message.received));
                 sb.append("<br>");
             }
 
@@ -1737,9 +1743,13 @@ public class ServiceSynchronize extends LifecycleService {
             db.message().setMessageLastAttempt(message.id, message.last_attempt);
         }
 
-        // Create session
+        String transportType = (ident.starttls ? "smtp" : "smtps");
+
+        // Get properties
         Properties props = MessageHelper.getSessionProperties(ident.auth_type, ident.insecure);
         props.put("mail.smtp.localhost", ident.host);
+
+        // Create session
         final Session isession = Session.getInstance(props, null);
 
         // Create message
@@ -1769,7 +1779,7 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Create transport
         // TODO: cache transport?
-        Transport itransport = isession.getTransport(ident.starttls ? "smtp" : "smtps");
+        Transport itransport = isession.getTransport(transportType);
         try {
             // Connect transport
             db.identity().setIdentityState(ident.id, "connecting");
@@ -1824,6 +1834,11 @@ public class ServiceSynchronize extends LifecycleService {
                         Log.i("Appending sent msgid=" + message.msgid);
                         EntityOperation.queue(this, db, message, EntityOperation.ADD); // Could already exist
                     }
+                }
+
+                if (message.replying != null) {
+                    EntityMessage replying = db.message().getMessage(message.replying);
+                    EntityOperation.queue(this, db, replying, EntityOperation.ANSWERED, true);
                 }
 
                 db.setTransactionSuccessful();

@@ -52,6 +52,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -810,11 +812,10 @@ public class FragmentMessages extends FragmentEx {
                         if (result[4] && !result[6] && !result[9]) // has archive and not is archive
                             popupMenu.getMenu().add(Menu.NONE, action_archive, 5, R.string.title_archive);
 
-                        if (result[5]) // has trash
-                            if (result[7] || result[9]) // is trash or drafts
-                                popupMenu.getMenu().add(Menu.NONE, action_delete, 6, R.string.title_trash);
-                            else
-                                popupMenu.getMenu().add(Menu.NONE, action_trash, 6, R.string.title_trash);
+                        if (result[7] || result[9]) // is trash/drafts
+                            popupMenu.getMenu().add(Menu.NONE, action_delete, 6, R.string.title_delete);
+                        else if (result[5]) // has trash
+                            popupMenu.getMenu().add(Menu.NONE, action_trash, 6, R.string.title_trash);
 
                         if (!result[8] && !result[9])
                             popupMenu.getMenu().add(Menu.NONE, action_junk, 7, R.string.title_spam);
@@ -1008,9 +1009,7 @@ public class FragmentMessages extends FragmentEx {
                                                     List<EntityMessage> messages = db.message().getMessageByThread(
                                                             message.account, message.thread, threading ? null : id, message.folder);
                                                     for (EntityMessage threaded : messages)
-                                                        if (threaded.uid == null && !TextUtils.isEmpty(threaded.error)) // outbox
-                                                            db.message().deleteMessage(threaded.id);
-                                                        else
+                                                        if (threaded.uid != null)
                                                             EntityOperation.queue(context, db, threaded, EntityOperation.DELETE);
                                                 }
                                             }
@@ -1206,15 +1205,31 @@ public class FragmentMessages extends FragmentEx {
                 final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_duration, null);
                 final NumberPicker npHours = dview.findViewById(R.id.npHours);
                 final NumberPicker npDays = dview.findViewById(R.id.npDays);
+                final TextView tvTime = dview.findViewById(R.id.tvTime);
+                final long HOUR_MS = 3600L * 1000L;
 
                 npHours.setMinValue(0);
                 npHours.setMaxValue(24);
 
                 npDays.setMinValue(0);
-                npDays.setMaxValue(30);
+                npDays.setMaxValue(90);
 
-                npHours.setValue(prefs.getInt("snooze_hours", 1));
-                npDays.setValue(prefs.getInt("snooze_days", 0));
+                NumberPicker.OnValueChangeListener valueChanged = new NumberPicker.OnValueChangeListener() {
+                    @Override
+                    public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                        int hours = npHours.getValue();
+                        int days = npDays.getValue();
+                        long duration = (hours + days * 24) * HOUR_MS;
+                        long time = new Date().getTime() / HOUR_MS * HOUR_MS + duration;
+                        DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
+                        tvTime.setText(df.format(time));
+                        tvTime.setVisibility(duration == 0 ? View.INVISIBLE : View.VISIBLE);
+                    }
+                };
+
+                npHours.setOnValueChangedListener(valueChanged);
+                npDays.setOnValueChangedListener(valueChanged);
+                valueChanged.onValueChange(null, 0, 0);
 
                 new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
                         .setTitle(R.string.title_snooze)
@@ -1225,16 +1240,12 @@ public class FragmentMessages extends FragmentEx {
                                 try {
                                     int hours = npHours.getValue();
                                     int days = npDays.getValue();
-                                    long duration = (hours + days * 24) * 3600L * 1000L;
-
-                                    if (duration > 0) {
-                                        prefs.edit().putInt("snooze_hours", hours).apply();
-                                        prefs.edit().putInt("snooze_days", days).apply();
-                                    }
+                                    long duration = (hours + days * 24) * HOUR_MS;
+                                    long time = new Date().getTime() / HOUR_MS * HOUR_MS + duration;
 
                                     Bundle args = new Bundle();
                                     args.putLongArray("ids", getSelection());
-                                    args.putLong("wakeup", duration == 0 ? 0 : new Date().getTime() + duration);
+                                    args.putLong("wakeup", duration == 0 ? 0 : time);
 
                                     new SimpleTask<Void>() {
                                         @Override
