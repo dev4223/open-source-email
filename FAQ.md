@@ -38,7 +38,6 @@ None at this moment.
 * Automatically go to the next message on deleting a message: since the 'next' message can either be an older or a newer message this would be confusing. You can disable auto closing in the advanced options and use the bottom navigation bar instead.
 * Rich text editor: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned.
 * Widget to read e-mail: widgets can have limited user interaction only, so a widget to read e-mail would not be very useful. Moreover, it would be not very useful to duplicate functions which are already available in the app.
-* Calendar events: opening the attached calendar file should open the related calendar app.
 * Executing filter rules: filter rules should be executed on the server because a battery powered device with possibly an unstable internet connection is not suitable for this.
 * Badge count: there is no standard Android API for this and third party solutions might stop working anytime. For example *ShortcutBadger* [has lots of problems](https://github.com/leolin310148/ShortcutBadger/issues). You can use the provided widget instead.
 * Switch language: although it is possible to change the language of an app, Android is not designed for this. Better fix the translation in your language if needed, see [this FAQ](#user-content-faq26) about how to.
@@ -124,6 +123,7 @@ Note that your contacts could unknowingly send malicious messages if they got in
 * [(62) Which authentication methods are supported?](#user-content-faq62)
 * [(63) How are images resized for displaying on screens?](#user-content-faq63)
 * [(64) Can you add custom actions for swipe left/right?](#user-content-faq64)
+* [(65) Why are some attachments shown dimmed?](#user-content-faq65)
 
 [I have another question.](#support)
 
@@ -998,6 +998,17 @@ The most natural action in the context of FairEmail is to either archive or tras
 Other actions, like adding stars to messages, reporting messages as spam and move messages are available via multiple selection.
 
 <br />
+
+<a name="faq65"></a>
+**(65) Why are some attachments shown dimmed?**
+
+Inline (image) attachments are shown dimmed.
+[Inline attachments](https://tools.ietf.org/html/rfc2183) are supposed to be downloaded and shown automatically,
+but since FairEmail doesn't always download attachments automatically, see also [this FAQ](#user-content-faq40),
+FairEmail shows all attachment types. To distinguish inline and regular attachments, inline attachments are shown dimmed.
+
+<br />
+
 
 ## Support
 
