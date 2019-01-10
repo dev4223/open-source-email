@@ -710,7 +710,13 @@
             android:id="@+id/grpAddress"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc,tvTimeEx,tvSizeExTitle,tvSizeEx,tvSubjectEx" />
+            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/grpAddressMeta"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:constraint_referenced_ids="tvTimeEx,tvSizeExTitle,tvSizeEx,tvSubjectEx" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/grpHeaders"

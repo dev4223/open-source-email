@@ -202,6 +202,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private RecyclerView rvImage;
 
         private Group grpAddress;
+        private Group grpAddressMeta;
         private Group grpHeaders;
         private Group grpAttachments;
         private Group grpExpanded;
@@ -281,6 +282,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             rvImage.setAdapter(adapterImage);
 
             grpAddress = itemView.findViewById(R.id.grpAddress);
+            grpAddressMeta = itemView.findViewById(R.id.grpAddressMeta);
             grpHeaders = itemView.findViewById(R.id.grpHeaders);
             grpAttachments = itemView.findViewById(R.id.grpAttachments);
             grpExpanded = itemView.findViewById(R.id.grpExpanded);
@@ -354,6 +356,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             rvImage.setVisibility(View.GONE);
 
             grpAddress.setVisibility(View.GONE);
+            grpAddressMeta.setVisibility(View.GONE);
             ivAddContact.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpAttachments.setVisibility(View.GONE);
@@ -534,8 +537,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             grpExpanded.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
             grpAddress.setVisibility(viewType == ViewType.THREAD && show_expanded && show_addresses ? View.VISIBLE : View.GONE);
+            grpAddressMeta.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
             tvKeywords.setVisibility(View.GONE);
             ivAddContact.setVisibility(viewType == ViewType.THREAD && show_expanded && show_addresses && contacts && message.from != null ? View.VISIBLE : View.GONE);
+
+            if(ViewType.THREAD == viewType) {
+                tvSubject.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
+            } else {
+                tvSubject.setVisibility(View.VISIBLE);
+            }
 
             if (show_headers && show_expanded && message.headers == null) {
                 pbHeaders.setVisibility(internet ? View.VISIBLE : View.GONE);
