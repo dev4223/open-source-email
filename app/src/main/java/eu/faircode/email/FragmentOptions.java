@@ -32,15 +32,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import java.io.IOException;
 
@@ -48,6 +46,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.FragmentActivity;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -55,6 +54,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
     private SwitchCompat swEnabled;
     private SwitchCompat swUpdates;
 
+    private TextView tvConnectionType;
     private SwitchCompat swMetered;
     private Spinner spDownload;
 
@@ -70,11 +70,13 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
     private SwitchCompat swSwipe;
     private SwitchCompat swActionbar;
     private SwitchCompat swAutoClose;
+    private SwitchCompat swAutoNext;
     private SwitchCompat swAutoRead;
     private SwitchCompat swCollapse;
     private SwitchCompat swAutoMove;
     private SwitchCompat swConfirm;
     private SwitchCompat swSender;
+    private SwitchCompat swAutoResize;
     private SwitchCompat swAutoSend;
 
     private SwitchCompat swLight;
@@ -96,6 +98,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
         swEnabled = view.findViewById(R.id.swEnabled);
         swUpdates = view.findViewById(R.id.swUpdates);
 
+        tvConnectionType = view.findViewById(R.id.tvConnectionType);
         swMetered = view.findViewById(R.id.swMetered);
         spDownload = view.findViewById(R.id.spDownload);
 
@@ -111,11 +114,13 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
         swSwipe = view.findViewById(R.id.swSwipe);
         swActionbar = view.findViewById(R.id.swActionbar);
         swAutoClose = view.findViewById(R.id.swAutoClose);
+        swAutoNext = view.findViewById(R.id.swAutoNext);
         swAutoRead = view.findViewById(R.id.swAutoRead);
         swCollapse = view.findViewById(R.id.swCollapse);
         swAutoMove = view.findViewById(R.id.swAutoMove);
         swConfirm = view.findViewById(R.id.swConfirm);
         swSender = view.findViewById(R.id.swSender);
+        swAutoResize = view.findViewById(R.id.swAutoResize);
         swAutoSend = view.findViewById(R.id.swAutoSend);
 
         swLight = view.findViewById(R.id.swLight);
@@ -252,7 +257,7 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                         }
-                    }.execute(FragmentOptions.this, null);
+                    }.execute(FragmentOptions.this, new Bundle(), "options:preview");
             }
         });
 
@@ -293,8 +298,18 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("autoclose", checked).apply();
+                swAutoNext.setEnabled(!checked);
             }
         });
+
+        swAutoNext.setChecked(prefs.getBoolean("autonext", false));
+        swAutoNext.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autonext", checked).apply();
+            }
+        });
+        swAutoNext.setEnabled(!swAutoClose.isChecked());
 
         swAutoRead.setChecked(prefs.getBoolean("autoread", false));
         swAutoRead.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -333,6 +348,14 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("sender", checked).apply();
+            }
+        });
+
+        swAutoResize.setChecked(prefs.getBoolean("autoresize", true));
+        swAutoResize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autoresize", checked).apply();
             }
         });
 
@@ -389,8 +412,6 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-        // Removed because of Android VPN service
-        // builder.addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
         cm.registerNetworkCallback(builder.build(), networkCallback);
     }
 
@@ -405,39 +426,35 @@ public class FragmentOptions extends FragmentEx implements SharedPreferences.OnS
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
         @Override
         public void onAvailable(Network network) {
-            getActivity().invalidateOptionsMenu();
+            showConnectionType();
         }
 
         @Override
         public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities) {
-            getActivity().invalidateOptionsMenu();
+            showConnectionType();
         }
 
         @Override
         public void onLost(Network network) {
-            getActivity().invalidateOptionsMenu();
+            showConnectionType();
         }
     };
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_options, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
+    public void showConnectionType() {
+        FragmentActivity activity = getActivity();
+        if (activity == null)
+            return;
 
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        Boolean metered = Helper.isMetered(getContext(), false);
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Boolean metered = Helper.isMetered(getContext(), false);
 
-        MenuItem menuMetered = menu.findItem(R.id.menu_metered);
-        menuMetered.setVisible(metered != null);
-        if (metered != null) {
-            menuMetered.setIcon(
-                    metered ? R.drawable.baseline_attach_money_24 : R.drawable.baseline_money_off_24);
-            menuMetered.setTitle(
-                    metered ? R.string.title_legend_metered : R.string.title_legend_unmetered);
-        }
-        super.onPrepareOptionsMenu(menu);
+                tvConnectionType.setVisibility(metered == null ? View.GONE : View.VISIBLE);
+                if (metered != null)
+                    tvConnectionType.setText(metered ? R.string.title_legend_metered : R.string.title_legend_unmetered);
+            }
+        });
     }
 
     @Override

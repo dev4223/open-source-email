@@ -206,6 +206,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 return;
 
             TupleFolderEx folder = filtered.get(pos);
+            if (folder.tbd != null)
+                return;
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
@@ -222,6 +224,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 return false;
 
             final TupleFolderEx folder = filtered.get(pos);
+            if (folder.tbd != null)
+                return false;
 
             PopupMenu popupMenu = new PopupMenu(context, itemView);
 
@@ -290,7 +294,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(context, owner, ex);
                         }
-                    }.execute(context, owner, args);
+                    }.execute(context, owner, args, "folder:sync");
                 }
 
                 private void OnActionDeleteLocal() {
@@ -315,7 +319,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         public void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(context, owner, ex);
                         }
-                    }.execute(context, owner, args);
+                    }.execute(context, owner, args, "folder:delete:local");
                 }
 
                 private void onActionEmptyTrash() {
@@ -354,7 +358,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                                         protected void onException(Bundle args, Throwable ex) {
                                             Helper.unexpectedError(context, owner, ex);
                                         }
-                                    }.execute(context, owner, args);
+                                    }.execute(context, owner, args, "folder:delete");
                                 }
                             })
                             .setNegativeButton(android.R.string.cancel, null)

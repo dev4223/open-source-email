@@ -303,7 +303,7 @@ public class FragmentAccount extends FragmentEx {
                         else
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                     }
-                }.execute(FragmentAccount.this, args);
+                }.execute(FragmentAccount.this, args, "account:config");
             }
         });
 
@@ -623,7 +623,7 @@ public class FragmentAccount extends FragmentEx {
                             });
                         }
                     }
-                }.execute(FragmentAccount.this, args);
+                }.execute(FragmentAccount.this, args, "account:check");
             }
         });
 
@@ -753,10 +753,12 @@ public class FragmentAccount extends FragmentEx {
                         DB db = DB.getInstance(context);
                         EntityAccount account = db.account().getAccount(id);
 
+                        String accountRealm = (account == null ? null : account.realm);
+
                         boolean check = (synchronize && (account == null ||
                                 !host.equals(account.host) || Integer.parseInt(port) != account.port ||
                                 !user.equals(account.user) || !password.equals(account.password) ||
-                                realm == null ? account.realm != null : !realm.equals(account.realm)));
+                                (realm == null ? accountRealm != null : !realm.equals(accountRealm))));
                         boolean reload = (check || account == null ||
                                 (account.prefix == null ? prefix != null : !account.prefix.equals(prefix)) ||
                                 account.synchronize != synchronize ||
@@ -935,7 +937,7 @@ public class FragmentAccount extends FragmentEx {
                             });
                         }
                     }
-                }.execute(FragmentAccount.this, args);
+                }.execute(FragmentAccount.this, args, "account:save");
             }
         });
 
@@ -1069,7 +1071,7 @@ public class FragmentAccount extends FragmentEx {
                         protected void onException(Bundle args, Throwable ex) {
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                         }
-                    }.execute(FragmentAccount.this, new Bundle());
+                    }.execute(FragmentAccount.this, new Bundle(), "account:primary");
                 } else {
                     int provider = savedInstanceState.getInt("provider");
                     spProvider.setTag(provider);
@@ -1109,14 +1111,14 @@ public class FragmentAccount extends FragmentEx {
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                     }
-                }.execute(FragmentAccount.this, args);
+                }.execute(FragmentAccount.this, args, "account:folders");
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "account:get");
     }
 
     @Override
@@ -1179,7 +1181,7 @@ public class FragmentAccount extends FragmentEx {
                             protected void onException(Bundle args, Throwable ex) {
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
-                        }.execute(FragmentAccount.this, args);
+                        }.execute(FragmentAccount.this, args, "account:delete");
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)

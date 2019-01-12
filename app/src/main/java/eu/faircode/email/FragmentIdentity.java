@@ -421,7 +421,7 @@ public class FragmentIdentity extends FragmentEx {
                         else
                             Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                     }
-                }.execute(FragmentIdentity.this, args);
+                }.execute(FragmentIdentity.this, args, "identity:config");
             }
         });
 
@@ -558,10 +558,12 @@ public class FragmentIdentity extends FragmentEx {
                         DB db = DB.getInstance(context);
                         EntityIdentity identity = db.identity().getIdentity(id);
 
+                        String identityRealm = (identity == null ? null : identity.realm);
+
                         boolean check = (synchronize && (identity == null ||
                                 !host.equals(identity.host) || Integer.parseInt(port) != identity.port ||
                                 !user.equals(identity.user) || !password.equals(identity.password) ||
-                                realm == null ? identity.realm != null : !realm.equals(identity.realm)));
+                                realm == null ? identityRealm != null : !realm.equals(identityRealm)));
                         boolean reload = (identity == null || identity.synchronize != synchronize || check);
 
                         // Check SMTP server
@@ -657,7 +659,7 @@ public class FragmentIdentity extends FragmentEx {
                             });
                         }
                     }
-                }.execute(FragmentIdentity.this, args);
+                }.execute(FragmentIdentity.this, args, "identity:save");
             }
         });
 
@@ -750,7 +752,7 @@ public class FragmentIdentity extends FragmentEx {
                             protected void onException(Bundle args, Throwable ex) {
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
-                        }.execute(FragmentIdentity.this, new Bundle());
+                        }.execute(FragmentIdentity.this, new Bundle(), "identity:count");
                 } else {
                     tilPassword.getEditText().setText(savedInstanceState.getString("password"));
                     grpAdvanced.setVisibility(savedInstanceState.getInt("advanced"));
@@ -847,14 +849,14 @@ public class FragmentIdentity extends FragmentEx {
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                     }
-                }.execute(FragmentIdentity.this, args);
+                }.execute(FragmentIdentity.this, args, "identity:accounts:get");
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "identity:get");
     }
 
     @Override
@@ -915,7 +917,7 @@ public class FragmentIdentity extends FragmentEx {
                             protected void onException(Bundle args, Throwable ex) {
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
-                        }.execute(FragmentIdentity.this, args);
+                        }.execute(FragmentIdentity.this, args, "identity:delete");
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
@@ -982,7 +984,7 @@ public class FragmentIdentity extends FragmentEx {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
-        }.execute(this, args);
+        }.execute(this, args, "identity:folders:get");
     }
 
     class IdentityFolders {
