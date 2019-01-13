@@ -74,6 +74,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.NumberPicker;
@@ -151,6 +152,7 @@ public class FragmentCompose extends FragmentEx {
     private TextView tvNoInternet;
     private TextView tvSignature;
     private TextView tvReference;
+    private ImageButton ibImages;
     private BottomNavigationView edit_bar;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
@@ -158,6 +160,7 @@ public class FragmentCompose extends FragmentEx {
     private Group grpExtra;
     private Group grpAddresses;
     private Group grpAttachments;
+    private Group grpBody;
     private Group grpSignature;
     private Group grpReference;
 
@@ -167,6 +170,7 @@ public class FragmentCompose extends FragmentEx {
 
     private long working = -1;
     private State state = State.NONE;
+    private boolean show_images = false;
     private boolean autosave = false;
     private boolean busy = false;
 
@@ -204,6 +208,7 @@ public class FragmentCompose extends FragmentEx {
         tvNoInternet = view.findViewById(R.id.tvNoInternet);
         tvSignature = view.findViewById(R.id.tvSignature);
         tvReference = view.findViewById(R.id.tvReference);
+        ibImages = view.findViewById(R.id.ibImages);
         edit_bar = view.findViewById(R.id.edit_bar);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
         pbWait = view.findViewById(R.id.pbWait);
@@ -211,6 +216,7 @@ public class FragmentCompose extends FragmentEx {
         grpExtra = view.findViewById(R.id.grpExtra);
         grpAddresses = view.findViewById(R.id.grpAddresses);
         grpAttachments = view.findViewById(R.id.grpAttachments);
+        grpBody = view.findViewById(R.id.grpBody);
         grpSignature = view.findViewById(R.id.grpSignature);
         grpReference = view.findViewById(R.id.grpReference);
 
@@ -279,6 +285,34 @@ public class FragmentCompose extends FragmentEx {
         ivCcAdd.setOnClickListener(onPick);
         ivBccAdd.setOnClickListener(onPick);
 
+        ibImages.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                show_images = true;
+
+                Bundle args = new Bundle();
+                args.putLong("id", working);
+
+                new SimpleTask<EntityMessage>() {
+                    @Override
+                    protected EntityMessage onExecute(Context context, Bundle args) {
+                        long id = args.getLong("id");
+                        return DB.getInstance(context).message().getMessage(id);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityMessage draft) {
+                        showDraft(draft);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    }
+                }.execute(FragmentCompose.this, args, "compose:images:show");
+            }
+        });
+
         edit_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -313,41 +347,7 @@ public class FragmentCompose extends FragmentEx {
                         break;
 
                     case R.id.action_send:
-                        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                        boolean autosend = prefs.getBoolean("autosend", false);
-                        if (autosend) {
-                            onAction(action);
-                            break;
-                        }
-
-                        try {
-                            String to = etTo.getText().toString();
-                            InternetAddress ato[] = (TextUtils.isEmpty(to) ? new InternetAddress[0] : InternetAddress.parse(to));
-                            if (ato.length == 0)
-                                throw new IllegalArgumentException(getString(R.string.title_to_missing));
-
-                            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
-                            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
-                            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-                            tvMessage.setText(getString(R.string.title_ask_send,
-                                    MessageHelper.getFormattedAddresses(ato, false)));
-
-                            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                    .setView(dview)
-                                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            if (cbNotAgain.isChecked())
-                                                prefs.edit().putBoolean("autosend", true).apply();
-                                            onAction(action);
-                                        }
-                                    })
-                                    .setNegativeButton(android.R.string.cancel, null)
-                                    .show();
-                        } catch (Throwable ex) {
-                            onAction(action);
-                        }
+                        onActionSend();
                         break;
 
                     default:
@@ -389,15 +389,16 @@ public class FragmentCompose extends FragmentEx {
         setSubtitle(R.string.title_compose);
         tvExtraPrefix.setText(null);
         tvExtraSuffix.setText(null);
-        etBody.setVisibility(View.GONE);
 
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
         grpAddresses.setVisibility(View.GONE);
         grpAttachments.setVisibility(View.GONE);
         tvNoInternet.setVisibility(View.GONE);
+        grpBody.setVisibility(View.GONE);
         grpSignature.setVisibility(View.GONE);
         grpReference.setVisibility(View.GONE);
+        ibImages.setVisibility(View.GONE);
         edit_bar.setVisibility(View.GONE);
         bottom_navigation.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
@@ -498,6 +499,7 @@ public class FragmentCompose extends FragmentEx {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong("working", working);
+        outState.putBoolean("show_images", show_images);
     }
 
     @Override
@@ -531,6 +533,8 @@ public class FragmentCompose extends FragmentEx {
             }
         } else {
             working = savedInstanceState.getLong("working");
+            show_images = savedInstanceState.getBoolean("show_images");
+
             Bundle args = new Bundle();
             args.putString("action", working < 0 ? "new" : "edit");
             args.putLong("id", working);
@@ -834,6 +838,44 @@ public class FragmentCompose extends FragmentEx {
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    private void onActionSend() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean autosend = prefs.getBoolean("autosend", false);
+        if (autosend) {
+            onAction(R.id.action_send);
+            return;
+        }
+
+        try {
+            String to = etTo.getText().toString();
+            InternetAddress ato[] = (TextUtils.isEmpty(to) ? new InternetAddress[0] : InternetAddress.parse(to));
+            if (ato.length == 0)
+                throw new IllegalArgumentException(getString(R.string.title_to_missing));
+
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
+            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(getString(R.string.title_ask_send,
+                    MessageHelper.getFormattedAddresses(ato, false)));
+
+            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (cbNotAgain.isChecked())
+                                prefs.edit().putBoolean("autosend", true).apply();
+                            onAction(R.id.action_send);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        } catch (Throwable ex) {
+            onAction(R.id.action_send);
+        }
     }
 
     private void onEncrypt() {
@@ -1903,13 +1945,6 @@ public class FragmentCompose extends FragmentEx {
 
                 last_available = available;
 
-                if (action == R.id.action_send)
-                    if (draft.replying != null || draft.forwarding != null) {
-                        body += HtmlHelper.getQuote(context,
-                                draft.replying == null ? draft.forwarding : draft.replying, false);
-                        dirty = true;
-                    }
-
                 if (dirty) {
                     // Update draft
                     draft.identity = ident;
@@ -2090,6 +2125,7 @@ public class FragmentCompose extends FragmentEx {
             args.putLong("reference", draft.replying);
         else if (draft.forwarding != null)
             args.putLong("reference", draft.forwarding);
+        args.putBoolean("show_images", show_images);
 
         new SimpleTask<Spanned[]>() {
             @Override
@@ -2109,6 +2145,7 @@ public class FragmentCompose extends FragmentEx {
             protected Spanned[] onExecute(final Context context, Bundle args) throws Throwable {
                 long id = args.getLong("id");
                 final long reference = args.getLong("reference", -1);
+                final boolean show_images = args.getBoolean("show_images", false);
 
                 String body = EntityMessage.read(context, id);
                 Spanned spannedBody = Html.fromHtml(body, cidGetter, null);
@@ -2120,7 +2157,7 @@ public class FragmentCompose extends FragmentEx {
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
-                                    Drawable image = HtmlHelper.decodeImage(source, context, reference, true);
+                                    Drawable image = HtmlHelper.decodeImage(source, context, reference, show_images);
 
                                     float width = context.getResources().getDisplayMetrics().widthPixels -
                                             Helper.dp2pixels(context, 12); // margins;
@@ -2155,13 +2192,17 @@ public class FragmentCompose extends FragmentEx {
             }
 
             @Override
-            protected void onExecuted(Bundle args, Spanned[] texts) {
-                etBody.setText(texts[0]);
+            protected void onExecuted(Bundle args, Spanned[] text) {
+                etBody.setText(text[0]);
                 etBody.setSelection(0);
-                etBody.setVisibility(View.VISIBLE);
+                grpBody.setVisibility(View.VISIBLE);
 
-                tvReference.setText(texts[1]);
-                grpReference.setVisibility(texts[1] == null ? View.GONE : View.VISIBLE);
+                boolean has_images = (text[1] != null &&
+                        text[1].getSpans(0, text[1].length(), ImageSpan.class).length > 0);
+
+                tvReference.setText(text[1]);
+                grpReference.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
+                ibImages.setVisibility(has_images && !show_images ? View.VISIBLE : View.GONE);
 
                 new Handler().post(new Runnable() {
                     @Override
