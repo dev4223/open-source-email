@@ -28,7 +28,7 @@ This app starts a foreground service with a low priority status bar notification
     - color of date, size and subject in header detail info is colorUnread
     - font size of subject in header block is one step larger
     - When opening an email the subject in the email list element is hidden
-    - date, size and subject will be always shown in header detail info, even when choosing to hide the header detail infos on opening the email 
+    - date, size and subject will be always shown in header detail info, even when choosing the option to hide the header detail infos on opening the email 
 
 ***
 
