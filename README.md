@@ -1,4 +1,4 @@
-# FairEmail
+# FairEmail (Fork)
 
 *Open source, privacy friendly email app*
 
