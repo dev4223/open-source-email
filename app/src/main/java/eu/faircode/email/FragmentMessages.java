@@ -70,7 +70,6 @@ import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -452,11 +451,10 @@ public class FragmentMessages extends FragmentEx {
                     FragmentActivity activity = getActivity();
                     if (activity != null) {
                         ViewModelMessages modelMessages = ViewModelProviders.of(activity).get(ViewModelMessages.class);
-                        LifecycleOwner owner = (viewType == AdapterMessage.ViewType.THREAD ? getViewLifecycleOwner() : activity);
                         if (selectionTracker.hasSelection())
-                            modelMessages.removeObservers(viewType, owner);
+                            modelMessages.removeObservers(viewType, getViewLifecycleOwner());
                         else
-                            modelMessages.observe(viewType, owner, observer);
+                            modelMessages.observe(viewType, getViewLifecycleOwner(), observer);
                     }
 
                     if (selectionTracker.hasSelection()) {
@@ -808,7 +806,7 @@ public class FragmentMessages extends FragmentEx {
                         if (result[4] && !result[6] && !result[9]) // has archive and not is archive
                             popupMenu.getMenu().add(Menu.NONE, action_archive, 5, R.string.title_archive);
 
-                        if (result[7] || result[9]) // is trash/drafts
+                        if (result[7]) // is trash
                             popupMenu.getMenu().add(Menu.NONE, action_delete, 6, R.string.title_delete);
                         else if (result[5]) // has trash
                             popupMenu.getMenu().add(Menu.NONE, action_trash, 6, R.string.title_trash);
@@ -1758,8 +1756,7 @@ public class FragmentMessages extends FragmentEx {
 
         // Sort changed
         final ViewModelMessages modelMessages = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-        LifecycleOwner owner = (viewType == AdapterMessage.ViewType.THREAD ? getViewLifecycleOwner() : getActivity());
-        modelMessages.removeObservers(viewType, owner);
+        modelMessages.removeObservers(viewType, getViewLifecycleOwner());
 
         DB db = DB.getInstance(getContext());
         LivePagedListBuilder<Integer, TupleMessageEx> builder = null;
@@ -1847,8 +1844,8 @@ public class FragmentMessages extends FragmentEx {
 
         builder.setFetchExecutor(executor);
 
-        modelMessages.setMessages(viewType, builder.build());
-        modelMessages.observe(viewType, owner, observer);
+        modelMessages.setMessages(viewType, getActivity(), builder.build());
+        modelMessages.observe(viewType, getViewLifecycleOwner(), observer);
     }
 
     private Observer<PagedList<TupleMessageEx>> observer = new Observer<PagedList<TupleMessageEx>>() {
