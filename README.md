@@ -17,16 +17,16 @@ This app is minimalistic by design, so you can concentrate on reading and writin
 
 This app starts a foreground service with a low priority status bar notification to make sure you'll never miss new email.
 
-## What I changed in this fork
-
-* Signal color for dark theme
-* For zoom = 0 font size of sender and subject is the same, for 1 and 2 font size of subject ist smaller then font size of sender
-* In detail view
-    - date and size is on one line
-    - color of date, size and subject in header detail info is colorUnread
-    - font size of subject in header block is one step larger
-    - When opening an email the subject in the email list element is hidden
-    - date, size and subject will be always shown in header detail info, even when choosing to hide the header detail infos on opening the email 
+> *What I changed in this fork*
+> 
+> * Signal color for dark theme
+> * For zoom = 0 font size of sender and subject is the same, for 1 and 2 font size of subject ist smaller then font size of sender
+> * In detail view
+>     - date and size is on one line
+>     - color of date, size and subject in header detail info is colorUnread
+>     - font size of subject in header block is one step larger
+>     - When opening an email the subject in the email list element is hidden
+>     - date, size and subject will be always shown in header detail info, even when choosing to hide the header detail infos on opening the email 
 
 ## Main features
 
