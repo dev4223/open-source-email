@@ -8,8 +8,9 @@ At the bottom you can find how to ask other questions, request features and repo
 
 For support on authorizing an account you should consult the documentation of your provider.
 Searching for *IMAP* and the name of the provider is mostly sufficient to find the right documentation.
-To setup an account you need the IMAP and SMTP server addresses and port numbers,
-whether STARTTLS should be used and your username and password.
+To setup an account (to receive email) and an identity (to send email)
+you need the IMAP and SMTP server addresses and port numbers, whether STARTTLS should be used
+and your username (mostly, but not always, your email address) and your password.
 In some cases you'll need to enable external access to your account and/or to use a special (app) password,
 for instance when two factor authentication is enabled.
 
@@ -20,16 +21,16 @@ For authorizing:
 * Microsoft Exchange: see [question 8](#user-content-faq8)
 
 
+## Known problems
+
+None at this moment.
+
+
 ## Planned features
 
 None at this moment.
 
 Anything on this list is in random order and *might* be added in the near future.
-
-
-## Known problems
-
-None at this moment.
 
 
 ## Frequently requested features
@@ -55,6 +56,9 @@ Confirmation is just one tap, which is just a small price for better privacy.
 Note that your contacts could unknowingly send malicious messages if they got infected with malware.
 
 Stripped and reformatted messages are often better readable than original messages because the margins are removed and font sizes are standardized.
+
+FairEmail does not allow other apps access to your messages and attachments without your approval.
+
 
 ## Frequently Asked Questions
 
@@ -126,6 +130,7 @@ Stripped and reformatted messages are often better readable than original messag
 * [(66) Is FairEmail available in the Google Play Family Library?](#user-content-faq66)
 * [(67) How can I snooze conversations?](#user-content-faq67)
 * [(68) Why can Adobe Acrobat reader not open PDF attachments?](#user-content-faq68)
+* [(69) Can you add auto scroll up on new message?](#user-content-faq69)
 
 [I have another question.](#support)
 
@@ -201,11 +206,15 @@ you'll need to enable insecure connections in the account and/or identity settin
 <a name="faq5"></a>
 **(5) How can I customize the message view?**
 
+In the three dot overflow menu you can enable or disable or select:
+
+* *text size*: for three different font sizes
+* *compact view*: for more condensed message items and a smaller message text font
+
 In the display section of the advanced settings you can enable or disable:
 
 * *unified inbox*: to disable the unified inbox and to list the folders selected for the unified inbox instead
 * *conversation threading*: to disable conversation threading and to show individual messages instead
-* *compact message view*: for more condensed message items and a smaller message text font
 * *show contact photos*: to hide contact photos
 * *show identicons*: to show generated contact avatars
 * *show message preview*: to show two lines of the message text
@@ -1060,6 +1069,15 @@ but you are advised to install an up-to-date and preferably open source PDF read
 for example one listed [here](https://github.com/offa/android-foss#-document--pdf-viewer).
 
 <br />
+
+<a name="faq69"></a>
+**(69) Can you add auto scroll up on new message?**
+
+The message list is automatically scrolled up when navigating from a new message notification.
+Always automatically scrolling up on arrival of new messages would interfere with your own navigation and scrolling.
+
+<br />
+
 
 ## Support
 
