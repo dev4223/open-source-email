@@ -2,8 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_help"
-        android:icon="@drawable/baseline_help_24"
-        android:title="@string/title_setup_help"
-        app:showAsAction="always" />
+        android:id="@+id/menu_default"
+        android:title="@string/title_setup_defaults"
+        app:showAsAction="never" />
 </menu>
