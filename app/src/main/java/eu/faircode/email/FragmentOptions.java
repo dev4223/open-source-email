@@ -43,8 +43,6 @@ import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.IOException;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
@@ -147,6 +145,8 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
+        setOptions();
+
         swEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -215,38 +215,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("preview", checked).apply();
-                if (checked)
-                    new SimpleTask<Void>() {
-                        @Override
-                        protected Void onExecute(Context context, Bundle args) {
-                            DB db = DB.getInstance(context);
-
-                            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-                            boolean metered = (cm == null || cm.isActiveNetworkMetered());
-
-                            for (Long id : db.message().getMessageWithoutPreview()) {
-                                EntityMessage message = db.message().getMessage(id);
-                                try {
-                                    Log.i("Building preview id=" + id);
-                                    String body = message.read(context);
-                                    db.message().setMessageContent(
-                                            message.id, true, HtmlHelper.getPreview(body));
-                                } catch (IOException ex) {
-                                    Log.e(ex);
-                                    db.message().setMessageContent(message.id, false, null);
-                                    if (!metered)
-                                        EntityOperation.queue(context, db, message, EntityOperation.BODY);
-                                }
-                            }
-
-                            return null;
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                        }
-                    }.execute(FragmentOptions.this, new Bundle(), "options:preview");
             }
         });
 
@@ -370,8 +338,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 ServiceSynchronize.reload(getContext(), "debug=" + checked);
             }
         });
-
-        setOptions();
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 

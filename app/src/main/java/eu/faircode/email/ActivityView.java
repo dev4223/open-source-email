@@ -59,6 +59,7 @@ import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -69,6 +70,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.URL;
 import java.text.Collator;
 import java.util.ArrayList;
@@ -117,13 +119,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     static final int REQUEST_UNIFIED = 1;
     static final int REQUEST_THREAD = 2;
 
-    static final int REQUEST_ATTACHMENT = 1;
-    static final int REQUEST_ATTACHMENTS = 2;
-    static final int REQUEST_DECRYPT = 3;
+    static final int REQUEST_RAW = 1;
+    static final int REQUEST_ATTACHMENT = 2;
+    static final int REQUEST_ATTACHMENTS = 3;
+    static final int REQUEST_DECRYPT = 4;
 
     static final String ACTION_VIEW_MESSAGES = BuildConfig.APPLICATION_ID + ".VIEW_MESSAGES";
     static final String ACTION_VIEW_THREAD = BuildConfig.APPLICATION_ID + ".VIEW_THREAD";
     static final String ACTION_VIEW_FULL = BuildConfig.APPLICATION_ID + ".VIEW_FULL";
+    static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_EDIT_FOLDER = BuildConfig.APPLICATION_ID + ".EDIT_FOLDER";
     static final String ACTION_EDIT_ANSWER = BuildConfig.APPLICATION_ID + ".EDIT_ANSWER";
     static final String ACTION_STORE_ATTACHMENT = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENT";
@@ -467,6 +471,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         iff.addAction(ACTION_VIEW_MESSAGES);
         iff.addAction(ACTION_VIEW_THREAD);
         iff.addAction(ACTION_VIEW_FULL);
+        iff.addAction(ACTION_STORE_RAW);
         iff.addAction(ACTION_EDIT_FOLDER);
         iff.addAction(ACTION_EDIT_ANSWER);
         iff.addAction(ACTION_STORE_ATTACHMENT);
@@ -998,6 +1003,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     onViewThread(intent);
                 else if (ACTION_VIEW_FULL.equals(action))
                     onViewFull(intent);
+                else if (ACTION_STORE_RAW.equals(action))
+                    onStoreRaw(intent);
                 else if (ACTION_EDIT_FOLDER.equals(action))
                     onEditFolder(intent);
                 else if (ACTION_EDIT_ANSWER.equals(action))
@@ -1064,6 +1071,18 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("webview");
         fragmentTransaction.commit();
+    }
+
+    private void onStoreRaw(Intent intent) {
+        message = intent.getLongExtra("id", -1);
+        Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        create.addCategory(Intent.CATEGORY_OPENABLE);
+        create.setType("*/*");
+        create.putExtra(Intent.EXTRA_TITLE, "email.eml");
+        if (create.resolveActivity(getPackageManager()) == null)
+            Snackbar.make(getVisibleView(), R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
+        else
+            startActivityForResult(Helper.getChooser(this, create), REQUEST_RAW);
     }
 
     private void onEditFolder(Intent intent) {
@@ -1156,7 +1175,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         if (!attachment.available)
                             throw new IllegalArgumentException(getString(R.string.title_attachments_missing));
 
-                        encrypted = new FileInputStream(EntityAttachment.getFile(context, attachment.id));
+                        File file = EntityAttachment.getFile(context, attachment.id);
+                        encrypted = new BufferedInputStream(new FileInputStream(file));
                         break;
                     }
 
@@ -1287,7 +1307,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK)
-            if (requestCode == REQUEST_ATTACHMENT) {
+            if (requestCode == REQUEST_RAW) {
+                if (data != null)
+                    saveRaw(data);
+            } else if (requestCode == REQUEST_ATTACHMENT) {
                 if (data != null)
                     saveAttachment(data);
             } else if (requestCode == REQUEST_ATTACHMENTS) {
@@ -1298,6 +1321,76 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 if (data != null)
                     decrypt(data, message);
             }
+    }
+
+    private void saveRaw(Intent data) {
+        Bundle args = new Bundle();
+        args.putLong("id", message);
+        args.putParcelable("uri", data.getData());
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                Uri uri = args.getParcelable("uri");
+
+                if ("file".equals(uri.getScheme())) {
+                    Log.w("Save raw uri=" + uri);
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
+                }
+
+                File file = EntityMessage.getRawFile(context, id);
+                Log.i("Raw file=" + file);
+
+                ParcelFileDescriptor pfd = null;
+                OutputStream os = null;
+                InputStream is = null;
+                try {
+                    pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+                    os = new FileOutputStream(pfd.getFileDescriptor());
+                    is = new BufferedInputStream(new FileInputStream(file));
+
+                    byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
+                    int read;
+                    while ((read = is.read(buffer)) != -1)
+                        os.write(buffer, 0, read);
+                } finally {
+                    try {
+                        if (pfd != null)
+                            pfd.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (os != null)
+                            os.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (is != null)
+                            is.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                Toast.makeText(ActivityView.this, R.string.title_raw_saved, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(getVisibleView(), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
+            }
+        }.execute(this, args, "raw:save");
     }
 
     private void saveAttachment(Intent data) {
@@ -1319,17 +1412,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 File file = EntityAttachment.getFile(context, id);
 
                 ParcelFileDescriptor pfd = null;
-                FileOutputStream fos = null;
-                FileInputStream fis = null;
+                OutputStream os = null;
+                InputStream is = null;
                 try {
                     pfd = context.getContentResolver().openFileDescriptor(uri, "w");
-                    fos = new FileOutputStream(pfd.getFileDescriptor());
-                    fis = new FileInputStream(file);
+                    os = new FileOutputStream(pfd.getFileDescriptor());
+                    is = new BufferedInputStream(new FileInputStream(file));
 
                     byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
                     int read;
-                    while ((read = fis.read(buffer)) != -1)
-                        fos.write(buffer, 0, read);
+                    while ((read = is.read(buffer)) != -1)
+                        os.write(buffer, 0, read);
                 } finally {
                     try {
                         if (pfd != null)
@@ -1338,14 +1431,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         Log.w(ex);
                     }
                     try {
-                        if (fos != null)
-                            fos.close();
+                        if (os != null)
+                            os.close();
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
                     try {
-                        if (fis != null)
-                            fis.close();
+                        if (is != null)
+                            is.close();
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
@@ -1391,17 +1484,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     DocumentFile document = tree.createFile(attachment.type, name);
 
                     ParcelFileDescriptor pfd = null;
-                    FileOutputStream fos = null;
-                    FileInputStream fis = null;
+                    OutputStream os = null;
+                    InputStream is = null;
                     try {
                         pfd = context.getContentResolver().openFileDescriptor(document.getUri(), "w");
-                        fos = new FileOutputStream(pfd.getFileDescriptor());
-                        fis = new FileInputStream(file);
+                        os = new FileOutputStream(pfd.getFileDescriptor());
+                        is = new BufferedInputStream(new FileInputStream(file));
 
                         byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
                         int read;
-                        while ((read = fis.read(buffer)) != -1)
-                            fos.write(buffer, 0, read);
+                        while ((read = is.read(buffer)) != -1)
+                            os.write(buffer, 0, read);
                     } finally {
                         try {
                             if (pfd != null)
@@ -1410,14 +1503,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                             Log.w(ex);
                         }
                         try {
-                            if (fos != null)
-                                fos.close();
+                            if (os != null)
+                                os.close();
                         } catch (Throwable ex) {
                             Log.w(ex);
                         }
                         try {
-                            if (fis != null)
-                                fis.close();
+                            if (is != null)
+                                is.close();
                         } catch (Throwable ex) {
                             Log.w(ex);
                         }

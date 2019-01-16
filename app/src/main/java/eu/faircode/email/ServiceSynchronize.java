@@ -66,8 +66,12 @@ import com.sun.mail.util.MailConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -1513,6 +1517,9 @@ public class ServiceSynchronize extends LifecycleService {
                         else if (EntityOperation.HEADERS.equals(op.name))
                             doHeaders(folder, ifolder, message, db);
 
+                        else if (EntityOperation.RAW.equals(op.name))
+                            doRaw(folder, ifolder, message, db);
+
                         else if (EntityOperation.BODY.equals(op.name))
                             doBody(folder, ifolder, message, db);
 
@@ -1905,7 +1912,7 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void doHeaders(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException {
+    private void doHeaders(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException, IOException {
         Message imessage = ifolder.getMessageByUID(message.uid);
         if (imessage == null)
             throw new MessageRemovedException();
@@ -1919,6 +1926,29 @@ public class ServiceSynchronize extends LifecycleService {
         }
 
         db.message().setMessageHeaders(message.id, sb.toString());
+    }
+
+    private void doRaw(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException, IOException {
+        Message imessage = ifolder.getMessageByUID(message.uid);
+        if (imessage == null)
+            throw new MessageRemovedException();
+
+        if (imessage instanceof MimeMessage) {
+            MimeMessage mmessage = (MimeMessage) imessage;
+
+            File file = EntityMessage.getRawFile(this, message.id);
+
+            OutputStream os = null;
+            try {
+                os = new BufferedOutputStream(new FileOutputStream(file));
+                mmessage.writeTo(os);
+            } finally {
+                if (os != null)
+                    os.close();
+            }
+
+            db.message().setMessageRaw(message.id, true);
+        }
     }
 
     private void doBody(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException, IOException {
@@ -2598,6 +2628,9 @@ public class ServiceSynchronize extends LifecycleService {
                     String body = parts.getHtml();
                     message.write(context, body);
                     db.message().setMessageContent(message.id, true, HtmlHelper.getPreview(body));
+                    String warnings = parts.getWarnings();
+                    if (warnings != null)
+                        db.message().setMessageError(message.id, warnings);
                     Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
                 }
 
