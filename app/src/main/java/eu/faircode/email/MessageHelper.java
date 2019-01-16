@@ -59,6 +59,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
+import javax.mail.internet.ParseException;
 
 public class MessageHelper {
     private MimeMessage imessage;
@@ -66,6 +67,7 @@ public class MessageHelper {
     private final static int NETWORK_TIMEOUT = 60 * 1000; // milliseconds
     private final static int FETCH_SIZE = 1024 * 1024; // bytes, default 16K
     private final static int POOL_TIMEOUT = 3 * 60 * 1000; // milliseconds, default 45 sec
+
     static final int ATTACHMENT_BUFFER_SIZE = 8192; // bytes
 
     static Properties getSessionProperties(int auth_type, String realm, boolean insecure) {
@@ -529,19 +531,13 @@ public class MessageHelper {
         return address.getAddress();
     }
 
-    private class AttachmentPart {
-        String disposition;
-        String filename;
-        boolean pgp;
-        Part part;
-    }
-
     class MessageParts {
         private Part plain = null;
         private Part html = null;
         private List<AttachmentPart> attachments = new ArrayList<>();
+        private List<String> warnings = new ArrayList<>();
 
-        String getHtml() throws IOException, MessagingException {
+        String getHtml() throws MessagingException {
             if (plain == null && html == null)
                 return null;
 
@@ -553,21 +549,25 @@ public class MessageHelper {
                 Object content = part.getContent();
                 if (content instanceof String)
                     result = (String) content;
-                else if (content instanceof InputStream) {
+                else if (content instanceof InputStream)
                     // Typically com.sun.mail.util.QPDecoderStream
                     result = readStream((InputStream) content, "UTF-8");
-                } else
+                else
                     result = content.toString();
-            } catch (UnsupportedEncodingException ex) {
-                // x-binaryenc
-                // https://javaee.github.io/javamail/FAQ#unsupen
-                Log.w("Unsupported encoding: " + part.getContentType());
-                text = true;
-                result = readStream(part.getInputStream(), "US-ASCII");
-            } catch (IOException ex) {
+            } catch (Throwable ex) {
                 Log.w(ex);
                 text = true;
                 result = ex + "\n" + android.util.Log.getStackTraceString(ex);
+            }
+
+            ContentType ct = new ContentType(part.getContentType());
+            String charset = ct.getParameter("charset");
+            if (TextUtils.isEmpty(charset))
+                warnings.add("Missing charset");
+            else {
+                if ("US-ASCII".equals(Charset.forName(charset).name()) &&
+                        !"US-ASCII".equals(charset.toUpperCase()))
+                    warnings.add("Unknown charset " + charset);
             }
 
             if (part.isMimeType("text/plain") || text)
@@ -633,7 +633,7 @@ public class MessageHelper {
             return result;
         }
 
-        void downloadAttachment(Context context, DB db, long id, int sequence) throws MessagingException, IOException {
+        void downloadAttachment(Context context, DB db, long id, int sequence) throws IOException {
             // Attachments of drafts might not have been uploaded yet
             if (sequence > attachments.size()) {
                 Log.w("Attachment unavailable sequence=" + sequence + " size=" + attachments.size());
@@ -642,19 +642,18 @@ public class MessageHelper {
 
             // Get data
             AttachmentPart apart = attachments.get(sequence - 1);
-            long total = apart.part.getSize();
             File file = EntityAttachment.getFile(context, id);
 
             // Download attachment
-            InputStream is = null;
             OutputStream os = null;
             try {
                 db.attachment().setProgress(id, null);
 
-                is = apart.part.getInputStream();
+                InputStream is = apart.part.getInputStream();
                 os = new BufferedOutputStream(new FileOutputStream(file));
 
                 long size = 0;
+                long total = apart.part.getSize();
                 byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
                 for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
                     size += len;
@@ -669,40 +668,52 @@ public class MessageHelper {
                 db.attachment().setDownloaded(id, size);
 
                 Log.i("Downloaded attachment size=" + size);
-            } catch (IOException ex) {
+            } catch (Throwable ex) {
+                Log.w(ex);
                 // Reset progress on failure
-                db.attachment().setProgress(id, null);
-                throw ex;
+                db.attachment().setError(id, Helper.formatThrowable(ex));
             } finally {
-                try {
-                    if (is != null)
-                        is.close();
-                } finally {
-                    if (os != null)
-                        os.close();
-                }
+                if (os != null)
+                    os.close();
             }
         }
+
+        String getWarnings() {
+            if (warnings.size() == 0)
+                return null;
+            else
+                return TextUtils.join(", ", warnings);
+        }
+    }
+
+    private class AttachmentPart {
+        String disposition;
+        String filename;
+        boolean pgp;
+        Part part;
     }
 
     MessageParts getMessageParts() throws IOException, MessagingException {
         MessageParts parts = new MessageParts();
-        getMessageParts(imessage, parts, false);
+        getMessageParts(imessage, parts, false); // Can throw ParseException
         return parts;
     }
 
     private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws MessagingException, IOException {
-        // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
-
         if (part.isMimeType("multipart/*")) {
             Multipart multipart = (Multipart) part.getContent();
-            for (int i = 0; i < multipart.getCount(); i++) {
-                Part cpart = multipart.getBodyPart(i);
-                getMessageParts(cpart, parts, pgp);
-                ContentType ct = new ContentType(cpart.getContentType());
-                if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
-                    pgp = true;
-            }
+            for (int i = 0; i < multipart.getCount(); i++)
+                try {
+                    Part cpart = multipart.getBodyPart(i);
+                    getMessageParts(cpart, parts, pgp);
+                    ContentType ct = new ContentType(cpart.getContentType());
+                    if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
+                        pgp = true;
+                } catch (ParseException ex) {
+                    // Nested body: try to continue
+                    // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
+                    Log.w(ex);
+                }
         } else {
             // https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
             String disposition;
