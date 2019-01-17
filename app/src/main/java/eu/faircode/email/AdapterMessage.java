@@ -145,8 +145,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     enum ViewType {UNIFIED, FOLDER, THREAD, SEARCH}
 
-    private static final float LOW_LIGHT = 0.6f;
-
     private static DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
@@ -397,24 +395,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             pbLoading.setVisibility(View.GONE);
 
-            itemView.setAlpha(message.uid == null && !EntityFolder.OUTBOX.equals(message.folderType) ? LOW_LIGHT : 1.0f);
+            itemView.setAlpha(message.uid == null && !EntityFolder.OUTBOX.equals(message.folderType)
+                    ? Helper.LOW_LIGHT : 1.0f);
 
             if (viewType == ViewType.THREAD) {
-                ivFlagged.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivAvatar.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvFrom.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvSize.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvTime.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivDraft.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivSnoozed.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivAnswered.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivAttachments.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvSubject.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvFolder.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvCount.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                ivThread.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvPreview.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
-                tvError.setAlpha(message.duplicate ? LOW_LIGHT : 1.0f);
+                ivFlagged.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivAvatar.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvFrom.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvSize.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvTime.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivDraft.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivSnoozed.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivAnswered.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivAttachments.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvSubject.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvFolder.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvCount.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivThread.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvPreview.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                tvError.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
             }
 
             if (!outgoing && (avatars || identicons)) {
@@ -520,8 +519,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivThread.setVisibility(View.VISIBLE);
             }
 
+            String error = message.error;
+            if (message.warning != null)
+                if (error == null)
+                    error = message.warning;
+                else
+                    error += " " + message.warning;
+
             if (debug) {
-                String text = "error=" + message.error +
+                String text = "error=" + error +
                         "\nuid=" + message.uid + " id=" + message.id + " " + df.format(new Date(message.received)) +
                         "\n" + (message.ui_hide ? "HIDDEN " : "") +
                         "seen=" + message.seen + "/" + message.ui_seen +
@@ -535,8 +541,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvError.setText(text);
                 tvError.setVisibility(View.VISIBLE);
             } else {
-                tvError.setText(message.error);
-                tvError.setVisibility(message.error == null ? View.GONE : View.VISIBLE);
+                tvError.setText(error);
+                tvError.setVisibility(error == null ? View.GONE : View.VISIBLE);
             }
 
             // Unseen
@@ -606,7 +612,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
                 if (!message.duplicate)
-                    tvSizeEx.setAlpha(message.content ? 1.0f : LOW_LIGHT);
+                    tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
                 tvSizeEx.setVisibility(message.size == null ? View.GONE : View.VISIBLE);
 
                 tvSubjectEx.setText(message.subject);

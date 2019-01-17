@@ -1963,10 +1963,11 @@ public class ServiceSynchronize extends LifecycleService {
 
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         MessageHelper.MessageParts parts = helper.getMessageParts();
-        String body = parts.getHtml();
+        String body = parts.getHtml(this);
         String preview = HtmlHelper.getPreview(body);
         message.write(this, body);
         db.message().setMessageContent(message.id, true, preview);
+        db.message().setMessageWarning(message.id, parts.getWarnings());
     }
 
     private void doAttachment(EntityFolder folder, EntityOperation op, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws JSONException, MessagingException, IOException {
@@ -2625,12 +2626,10 @@ public class ServiceSynchronize extends LifecycleService {
 
             if (!message.content)
                 if (!metered || (message.size != null && message.size < maxSize)) {
-                    String body = parts.getHtml();
+                    String body = parts.getHtml(context);
                     message.write(context, body);
                     db.message().setMessageContent(message.id, true, HtmlHelper.getPreview(body));
-                    String warnings = parts.getWarnings();
-                    if (warnings != null)
-                        db.message().setMessageError(message.id, warnings);
+                    db.message().setMessageWarning(message.id, parts.getWarnings());
                     Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
                 }
 
@@ -2638,7 +2637,8 @@ public class ServiceSynchronize extends LifecycleService {
                 EntityAttachment attachment = attachments.get(i);
                 if (!attachment.available)
                     if (!metered || (attachment.size != null && attachment.size < maxSize))
-                        parts.downloadAttachment(context, db, attachment.id, attachment.sequence);
+                        if (!parts.downloadAttachment(context, db, attachment.id, attachment.sequence))
+                            break;
             }
         }
     }

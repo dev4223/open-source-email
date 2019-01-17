@@ -537,9 +537,11 @@ public class MessageHelper {
         private List<AttachmentPart> attachments = new ArrayList<>();
         private List<String> warnings = new ArrayList<>();
 
-        String getHtml() throws MessagingException {
-            if (plain == null && html == null)
+        String getHtml(Context context) throws MessagingException {
+            if (plain == null && html == null) {
+                warnings.add(context.getString(R.string.title_no_body));
                 return null;
+            }
 
             String result;
             boolean text = false;
@@ -562,24 +564,16 @@ public class MessageHelper {
 
             ContentType ct = new ContentType(part.getContentType());
             String charset = ct.getParameter("charset");
-            if (TextUtils.isEmpty(charset))
-                warnings.add("Missing charset");
-            else {
+            if (!TextUtils.isEmpty(charset)) {
                 if ("US-ASCII".equals(Charset.forName(charset).name()) &&
                         !"US-ASCII".equals(charset.toUpperCase()))
-                    warnings.add("Unknown charset " + charset);
+                    warnings.add(context.getString(R.string.title_no_charset, charset));
             }
 
             if (part.isMimeType("text/plain") || text)
                 result = "<pre>" + result.replaceAll("\\r?\\n", "<br />") + "</pre>";
 
-            if (part.isMimeType("text/plain")) {
-                Log.i("Plain text");
-                return result;
-            } else {
-                Log.i("HTML text");
-                return result;
-            }
+            return result;
         }
 
         List<EntityAttachment> getAttachments() throws MessagingException {
@@ -633,11 +627,11 @@ public class MessageHelper {
             return result;
         }
 
-        void downloadAttachment(Context context, DB db, long id, int sequence) throws IOException {
+        boolean downloadAttachment(Context context, DB db, long id, int sequence) throws IOException {
             // Attachments of drafts might not have been uploaded yet
             if (sequence > attachments.size()) {
                 Log.w("Attachment unavailable sequence=" + sequence + " size=" + attachments.size());
-                return;
+                return false;
             }
 
             // Get data
@@ -668,10 +662,12 @@ public class MessageHelper {
                 db.attachment().setDownloaded(id, size);
 
                 Log.i("Downloaded attachment size=" + size);
+                return true;
             } catch (Throwable ex) {
                 Log.w(ex);
                 // Reset progress on failure
                 db.attachment().setError(id, Helper.formatThrowable(ex));
+                return false;
             } finally {
                 if (os != null)
                     os.close();
@@ -732,10 +728,10 @@ public class MessageHelper {
                 filename = null;
             }
 
-            Log.i("Part" +
-                    " disposition=" + disposition +
-                    " filename=" + filename +
-                    " content type=" + part.getContentType());
+            //Log.i("Part" +
+            //        " disposition=" + disposition +
+            //        " filename=" + filename +
+            //        " content type=" + part.getContentType());
 
             if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
                     ((parts.plain == null && part.isMimeType("text/plain")) ||
