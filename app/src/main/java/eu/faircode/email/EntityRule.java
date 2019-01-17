@@ -21,6 +21,9 @@ package eu.faircode.email;
 
 import android.content.Context;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.regex.Pattern;
 
@@ -36,10 +39,10 @@ import static androidx.room.ForeignKey.CASCADE;
         tableName = EntityRule.TABLE_NAME,
         foreignKeys = {
                 @ForeignKey(childColumns = "folder", entity = EntityFolder.class, parentColumns = "id", onDelete = CASCADE),
-                @ForeignKey(childColumns = "move", entity = EntityFolder.class, parentColumns = "id", onDelete = CASCADE),
         },
         indices = {
                 @Index(value = {"folder"}),
+                @Index(value = {"order"})
         }
 )
 public class EntityRule {
@@ -50,42 +53,49 @@ public class EntityRule {
     @NonNull
     public Long folder;
 
-    public String name;
-
-    public String sender;
-    public String subject;
-    public String text;
     @NonNull
-    public boolean regex;
-
-    public Boolean read;
-    public Long move;
-
+    public String name;
+    @NonNull
+    public int order;
+    @NonNull
+    public String condition;
+    @NonNull
+    public String action;
     @NonNull
     public boolean enabled;
 
-    boolean matches(Context context, EntityMessage message) throws IOException {
+    static final int TYPE_SEEN = 1;
+    static final int TYPE_UNSEEN = 2;
+    static final int TYPE_MOVE = 3;
+
+    boolean matches(Context context, EntityMessage message) throws JSONException, IOException {
+        JSONObject jcondition = new JSONObject(condition);
+        String sender = jcondition.getString("sender");
+        String subject = jcondition.getString("subject");
+        String text = jcondition.getString("text");
+        boolean regex = jcondition.getBoolean("regex");
+
         if (sender != null && message.from != null) {
-            if (matches(sender, MessageHelper.getFormattedAddresses(message.from, true)))
+            if (matches(sender, MessageHelper.getFormattedAddresses(message.from, true), regex))
                 return true;
         }
 
         if (subject != null && message.subject != null) {
-            if (matches(subject, message.subject))
+            if (matches(subject, message.subject, regex))
                 return true;
         }
 
         if (text != null && message.content) {
             String body = message.read(context);
             String santized = HtmlHelper.sanitize(body, true);
-            if (matches(text, santized))
+            if (matches(text, santized, regex))
                 return true;
         }
 
         return false;
     }
 
-    private boolean matches(String needle, String haystack) {
+    private boolean matches(String needle, String haystack, boolean regex) {
         if (regex) {
             Pattern pattern = Pattern.compile(needle);
             return pattern.matcher(haystack).matches();
@@ -93,24 +103,41 @@ public class EntityRule {
             return haystack.contains(needle);
     }
 
-    void execute(Context context, DB db, EntityMessage message) {
-        if (read != null && read)
+    void execute(Context context, DB db, EntityMessage message) throws JSONException {
+        JSONObject jargs = new JSONObject(action);
+        switch (jargs.getInt("type")) {
+            case TYPE_SEEN:
+                onActionSeen(context, db, message, true);
+                break;
+            case TYPE_UNSEEN:
+                onActionSeen(context, db, message, false);
+                break;
+            case TYPE_MOVE:
+                onActionMove(context, db, message, jargs);
+                break;
+        }
+    }
+
+    private void onActionSeen(Context context, DB db, EntityMessage message, boolean seen) {
+        EntityOperation.queue(context, db, message, EntityOperation.SEEN, seen);
+    }
+
+    private void onActionMove(Context context, DB db, EntityMessage message, JSONObject jargs) throws JSONException {
+        long target = jargs.getLong("target");
+        boolean seen = jargs.getBoolean("seen");
+        if (seen)
             EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
-        if (move != null)
-            EntityOperation.queue(context, db, message, EntityOperation.MOVE, move);
+        EntityOperation.queue(context, db, message, EntityOperation.MOVE, target);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof EntityRule) {
             EntityRule other = (EntityRule) obj;
-            return this.name.equals(other.name) &&
-                    (this.sender.equals(other.sender) && this.sender.equals(other.sender)) &&
-                    (this.subject.equals(other.subject) && this.subject.equals(other.subject)) &&
-                    (this.text.equals(other.text) && this.text.equals(other.text)) &&
-                    this.regex == other.regex &&
-                    (this.folder.equals(other.folder) && this.folder.equals(other.folder)) &&
-                    (this.read.equals(other.read) && this.read.equals(other.read)) &&
+            return this.folder.equals(other.folder) &&
+                    this.name.equals(other.name) &&
+                    this.condition.equals(other.condition) &&
+                    this.action.equals(other.action) &&
                     this.enabled == other.enabled;
         } else
             return false;

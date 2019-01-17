@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 37,
-    "identityHash": "24931d015eaa887738e5e43a4be0fd65",
+    "identityHash": "506a2b93241a7b9ffcd678dc8e496807",
     "entities": [
       {
         "tableName": "identity",
@@ -1284,7 +1284,7 @@
       },
       {
         "tableName": "rule",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `folder` INTEGER NOT NULL, `name` TEXT, `sender` TEXT, `subject` TEXT, `text` TEXT, `regex` INTEGER NOT NULL, `read` INTEGER, `move` INTEGER, `enabled` INTEGER NOT NULL, FOREIGN KEY(`folder`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`move`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `folder` INTEGER NOT NULL, `name` TEXT NOT NULL, `order` INTEGER NOT NULL, `condition` TEXT NOT NULL, `action` TEXT NOT NULL, `enabled` INTEGER NOT NULL, FOREIGN KEY(`folder`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -1302,43 +1302,25 @@
             "fieldPath": "name",
             "columnName": "name",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
-            "fieldPath": "sender",
-            "columnName": "sender",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "subject",
-            "columnName": "subject",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "text",
-            "columnName": "text",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "regex",
-            "columnName": "regex",
+            "fieldPath": "order",
+            "columnName": "order",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "read",
-            "columnName": "read",
-            "affinity": "INTEGER",
-            "notNull": false
+            "fieldPath": "condition",
+            "columnName": "condition",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
-            "fieldPath": "move",
-            "columnName": "move",
-            "affinity": "INTEGER",
-            "notNull": false
+            "fieldPath": "action",
+            "columnName": "action",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "enabled",
@@ -1361,6 +1343,14 @@
               "folder"
             ],
             "createSql": "CREATE  INDEX `index_rule_folder` ON `${TABLE_NAME}` (`folder`)"
+          },
+          {
+            "name": "index_rule_order",
+            "unique": false,
+            "columnNames": [
+              "order"
+            ],
+            "createSql": "CREATE  INDEX `index_rule_order` ON `${TABLE_NAME}` (`order`)"
           }
         ],
         "foreignKeys": [
@@ -1370,17 +1360,6 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "folder"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "folder",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "move"
             ],
             "referencedColumns": [
               "id"
@@ -1432,7 +1411,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"24931d015eaa887738e5e43a4be0fd65\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"506a2b93241a7b9ffcd678dc8e496807\")"
     ]
   }
 }

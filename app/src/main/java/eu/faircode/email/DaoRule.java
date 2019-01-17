@@ -29,11 +29,8 @@ import androidx.room.Update;
 
 @Dao
 public interface DaoRule {
-    @Query("SELECT * FROM rule")
-    List<EntityRule> getRules();
-
-    @Query("SELECT COUNT(*) FROM rule WHERE folder = :folder")
-    int countRules(long folder);
+    @Query("SELECT * FROM rule WHERE folder = :folder")
+    List<EntityRule> getRules(long folder);
 
     @Query("SELECT * FROM rule WHERE id = :id")
     EntityRule getRule(long id);

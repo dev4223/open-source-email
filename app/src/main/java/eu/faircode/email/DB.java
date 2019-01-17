@@ -440,20 +440,18 @@ public abstract class DB extends RoomDatabase {
                     @Override
                     public void migrate(SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
-                        db.execSQL("CREATE TABLE IF NOT EXISTS `rule`" +
+
+                        db.execSQL("CREATE TABLE `rule`" +
                                 " (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
                                 " `folder` INTEGER NOT NULL," +
-                                " `name` TEXT," +
-                                " `sender` TEXT," +
-                                " `subject` TEXT," +
-                                " `text` TEXT," +
-                                " `regex` INTEGER NOT NULL," +
-                                " `read` INTEGER," +
-                                " `move` INTEGER," +
+                                " `name` TEXT NOT NULL," +
+                                " `order` INTEGER NOT NULL," +
+                                " `condition` TEXT NOT NULL," +
+                                " `action` TEXT NOT NULL," +
                                 " `enabled` INTEGER NOT NULL," +
-                                " FOREIGN KEY(`folder`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE," +
-                                " FOREIGN KEY(`move`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+                                " FOREIGN KEY(`folder`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
                         db.execSQL("CREATE  INDEX `index_rule_folder` ON `rule` (`folder`)");
+                        db.execSQL("CREATE  INDEX `index_rule_order` ON `rule` (`order`)");
                     }
                 })
                 .build();

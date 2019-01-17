@@ -381,7 +381,16 @@
     <string name="title_answer_template_name">$name$ will be replaced by the sender full name</string>
     <string name="title_answer_template_email">$email$ will be replaced by the sender email address</string>
 
-    <string name="title_rule_name">Rule name</string>
+    <string name="title_rule_name">Name</string>
+    <string name="title_rule_account">Account</string>
+    <string name="title_rule_folder">Folder</string>
+    <string name="title_rule_order">Order</string>
+    <string name="title_rule_sender">Sender</string>
+    <string name="title_rule_subject">Subject</string>
+    <string name="title_rule_text">Text</string>
+    <string name="title_rule_action">Action</string>
+    <string name="title_rule_target">Target</string>
+    <string name="title_rule_seen">Mark as read</string>
 
     <string name="title_action_seen">Mark read</string>
     <string name="title_action_archive">Archive</string>
