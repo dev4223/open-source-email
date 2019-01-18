@@ -34,7 +34,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
-import androidx.lifecycle.Lifecycle;
 
 public class FragmentAnswer extends FragmentBase {
     private ViewGroup view;
@@ -70,7 +69,7 @@ public class FragmentAnswer extends FragmentBase {
 
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
-            public boolean onNavigationItemSelected(MenuItem menuItem) {
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
                     case R.id.action_delete:
                         onActionDelete();
@@ -84,19 +83,11 @@ public class FragmentAnswer extends FragmentBase {
             }
         });
 
-        ((ActivityBase) getActivity()).addBackPressedListener(onBackPressedListener);
-
         // Initialize
         grpReady.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
 
         return view;
-    }
-
-    @Override
-    public void onDestroyView() {
-        ((ActivityBase) getActivity()).removeBackPressedListener(onBackPressedListener);
-        super.onDestroyView();
     }
 
     @Override
@@ -136,12 +127,20 @@ public class FragmentAnswer extends FragmentBase {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Helper.setViewsEnabled(view, false);
-
                         Bundle args = new Bundle();
                         args.putLong("id", id);
 
                         new SimpleTask<Void>() {
+                            @Override
+                            protected void onPreExecute(Bundle args) {
+                                Helper.setViewsEnabled(view, false);
+                            }
+
+                            @Override
+                            protected void onPostExecute(Bundle args) {
+                                Helper.setViewsEnabled(view, true);
+                            }
+
                             @Override
                             protected Void onExecute(Context context, Bundle args) {
                                 long id = args.getLong("id");
@@ -156,7 +155,6 @@ public class FragmentAnswer extends FragmentBase {
 
                             @Override
                             protected void onException(Bundle args, Throwable ex) {
-                                Helper.setViewsEnabled(view, true);
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
                         }.execute(FragmentAnswer.this, args, "answer:delete");
@@ -167,14 +165,22 @@ public class FragmentAnswer extends FragmentBase {
     }
 
     private void onActionSave() {
-        Helper.setViewsEnabled(view, false);
-
         Bundle args = new Bundle();
         args.putLong("id", id);
         args.putString("name", etName.getText().toString());
         args.putString("text", Html.toHtml(etText.getText()));
 
         new SimpleTask<Void>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                Helper.setViewsEnabled(view, false);
+            }
+
+            @Override
+            protected void onPostExecute(Bundle args) {
+                Helper.setViewsEnabled(view, true);
+            }
+
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
@@ -204,36 +210,8 @@ public class FragmentAnswer extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.setViewsEnabled(view, true);
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
         }.execute(this, args, "answer:save");
     }
-
-    private void handleExit() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                    .setMessage(R.string.title_ask_save)
-                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            onActionSave();
-                        }
-                    })
-                    .setNegativeButton(R.string.title_no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .show();
-    }
-
-    ActivityBase.IBackPressedListener onBackPressedListener = new ActivityBase.IBackPressedListener() {
-        @Override
-        public boolean onBackPressed() {
-            handleExit();
-            return true;
-        }
-    };
 }

@@ -24,8 +24,14 @@ import android.content.Context;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
+import java.util.Enumeration;
 import java.util.regex.Pattern;
+
+import javax.mail.Address;
+import javax.mail.Header;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -52,82 +58,130 @@ public class EntityRule {
     public Long id;
     @NonNull
     public Long folder;
-
     @NonNull
     public String name;
     @NonNull
     public int order;
     @NonNull
+    public boolean enabled;
+    @NonNull
+    public boolean stop;
+    @NonNull
     public String condition;
     @NonNull
     public String action;
-    @NonNull
-    public boolean enabled;
 
     static final int TYPE_SEEN = 1;
     static final int TYPE_UNSEEN = 2;
     static final int TYPE_MOVE = 3;
 
-    boolean matches(Context context, EntityMessage message) throws JSONException, IOException {
-        JSONObject jcondition = new JSONObject(condition);
-        String sender = jcondition.getString("sender");
-        String subject = jcondition.getString("subject");
-        String text = jcondition.getString("text");
-        boolean regex = jcondition.getBoolean("regex");
+    boolean matches(Context context, EntityMessage message, Message imessage) throws MessagingException {
+        try {
+            JSONObject jcondition = new JSONObject(condition);
 
-        if (sender != null && message.from != null) {
-            if (matches(sender, MessageHelper.getFormattedAddresses(message.from, true), regex))
-                return true;
+            JSONObject jsender = jcondition.optJSONObject("sender");
+            if (jsender != null) {
+                String value = jsender.getString("value");
+                boolean regex = jsender.getBoolean("regex");
+
+                boolean matches = false;
+                if (message.from != null) {
+                    for (Address from : message.from) {
+                        InternetAddress ia = (InternetAddress) from;
+                        String personal = ia.getPersonal();
+                        String formatted = ((personal == null ? "" : personal + " ") + "<" + ia.getAddress() + ">");
+                        if (matches(value, formatted, regex)) {
+                            matches = true;
+                            break;
+                        }
+                    }
+                }
+                if (!matches)
+                    return false;
+            }
+
+            JSONObject jsubject = jcondition.optJSONObject("subject");
+            if (jsubject != null) {
+                String value = jsubject.getString("value");
+                boolean regex = jsubject.getBoolean("regex");
+
+                if (!matches(value, message.subject, regex))
+                    return false;
+            }
+
+            JSONObject jheader = jcondition.optJSONObject("header");
+            if (jheader != null) {
+                String value = jheader.getString("value");
+                boolean regex = jheader.getBoolean("regex");
+
+                boolean matches = false;
+                Enumeration<Header> headers = imessage.getAllHeaders();
+                while (headers.hasMoreElements()) {
+                    Header header = headers.nextElement();
+                    String formatted = header.getName() + ": " + header.getValue();
+                    if (matches(value, formatted, regex)) {
+                        matches = true;
+                        break;
+                    }
+                }
+                if (!matches)
+                    return false;
+            }
+
+            // Safeguard
+            if (jsender == null && jsubject == null && jheader == null)
+                return false;
+        } catch (JSONException ex) {
+            Log.e(ex);
+            return false;
         }
 
-        if (subject != null && message.subject != null) {
-            if (matches(subject, message.subject, regex))
-                return true;
-        }
-
-        if (text != null && message.content) {
-            String body = message.read(context);
-            String santized = HtmlHelper.sanitize(body, true);
-            if (matches(text, santized, regex))
-                return true;
-        }
-
-        return false;
+        return true;
     }
 
     private boolean matches(String needle, String haystack, boolean regex) {
+        Log.i("Matches needle=" + needle + " haystack=" + haystack + " regex=" + regex);
+
+        if (needle == null || haystack == null)
+            return false;
+
         if (regex) {
             Pattern pattern = Pattern.compile(needle);
             return pattern.matcher(haystack).matches();
         } else
-            return haystack.contains(needle);
+            return haystack.toLowerCase().contains(needle.toLowerCase());
     }
 
-    void execute(Context context, DB db, EntityMessage message) throws JSONException {
-        JSONObject jargs = new JSONObject(action);
-        switch (jargs.getInt("type")) {
-            case TYPE_SEEN:
-                onActionSeen(context, db, message, true);
-                break;
-            case TYPE_UNSEEN:
-                onActionSeen(context, db, message, false);
-                break;
-            case TYPE_MOVE:
-                onActionMove(context, db, message, jargs);
-                break;
+    void execute(Context context, DB db, EntityMessage message) {
+        try {
+            JSONObject jargs = new JSONObject(action);
+            int type = jargs.getInt("type");
+            Log.i("Executing rule=" + type + ":" + name + " message=" + message.id);
+
+            switch (type) {
+                case TYPE_SEEN:
+                    onActionSeen(context, db, message, true);
+                    break;
+                case TYPE_UNSEEN:
+                    onActionSeen(context, db, message, false);
+                    break;
+                case TYPE_MOVE:
+                    onActionMove(context, db, message, jargs);
+                    break;
+            }
+        } catch (JSONException ex) {
+            Log.e(ex);
         }
     }
 
     private void onActionSeen(Context context, DB db, EntityMessage message, boolean seen) {
         EntityOperation.queue(context, db, message, EntityOperation.SEEN, seen);
+        message.seen = seen;
     }
 
     private void onActionMove(Context context, DB db, EntityMessage message, JSONObject jargs) throws JSONException {
         long target = jargs.getLong("target");
-        boolean seen = jargs.getBoolean("seen");
-        if (seen)
-            EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
-        EntityOperation.queue(context, db, message, EntityOperation.MOVE, target);
+        EntityOperation.queue(context, db, message, EntityOperation.MOVE, target, false);
     }
 
     @Override
@@ -136,10 +190,34 @@ public class EntityRule {
             EntityRule other = (EntityRule) obj;
             return this.folder.equals(other.folder) &&
                     this.name.equals(other.name) &&
+                    this.order == other.order &&
+                    this.enabled == other.enabled &&
+                    this.stop == other.stop &&
                     this.condition.equals(other.condition) &&
-                    this.action.equals(other.action) &&
-                    this.enabled == other.enabled;
+                    this.action.equals(other.action);
         } else
             return false;
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("name", name);
+        json.put("order", order);
+        json.put("enabled", enabled);
+        json.put("stop", stop);
+        json.put("condition", condition);
+        json.put("action", action);
+        return json;
+    }
+
+    public static EntityRule fromJSON(JSONObject json) throws JSONException {
+        EntityRule rule = new EntityRule();
+        rule.name = json.getString("name");
+        rule.order = json.getInt("order");
+        rule.enabled = json.getBoolean("enabled");
+        rule.stop = json.getBoolean("stop");
+        rule.condition = json.getString("condition");
+        rule.action = json.getString("action");
+        return rule;
     }
 }

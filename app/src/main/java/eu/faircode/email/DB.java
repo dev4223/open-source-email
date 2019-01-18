@@ -49,7 +49,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 37,
+        version = 38,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -440,18 +440,24 @@ public abstract class DB extends RoomDatabase {
                     @Override
                     public void migrate(SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
-
                         db.execSQL("CREATE TABLE `rule`" +
                                 " (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
                                 " `folder` INTEGER NOT NULL," +
                                 " `name` TEXT NOT NULL," +
                                 " `order` INTEGER NOT NULL," +
+                                " `enabled` INTEGER NOT NULL," +
                                 " `condition` TEXT NOT NULL," +
                                 " `action` TEXT NOT NULL," +
-                                " `enabled` INTEGER NOT NULL," +
                                 " FOREIGN KEY(`folder`) REFERENCES `folder`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
                         db.execSQL("CREATE  INDEX `index_rule_folder` ON `rule` (`folder`)");
                         db.execSQL("CREATE  INDEX `index_rule_order` ON `rule` (`order`)");
+                    }
+                })
+                .addMigrations(new Migration(37, 38) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `rule` ADD COLUMN `stop` INTEGER NOT NULL DEFAULT 0");
                     }
                 })
                 .build();
