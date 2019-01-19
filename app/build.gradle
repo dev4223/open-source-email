@@ -10,8 +10,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 281
-        versionName "1.281"
+        versionCode 283
+        versionName "1.283"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -73,10 +73,7 @@ android {
 
     lintOptions {
         disable 'MissingTranslation'
-        checkReleaseBuilds false
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
-        //abortOnError false
+        abortOnError false
     }
 
     packagingOptions {

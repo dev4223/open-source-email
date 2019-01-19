@@ -170,6 +170,8 @@
     <string name="title_identity_read_receipt">Request read receipt</string>
     <string name="title_identity_delivery_receipt">Request delivery receipt</string>
     <string name="title_identity_receipt_remark">Most providers ignore receipt requests</string>
+    <string name="title_identity_store_sent">Store sent messages</string>
+    <string name="title_identity_store_sent_remark">Enable this only if your provider does not automatically stores sent messages</string>
     <string name="title_optional">Optional</string>
     <string name="title_account_linked">Linked account</string>
     <string name="title_account_name">Account name</string>
@@ -195,7 +197,6 @@
     <string name="title_authorize">Select account</string>
     <string name="title_authorizing">Authorizing account &#8230;</string>
     <string name="title_setup_advanced">Advanced</string>
-    <string name="title_store_copy">Store a copy of sent messages in:</string>
     <string name="title_synchronize_account">Synchronize (receive messages)</string>
     <string name="title_synchronize_identity">Synchronize (send messages)</string>
     <string name="title_primary_account">Primary (default account)</string>
@@ -215,7 +216,6 @@
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_pop">POP is not supported</string>
-    <string name="title_identity_sent_hint">Sent messages will automatically be stored in the sent folder already in most cases</string>
     <string name="title_edit_html">Edit as HTML</string>
 
     <string name="title_unseen_count" translatable="false">%1$s (%2$d)</string>
@@ -370,7 +370,6 @@
     <string name="title_address_unsent">Unsent:</string>
     <string name="title_address_invalid">Invalid:</string>
     <string name="title_snoozed">Snoozed</string>
-    <string name="title_move_sent">Move to sent</string>
 
     <string name="title_previous">Previous</string>
     <string name="title_next">Next</string>
@@ -391,6 +390,9 @@
     <string name="title_rule_regex">Regex</string>
     <string name="title_rule_and">AND</string>
     <string name="title_rule_action">Action</string>
+    <string name="title_rule_folder">Folder</string>
+    <string name="title_rule_identity">Identity</string>
+    <string name="title_rule_answer">Reply template</string>
     <string name="title_rule_name_missing">Rule name missing</string>
     <string name="title_rule_condition_missing">Condition missing</string>
 
@@ -408,8 +410,9 @@
     <string name="title_legend_thread">Conversation</string>
     <string name="title_legend_cc">CC/BCC</string>
     <string name="title_legend_attachment">Attachment</string>
-    <string name="title_legend_snoozed">Snoozed</string>
     <string name="title_legend_draft">Draft/edit</string>
+    <string name="title_legend_snoozed">Snoozed</string>
+    <string name="title_legend_browsed">Browsed or searched</string>
     <string name="title_legend_answered">Answered</string>
     <string name="title_legend_contacts">Contacts</string>
     <string name="title_legend_view">View content</string>
@@ -428,6 +431,7 @@
     <string name="title_legend_synchronizing">Synchronizing</string>
     <string name="title_legend_downloading">Downloading</string>
     <string name="title_legend_closing">Closing</string>
+    <string name="title_legend_stop">Stop processing rules</string>
     <string name="title_legend_metered">Connection is metered</string>
     <string name="title_legend_unmetered">Connection is unmetered</string>
     <string name="title_legend_sync_keep">Number of days to synchronize / to keep messages</string>
@@ -456,6 +460,7 @@
     <string name="title_no_adobe">Adobe Acrobat reader cannot open safely shared files, see the FAQ for more information</string>
     <string name="title_no_body">No message text found</string>
     <string name="title_no_charset">Unsupported encoding: %1$s</string>
+    <string name="title_via">Via: %1$s</string>
 
     <string name="title_try">Try FairEmail, an open source, privacy friendly email app for Android</string>
 

@@ -101,7 +101,6 @@ public class FragmentMessages extends FragmentBase {
 
     private long account;
     private long folder;
-    private boolean outgoing;
     private String thread;
     private long id;
     private String search;
@@ -156,7 +155,6 @@ public class FragmentMessages extends FragmentBase {
         Bundle args = getArguments();
         account = args.getLong("account", -1);
         folder = args.getLong("folder", -1);
-        outgoing = args.getBoolean("outgoing", false);
         thread = args.getString("thread");
         id = args.getLong("id", -1);
         search = args.getString("search");
@@ -269,7 +267,7 @@ public class FragmentMessages extends FragmentBase {
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
         adapter = new AdapterMessage(
                 getContext(), getViewLifecycleOwner(),
-                viewType, outgoing, compact, zoom, iProperties);
+                viewType, compact, zoom, iProperties);
 
         rvMessage.setAdapter(adapter);
 
@@ -367,8 +365,7 @@ public class FragmentMessages extends FragmentBase {
                 lbm.sendBroadcast(
                         new Intent(ActivityView.ACTION_VIEW_MESSAGES)
                                 .putExtra("account", drafts.account)
-                                .putExtra("folder", drafts.id)
-                                .putExtra("outgoing", drafts.isOutgoing()));
+                                .putExtra("folder", drafts.id));
 
                 return true;
             }
@@ -1314,9 +1311,13 @@ public class FragmentMessages extends FragmentBase {
         db.account().livePrimaryAccount().observe(getViewLifecycleOwner(), new Observer<EntityAccount>() {
             @Override
             public void onChanged(EntityAccount account) {
-                primary = (account == null ? -1 : account.id);
-                connected = (account != null && "connected".equals(account.state));
-                getActivity().invalidateOptionsMenu();
+                long primary = (account == null ? -1 : account.id);
+                boolean connected = (account != null && "connected".equals(account.state));
+                if (FragmentMessages.this.primary != primary || FragmentMessages.this.connected != connected) {
+                    FragmentMessages.this.primary = primary;
+                    FragmentMessages.this.connected = connected;
+                    getActivity().invalidateOptionsMenu();
+                }
             }
         });
 
@@ -1363,8 +1364,11 @@ public class FragmentMessages extends FragmentBase {
                             else
                                 setSubtitle(name);
 
-                            outbox = EntityFolder.OUTBOX.equals(folder.type);
-                            getActivity().invalidateOptionsMenu();
+                            boolean outbox = EntityFolder.OUTBOX.equals(folder.type);
+                            if (FragmentMessages.this.outbox != outbox) {
+                                FragmentMessages.this.outbox = outbox;
+                                getActivity().invalidateOptionsMenu();
+                            }
                         }
 
                         swipeRefresh.setRefreshing(
@@ -1587,8 +1591,6 @@ public class FragmentMessages extends FragmentBase {
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
         menu.findItem(R.id.menu_snoozed).setChecked(prefs.getBoolean("snoozed", false));
 
-        menu.findItem(R.id.menu_move_sent).setVisible(!selection && outbox);
-
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -1632,10 +1634,6 @@ public class FragmentMessages extends FragmentBase {
                 onMenuSnoozed();
                 return true;
 
-            case R.id.menu_move_sent:
-                onMenuMoveSent();
-                return true;
-
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -1675,7 +1673,12 @@ public class FragmentMessages extends FragmentBase {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean compact = !prefs.getBoolean("compact", false);
         prefs.edit().putBoolean("compact", compact).apply();
+
+        int zoom = (compact ? 0 : 1);
+        prefs.edit().putInt("zoom", zoom).apply();
+
         adapter.setCompact(compact);
+        adapter.setZoom(zoom);
         getActivity().invalidateOptionsMenu();
     }
 
@@ -1684,47 +1687,6 @@ public class FragmentMessages extends FragmentBase {
         boolean snoozed = prefs.getBoolean("snoozed", false);
         prefs.edit().putBoolean("snoozed", !snoozed).apply();
         loadMessages();
-    }
-
-    private void onMenuMoveSent() {
-        Bundle args = new Bundle();
-        args.putLong("folder", folder);
-
-        new SimpleTask<Void>() {
-            @Override
-            protected Void onExecute(Context context, Bundle args) {
-                long outbox = args.getLong("folder");
-
-                DB db = DB.getInstance(context);
-                try {
-                    db.beginTransaction();
-
-                    for (EntityMessage message : db.message().getMessageSeen(outbox))
-                        if (message.identity != null) {
-                            EntityIdentity identity = db.identity().getIdentity(message.identity);
-                            EntityFolder sent = db.folder().getFolderByType(identity.account, EntityFolder.SENT);
-                            if (sent != null) {
-                                message.folder = sent.id;
-                                message.uid = null;
-                                db.message().updateMessage(message);
-                                Log.i("Appending sent msgid=" + message.msgid);
-                                EntityOperation.queue(context, db, message, EntityOperation.ADD); // Could already exist
-                            }
-                        }
-
-                    db.setTransactionSuccessful();
-                } finally {
-                    db.endTransaction();
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-            }
-        }.execute(this, args, "messages:movesent");
     }
 
     private void loadMessages() {

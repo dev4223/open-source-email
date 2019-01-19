@@ -71,6 +71,7 @@
     <string name="title_setup_go">Git</string>
     <string name="title_setup_setting_gmail">\"Daha az güvenli\" uygulamalara erişimi etkinleştir</string>
     <string name="title_setup_no_settings">%1$s için ayar bulunamadı</string>
+    <string name="title_setup_quick_success">Bir hesap ve bir kimlik başarıyla eklendi</string>
     <string name="title_setup_quick_failed">Bir hesap ve kimlik yapılandırmayı aşağıdan da deneyebilirsiniz</string>
     <string name="title_setup_manage">Yönet</string>
     <string name="title_setup_account">Kurulum hesapları</string>
@@ -158,7 +159,6 @@
     <string name="title_authorize">Hesap seç</string>
     <string name="title_authorizing">Hesap yetkilendiriliyor &#8230;</string>
     <string name="title_setup_advanced">Gelişmiş</string>
-    <string name="title_store_copy">Gönderilen iletilerin bir kopyasını aşağıdaki konumda saklayın:</string>
     <string name="title_synchronize_account">Eşzamanlama (iletileri al)</string>
     <string name="title_synchronize_identity">Eşzamanlama (iletileri gönder)</string>
     <string name="title_primary_account">Birincil (varsayılan hesap)</string>
@@ -178,7 +178,6 @@
     <string name="title_account_delete">Bu hesap kalıcı olarak silinsin mi?</string>
     <string name="title_identity_delete">Bu kimlik kalıcı olarak silinsin mi?</string>
     <string name="title_pop">POP desteklenmiyor</string>
-    <string name="title_identity_sent_hint">Gönderilen iletiler, çoğu durumda zaten gönderilenler klasöründe otomatik olarak saklanır</string>
     <string name="title_edit_html">HTML olarak düzenle</string>
     <string name="title_synchronize_now">Şimdi senkronize et</string>
     <string name="title_delete_local">Yerel mesajları sil</string>
@@ -315,7 +314,6 @@
     <string name="title_address_unsent">Gönderilmemiş:</string>
     <string name="title_address_invalid">Geçersiz:</string>
     <string name="title_snoozed">Ertelendi</string>
-    <string name="title_move_sent">Gönderilenlere taşı</string>
     <string name="title_previous">Önceki</string>
     <string name="title_next">Sonraki</string>
     <string name="title_answer_reply">Yanıt kalıbı</string>
@@ -326,6 +324,9 @@
     <string name="title_rule_name">Ad</string>
     <string name="title_rule_enabled">Etkin</string>
     <string name="title_rule_stop">İşlemi durdur</string>
+    <string name="title_rule_sender">Gönderen içeriyor</string>
+    <string name="title_rule_subject">Konu içeriyor</string>
+    <string name="title_rule_header">Başlık içeriyor</string>
     <string name="title_rule_regex">Düzenli ifade</string>
     <string name="title_rule_and">VE</string>
     <string name="title_rule_action">Eylem</string>
@@ -344,8 +345,8 @@
     <string name="title_legend_thread">Sohbet</string>
     <string name="title_legend_cc">CC/BCC</string>
     <string name="title_legend_attachment">Ek</string>
-    <string name="title_legend_snoozed">Ertelendi</string>
     <string name="title_legend_draft">Taslak/düzenle</string>
+    <string name="title_legend_snoozed">Ertelendi</string>
     <string name="title_legend_answered">Yanıtlanmış</string>
     <string name="title_legend_contacts">Kişiler</string>
     <string name="title_legend_view">İçeriği görüntüle</string>
@@ -387,6 +388,7 @@
     <string name="title_days">Günler</string>
     <string name="title_report">Rapor Et</string>
     <string name="title_no_ask_again">Bunu bir daha sorma</string>
+    <string name="title_no_adobe">Adobe Acrobat Reader güvenli bir biçimde paylaşılan dosyaları açamıyor, daha fazla bilgi için SSS bölümüne bakın</string>
     <string name="title_no_body">Hiçbir ileti metni bulunamadı</string>
     <string name="title_no_charset">Desteklenmeyen kodlama: %1$s</string>
     <string name="title_try">Android için açık kaynaklı, gizlilik dostu bir e-posta uygulaması olan FairEmail\'i deneyin</string>

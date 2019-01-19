@@ -73,7 +73,6 @@ import org.xml.sax.XMLReader;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.Collator;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -113,7 +112,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private LayoutInflater inflater;
     private LifecycleOwner owner;
     private ViewType viewType;
-    private boolean outgoing;
     private boolean compact;
     private int zoom;
     private boolean internet;
@@ -156,6 +154,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvTime;
         private ImageView ivDraft;
         private ImageView ivSnoozed;
+        private ImageView ivBrowsed;
         private ImageView ivAnswered;
         private ImageView ivAttachments;
         private TextView tvSubject;
@@ -222,6 +221,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTime = itemView.findViewById(R.id.tvTime);
             ivDraft = itemView.findViewById(R.id.ivDraft);
             ivSnoozed = itemView.findViewById(R.id.ivSnoozed);
+            ivBrowsed = itemView.findViewById(R.id.ivBrowsed);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
             tvSubject = itemView.findViewById(R.id.tvSubject);
@@ -349,6 +349,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTime.setText(null);
             ivDraft.setVisibility(View.GONE);
             ivSnoozed.setVisibility(View.GONE);
+            ivBrowsed.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
             ivAttachments.setVisibility(View.GONE);
             tvSubject.setText(null);
@@ -403,6 +404,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvTime.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
                 ivDraft.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
                 ivSnoozed.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
+                ivBrowsed.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
                 ivAttachments.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
                 tvSubject.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
@@ -413,52 +415,55 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvError.setAlpha(message.duplicate ? Helper.LOW_LIGHT : 1.0f);
             }
 
-            if (!outgoing && (avatars || identicons)) {
+            boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
+
+            if (avatars || identicons) {
                 Bundle aargs = new Bundle();
                 aargs.putLong("id", message.id);
-                aargs.putString("uri", message.avatar);
-                if (message.from != null && message.from.length > 0)
-                    aargs.putString("from", message.from[0].toString());
+                aargs.putSerializable("addresses", outgoing ? message.to : message.from);
 
-                new SimpleTask<Drawable>() {
+                new SimpleTask<ContactInfo>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
                         ivAvatar.setTag(message.id);
                         ivAvatar.setVisibility(View.INVISIBLE);
+                        tvFrom.setTag(message.id);
                     }
 
                     @Override
-                    protected Drawable onExecute(Context context, Bundle args) {
-                        String uri = args.getString("uri");
-                        if (avatars && uri != null)
-                            try {
-                                ContentResolver resolver = context.getContentResolver();
-                                InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(resolver, Uri.parse(uri));
-                                if (is != null)
-                                    return Drawable.createFromStream(is, "avatar");
-                            } catch (SecurityException ex) {
-                                Log.e(ex);
-                            }
+                    protected ContactInfo onExecute(Context context, Bundle args) {
+                        Address[] addresses = (Address[]) args.getSerializable("addresses");
 
-                        String from = args.getString("from");
-                        if (identicons && from != null)
-                            return new BitmapDrawable(
+                        ContactInfo info = ContactInfo.get(context, addresses);
+
+                        if ((info == null || !info.hasPhoto()) &&
+                                identicons && addresses != null && addresses.length > 0) {
+                            Drawable ident = new BitmapDrawable(
                                     context.getResources(),
-                                    Identicon.generate(from, dp24, 5, "light".equals(theme)));
+                                    Identicon.generate(addresses[0].toString(),
+                                            dp24, 5, "light".equals(theme)));
+                            info = new ContactInfo(ident, (info == null ? null : info.getDisplayName()));
+                        }
 
-                        return null;
+                        return info;
                     }
 
                     @Override
-                    protected void onExecuted(Bundle args, Drawable avatar) {
-                        if ((long) ivAvatar.getTag() == args.getLong("id")) {
-                            if (avatar == null)
+                    protected void onExecuted(Bundle args, ContactInfo info) {
+                        long id = args.getLong("id");
+
+                        if ((long) ivAvatar.getTag() == id) {
+                            if (info == null || !info.hasPhoto())
                                 ivAvatar.setImageResource(R.drawable.baseline_person_24);
                             else
-                                ivAvatar.setImageDrawable(avatar);
+                                ivAvatar.setImageDrawable(info.getPhotoDrawable());
                             ivAvatar.setVisibility(View.VISIBLE);
-                        } else
-                            Log.i("Skipping avatar");
+                        }
+
+                        if ((long) tvFrom.getTag() == id) {
+                            if (info != null && info.hasDisplayName())
+                                tvFrom.setText(info.getDisplayName());
+                        }
                     }
 
                     @Override
@@ -490,6 +495,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ivDraft.setVisibility(message.drafts > 0 ? View.VISIBLE : View.GONE);
             ivSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
+            ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
             btnDownloadAttachments.setVisibility(View.GONE);
@@ -2017,12 +2023,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     AdapterMessage(Context context, LifecycleOwner owner,
-                   ViewType viewType, boolean outgoing, boolean compact, int zoom, IProperties properties) {
+                   ViewType viewType, boolean compact, int zoom, IProperties properties) {
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
         this.viewType = viewType;
-        this.outgoing = outgoing;
         this.compact = compact;
         this.zoom = zoom;
         this.internet = (Helper.isMetered(context, false) != null);
@@ -2033,7 +2038,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.threading = prefs.getBoolean("threading", true);
         this.contacts = (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS)
                 == PackageManager.PERMISSION_GRANTED);
-        this.avatars = (prefs.getBoolean("avatars", true) && this.contacts);
+        this.avatars = prefs.getBoolean("avatars", true);
         this.identicons = prefs.getBoolean("identicons", false);
         this.preview = prefs.getBoolean("preview", false);
         this.confirm = prefs.getBoolean("confirm", false);

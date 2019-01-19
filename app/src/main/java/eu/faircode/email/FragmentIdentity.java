@@ -110,7 +110,8 @@ public class FragmentIdentity extends FragmentBase {
     private EditText etBcc;
     private CheckBox cbDeliveryReceipt;
     private CheckBox cbReadReceipt;
-    private Spinner spSent;
+
+    private CheckBox cbStoreSent;
 
     private Button btnSave;
     private ContentLoadingProgressBar pbSave;
@@ -123,7 +124,6 @@ public class FragmentIdentity extends FragmentBase {
 
     private long id = -1;
     private int color = Color.TRANSPARENT;
-    private ArrayAdapter<EntityFolder> adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -175,7 +175,8 @@ public class FragmentIdentity extends FragmentBase {
         etBcc = view.findViewById(R.id.etBcc);
         cbDeliveryReceipt = view.findViewById(R.id.cbDeliveryReceipt);
         cbReadReceipt = view.findViewById(R.id.cbReadReceipt);
-        spSent = view.findViewById(R.id.spSent);
+
+        cbStoreSent = view.findViewById(R.id.cbStoreSent);
 
         btnSave = view.findViewById(R.id.btnSave);
         pbSave = view.findViewById(R.id.pbSave);
@@ -233,13 +234,10 @@ public class FragmentIdentity extends FragmentBase {
                 etUser.setText(account.user);
                 tilPassword.getEditText().setText(account.password);
                 etRealm.setText(account.realm);
-
-                setFolders(account.id);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                adapter.clear();
             }
         });
 
@@ -407,10 +405,6 @@ public class FragmentIdentity extends FragmentBase {
             }
         });
 
-        adapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<EntityFolder>());
-        adapter.setDropDownViewResource(R.layout.spinner_item1_dropdown);
-        spSent.setAdapter(adapter);
-
         // Initialize
         Helper.setViewsEnabled(view, false);
         btnAutoConfig.setEnabled(false);
@@ -489,6 +483,7 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("bcc", etBcc.getText().toString().trim());
         args.putBoolean("delivery_receipt", cbDeliveryReceipt.isChecked());
         args.putBoolean("read_receipt", cbReadReceipt.isChecked());
+        args.putBoolean("store_sent", cbStoreSent.isChecked());
         args.putLong("account", account == null ? -1 : account.id);
         args.putInt("auth_type", account == null || account.auth_type == null ? Helper.AUTH_TYPE_PASSWORD : account.auth_type);
         args.putString("host", etHost.getText().toString());
@@ -502,7 +497,6 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("signature", Html.toHtml(etSignature.getText()));
         args.putBoolean("synchronize", cbSynchronize.isChecked());
         args.putBoolean("primary", cbPrimary.isChecked());
-        args.putSerializable("sent", (EntityFolder) spSent.getSelectedItem());
 
         new SimpleTask<Void>() {
             @Override
@@ -546,7 +540,8 @@ public class FragmentIdentity extends FragmentBase {
                 String bcc = args.getString("bcc");
                 boolean delivery_receipt = args.getBoolean("delivery_receipt");
                 boolean read_receipt = args.getBoolean("read_receipt");
-                EntityFolder sent = (EntityFolder) args.getSerializable("sent");
+                boolean store_sent = args.getBoolean("store_sent");
+
 
                 if (TextUtils.isEmpty(name))
                     throw new IllegalArgumentException(context.getString(R.string.title_no_name));
@@ -645,8 +640,8 @@ public class FragmentIdentity extends FragmentBase {
                     identity.bcc = bcc;
                     identity.delivery_receipt = delivery_receipt;
                     identity.read_receipt = read_receipt;
-                    identity.store_sent = false;
-                    identity.sent_folder = (sent == null ? null : sent.id);
+                    identity.store_sent = store_sent;
+                    identity.sent_folder = null;
                     identity.error = null;
 
                     if (identity.primary)
@@ -739,6 +734,7 @@ public class FragmentIdentity extends FragmentBase {
                     etBcc.setText(identity == null ? null : identity.bcc);
                     cbDeliveryReceipt.setChecked(identity == null ? false : identity.delivery_receipt);
                     cbReadReceipt.setChecked(identity == null ? false : identity.read_receipt);
+                    cbStoreSent.setChecked(identity == null ? false : identity.store_sent);
 
                     color = (identity == null || identity.color == null ? Color.TRANSPARENT : identity.color);
 
@@ -838,7 +834,6 @@ public class FragmentIdentity extends FragmentBase {
                                     // OAuth token could be updated
                                     if (pos > 0 && accounts.get(pos).auth_type != Helper.AUTH_TYPE_PASSWORD)
                                         tilPassword.getEditText().setText(accounts.get(pos).password);
-                                    setFolders(account.id);
                                     break;
                                 }
                             }
@@ -939,64 +934,6 @@ public class FragmentIdentity extends FragmentBase {
         border.setColor(color);
         border.setStroke(1, Helper.resolveColor(getContext(), R.attr.colorSeparator));
         vwColor.setBackground(border);
-    }
-
-    private void setFolders(long account) {
-        Bundle args = new Bundle();
-        args.putLong("account", account);
-        args.putLong("identity", id);
-
-        new SimpleTask<IdentityFolders>() {
-            @Override
-            protected IdentityFolders onExecute(Context context, Bundle args) {
-                long aid = args.getLong("account");
-                long iid = args.getLong("identity");
-
-                DB db = DB.getInstance(context);
-                IdentityFolders result = new IdentityFolders();
-                result.identity = db.identity().getIdentity(iid);
-                result.folders = db.folder().getFolders(aid);
-
-                if (result.folders != null) {
-                    for (EntityFolder folder : result.folders)
-                        folder.display = folder.getDisplayName(context);
-                    EntityFolder.sort(context, result.folders);
-                }
-
-                return result;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, IdentityFolders result) {
-                EntityFolder none = new EntityFolder();
-                none.name = "-";
-                result.folders.add(0, none);
-
-                adapter.clear();
-                adapter.addAll(result.folders);
-
-                if (result.identity != null)
-                    for (int pos = 0; pos < result.folders.size(); pos++) {
-                        EntityFolder folder = result.folders.get(pos);
-                        if (result.identity.store_sent) {
-                            if (EntityFolder.SENT.equals(folder.type)) {
-                                spSent.setSelection(pos);
-                                break;
-                            }
-                        } else if (result.identity.sent_folder != null) {
-                            if (result.identity.sent_folder.equals(folder.id)) {
-                                spSent.setSelection(pos);
-                                break;
-                            }
-                        }
-                    }
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-            }
-        }.execute(this, args, "identity:folders:get");
     }
 
     class IdentityFolders {
