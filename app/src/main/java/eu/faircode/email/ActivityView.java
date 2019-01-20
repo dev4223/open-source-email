@@ -186,9 +186,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     case R.string.menu_answers:
                         onMenuAnswers();
                         break;
-                    case R.string.menu_rules:
-                        onMenuRules();
-                        break;
                     case R.string.menu_operations:
                         onMenuOperations();
                         break;
@@ -306,7 +303,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 drawerArray.add(new DrawerItem(R.layout.item_drawer_separator));
 
                 drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_reply_24, R.string.menu_answers));
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_filter_list_24, R.string.menu_rules));
                 drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_list_24, R.string.menu_operations));
 
                 drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_settings_applications_24, R.string.menu_setup));
@@ -878,12 +874,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private void onMenuAnswers() {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentAnswers()).addToBackStack("answers");
-        fragmentTransaction.commit();
-    }
-
-    private void onMenuRules() {
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame, new FragmentRules()).addToBackStack("rules");
         fragmentTransaction.commit();
     }
 
