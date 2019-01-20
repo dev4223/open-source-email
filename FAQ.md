@@ -1025,8 +1025,9 @@ There is an advanced option to disable automatically resizing of image attachmen
 **(64) Can you add custom actions for swipe left/right?**
 
 The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.
-The most natural action in the context of FairEmail is to either archive or trash the message.
-Other actions, like adding stars to messages, reporting messages as spam and move messages are available via multiple selection.
+The most natural action in the context of an email app is moving the message out of the folder to another folder.
+You can select the folder to move to in the account settings.
+Other actions, like marking messages read and adding stars to messages are available via multiple selection.
 
 <br />
 
@@ -1104,6 +1105,7 @@ Duplicate (archived) messages, trashed messages and draft messages are not count
 **(71) How do I use filter rules?**
 
 You can edit filter rules by long pressing a folder in the folder list.
+The rules will be applied to new messages received in the folder, not to existing messages.
 
 You'll need to give a rule a name and you'll need to define the order in which a rule should be executed relative to other rules.
 
@@ -1111,6 +1113,13 @@ You can disable a rule and you can stop processing other rules after a rule has 
 
 All the conditions of a rule need to be true for a filter rule to be executed.
 Conditions are optional, but there needs to be at least one condition.
+
+You can select one of these actions to apply to matching messages:
+
+* Mark as read
+* Mark as unread
+* Move
+* Reply template
 
 Filter rules are applied direct after the message header has been fetched, before the message text has been downloaded,
 so it is not possible to apply filter rules to the message text.

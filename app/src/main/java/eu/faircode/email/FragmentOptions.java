@@ -48,6 +48,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -67,7 +68,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swAddresses;
 
     private SwitchCompat swPull;
-    private SwitchCompat swSwipe;
     private SwitchCompat swActionbar;
     private SwitchCompat swAutoClose;
     private SwitchCompat swAutoNext;
@@ -90,7 +90,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "enabled", "updates",
             "metered", "download",
             "unified", "threading", "avatars", "identicons", "preview", "addresses",
-            "pull", "swipe", "actionbar", "autoclose", "autonext",
+            "pull", "actionbar", "autoclose", "autonext",
             "autoread", "collapse", "automove", "confirm", "sender", "autoresize", "autosend",
             "light", "sound", "debug",
             "first", "why", "last_update_check",
@@ -122,7 +122,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAddresses = view.findViewById(R.id.swAddresses);
 
         swPull = view.findViewById(R.id.swPull);
-        swSwipe = view.findViewById(R.id.swSwipe);
         swActionbar = view.findViewById(R.id.swActionbar);
         swAutoClose = view.findViewById(R.id.swAutoClose);
         swAutoNext = view.findViewById(R.id.swAutoNext);
@@ -229,13 +228,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("pull", checked).apply();
-            }
-        });
-
-        swSwipe.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("swipe", checked).apply();
             }
         });
 
@@ -420,7 +412,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAddresses.setChecked(prefs.getBoolean("addresses", true));
 
         swPull.setChecked(prefs.getBoolean("pull", true));
-        swSwipe.setChecked(prefs.getBoolean("swipe", true));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));
         swAutoClose.setChecked(prefs.getBoolean("autoclose", true));
         swAutoNext.setChecked(prefs.getBoolean("autonext", false));
@@ -464,11 +455,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Boolean metered = Helper.isMetered(getContext(), false);
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+                    Boolean metered = Helper.isMetered(getContext(), false);
 
-                tvConnectionType.setVisibility(metered == null ? View.GONE : View.VISIBLE);
-                if (metered != null)
-                    tvConnectionType.setText(metered ? R.string.title_legend_metered : R.string.title_legend_unmetered);
+                    tvConnectionType.setVisibility(metered == null ? View.GONE : View.VISIBLE);
+                    if (metered != null)
+                        tvConnectionType.setText(metered ? R.string.title_legend_metered : R.string.title_legend_unmetered);
+                }
             }
         });
     }

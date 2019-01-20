@@ -2303,6 +2303,17 @@ public class ServiceSynchronize extends LifecycleService {
             // Delete not synchronized messages without uid
             db.message().deleteOrphans(folder.id);
 
+            // Add local sent messages to remote sent folder
+            if (EntityFolder.SENT.equals(folder.type)) {
+                List<EntityMessage> orphans = db.message().getSentOrphans(folder.id);
+                Log.i(folder.name + " sent orphans=" + orphans.size());
+                for (EntityMessage orphan : orphans) {
+                    Log.i(folder.name + " adding orphan id=" + orphan.id);
+                    EntityOperation.queue(this, db, orphan, EntityOperation.ADD);
+                    db.message().setMessageUiBrowsed(orphan.id, false); // Prevent adding again
+                }
+            }
+
             if (download) {
                 db.folder().setFolderSyncState(folder.id, "downloading");
 
@@ -2398,8 +2409,7 @@ public class ServiceSynchronize extends LifecycleService {
                         " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
                         " msgid=" + dup.msgid + " thread=" + dup.thread);
 
-                if (dup.folder.equals(folder.id) ||
-                        (EntityFolder.OUTBOX.equals(dfolder.type) && EntityFolder.SENT.equals(folder.type))) {
+                if (dup.folder.equals(folder.id)) {
                     String thread = helper.getThreadId(uid);
                     Log.i(folder.name + " found as id=" + dup.id + "/" +
                             " uid=" + dup.uid + "/" + uid +
