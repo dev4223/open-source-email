@@ -1129,7 +1129,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                 if (body == null)
                     try {
-                        body = message.read(context);
+                        body = Helper.readText(EntityMessage.getFile(context, message.id));
                     } catch (IOException ex) {
                         Log.e(ex);
                         body = "";
@@ -1510,7 +1510,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return new String[]{
                             from,
                             message.subject,
-                            HtmlHelper.getText(message.read(context))
+                            HtmlHelper.getText(Helper.readText(EntityMessage.getFile(context, message.id)))
                     };
                 }
 
