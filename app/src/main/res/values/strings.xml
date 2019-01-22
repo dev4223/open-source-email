@@ -129,6 +129,7 @@
     <string name="title_advanced_browse">Browse messages on the server</string>
 
     <string name="title_advanced_unified">Unified inbox</string>
+    <string name="title_advanced_date_header">Group by date</string>
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_identicons">Show identicons</string>
@@ -279,6 +280,7 @@
     <string name="title_raw_save">Save raw message</string>
     <string name="title_manage_keywords">Manage keywords</string>
     <string name="title_add_keyword">Add keyword</string>
+    <string name="title_show_inline">Show inline attachments</string>
     <string name="title_download_all">Download all</string>
     <string name="title_save_all">Save all</string>
     <string name="title_show_html">Show original</string>

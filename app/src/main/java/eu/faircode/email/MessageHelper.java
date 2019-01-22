@@ -152,6 +152,7 @@ public class MessageHelper {
         props.put("mail.smtp.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
         props.put("mail.smtp.timeout", Integer.toString(NETWORK_TIMEOUT));
 
+        props.put("mail.mime.allowutf8", "true");
         props.put("mail.mime.address.strict", "false");
         props.put("mail.mime.decodetext.strict", "false");
 
@@ -306,11 +307,8 @@ public class MessageHelper {
         }
 
         File refFile = EntityMessage.getRefFile(context, message.id);
-        if (refFile.exists()) {
-            Log.i("Ref read file=" + refFile);
+        if (refFile.exists())
             body.append(Helper.readText(refFile));
-        } else
-            Log.i("Ref not found file=" + refFile);
 
         String plainContent = HtmlHelper.getText(body.toString());
 
@@ -499,15 +497,21 @@ public class MessageHelper {
 
     String getSubject() throws MessagingException, UnsupportedEncodingException {
         String subject = imessage.getSubject();
-        if (subject != null && subject.contains("=?")) {
-            String prev;
-            do {
-                prev = subject;
-                subject = MimeUtility.decodeText(subject);
-                Log.i("Mime decode " + prev + " -> " + subject);
-            }
-            while (!subject.equals(prev));
+        if (subject == null)
+            return subject;
+
+        int i = 0;
+        int s = subject.indexOf("=?", i);
+        int e = subject.indexOf("?=", i);
+        while (s >= 0 && e >= 0 && i < subject.length()) {
+            String decode = subject.substring(s, e + 2);
+            String decoded = MimeUtility.decodeText(decode);
+            subject = subject.substring(0, i) + decoded + subject.substring(e + 2);
+            i += decoded.length();
+            s = subject.indexOf("=?", i);
+            e = subject.indexOf("?=", i);
         }
+
         return subject;
     }
 
@@ -743,65 +747,70 @@ public class MessageHelper {
         Part part;
     }
 
-    MessageParts getMessageParts() throws IOException, MessagingException {
+    MessageParts getMessageParts() throws IOException {
         MessageParts parts = new MessageParts();
         getMessageParts(imessage, parts, false); // Can throw ParseException
         return parts;
     }
 
-    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws MessagingException, IOException {
-        if (part.isMimeType("multipart/*")) {
-            Multipart multipart = (Multipart) part.getContent();
-            for (int i = 0; i < multipart.getCount(); i++)
-                try {
-                    Part cpart = multipart.getBodyPart(i);
-                    getMessageParts(cpart, parts, pgp);
-                    ContentType ct = new ContentType(cpart.getContentType());
-                    if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
-                        pgp = true;
-                } catch (ParseException ex) {
-                    // Nested body: try to continue
-                    // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
-                    Log.w(ex);
-                }
-        } else {
-            // https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
-            String disposition;
-            try {
-                disposition = part.getDisposition();
-            } catch (MessagingException ex) {
-                Log.w(ex);
-                disposition = null;
-            }
-
-            String filename;
-            try {
-                filename = part.getFileName();
-            } catch (MessagingException ex) {
-                Log.w(ex);
-                filename = null;
-            }
-
-            //Log.i("Part" +
-            //        " disposition=" + disposition +
-            //        " filename=" + filename +
-            //        " content type=" + part.getContentType());
-
-            if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
-                    ((parts.plain == null && part.isMimeType("text/plain")) ||
-                            (parts.html == null && part.isMimeType("text/html")))) {
-                if (part.isMimeType("text/plain"))
-                    parts.plain = part;
-                else
-                    parts.html = part;
+    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException {
+        try {
+            if (part.isMimeType("multipart/*")) {
+                Multipart multipart = (Multipart) part.getContent();
+                for (int i = 0; i < multipart.getCount(); i++)
+                    try {
+                        Part cpart = multipart.getBodyPart(i);
+                        getMessageParts(cpart, parts, pgp);
+                        ContentType ct = new ContentType(cpart.getContentType());
+                        if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
+                            pgp = true;
+                    } catch (ParseException ex) {
+                        // Nested body: try to continue
+                        // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
+                        Log.w(ex);
+                    }
             } else {
-                AttachmentPart apart = new AttachmentPart();
-                apart.disposition = disposition;
-                apart.filename = filename;
-                apart.pgp = pgp;
-                apart.part = part;
-                parts.attachments.add(apart);
+                // https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
+                String disposition;
+                try {
+                    disposition = part.getDisposition();
+                } catch (MessagingException ex) {
+                    Log.w(ex);
+                    disposition = null;
+                }
+
+                String filename;
+                try {
+                    filename = part.getFileName();
+                } catch (MessagingException ex) {
+                    Log.w(ex);
+                    filename = null;
+                }
+
+                //Log.i("Part" +
+                //        " disposition=" + disposition +
+                //        " filename=" + filename +
+                //        " content type=" + part.getContentType());
+
+                if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
+                        ((parts.plain == null && part.isMimeType("text/plain")) ||
+                                (parts.html == null && part.isMimeType("text/html")))) {
+                    if (part.isMimeType("text/plain"))
+                        parts.plain = part;
+                    else
+                        parts.html = part;
+                } else {
+                    AttachmentPart apart = new AttachmentPart();
+                    apart.disposition = disposition;
+                    apart.filename = filename;
+                    apart.pgp = pgp;
+                    apart.part = part;
+                    parts.attachments.add(apart);
+                }
             }
+        } catch (MessagingException ex) {
+            Log.w(ex);
+            parts.warnings.add(Helper.formatThrowable(ex));
         }
     }
 

@@ -266,9 +266,11 @@ public class FragmentMessages extends FragmentBase {
 
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
+        String sort = prefs.getString("sort", "time");
+
         adapter = new AdapterMessage(
                 getContext(), getViewLifecycleOwner(),
-                viewType, compact, zoom, iProperties);
+                viewType, compact, zoom, sort, iProperties);
 
         rvMessage.setAdapter(adapter);
 
@@ -595,7 +597,7 @@ public class FragmentMessages extends FragmentBase {
 
             if (dX > margin) {
                 // Right swipe
-                Drawable d = getResources().getDrawable(getIcon(swipes.right_type), getContext().getTheme());
+                Drawable d = getResources().getDrawable(EntityFolder.getIcon(swipes.right_type), getContext().getTheme());
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + margin,
@@ -605,7 +607,7 @@ public class FragmentMessages extends FragmentBase {
                 d.draw(canvas);
             } else if (dX < -margin) {
                 // Left swipe
-                Drawable d = getResources().getDrawable(getIcon(swipes.left_type), getContext().getTheme());
+                Drawable d = getResources().getDrawable(EntityFolder.getIcon(swipes.left_type), getContext().getTheme());
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + rect.width() - size - margin,
@@ -698,18 +700,6 @@ public class FragmentMessages extends FragmentBase {
                 return null;
 
             return message;
-        }
-
-        int getIcon(String type) {
-            if (EntityFolder.INBOX.equals(type))
-                return R.drawable.baseline_move_to_inbox_24;
-            if (EntityFolder.ARCHIVE.equals(type))
-                return R.drawable.baseline_archive_24;
-            if (EntityFolder.TRASH.equals(type))
-                return R.drawable.baseline_delete_24;
-            if (EntityFolder.JUNK.equals(type))
-                return R.drawable.baseline_flag_24;
-            return R.drawable.baseline_folder_24;
         }
     };
 
@@ -1677,6 +1667,7 @@ public class FragmentMessages extends FragmentBase {
     private void onMenuSort(String sort) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefs.edit().putString("sort", sort).apply();
+        adapter.setSort(sort);
         loadMessages();
     }
 
