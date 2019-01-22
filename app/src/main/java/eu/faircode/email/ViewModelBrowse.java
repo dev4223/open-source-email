@@ -94,24 +94,22 @@ public class ViewModelBrowse extends ViewModel {
             return;
 
         DB db = DB.getInstance(state.context);
-        final EntityFolder folder = db.folder().getFolder(state.fid);
-        if (folder == null) // unified inbox
+        final List<EntityFolder> folders = db.folder().getFolders(
+                state.fid < 0 ? null : state.fid, state.search == null);
+        Log.i("Search fid=" + (state.fid < 0 ? null : state.fid) + " browse=" + (state.search == null) + " count=" + folders.size());
+        if (folders.size() == 0)
             return;
-        if (folder.account == null) // outbox
-            return;
-
-        if (state.search == null) {
-            EntityAccount account = db.account().getAccount(folder.account);
-            if (!account.browse)
-                return;
-        }
 
         if (state.search != null)
             try {
                 db.beginTransaction();
 
-                if (state.messages == null)
-                    state.messages = db.message().getMessageByFolder(state.fid);
+                if (state.messages == null) {
+                    state.messages = new ArrayList<>();
+                    for (EntityFolder folder : folders)
+                        state.messages.addAll(db.message().getMessageByFolder(folder.id));
+                    Log.i("Messages=" + state.messages.size());
+                }
 
                 int matched = 0;
                 for (int i = state.local; i < state.messages.size() && matched < state.pageSize; i++) {
@@ -154,10 +152,11 @@ public class ViewModelBrowse extends ViewModel {
                 db.endTransaction();
             }
 
-        if (state.imessages == null) {
-            if (folder.account == null) // outbox
-                return;
+        if (folders.size() > 1)
+            return;
 
+        final EntityFolder folder = folders.get(0);
+        if (state.imessages == null) {
             EntityAccount account = db.account().getAccount(folder.account);
 
             try {
@@ -177,47 +176,33 @@ public class ViewModelBrowse extends ViewModel {
                 if (state.search == null)
                     state.imessages = state.ifolder.getMessages();
                 else {
-                    try {
-                        SearchTerm term = new OrTerm(
-                                new OrTerm(
-                                        new FromStringTerm(state.search),
-                                        new RecipientStringTerm(Message.RecipientType.TO, state.search)
-                                ),
-                                new OrTerm(
-                                        new SubjectTerm(state.search),
-                                        new BodyTerm(state.search)
-                                )
-                        );
-
-                        if (folder.keywords.length > 0)
-                            term = new OrTerm(term, new FlagTerm(
-                                    new Flags(Helper.sanitizeKeyword(state.search)), true));
-
-                        state.imessages = state.ifolder.search(term);
-                    } catch (final MessagingException ex) {
-                        Object result = state.ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
-                            @Override
-                            public Object doCommand(IMAPProtocol protocol) {
-                                try {
-                                    if (!protocol.supportsUtf8())
-                                        throw ex;
-
+                    Object result = state.ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+                        @Override
+                        public Object doCommand(IMAPProtocol protocol) {
+                            try {
+                                if (protocol.supportsUtf8()) {
                                     // SEARCH OR OR FROM "x" TO "x" OR SUBJECT "x" BODY "x" ALL
                                     // SEARCH OR OR OR FROM "x" TO "x" OR SUBJECT "x" BODY "x" (KEYWORD x) ALL
-                                    Argument a = new Argument();
-                                    a.writeAtom("OR");
-                                    a.writeAtom("OR");
-                                    a.writeAtom("FROM");
-                                    a.writeBytes(state.search.getBytes());
-                                    a.writeAtom("TO");
-                                    a.writeBytes(state.search.getBytes());
-                                    a.writeAtom("OR");
-                                    a.writeAtom("SUBJECT");
-                                    a.writeBytes(state.search.getBytes());
-                                    a.writeAtom("BODY");
-                                    a.writeBytes(state.search.getBytes());
-                                    a.writeAtom("ALL");
-                                    Response[] responses = protocol.command("SEARCH", a);
+                                    Argument arg = new Argument();
+                                    if (folder.keywords.length > 0)
+                                        arg.writeAtom("OR");
+                                    arg.writeAtom("OR");
+                                    arg.writeAtom("OR");
+                                    arg.writeAtom("FROM");
+                                    arg.writeBytes(state.search.getBytes());
+                                    arg.writeAtom("TO");
+                                    arg.writeBytes(state.search.getBytes());
+                                    arg.writeAtom("OR");
+                                    arg.writeAtom("SUBJECT");
+                                    arg.writeBytes(state.search.getBytes());
+                                    arg.writeAtom("BODY");
+                                    arg.writeBytes(state.search.getBytes());
+                                    if (folder.keywords.length > 0) {
+                                        arg.writeAtom("KEYWORD");
+                                        arg.writeBytes(state.search.getBytes());
+                                    }
+                                    arg.writeAtom("ALL");
+                                    Response[] responses = protocol.command("SEARCH", arg);
 
                                     int msgnum;
                                     List<Integer> msgnums = new ArrayList<>();
@@ -241,18 +226,35 @@ public class ViewModelBrowse extends ViewModel {
                                         imessages[i] = state.ifolder.getMessage(msgnums.get(i));
 
                                     return imessages;
-                                } catch (MessagingException ex) {
-                                    Log.e(ex);
-                                    return ex;
+                                } else {
+                                    SearchTerm term = new OrTerm(
+                                            new OrTerm(
+                                                    new FromStringTerm(state.search),
+                                                    new RecipientStringTerm(Message.RecipientType.TO, state.search)
+                                            ),
+                                            new OrTerm(
+                                                    new SubjectTerm(state.search),
+                                                    new BodyTerm(state.search)
+                                            )
+                                    );
+
+                                    if (folder.keywords.length > 0)
+                                        term = new OrTerm(term, new FlagTerm(
+                                                new Flags(Helper.sanitizeKeyword(state.search)), true));
+
+                                    return state.ifolder.search(term);
                                 }
+                            } catch (MessagingException ex) {
+                                Log.e(ex);
+                                return ex;
                             }
-                        });
+                        }
+                    });
 
-                        if (result instanceof Throwable)
-                            throw (MessagingException) result;
+                    if (result instanceof MessagingException)
+                        throw (MessagingException) result;
 
-                        state.imessages = (Message[]) result;
-                    }
+                    state.imessages = (Message[]) result;
                 }
                 Log.i("Boundary found messages=" + state.imessages.length);
 
@@ -292,7 +294,7 @@ public class ViewModelBrowse extends ViewModel {
                     try {
                         long uid = state.ifolder.getUID(isub[j]);
                         Log.i("Boundary sync uid=" + uid);
-                        EntityMessage message = db.message().getMessageByUid(state.fid, uid);
+                        EntityMessage message = db.message().getMessageByUid(folder.id, uid);
                         if (message == null) {
                             message = ServiceSynchronize.synchronizeMessage(state.context,
                                     folder, state.ifolder, (IMAPMessage) isub[j],
