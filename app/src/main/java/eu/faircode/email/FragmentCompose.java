@@ -287,6 +287,7 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public void onClick(View v) {
                 show_images = true;
+                onAction(R.id.action_save);
                 showDraft(working);
             }
         });
@@ -1288,7 +1289,7 @@ public class FragmentCompose extends FragmentBase {
                     os.write(buffer, 0, len);
 
                     // Update progress
-                    if (attachment.size != null)
+                    if (attachment.size != null && attachment.size > 0)
                         db.attachment().setProgress(attachment.id, (int) (size * 100 / attachment.size));
                 }
 

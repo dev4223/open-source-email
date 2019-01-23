@@ -94,7 +94,7 @@ public class ViewModelBrowse extends ViewModel {
             return;
 
         DB db = DB.getInstance(state.context);
-        final List<EntityFolder> folders = db.folder().getFolders(
+        final List<EntityFolder> folders = db.folder().getBrowsableFolders(
                 state.fid < 0 ? null : state.fid, state.search != null);
         Log.i("Search fid=" + (state.fid < 0 ? null : state.fid) + " search=" + (state.search == null) + " count=" + folders.size());
         if (folders.size() == 0)
@@ -105,9 +105,10 @@ public class ViewModelBrowse extends ViewModel {
                 db.beginTransaction();
 
                 if (state.messages == null) {
-                    state.messages = new ArrayList<>();
+                    List<Long> fids = new ArrayList<>();
                     for (EntityFolder folder : folders)
-                        state.messages.addAll(db.message().getMessageByFolder(folder.id));
+                        fids.add(folder.id);
+                    state.messages = db.message().getMessageByFolders(fids);
                     Log.i("Messages=" + state.messages.size());
                 }
 
