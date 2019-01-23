@@ -594,7 +594,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         : message.folderDisplay);
                 tvFolder.setText((compact ? "" : message.accountName + "/") + folderName);
             }
-            tvFolder.setVisibility(viewType == ViewType.FOLDER && compact ? View.GONE : View.VISIBLE);
+
+            if(ViewType.FOLDER == viewType && compact) {
+                tvFolder.setVisibility(View.GONE);
+            } else if(compact) {
+                tvFolder.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
+            } else {
+                tvFolder.setVisibility(View.VISIBLE);
+            }
 
             tvPreview.setText(message.preview);
             tvPreview.setVisibility(preview && !TextUtils.isEmpty(message.preview) ? View.VISIBLE : View.GONE);
