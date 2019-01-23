@@ -1451,6 +1451,8 @@ public class ServiceSynchronize extends LifecycleService {
                     if (op.message != null)
                         message = db.message().getMessage(op.message);
 
+                    JSONArray jargs = new JSONArray(op.args);
+
                     try {
                         if (message == null && !EntityOperation.SYNC.equals(op.name))
                             throw new MessageRemovedException();
@@ -1465,8 +1467,6 @@ public class ServiceSynchronize extends LifecycleService {
                                         EntityOperation.SEND.equals(op.name) ||
                                         EntityOperation.SYNC.equals(op.name)))
                             throw new IllegalArgumentException(op.name + " without uid " + op.args);
-
-                        JSONArray jargs = new JSONArray(op.args);
 
                         // Operations should use database transaction when needed
 
@@ -1483,7 +1483,7 @@ public class ServiceSynchronize extends LifecycleService {
                             doKeyword(folder, ifolder, message, jargs, db);
 
                         else if (EntityOperation.ADD.equals(op.name))
-                            doAdd(folder, isession, istore, ifolder, message, jargs, db);
+                            doAdd(folder, isession, ifolder, message, jargs, db);
 
                         else if (EntityOperation.MOVE.equals(op.name))
                             doMove(folder, isession, istore, ifolder, message, jargs, db);
@@ -1538,9 +1538,18 @@ public class ServiceSynchronize extends LifecycleService {
                             // There is no use in repeating
                             db.operation().deleteOperation(op.id);
 
-                            if (message != null &&
-                                    ex instanceof MessageRemovedException)
-                                db.message().deleteMessage(message.id);
+                            // Cleanup
+                            if (message != null)
+                                if (ex instanceof MessageRemovedException) {
+                                    db.message().deleteMessage(message.id);
+
+                                    // Delete temporary copy in target folder
+                                    if (EntityOperation.MOVE.equals(op.name) && jargs.length() > 1)
+                                        db.message().deleteMessage(jargs.getInt(1));
+                                    if (EntityOperation.ADD.equals(op.name) && jargs.length() > 0)
+                                        db.message().deleteMessage(jargs.getInt(0));
+                                } else
+                                    db.message().setMessageUiHide(message.id, false);
 
                             continue;
                         } else if (ex instanceof MessagingException) {
@@ -1663,7 +1672,7 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void doAdd(EntityFolder folder, Session isession, IMAPStore istore, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException, IOException {
+    private void doAdd(EntityFolder folder, Session isession, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException, IOException {
         // Append message
         MimeMessage imessage = MessageHelper.from(this, message, isession);
 
@@ -1673,6 +1682,10 @@ public class ServiceSynchronize extends LifecycleService {
         }
 
         ifolder.appendMessages(new Message[]{imessage});
+
+        // Cross account move
+        if (!folder.id.equals(message.folder))
+            EntityOperation.queue(this, db, message, EntityOperation.DELETE);
     }
 
     private void doMove(EntityFolder folder, Session isession, IMAPStore istore, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws JSONException, MessagingException, IOException {

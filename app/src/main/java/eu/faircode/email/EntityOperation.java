@@ -127,6 +127,7 @@ public class EntityOperation {
     }
 
     private static void queue(Context context, DB db, EntityMessage message, String name, JSONArray jargs) {
+        long folder = message.folder;
         try {
             if (SEEN.equals(name)) {
                 for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid)) {
@@ -158,6 +159,7 @@ public class EntityOperation {
 
                 // Create copy without uid in target folder
                 // Message with same msgid can be in archive
+                Long newid = null;
                 if (message.uid != null &&
                         message.ui_seen &&
                         target.synchronize &&
@@ -166,12 +168,14 @@ public class EntityOperation {
                     long id = message.id;
                     long uid = message.uid;
                     message.id = null;
-                    message.uid = null;
+                    message.account = target.account;
                     message.folder = target.id;
-                    long newid = db.message().insertMessage(message);
+                    message.uid = null;
+                    newid = db.message().insertMessage(message);
                     message.id = id;
-                    message.uid = uid;
+                    message.account = source.account;
                     message.folder = source.id;
+                    message.uid = uid;
 
                     if (message.content)
                         try {
@@ -184,6 +188,18 @@ public class EntityOperation {
                         }
 
                     EntityAttachment.copy(context, db, message.id, newid);
+
+                    // Store new id for when source message was deleted
+                    jargs.put(1, newid);
+                }
+
+                // Cross account move
+                if (!source.account.equals(target.account)) {
+                    name = ADD;
+                    folder = target.id;
+                    jargs = new JSONArray();
+                    if (newid != null)
+                        jargs.put(0, newid);
                 }
 
             } else if (DELETE.equals(name))
@@ -193,7 +209,7 @@ public class EntityOperation {
         }
 
         EntityOperation operation = new EntityOperation();
-        operation.folder = message.folder;
+        operation.folder = folder;
         operation.message = message.id;
         operation.name = name;
         operation.args = jargs.toString();
