@@ -144,7 +144,7 @@ public class ServiceSynchronize extends LifecycleService {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long RECONNECT_BACKOFF = 90 * 1000L; // milliseconds
-    private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
+    private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
     private static final long STOP_DELAY = 5000L; // milliseconds
     private static final long YIELD_DURATION = 200L; // milliseconds
@@ -917,7 +917,7 @@ public class ServiceSynchronize extends LifecycleService {
                         if (account.last_connected != null) {
                             EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
                             long now = new Date().getTime();
-                            long delayed = now - account.last_connected;
+                            long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
                             if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L) {
                                 Log.i("Reporting sync error after=" + delayed);
                                 Throwable warning = new Throwable(
@@ -1544,9 +1544,11 @@ public class ServiceSynchronize extends LifecycleService {
                                     db.message().deleteMessage(message.id);
 
                                     // Delete temporary copy in target folder
-                                    if (EntityOperation.MOVE.equals(op.name) && jargs.length() > 2)
+                                    if (EntityOperation.MOVE.equals(op.name) &&
+                                            jargs.length() > 2)
                                         db.message().deleteMessage(jargs.getInt(2));
-                                    if (EntityOperation.ADD.equals(op.name) && jargs.length() > 0)
+                                    if (EntityOperation.ADD.equals(op.name) &&
+                                            jargs.length() > 0 && !jargs.isNull(0))
                                         db.message().deleteMessage(jargs.getInt(0));
                                 } else
                                     db.message().setMessageUiHide(message.id, false);
@@ -1710,11 +1712,16 @@ public class ServiceSynchronize extends LifecycleService {
         if (autoread && !imessage.isSet(Flags.Flag.SEEN))
             imessage.setFlag(Flags.Flag.SEEN, true);
 
+        if (target.id.equals(folder.id)) {
+            Log.w(folder.name + " MOVE onto self");
+            return;
+        }
+
         if (istore.hasCapability("MOVE") && !EntityFolder.DRAFTS.equals(folder.type)) {
             Folder itarget = istore.getFolder(target.name);
             ifolder.moveMessages(new Message[]{imessage}, itarget);
         } else {
-            Log.w("MOVE by DELETE/APPEND");
+            Log.w(folder.name + " MOVE by DELETE/APPEND");
 
             // Delete source
             imessage.setFlag(Flags.Flag.DELETED, true);

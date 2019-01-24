@@ -400,6 +400,12 @@ public class FragmentMessages extends FragmentBase {
         return view;
     }
 
+    @Override
+    public void onDestroy() {
+        selectionTracker = null;
+        super.onDestroy();
+    }
+
     private void onSwipeRefresh() {
         Bundle args = new Bundle();
         args.putLong("folder", folder);
@@ -1395,7 +1401,12 @@ public class FragmentMessages extends FragmentBase {
                 break;
 
             case THREAD:
-                setSubtitle(R.string.title_folder_thread);
+                db.account().liveAccount(account).observe(getViewLifecycleOwner(), new Observer<EntityAccount>() {
+                    @Override
+                    public void onChanged(EntityAccount account) {
+                        setSubtitle(getString(R.string.title_folder_thread, account == null ? "" : account.name));
+                    }
+                });
                 break;
 
             case SEARCH:
@@ -1976,13 +1987,12 @@ public class FragmentMessages extends FragmentBase {
                     db.beginTransaction();
 
                     EntityMessage message = db.message().getMessage(id);
-                    EntityFolder folder = db.folder().getFolder(message.folder);
-
-                    if (!message.content)
-                        EntityOperation.queue(context, db, message, EntityOperation.BODY);
-
-                    if (!message.ui_seen && !EntityFolder.OUTBOX.equals(folder.type))
-                        EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
+                    if (message.uid != null) {
+                        if (!message.content)
+                            EntityOperation.queue(context, db, message, EntityOperation.BODY);
+                        if (!message.ui_seen)
+                            EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
+                    }
 
                     db.setTransactionSuccessful();
                 } finally {
