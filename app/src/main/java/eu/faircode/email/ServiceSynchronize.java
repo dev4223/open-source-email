@@ -144,7 +144,7 @@ public class ServiceSynchronize extends LifecycleService {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long RECONNECT_BACKOFF = 90 * 1000L; // milliseconds
-    private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
+    private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
     private static final long STOP_DELAY = 5000L; // milliseconds
     private static final long YIELD_DURATION = 200L; // milliseconds
@@ -1544,8 +1544,8 @@ public class ServiceSynchronize extends LifecycleService {
                                     db.message().deleteMessage(message.id);
 
                                     // Delete temporary copy in target folder
-                                    if (EntityOperation.MOVE.equals(op.name) && jargs.length() > 1)
-                                        db.message().deleteMessage(jargs.getInt(1));
+                                    if (EntityOperation.MOVE.equals(op.name) && jargs.length() > 2)
+                                        db.message().deleteMessage(jargs.getInt(2));
                                     if (EntityOperation.ADD.equals(op.name) && jargs.length() > 0)
                                         db.message().deleteMessage(jargs.getInt(0));
                                 } else
@@ -1676,6 +1676,12 @@ public class ServiceSynchronize extends LifecycleService {
         // Append message
         MimeMessage imessage = MessageHelper.from(this, message, isession);
 
+        if (jargs.length() > 1) {
+            boolean autoread = jargs.getBoolean(1);
+            if (autoread && !imessage.isSet(Flags.Flag.SEEN))
+                imessage.setFlag(Flags.Flag.SEEN, true);
+        }
+
         if (EntityFolder.DRAFTS.equals(folder.type)) {
             if (ifolder.getPermanentFlags().contains(Flags.Flag.DRAFT))
                 imessage.setFlag(Flags.Flag.DRAFT, true);
@@ -1700,11 +1706,9 @@ public class ServiceSynchronize extends LifecycleService {
         if (imessage == null)
             throw new MessageRemovedException();
 
-        if (jargs.length() == 1 || jargs.getBoolean(1)) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            if (prefs.getBoolean("autoread", false) && !imessage.isSet(Flags.Flag.SEEN))
-                imessage.setFlag(Flags.Flag.SEEN, true);
-        }
+        boolean autoread = jargs.getBoolean(1);
+        if (autoread && !imessage.isSet(Flags.Flag.SEEN))
+            imessage.setFlag(Flags.Flag.SEEN, true);
 
         if (istore.hasCapability("MOVE") && !EntityFolder.DRAFTS.equals(folder.type)) {
             Folder itarget = istore.getFolder(target.name);
