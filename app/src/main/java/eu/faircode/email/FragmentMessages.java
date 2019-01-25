@@ -295,12 +295,15 @@ public class FragmentMessages extends FragmentBase {
             selectionTracker.addObserver(new SelectionTracker.SelectionObserver() {
                 @Override
                 public void onSelectionChanged() {
-                    // Workaround AndroidX bug
+                    SelectionTracker tracker = selectionTracker;
+                    if (tracker == null)
+                        return;
+
                     FragmentActivity activity = getActivity();
                     if (activity != null) {
                         try {
                             ViewModelMessages modelMessages = ViewModelProviders.of(activity).get(ViewModelMessages.class);
-                            if (selectionTracker.hasSelection())
+                            if (tracker.hasSelection())
                                 modelMessages.removeObservers(viewType, getViewLifecycleOwner());
                             else
                                 modelMessages.observe(viewType, getViewLifecycleOwner(), observer);
@@ -312,7 +315,7 @@ public class FragmentMessages extends FragmentBase {
                         activity.invalidateOptionsMenu();
                     }
 
-                    if (selectionTracker.hasSelection()) {
+                    if (tracker.hasSelection()) {
                         swipeRefresh.setEnabled(false);
                         fabMore.show();
                     } else {
@@ -545,7 +548,7 @@ public class FragmentMessages extends FragmentBase {
 
                         if (target != null) {
                             EntityAccount account = db.account().getAccount(target.account);
-                            result.add(new MessageTarget(id, account, target));
+                            result.add(new MessageTarget(message, account, target));
                         }
 
                         db.setTransactionSuccessful();
@@ -675,7 +678,7 @@ public class FragmentMessages extends FragmentBase {
                                 List<EntityMessage> messages = db.message().getMessageByThread(
                                         message.account, message.thread, threading && thread ? null : id, message.folder);
                                 for (EntityMessage threaded : messages) {
-                                    result.add(new MessageTarget(threaded.id, account, target));
+                                    result.add(new MessageTarget(threaded, account, target));
                                     db.message().setMessageUiHide(threaded.id, true);
                                     // Prevent new message notification on undo
                                     db.message().setMessageUiIgnored(threaded.id, true);
@@ -759,7 +762,7 @@ public class FragmentMessages extends FragmentBase {
                                     (!EntityFolder.SENT.equals(folder.type) || EntityFolder.TRASH.equals(target.type)) &&
                                     !EntityFolder.TRASH.equals(folder.type) &&
                                     !EntityFolder.JUNK.equals(folder.type))
-                                result.add(new MessageTarget(threaded.id, account, target));
+                                result.add(new MessageTarget(threaded, account, target));
                         }
                     }
 
@@ -785,48 +788,48 @@ public class FragmentMessages extends FragmentBase {
 
     private void onMore() {
         Bundle args = new Bundle();
-        args.putLong("folder", folder);
         args.putLongArray("ids", getSelection());
 
         new SimpleTask<MoreResult>() {
-
             @Override
             protected MoreResult onExecute(Context context, Bundle args) {
-                long fid = args.getLong("folder");
                 long[] ids = args.getLongArray("ids");
 
                 MoreResult result = new MoreResult();
 
                 DB db = DB.getInstance(context);
 
+                List<Long> fids = new ArrayList<>();
                 for (long id : ids) {
                     EntityMessage message = db.message().getMessage(id);
-                    if (message != null) {
-                        if (message.ui_seen)
-                            result.seen = true;
-                        else
-                            result.unseen = true;
+                    if (message == null)
+                        continue;
 
-                        if (message.ui_flagged)
-                            result.flagged = true;
-                        else
-                            result.unflagged = true;
+                    if (!fids.contains(message.folder))
+                        fids.add(message.folder);
 
-                        result.hasArchive = (result.hasArchive &&
-                                db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null);
-                        result.hasTrash = (result.hasTrash &&
-                                db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null);
-                        result.hasJunk = (result.hasJunk &&
-                                db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null);
-                    }
-                }
-
-                EntityFolder folder = db.folder().getFolder(fid);
-                if (folder != null) {
+                    EntityFolder folder = db.folder().getFolder(message.folder);
                     result.isArchive = EntityFolder.ARCHIVE.equals(folder.type);
                     result.isTrash = EntityFolder.TRASH.equals(folder.type);
                     result.isJunk = EntityFolder.JUNK.equals(folder.type);
                     result.isDrafts = EntityFolder.DRAFTS.equals(folder.type);
+
+                    if (message.ui_seen)
+                        result.seen = true;
+                    else
+                        result.unseen = true;
+
+                    if (message.ui_flagged)
+                        result.flagged = true;
+                    else
+                        result.unflagged = true;
+
+                    result.hasArchive = (result.hasArchive &&
+                            db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null);
+                    result.hasTrash = (result.hasTrash &&
+                            db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null);
+                    result.hasJunk = (result.hasJunk &&
+                            db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null);
                 }
 
                 result.accounts = db.account().getAccounts(true);
@@ -851,7 +854,7 @@ public class FragmentMessages extends FragmentBase {
                                 !EntityFolder.ARCHIVE.equals(target.type) &&
                                 !EntityFolder.TRASH.equals(target.type) &&
                                 !EntityFolder.JUNK.equals(target.type) &&
-                                !target.id.equals(fid))
+                                (fids.size() != 1 || !fids.contains(target.id)))
                             targets.add(target);
                     EntityFolder.sort(context, targets);
                     result.targets.put(account, targets);
@@ -1189,7 +1192,7 @@ public class FragmentMessages extends FragmentBase {
                             for (EntityMessage threaded : messages) {
                                 EntityFolder target = db.folder().getFolderByType(message.account, type);
                                 EntityAccount account = db.account().getAccount(target.account);
-                                result.add(new MessageTarget(threaded.id, account, target));
+                                result.add(new MessageTarget(threaded, account, target));
                             }
                         }
                     }
@@ -1242,7 +1245,7 @@ public class FragmentMessages extends FragmentBase {
                                 List<EntityMessage> messages = db.message().getMessageByThread(
                                         message.account, message.thread, threading ? null : id, message.folder);
                                 for (EntityMessage threaded : messages)
-                                    result.add(new MessageTarget(threaded.id, account, target));
+                                    result.add(new MessageTarget(threaded, account, target));
                             }
                         }
                     }
@@ -2038,7 +2041,7 @@ public class FragmentMessages extends FragmentBase {
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         if (prefs.getBoolean("automove", false)) {
-            moveAskConfirmed(result);
+            moveAskAcross(result);
             return;
         }
 
@@ -2056,11 +2059,34 @@ public class FragmentMessages extends FragmentBase {
                     public void onClick(DialogInterface dialog, int which) {
                         if (cbNotAgain.isChecked())
                             prefs.edit().putBoolean("automove", true).apply();
-                        moveAskConfirmed(result);
+                        moveAskAcross(result);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    private void moveAskAcross(final ArrayList<MessageTarget> result) {
+        boolean across = false;
+        for (MessageTarget target : result)
+            if (target.across) {
+                across = true;
+                break;
+            }
+
+        if (across)
+            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                    .setMessage(R.string.title_accross_remark)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            moveAskConfirmed(result);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        else
+            moveAskConfirmed(result);
     }
 
     private void moveAskConfirmed(ArrayList<MessageTarget> result) {
@@ -2081,6 +2107,18 @@ public class FragmentMessages extends FragmentBase {
                         EntityMessage message = db.message().getMessage(target.id);
                         if (message != null) {
                             Log.i("Move id=" + target.id + " target=" + target.folder.name);
+
+                            // Cross account move: check if message downloaded
+                            if (!target.folder.account.equals(message.account)) {
+                                if (!message.content)
+                                    throw new IllegalArgumentException(getString(R.string.title_no_accross));
+
+                                List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+                                for (EntityAttachment attachment : attachments)
+                                    if (!attachment.available)
+                                        throw new IllegalArgumentException(getString(R.string.title_no_accross));
+                            }
+
                             EntityOperation.queue(context, db, message, EntityOperation.MOVE, target.folder.id);
                         }
                     }
@@ -2094,7 +2132,10 @@ public class FragmentMessages extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
         }.execute(FragmentMessages.this, args, "messages:move");
     }
@@ -2225,17 +2266,20 @@ public class FragmentMessages extends FragmentBase {
 
     private static class MessageTarget implements Parcelable {
         long id;
+        boolean across;
         EntityAccount account;
         EntityFolder folder;
 
-        MessageTarget(long id, EntityAccount account, EntityFolder folder) {
-            this.id = id;
+        MessageTarget(EntityMessage message, EntityAccount account, EntityFolder folder) {
+            this.id = message.id;
+            this.across = !folder.account.equals(message.account);
             this.account = account;
             this.folder = folder;
         }
 
         protected MessageTarget(Parcel in) {
             id = in.readLong();
+            across = (in.readInt() != 0);
             account = (EntityAccount) in.readSerializable();
             folder = (EntityFolder) in.readSerializable();
         }
@@ -2243,6 +2287,7 @@ public class FragmentMessages extends FragmentBase {
         @Override
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeLong(id);
+            dest.writeInt(across ? 1 : 0);
             dest.writeSerializable(account);
             dest.writeSerializable(folder);
         }

@@ -1367,50 +1367,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onMenuJunk(final ActionData data) {
-            new DialogBuilderLifecycle(context, owner)
-                    .setMessage(R.string.title_ask_spam)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Bundle args = new Bundle();
-                            args.putLong("id", data.message.id);
-
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long id = args.getLong("id");
-
-                                    DB db = DB.getInstance(context);
-                                    try {
-                                        db.beginTransaction();
-
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message == null)
-                                            return null;
-
-                                        EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
-                                        EntityOperation.queue(context, db, message, EntityOperation.MOVE, junk.id);
-
-                                        db.setTransactionSuccessful();
-                                    } finally {
-                                        db.endTransaction();
-                                    }
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Helper.unexpectedError(context, owner, ex);
-                                }
-                            }.execute(context, owner, args, "message:spam");
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
-        }
-
         private void onMenuForward(final ActionData data) {
             Bundle args = new Bundle();
             args.putLong("id", data.message.id);
@@ -1558,6 +1514,71 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Helper.unexpectedError(context, owner, ex);
                 }
             }.execute(context, owner, args, "message:unseen");
+        }
+
+        private void onMenuJunk(final ActionData data) {
+            new DialogBuilderLifecycle(context, owner)
+                    .setMessage(R.string.title_ask_spam)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Bundle args = new Bundle();
+                            args.putLong("id", data.message.id);
+
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    long id = args.getLong("id");
+
+                                    DB db = DB.getInstance(context);
+                                    try {
+                                        db.beginTransaction();
+
+                                        EntityMessage message = db.message().getMessage(id);
+                                        if (message == null)
+                                            return null;
+
+                                        EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
+                                        EntityOperation.queue(context, db, message, EntityOperation.MOVE, junk.id);
+
+                                        db.setTransactionSuccessful();
+                                    } finally {
+                                        db.endTransaction();
+                                    }
+
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Helper.unexpectedError(context, owner, ex);
+                                }
+                            }.execute(context, owner, args, "message:spam");
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        }
+
+        private void onMenuDelete(final ActionData data) {
+            Bundle args = new Bundle();
+            args.putLong("id", data.message.id);
+
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    db.message().deleteMessage(id);
+                    return null;
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args, "message:delete");
         }
 
         private void onMenuShare(ActionData data) {
@@ -1838,8 +1859,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View anchor = bnvActions.findViewById(R.id.action_more);
             PopupMenu popupMenu = new PopupMenu(context, anchor);
             popupMenu.inflate(R.menu.menu_message);
-            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
-            popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(data.hasJunk);
 
             popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(data.message.content);
 
@@ -1847,6 +1866,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_answer).setEnabled(data.message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null);
+
+            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(data.hasJunk);
+
+            popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(debug);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(data.message.uid != null);
 
@@ -1870,9 +1894,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 public boolean onMenuItemClick(MenuItem target) {
                     switch (target.getItemId()) {
-                        case R.id.menu_junk:
-                            onMenuJunk(data);
-                            return true;
                         case R.id.menu_forward:
                             onMenuForward(data);
                             return true;
@@ -1884,6 +1905,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_unseen:
                             onMenuUnseen(data);
+                            return true;
+                        case R.id.menu_junk:
+                            onMenuJunk(data);
+                            return true;
+                        case R.id.menu_delete:
+                            // For emergencies
+                            onMenuDelete(data);
                             return true;
                         case R.id.menu_share:
                             onMenuShare(data);
