@@ -59,7 +59,7 @@ public class ViewModelBrowse extends ViewModel {
 
     private class State {
         private Context context;
-        private long fid;
+        private Long fid;
         private String search;
         private int pageSize;
 
@@ -76,44 +76,31 @@ public class ViewModelBrowse extends ViewModel {
     void set(Context context, long folder, String search, int pageSize) {
         currentState = new State();
         currentState.context = context;
-        currentState.fid = folder;
+        currentState.fid = (folder < 0 ? null : folder);
         currentState.search = search;
         currentState.pageSize = pageSize;
         currentState.index = -1;
         currentState.error = false;
     }
 
-    boolean isSearching() {
-        State state = currentState;
-        return (state != null && state.search != null);
-    }
-
-    void load() throws MessagingException, IOException {
+    int load() throws MessagingException, IOException {
         final State state = currentState;
         if (state == null || state.error)
-            return;
+            return 0;
 
         DB db = DB.getInstance(state.context);
-        final List<EntityFolder> folders = db.folder().getBrowsableFolders(
-                state.fid < 0 ? null : state.fid, state.search != null);
-        Log.i("Search fid=" + (state.fid < 0 ? null : state.fid) + " search=" + (state.search == null) + " count=" + folders.size());
-        if (folders.size() == 0)
-            return;
 
+        int local = 0;
         if (state.search != null)
             try {
                 db.beginTransaction();
 
                 if (state.messages == null) {
-                    List<Long> fids = new ArrayList<>();
-                    for (EntityFolder folder : folders)
-                        fids.add(folder.id);
-                    state.messages = db.message().getMessageByFolders(fids);
+                    state.messages = db.message().getMessageIdsByFolder(state.fid);
                     Log.i("Messages=" + state.messages.size());
                 }
 
-                int matched = 0;
-                for (int i = state.local; i < state.messages.size() && matched < state.pageSize; i++) {
+                for (int i = state.local; i < state.messages.size() && local < state.pageSize; i++) {
                     state.local = i + 1;
 
                     boolean match = false;
@@ -141,22 +128,27 @@ public class ViewModelBrowse extends ViewModel {
                     if (!match && message.content)
                         match = body.toLowerCase().contains(find);
 
-                    if (match)
+                    if (match) {
+                        local++;
                         db.message().setMessageFound(message.account, message.thread);
+                    }
                 }
 
                 db.setTransactionSuccessful();
 
-                if (++matched >= state.pageSize)
-                    return;
+                if (local == state.pageSize)
+                    return local;
             } finally {
                 db.endTransaction();
             }
 
-        if (folders.size() > 1)
-            return;
+        if (state.fid == null)
+            return local;
 
-        final EntityFolder folder = folders.get(0);
+        final EntityFolder folder = db.folder().getBrowsableFolder(state.fid, state.search != null);
+        if (folder == null)
+            return local;
+
         if (state.imessages == null) {
             EntityAccount account = db.account().getAccount(folder.account);
 
@@ -271,12 +263,12 @@ public class ViewModelBrowse extends ViewModel {
             }
         }
 
-        int count = 0;
-        while (state.index >= 0 && count < state.pageSize && currentState != null) {
+        int remote = 0;
+        while (state.index >= 0 && remote < state.pageSize && currentState != null) {
             Log.i("Boundary index=" + state.index);
-            int from = Math.max(0, state.index - (state.pageSize - count) + 1);
+            int from = Math.max(0, state.index - (state.pageSize - remote) + 1);
             Message[] isub = Arrays.copyOfRange(state.imessages, from, state.index + 1);
-            state.index -= (state.pageSize - count);
+            state.index -= (state.pageSize - remote);
 
             FetchProfile fp = new FetchProfile();
             fp.add(FetchProfile.Item.ENVELOPE);
@@ -301,7 +293,7 @@ public class ViewModelBrowse extends ViewModel {
                                     folder, state.ifolder, (IMAPMessage) isub[j],
                                     true,
                                     new ArrayList<EntityRule>());
-                            count++;
+                            remote++;
                         }
                         db.message().setMessageFound(message.account, message.thread);
                     } catch (MessageRemovedException ex) {
@@ -329,6 +321,7 @@ public class ViewModelBrowse extends ViewModel {
         }
 
         Log.i("Boundary done");
+        return local + remote;
     }
 
     void clear() {

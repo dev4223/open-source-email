@@ -118,10 +118,10 @@
     <string name="title_advanced_identicons">Arată iconițe generate</string>
     <string name="title_advanced_preview">Arată previzualizare mesaj</string>
     <string name="title_advanced_addresses">Implicit arată detaliile adreselor</string>
+    <string name="title_advanced_actionbar">Bara de acțiuni corversație</string>
     <string name="title_advanced_light">Folosire LED de notificare</string>
     <string name="title_advanced_sound">Selectare sunet de notificare</string>
     <string name="title_advanced_pull_refresh">Trageți în jos pentru a actualiza</string>
-    <string name="title_advanced_actionbar">Bara de acțiuni corversație</string>
     <string name="title_advanced_autoclose">Închide automat conversațiile</string>
     <string name="title_advanced_autonext">Se trece la următoarea conversație când este închisă cea curentă</string>
     <string name="title_advanced_autoread">Marchează automat mesajele mutate ca citite</string>
@@ -232,6 +232,7 @@
     <string name="title_folder_system">Sistem</string>
     <string name="title_folder_user">Utilizator</string>
     <string name="title_folder_primary">Dosare cont primar</string>
+    <string name="title_folder_thread">Conversație %1$s</string>
     <string name="title_folders_unified">Director unificat de mesaje primite</string>
     <string name="title_no_messages">Nici un mesaj</string>
     <string name="title_subject_reply">Răsp: %1$s</string>
@@ -269,6 +270,7 @@
     <string name="title_no_stream">O aplicație invechită a trimis calea fișierului în locul unui flux de date</string>
     <string name="title_no_contacts">Selectorul de contacte nu este disponibil</string>
     <string name="title_no_internet">Nu există conexiune la internet</string>
+    <string name="title_accross_remark">Mesajele mutate între conturi vor fi descărcate din nou consumând date în plus</string>
     <string name="title_raw_saved">Mesaj original salvat</string>
     <string name="title_attachment_saved">Atașament salvat</string>
     <string name="title_attachments_saved">Atașamente salvate</string>
@@ -279,7 +281,6 @@
     <string name="title_ask_delete_answer">Se șterge permanent șablonul de răspuns?</string>
     <string name="title_ask_delete_rule">Ștergeți regula definitiv?</string>
     <string name="title_ask_discard">Renunțați la ciornă?</string>
-    <string name="title_ask_spam">Raportează ca spam?</string>
     <string name="title_ask_show_html">Vizualizarea mesajului original poate duce la divulgarea de informații confidențiale</string>
     <string name="title_ask_show_image">Vizualizarea imaginilor poate duce la divulgarea de informații confidențiale</string>
     <string name="title_sync_queued">Sincronizarea va avea loc la următoarea conexiune a contului</string>
@@ -298,6 +299,7 @@
     <string name="title_save">Salvează</string>
     <string name="title_send">Trimite</string>
     <string name="title_view">Afisare</string>
+    <string name="title_send_at">Trimite la &#8230;</string>
     <string name="title_no_selection">Nimic selectat</string>
     <string name="title_style_bold">Îngroșat</string>
     <string name="title_style_italic">Cursiv</string>
@@ -311,7 +313,7 @@
     <string name="title_attachments_missing">Nu toate ataşamentele se descarcă</string>
     <string name="title_draft_deleted">S-a renunțat la ciornă</string>
     <string name="title_draft_saved">Ciornă salvată</string>
-    <string name="title_ask_send">Trimite un mesaj către %1$s?</string>
+    <string name="title_ask_send_via">Trimite mesajul către %1$s via %2$s?</string>
     <string name="title_queued">Expediere mesaj</string>
     <string name="title_encrypt">Criptare</string>
     <string name="title_decrypt">Decriptare</string>

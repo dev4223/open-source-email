@@ -30,18 +30,15 @@ import androidx.room.Update;
 @Dao
 public interface DaoIdentity {
     @Query("SELECT identity.*, account.name AS accountName FROM identity" +
-            " JOIN account ON account.id = identity.account")
-    LiveData<List<TupleIdentityEx>> liveIdentities();
-
-    @Query("SELECT identity.* FROM identity" +
             " JOIN account ON account.id = identity.account" +
-            " WHERE (:account IS NULL OR account.id = :account)" +
-            " AND account.synchronize = :synchronize" +
-            " AND identity.synchronize = :synchronize")
-    LiveData<List<EntityIdentity>> liveIdentities(Long account, boolean synchronize);
+            " WHERE NOT :synchronize OR account.synchronize")
+    LiveData<List<TupleIdentityEx>> liveIdentities(boolean synchronize);
 
-    @Query("SELECT * FROM identity")
-    List<EntityIdentity> getIdentities();
+    @Query("SELECT identity.*, account.name AS accountName FROM identity" +
+            " JOIN account ON account.id = identity.account" +
+            " JOIN folder ON folder.account = identity.account AND folder.type = '" + EntityFolder.DRAFTS + "'" +
+            " WHERE NOT :synchronize OR account.synchronize")
+    List<TupleIdentityEx> getComposableIdentities(boolean synchronize);
 
     @Query("SELECT * FROM identity WHERE account = :account")
     List<EntityIdentity> getIdentities(long account);
@@ -63,6 +60,9 @@ public interface DaoIdentity {
 
     @Query("UPDATE identity SET state = :state WHERE id = :id")
     int setIdentityState(long id, String state);
+
+    @Query("UPDATE identity SET last_connected = :last_connected WHERE id = :id")
+    int setIdentityConnected(long id, long last_connected);
 
     @Query("UPDATE identity SET password = :password WHERE id = :id")
     int setIdentityPassword(long id, String password);

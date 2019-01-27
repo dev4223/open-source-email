@@ -133,6 +133,8 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(69) Can you add auto scroll up on new message?](#user-content-faq69)
 * [(70) When will messages be auto expanded?](#user-content-faq70)
 * [(71) How do I use filter rules?](#user-content-faq71)
+* [(72) What are primary accounts/identities?](#user-content-faq72)
+* [(73) Is moving messages across accounts safe/efficient?](#user-content-faq73)
 
 [I have another question.](#support)
 
@@ -223,6 +225,7 @@ In the display section of the advanced settings you can enable or disable:
 * *Show identicons*: to show generated contact avatars
 * *Show message preview*: to show two lines of the message text
 * *Show address details by default*: to collapse the addresses section by default
+* *Conversation action bar*: to disable the bottom navigation bar
 
 Note that messages can be previewed only when the message text was downloaded.
 Larger message texts are not downloaded by default on metered (generally mobile) networks.
@@ -1135,6 +1138,27 @@ Using filter rules is a pro feature.
 
 <br />
 
+<a name="faq72"></a>
+**(72) What are primary accounts/identities?**
+
+The primary account is used when the account is ambiguous, for example when starting a new draft from the unified inbox.
+
+Similarly, the primary identity of an account is used when the identity is ambiguous.
+
+There can be just one primary account and there can be just one primary identity per account.
+
+<br />
+
+<a name="faq73"></a>
+**(73) Is moving messages across accounts safe/efficient?**
+
+Moving messages across accounts is safe because the raw, original messages will be downloaded and moved
+and because the source messages will be deleted only after the target messages have been added
+
+Batch moving messages across accounts is efficient if both the source folder and target folder are set to synchronize,
+else FairEmail needs to connect to the folder(s) for each message.
+
+<br />
 
 ## Support
 

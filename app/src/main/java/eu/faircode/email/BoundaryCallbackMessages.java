@@ -33,14 +33,13 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     private ViewModelBrowse model;
     private Handler handler;
     private IBoundaryCallbackMessages intf;
-    private boolean searching = false;
 
     private ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     interface IBoundaryCallbackMessages {
         void onLoading();
 
-        void onLoaded();
+        void onLoaded(int fetched);
 
         void onError(Throwable ex);
     }
@@ -65,10 +64,6 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         });
     }
 
-    boolean isSearching() {
-        return searching;
-    }
-
     @Override
     public void onZeroItemsLoaded() {
         Log.i("onZeroItemsLoaded");
@@ -83,20 +78,22 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
     private void load() {
         executor.submit(new Runnable() {
+            private int fetched;
+
             @Override
             public void run() {
                 if (model == null)
                     return;
 
                 try {
-                    searching = model.isSearching();
+                    fetched = 0;
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
                             intf.onLoading();
                         }
                     });
-                    model.load();
+                    fetched = model.load();
                 } catch (final Throwable ex) {
                     Log.e("Boundary", ex);
                     handler.post(new Runnable() {
@@ -106,11 +103,10 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         }
                     });
                 } finally {
-                    searching = false;
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            intf.onLoaded();
+                            intf.onLoaded(fetched);
                         }
                     });
                 }

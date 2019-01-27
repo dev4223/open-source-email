@@ -34,6 +34,10 @@
         <item quantity="one">Déplacer %1$d message vers %2$s ?</item>
         <item quantity="other">Déplacer %1$d messages vers %2$s ?</item>
     </plurals>
+    <plurals name="title_ask_spam">
+        <item quantity="one">Signaler %1$d message comme spam ?</item>
+        <item quantity="other">Signaler %1$d messages comme spam ?</item>
+    </plurals>
     <string name="title_notification_failed">\'%1$s\' a échoué</string>
     <string name="menu_setup">Configuration</string>
     <string name="menu_answers">Modèles</string>
@@ -112,10 +116,10 @@
     <string name="title_advanced_identicons">Afficher les identicônes</string>
     <string name="title_advanced_preview">Afficher l\'aperçu du message</string>
     <string name="title_advanced_addresses">Afficher par défaut les détails de l\'adresse</string>
+    <string name="title_advanced_actionbar">Barre d\'action de conversation</string>
     <string name="title_advanced_light">Utiliser le voyant de notification</string>
     <string name="title_advanced_sound">Sélectionner le son pour les notifications</string>
     <string name="title_advanced_pull_refresh">Tirer vers le bas pour actualiser</string>
-    <string name="title_advanced_actionbar">Barre d\'action de conversation</string>
     <string name="title_advanced_autoclose">Fermer automatiquement les conversations</string>
     <string name="title_advanced_autonext">Lors de la fermeture d\'une conversation, aller automatiquement sur la suivante</string>
     <string name="title_advanced_autoread">Marquer automatiquement le message comme lu lors de son déplacement</string>
@@ -264,8 +268,7 @@
     <string name="title_no_stream">Une application obsolète a envoyé un chemin d\'accès au lieu d\'un flux de fichier</string>
     <string name="title_no_contacts">Sélecteur de contact non disponible</string>
     <string name="title_no_internet">Pas de connexion Internet</string>
-    <string name="title_no_accross">Le déplacement entre comptes exige que tout le contenu du message soit téléchargé</string>
-    <string name="title_accross_remark">Les messages déplacés entre comptes ne seront pas identiques après le déplacement</string>
+    <string name="title_accross_remark">Les messages déplacés entre comptes seront téléchargés à nouveau entraînant une utilisation supplémentaire des données</string>
     <string name="title_raw_saved">Message brut enregistré</string>
     <string name="title_attachment_saved">Pièce jointe enregistrée</string>
     <string name="title_attachments_saved">Pièces jointes enregistrées</string>
@@ -276,7 +279,6 @@
     <string name="title_ask_delete_answer">Supprimer définitivement le modèle de réponse ?</string>
     <string name="title_ask_delete_rule">Supprimer définitivement la règle ?</string>
     <string name="title_ask_discard">Supprimer le brouillon ?</string>
-    <string name="title_ask_spam">Signaler comme spam ?</string>
     <string name="title_ask_show_html">Afficher le message original peut divulguer des informations sensibles privées</string>
     <string name="title_ask_show_image">Afficher les images peut divulguer des informations sensibles privées</string>
     <string name="title_sync_queued">La synchronisation sera effectuée à la prochaine connexion d\'un compte</string>
@@ -309,7 +311,7 @@
     <string name="title_attachments_missing">Les pièces jointes ne sont pas toutes téléchargées</string>
     <string name="title_draft_deleted">Brouillon supprimé</string>
     <string name="title_draft_saved">Brouillon enregistré</string>
-    <string name="title_ask_send">Envoyer le message à %1$s ?</string>
+    <string name="title_ask_send_via">Envoyer le message à %1$s via %2$s ?</string>
     <string name="title_queued">Envoi du message</string>
     <string name="title_encrypt">Chiffrer</string>
     <string name="title_decrypt">Déchiffrer</string>

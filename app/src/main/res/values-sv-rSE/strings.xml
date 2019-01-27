@@ -4,6 +4,7 @@
     <string name="app_welcome">FairEmail är en e-postapp med öppen källkod som är fokuserad på integritet och säkerhet. Av denna anledning kan vissa funktioner fungera annorlunda än vad du är van vid.</string>
     <string name="channel_service">Tjänst</string>
     <string name="channel_notification">Aviseringar</string>
+    <string name="channel_warning">Varningar</string>
     <string name="channel_error">Fel</string>
     <string name="tile_synchronize">Synkronisera</string>
     <string name="tile_unseen">Nya meddelanden</string>
@@ -111,10 +112,10 @@
     <string name="title_advanced_identicons">Visa identicons</string>
     <string name="title_advanced_preview">Förhandsvisning av meddelande</string>
     <string name="title_advanced_addresses">Visa adressuppgifter som standard</string>
+    <string name="title_advanced_actionbar">Konversationens åtgärdsfält</string>
     <string name="title_advanced_light">Använda aviseringslampan</string>
     <string name="title_advanced_sound">Välj aviseringsljud</string>
     <string name="title_advanced_pull_refresh">Dra ner för att uppdatera</string>
-    <string name="title_advanced_actionbar">Konversationens åtgärdsfält</string>
     <string name="title_advanced_autoclose">Stäng konversationer automatiskt</string>
     <string name="title_advanced_autonext">Gå automatiskt till nästa konversation vid stängning av konversation</string>
     <string name="title_advanced_autoread">Märk automatiskt meddelanden som lästa vid flyttning av meddelanden</string>
@@ -180,10 +181,12 @@
     <string name="title_no_drafts">Ingen utkastmapp vald</string>
     <string name="title_no_primary_drafts">Inget primärt konto eller ingen utkastmapp</string>
     <string name="title_no_idle">Leverantören stöder inte push-meddelanden. Detta kommer att fördröja mottagning av nya meddelanden och öka batterianvändningen.</string>
+    <string name="title_no_sync">Synkroniseringsfel sedan %1$s</string>
     <string name="title_account_delete">Ta bort detta konto permanent?</string>
     <string name="title_identity_delete">Ta bort denna identitet permanent?</string>
     <string name="title_pop">POP stöds inte</string>
     <string name="title_edit_html">Redigera som HTML</string>
+    <string name="title_last_connected">Senast ansluten: %1$s</string>
     <string name="title_synchronize_now">Synkronisera nu</string>
     <string name="title_delete_local">Ta bort lokala meddelanden</string>
     <string name="title_empty_trash">Töm papperskorgen</string>
@@ -220,6 +223,7 @@
     <string name="title_folder_system">System</string>
     <string name="title_folder_user">Användare</string>
     <string name="title_folder_primary">Mappar primärt konto</string>
+    <string name="title_folder_thread">Konversation %1$s</string>
     <string name="title_folders_unified">Samlad inkorg mappar</string>
     <string name="title_no_messages">Inga meddelanden</string>
     <string name="title_subject_reply">Sv: %1$s</string>
@@ -231,6 +235,7 @@
     <string name="title_forward">Vidarebefordra</string>
     <string name="title_reply_all">Svara till alla</string>
     <string name="title_share">Dela</string>
+    <string name="title_show_headers">Visa rubriker</string>
     <string name="title_manage_keywords">Hantera nyckelord</string>
     <string name="title_add_keyword">Lägg till nyckelord</string>
     <string name="title_download_all">Hämta alla</string>
@@ -241,6 +246,7 @@
     <string name="title_more">Mer</string>
     <string name="title_spam">Skräppost</string>
     <string name="title_move">Flytta</string>
+    <string name="title_move_to">Flytta till %1$s</string>
     <string name="title_snooze">Slumra &#8230;</string>
     <string name="title_archive">Arkivera</string>
     <string name="title_reply">Svara</string>
@@ -248,9 +254,11 @@
     <string name="title_open_with">Öppna med</string>
     <string name="title_no_answers">Inga svarsmallar definierade</string>
     <string name="title_no_viewer">Ingen visarapp tillgänglig för %1$s</string>
+    <string name="title_no_saf">Ramverk för lagringstillträde är inte tillgängligt</string>
     <string name="title_no_stream">En föråldrad app skickade en sökväg istället för en filström</string>
     <string name="title_no_contacts">Kontaktväljaren är inte tillgänglig</string>
     <string name="title_no_internet">Ingen internetanslutning</string>
+    <string name="title_accross_remark">Meddelanden flyttade över konton kommer att hämtas igen och orsakar extra dataanvändning</string>
     <string name="title_attachment_saved">Bilaga sparad</string>
     <string name="title_attachments_saved">Bilagor sparade</string>
     <string name="title_attachment_unavailable">Vissa bilagor hämtas inte och kommer inte att läggas till, fortsätt?</string>
@@ -260,7 +268,6 @@
     <string name="title_ask_delete_answer">Ta bort svarsmall permanent?</string>
     <string name="title_ask_delete_rule">Ta bort regel permanent?</string>
     <string name="title_ask_discard">Släng utkastet?</string>
-    <string name="title_ask_spam">Rapportera som skräppost?</string>
     <string name="title_ask_show_html">Att visa det ursprungliga meddelandet kan läcka sekretesskänslig information</string>
     <string name="title_ask_show_image">Att visa bilder kan läcka sekretesskänslig information</string>
     <string name="title_sync_queued">Synkronisering kommer att äga rum vid nästa kontoanslutning</string>
@@ -292,7 +299,7 @@
     <string name="title_attachments_missing">Inte alla bilagor har hämtats</string>
     <string name="title_draft_deleted">Utkastet slängdes</string>
     <string name="title_draft_saved">Utkast sparat</string>
-    <string name="title_ask_send">Skicka meddelande till %1$s?</string>
+    <string name="title_ask_send_via">Skicka meddelande till %1$s via %2$s?</string>
     <string name="title_queued">Skickar meddelande</string>
     <string name="title_encrypt">Kryptera</string>
     <string name="title_decrypt">Dekryptera</string>
@@ -326,6 +333,8 @@
     <string name="title_rule_stop">Stoppa bearbetning</string>
     <string name="title_rule_sender">Avsändaren innehåller</string>
     <string name="title_rule_subject">Ämnet innehåller</string>
+    <string name="title_rule_header">Rubriken innhåller</string>
+    <string name="title_rule_regex">Regex</string>
     <string name="title_rule_action">Åtgärd</string>
     <string name="title_rule_folder">Mapp</string>
     <string name="title_rule_identity">Identitet</string>
@@ -370,6 +379,7 @@
     <string name="title_legend_metered">Uppmätt anslutning</string>
     <string name="title_legend_unmetered">Icke-uppmätt anslutning</string>
     <string name="title_legend_sync_keep">Antal dagar att synkronisera / för att behålla meddelanden</string>
+    <string name="title_legend_download_fetch">Antal meddelandetexter hämtat / rubriker hämtat</string>
     <string name="title_hint_folder_actions">Långtryck för inställningar</string>
     <string name="title_hint_folder_sync">För att begränsa batteri- och nätverksanvändning synkroniseras inte alla mappar och inte alla meddelanden som standard</string>
     <string name="title_hint_support">Om du har en fråga eller ett problem, vänligen använd supportmenyn för att få hjälp</string>
@@ -390,6 +400,7 @@
     <string name="title_no_adobe">Adobe Acrobat reader kan inte säkert öppna delade filer, se FAQ för mer information</string>
     <string name="title_no_body">Ingen meddelandetext hittades</string>
     <string name="title_no_charset">Kodningen stöds inte: %1$s</string>
+    <string name="title_via">Via: %1$s</string>
     <string name="title_try">Prova FairEmail, en e-postapp för Android med öppen källkod som respekterar din integritet</string>
     <string name="title_pro_feature">Detta är en pro-funktion</string>
     <string name="title_pro_list">Lista över pro-funktioner</string>

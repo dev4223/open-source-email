@@ -804,6 +804,10 @@ public class FragmentCompose extends FragmentBase {
         }
 
         try {
+            EntityIdentity ident = (EntityIdentity) spIdentity.getSelectedItem();
+            if (ident == null)
+                throw new IllegalArgumentException(getString(R.string.title_from_missing));
+
             String to = etTo.getText().toString();
             InternetAddress ato[] = (TextUtils.isEmpty(to) ? new InternetAddress[0] : InternetAddress.parse(to));
             if (ato.length == 0)
@@ -813,7 +817,8 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvMessage = dview.findViewById(R.id.tvMessage);
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
-            tvMessage.setText(getString(R.string.title_ask_send, MessageHelper.formatAddressesShort(ato)));
+            tvMessage.setText(getString(R.string.title_ask_send_via,
+                    MessageHelper.formatAddressesShort(ato), ident.email));
 
             new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
                     .setView(dview)
@@ -1379,7 +1384,7 @@ public class FragmentCompose extends FragmentBase {
                     if ("edit".equals(action))
                         throw new IllegalStateException("Draft not found hide=" + (result.draft != null));
 
-                    List<EntityIdentity> identities = db.identity().getIdentities();
+                    List<TupleIdentityEx> identities = db.identity().getComposableIdentities(true);
 
                     EntityMessage ref = db.message().getMessage(reference);
                     if (ref == null) {
@@ -1640,15 +1645,13 @@ public class FragmentCompose extends FragmentBase {
 
             getActivity().invalidateOptionsMenu();
 
-            DB db = DB.getInstance(getContext());
-
-            db.identity().liveIdentities().observe(getViewLifecycleOwner(), new Observer<List<TupleIdentityEx>>() {
+            new SimpleTask<List<TupleIdentityEx>>() {
                 @Override
-                public void onChanged(List<TupleIdentityEx> identities) {
+                protected List<TupleIdentityEx> onExecute(Context context, Bundle args) {
+                    DB db = DB.getInstance(context);
+                    List<TupleIdentityEx> identities = db.identity().getComposableIdentities(true);
                     if (identities == null)
                         identities = new ArrayList<>();
-
-                    Log.i("Set identities=" + identities.size());
 
                     // Sort identities
                     Collections.sort(identities, new Comparator<TupleIdentityEx>() {
@@ -1664,6 +1667,13 @@ public class FragmentCompose extends FragmentBase {
                         }
                     });
 
+                    return identities;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, List<TupleIdentityEx> identities) {
+                    Log.i("Set identities=" + identities.size());
+
                     // Show identities
                     IdentityAdapter adapter = new IdentityAdapter(getContext(), identities);
                     adapter.setDropDownViewResource(R.layout.spinner_item1_dropdown);
@@ -1677,9 +1687,15 @@ public class FragmentCompose extends FragmentBase {
                                 break;
                             }
                         }
-
                 }
-            });
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                }
+            }.execute(FragmentCompose.this, new Bundle(), "compose:identities");
+
+            DB db = DB.getInstance(getContext());
 
             db.attachment().liveAttachments(result.draft.id).observe(getViewLifecycleOwner(),
                     new Observer<List<EntityAttachment>>() {
@@ -1796,24 +1812,28 @@ public class FragmentCompose extends FragmentBase {
                     Long uid = draft.uid;
                     String msgid = draft.msgid;
 
+                    // To prevent violating constraints
                     draft.uid = null;
                     draft.msgid = null;
                     db.message().updateMessage(draft);
 
+                    // Create copy to delete
                     draft.id = null;
                     draft.uid = uid;
                     draft.msgid = msgid;
                     draft.content = false;
                     draft.ui_hide = true;
                     draft.id = db.message().insertMessage(draft);
-                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
+                    EntityOperation.queue(context, db, draft, EntityOperation.DELETE); // by msgid
 
+                    // Restore original with new account, no uid and new msgid
                     draft.id = id;
                     draft.account = aid;
                     draft.folder = db.folder().getFolderByType(aid, EntityFolder.DRAFTS).id;
+                    draft.uid = null;
+                    draft.msgid = EntityMessage.generateMessageId();
                     draft.content = true;
                     draft.ui_hide = false;
-                    EntityOperation.queue(context, db, draft, EntityOperation.ADD);
                 }
 
                 List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);

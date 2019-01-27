@@ -61,10 +61,13 @@ import com.sun.mail.util.MailConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -485,12 +488,9 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
-        for (TupleMessageEx message : messages) {
-            ContactInfo info = ContactInfo.get(this, message.from);
-            if (info == null)
-                info = new ContactInfo(MessageHelper.formatAddressesShort(message.from));
-            messageContact.put(message, info);
-        }
+        for (TupleMessageEx message : messages)
+            messageContact.put(message,
+                    ContactInfo.get(this, message.from, false));
 
         // Build pending intent
         Intent view = new Intent(this, ActivityView.class);
@@ -569,7 +569,7 @@ public class ServiceSynchronize extends LifecycleService {
             DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
             StringBuilder sb = new StringBuilder();
             for (EntityMessage message : messages) {
-                sb.append("<strong>").append(messageContact.get(message).getDisplayName()).append("</strong>");
+                sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
                 if (!TextUtils.isEmpty(message.subject))
                     sb.append(": ").append(message.subject);
                 sb.append(" ").append(df.format(message.received));
@@ -642,7 +642,7 @@ public class ServiceSynchronize extends LifecycleService {
             mbuilder
                     .addExtras(args)
                     .setSmallIcon(R.drawable.baseline_email_white_24)
-                    .setContentTitle(info.getDisplayName())
+                    .setContentTitle(info.getDisplayName(true))
                     .setSubText(message.accountName + " · " + folderName)
                     .setContentIntent(piContent)
                     .setWhen(message.received)
@@ -1496,7 +1496,7 @@ public class ServiceSynchronize extends LifecycleService {
                             doHeaders(folder, ifolder, message, db);
 
                         else if (EntityOperation.RAW.equals(op.name))
-                            doRaw(folder, ifolder, message, db);
+                            doRaw(folder, ifolder, message, jargs, db);
 
                         else if (EntityOperation.BODY.equals(op.name))
                             doBody(folder, ifolder, message, db);
@@ -1537,19 +1537,27 @@ public class ServiceSynchronize extends LifecycleService {
                             db.operation().deleteOperation(op.id);
 
                             // Cleanup
-                            if (message != null)
-                                if (ex instanceof MessageRemovedException) {
+                            if (message != null) {
+                                if (ex instanceof MessageRemovedException)
                                     db.message().deleteMessage(message.id);
 
-                                    // Delete temporary copy in target folder
-                                    if (EntityOperation.MOVE.equals(op.name) &&
-                                            jargs.length() > 2)
-                                        db.message().deleteMessage(jargs.getInt(2));
-                                    if (EntityOperation.ADD.equals(op.name) &&
-                                            jargs.length() > 0 && !jargs.isNull(0))
-                                        db.message().deleteMessage(jargs.getInt(0));
-                                } else
+                                Long newid = null;
+
+                                if (EntityOperation.MOVE.equals(op.name) &&
+                                        jargs.length() > 2)
+                                    newid = jargs.getLong(2);
+
+                                if ((EntityOperation.ADD.equals(op.name) ||
+                                        EntityOperation.RAW.equals(op.name)) &&
+                                        jargs.length() > 0 && !jargs.isNull(0))
+                                    newid = jargs.getLong(0);
+
+                                // Delete temporary copy in target folder
+                                if (newid != null) {
+                                    db.message().deleteMessage(newid);
                                     db.message().setMessageUiHide(message.id, false);
+                                }
+                            }
 
                             continue;
                         } else if (ex instanceof MessagingException) {
@@ -1673,21 +1681,41 @@ public class ServiceSynchronize extends LifecycleService {
     }
 
     private void doAdd(EntityFolder folder, Session isession, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException, IOException {
-        if (!message.content)
-            throw new IllegalArgumentException("Message body missing");
+        MimeMessage imessage;
+        if (folder.id.equals(message.folder)) {
+            if (!message.content)
+                throw new IllegalArgumentException("Message body missing");
 
-        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-        for (EntityAttachment attachment : attachments)
-            if (!attachment.available)
-                throw new IllegalArgumentException("Attachment missing");
+            List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+            for (EntityAttachment attachment : attachments)
+                if (!attachment.available)
+                    throw new IllegalArgumentException("Attachment missing");
 
-        // Append message
-        MimeMessage imessage = MessageHelper.from(this, message, isession);
+            imessage = MessageHelper.from(this, message, isession);
+        } else {
+            // Cross account move
+            File file = EntityMessage.getRawFile(this, message.id);
+            if (!file.exists())
+                throw new IllegalArgumentException("raw message file not found");
 
+            InputStream is = null;
+            try {
+                Log.i(folder.name + " reading " + file);
+                is = new BufferedInputStream(new FileInputStream(file));
+                imessage = new MimeMessage(isession, is);
+            } finally {
+                if (is != null)
+                    is.close();
+            }
+        }
+
+        boolean autoread = false;
         if (jargs.length() > 1) {
-            boolean autoread = jargs.getBoolean(1);
-            if (autoread && !imessage.isSet(Flags.Flag.SEEN))
+            autoread = jargs.getBoolean(1);
+            if (autoread && !imessage.isSet(Flags.Flag.SEEN)) {
+                Log.i(folder.name + " autoread");
                 imessage.setFlag(Flags.Flag.SEEN, true);
+            }
         }
 
         if (EntityFolder.DRAFTS.equals(folder.type)) {
@@ -1698,8 +1726,15 @@ public class ServiceSynchronize extends LifecycleService {
         ifolder.appendMessages(new Message[]{imessage});
 
         // Cross account move
-        if (!folder.id.equals(message.folder))
+        if (!folder.id.equals(message.folder)) {
+            if (autoread) {
+                Log.i(folder.name + " queuing SEEN id=" + message.id);
+                EntityOperation.queue(this, db, message, EntityOperation.SEEN, true);
+            }
+
+            Log.i(folder.name + " queuing DELETE id=" + message.id);
             EntityOperation.queue(this, db, message, EntityOperation.DELETE);
+        }
     }
 
     private void doMove(EntityFolder folder, Session isession, IMAPStore istore, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws JSONException, MessagingException, IOException {
@@ -1740,7 +1775,7 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void doDelete(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException {
+    private void doDelete(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException {
         // Delete message
         if (message.msgid != null) {
             Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
@@ -1897,6 +1932,7 @@ public class ServiceSynchronize extends LifecycleService {
                             EntityOperation.queue(this, db, replied, EntityOperation.ANSWERED, true);
                 }
 
+                db.identity().setIdentityConnected(ident.id, new Date().getTime());
                 db.identity().setIdentityError(ident.id, null);
 
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1953,7 +1989,7 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void doHeaders(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException, IOException {
+    private void doHeaders(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException {
         if (message.headers != null)
             return;
 
@@ -1965,29 +2001,37 @@ public class ServiceSynchronize extends LifecycleService {
         db.message().setMessageHeaders(message.id, helper.getHeaders());
     }
 
-    private void doRaw(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, DB db) throws MessagingException, IOException {
-        if (message.raw)
-            return;
-
-        Message imessage = ifolder.getMessageByUID(message.uid);
-        if (imessage == null)
-            throw new MessageRemovedException();
-
-        if (imessage instanceof MimeMessage) {
-            MimeMessage mmessage = (MimeMessage) imessage;
+    private void doRaw(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, IOException, JSONException {
+        if (message.raw == null || !message.raw) {
+            IMAPMessage imessage = (IMAPMessage) ifolder.getMessageByUID(message.uid);
+            if (imessage == null)
+                throw new MessageRemovedException();
 
             File file = EntityMessage.getRawFile(this, message.id);
 
             OutputStream os = null;
             try {
                 os = new BufferedOutputStream(new FileOutputStream(file));
-                mmessage.writeTo(os);
+                imessage.writeTo(os);
+                db.message().setMessageRaw(message.id, true);
             } finally {
                 if (os != null)
                     os.close();
             }
+        }
 
-            db.message().setMessageRaw(message.id, true);
+        if (jargs.length() > 0) {
+            long target = jargs.getLong(2);
+            jargs.remove(2);
+            Log.i(folder.name + " queuing ADD id=" + message.id + ":" + target);
+
+            EntityOperation operation = new EntityOperation();
+            operation.folder = target;
+            operation.message = message.id;
+            operation.name = EntityOperation.ADD;
+            operation.args = jargs.toString();
+            operation.created = new Date().getTime();
+            operation.id = db.operation().insertOperation(operation);
         }
     }
 

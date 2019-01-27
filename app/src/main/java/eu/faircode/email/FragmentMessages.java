@@ -125,8 +125,6 @@ public class FragmentMessages extends FragmentBase {
     private boolean searching = false;
     private AdapterMessage adapter;
 
-    private Map<Long, TupleAccountSwipes> accountSwipes = new HashMap<>();
-
     private AdapterMessage.ViewType viewType;
     private SelectionTracker<Long> selectionTracker = null;
 
@@ -134,8 +132,9 @@ public class FragmentMessages extends FragmentBase {
     private boolean autoExpand = true;
     private Map<String, List<Long>> values = new HashMap<>();
     private LongSparseArray<Spanned> bodies = new LongSparseArray<>();
+    private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
-    private BoundaryCallbackMessages searchCallback = null;
+    private BoundaryCallbackMessages boundaryCallback = null;
 
     private ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
@@ -279,7 +278,22 @@ public class FragmentMessages extends FragmentBase {
 
         rvMessage.setAdapter(adapter);
 
-        if (viewType != AdapterMessage.ViewType.THREAD) {
+        if (viewType == AdapterMessage.ViewType.THREAD) {
+            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
+                @Override
+                public void onPrevious(Long id) {
+                    bottom_navigation.getMenu().findItem(R.id.action_prev).setIntent(new Intent().putExtra("id", id));
+                    bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(id != null);
+                }
+
+                @Override
+                public void onNext(Long id) {
+                    bottom_navigation.getMenu().findItem(R.id.action_next).setIntent(new Intent().putExtra("id", id));
+                    bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(id != null);
+                }
+            });
+        } else {
             final SelectionPredicateMessage predicate = new SelectionPredicateMessage(rvMessage);
 
             selectionTracker = new SelectionTracker.Builder<>(
@@ -341,11 +355,11 @@ public class FragmentMessages extends FragmentBase {
                         return true;
 
                     case R.id.action_prev:
-                        navigate(false);
+                        navigate(menuItem.getIntent().getLongExtra("id", -1));
                         return true;
 
                     case R.id.action_next:
-                        navigate(true);
+                        navigate(menuItem.getIntent().getLongExtra("id", -1));
                         return true;
 
                     default:
@@ -393,6 +407,8 @@ public class FragmentMessages extends FragmentBase {
         // Initialize
         swipeRefresh.setEnabled(pull);
         tvNoEmail.setVisibility(View.GONE);
+        bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(false);
+        bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(false);
         bottom_navigation.setVisibility(View.GONE);
         grpReady.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
@@ -574,7 +590,7 @@ public class FragmentMessages extends FragmentBase {
 
     private ItemTouchHelper.Callback touchHelper = new ItemTouchHelper.Callback() {
         @Override
-        public int getMovementFlags(@NonNull RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
             TupleMessageEx message = getMessage(viewHolder);
             if (message == null)
                 return 0;
@@ -593,13 +609,16 @@ public class FragmentMessages extends FragmentBase {
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        public boolean onMove(
+                @NonNull RecyclerView recyclerView,
+                @NonNull RecyclerView.ViewHolder viewHolder,
+                @NonNull RecyclerView.ViewHolder target) {
             return false;
         }
 
         @Override
         public void onChildDraw(
-                Canvas canvas, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                @NonNull Canvas canvas, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
                 float dX, float dY, int actionState, boolean isCurrentlyActive) {
             AdapterMessage.ViewHolder holder = ((AdapterMessage.ViewHolder) viewHolder);
             holder.setDisplacement(dX);
@@ -808,12 +827,6 @@ public class FragmentMessages extends FragmentBase {
                     if (!fids.contains(message.folder))
                         fids.add(message.folder);
 
-                    EntityFolder folder = db.folder().getFolder(message.folder);
-                    result.isArchive = EntityFolder.ARCHIVE.equals(folder.type);
-                    result.isTrash = EntityFolder.TRASH.equals(folder.type);
-                    result.isJunk = EntityFolder.JUNK.equals(folder.type);
-                    result.isDrafts = EntityFolder.DRAFTS.equals(folder.type);
-
                     if (message.ui_seen)
                         result.seen = true;
                     else
@@ -824,13 +837,34 @@ public class FragmentMessages extends FragmentBase {
                     else
                         result.unflagged = true;
 
-                    result.hasArchive = (result.hasArchive &&
-                            db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null);
-                    result.hasTrash = (result.hasTrash &&
-                            db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null);
-                    result.hasJunk = (result.hasJunk &&
-                            db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null);
+                    EntityFolder folder = db.folder().getFolder(message.folder);
+                    boolean isArchive = EntityFolder.ARCHIVE.equals(folder.type);
+                    boolean isTrash = EntityFolder.TRASH.equals(folder.type);
+                    boolean isJunk = EntityFolder.JUNK.equals(folder.type);
+                    boolean isDrafts = EntityFolder.DRAFTS.equals(folder.type);
+
+                    result.isArchive = (result.isArchive == null ? isArchive : result.isArchive && isArchive);
+                    result.isTrash = (result.isTrash == null ? isTrash : result.isTrash && isTrash);
+                    result.isJunk = (result.isJunk == null ? isJunk : result.isJunk && isJunk);
+                    result.isDrafts = (result.isDrafts == null ? isDrafts : result.isDrafts && isDrafts);
+
+                    boolean hasArchive = (db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null);
+                    boolean hasTrash = (db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null);
+                    boolean hasJunk = (db.folder().getFolderByType(message.account, EntityFolder.JUNK) != null);
+
+                    result.hasArchive = (result.hasArchive == null ? hasArchive : result.hasArchive && hasArchive);
+                    result.hasTrash = (result.hasTrash == null ? hasTrash : result.hasTrash && hasTrash);
+                    result.hasJunk = (result.hasJunk == null ? hasJunk : result.hasJunk && hasJunk);
                 }
+
+                if (result.isArchive == null) result.isArchive = false;
+                if (result.isTrash == null) result.isTrash = false;
+                if (result.isJunk == null) result.isJunk = false;
+                if (result.isDrafts == null) result.isDrafts = false;
+
+                if (result.hasArchive == null) result.hasArchive = false;
+                if (result.hasTrash == null) result.hasTrash = false;
+                if (result.hasJunk == null) result.hasJunk = false;
 
                 result.accounts = db.account().getAccounts(true);
 
@@ -1153,8 +1187,9 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void onActionJunkSelection() {
+        int count = selectionTracker.getSelection().size();
         new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setMessage(R.string.title_ask_spam)
+                .setMessage(getResources().getQuantityString(R.plurals.title_ask_spam, count, count))
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -1165,7 +1200,7 @@ public class FragmentMessages extends FragmentBase {
                 .show();
     }
 
-    private void onActionMoveSelection(String type) {
+    private void onActionMoveSelection(final String type) {
         Bundle args = new Bundle();
         args.putString("type", type);
         args.putLongArray("ids", getSelection());
@@ -1207,7 +1242,10 @@ public class FragmentMessages extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result);
+                if (EntityFolder.JUNK.equals(type))
+                    moveAskConfirmed(result);
+                else
+                    moveAsk(result);
             }
 
             @Override
@@ -1704,6 +1742,37 @@ public class FragmentMessages extends FragmentBase {
         ViewModelBrowse modelBrowse = ViewModelProviders.of(getActivity()).get(ViewModelBrowse.class);
         modelBrowse.set(getContext(), folder, search, REMOTE_PAGE_SIZE);
 
+        if (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH)
+            if (boundaryCallback == null)
+                boundaryCallback = new BoundaryCallbackMessages(this, modelBrowse,
+                        new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
+                            @Override
+                            public void onLoading() {
+                                pbWait.setTag(true);
+                                tvNoEmail.setVisibility(View.GONE);
+                                pbWait.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onLoaded(int fetched) {
+                                RecyclerView.Adapter adapter = rvMessage.getAdapter();
+                                int items = (adapter == null ? 0 : adapter.getItemCount());
+                                tvNoEmail.setVisibility(items + fetched == 0 ? View.VISIBLE : View.GONE);
+                                pbWait.setVisibility(View.GONE);
+                                pbWait.setTag(null);
+                            }
+
+                            @Override
+                            public void onError(Throwable ex) {
+                                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                                            .setMessage(Helper.formatThrowable(ex))
+                                            .setPositiveButton(android.R.string.cancel, null)
+                                            .create()
+                                            .show();
+                            }
+                        });
+
         // Observe folder/messages/search
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String sort = prefs.getString("sort", "time");
@@ -1724,37 +1793,13 @@ public class FragmentMessages extends FragmentBase {
                 break;
 
             case FOLDER:
-                if (searchCallback == null)
-                    searchCallback = new BoundaryCallbackMessages(this, modelBrowse,
-                            new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
-                                @Override
-                                public void onLoading() {
-                                    pbWait.setVisibility(View.VISIBLE);
-                                }
-
-                                @Override
-                                public void onLoaded() {
-                                    pbWait.setVisibility(View.GONE);
-                                }
-
-                                @Override
-                                public void onError(Throwable ex) {
-                                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                                .setMessage(Helper.formatThrowable(ex))
-                                                .setPositiveButton(android.R.string.cancel, null)
-                                                .create()
-                                                .show();
-                                }
-                            });
-
                 PagedList.Config configFolder = new PagedList.Config.Builder()
                         .setPageSize(LOCAL_PAGE_SIZE)
                         .setPrefetchDistance(REMOTE_PAGE_SIZE)
                         .build();
                 builder = new LivePagedListBuilder<>(
                         db.message().pagedFolder(folder, threading, sort, snoozed, false, debug), configFolder);
-                builder.setBoundaryCallback(searchCallback);
+                builder.setBoundaryCallback(boundaryCallback);
                 break;
 
             case THREAD:
@@ -1763,32 +1808,6 @@ public class FragmentMessages extends FragmentBase {
                 break;
 
             case SEARCH:
-                if (searchCallback == null)
-                    searchCallback = new BoundaryCallbackMessages(this, modelBrowse,
-                            new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
-                                @Override
-                                public void onLoading() {
-                                    tvNoEmail.setVisibility(View.GONE);
-                                    pbWait.setVisibility(View.VISIBLE);
-                                }
-
-                                @Override
-                                public void onLoaded() {
-                                    pbWait.setVisibility(View.GONE);
-                                    tvNoEmail.setVisibility(modelMessages.isEmpty(viewType) ? View.VISIBLE : View.GONE);
-                                }
-
-                                @Override
-                                public void onError(Throwable ex) {
-                                    if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                                .setMessage(Helper.formatThrowable(ex))
-                                                .setPositiveButton(android.R.string.cancel, null)
-                                                .create()
-                                                .show();
-                                }
-                            });
-
                 PagedList.Config configSearch = new PagedList.Config.Builder()
                         .setPageSize(LOCAL_PAGE_SIZE)
                         .setPrefetchDistance(REMOTE_PAGE_SIZE)
@@ -1799,7 +1818,7 @@ public class FragmentMessages extends FragmentBase {
                 else
                     builder = new LivePagedListBuilder<>(
                             db.message().pagedFolder(folder, threading, "time", snoozed, true, debug), configSearch);
-                builder.setBoundaryCallback(searchCallback);
+                builder.setBoundaryCallback(boundaryCallback);
                 break;
         }
 
@@ -1960,18 +1979,11 @@ public class FragmentMessages extends FragmentBase {
             Log.i("Submit messages=" + messages.size());
             adapter.submitList(messages);
 
-            boolean searching = (searchCallback != null && searchCallback.isSearching());
-
-            if (!searching)
+            if (pbWait.getTag() == null) {
                 pbWait.setVisibility(View.GONE);
-            grpReady.setVisibility(View.VISIBLE);
-
-            if (messages.size() == 0) {
-                tvNoEmail.setVisibility(searching ? View.GONE : View.VISIBLE);
-                rvMessage.setVisibility(View.GONE);
-            } else {
-                tvNoEmail.setVisibility(View.GONE);
-                rvMessage.setVisibility(View.VISIBLE);
+                if (!(viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH))
+                    tvNoEmail.setVisibility(messages.size() == 0 ? View.VISIBLE : View.GONE);
+                grpReady.setVisibility(messages.size() > 0 ? View.VISIBLE : View.GONE);
             }
         }
     };
@@ -2015,24 +2027,41 @@ public class FragmentMessages extends FragmentBase {
     private void handleAutoClose() {
         if (autoclose)
             finish();
-        else if (autonext)
-            navigate(true);
+        else if (autonext) {
+            Intent intent = bottom_navigation.getMenu().findItem(R.id.action_next).getIntent();
+            Long id = (intent == null ? null : intent.getLongExtra("id", -1));
+            if (id == null || id < 0)
+                finish();
+            else
+                navigate(id);
+        }
     }
 
-    private void navigate(boolean next) {
-        ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-        ViewModelMessages.Target target = model.getPrevNext(thread)[next ? 1 : 0];
+    private void navigate(long id) {
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+        new SimpleTask<EntityMessage>() {
+            @Override
+            protected EntityMessage onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                return DB.getInstance(context).message().getMessage(id);
+            }
 
-        if (target == null)
-            finish();
-        else {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(
-                    new Intent(ActivityView.ACTION_VIEW_THREAD)
-                            .putExtra("account", target.account)
-                            .putExtra("thread", target.thread)
-                            .putExtra("id", target.id));
-        }
+            @Override
+            protected void onExecuted(Bundle args, EntityMessage message) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(
+                        new Intent(ActivityView.ACTION_VIEW_THREAD)
+                                .putExtra("account", message.account)
+                                .putExtra("thread", message.thread)
+                                .putExtra("id", message.id));
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+            }
+        }.execute(this, args, "messages:navigate");
     }
 
     private void moveAsk(final ArrayList<MessageTarget> result) {
@@ -2107,18 +2136,6 @@ public class FragmentMessages extends FragmentBase {
                         EntityMessage message = db.message().getMessage(target.id);
                         if (message != null) {
                             Log.i("Move id=" + target.id + " target=" + target.folder.name);
-
-                            // Cross account move: check if message downloaded
-                            if (!target.folder.account.equals(message.account)) {
-                                if (!message.content)
-                                    throw new IllegalArgumentException(getString(R.string.title_no_accross));
-
-                                List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-                                for (EntityAttachment attachment : attachments)
-                                    if (!attachment.available)
-                                        throw new IllegalArgumentException(getString(R.string.title_no_accross));
-                            }
-
                             EntityOperation.queue(context, db, message, EntityOperation.MOVE, target.folder.id);
                         }
                     }
@@ -2214,9 +2231,15 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private String getDisplay(ArrayList<MessageTarget> result) {
+        boolean across = false;
+        for (MessageTarget target : result)
+            if (target.across)
+                across = true;
+
         List<String> displays = new ArrayList<>();
         for (MessageTarget target : result) {
-            String display = target.account.name + "/" + target.folder.getDisplayName(getContext());
+            String display = (across ? target.account.name + "/" : "") +
+                    target.folder.getDisplayName(getContext());
             if (!displays.contains(display))
                 displays.add(display);
         }
@@ -2253,13 +2276,13 @@ public class FragmentMessages extends FragmentBase {
         boolean unseen;
         boolean flagged;
         boolean unflagged;
-        boolean hasArchive = true;
-        boolean hasTrash = true;
-        boolean hasJunk = true;
-        boolean isArchive;
-        boolean isTrash;
-        boolean isJunk;
-        boolean isDrafts;
+        Boolean hasArchive;
+        Boolean hasTrash;
+        Boolean hasJunk;
+        Boolean isArchive;
+        Boolean isTrash;
+        Boolean isJunk;
+        Boolean isDrafts;
         List<EntityAccount> accounts;
         Map<EntityAccount, List<EntityFolder>> targets = new HashMap<>();
     }

@@ -56,7 +56,7 @@ public interface DaoMessage {
             ", SUM(CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END) AS drafts" +
             ", 0 AS duplicate" +
             ", COUNT(DISTINCT message.msgid) AS visible" +
-            ", MAX(CASE WHEN folder.unified THEN message.received ELSE 0 END) AS dummy" +
+            ", MAX(CASE WHEN :found OR folder.unified THEN message.received ELSE 0 END) AS dummy" +
             " FROM message" +
             " JOIN account ON account.id = message.account" +
             " LEFT JOIN identity ON identity.id = message.identity" +
@@ -66,7 +66,7 @@ public interface DaoMessage {
             " AND (:snoozed OR :found OR ui_snoozed IS NULL)" +
             " AND (NOT :found OR ui_found = :found)" +
             " GROUP BY account.id, CASE WHEN message.thread IS NULL OR NOT :threading THEN message.id ELSE message.thread END" +
-            " HAVING SUM(unified) > 0" +
+            " HAVING :found OR SUM(unified) > 0" +
             " ORDER BY" +
             " CASE WHEN 'sender' = :sort THEN message.sender ELSE '' END," +
             " CASE" +
@@ -175,10 +175,10 @@ public interface DaoMessage {
 
     @Query("SELECT id" +
             " FROM message" +
-            " WHERE folder IN (:folders)" +
+            " WHERE (:folder IS NULL OR folder = :folder)" +
             " AND NOT ui_hide" +
             " ORDER BY message.received DESC")
-    List<Long> getMessageByFolders(List<Long> folders);
+    List<Long> getMessageIdsByFolder(Long folder);
 
     @Query("SELECT *" +
             " FROM message" +
@@ -371,7 +371,11 @@ public interface DaoMessage {
     @Query("DELETE FROM message" +
             " WHERE folder = :folder" +
             " AND uid IS NULL" +
-            " AND NOT ui_browsed")
+            " AND NOT ui_browsed" +
+            " AND NOT EXISTS" +
+            "  (SELECT * FROM operation" +
+            "  WHERE operation.message = message.id" +
+            "  AND operation.name = '" + EntityOperation.ADD + "')")
     int deleteOrphans(long folder);
 
     @Query("DELETE FROM message" +

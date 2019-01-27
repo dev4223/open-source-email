@@ -46,6 +46,12 @@
         <item quantity="many">Перемещение сообщений %1$d к %2$s?</item>
         <item quantity="other">Перемещение сообщений %1$d к %2$s?</item>
     </plurals>
+    <plurals name="title_ask_spam">
+        <item quantity="one">Сообщить о сообщении %1$d как о спаме?</item>
+        <item quantity="few">Сообщить о сообщениях %1$d как о спаме?</item>
+        <item quantity="many">Сообщить о сообщениях %1$d как о спаме?</item>
+        <item quantity="other">Сообщить о сообщениях %1$d как о спаме?</item>
+    </plurals>
     <string name="title_notification_failed">\'%1$s\' не удалось</string>
     <string name="menu_setup">Настройки</string>
     <string name="menu_answers">Шаблоны</string>
@@ -124,10 +130,10 @@
     <string name="title_advanced_identicons">Показать идентификаторы</string>
     <string name="title_advanced_preview">Показать предварительный просмотр сообщения</string>
     <string name="title_advanced_addresses">Показывать подробную информацию об адресах по умолчанию</string>
+    <string name="title_advanced_actionbar">Панель управления диалогами</string>
     <string name="title_advanced_light">Использовать индикатор уведомлений</string>
     <string name="title_advanced_sound">Выбрать звук уведомления</string>
     <string name="title_advanced_pull_refresh">Потяните вниз, для обновления</string>
-    <string name="title_advanced_actionbar">Панель управления диалогами</string>
     <string name="title_advanced_autoclose">Автоматически закрывать диалоги</string>
     <string name="title_advanced_autonext">При закрытии диалога, автоматически открыть следующий</string>
     <string name="title_advanced_autoread">Автоматически помечать сообщения прочитанными при перемещении</string>
@@ -276,8 +282,7 @@
     <string name="title_no_stream">Устаревшее приложение послало путь к файлу вместо файлового потока</string>
     <string name="title_no_contacts">Выбор контакта недоступен</string>
     <string name="title_no_internet">Отсутствует подключение к Интернету</string>
-    <string name="title_no_accross">Перемещение между учётными записями требует загрузки сообщения целиком</string>
-    <string name="title_accross_remark">Сообщения, перемещаемые между учётными записями, не будут идентичны после перемещения</string>
+    <string name="title_accross_remark">Сообщения, перемещаемые между учётными записями, будут загружены заново, порождая дополнительный трафик</string>
     <string name="title_raw_saved">Оригинал сообщения сохранён</string>
     <string name="title_attachment_saved">Файл сохранен</string>
     <string name="title_attachments_saved">Вложения сохранены</string>
@@ -288,7 +293,6 @@
     <string name="title_ask_delete_answer">Удалить шаблон ответа навсегда?</string>
     <string name="title_ask_delete_rule">Удалить правило навсегда?</string>
     <string name="title_ask_discard">Удалить черновик?</string>
-    <string name="title_ask_spam">Сообщать о спаме?</string>
     <string name="title_ask_show_html">Отображение исходного сообщения может привести к утечке конфиденциальной информации</string>
     <string name="title_ask_show_image">Отображение изображений может привести к утечке конфиденциальной информации</string>
     <string name="title_sync_queued">Будет синхронизировано при следующем подключении к учетной записи</string>
@@ -321,7 +325,7 @@
     <string name="title_attachments_missing">Не все вложения загружены</string>
     <string name="title_draft_deleted">Черновик отклонен</string>
     <string name="title_draft_saved">Черновик сохранен</string>
-    <string name="title_ask_send">Отправить сообщение для %1$s?</string>
+    <string name="title_ask_send_via">Отправить сообщение для %1$s через %2$s?</string>
     <string name="title_queued">Отправка сообщения</string>
     <string name="title_encrypt">Шифрование</string>
     <string name="title_decrypt">Расшифровать</string>
