@@ -133,6 +133,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean avatars;
     private boolean preview;
     private boolean confirm;
+    private boolean autoimages;
     private boolean debug;
 
     private float textSize;
@@ -505,9 +506,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 new SimpleTask<ContactInfo>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
-                        ivAvatar.setTag(message.id);
-                        tvFrom.setTag(message.id);
-
+                        itemView.setTag(message.id);
                         ivAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
                         tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
                     }
@@ -521,17 +520,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     @Override
                     protected void onExecuted(Bundle args, ContactInfo info) {
                         Long id = args.getLong("id");
-
-                        if (id.equals(ivAvatar.getTag())) {
-                            if (info.hasPhoto())
-                                ivAvatar.setImageBitmap(info.getPhotoBitmap());
-                            else
-                                ivAvatar.setImageResource(R.drawable.baseline_person_24);
-                            ivAvatar.setVisibility(avatars ? View.VISIBLE : View.GONE);
-                        }
-
-                        if (id.equals(tvFrom.getTag()))
-                            tvFrom.setText(info.getDisplayName(compact));
+                        if (id != null && id.equals(itemView.getTag()))
+                            showContactInfo(info, message);
                     }
 
                     @Override
@@ -539,14 +529,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Helper.unexpectedError(context, owner, ex);
                     }
                 }.execute(context, owner, aargs, "message:avatar");
-            } else {
-                if (info.hasPhoto())
-                    ivAvatar.setImageBitmap(info.getPhotoBitmap());
-                else
-                    ivAvatar.setImageResource(R.drawable.baseline_person_24);
-                ivAvatar.setVisibility(avatars ? View.VISIBLE : View.GONE);
-                tvFrom.setText(info.getDisplayName(compact));
-            }
+            } else
+                showContactInfo(info, message);
 
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
             vwColor.setVisibility(View.VISIBLE);
@@ -883,6 +867,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 properties.setBody(message.id, null);
 
             itemView.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
+        }
+
+        private void showContactInfo(ContactInfo info, TupleMessageEx message) {
+            if (info.hasPhoto())
+                ivAvatar.setImageBitmap(info.getPhotoBitmap());
+            else
+                ivAvatar.setImageResource(R.drawable.baseline_person_24);
+            ivAvatar.setVisibility(avatars ? View.VISIBLE : View.GONE);
+            tvFrom.setText(info.getDisplayName(compact));
+
+            if (info.hasLookupUri() && autoimages &&
+                    !properties.getValue("images", message.id))
+                onShowImagesConfirmed(message);
         }
 
         void unbind() {
@@ -2239,6 +2236,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 prefs.getBoolean("identicons", false));
         this.preview = prefs.getBoolean("preview", false);
         this.confirm = prefs.getBoolean("confirm", false);
+        this.autoimages = prefs.getBoolean("autoimages", false);
         this.debug = prefs.getBoolean("debug", false);
 
         this.textSize = Helper.getTextSize(context, zoom);
@@ -2246,9 +2244,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
-
-        PackageManager pm = context.getPackageManager();
-        this.hasWebView = pm.hasSystemFeature("android.software.webview");
+        this.hasWebView = Helper.hasWebView(context);
     }
 
     void submitList(PagedList<TupleMessageEx> pagedList) {
