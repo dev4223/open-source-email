@@ -576,6 +576,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFolder.setVisibility(View.GONE);
             } else if(compact) {
                 tvFolder.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
+                ivAttachments.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
             } else {
                 tvFolder.setVisibility(View.VISIBLE);
             }
