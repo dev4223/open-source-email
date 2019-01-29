@@ -280,20 +280,22 @@ public class FragmentMessages extends FragmentBase {
         rvMessage.setAdapter(adapter);
 
         if (viewType == AdapterMessage.ViewType.THREAD) {
-            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
-                @Override
-                public void onPrevious(Long id) {
-                    bottom_navigation.getMenu().findItem(R.id.action_prev).setIntent(new Intent().putExtra("id", id));
-                    bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(id != null);
-                }
+            if (actionbar) {
+                ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+                model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
+                    @Override
+                    public void onPrevious(boolean exists, Long id) {
+                        bottom_navigation.getMenu().findItem(R.id.action_prev).setIntent(new Intent().putExtra("id", id));
+                        bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(id != null);
+                    }
 
-                @Override
-                public void onNext(Long id) {
-                    bottom_navigation.getMenu().findItem(R.id.action_next).setIntent(new Intent().putExtra("id", id));
-                    bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(id != null);
-                }
-            });
+                    @Override
+                    public void onNext(boolean exists, Long id) {
+                        bottom_navigation.getMenu().findItem(R.id.action_next).setIntent(new Intent().putExtra("id", id));
+                        bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(id != null);
+                    }
+                });
+            }
         } else {
             final SelectionPredicateMessage predicate = new SelectionPredicateMessage(rvMessage);
 
@@ -1059,16 +1061,25 @@ public class FragmentMessages extends FragmentBase {
                                         wakeup = null;
 
                                     DB db = DB.getInstance(context);
-                                    for (long id : ids) {
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message != null) {
-                                            List<EntityMessage> messages = db.message().getMessageByThread(
-                                                    message.account, message.thread, threading ? null : id, message.folder);
-                                            for (EntityMessage threaded : messages) {
-                                                db.message().setMessageSnoozed(threaded.id, wakeup);
-                                                EntityMessage.snooze(context, threaded.id, wakeup);
+                                    try {
+                                        db.beginTransaction();
+
+                                        for (long id : ids) {
+                                            EntityMessage message = db.message().getMessage(id);
+                                            if (message != null) {
+                                                List<EntityMessage> messages = db.message().getMessageByThread(
+                                                        message.account, message.thread, threading ? null : id, message.folder);
+                                                for (EntityMessage threaded : messages) {
+                                                    db.message().setMessageSnoozed(threaded.id, wakeup);
+                                                    EntityMessage.snooze(context, threaded.id, wakeup);
+                                                    EntityOperation.queue(context, db, threaded, EntityOperation.SEEN, true);
+                                                }
                                             }
                                         }
+
+                                        db.setTransactionSuccessful();
+                                    } finally {
+                                        db.endTransaction();
                                     }
 
                                     return null;
@@ -1748,18 +1759,18 @@ public class FragmentMessages extends FragmentBase {
                         new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
                             @Override
                             public void onLoading() {
-                                pbWait.setTag(true);
-                                tvNoEmail.setVisibility(View.GONE);
                                 pbWait.setVisibility(View.VISIBLE);
                             }
 
                             @Override
                             public void onLoaded(int fetched) {
-                                RecyclerView.Adapter adapter = rvMessage.getAdapter();
-                                int items = (adapter == null ? 0 : adapter.getItemCount());
-                                tvNoEmail.setVisibility(items + fetched == 0 ? View.VISIBLE : View.GONE);
                                 pbWait.setVisibility(View.GONE);
-                                pbWait.setTag(null);
+
+                                Integer submitted = (Integer) rvMessage.getTag();
+                                if (submitted == null)
+                                    submitted = 0;
+                                if (submitted + fetched == 0)
+                                    tvNoEmail.setVisibility(View.VISIBLE);
                             }
 
                             @Override
@@ -2018,13 +2029,14 @@ public class FragmentMessages extends FragmentBase {
 
             Log.i("Submit messages=" + messages.size());
             adapter.submitList(messages);
+            rvMessage.setTag(messages.size());
 
-            if (pbWait.getTag() == null) {
+            if (boundaryCallback == null || !boundaryCallback.isLoading())
                 pbWait.setVisibility(View.GONE);
-                if (!(viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH))
-                    tvNoEmail.setVisibility(messages.size() == 0 ? View.VISIBLE : View.GONE);
-                grpReady.setVisibility(messages.size() > 0 ? View.VISIBLE : View.GONE);
-            }
+            if (boundaryCallback == null && messages.size() == 0)
+                tvNoEmail.setVisibility(View.VISIBLE);
+            if (messages.size() > 0)
+                grpReady.setVisibility(View.VISIBLE);
         }
     };
 
@@ -2068,12 +2080,21 @@ public class FragmentMessages extends FragmentBase {
         if (autoclose)
             finish();
         else if (autonext) {
-            Intent intent = bottom_navigation.getMenu().findItem(R.id.action_next).getIntent();
-            Long id = (intent == null ? null : intent.getLongExtra("id", -1));
-            if (id == null || id < 0)
-                finish();
-            else
-                navigate(id);
+            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
+                @Override
+                public void onPrevious(boolean exists, Long id) {
+                    // Do nothing
+                }
+
+                @Override
+                public void onNext(boolean exists, Long id) {
+                    if (id != null)
+                        navigate(id);
+                    if (!exists)
+                        finish();
+                }
+            });
         }
     }
 
