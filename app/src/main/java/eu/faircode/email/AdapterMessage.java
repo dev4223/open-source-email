@@ -187,6 +187,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvTimeEx;
         private TextView tvSizeEx;
         private TextView tvSubjectEx;
+        private TextView tvFlags;
         private TextView tvKeywords;
 
         private TextView tvHeaders;
@@ -258,6 +259,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTimeEx = itemView.findViewById(R.id.tvTimeEx);
             tvSizeEx = itemView.findViewById(R.id.tvSizeEx);
             tvSubjectEx = itemView.findViewById(R.id.tvSubjectEx);
+            tvFlags = itemView.findViewById(R.id.tvFlags);
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
 
             tvHeaders = itemView.findViewById(R.id.tvHeaders);
@@ -395,6 +397,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvError.setVisibility(View.GONE);
             pbLoading.setVisibility(View.VISIBLE);
 
+            tvFlags.setVisibility(View.GONE);
             tvKeywords.setVisibility(View.GONE);
 
             pbHeaders.setVisibility(View.GONE);
@@ -632,6 +635,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpExpanded.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
             grpAddress.setVisibility(viewType == ViewType.THREAD && show_expanded && show_addresses ? View.VISIBLE : View.GONE);
             grpAddressMeta.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
+            tvFlags.setVisibility(View.GONE);
             tvKeywords.setVisibility(View.GONE);
             ivSearchContact.setVisibility(
                     viewType == ViewType.THREAD && show_expanded && show_addresses &&
@@ -685,6 +689,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSizeEx.setVisibility(message.size == null ? View.GONE : View.VISIBLE);
 
                 tvSubjectEx.setText(message.subject);
+                tvFlags.setText(message.flags);
+                tvFlags.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
                 tvKeywords.setText(TextUtils.join(" ", message.keywords));
                 tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
