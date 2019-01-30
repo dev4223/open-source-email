@@ -73,6 +73,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
@@ -112,10 +113,12 @@ public class FragmentMessages extends FragmentBase {
     private String thread;
     private long id;
     private String search;
+    private boolean pane;
 
     private boolean threading;
     private boolean pull;
     private boolean actionbar;
+    private boolean autoexpand;
     private boolean autoclose;
     private boolean autonext;
     private boolean addresses;
@@ -129,9 +132,11 @@ public class FragmentMessages extends FragmentBase {
     private AdapterMessage.ViewType viewType;
     private SelectionTracker<Long> selectionTracker = null;
 
+    private Long previous = null;
     private Long next = null;
+    private Long closeNext = null;
     private int autoCloseCount = 0;
-    private boolean autoExpand = true;
+    private boolean autoExpanded = true;
     private Map<String, List<Long>> values = new HashMap<>();
     private LongSparseArray<Spanned> bodies = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
@@ -166,6 +171,7 @@ public class FragmentMessages extends FragmentBase {
         thread = args.getString("thread");
         id = args.getLong("id", -1);
         search = args.getString("search");
+        pane = args.getBoolean("pane", false);
 
         if (TextUtils.isEmpty(search))
             if (thread == null)
@@ -187,6 +193,7 @@ public class FragmentMessages extends FragmentBase {
 
         threading = prefs.getBoolean("threading", true);
         actionbar = prefs.getBoolean("actionbar", true);
+        autoexpand = prefs.getBoolean("autoexpand", true);
         autoclose = prefs.getBoolean("autoclose", true);
         autonext = prefs.getBoolean("autonext", false);
         addresses = prefs.getBoolean("addresses", true);
@@ -281,22 +288,38 @@ public class FragmentMessages extends FragmentBase {
         rvMessage.setAdapter(adapter);
 
         if (viewType == AdapterMessage.ViewType.THREAD) {
-            if (actionbar) {
-                ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-                model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
-                    @Override
-                    public void onPrevious(boolean exists, Long id) {
-                        bottom_navigation.getMenu().findItem(R.id.action_prev).setIntent(new Intent().putExtra("id", id));
-                        bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(id != null);
-                    }
+            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
+                @Override
+                public void onPrevious(boolean exists, Long id) {
+                    previous = id;
+                    bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(id != null);
+                }
 
-                    @Override
-                    public void onNext(boolean exists, Long id) {
-                        bottom_navigation.getMenu().findItem(R.id.action_next).setIntent(new Intent().putExtra("id", id));
-                        bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(id != null);
-                    }
-                });
-            }
+                @Override
+                public void onNext(boolean exists, Long id) {
+                    next = id;
+                    bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(id != null);
+                }
+            });
+
+            ActivityBase activity = (ActivityBase) getActivity();
+            activity.setSwipeListener(new SwipeListener.ISwipeListener() {
+                @Override
+                public boolean onSwipeRight() {
+                    if (previous != null)
+                        navigate(previous, true);
+                    return (previous != null);
+                }
+
+                @Override
+                public boolean onSwipeLeft() {
+                    if (next != null)
+                        navigate(next, false);
+                    return (next != null);
+                }
+            });
+
         } else {
             final SelectionPredicateMessage predicate = new SelectionPredicateMessage(rvMessage);
 
@@ -359,11 +382,11 @@ public class FragmentMessages extends FragmentBase {
                         return true;
 
                     case R.id.action_prev:
-                        navigate(menuItem.getIntent().getLongExtra("id", -1));
+                        navigate(previous, true);
                         return true;
 
                     case R.id.action_next:
-                        navigate(menuItem.getIntent().getLongExtra("id", -1));
+                        navigate(next, false);
                         return true;
 
                     default:
@@ -1329,7 +1352,7 @@ public class FragmentMessages extends FragmentBase {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean("autoExpand", autoExpand);
+        outState.putBoolean("autoExpanded", autoExpanded);
         outState.putInt("autoCloseCount", autoCloseCount);
 
         outState.putStringArray("values", values.keySet().toArray(new String[0]));
@@ -1345,7 +1368,7 @@ public class FragmentMessages extends FragmentBase {
         super.onActivityCreated(savedInstanceState);
 
         if (savedInstanceState != null) {
-            autoExpand = savedInstanceState.getBoolean("autoExpand");
+            autoExpanded = savedInstanceState.getBoolean("autoExpanded");
             autoCloseCount = savedInstanceState.getInt("autoCloseCount");
 
             String[] names = savedInstanceState.getStringArray("values");
@@ -1753,7 +1776,7 @@ public class FragmentMessages extends FragmentBase {
     private void loadMessages() {
         if (viewType == AdapterMessage.ViewType.THREAD && autonext) {
             ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
+            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 boolean once = false;
 
                 @Override
@@ -1764,7 +1787,7 @@ public class FragmentMessages extends FragmentBase {
                 @Override
                 public void onNext(boolean exists, Long id) {
                     if (!exists || id != null) {
-                        next = id;
+                        closeNext = id;
                         if (!once) {
                             once = true;
                             loadMessagesNext();
@@ -1913,8 +1936,8 @@ public class FragmentMessages extends FragmentBase {
                     }
                 }
 
-                if (autoExpand) {
-                    autoExpand = false;
+                if (autoExpanded) {
+                    autoExpanded = false;
 
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                     long download = prefs.getInt("download", 32768);
@@ -1954,21 +1977,22 @@ public class FragmentMessages extends FragmentBase {
                     // - single, non archived/trashed/sent message
                     // - one unread, non archived/trashed/sent message in conversation
                     // - sole message
+                    if (autoexpand) {
+                        TupleMessageEx expand = null;
+                        if (count == 1)
+                            expand = single;
+                        else if (unseen == 1)
+                            expand = see;
+                        else if (messages.size() == 1)
+                            expand = messages.get(0);
 
-                    TupleMessageEx expand = null;
-                    if (count == 1)
-                        expand = single;
-                    else if (unseen == 1)
-                        expand = see;
-                    else if (messages.size() == 1)
-                        expand = messages.get(0);
-
-                    if (expand != null &&
-                            (expand.content || !metered || (expand.size != null && expand.size < download))) {
-                        if (!values.containsKey("expanded"))
-                            values.put("expanded", new ArrayList<Long>());
-                        values.get("expanded").add(expand.id);
-                        handleExpand(expand.id);
+                        if (expand != null &&
+                                (expand.content || !metered || (expand.size != null && expand.size < download))) {
+                            if (!values.containsKey("expanded"))
+                                values.put("expanded", new ArrayList<Long>());
+                            values.get("expanded").add(expand.id);
+                            handleExpand(expand.id);
+                        }
                     }
                 } else {
                     if (autoCloseCount > 0 && (autoclose || autonext)) {
@@ -2109,16 +2133,16 @@ public class FragmentMessages extends FragmentBase {
         if (autoclose)
             finish();
         else if (autonext) {
-            if (next == null)
+            if (closeNext == null)
                 finish();
             else {
-                Log.i("Navigating to last next=" + next);
-                navigate(next);
+                Log.i("Navigating to last next=" + closeNext);
+                navigate(closeNext, false);
             }
         }
     }
 
-    private void navigate(long id) {
+    private void navigate(long id, final boolean left) {
         Bundle args = new Bundle();
         args.putLong("id", id);
         new SimpleTask<EntityMessage>() {
@@ -2135,12 +2159,24 @@ public class FragmentMessages extends FragmentBase {
                     return;
                 }
 
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                lbm.sendBroadcast(
-                        new Intent(ActivityView.ACTION_VIEW_THREAD)
-                                .putExtra("account", message.account)
-                                .putExtra("thread", message.thread)
-                                .putExtra("id", message.id));
+                getFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+                Bundle nargs = new Bundle();
+                nargs.putLong("account", message.account);
+                nargs.putString("thread", message.thread);
+                nargs.putLong("id", message.id);
+                nargs.putBoolean("pane", pane);
+
+                FragmentMessages fragment = new FragmentMessages();
+                fragment.setArguments(nargs);
+
+                int res = (pane ? R.id.content_pane : R.id.content_frame);
+                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                fragmentTransaction.setCustomAnimations(
+                        left ? R.anim.exit_to_right : R.anim.exit_to_left,
+                        left ? R.anim.enter_from_left : R.anim.enter_from_right);
+                fragmentTransaction.replace(res, fragment).addToBackStack("thread");
+                fragmentTransaction.commit();
             }
 
             @Override
