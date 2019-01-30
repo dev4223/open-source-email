@@ -131,7 +131,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean search;
     private boolean avatars;
     private boolean preview;
-    private boolean confirm;
     private boolean autoimages;
     private boolean debug;
 
@@ -541,10 +540,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else
                 ivExpander.setVisibility(View.GONE);
 
-            int flagged = (message.count - message.unflagged);
-            ivFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-            ivFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
-            ivFlagged.setVisibility(message.uid == null ? View.INVISIBLE : View.VISIBLE);
+            bindFlagged(message);
 
             tvSize.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
             tvSize.setVisibility(message.size == null || message.content ? View.GONE : View.VISIBLE);
@@ -635,6 +631,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpExpanded.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
             grpAddress.setVisibility(viewType == ViewType.THREAD && show_expanded && show_addresses ? View.VISIBLE : View.GONE);
             grpAddressMeta.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
+
             tvFlags.setVisibility(View.GONE);
             tvKeywords.setVisibility(View.GONE);
             ivSearchContact.setVisibility(
@@ -874,6 +871,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             itemView.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
         }
 
+        private void bindFlagged(TupleMessageEx message) {
+            int flagged = (message.count - message.unflagged);
+            ivFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
+            ivFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
+            ivFlagged.setVisibility(message.uid == null ? View.INVISIBLE : View.VISIBLE);
+        }
+
         private void showContactInfo(ContactInfo info, TupleMessageEx message) {
             if (info.hasPhoto())
                 ivAvatar.setImageBitmap(info.getPhotoBitmap());
@@ -955,11 +959,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onToggleFlag(TupleMessageEx message) {
+            Log.i("Set message id=" + message.id +
+                    " flagged=" + message.ui_flagged + " " + message.unflagged + "/" + message.count);
+
             Bundle args = new Bundle();
             args.putLong("id", message.id);
             args.putBoolean("flagged", !message.ui_flagged);
             args.putBoolean("thread", viewType != ViewType.THREAD);
-            Log.i("Set message id=" + message.id + " flagged=" + !message.ui_flagged);
+
+            message.unflagged = message.ui_flagged ? message.count : 0;
+            message.ui_flagged = !message.ui_flagged;
+            bindFlagged(message);
 
             new SimpleTask<Void>() {
                 @Override
@@ -1164,19 +1174,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowHtml(final TupleMessageEx message) {
-            if (confirm)
-                new DialogBuilderLifecycle(context, owner)
-                        .setMessage(R.string.title_ask_show_html)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                onShowHtmlConfirmed(message);
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show();
-            else
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            if (prefs.getBoolean("show_html_confirmed", false)) {
                 onShowHtmlConfirmed(message);
+                return;
+            }
+
+            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_again, null);
+            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(context.getText(R.string.title_ask_show_html));
+
+            new DialogBuilderLifecycle(context, owner)
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (cbNotAgain.isChecked())
+                                prefs.edit().putBoolean("show_html_confirmed", true).apply();
+                            onShowHtmlConfirmed(message);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         }
 
         private void onShowHtmlConfirmed(final TupleMessageEx message) {
@@ -1197,19 +1218,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowImages(final TupleMessageEx message) {
-            if (confirm)
-                new DialogBuilderLifecycle(context, owner)
-                        .setMessage(R.string.title_ask_show_image)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                onShowImagesConfirmed(message);
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show();
-            else
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            if (prefs.getBoolean("show_images_confirmed", false)) {
                 onShowImagesConfirmed(message);
+                return;
+            }
+
+            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_again, null);
+            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(context.getText(R.string.title_ask_show_image));
+
+            new DialogBuilderLifecycle(context, owner)
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (cbNotAgain.isChecked())
+                                prefs.edit().putBoolean("show_images_confirmed", true).apply();
+                            onShowImagesConfirmed(message);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         }
 
         private void onShowImagesConfirmed(final TupleMessageEx message) {
@@ -1567,8 +1599,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuJunk(final ActionData data) {
+            String who = MessageHelper.formatAddresses(data.message.from);
             new DialogBuilderLifecycle(context, owner)
-                    .setMessage(context.getResources().getQuantityString(R.plurals.title_ask_spam, 1, 1))
+                    .setMessage(context.getString(R.string.title_ask_spam_who, who))
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -2241,7 +2274,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.avatars = (prefs.getBoolean("avatars", true) ||
                 prefs.getBoolean("identicons", false));
         this.preview = prefs.getBoolean("preview", false);
-        this.confirm = prefs.getBoolean("confirm", false);
         this.autoimages = prefs.getBoolean("autoimages", false);
         this.debug = prefs.getBoolean("debug", false);
 

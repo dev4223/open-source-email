@@ -218,7 +218,7 @@ public class EntityMessage implements Serializable {
                     //this.seen.equals(other.seen) &&
                     //this.answered.equals(other.answered) &&
                     //this.flagged.equals(other.flagged) &&
-                    (this.flags == null ? other.flags == null : this.flags.equals(other.flags)) &&
+                    (!BuildConfig.DEBUG || (this.flags == null ? other.flags == null : this.flags.equals(other.flags))) &&
                     Helper.equal(this.keywords, other.keywords) &&
                     this.ui_seen.equals(other.ui_seen) &&
                     this.ui_answered.equals(other.ui_answered) &&
