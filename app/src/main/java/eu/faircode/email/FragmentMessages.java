@@ -129,6 +129,7 @@ public class FragmentMessages extends FragmentBase {
     private AdapterMessage.ViewType viewType;
     private SelectionTracker<Long> selectionTracker = null;
 
+    private Long next = null;
     private int autoCloseCount = 0;
     private boolean autoExpand = true;
     private Map<String, List<Long>> values = new HashMap<>();
@@ -1750,6 +1751,32 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void loadMessages() {
+        if (viewType == AdapterMessage.ViewType.THREAD && autonext) {
+            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
+                boolean once = false;
+
+                @Override
+                public void onPrevious(boolean exists, Long id) {
+                    // Do nothing
+                }
+
+                @Override
+                public void onNext(boolean exists, Long id) {
+                    if (!exists || id != null) {
+                        next = id;
+                        if (!once) {
+                            once = true;
+                            loadMessagesNext();
+                        }
+                    }
+                }
+            });
+        } else
+            loadMessagesNext();
+    }
+
+    private void loadMessagesNext() {
         ViewModelBrowse modelBrowse = ViewModelProviders.of(getActivity()).get(ViewModelBrowse.class);
         modelBrowse.set(getContext(), folder, search, REMOTE_PAGE_SIZE);
 
@@ -2035,8 +2062,10 @@ public class FragmentMessages extends FragmentBase {
                 pbWait.setVisibility(View.GONE);
             if (boundaryCallback == null && messages.size() == 0)
                 tvNoEmail.setVisibility(View.VISIBLE);
-            if (messages.size() > 0)
+            if (messages.size() > 0) {
+                tvNoEmail.setVisibility(View.GONE);
                 grpReady.setVisibility(View.VISIBLE);
+            }
         }
     };
 
@@ -2080,21 +2109,12 @@ public class FragmentMessages extends FragmentBase {
         if (autoclose)
             finish();
         else if (autonext) {
-            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), thread, new ViewModelMessages.IPrevNext() {
-                @Override
-                public void onPrevious(boolean exists, Long id) {
-                    // Do nothing
-                }
-
-                @Override
-                public void onNext(boolean exists, Long id) {
-                    if (id != null)
-                        navigate(id);
-                    if (!exists)
-                        finish();
-                }
-            });
+            if (next == null)
+                finish();
+            else {
+                Log.i("Navigating to last next=" + next);
+                navigate(next);
+            }
         }
     }
 
@@ -2110,6 +2130,11 @@ public class FragmentMessages extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, EntityMessage message) {
+                if (message == null) {
+                    finish();
+                    return;
+                }
+
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
                 lbm.sendBroadcast(
                         new Intent(ActivityView.ACTION_VIEW_THREAD)
