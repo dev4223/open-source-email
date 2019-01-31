@@ -47,6 +47,8 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -123,9 +125,9 @@ public class FragmentMessages extends FragmentBase {
     private boolean autonext;
     private boolean addresses;
 
-    private Long primary = null;
+    private long primary;
     private boolean outbox = false;
-    private Boolean connected = null;
+    private boolean connected;
     private boolean searching = false;
     private AdapterMessage adapter;
 
@@ -172,6 +174,8 @@ public class FragmentMessages extends FragmentBase {
         id = args.getLong("id", -1);
         search = args.getString("search");
         pane = args.getBoolean("pane", false);
+        primary = args.getLong("primary", -1);
+        connected = args.getBoolean("connected", false);
 
         if (TextUtils.isEmpty(search))
             if (thread == null)
@@ -1396,8 +1400,7 @@ public class FragmentMessages extends FragmentBase {
             public void onChanged(EntityAccount account) {
                 long primary = (account == null ? -1 : account.id);
                 boolean connected = (account != null && "connected".equals(account.state));
-                if (FragmentMessages.this.primary == null || FragmentMessages.this.connected == null ||
-                        FragmentMessages.this.primary != primary || FragmentMessages.this.connected != connected) {
+                if (FragmentMessages.this.primary != primary || FragmentMessages.this.connected != connected) {
                     FragmentMessages.this.primary = primary;
                     FragmentMessages.this.connected = connected;
                     getActivity().invalidateOptionsMenu();
@@ -1648,12 +1651,11 @@ public class FragmentMessages extends FragmentBase {
 
         boolean selection = (selectionTracker != null && selectionTracker.hasSelection());
 
-        menu.findItem(R.id.menu_search).setVisible(viewType != AdapterMessage.ViewType.SEARCH);
+        menu.findItem(R.id.menu_search).setVisible(
+                viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
 
-        menu.findItem(R.id.menu_folders).setVisible(primary == null || primary >= 0);
-        menu.findItem(R.id.menu_folders).setEnabled(primary != null);
-        menu.findItem(R.id.menu_folders).setIcon(
-                connected != null && connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
+        menu.findItem(R.id.menu_folders).setVisible(primary >= 0);
+        menu.findItem(R.id.menu_folders).setIcon(connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
 
         menu.findItem(R.id.menu_sort_on).setVisible(!selection &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
@@ -2164,21 +2166,22 @@ public class FragmentMessages extends FragmentBase {
 
                 getFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
+                getArguments().putBoolean("fade", true);
+
                 Bundle nargs = new Bundle();
                 nargs.putLong("account", message.account);
                 nargs.putString("thread", message.thread);
                 nargs.putLong("id", message.id);
                 nargs.putBoolean("pane", pane);
+                nargs.putLong("primary", primary);
+                nargs.putBoolean("connected", connected);
+                nargs.putBoolean("left", left);
 
                 FragmentMessages fragment = new FragmentMessages();
                 fragment.setArguments(nargs);
 
                 int res = (pane ? R.id.content_pane : R.id.content_frame);
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.setCustomAnimations(
-                        left ? R.anim.enter_from_left : R.anim.enter_from_right,
-                        left ? R.anim.exit_to_right : R.anim.exit_to_left,
-                        android.R.anim.fade_out, android.R.anim.fade_out);
                 fragmentTransaction.replace(res, fragment).addToBackStack("thread");
                 fragmentTransaction.commit();
             }
@@ -2396,6 +2399,25 @@ public class FragmentMessages extends FragmentBase {
             return false;
         }
     };
+
+    @Override
+    public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
+        Bundle args = getArguments();
+        if (viewType == AdapterMessage.ViewType.THREAD && args != null) {
+            if (enter) {
+                Boolean left = (Boolean) args.get("left");
+                if (left != null)
+                    return AnimationUtils.loadAnimation(getContext(), left ? R.anim.enter_from_left : R.anim.enter_from_right);
+            } else {
+                if (args.getBoolean("fade")) {
+                    args.remove("fade");
+                    return AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_out);
+                }
+            }
+        }
+
+        return super.onCreateAnimation(transit, enter, nextAnim);
+    }
 
     private class MoreResult {
         boolean seen;

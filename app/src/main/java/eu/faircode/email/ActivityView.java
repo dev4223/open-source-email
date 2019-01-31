@@ -44,7 +44,6 @@ import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -115,8 +114,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private long attachment = -1;
 
     private OpenPgpServiceConnection pgpService;
-
-    private static final int ATTACHMENT_BUFFER_SIZE = 8192; // bytes
 
     static final int REQUEST_UNIFIED = 1;
     static final int REQUEST_THREAD = 2;
@@ -1096,15 +1093,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             args.putBoolean("pane", true);
         }
 
-        TypedValue enter = new TypedValue();
-        TypedValue exit = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.activityOpenEnterAnimation, enter, false);
-        getTheme().resolveAttribute(android.R.attr.activityOpenExitAnimation, exit, false);
-
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.setCustomAnimations(
-                enter.resourceId, exit.resourceId,
-                android.R.anim.fade_out, android.R.anim.fade_out);
         fragmentTransaction.replace(pane, fragment).addToBackStack("thread");
         fragmentTransaction.commit();
     }
@@ -1417,7 +1406,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     os = new FileOutputStream(pfd.getFileDescriptor());
                     is = new BufferedInputStream(new FileInputStream(file));
 
-                    byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
+                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
                     int read;
                     while ((read = is.read(buffer)) != -1)
                         os.write(buffer, 0, read);
@@ -1486,7 +1475,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     os = new FileOutputStream(pfd.getFileDescriptor());
                     is = new BufferedInputStream(new FileInputStream(file));
 
-                    byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
+                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
                     int read;
                     while ((read = is.read(buffer)) != -1)
                         os.write(buffer, 0, read);
@@ -1558,7 +1547,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         os = new FileOutputStream(pfd.getFileDescriptor());
                         is = new BufferedInputStream(new FileInputStream(file));
 
-                        byte[] buffer = new byte[ATTACHMENT_BUFFER_SIZE];
+                        byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
                         int read;
                         while ((read = is.read(buffer)) != -1)
                             os.write(buffer, 0, read);
