@@ -123,9 +123,9 @@ public class FragmentMessages extends FragmentBase {
     private boolean autonext;
     private boolean addresses;
 
-    private long primary = -1;
+    private Long primary = null;
     private boolean outbox = false;
-    private boolean connected = false;
+    private Boolean connected = null;
     private boolean searching = false;
     private AdapterMessage adapter;
 
@@ -195,7 +195,7 @@ public class FragmentMessages extends FragmentBase {
         actionbar = prefs.getBoolean("actionbar", true);
         autoexpand = prefs.getBoolean("autoexpand", true);
         autoclose = prefs.getBoolean("autoclose", true);
-        autonext = prefs.getBoolean("autonext", false);
+        autonext = (!autoclose && prefs.getBoolean("autonext", false));
         addresses = prefs.getBoolean("addresses", true);
     }
 
@@ -1396,7 +1396,8 @@ public class FragmentMessages extends FragmentBase {
             public void onChanged(EntityAccount account) {
                 long primary = (account == null ? -1 : account.id);
                 boolean connected = (account != null && "connected".equals(account.state));
-                if (FragmentMessages.this.primary != primary || FragmentMessages.this.connected != connected) {
+                if (FragmentMessages.this.primary == null || FragmentMessages.this.connected == null ||
+                        FragmentMessages.this.primary != primary || FragmentMessages.this.connected != connected) {
                     FragmentMessages.this.primary = primary;
                     FragmentMessages.this.connected = connected;
                     getActivity().invalidateOptionsMenu();
@@ -1649,8 +1650,10 @@ public class FragmentMessages extends FragmentBase {
 
         menu.findItem(R.id.menu_search).setVisible(viewType != AdapterMessage.ViewType.SEARCH);
 
-        menu.findItem(R.id.menu_folders).setVisible(primary >= 0);
-        menu.findItem(R.id.menu_folders).setIcon(connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
+        menu.findItem(R.id.menu_folders).setVisible(primary == null || primary >= 0);
+        menu.findItem(R.id.menu_folders).setEnabled(primary != null);
+        menu.findItem(R.id.menu_folders).setIcon(
+                connected != null && connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
 
         menu.findItem(R.id.menu_sort_on).setVisible(!selection &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
@@ -1885,7 +1888,7 @@ public class FragmentMessages extends FragmentBase {
 
         builder.setFetchExecutor(executor);
 
-        modelMessages.setMessages(viewType, getActivity(), builder.build());
+        modelMessages.setMessages(viewType, getViewLifecycleOwner(), builder.build());
         modelMessages.observe(viewType, getViewLifecycleOwner(), observer);
     }
 
@@ -2173,8 +2176,9 @@ public class FragmentMessages extends FragmentBase {
                 int res = (pane ? R.id.content_pane : R.id.content_frame);
                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                 fragmentTransaction.setCustomAnimations(
+                        left ? R.anim.enter_from_left : R.anim.enter_from_right,
                         left ? R.anim.exit_to_right : R.anim.exit_to_left,
-                        left ? R.anim.enter_from_left : R.anim.enter_from_right);
+                        android.R.anim.fade_out, android.R.anim.fade_out);
                 fragmentTransaction.replace(res, fragment).addToBackStack("thread");
                 fragmentTransaction.commit();
             }
