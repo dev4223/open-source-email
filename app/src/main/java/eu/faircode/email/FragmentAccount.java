@@ -569,6 +569,7 @@ public class FragmentAccount extends FragmentBase {
 
                     result.idle = istore.hasCapability("IDLE");
 
+                    boolean inbox = false;
                     boolean archive = false;
                     boolean drafts = false;
                     boolean trash = false;
@@ -582,30 +583,19 @@ public class FragmentAccount extends FragmentBase {
 
                     for (Folder ifolder : istore.getDefaultFolder().list("*")) {
                         // Check folder attributes
-                        String type = null;
-                        boolean selectable = true;
+                        String fullName = ifolder.getFullName();
                         String[] attrs = ((IMAPFolder) ifolder).getAttributes();
-                        Log.i(ifolder.getFullName() + " attrs=" + TextUtils.join(" ", attrs));
-                        for (String attr : attrs) {
-                            if ("\\Noselect".equals(attr) || "\\NonExistent".equals(attr))
-                                selectable = false;
-                            if (attr.startsWith("\\")) {
-                                int index = EntityFolder.SYSTEM_FOLDER_ATTR.indexOf(attr.substring(1));
-                                if (index >= 0) {
-                                    type = EntityFolder.SYSTEM_FOLDER_TYPE.get(index);
-                                    break;
-                                }
-                            }
-                        }
+                        Log.i(fullName + " attrs=" + TextUtils.join(" ", attrs));
+                        String type = EntityFolder.getType(attrs, fullName);
 
-                        if (selectable) {
+                        if (type != null) {
                             // Create entry
-                            EntityFolder folder = db.folder().getFolderByName(id, ifolder.getFullName());
+                            EntityFolder folder = db.folder().getFolderByName(id, fullName);
                             if (folder == null) {
                                 int sync = EntityFolder.SYSTEM_FOLDER_SYNC.indexOf(type);
                                 folder = new EntityFolder();
-                                folder.name = ifolder.getFullName();
-                                folder.type = (type == null ? EntityFolder.USER : type);
+                                folder.name = fullName;
+                                folder.type = type;
                                 folder.synchronize = (sync >= 0);
                                 folder.download = (sync < 0 ? true : EntityFolder.SYSTEM_FOLDER_DOWNLOAD.get(sync));
                                 folder.sync_days = EntityFolder.DEFAULT_SYNC;
@@ -613,7 +603,7 @@ public class FragmentAccount extends FragmentBase {
                             }
                             result.folders.add(folder);
 
-                            if (type == null) {
+                            if (EntityFolder.USER.equals(type)) {
                                 if (folder.name.toLowerCase().contains("archive"))
                                     altArchive = folder;
                                 if (folder.name.toLowerCase().contains("draft"))
@@ -625,7 +615,9 @@ public class FragmentAccount extends FragmentBase {
                                 if (folder.name.toLowerCase().contains("junk"))
                                     altJunk = folder;
                             } else {
-                                if (EntityFolder.ARCHIVE.equals(type))
+                                if (EntityFolder.INBOX.equals(type))
+                                    inbox = true;
+                                else if (EntityFolder.ARCHIVE.equals(type))
                                     archive = true;
                                 else if (EntityFolder.DRAFTS.equals(type))
                                     drafts = true;
@@ -642,6 +634,8 @@ public class FragmentAccount extends FragmentBase {
                         }
                     }
 
+                    if (!inbox)
+                        throw new IllegalArgumentException(getString(R.string.title_no_inbox));
                     if (!archive && altArchive != null)
                         altArchive.type = EntityFolder.ARCHIVE;
                     if (!drafts && altDrafts != null)
@@ -846,6 +840,7 @@ public class FragmentAccount extends FragmentBase {
                     last_connected = account.last_connected;
 
                 // Check IMAP server
+                EntityFolder inbox = null;
                 if (check) {
                     Properties props = MessageHelper.getSessionProperties(auth_type, realm, insecure);
                     Session isession = Session.getInstance(props, null);
@@ -864,6 +859,26 @@ public class FragmentAccount extends FragmentBase {
                                 throw ex;
                         }
                         separator = istore.getDefaultFolder().getSeparator();
+
+                        for (Folder ifolder : istore.getDefaultFolder().list("*")) {
+                            // Check folder attributes
+                            String fullName = ifolder.getFullName();
+                            String[] attrs = ((IMAPFolder) ifolder).getAttributes();
+                            Log.i(fullName + " attrs=" + TextUtils.join(" ", attrs));
+                            String type = EntityFolder.getType(attrs, fullName);
+
+                            if (EntityFolder.INBOX.equals(type)) {
+                                inbox = new EntityFolder();
+                                inbox.name = fullName;
+                                inbox.type = type;
+                                inbox.synchronize = true;
+                                inbox.unified = true;
+                                inbox.notify = true;
+                                inbox.sync_days = EntityFolder.DEFAULT_SYNC;
+                                inbox.keep_days = EntityFolder.DEFAULT_KEEP;
+                            }
+                        }
+
                     } finally {
                         if (istore != null)
                             istore.close();
@@ -917,6 +932,7 @@ public class FragmentAccount extends FragmentBase {
                         db.account().updateAccount(account);
                     else
                         account.id = db.account().insertAccount(account);
+                    EntityLog.log(context, (update ? "Updated" : "Added") + " account=" + account.name);
 
                     // Make sure the channel exists on commit
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -929,16 +945,8 @@ public class FragmentAccount extends FragmentBase {
 
                     List<EntityFolder> folders = new ArrayList<>();
 
-                    EntityFolder inbox = new EntityFolder();
-                    inbox.name = "INBOX";
-                    inbox.type = EntityFolder.INBOX;
-                    inbox.synchronize = true;
-                    inbox.unified = true;
-                    inbox.notify = true;
-                    inbox.sync_days = EntityFolder.DEFAULT_SYNC;
-                    inbox.keep_days = EntityFolder.DEFAULT_KEEP;
-
-                    folders.add(inbox);
+                    if (inbox != null)
+                        folders.add(inbox);
 
                     if (drafts != null) {
                         drafts.type = EntityFolder.DRAFTS;
@@ -998,9 +1006,10 @@ public class FragmentAccount extends FragmentBase {
                         EntityFolder existing = db.folder().getFolderByName(account.id, folder.name);
                         if (existing == null) {
                             folder.account = account.id;
-                            Log.i("Creating folder=" + folder.name + " (" + folder.type + ")");
+                            EntityLog.log(context, "Added folder=" + folder.name + " type=" + folder.type);
                             folder.id = db.folder().insertFolder(folder);
                         } else {
+                            EntityLog.log(context, "Updated folder=" + folder.name + " type=" + folder.type);
                             db.folder().setFolderType(existing.id, folder.type);
                             db.folder().setFolderLevel(existing.id, folder.level);
                         }
@@ -1388,6 +1397,14 @@ public class FragmentAccount extends FragmentBase {
         Long left = (account == null ? null : account.swipe_left);
         Long right = (account == null ? null : account.swipe_right);
 
+        String leftDefault = EntityFolder.TRASH;
+        String rightDefault = EntityFolder.TRASH;
+        for (EntityFolder folder : folders)
+            if (EntityFolder.ARCHIVE.equals(folder.type)) {
+                rightDefault = folder.type;
+                break;
+            }
+
         for (int pos = 0; pos < folders.size(); pos++) {
             EntityFolder folder = folders.get(pos);
 
@@ -1402,10 +1419,10 @@ public class FragmentAccount extends FragmentBase {
             else if (EntityFolder.JUNK.equals(folder.type))
                 spJunk.setSelection(pos);
 
-            if (left == null ? (account == null && EntityFolder.TRASH.equals(folder.type)) : left.equals(folder.id))
+            if (left == null ? (account == null && leftDefault.equals(folder.type)) : left.equals(folder.id))
                 spLeft.setSelection(pos);
 
-            if (right == null ? (account == null && EntityFolder.ARCHIVE.equals(folder.type)) : right.equals(folder.id))
+            if (right == null ? (account == null && rightDefault.equals(folder.type)) : right.equals(folder.id))
                 spRight.setSelection(pos);
         }
 

@@ -105,7 +105,7 @@ public class EntityFolder implements Serializable {
     static final String USER = "User";
 
     // https://www.iana.org/assignments/imap-mailbox-name-attributes/imap-mailbox-name-attributes.xhtml
-    static final List<String> SYSTEM_FOLDER_ATTR = Arrays.asList(
+    private static final List<String> SYSTEM_FOLDER_ATTR = Arrays.asList(
             "All",
             "Archive",
             "Drafts",
@@ -115,15 +115,15 @@ public class EntityFolder implements Serializable {
             "Important",
             "Flagged"
     );
-    static final List<String> SYSTEM_FOLDER_TYPE = Arrays.asList(
-            ARCHIVE,
+    private static final List<String> SYSTEM_FOLDER_TYPE = Arrays.asList(
+            ARCHIVE, // All
             ARCHIVE,
             DRAFTS,
             TRASH,
             JUNK,
             SENT,
-            SYSTEM,
-            SYSTEM
+            SYSTEM, // Important
+            SYSTEM // Flagged
     ); // MUST match SYSTEM_FOLDER_ATTR
 
     static final List<String> FOLDER_SORT_ORDER = Arrays.asList(
@@ -143,6 +143,7 @@ public class EntityFolder implements Serializable {
     static final int DEFAULT_KEEP = 30; // days
 
     static final List<String> SYSTEM_FOLDER_SYNC = Arrays.asList(
+            INBOX,
             DRAFTS,
             SENT,
             ARCHIVE,
@@ -150,6 +151,7 @@ public class EntityFolder implements Serializable {
             JUNK
     );
     static final List<Boolean> SYSTEM_FOLDER_DOWNLOAD = Arrays.asList(
+            true, // inbox
             true, // drafts
             false, // sent
             false, // archive
@@ -182,6 +184,25 @@ public class EntityFolder implements Serializable {
 
     static boolean isOutgoing(String type) {
         return DRAFTS.equals(type) || OUTBOX.equals(type) || SENT.equals(type);
+    }
+
+    static String getType(String[] attrs, String fullName) {
+        for (String attr : attrs) {
+            if ("\\Noselect".equals(attr) || "\\NonExistent".equals(attr))
+                return null;
+
+            if (attr.startsWith("\\")) {
+                int index = SYSTEM_FOLDER_ATTR.indexOf(attr.substring(1));
+                if (index >= 0)
+                    return SYSTEM_FOLDER_TYPE.get(index);
+            }
+        }
+
+        // https://tools.ietf.org/html/rfc3501#section-5.1
+        if ("INBOX".equals(fullName.toUpperCase()))
+            return INBOX;
+
+        return USER;
     }
 
     static int getLevel(Character separator, String name) {

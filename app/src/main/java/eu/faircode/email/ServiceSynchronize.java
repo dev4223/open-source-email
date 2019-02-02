@@ -931,7 +931,8 @@ public class ServiceSynchronize extends LifecycleService {
                     }
 
                     final boolean capIdle = istore.hasCapability("IDLE");
-                    Log.i(account.name + " idle=" + capIdle);
+                    final boolean capUidPlus = istore.hasCapability("UIDPLUS");
+                    Log.i(account.name + " idle=" + capIdle + " uidplus=" + capUidPlus);
 
                     db.account().setAccountState(account.id, "connected");
 
@@ -1243,7 +1244,10 @@ public class ServiceSynchronize extends LifecycleService {
                                                                     Log.w(folder.name, ex);
                                                                 }
                                                             }
-                                                            db.folder().setFolderState(folder.id, null);
+                                                            if (folder.synchronize && (folder.poll || !capIdle))
+                                                                db.folder().setFolderState(folder.id, "waiting");
+                                                            else
+                                                                db.folder().setFolderState(folder.id, null);
                                                         }
                                                     }
                                                 } finally {
@@ -1730,23 +1734,9 @@ public class ServiceSynchronize extends LifecycleService {
                 imessage.setFlag(Flags.Flag.DRAFT, true);
 
         // Add message
-        if (istore.hasCapability("UIDPLUS")) {
-            Log.i(folder.name + " append uid id=" + message.id);
-            AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
-            if (uids == null || uids.length == 0)
-                throw new MessageRemovedException("Message not appended");
-            Log.i(folder.name + " appended uid=" + uids[0].uid);
-            db.message().setMessageUid(message.id, uids[0].uid);
-        } else {
-            Log.i(folder.name + " append id=" + message.id);
-            ifolder.appendMessages(new Message[]{imessage});
-
-            Log.i(folder.name + " lookup id=" + message.id);
-            long uid = getUid(folder, ifolder, message.msgid);
-
-            Log.i(folder.name + " lookup id=" + message.id + " uid=" + uid);
-            db.message().setMessageUid(message.id, uid);
-        }
+        long uid = append(istore, ifolder, imessage, message.msgid);
+        Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
+        db.message().setMessageUid(message.id, uid);
 
         if (folder.id.equals(message.folder)) {
             // Delete previous message
@@ -1833,7 +1823,18 @@ public class ServiceSynchronize extends LifecycleService {
                         icopy.setFlag(Flags.Flag.DRAFT, true);
 
                 // Append target
-                itarget.appendMessages(new Message[]{icopy});
+                long uid = append(istore, itarget, icopy, message.msgid);
+                Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
+                db.message().setMessageUid(message.id, uid);
+
+                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+                    boolean seen = (autoread || message.ui_seen);
+                    icopy = itarget.getMessageByUID(uid);
+                    if (seen != icopy.isSet(Flags.Flag.SEEN)) {
+                        Log.i(folder.name + " Fixing id=" + message.id + " seen=" + seen);
+                        icopy.setFlag(Flags.Flag.SEEN, seen);
+                    }
+                }
 
                 // Delete source
                 imessage.setFlag(Flags.Flag.DELETED, true);
@@ -2142,22 +2143,29 @@ public class ServiceSynchronize extends LifecycleService {
         parts.downloadAttachment(this, db, attachment.id, sequence);
     }
 
-    private long getUid(EntityFolder folder, IMAPFolder ifolder, String msgid) throws MessagingException {
-        long uid = -1;
-        Message[] messages = ifolder.search(new MessageIDTerm(msgid));
-        if (messages != null)
-            for (Message message : messages) {
-                long muid = ifolder.getUID(message);
-                Log.i(folder.name + " " + msgid + " uid=" + muid);
-                // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
-                if (muid > uid)
-                    uid = muid;
-            }
+    private long append(IMAPStore istore, IMAPFolder ifolder, Message imessage, String msgid) throws MessagingException {
+        if (istore.hasCapability("UIDPLUS")) {
+            AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
+            if (uids == null || uids.length == 0)
+                throw new MessageRemovedException("Message not appended");
+            return uids[0].uid;
+        } else {
+            ifolder.appendMessages(new Message[]{imessage});
+            long uid = -1;
+            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
+            if (messages != null)
+                for (Message iappended : messages) {
+                    long muid = ifolder.getUID(iappended);
+                    // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
+                    if (muid > uid)
+                        uid = muid;
+                }
 
-        if (uid < 0)
-            throw new MessageRemovedException("uid not found");
+            if (uid < 0)
+                throw new MessageRemovedException("uid not found");
 
-        return uid;
+            return uid;
+        }
     }
 
     private void synchronizeFolders(EntityAccount account, IMAPStore istore, ServiceState state) throws MessagingException {
@@ -2195,30 +2203,13 @@ public class ServiceSynchronize extends LifecycleService {
 
             for (Folder ifolder : ifolders) {
                 String fullName = ifolder.getFullName();
-
-                String type = null;
-                boolean selectable = true;
                 String[] attrs = ((IMAPFolder) ifolder).getAttributes();
+                String type = EntityFolder.getType(attrs, fullName);
+
                 EntityLog.log(this, account.name + ":" + fullName +
-                        " attrs=" + TextUtils.join(" ", attrs));
-                for (String attr : attrs) {
-                    if ("\\Noselect".equals(attr) || "\\NonExistent".equals(attr))
-                        selectable = false;
+                        " attrs=" + TextUtils.join(" ", attrs) + " type=" + type);
 
-                    if (attr.startsWith("\\")) {
-                        int index = EntityFolder.SYSTEM_FOLDER_ATTR.indexOf(attr.substring(1));
-                        if (index >= 0) {
-                            type = EntityFolder.SYSTEM_FOLDER_TYPE.get(index);
-                            break;
-                        }
-                    }
-                }
-
-                // https://tools.ietf.org/html/rfc3501#section-5.1
-                if ("INBOX".equals(fullName.toUpperCase()))
-                    type = EntityFolder.INBOX;
-
-                if (selectable) {
+                if (type != null) {
                     names.remove(fullName);
 
                     int level = EntityFolder.getLevel(separator, fullName);
@@ -2232,16 +2223,16 @@ public class ServiceSynchronize extends LifecycleService {
                         folder.account = account.id;
                         folder.name = fullName;
                         folder.display = display;
-                        folder.type = (type == null ? EntityFolder.USER : type);
+                        folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.level = level;
                         folder.synchronize = false;
                         folder.poll = ("imap.gmail.com".equals(account.host));
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                         db.folder().insertFolder(folder);
-                        Log.i(folder.name + " added");
+                        Log.i(folder.name + " added type=" + folder.type);
                     } else {
-                        Log.i(folder.name + " exists");
+                        Log.i(folder.name + " exists type=" + folder.type);
 
                         if (folder.display == null) {
                             if (display != null) {
