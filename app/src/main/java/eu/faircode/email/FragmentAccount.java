@@ -807,8 +807,6 @@ public class FragmentAccount extends FragmentBase {
                     throw new IllegalArgumentException(context.getString(R.string.title_no_password));
                 if (TextUtils.isEmpty(interval))
                     interval = "19";
-                if (synchronize && drafts == null)
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_drafts));
 
                 if (TextUtils.isEmpty(realm))
                     realm = null;
@@ -827,6 +825,7 @@ public class FragmentAccount extends FragmentBase {
                 String accountRealm = (account == null ? null : account.realm);
 
                 boolean check = (synchronize && (account == null ||
+                        auth_type != account.auth_type ||
                         !host.equals(account.host) || Integer.parseInt(port) != account.port ||
                         !user.equals(account.user) || !password.equals(account.password) ||
                         (realm == null ? accountRealm != null : !realm.equals(accountRealm))));
