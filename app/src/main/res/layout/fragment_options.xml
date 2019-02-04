@@ -306,6 +306,31 @@
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swHtml"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:text="@string/title_advanced_html"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swAddresses"
+            app:switchPadding="12dp" />
+
+        <TextView
+            android:id="@+id/tvHtmlHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="60dp"
+            android:text="@string/title_ask_show_html"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swHtml" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swImages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -314,8 +339,21 @@
             android:layout_marginEnd="12dp"
             android:text="@string/title_advanced_images"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swAddresses"
+            app:layout_constraintTop_toBottomOf="@id/tvHtmlHint"
             app:switchPadding="12dp" />
+
+        <TextView
+            android:id="@+id/tvImagesHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="60dp"
+            android:text="@string/title_ask_show_image"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swImages" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swActionbar"
@@ -326,7 +364,7 @@
             android:layout_marginEnd="12dp"
             android:text="@string/title_advanced_actionbar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swImages"
+            app:layout_constraintTop_toBottomOf="@id/tvImagesHint"
             app:switchPadding="12dp" />
 
         <TextView
@@ -362,6 +400,18 @@
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swSwipeNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:text="@string/title_advanced_swipenav"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swPull"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swAutoExpand"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -370,7 +420,7 @@
             android:layout_marginEnd="12dp"
             android:text="@string/title_advanced_autoexpand"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swPull"
+            app:layout_constraintTop_toBottomOf="@id/swSwipeNav"
             app:switchPadding="12dp" />
 
         <TextView
@@ -424,18 +474,6 @@
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/swAutoRead"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="12dp"
-            android:text="@string/title_advanced_autoread"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swAutoNext"
-            app:switchPadding="12dp" />
-
-        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swCollapse"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -444,7 +482,19 @@
             android:layout_marginEnd="12dp"
             android:text="@string/title_advanced_collapse"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swAutoRead"
+            app:layout_constraintTop_toBottomOf="@id/swAutoNext"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swAutoRead"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="12dp"
+            android:text="@string/title_advanced_autoread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swCollapse"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
@@ -456,7 +506,7 @@
             android:layout_marginEnd="12dp"
             android:text="@string/title_advanced_automove"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swCollapse"
+            app:layout_constraintTop_toBottomOf="@id/swAutoRead"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat

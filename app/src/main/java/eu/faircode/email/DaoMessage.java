@@ -49,6 +49,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
+            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", COUNT(message.id) AS count" +
             ", " + unseen_unified + " AS unseen" +
             ", " + unflagged_unified + " AS unflagged" +
@@ -88,6 +89,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
+            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", COUNT(message.id) AS count" +
             ", " + unseen_folder + " AS unseen" +
             ", " + unflagged_folder + " AS unflagged" +
@@ -119,6 +121,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
+            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
@@ -187,20 +190,10 @@ public interface DaoMessage {
             " AND msgid = :msgid")
     int countMessageByMsgId(long folder, String msgid);
 
-    @Query("SELECT * FROM message" +
-            " WHERE folder = :folder" +
-            " AND ui_seen" +
-            " AND NOT ui_hide")
-    List<EntityMessage> getMessageSeen(long folder);
-
-    @Query("SELECT id FROM message" +
-            " WHERE content" +
-            " AND (preview IS NULL OR preview = '')")
-    List<Long> getMessageWithoutPreview();
-
     @Query("SELECT message.*" +
             ", account.name AS accountName, identity.color AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
+            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
@@ -217,6 +210,7 @@ public interface DaoMessage {
     @Query("SELECT message.*" +
             ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
+            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
             ", 1 AS unseen" +
             ", 0 AS unflagged" +

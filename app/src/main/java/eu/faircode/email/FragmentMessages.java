@@ -143,6 +143,7 @@ public class FragmentMessages extends FragmentBase {
     private boolean autoExpanded = true;
     private Map<String, List<Long>> values = new HashMap<>();
     private LongSparseArray<Spanned> bodies = new LongSparseArray<>();
+    private LongSparseArray<String> html = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
     private BoundaryCallbackMessages boundaryCallback = null;
@@ -390,9 +391,9 @@ public class FragmentMessages extends FragmentBase {
                 @Override
                 public void onFound(int position, int size) {
                     if (actionbar) {
-                        seekBar.setProgress(position);
                         seekBar.setMax(size - 1);
-                        seekBar.setVisibility(View.VISIBLE);
+                        seekBar.setProgress(size - 1 - position);
+                        seekBar.setVisibility(size > 1 ? View.VISIBLE : View.GONE);
                     }
                 }
             });
@@ -401,6 +402,10 @@ public class FragmentMessages extends FragmentBase {
             activity.setSwipeListener(new SwipeListener.ISwipeListener() {
                 @Override
                 public boolean onSwipeRight() {
+                    boolean swipenav = prefs.getBoolean("swipenav", true);
+                    if (!swipenav)
+                        return false;
+
                     if (previous != null)
                         navigate(previous, true);
                     return (previous != null);
@@ -408,6 +413,10 @@ public class FragmentMessages extends FragmentBase {
 
                 @Override
                 public boolean onSwipeLeft() {
+                    boolean swipenav = prefs.getBoolean("swipenav", true);
+                    if (!swipenav)
+                        return false;
+
                     if (next != null)
                         navigate(next, false);
                     return (next != null);
@@ -555,16 +564,29 @@ public class FragmentMessages extends FragmentBase {
         }
 
         @Override
-        public void setBody(long id, Spanned body) {
-            if (body == null)
+        public void setBody(long id, Spanned value) {
+            if (value == null)
                 bodies.remove(id);
             else
-                bodies.put(id, body);
+                bodies.put(id, value);
         }
 
         @Override
         public Spanned getBody(long id) {
             return bodies.get(id);
+        }
+
+        @Override
+        public void setHtml(long id, String value) {
+            if (value == null)
+                html.remove(id);
+            else
+                html.put(id, value);
+        }
+
+        @Override
+        public String getHtml(long id) {
+            return html.get(id);
         }
 
         @Override
