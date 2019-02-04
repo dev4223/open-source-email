@@ -441,7 +441,7 @@ public class FragmentMessages extends FragmentBase {
                 @Override
                 public void onSelectionChanged() {
                     SelectionTracker tracker = selectionTracker;
-                    if (tracker == null)
+                    if (tracker == null) // destroyed
                         return;
 
                     FragmentActivity activity = getActivity();
@@ -476,6 +476,8 @@ public class FragmentMessages extends FragmentBase {
 
     @Override
     public void onDestroy() {
+        if (selectionPredicate != null)
+            selectionPredicate.destroy();
         selectionTracker = null;
         super.onDestroy();
     }
@@ -740,6 +742,9 @@ public class FragmentMessages extends FragmentBase {
                 return;
 
             Log.i("Swiped dir=" + direction + " message=" + message.id);
+
+            if (selectionPredicate != null)
+                selectionPredicate.setEnabled(false);
 
             Bundle args = new Bundle();
             args.putLong("id", message.id);
@@ -1949,6 +1954,9 @@ public class FragmentMessages extends FragmentBase {
                 handleAutoClose();
                 return;
             }
+
+            if (selectionPredicate != null)
+                selectionPredicate.setEnabled(true);
 
             if (viewType == AdapterMessage.ViewType.THREAD) {
                 // Mark duplicates
