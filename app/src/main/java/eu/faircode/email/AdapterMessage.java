@@ -667,6 +667,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void clearExpanded() {
+            tvSubject.setVisibility(View.VISIBLE);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
@@ -733,16 +734,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpExpanded.setVisibility(View.VISIBLE);
 
             grpAddress.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            // dev4223: show always header subject, date and size when showing message body
-            grpAddressMeta.setVisibility(threading ? View.VISIBLE : View.GONE);
             ivSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
             ivAddContact.setVisibility(show_addresses && contacts && message.from != null && message.from.length > 0 ? View.VISIBLE : View.GONE);
 
             // dev4223: show subject dependand on show message body
-            if(ViewType.THREAD == viewType) {
-                tvSubject.setVisibility(!threading ? View.VISIBLE : View.GONE);
-            } else {
-                tvSubject.setVisibility(View.VISIBLE);
+            grpAddressMeta.setVisibility(View.VISIBLE);
+            tvSubject.setVisibility(View.GONE);
+            if(compact) {
+                ivAnswered.setVisibility(View.GONE);
             }
 
             grpHeaders.setVisibility(show_headers ? View.VISIBLE : View.GONE);
