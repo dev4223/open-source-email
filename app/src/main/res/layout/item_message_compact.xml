@@ -495,7 +495,7 @@
             android:textIsSelectable="true"
             app:layout_constraintEnd_toStartOf="@+id/tvSizeExTitle"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvBcc" />
+            app:layout_constraintTop_toBottomOf="@id/tvIdentity" />
 
         <TextView
             android:id="@+id/tvSizeExTitle"
@@ -506,7 +506,7 @@
             android:textAlignment="viewEnd"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintEnd_toStartOf="@+id/tvSizeEx"
-            app:layout_constraintTop_toBottomOf="@+id/tvBcc" />
+            app:layout_constraintTop_toBottomOf="@+id/tvIdentity" />
 
         <TextView
             android:id="@+id/tvSizeEx"
@@ -518,7 +518,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             android:textIsSelectable="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvBcc" />
+            app:layout_constraintTop_toBottomOf="@+id/tvIdentity" />
 
         <TextView
             android:id="@+id/tvSubjectEx"

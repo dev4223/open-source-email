@@ -453,13 +453,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (textSize != 0) {
                 tvDay.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-
-	            if (zoom == 0)
-	                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-	            else
-	                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*8/10));
-
-	            tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                // dev4223: subject size smaller in list view
+                if (zoom == 0)
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                else
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*8/10));
+                tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
             }
 
             // Date header
@@ -517,10 +516,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setTypeface(null, typeface);
             tvSize.setTypeface(null, typeface);
             tvTime.setTypeface(null, typeface);
-            tvSubject.setTypeface(null, typeface | Typeface.ITALIC);
+            // dev4223: subject not in italics
+            tvSubject.setTypeface(null, typeface);
             tvCount.setTypeface(null, typeface);
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
+            // dev4223: subject in unseen-color
+            tvSubject.setTextColor(colorUnseen);
             tvFrom.setTextColor(colorUnseen);
             tvSize.setTextColor(colorUnseen);
             tvTime.setTextColor(colorUnseen);
@@ -563,11 +565,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFolder.setText((compact ? "" : message.accountName + "/") + folderName);
             }
 
+            // dev4223: dont show folder and attachemnt in compact view
             if(ViewType.FOLDER == viewType && compact) {
                 tvFolder.setVisibility(View.GONE);
             } else if(compact) {
-                tvFolder.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
-                ivAttachments.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
+                tvFolder.setVisibility(!threading ? View.VISIBLE : View.GONE);
+                ivAttachments.setVisibility(!threading ? View.VISIBLE : View.GONE);
             } else {
                 tvFolder.setVisibility(View.VISIBLE);
             }
@@ -613,123 +616,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvError.setText(error);
                 tvError.setVisibility(error == null ? View.GONE : View.VISIBLE);
             }
-
-            // Unseen
-            int typeface = (message.unseen > 0 ? Typeface.BOLD : Typeface.NORMAL);
-            tvFrom.setTypeface(null, typeface);
-            tvSize.setTypeface(null, typeface);
-            tvTime.setTypeface(null, typeface);
-            tvSubject.setTypeface(null, typeface);
-            tvCount.setTypeface(null, typeface);
-
-            int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
-            tvSubject.setTextColor(colorUnseen);
-            tvFrom.setTextColor(colorUnseen);
-            tvSize.setTextColor(colorUnseen);
-            tvTime.setTextColor(colorUnseen);
-
-            grpExpanded.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
-            grpAddress.setVisibility(viewType == ViewType.THREAD && show_expanded && show_addresses ? View.VISIBLE : View.GONE);
-            grpAddressMeta.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.VISIBLE : View.GONE);
-
-            tvFlags.setVisibility(View.GONE);
-            tvKeywords.setVisibility(View.GONE);
-            ivSearchContact.setVisibility(
-                    viewType == ViewType.THREAD && show_expanded && show_addresses &&
-                            search && BuildConfig.DEBUG
-                            ? View.VISIBLE : View.GONE);
-            ivAddContact.setVisibility(
-                    viewType == ViewType.THREAD && show_expanded && show_addresses &&
-                            contacts && message.from != null && message.from.length > 0
-                            ? View.VISIBLE : View.GONE);
-
-            if(ViewType.THREAD == viewType) {
-                tvSubject.setVisibility(!show_expanded ? View.VISIBLE : View.GONE);
-            } else {
-                tvSubject.setVisibility(View.VISIBLE);
-            }
-
-            if (show_headers && show_expanded && message.headers == null) {
-                pbHeaders.setVisibility(internet ? View.VISIBLE : View.GONE);
-                tvNoInternetHeaders.setVisibility(internet ? View.GONE : View.VISIBLE);
-            } else {
-                pbHeaders.setVisibility(View.GONE);
-                tvNoInternetHeaders.setVisibility(View.GONE);
-            }
-
-            rvImage.setVisibility(View.GONE);
-
-            grpHeaders.setVisibility(show_headers && show_expanded ? View.VISIBLE : View.GONE);
-            grpAttachments.setVisibility(message.attachments > 0 && show_expanded ? View.VISIBLE : View.GONE);
-            btnHtml.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.INVISIBLE : View.GONE);
-            ibQuotes.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.INVISIBLE : View.GONE);
-            ibImages.setVisibility(viewType == ViewType.THREAD && show_expanded ? View.INVISIBLE : View.GONE);
-            pbBody.setVisibility(View.GONE);
-            tvNoInternetBody.setVisibility(View.GONE);
-
-            bnvActions.setTag(null);
-
-            if (show_expanded) {
-                ivExpanderAddress.setImageResource(show_addresses ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
-
-                tvFromEx.setText(MessageHelper.formatAddresses(message.from));
-                tvTo.setText(MessageHelper.formatAddresses(message.to));
-                tvReplyTo.setText(MessageHelper.formatAddresses(message.reply));
-                tvCc.setText(MessageHelper.formatAddresses(message.cc));
-                tvBcc.setText(MessageHelper.formatAddresses(message.bcc));
-
-                tvTimeEx.setText(dtf.format(message.received));
-
-                tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
-                if (!message.duplicate)
-                    tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
-                tvSizeEx.setVisibility(message.size == null ? View.GONE : View.VISIBLE);
-
-                tvSubjectEx.setText(message.subject);
-                tvFlags.setText(message.flags);
-                tvFlags.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
-                tvKeywords.setText(TextUtils.join(" ", message.keywords));
-                tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
-
-                if (show_headers && message.headers != null) {
-                    SpannableStringBuilder ssb = new SpannableStringBuilder(message.headers);
-                    int index = 0;
-                    for (String line : message.headers.split("\n")) {
-                        if (line.length() > 0 && !Character.isWhitespace(line.charAt(0))) {
-                            int colon = line.indexOf(':');
-                            if (colon > 0)
-                                ssb.setSpan(new StyleSpan(Typeface.BOLD), index, index + colon, 0);
-                        }
-                        index += line.length() + 1;
-                    }
-
-                    tvHeaders.setText(ssb);
-                } else
-                    tvHeaders.setText(null);
-
-                for (int i = 0; i < bnvActions.getMenu().size(); i++)
-                    bnvActions.getMenu().getItem(i).setVisible(false);
-
-                if (textSize != 0)
-                    tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-
-                Spanned body = properties.getBody(message.id);
-                tvBody.setText(body);
-                tvBody.setMovementMethod(null);
-                if (internet || message.content)
-                    pbBody.setVisibility(View.VISIBLE);
-                else
-                    tvNoInternetBody.setVisibility(View.VISIBLE);
-
-                if (body == null && message.content) {
-                    Bundle args = new Bundle();
-                    args.putSerializable("message", message);
-                    bodyTask.execute(context, owner, args, "message:body");
-                }
-
-                List<EntityAttachment> attachments = idAttachments.get(message.id);
-                if (attachments != null)
-                    adapterAttachment.set(attachments);
 
             // Contact info
             boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
@@ -782,6 +668,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void clearExpanded() {
             grpAddress.setVisibility(View.GONE);
+            grpAddressMeta.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpAttachments.setVisibility(View.GONE);
             grpExpanded.setVisibility(View.GONE);
@@ -846,8 +733,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpExpanded.setVisibility(View.VISIBLE);
 
             grpAddress.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            // dev4223: show always header subject, date and size when showing message body
+            grpAddressMeta.setVisibility(threading ? View.VISIBLE : View.GONE);
             ivSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
             ivAddContact.setVisibility(show_addresses && contacts && message.from != null && message.from.length > 0 ? View.VISIBLE : View.GONE);
+
+            // dev4223: show subject dependand on show message body
+            if(ViewType.THREAD == viewType) {
+                tvSubject.setVisibility(!threading ? View.VISIBLE : View.GONE);
+            } else {
+                tvSubject.setVisibility(View.VISIBLE);
+            }
 
             grpHeaders.setVisibility(show_headers ? View.VISIBLE : View.GONE);
             if (show_headers && message.headers == null) {
