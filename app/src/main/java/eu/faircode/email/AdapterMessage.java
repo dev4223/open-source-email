@@ -658,7 +658,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 bindContactInfo(info, message);
 
             if (message.avatar != null) {
-                if (autohtml)
+                if (autohtml && hasWebView)
                     properties.setValue("html", message.id, true);
 
                 if (autoimages)
@@ -822,7 +822,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bindAttachments(message, attachments);
                 }
             };
-            liveAttachments = db.attachment().liveAttachments(message.id);
+            liveAttachments = db.attachment().liveAttachments(message.id, true);
             liveAttachments.observe(owner, observerAttachments);
 
             // Setup actions
@@ -1009,7 +1009,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 else
                     onToggleMessage(message);
             } else {
-                if (EntityFolder.DRAFTS.equals(message.folderType))
+                if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1)
                     context.startActivity(
                             new Intent(context, ActivityCompose.class)
                                     .putExtra("action", "edit")
@@ -1020,7 +1020,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             new Intent(ActivityView.ACTION_VIEW_THREAD)
                                     .putExtra("account", message.account)
                                     .putExtra("thread", message.thread)
-                                    .putExtra("id", message.id));
+                                    .putExtra("id", message.id)
+                                    .putExtra("found", viewType == ViewType.SEARCH));
                 }
             }
         }
@@ -2590,11 +2591,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     @Override
     public int getItemCount() {
         return differ.getItemCount();
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return super.getItemId(position);
     }
 
     private static final DiffUtil.ItemCallback<TupleMessageEx> DIFF_CALLBACK =
