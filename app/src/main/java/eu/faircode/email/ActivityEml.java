@@ -39,21 +39,25 @@ public class ActivityEml extends ActivityBase {
         final TextView tvEml = findViewById(R.id.tvEml);
         final ContentLoadingProgressBar pbWait = findViewById(R.id.pbWait);
         final Group grpEml = findViewById(R.id.grpEml);
-        grpEml.setVisibility(View.GONE);
-        pbWait.setVisibility(View.VISIBLE);
 
-        Log.logExtras(getIntent());
-        Log.i("EML uri=" + getIntent().getData());
+        grpEml.setVisibility(View.GONE);
+
+        Uri uri = getIntent().getData();
+        if (uri == null) {
+            pbWait.setVisibility(View.GONE);
+            return;
+        } else
+            pbWait.setVisibility(View.VISIBLE);
+
+        Log.i("EML uri=" + uri);
 
         Bundle args = new Bundle();
-        args.putParcelable("uri", getIntent().getData());
+        args.putParcelable("uri", uri);
 
         new SimpleTask<Result>() {
             @Override
             protected Result onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
-
-                Thread.sleep(1000);
 
                 Result result = new Result();
 
@@ -79,7 +83,8 @@ public class ActivityEml extends ActivityBase {
                     MessageHelper.MessageParts parts = helper.getMessageParts();
 
                     StringBuilder sb = new StringBuilder();
-                    for (MessageHelper.AttachmentPart apart : parts.getRawAttachments()) {
+
+                    for (MessageHelper.AttachmentPart apart : parts.getAttachmentParts()) {
                         if (sb.length() > 0)
                             sb.append("<br />");
                         sb.append(
@@ -89,7 +94,8 @@ public class ActivityEml extends ActivityBase {
                     }
                     result.parts = Html.fromHtml(sb.toString());
 
-                    result.body = Html.fromHtml(parts.getHtml(context));
+                    String html = HtmlHelper.sanitize(parts.getHtml(context), true);
+                    result.body = Html.fromHtml(html);
 
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     mmessage.writeTo(bos);
