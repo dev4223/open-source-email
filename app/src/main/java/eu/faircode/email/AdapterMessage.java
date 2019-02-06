@@ -795,7 +795,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Keywords
             tvKeywords.setText(TextUtils.join(" ", message.keywords));
             // dev4223: show keywords only in debug mode
-            tvKeywords.setVisibility(debug && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+            // take back: added tvFlags and tv Keywords to group addressMeta
+            tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
             // Headers
             if (show_headers && message.headers != null) {
