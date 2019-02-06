@@ -44,6 +44,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -166,6 +167,7 @@ public class FragmentMessages extends FragmentBase {
     private static final int LOCAL_PAGE_SIZE = 100;
     private static final int REMOTE_PAGE_SIZE = 10;
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
+    private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -298,8 +300,6 @@ public class FragmentMessages extends FragmentBase {
 
         rvMessage.setAdapter(adapter);
 
-        new ItemTouchHelper(touchHelper).attachToRecyclerView(rvMessage);
-
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -401,32 +401,29 @@ public class FragmentMessages extends FragmentBase {
                 }
             });
 
-            ActivityBase activity = (ActivityBase) getActivity();
-            activity.setSwipeListener(new SwipeListener.ISwipeListener() {
-                @Override
-                public boolean onSwipeRight() {
-                    boolean swipenav = prefs.getBoolean("swipenav", true);
-                    if (!swipenav)
+            boolean swipenav = prefs.getBoolean("swipenav", true);
+            if (swipenav) {
+                Log.i("Swipe navigation");
+                rvMessage.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+                    @Override
+                    public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent ev) {
+                        swipeListener.onTouch(null, ev);
                         return false;
+                    }
 
-                    if (previous != null)
-                        navigate(previous, true);
-                    return (previous != null);
-                }
+                    @Override
+                    public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent ev) {
+                    }
 
-                @Override
-                public boolean onSwipeLeft() {
-                    boolean swipenav = prefs.getBoolean("swipenav", true);
-                    if (!swipenav)
-                        return false;
-
-                    if (next != null)
-                        navigate(next, false);
-                    return (next != null);
-                }
-            });
-
+                    @Override
+                    public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+                    }
+                });
+            } else
+                new ItemTouchHelper(touchHelper).attachToRecyclerView(rvMessage);
         } else {
+            new ItemTouchHelper(touchHelper).attachToRecyclerView(rvMessage);
+
             selectionPredicate = new SelectionPredicateMessage(rvMessage);
 
             selectionTracker = new SelectionTracker.Builder<>(
@@ -691,7 +688,7 @@ public class FragmentMessages extends FragmentBase {
                 if (isCurrentlyActive)
                     selectionPredicate.setEnabled(false);
                 else
-                    handler.postDelayed(enableSelection, 1000);
+                    handler.postDelayed(enableSelection, SWIPE_DISABLE_SELECT_DURATION);
             }
 
             TupleMessageEx message = getMessage(viewHolder);
@@ -818,6 +815,22 @@ public class FragmentMessages extends FragmentBase {
             return message;
         }
     };
+
+    SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
+        @Override
+        public boolean onSwipeRight() {
+            if (previous != null)
+                navigate(previous, true);
+            return (previous != null);
+        }
+
+        @Override
+        public boolean onSwipeLeft() {
+            if (next != null)
+                navigate(next, false);
+            return (next != null);
+        }
+    });
 
     private void onActionMove(String folderType) {
         Bundle args = new Bundle();
