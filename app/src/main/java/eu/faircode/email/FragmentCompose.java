@@ -1862,9 +1862,11 @@ public class FragmentCompose extends FragmentBase {
 
         @Override
         protected void onException(Bundle args, Throwable ex) {
+            pbWait.setVisibility(View.GONE);
+
             // External app sending absolute file
             if (ex instanceof IllegalArgumentException)
-                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE).show();
             else
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
         }
