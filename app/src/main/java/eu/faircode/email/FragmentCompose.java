@@ -124,7 +124,6 @@ import javax.mail.internet.MimeMessage;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
@@ -398,8 +397,7 @@ public class FragmentCompose extends FragmentBase {
         getActivity().invalidateOptionsMenu();
         Helper.setViewsEnabled(view, false);
 
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS)
-                == PackageManager.PERMISSION_GRANTED) {
+        if (Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS)) {
             SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                     getContext(),
                     android.R.layout.simple_list_item_2,
@@ -1329,14 +1327,15 @@ public class FragmentCompose extends FragmentBase {
 
     private static EntityAttachment addAttachment(Context context, long id, Uri uri,
                                                   boolean image) throws IOException {
-        if ("file".equals(uri.getScheme())) {
+        if ("file".equals(uri.getScheme()) &&
+                !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             Log.w("Add attachment uri=" + uri);
             throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
         }
 
         EntityAttachment attachment = new EntityAttachment();
 
-        String name = null;
+        String name = uri.getLastPathSegment();
         String s = null;
 
         Cursor cursor = null;
