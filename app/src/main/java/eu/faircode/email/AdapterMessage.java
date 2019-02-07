@@ -227,6 +227,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private Group grpDay;
         private Group grpAddress;
         private Group grpAddressMeta;
+        private Group grpAddressMetaBottom;
         private Group grpHeaders;
         private Group grpAttachments;
         private Group grpExpanded;
@@ -315,6 +316,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpDay = itemView.findViewById(R.id.grpDay);
             grpAddress = itemView.findViewById(R.id.grpAddress);
             grpAddressMeta = itemView.findViewById(R.id.grpAddressMeta);
+            grpAddressMetaBottom = itemView.findViewById(R.id.grpAddressMetaBottom);
             grpHeaders = itemView.findViewById(R.id.grpHeaders);
             grpAttachments = itemView.findViewById(R.id.grpAttachments);
             grpExpanded = itemView.findViewById(R.id.grpExpanded);
@@ -435,6 +437,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpDay.setVisibility(View.GONE);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
+            grpAddressMetaBottom.setVisibility(View.GONE);
             ivSearchContact.setVisibility(View.GONE);
             ivAddContact.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
@@ -681,6 +684,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubject.setVisibility(View.VISIBLE);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
+            grpAddressMetaBottom.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpAttachments.setVisibility(View.GONE);
             grpExpanded.setVisibility(View.GONE);
@@ -737,6 +741,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // dev4223: show subject dependand on show message body
             grpAddressMeta.setVisibility(View.VISIBLE);
+            if(BuildConfig.DEBUG || message.keywords.length > 0) {
+                grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            }
             tvSubject.setVisibility(View.GONE);
             if(compact) {
                 ivAnswered.setVisibility(View.GONE);
