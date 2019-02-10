@@ -743,11 +743,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
             ivAddContact.setVisibility(show_addresses && contacts && message.from != null && message.from.length > 0 ? View.VISIBLE : View.GONE);
 
-            // dev4223: show subject dependand on show message body
-            grpAddressMeta.setVisibility(View.VISIBLE);
-            if(BuildConfig.DEBUG || message.keywords.length > 0) {
-                grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            }
+            // dev4223: if expanded dont show subjects and anwsered-icon
             tvSubject.setVisibility(View.GONE);
             if(compact) {
                 ivAnswered.setVisibility(View.GONE);
@@ -799,12 +795,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubjectEx.setText(message.subject);
 
             // Flags
-            tvFlags.setText(message.flags);
+            tvFlags.setText(BuildConfig.DEBUG ? message.flags : null);
             tvFlags.setVisibility(BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
 
             // Keywords
-            tvKeywords.setText(TextUtils.join(" ", message.keywords));
+            tvKeywords.setText(message.keywords.length > 0 ? TextUtils.join(" ", message.keywords) : null);
             tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+
+            // dev4223: show Flags and Keywords dependand on show addresses
+            grpAddressMeta.setVisibility(View.VISIBLE);
+            if(BuildConfig.DEBUG || message.keywords.length > 0) {
+                grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            } else {
+                grpAddressMetaBottom.setVisibility(View.GONE);
+            }
 
             // Headers
             if (show_headers && message.headers != null) {
