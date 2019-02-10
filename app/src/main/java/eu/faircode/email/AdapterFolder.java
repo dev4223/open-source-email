@@ -204,7 +204,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             tvKeywords.setVisibility(debug && folder.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
             tvError.setText(folder.error);
-            tvError.setVisibility(folder.error != null && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+            tvError.setVisibility(folder.error != null ? View.VISIBLE : View.GONE);
         }
 
         @Override
@@ -238,15 +238,17 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             popupMenu.getMenu().add(Menu.NONE, action_synchronize_now, 1, R.string.title_synchronize_now);
 
-            if (folder.account != null)
+            if (folder.account != null && !folder.accountPop)
                 popupMenu.getMenu().add(Menu.NONE, action_delete_local, 2, R.string.title_delete_local);
 
-            if (EntityFolder.TRASH.equals(folder.type))
+            if (EntityFolder.TRASH.equals(folder.type) && !folder.accountPop)
                 popupMenu.getMenu().add(Menu.NONE, action_empty_trash, 3, R.string.title_empty_trash);
 
             if (folder.account != null) {
-                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 4, R.string.title_edit_properties);
-                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 5, R.string.title_edit_rules);
+                if (!folder.accountPop || EntityFolder.INBOX.equals(folder.type))
+                    popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 4, R.string.title_edit_properties);
+                if (!folder.accountPop)
+                    popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 5, R.string.title_edit_rules);
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -447,7 +449,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (!folder.hide || showAll)
                 shown.add((TupleFolderEx) folder);
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new MessageDiffCallback(filtered, shown));
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(filtered, shown));
 
         filtered.clear();
         filtered.addAll(shown);
@@ -476,11 +478,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         diff.dispatchUpdatesTo(this);
     }
 
-    private class MessageDiffCallback extends DiffUtil.Callback {
+    private class DiffCallback extends DiffUtil.Callback {
         private List<TupleFolderEx> prev;
         private List<TupleFolderEx> next;
 
-        MessageDiffCallback(List<TupleFolderEx> prev, List<TupleFolderEx> next) {
+        DiffCallback(List<TupleFolderEx> prev, List<TupleFolderEx> next) {
             this.prev = prev;
             this.next = next;
         }

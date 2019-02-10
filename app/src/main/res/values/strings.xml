@@ -150,12 +150,14 @@
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_identicons">Show identicons</string>
+    <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_addresses">Show address details by default</string>
     <string name="title_advanced_html">Automatically show original message for known contacts</string>
     <string name="title_advanced_images">Automatically show images for known contacts</string>
     <string name="title_advanced_actionbar">Conversation action bar</string>
 
+    <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_light">Use notification light</string>
     <string name="title_advanced_sound">Select notification sound</string>
 
@@ -180,6 +182,7 @@
     <string name="title_advanced_browse_hint">Fetch more messages when scrolling down</string>
     <string name="title_advanced_unified_hint">Show unified inbox folders or unified inbox messages</string>
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
+    <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
     <string name="title_advanced_preview_hint">Only available when message text was downloaded</string>
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
     <string name="title_advanced_autoclose_hint">Automatically close conversations when all messages are archived, sent or trashed</string>
@@ -189,6 +192,7 @@
     <string name="title_identity_name">Your name</string>
     <string name="title_identity_email">Your email address</string>
     <string name="title_identity_reply_to">Reply to address</string>
+    <string name="title_identity_plain_text">Send plain text only</string>
     <string name="title_identity_read_receipt">Request read receipt</string>
     <string name="title_identity_delivery_receipt">Request delivery receipt</string>
     <string name="title_identity_receipt_remark">Most providers ignore receipt requests</string>
@@ -208,6 +212,7 @@
     <string name="title_domain">Domain name</string>
     <string name="title_autoconfig">Get settings</string>
     <string name="title_imap" translatable="false">IMAP</string>
+    <string name="title_pop3" translatable="false">POP3</string>
     <string name="title_smtp" translatable="false">SMTP</string>
     <string name="title_provider">Provider</string>
     <string name="title_custom">Custom</string>
@@ -237,6 +242,8 @@
     <string name="title_no_inbox">Inbox not found</string>
     <string name="title_no_primary_drafts">No primary account or no drafts folder</string>
     <string name="title_no_idle">This provider does not support push messages. This will delay reception of new messages and increase battery usage.</string>
+    <string name="title_no_move">This provider does not support MOVE</string>
+    <string name="title_no_uidplus">This provider does not support UIDPLUS</string>
     <string name="title_no_sync">Synchronization errors since %1$s</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>

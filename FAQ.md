@@ -23,7 +23,7 @@ For authorizing:
 
 ## Known problems
 
-A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.
+~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
 
 
 ## Planned features
@@ -304,7 +304,7 @@ Besides that any decent email provider supports [IMAP](https://en.wikipedia.org/
 using [POP](https://en.wikipedia.org/wiki/Post_Office_Protocol) will result in unnecessary extra battery usage and delayed new message notifications.
 Moreover, POP is unsuitable for two way synchronization and more often than not people read and write messages on different devices these days.
 
-Basically POP supports only downloading and deleting messages from the server.
+Basically, POP supports only downloading and deleting messages from the inbox.
 So, common operations like setting message attributes (read, starred, answered, etc), adding (backing up) and moving messages is not possible.
 
 See also [what Google writes about it](https://support.google.com/mail/answer/7104828).
@@ -1151,6 +1151,10 @@ You can select one of these actions to apply to matching messages:
 Filter rules are applied direct after the message header has been fetched, before the message text has been downloaded,
 so it is not possible to apply filter rules to the message text.
 Note that large message texts are downloaded on demand on a metered connection to save data.
+
+To debug rules you can long press *Operations* to see logging about the evaluation of rule conditions.
+Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
+it is not possible to preview which messages would match the rule conditions.
 
 Using filter rules is a pro feature.
 

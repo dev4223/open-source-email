@@ -43,7 +43,6 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.text.Html;
 import android.text.TextUtils;
 import android.util.LongSparseArray;
 
@@ -56,6 +55,8 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.pop3.POP3Folder;
+import com.sun.mail.pop3.POP3Message;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
@@ -104,6 +105,7 @@ import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
+import javax.mail.Store;
 import javax.mail.StoreClosedException;
 import javax.mail.Transport;
 import javax.mail.UIDFolder;
@@ -155,12 +157,13 @@ public class ServiceSynchronize extends LifecycleService {
     private static final long YIELD_DURATION = 200L; // milliseconds
 
     static final int PI_WHY = 1;
-    static final int PI_CLEAR = 2;
-    static final int PI_SEEN = 3;
-    static final int PI_ARCHIVE = 4;
-    static final int PI_TRASH = 5;
-    static final int PI_IGNORED = 6;
-    static final int PI_SNOOZED = 7;
+    static final int PI_SUMMARY = 2;
+    static final int PI_CLEAR = 3;
+    static final int PI_SEEN = 4;
+    static final int PI_ARCHIVE = 5;
+    static final int PI_TRASH = 6;
+    static final int PI_IGNORED = 7;
+    static final int PI_SNOOZED = 8;
 
     @Override
     public void onCreate() {
@@ -313,7 +316,7 @@ public class ServiceSynchronize extends LifecycleService {
                 switch (parts[0]) {
                     case "why":
                         Intent why = new Intent(Intent.ACTION_VIEW);
-                        why.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq2"));
+                        why.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq2"));
                         why.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                         PackageManager pm = getPackageManager();
@@ -337,19 +340,8 @@ public class ServiceSynchronize extends LifecycleService {
                         serviceManager.service_reload(intent.getStringExtra("reason"));
                         break;
 
+                    case "summary":
                     case "clear":
-                        executor.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    DB.getInstance(ServiceSynchronize.this).message().ignoreAll();
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
-                                }
-                            }
-                        });
-                        break;
-
                     case "seen":
                     case "archive":
                     case "trash":
@@ -362,12 +354,25 @@ public class ServiceSynchronize extends LifecycleService {
                                 try {
                                     db.beginTransaction();
 
-                                    long id = Long.parseLong(parts[1]);
+                                    long id = (parts.length > 1 ? Long.parseLong(parts[1]) : -1);
                                     EntityMessage message = db.message().getMessage(id);
-                                    if (message == null)
+                                    if (id > 0 && message == null)
                                         return;
 
                                     switch (parts[0]) {
+                                        case "summary":
+                                            db.message().ignoreAll();
+
+                                            Intent view = new Intent(ServiceSynchronize.this, ActivityView.class);
+                                            view.setAction("unified");
+                                            view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                            startActivity(view);
+                                            break;
+
+                                        case "clear":
+                                            db.message().ignoreAll();
+                                            break;
+
                                         case "seen":
                                             EntityOperation.queue(ServiceSynchronize.this, db, message, EntityOperation.SEEN, true);
                                             break;
@@ -484,7 +489,7 @@ public class ServiceSynchronize extends LifecycleService {
         // https://developer.android.com/training/notify-user/group
         String group = Long.toString(account);
 
-        String summary = getResources().getQuantityString(
+        String title = getResources().getQuantityString(
                 R.plurals.title_notification_unseen, messages.size(), messages.size());
 
         // Get contact info
@@ -493,11 +498,9 @@ public class ServiceSynchronize extends LifecycleService {
             messageContact.put(message, ContactInfo.get(this, message.from, false));
 
         // Build pending intent
-        Intent view = new Intent(this, ActivityView.class);
-        view.setAction("unified");
-        view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent piView = PendingIntent.getActivity(
-                this, ActivityView.REQUEST_UNIFIED, view, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent summary = new Intent(this, ServiceSynchronize.class);
+        summary.setAction("summary");
+        PendingIntent piSummary = PendingIntent.getService(this, PI_SUMMARY, summary, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent clear = new Intent(this, ServiceSynchronize.class);
         clear.setAction("clear");
@@ -514,8 +517,8 @@ public class ServiceSynchronize extends LifecycleService {
 
         pbuilder
                 .setSmallIcon(R.drawable.baseline_email_white_24)
-                .setContentTitle(summary)
-                .setContentIntent(piView)
+                .setContentTitle(title)
+                .setContentIntent(piSummary)
                 .setNumber(messages.size())
                 .setShowWhen(false)
                 .setDeleteIntent(piClear)
@@ -536,7 +539,7 @@ public class ServiceSynchronize extends LifecycleService {
         builder
                 .setSmallIcon(R.drawable.baseline_email_white_24)
                 .setContentTitle(getResources().getQuantityString(R.plurals.title_notification_unseen, messages.size(), messages.size()))
-                .setContentIntent(piView)
+                .setContentIntent(piSummary)
                 .setNumber(messages.size())
                 .setShowWhen(false)
                 .setDeleteIntent(piClear)
@@ -551,10 +554,12 @@ public class ServiceSynchronize extends LifecycleService {
             builder.setSubText(accountName);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            if (prefs.getBoolean("light", false))
+            boolean light = prefs.getBoolean("light", false);
+            String sound = prefs.getString("sound", null);
+
+            if (light)
                 builder.setLights(Color.GREEN, 1000, 1000);
 
-            String sound = prefs.getString("sound", null);
             if (sound == null) {
                 Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
                 builder.setSound(uri);
@@ -577,12 +582,13 @@ public class ServiceSynchronize extends LifecycleService {
             }
 
             builder.setStyle(new Notification.BigTextStyle()
-                    .bigText(Html.fromHtml(sb.toString()))
-                    .setSummaryText(summary));
+                    .bigText(HtmlHelper.fromHtml(sb.toString()))
+                    .setSummaryText(title));
         }
 
         notifications.add(builder.build());
 
+        boolean preview = prefs.getBoolean("notify_preview", true);
         for (TupleMessageEx message : messages) {
             ContactInfo info = messageContact.get(message);
 
@@ -664,14 +670,14 @@ public class ServiceSynchronize extends LifecycleService {
                 if (!TextUtils.isEmpty(message.subject))
                     mbuilder.setContentText(message.subject);
 
-                if (message.content)
+                if (message.content && preview)
                     try {
                         String body = Helper.readText(EntityMessage.getFile(this, message.id));
                         StringBuilder sb = new StringBuilder();
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(message.subject).append("<br>");
                         sb.append(HtmlHelper.getPreview(body));
-                        mbuilder.setStyle(new Notification.BigTextStyle().bigText(Html.fromHtml(sb.toString())));
+                        mbuilder.setStyle(new Notification.BigTextStyle().bigText(HtmlHelper.fromHtml(sb.toString())));
                     } catch (IOException ex) {
                         Log.e(ex);
                         mbuilder.setStyle(new Notification.BigTextStyle().bigText(ex.toString()));
@@ -817,8 +823,8 @@ public class ServiceSynchronize extends LifecycleService {
                 isession.setDebug(debug);
                 // adb -t 1 logcat | grep "fairemail\|System.out"
 
-                final IMAPStore istore = (IMAPStore) isession.getStore(account.starttls ? "imap" : "imaps");
-                final Map<EntityFolder, IMAPFolder> folders = new HashMap<>();
+                final Store istore = isession.getStore(account.getProtocol());
+                final Map<EntityFolder, Folder> folders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
                 List<Handler> handlers = new ArrayList<>();
                 try {
@@ -931,8 +937,10 @@ public class ServiceSynchronize extends LifecycleService {
                         throw ex;
                     }
 
-                    final boolean capIdle = istore.hasCapability("IDLE");
-                    final boolean capUidPlus = istore.hasCapability("UIDPLUS");
+                    final boolean capIdle =
+                            (istore instanceof IMAPStore ? ((IMAPStore) istore).hasCapability("IDLE") : false);
+                    final boolean capUidPlus =
+                            (istore instanceof IMAPStore ? ((IMAPStore) istore).hasCapability("UIDPLUS") : false);
                     Log.i(account.name + " idle=" + capIdle + " uidplus=" + capUidPlus);
 
                     db.account().setAccountState(account.id, "connected");
@@ -943,7 +951,8 @@ public class ServiceSynchronize extends LifecycleService {
                     EntityLog.log(this, account.name + " connected");
 
                     // Update folder list
-                    synchronizeFolders(account, istore, state);
+                    if (istore instanceof IMAPStore)
+                        synchronizeFolders(account, istore, state);
 
                     // Open synchronizing folders
                     final ExecutorService pollExecutor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
@@ -953,7 +962,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                             db.folder().setFolderState(folder.id, "connecting");
 
-                            final IMAPFolder ifolder = (IMAPFolder) istore.getFolder(folder.name);
+                            final Folder ifolder = istore.getFolder(folder.name);
                             try {
                                 ifolder.open(Folder.READ_WRITE);
                             } catch (MessagingException ex) {
@@ -998,7 +1007,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                     db.beginTransaction();
                                                     message = synchronizeMessage(
                                                             ServiceSynchronize.this,
-                                                            folder, ifolder, (IMAPMessage) imessage,
+                                                            folder, (IMAPFolder) ifolder, (IMAPMessage) imessage,
                                                             false,
                                                             db.rule().getEnabledRules(folder.id));
                                                     db.setTransactionSuccessful();
@@ -1010,7 +1019,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                     try {
                                                         db.beginTransaction();
                                                         downloadMessage(ServiceSynchronize.this,
-                                                                folder, ifolder,
+                                                                folder, (IMAPFolder) ifolder,
                                                                 (IMAPMessage) imessage, message.id);
                                                         db.setTransactionSuccessful();
                                                     } finally {
@@ -1047,7 +1056,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         Log.i(folder.name + " messages removed");
                                         for (Message imessage : e.getMessages())
                                             try {
-                                                long uid = ifolder.getUID(imessage);
+                                                long uid = ((IMAPFolder) ifolder).getUID(imessage);
 
                                                 DB db = DB.getInstance(ServiceSynchronize.this);
                                                 int count = db.message().deleteMessage(folder.id, uid);
@@ -1088,7 +1097,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                 db.beginTransaction();
                                                 message = synchronizeMessage(
                                                         ServiceSynchronize.this,
-                                                        folder, ifolder, (IMAPMessage) e.getMessage(),
+                                                        folder, (IMAPFolder) ifolder, (IMAPMessage) e.getMessage(),
                                                         false,
                                                         db.rule().getEnabledRules(folder.id));
                                                 db.setTransactionSuccessful();
@@ -1100,7 +1109,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                 try {
                                                     db.beginTransaction();
                                                     downloadMessage(ServiceSynchronize.this,
-                                                            folder, ifolder,
+                                                            folder, (IMAPFolder) ifolder,
                                                             (IMAPMessage) e.getMessage(), message.id);
                                                     db.setTransactionSuccessful();
                                                 } finally {
@@ -1139,7 +1148,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         Log.i(folder.name + " start idle");
                                         while (state.running()) {
                                             Log.i(folder.name + " do idle");
-                                            ifolder.idle(false);
+                                            ((IMAPFolder) ifolder).idle(false);
                                         }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
@@ -1206,7 +1215,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                     Log.i(folder.name + " process");
 
                                                     // Get folder
-                                                    IMAPFolder ifolder = folders.get(folder); // null when polling
+                                                    Folder ifolder = folders.get(folder); // null when polling
                                                     final boolean shouldClose = (ifolder == null);
 
                                                     try {
@@ -1217,12 +1226,15 @@ public class ServiceSynchronize extends LifecycleService {
                                                             if (db.operation().getOperationCount(folder.id, null) == 0)
                                                                 return;
 
-                                                            db.folder().setFolderState(folder.id, "connecting");
+                                                            if (!account.pop || EntityFolder.INBOX.equals(folder.type)) {
+                                                                db.folder().setFolderState(folder.id, "connecting");
 
-                                                            ifolder = (IMAPFolder) istore.getFolder(folder.name);
-                                                            ifolder.open(Folder.READ_WRITE);
+                                                                ifolder = istore.getFolder(folder.name);
+                                                                ifolder.open(Folder.READ_WRITE);
 
-                                                            db.folder().setFolderState(folder.id, "connected");
+                                                                db.folder().setFolderState(folder.id, "connected");
+                                                            }
+
                                                             db.folder().setFolderError(folder.id, null);
                                                         }
 
@@ -1433,7 +1445,7 @@ public class ServiceSynchronize extends LifecycleService {
 
     private void processOperations(
             EntityAccount account, EntityFolder folder,
-            Session isession, IMAPStore istore, IMAPFolder ifolder,
+            Session isession, Store istore, Folder ifolder,
             ServiceState state)
             throws MessagingException, JSONException, IOException {
         try {
@@ -1465,59 +1477,77 @@ public class ServiceSynchronize extends LifecycleService {
                         if (message != null)
                             db.message().setMessageError(message.id, null);
 
-                        if (message != null && message.uid == null &&
-                                !(EntityOperation.ADD.equals(op.name) ||
-                                        EntityOperation.DELETE.equals(op.name) ||
-                                        EntityOperation.SEND.equals(op.name) ||
-                                        EntityOperation.SYNC.equals(op.name)))
-                            throw new IllegalArgumentException(op.name + " without uid " + op.args);
+                        if (account != null && account.pop) {
+                            if (EntityOperation.SEEN.equals(op.name))
+                                doSeen(folder, (POP3Folder) ifolder, message, jargs, db);
 
-                        // Operations should use database transaction when needed
+                            else if (EntityOperation.ADD.equals(op.name))
+                                ; // Do nothing
 
-                        if (EntityOperation.SEEN.equals(op.name))
-                            doSeen(folder, ifolder, message, jargs, db);
+                            else if (EntityOperation.DELETE.equals(op.name))
+                                doDelete(folder, (POP3Folder) ifolder, message, jargs, db);
 
-                        else if (EntityOperation.FLAG.equals(op.name))
-                            doFlag(folder, ifolder, message, jargs, db);
+                            else if (EntityOperation.SYNC.equals(op.name))
+                                synchronizeMessages(account, folder, (POP3Folder) ifolder, jargs, state);
 
-                        else if (EntityOperation.ANSWERED.equals(op.name))
-                            doAnswered(folder, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.KEYWORD.equals(op.name))
-                            doKeyword(folder, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.ADD.equals(op.name))
-                            doAdd(folder, isession, istore, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.MOVE.equals(op.name))
-                            doMove(folder, isession, istore, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.DELETE.equals(op.name))
-                            doDelete(folder, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.SEND.equals(op.name))
-                            doSend(message, db);
-
-                        else if (EntityOperation.HEADERS.equals(op.name))
-                            doHeaders(folder, ifolder, message, db);
-
-                        else if (EntityOperation.RAW.equals(op.name))
-                            doRaw(folder, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.BODY.equals(op.name))
-                            doBody(folder, ifolder, message, db);
-
-                        else if (EntityOperation.ATTACHMENT.equals(op.name))
-                            doAttachment(folder, op, ifolder, message, jargs, db);
-
-                        else if (EntityOperation.SYNC.equals(op.name))
-                            if (EntityFolder.OUTBOX.equals(folder.type))
-                                db.folder().setFolderError(folder.id, null);
                             else
-                                synchronizeMessages(account, folder, ifolder, jargs, state);
+                                throw new MessagingException("Unknown operation name=" + op.name);
 
-                        else
-                            throw new MessagingException("Unknown operation name=" + op.name);
+                        } else {
+                            if (message != null && message.uid == null &&
+                                    !(EntityOperation.ADD.equals(op.name) ||
+                                            EntityOperation.DELETE.equals(op.name) ||
+                                            EntityOperation.SEND.equals(op.name) ||
+                                            EntityOperation.SYNC.equals(op.name)))
+                                throw new IllegalArgumentException(op.name + " without uid " + op.args);
+
+                            // Operations should use database transaction when needed
+
+                            if (EntityOperation.SEEN.equals(op.name))
+                                doSeen(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.FLAG.equals(op.name))
+                                doFlag(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.ANSWERED.equals(op.name))
+                                doAnswered(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.KEYWORD.equals(op.name))
+                                doKeyword(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.ADD.equals(op.name))
+                                doAdd(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.MOVE.equals(op.name))
+                                doMove(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.DELETE.equals(op.name))
+                                doDelete(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.SEND.equals(op.name))
+                                doSend(message, db);
+
+                            else if (EntityOperation.HEADERS.equals(op.name))
+                                doHeaders(folder, (IMAPFolder) ifolder, message, db);
+
+                            else if (EntityOperation.RAW.equals(op.name))
+                                doRaw(folder, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.BODY.equals(op.name))
+                                doBody(folder, (IMAPFolder) ifolder, message, db);
+
+                            else if (EntityOperation.ATTACHMENT.equals(op.name))
+                                doAttachment(folder, op, (IMAPFolder) ifolder, message, jargs, db);
+
+                            else if (EntityOperation.SYNC.equals(op.name))
+                                if (EntityFolder.OUTBOX.equals(folder.type))
+                                    db.folder().setFolderError(folder.id, null);
+                                else
+                                    synchronizeMessages(account, folder, (IMAPFolder) ifolder, jargs, state);
+
+                            else
+                                throw new MessagingException("Unknown operation name=" + op.name);
+                        }
 
                         // Operation succeeded
                         db.operation().deleteOperation(op.id);
@@ -1584,6 +1614,15 @@ public class ServiceSynchronize extends LifecycleService {
         } finally {
             Log.i(folder.name + " end process state=" + state);
         }
+    }
+
+    private void doSeen(EntityFolder folder, POP3Folder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException {
+        boolean seen = jargs.getBoolean(0);
+        if (message.seen.equals(seen))
+            return;
+
+        Log.i(folder.name + " setting POP message=" + message.id + " seen=" + seen);
+        db.message().setMessageSeen(message.id, seen);
     }
 
     private void doSeen(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException, JSONException {
@@ -1698,12 +1737,16 @@ public class ServiceSynchronize extends LifecycleService {
             if (!message.content)
                 throw new IllegalArgumentException("Message body missing");
 
+            EntityIdentity identity =
+                    (message.identity == null ? null : db.identity().getIdentity(message.identity));
+
             List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
             for (EntityAttachment attachment : attachments)
                 if (!attachment.available)
                     throw new IllegalArgumentException("Attachment missing");
 
-            imessage = MessageHelper.from(this, message, isession);
+            imessage = MessageHelper.from(this, message, isession,
+                    identity == null ? false : identity.plain_only);
         } else {
             // Cross account move
             File file = EntityMessage.getRawFile(this, message.id);
@@ -1864,6 +1907,26 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
+    private void doDelete(EntityFolder folder, POP3Folder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException {
+        Log.i(folder.name + " deleting POP message=" + message.id + " msgid=" + message.msgid);
+
+        if (EntityFolder.INBOX.equals(folder.type)) {
+            // Delete message
+            if (TextUtils.isEmpty(message.msgid))
+                throw new IllegalArgumentException("Message ID missing");
+
+            Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
+            for (Message imessage : imessages) {
+                Log.i(folder.name + " deleting uid=" + message.uid + " msgid=" + message.msgid);
+                imessage.setFlag(Flags.Flag.DELETED, true);
+            }
+            ifolder.close();
+            ifolder.open(Folder.READ_WRITE);
+        }
+
+        db.message().deleteMessage(message.id);
+    }
+
     private void doDelete(EntityFolder folder, IMAPFolder ifolder, EntityMessage message, JSONArray jargs, DB db) throws MessagingException {
         // Delete message
         if (TextUtils.isEmpty(message.msgid))
@@ -1889,8 +1952,6 @@ public class ServiceSynchronize extends LifecycleService {
             db.message().setMessageLastAttempt(message.id, message.last_attempt);
         }
 
-        String transportType = (ident.starttls ? "smtp" : "smtps");
-
         // Get properties
         Properties props = MessageHelper.getSessionProperties(ident.auth_type, ident.realm, ident.insecure);
         props.put("mail.smtp.localhost", ident.host);
@@ -1899,7 +1960,7 @@ public class ServiceSynchronize extends LifecycleService {
         final Session isession = Session.getInstance(props, null);
 
         // Create message
-        MimeMessage imessage = MessageHelper.from(this, message, isession);
+        MimeMessage imessage = MessageHelper.from(this, message, isession, ident.plain_only);
 
         // Add reply to
         if (ident.replyto != null)
@@ -1925,7 +1986,7 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Create transport
         // TODO: cache transport?
-        Transport itransport = isession.getTransport(transportType);
+        Transport itransport = isession.getTransport(ident.getProtocol());
         try {
             // Connect transport
             db.identity().setIdentityState(ident.id, "connecting");
@@ -2186,7 +2247,7 @@ public class ServiceSynchronize extends LifecycleService {
         }
     }
 
-    private void synchronizeFolders(EntityAccount account, IMAPStore istore, ServiceState state) throws MessagingException {
+    private void synchronizeFolders(EntityAccount account, Store istore, ServiceState state) throws MessagingException {
         DB db = DB.getInstance(this);
         try {
             db.beginTransaction();
@@ -2197,13 +2258,13 @@ public class ServiceSynchronize extends LifecycleService {
             for (EntityFolder folder : db.folder().getFolders(account.id))
                 if (folder.tbc != null) {
                     Log.i(folder.name + " creating");
-                    IMAPFolder ifolder = (IMAPFolder) istore.getFolder(folder.name);
+                    Folder ifolder = istore.getFolder(folder.name);
                     if (!ifolder.exists())
                         ifolder.create(Folder.HOLDS_MESSAGES);
                     db.folder().resetFolderTbc(folder.id);
                 } else if (folder.tbd != null && folder.tbd) {
                     Log.i(folder.name + " deleting");
-                    IMAPFolder ifolder = (IMAPFolder) istore.getFolder(folder.name);
+                    Folder ifolder = istore.getFolder(folder.name);
                     if (ifolder.exists())
                         ifolder.delete(false);
                     db.folder().deleteFolder(folder.id);
@@ -2288,6 +2349,108 @@ public class ServiceSynchronize extends LifecycleService {
         } finally {
             db.endTransaction();
             Log.i("End sync folder");
+        }
+    }
+
+    private void synchronizeMessages(EntityAccount account, final EntityFolder folder, POP3Folder ifolder, JSONArray jargs, ServiceState state) throws JSONException, MessagingException, IOException {
+        DB db = DB.getInstance(this);
+
+        if (!EntityFolder.INBOX.equals(folder.type)) {
+            db.folder().setFolderSyncState(folder.id, null);
+            return;
+        }
+
+        try {
+            db.folder().setFolderSyncState(folder.id, "syncing");
+
+            Message[] imessages = ifolder.getMessages();
+            Log.i(folder.name + " POP messages=" + imessages.length);
+
+            db.folder().setFolderSyncState(folder.id, "downloading");
+
+            for (Message imessage : imessages)
+                try {
+                    if (!state.running())
+                        break;
+
+                    MessageHelper helper = new MessageHelper((MimeMessage) imessage);
+                    String msgid = helper.getMessageID();
+                    if (msgid == null) {
+                        Log.w(folder.name + " POP no message ID");
+                        continue;
+                    }
+
+                    List<EntityMessage> messages = db.message().getMessageByMsgId(folder.account, msgid);
+                    if (messages.size() > 0) {
+                        Log.i(folder.name + " POP having=" + msgid);
+                        continue;
+                    }
+
+                    EntityMessage message = new EntityMessage();
+                    message.account = folder.account;
+                    message.folder = folder.id;
+                    message.identity = null;
+                    message.uid = null;
+
+                    message.msgid = helper.getMessageID();
+                    message.references = TextUtils.join(" ", helper.getReferences());
+                    message.inreplyto = helper.getInReplyTo();
+                    message.deliveredto = helper.getDeliveredTo();
+                    message.thread = helper.getThreadId(0);
+                    message.sender = MessageHelper.getSortKey(helper.getFrom());
+                    message.from = helper.getFrom();
+                    message.to = helper.getTo();
+                    message.cc = helper.getCc();
+                    message.bcc = helper.getBcc();
+                    message.reply = helper.getReply();
+                    message.subject = helper.getSubject();
+                    message.size = helper.getSize();
+                    message.content = false;
+                    message.received = helper.getReceived();
+                    message.sent = helper.getSent();
+                    message.seen = false;
+                    message.answered = false;
+                    message.flagged = false;
+                    message.flags = null;
+                    message.keywords = null;
+                    message.ui_seen = false;
+                    message.ui_answered = false;
+                    message.ui_flagged = false;
+                    message.ui_hide = false;
+                    message.ui_found = false;
+                    message.ui_ignored = false;
+                    message.ui_browsed = false;
+
+                    Uri lookupUri = ContactInfo.getLookupUri(this, message.from);
+                    message.avatar = (lookupUri == null ? null : lookupUri.toString());
+
+                    message.id = db.message().insertMessage(message);
+
+                    Log.i(folder.name + " POP id=" + message.id + " uid=" + message.uid);
+
+                    MessageHelper.MessageParts parts = helper.getMessageParts();
+                    String body = parts.getHtml(this);
+                    Helper.writeText(EntityMessage.getFile(this, message.id), body);
+                    db.message().setMessageContent(message.id, true, HtmlHelper.getPreview(body));
+                    db.message().setMessageWarning(message.id, parts.getWarnings(message.warning));
+
+                    int sequence = 1;
+                    for (EntityAttachment attachment : parts.getAttachments()) {
+                        Log.i(folder.name + " POP attachment seq=" + sequence +
+                                " name=" + attachment.name + " type=" + attachment.type +
+                                " cid=" + attachment.cid + " pgp=" + attachment.encryption);
+                        attachment.message = message.id;
+                        attachment.sequence = sequence++;
+                        attachment.id = db.attachment().insertAttachment(attachment);
+                        parts.downloadAttachment(this, db, attachment.id, attachment.sequence);
+                    }
+                } catch (Throwable ex) {
+                    db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                } finally {
+                    ((POP3Message) imessage).invalidate(true);
+                }
+        } finally {
+            db.folder().setFolderSyncState(folder.id, null);
         }
     }
 
@@ -2661,8 +2824,8 @@ public class ServiceSynchronize extends LifecycleService {
             message.subject = helper.getSubject();
             message.size = helper.getSize();
             message.content = false;
-            message.received = imessage.getReceivedDate().getTime();
-            message.sent = (imessage.getSentDate() == null ? null : imessage.getSentDate().getTime());
+            message.received = helper.getReceived();
+            message.sent = helper.getSent();
             message.seen = seen;
             message.answered = answered;
             message.flagged = flagged;

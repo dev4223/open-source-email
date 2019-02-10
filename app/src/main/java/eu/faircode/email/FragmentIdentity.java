@@ -26,7 +26,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
-import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -99,6 +98,7 @@ public class FragmentIdentity extends FragmentBase {
 
     private EditText etReplyTo;
     private EditText etBcc;
+    private CheckBox cbPlainOnly;
     private CheckBox cbDeliveryReceipt;
     private CheckBox cbReadReceipt;
 
@@ -165,6 +165,7 @@ public class FragmentIdentity extends FragmentBase {
 
         etReplyTo = view.findViewById(R.id.etReplyTo);
         etBcc = view.findViewById(R.id.etBcc);
+        cbPlainOnly = view.findViewById(R.id.cbPlainOnly);
         cbDeliveryReceipt = view.findViewById(R.id.cbDeliveryReceipt);
         cbReadReceipt = view.findViewById(R.id.cbReadReceipt);
 
@@ -294,14 +295,14 @@ public class FragmentIdentity extends FragmentBase {
             public void onClick(View v) {
                 View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_html, null);
                 final EditText etHtml = dview.findViewById(R.id.etHtml);
-                etHtml.setText(Html.toHtml(etSignature.getText()));
+                etHtml.setText(HtmlHelper.toHtml(etSignature.getText()));
 
                 new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
                         .setView(dview)
                         .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Spanned html = Html.fromHtml(etHtml.getText().toString());
+                                Spanned html = HtmlHelper.fromHtml(etHtml.getText().toString());
                                 etSignature.setText(html);
                             }
                         })
@@ -464,6 +465,7 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("display", etDisplay.getText().toString());
         args.putString("replyto", etReplyTo.getText().toString().trim());
         args.putString("bcc", etBcc.getText().toString().trim());
+        args.putBoolean("plain_only", cbPlainOnly.isChecked());
         args.putBoolean("delivery_receipt", cbDeliveryReceipt.isChecked());
         args.putBoolean("read_receipt", cbReadReceipt.isChecked());
         args.putBoolean("store_sent", cbStoreSent.isChecked());
@@ -477,7 +479,7 @@ public class FragmentIdentity extends FragmentBase {
         args.putString("password", tilPassword.getEditText().getText().toString());
         args.putString("realm", etRealm.getText().toString());
         args.putInt("color", color);
-        args.putString("signature", Html.toHtml(etSignature.getText()));
+        args.putString("signature", HtmlHelper.toHtml(etSignature.getText()));
         args.putBoolean("synchronize", cbSynchronize.isChecked());
         args.putBoolean("primary", cbPrimary.isChecked());
 
@@ -523,6 +525,7 @@ public class FragmentIdentity extends FragmentBase {
 
                 String replyto = args.getString("replyto");
                 String bcc = args.getString("bcc");
+                boolean plain_only = args.getBoolean("plain_only");
                 boolean delivery_receipt = args.getBoolean("delivery_receipt");
                 boolean read_receipt = args.getBoolean("read_receipt");
                 boolean store_sent = args.getBoolean("store_sent");
@@ -581,11 +584,11 @@ public class FragmentIdentity extends FragmentBase {
 
                 // Check SMTP server
                 if (check) {
-                    String transportType = (starttls ? "smtp" : "smtps");
+                    String protocol = (starttls ? "smtp" : "smtps");
                     Properties props = MessageHelper.getSessionProperties(auth_type, realm, insecure);
                     Session isession = Session.getInstance(props, null);
                     isession.setDebug(true);
-                    Transport itransport = isession.getTransport(transportType);
+                    Transport itransport = isession.getTransport(protocol);
                     try {
                         try {
                             itransport.connect(host, Integer.parseInt(port), user, password);
@@ -627,6 +630,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     identity.replyto = replyto;
                     identity.bcc = bcc;
+                    identity.plain_only = plain_only;
                     identity.delivery_receipt = delivery_receipt;
                     identity.read_receipt = read_receipt;
                     identity.store_sent = store_sent;
@@ -713,7 +717,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     etDisplay.setText(identity == null ? null : identity.display);
                     etSignature.setText(identity == null ||
-                            TextUtils.isEmpty(identity.signature) ? null : Html.fromHtml(identity.signature));
+                            TextUtils.isEmpty(identity.signature) ? null : HtmlHelper.fromHtml(identity.signature));
 
                     etHost.setText(identity == null ? null : identity.host);
                     cbStartTls.setChecked(identity == null ? false : identity.starttls);
@@ -728,6 +732,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     etReplyTo.setText(identity == null ? null : identity.replyto);
                     etBcc.setText(identity == null ? null : identity.bcc);
+                    cbPlainOnly.setChecked(identity == null ? false : identity.plain_only);
                     cbDeliveryReceipt.setChecked(identity == null ? false : identity.delivery_receipt);
                     cbReadReceipt.setChecked(identity == null ? false : identity.read_receipt);
                     cbStoreSent.setChecked(identity == null ? false : identity.store_sent);

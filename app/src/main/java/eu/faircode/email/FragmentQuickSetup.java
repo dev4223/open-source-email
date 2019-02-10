@@ -34,7 +34,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
-import android.text.Html;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
@@ -233,8 +232,10 @@ public class FragmentQuickSetup extends FragmentBase {
                                 folder.keep_days = EntityFolder.DEFAULT_KEEP;
                                 folders.add(folder);
 
-                                if (EntityFolder.INBOX.equals(type))
+                                if (EntityFolder.INBOX.equals(type)) {
+                                    folder.unified = true;
                                     inbox = true;
+                                }
                                 if (EntityFolder.DRAFTS.equals(type))
                                     drafts = true;
                             }
@@ -376,7 +377,7 @@ public class FragmentQuickSetup extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (args.containsKey("documentation")) {
-                    tvInstructions.setText(Html.fromHtml(args.getString("documentation")));
+                    tvInstructions.setText(HtmlHelper.fromHtml(args.getString("documentation")));
                     tvInstructions.setVisibility(View.VISIBLE);
                 }
 

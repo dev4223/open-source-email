@@ -272,96 +272,7 @@ public class FragmentRule extends FragmentBase {
                         getString(R.string.title_rule_action_remark, data.folder.getDisplayName(getContext())));
                 tvActionRemark.setVisibility(View.VISIBLE);
 
-                Bundle rargs = new Bundle();
-                rargs.putLong("id", id);
-
-                new SimpleTask<TupleRuleEx>() {
-                    @Override
-                    protected TupleRuleEx onExecute(Context context, Bundle args) {
-                        long id = args.getLong("id");
-                        return DB.getInstance(context).rule().getRule(id);
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, TupleRuleEx rule) {
-                        try {
-                            JSONObject jcondition = (rule == null ? new JSONObject() : new JSONObject(rule.condition));
-                            JSONObject jaction = (rule == null ? new JSONObject() : new JSONObject(rule.action));
-
-                            JSONObject jsender = jcondition.optJSONObject("sender");
-                            JSONObject jsubject = jcondition.optJSONObject("subject");
-                            JSONObject jheader = jcondition.optJSONObject("header");
-
-                            etName.setText(rule == null ? null : rule.name);
-                            etOrder.setText(rule == null ? null : Integer.toString(rule.order));
-                            cbEnabled.setChecked(rule == null || rule.enabled);
-                            cbStop.setChecked(rule != null && rule.stop);
-                            etSender.setText(jsender == null ? null : jsender.getString("value"));
-                            cbSender.setChecked(jsender != null && jsender.getBoolean("regex"));
-                            etSubject.setText(jsubject == null ? null : jsubject.getString("value"));
-                            cbSubject.setChecked(jsubject != null && jsubject.getBoolean("regex"));
-                            etHeader.setText(jheader == null ? null : jheader.getString("value"));
-                            cbHeader.setChecked(jheader != null && jheader.getBoolean("regex"));
-
-                            if (rule == null) {
-                                for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
-                                    if (adapterIdentity.getItem(pos).primary) {
-                                        spIdent.setSelection(pos);
-                                        break;
-                                    }
-                            } else {
-                                int type = jaction.getInt("type");
-                                switch (type) {
-                                    case EntityRule.TYPE_MOVE:
-                                        long target = jaction.getLong("target");
-                                        for (int pos = 0; pos < adapterTarget.getCount(); pos++)
-                                            if (adapterTarget.getItem(pos).id.equals(target)) {
-                                                spTarget.setSelection(pos);
-                                                break;
-                                            }
-                                        break;
-
-                                    case EntityRule.TYPE_ANSWER:
-                                        long identity = jaction.getLong("identity");
-                                        for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
-                                            if (adapterIdentity.getItem(pos).id.equals(identity)) {
-                                                spIdent.setSelection(pos);
-                                                break;
-                                            }
-
-                                        long answer = jaction.getLong("answer");
-                                        for (int pos = 0; pos < adapterAnswer.getCount(); pos++)
-                                            if (adapterAnswer.getItem(pos).id.equals(answer)) {
-                                                spAnswer.setSelection(pos);
-                                                break;
-                                            }
-                                        break;
-                                }
-
-                                for (int pos = 0; pos < adapterAction.getCount(); pos++)
-                                    if (adapterAction.getItem(pos).type == type) {
-                                        spAction.setTag(pos);
-                                        spAction.setSelection(pos);
-                                        break;
-                                    }
-
-                                showActionParameters(type);
-                            }
-
-                            grpReady.setVisibility(View.VISIBLE);
-                            bottom_navigation.findViewById(R.id.action_delete).setVisibility(rule == null ? View.GONE : View.VISIBLE);
-                            bottom_navigation.setVisibility(View.VISIBLE);
-                            pbWait.setVisibility(View.GONE);
-                        } catch (JSONException ex) {
-                            Log.e(ex);
-                        }
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                    }
-                }.execute(FragmentRule.this, rargs, "rule:get");
+                loadRule();
             }
 
             @Override
@@ -401,6 +312,99 @@ public class FragmentRule extends FragmentBase {
             if (cursor != null)
                 cursor.close();
         }
+    }
+
+    private void loadRule() {
+        Bundle rargs = new Bundle();
+        rargs.putLong("id", id);
+
+        new SimpleTask<TupleRuleEx>() {
+            @Override
+            protected TupleRuleEx onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                return DB.getInstance(context).rule().getRule(id);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, TupleRuleEx rule) {
+                try {
+                    JSONObject jcondition = (rule == null ? new JSONObject() : new JSONObject(rule.condition));
+                    JSONObject jaction = (rule == null ? new JSONObject() : new JSONObject(rule.action));
+
+                    JSONObject jsender = jcondition.optJSONObject("sender");
+                    JSONObject jsubject = jcondition.optJSONObject("subject");
+                    JSONObject jheader = jcondition.optJSONObject("header");
+
+                    etName.setText(rule == null ? null : rule.name);
+                    etOrder.setText(rule == null ? null : Integer.toString(rule.order));
+                    cbEnabled.setChecked(rule == null || rule.enabled);
+                    cbStop.setChecked(rule != null && rule.stop);
+                    etSender.setText(jsender == null ? null : jsender.getString("value"));
+                    cbSender.setChecked(jsender != null && jsender.getBoolean("regex"));
+                    etSubject.setText(jsubject == null ? null : jsubject.getString("value"));
+                    cbSubject.setChecked(jsubject != null && jsubject.getBoolean("regex"));
+                    etHeader.setText(jheader == null ? null : jheader.getString("value"));
+                    cbHeader.setChecked(jheader != null && jheader.getBoolean("regex"));
+
+                    if (rule == null) {
+                        for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
+                            if (adapterIdentity.getItem(pos).primary) {
+                                spIdent.setSelection(pos);
+                                break;
+                            }
+                    } else {
+                        int type = jaction.getInt("type");
+                        switch (type) {
+                            case EntityRule.TYPE_MOVE:
+                                long target = jaction.getLong("target");
+                                for (int pos = 0; pos < adapterTarget.getCount(); pos++)
+                                    if (adapterTarget.getItem(pos).id.equals(target)) {
+                                        spTarget.setSelection(pos);
+                                        break;
+                                    }
+                                break;
+
+                            case EntityRule.TYPE_ANSWER:
+                                long identity = jaction.getLong("identity");
+                                for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
+                                    if (adapterIdentity.getItem(pos).id.equals(identity)) {
+                                        spIdent.setSelection(pos);
+                                        break;
+                                    }
+
+                                long answer = jaction.getLong("answer");
+                                for (int pos = 0; pos < adapterAnswer.getCount(); pos++)
+                                    if (adapterAnswer.getItem(pos).id.equals(answer)) {
+                                        spAnswer.setSelection(pos);
+                                        break;
+                                    }
+                                break;
+                        }
+
+                        for (int pos = 0; pos < adapterAction.getCount(); pos++)
+                            if (adapterAction.getItem(pos).type == type) {
+                                spAction.setTag(pos);
+                                spAction.setSelection(pos);
+                                break;
+                            }
+
+                        showActionParameters(type);
+                    }
+
+                    grpReady.setVisibility(View.VISIBLE);
+                    bottom_navigation.findViewById(R.id.action_delete).setVisibility(rule == null ? View.GONE : View.VISIBLE);
+                    bottom_navigation.setVisibility(View.VISIBLE);
+                    pbWait.setVisibility(View.GONE);
+                } catch (JSONException ex) {
+                    Log.e(ex);
+                }
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+            }
+        }.execute(FragmentRule.this, rargs, "rule:get");
     }
 
     private void onActionTrash() {
@@ -457,52 +461,6 @@ public class FragmentRule extends FragmentBase {
         try {
             Helper.setViewsEnabled(view, false);
 
-            JSONObject jcondition = new JSONObject();
-
-            String sender = etSender.getText().toString();
-            if (!TextUtils.isEmpty(sender)) {
-                JSONObject jsender = new JSONObject();
-                jsender.put("value", sender);
-                jsender.put("regex", cbSender.isChecked());
-                jcondition.put("sender", jsender);
-            }
-
-            String subject = etSubject.getText().toString();
-            if (!TextUtils.isEmpty(subject)) {
-                JSONObject jsubject = new JSONObject();
-                jsubject.put("value", subject);
-                jsubject.put("regex", cbSubject.isChecked());
-                jcondition.put("subject", jsubject);
-            }
-
-            String header = etHeader.getText().toString();
-            if (!TextUtils.isEmpty(header)) {
-                JSONObject jheader = new JSONObject();
-                jheader.put("value", header);
-                jheader.put("regex", cbHeader.isChecked());
-                jcondition.put("header", jheader);
-            }
-
-            JSONObject jaction = new JSONObject();
-
-            Action action = (Action) spAction.getSelectedItem();
-            if (action != null) {
-                jaction.put("type", action.type);
-                switch (action.type) {
-                    case EntityRule.TYPE_MOVE:
-                        EntityFolder target = (EntityFolder) spTarget.getSelectedItem();
-                        jaction.put("target", target.id);
-                        break;
-
-                    case EntityRule.TYPE_ANSWER:
-                        EntityIdentity identity = (EntityIdentity) spIdent.getSelectedItem();
-                        EntityAnswer answer = (EntityAnswer) spAnswer.getSelectedItem();
-                        jaction.put("identity", identity.id);
-                        jaction.put("answer", answer.id);
-                        break;
-                }
-            }
-
             Bundle args = new Bundle();
             args.putLong("id", id);
             args.putLong("folder", folder);
@@ -510,8 +468,8 @@ public class FragmentRule extends FragmentBase {
             args.putString("order", etOrder.getText().toString());
             args.putBoolean("enabled", cbEnabled.isChecked());
             args.putBoolean("stop", cbStop.isChecked());
-            args.putString("condition", jcondition.toString());
-            args.putString("action", jaction.toString());
+            args.putString("condition", getCondition().toString());
+            args.putString("action", getAction().toString());
 
             new SimpleTask<Void>() {
                 @Override
@@ -596,6 +554,60 @@ public class FragmentRule extends FragmentBase {
     private void showActionParameters(int type) {
         grpMove.setVisibility(type == EntityRule.TYPE_MOVE ? View.VISIBLE : View.GONE);
         grpAnswer.setVisibility(type == EntityRule.TYPE_ANSWER ? View.VISIBLE : View.GONE);
+    }
+
+    private JSONObject getCondition() throws JSONException {
+        JSONObject jcondition = new JSONObject();
+
+        String sender = etSender.getText().toString();
+        if (!TextUtils.isEmpty(sender)) {
+            JSONObject jsender = new JSONObject();
+            jsender.put("value", sender);
+            jsender.put("regex", cbSender.isChecked());
+            jcondition.put("sender", jsender);
+        }
+
+        String subject = etSubject.getText().toString();
+        if (!TextUtils.isEmpty(subject)) {
+            JSONObject jsubject = new JSONObject();
+            jsubject.put("value", subject);
+            jsubject.put("regex", cbSubject.isChecked());
+            jcondition.put("subject", jsubject);
+        }
+
+        String header = etHeader.getText().toString();
+        if (!TextUtils.isEmpty(header)) {
+            JSONObject jheader = new JSONObject();
+            jheader.put("value", header);
+            jheader.put("regex", cbHeader.isChecked());
+            jcondition.put("header", jheader);
+        }
+
+        return jcondition;
+    }
+
+    private JSONObject getAction() throws JSONException {
+        JSONObject jaction = new JSONObject();
+
+        Action action = (Action) spAction.getSelectedItem();
+        if (action != null) {
+            jaction.put("type", action.type);
+            switch (action.type) {
+                case EntityRule.TYPE_MOVE:
+                    EntityFolder target = (EntityFolder) spTarget.getSelectedItem();
+                    jaction.put("target", target.id);
+                    break;
+
+                case EntityRule.TYPE_ANSWER:
+                    EntityIdentity identity = (EntityIdentity) spIdent.getSelectedItem();
+                    EntityAnswer answer = (EntityAnswer) spAnswer.getSelectedItem();
+                    jaction.put("identity", identity.id);
+                    jaction.put("answer", answer.id);
+                    break;
+            }
+        }
+
+        return jaction;
     }
 
     private class RefData {

@@ -67,6 +67,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swThreading;
     private SwitchCompat swAvatars;
     private SwitchCompat swIdenticons;
+    private SwitchCompat swNameEmail;
     private SwitchCompat swPreview;
     private SwitchCompat swAddresses;
     private SwitchCompat swHtml;
@@ -85,6 +86,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swAutoResize;
     private SwitchCompat swAutoSend;
 
+    private SwitchCompat swNotifyPreview;
     private SwitchCompat swLight;
     private Button btnSound;
 
@@ -93,7 +95,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private Group grpNotification;
 
     static String[] OPTIONS_RESTART = new String[]{
-            "unified", "date", "threading", "avatars", "identicons", "preview", "addresses", "autoimages", "actionbar",
+            "unified", "date", "threading", "avatars", "identicons", "name_email", "preview", "addresses", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext",
             "debug"
     };
@@ -101,9 +103,9 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private final static String[] ADVANCED_OPTIONS = new String[]{
             "enabled", "updates",
             "metered", "download",
-            "unified", "date", "threading", "avatars", "identicons", "preview", "addresses", "autoimages", "actionbar",
+            "unified", "date", "threading", "avatars", "identicons", "name_email", "preview", "addresses", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext", "collapse", "autoread", "automove", "sender", "autoresize", "autosend",
-            "light", "sound",
+            "notify_preview", "light", "sound",
             "debug",
             "first", "why", "last_update_check", "app_support", "message_swipe", "message_select", "folder_actions", "folder_sync",
             "edit_ref_confirmed", "autosend", "automove", "show_html_confirmed", "show_images_confirmed"
@@ -130,6 +132,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swThreading = view.findViewById(R.id.swThreading);
         swAvatars = view.findViewById(R.id.swAvatars);
         swIdenticons = view.findViewById(R.id.swIdenticons);
+        swNameEmail = view.findViewById(R.id.swNameEmail);
         swPreview = view.findViewById(R.id.swPreview);
         swAddresses = view.findViewById(R.id.swAddresses);
         swHtml = view.findViewById(R.id.swHtml);
@@ -148,6 +151,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoResize = view.findViewById(R.id.swAutoResize);
         swAutoSend = view.findViewById(R.id.swAutoSend);
 
+        swNotifyPreview = view.findViewById(R.id.swNotifyPreview);
         swLight = view.findViewById(R.id.swLight);
         btnSound = view.findViewById(R.id.btnSound);
 
@@ -255,6 +259,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("identicons", checked).apply();
                 ContactInfo.clearCache();
+            }
+        });
+
+        swNameEmail.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("name_email", checked).apply();
             }
         });
 
@@ -372,6 +383,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             }
         });
 
+        swNotifyPreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("notify_preview", checked).apply();
+            }
+        });
+
         swLight.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -475,11 +493,14 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 break;
             }
 
+        boolean compact = prefs.getBoolean("compact", false);
+
         swUnified.setChecked(prefs.getBoolean("unified", true));
         swDate.setChecked(prefs.getBoolean("date", true));
         swThreading.setChecked(prefs.getBoolean("threading", true));
         swAvatars.setChecked(prefs.getBoolean("avatars", true));
         swIdenticons.setChecked(prefs.getBoolean("identicons", false));
+        swNameEmail.setChecked(prefs.getBoolean("name_email", !compact));
         swPreview.setChecked(prefs.getBoolean("preview", false));
         swAddresses.setChecked(prefs.getBoolean("addresses", true));
         swHtml.setChecked(prefs.getBoolean("autohtml", false));
@@ -500,6 +521,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoResize.setChecked(prefs.getBoolean("autoresize", true));
         swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
 
+        swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
         swLight.setChecked(prefs.getBoolean("light", false));
         swDebug.setChecked(prefs.getBoolean("debug", false));
 

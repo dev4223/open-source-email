@@ -41,8 +41,8 @@ public class ContactInfo {
         return bitmap;
     }
 
-    String getDisplayName(boolean compact) {
-        if (compact && displayName != null)
+    String getDisplayName(boolean name_email) {
+        if (!name_email && displayName != null)
             return displayName;
         else if (displayName == null)
             return (email == null ? "" : email);
@@ -73,7 +73,7 @@ public class ContactInfo {
             return new ContactInfo();
         InternetAddress address = (InternetAddress) addresses[0];
 
-        String key = address.toString();
+        String key = MessageHelper.formatAddresses(new Address[]{address});
         synchronized (emailContactInfo) {
             ContactInfo info = emailContactInfo.get(key);
             if (info != null && !info.isExpired())

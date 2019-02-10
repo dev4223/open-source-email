@@ -10,8 +10,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 324
-        versionName "1.324"
+        versionCode 327
+        versionName "1.327"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -50,24 +50,27 @@ android {
     productFlavors {
         full {
             dimension "all"
-            buildConfigField "boolean", "PLAY_STORE_RELEASE", "false"
-            buildConfigField "String", "PRO_FEATURES", "\"https://email.faircode.eu/donate/\""
-            buildConfigField "String", "GITHUB_LATEST_API", "\"https://api.github.com/repos/M66B/open-source-email/releases/latest\""
             buildConfigField "boolean", "BETA_RELEASE", "true"
+            buildConfigField "boolean", "PLAY_STORE_RELEASE", "false"
+            buildConfigField "String", "INVITE_URI", "\"https://email.faircode.eu/\""
+            buildConfigField "String", "PRO_FEATURES_URI", "\"https://email.faircode.eu/donate/\""
+            buildConfigField "String", "GITHUB_LATEST_API", "\"https://api.github.com/repos/M66B/open-source-email/releases/latest\""
         }
         play_beta {
             dimension "all"
-            buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
-            buildConfigField "String", "PRO_FEATURES", "\"https://email.faircode.eu/#pro\""
-            buildConfigField "String", "GITHUB_LATEST_API", "\"\""
             buildConfigField "boolean", "BETA_RELEASE", "true"
+            buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
+            buildConfigField "String", "INVITE_URI", "\"https://play.google.com/apps/testing/eu.faircode.email\""
+            buildConfigField "String", "PRO_FEATURES_URI", "\"https://email.faircode.eu/#pro\""
+            buildConfigField "String", "GITHUB_LATEST_API", "\"\""
         }
         play_release {
             dimension "all"
-            buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
-            buildConfigField "String", "PRO_FEATURES", "\"https://email.faircode.eu/#pro\""
-            buildConfigField "String", "GITHUB_LATEST_API", "\"\""
             buildConfigField "boolean", "BETA_RELEASE", "false"
+            buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
+            buildConfigField "String", "INVITE_URI", "\"https://play.google.com/store/apps/details?id=eu.faircode.email\""
+            buildConfigField "String", "PRO_FEATURES_URI", "\"https://email.faircode.eu/#pro\""
+            buildConfigField "String", "GITHUB_LATEST_API", "\"\""
         }
     }
 
@@ -105,7 +108,7 @@ dependencies {
     def browser_version = "1.0.0"
     def lifecycle_version = "2.0.0"
     def room_version = "2.0.0"
-    def paging_version = "2.0.0"
+    def paging_version = "2.1.0"
     def billingclient_version = "1.2"
     def javamail_version = "1.6.3"
     def jsoup_version = "1.11.3"
@@ -115,7 +118,6 @@ dependencies {
     def openpgp_version = "12.0"
     def requery_version = "3.26.0"
 
-    // https://developer.android.com/topic/libraries/support-library/androidx-rn
     // https://developer.android.com/jetpack/docs/release-notes
 
     // https://mvnrepository.com/artifact/androidx.appcompat/appcompat
@@ -123,7 +125,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/androidx.recyclerview/recyclerview
     implementation "androidx.recyclerview:recyclerview:$recyclerview_version"
-    implementation "androidx.recyclerview:recyclerview-selection:$recyclerview_version"
+    //implementation "androidx.recyclerview:recyclerview-selection:$recyclerview_version"
 
     // https://mvnrepository.com/artifact/androidx.coordinatorlayout/coordinatorlayout
     implementation "androidx.coordinatorlayout:coordinatorlayout:$coordinatorlayout_version"

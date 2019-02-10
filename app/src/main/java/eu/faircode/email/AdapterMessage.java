@@ -47,7 +47,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.text.method.LinkMovementMethod;
+import android.text.method.ArrowKeyMovementMethod;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
@@ -132,6 +132,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private LifecycleOwner owner;
     private ViewType viewType;
     private boolean compact;
+    private boolean name_email;
     private int zoom;
     private String sort;
     private boolean internet;
@@ -490,7 +491,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Selected / disabled
             itemView.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
             itemView.setAlpha(
-                    message.uid == null && !EntityFolder.OUTBOX.equals(message.folderType) ? Helper.LOW_LIGHT : 1.0f);
+                    message.uid == null &&
+                            !message.accountPop &&
+                            !EntityFolder.OUTBOX.equals(message.folderType)
+                            ? Helper.LOW_LIGHT : 1.0f);
 
             // Duplicate
             if (viewType == ViewType.THREAD) {
@@ -724,7 +728,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else
                 ivAvatar.setImageResource(R.drawable.baseline_person_24);
             ivAvatar.setVisibility(avatars ? View.VISIBLE : View.GONE);
-            tvFrom.setText(info.getDisplayName(compact));
+            tvFrom.setText(info.getDisplayName(name_email));
         }
 
         private void bindExpanded(final TupleMessageEx message) {
@@ -780,7 +784,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             try {
                 InternetAddress via = new InternetAddress(message.identityEmail, message.identityName);
-                tvIdentity.setText(via.toString());
+                tvIdentity.setText(MessageHelper.formatAddresses(new Address[]{via}));
             } catch (UnsupportedEncodingException ex) {
                 tvIdentity.setText(ex.getMessage());
             }
@@ -876,9 +880,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     bnvActions.getMenu().findItem(R.id.action_delete).setVisible(
                             (inTrash && message.msgid != null) ||
+                                    message.accountPop ||
                                     (!inTrash && hasTrash && message.uid != null) ||
                                     (inOutbox && (!TextUtils.isEmpty(message.error) || !message.identitySynchronize)));
-                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash ? R.string.title_delete : R.string.title_trash);
+                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash || message.accountPop ? R.string.title_delete : R.string.title_trash);
 
                     bnvActions.getMenu().findItem(R.id.action_move).setVisible(
                             message.uid != null || (inOutbox && (message.ui_snoozed != null || message.error != null)));
@@ -905,6 +910,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (show_html)
                     onShowHtmlConfirmed(message);
                 else {
+                    Spanned body = properties.getBody(message.id);
+                    tvBody.setText(body);
+                    tvBody.setMovementMethod(null);
+
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
                     bodyTask.execute(context, owner, args, "message:body");
@@ -1505,14 +1514,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
             @Override
-            protected void onPreExecute(Bundle args) {
-                TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                Spanned body = properties.getBody(message.id);
-                tvBody.setText(body);
-                tvBody.setMovementMethod(null);
-            }
-
-            @Override
             protected SpannableStringBuilder onExecute(Context context, final Bundle args) {
                 DB db = DB.getInstance(context);
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
@@ -1564,6 +1565,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibQuotes.setVisibility(has_quotes && show_expanded && !show_quotes ? View.VISIBLE : View.GONE);
                 ibImages.setVisibility(has_images && show_expanded && !show_images ? View.VISIBLE : View.GONE);
                 tvBody.setText(body);
+                tvBody.setTextIsSelectable(false);
+                tvBody.setTextIsSelectable(true);
                 tvBody.setMovementMethod(new UrlHandler());
                 tvBody.setVisibility(show_expanded ? View.VISIBLE : View.GONE);
                 pbBody.setVisibility(View.GONE);
@@ -1579,7 +1582,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final boolean show_quotes = properties.getValue("quotes", message.id);
             final boolean show_images = properties.getValue("images", message.id);
 
-            return Html.fromHtml(HtmlHelper.sanitize(body, show_quotes), new Html.ImageGetter() {
+            return HtmlHelper.fromHtml(HtmlHelper.sanitize(body, show_quotes), new Html.ImageGetter() {
                 @Override
                 public Drawable getDrawable(String source) {
                     Drawable image = HtmlHelper.decodeImage(source, context, message.id, show_images);
@@ -1604,7 +1607,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             });
         }
 
-        private class UrlHandler extends LinkMovementMethod {
+        private class UrlHandler extends ArrowKeyMovementMethod {
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
                 if (event.getAction() != MotionEvent.ACTION_UP)
                     return false;
@@ -2197,7 +2200,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_reply_all).setEnabled(data.message.content);
             popupMenu.getMenu().findItem(R.id.menu_answer).setEnabled(data.message.content);
 
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null || data.message.accountPop);
 
             popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
             popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(
@@ -2205,9 +2208,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(debug);
 
-            popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(data.message.uid != null);
-
-            popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.content);
+            popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(data.message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.uid != null);
@@ -2500,17 +2501,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     AdapterMessage(Context context, LifecycleOwner owner,
                    ViewType viewType, boolean compact, int zoom, String sort, IProperties properties) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
         this.viewType = viewType;
         this.compact = compact;
+        this.name_email = prefs.getBoolean("name_email", !compact);
         this.zoom = zoom;
         this.sort = sort;
         this.internet = (Helper.isMetered(context, false) != null);
         this.properties = properties;
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
@@ -2565,7 +2568,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     void setCompact(boolean compact) {
         if (this.compact != compact) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             this.compact = compact;
+            this.name_email = prefs.getBoolean("name_email", !compact);
             notifyDataSetChanged();
         }
     }

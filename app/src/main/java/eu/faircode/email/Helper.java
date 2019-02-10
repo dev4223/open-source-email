@@ -56,7 +56,6 @@ import android.widget.Toast;
 
 import com.android.billingclient.api.BillingClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.sun.mail.imap.IMAPStore;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -86,6 +85,7 @@ import java.util.concurrent.ThreadFactory;
 import javax.mail.Address;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
+import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
 
 import androidx.annotation.NonNull;
@@ -104,6 +104,8 @@ public class Helper {
     static final int AUTH_TYPE_GMAIL = 2;
 
     static final float LOW_LIGHT = 0.6f;
+
+    static final String FAQ_URI = "https://github.com/M66B/open-source-email/blob/master/FAQ.md";
 
     static ThreadFactory backgroundThreadFactory = new ThreadFactory() {
         @Override
@@ -177,7 +179,7 @@ public class Helper {
 
     static Intent getIntentFAQ() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/FAQ.md"));
+        intent.setData(Uri.parse(Helper.FAQ_URI));
         return intent;
     }
 
@@ -704,8 +706,15 @@ public class Helper {
             return null;
         }
 
+        NetworkInfo ani = cm.getNetworkInfo(active);
         if (log)
-            Log.i("isMetered: active info=" + cm.getNetworkInfo(active));
+            EntityLog.log(context, "isMetered: active info=" + ani);
+
+        if (ani == null || !ani.isConnected()) {
+            if (log)
+                EntityLog.log(context, "isMetered: active network not connected");
+            return null;
+        }
 
         NetworkCapabilities caps = cm.getNetworkCapabilities(active);
         if (caps == null) {
@@ -715,7 +724,7 @@ public class Helper {
         }
 
         if (log)
-            Log.i("isMetered: active caps=" + caps);
+            EntityLog.log(context, "isMetered: active caps=" + caps);
 
         if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
             boolean unmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
@@ -777,7 +786,7 @@ public class Helper {
         return true;
     }
 
-    static void connect(Context context, IMAPStore istore, EntityAccount account) throws
+    static void connect(Context context, Store istore, EntityAccount account) throws
             MessagingException {
         try {
             istore.connect(account.host, account.port, account.user, account.password);

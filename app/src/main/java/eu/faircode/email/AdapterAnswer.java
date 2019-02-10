@@ -49,7 +49,7 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     private List<EntityAnswer> all = new ArrayList<>();
     private List<EntityAnswer> filtered = new ArrayList<>();
 
-    private EntityAccount primary = null;
+    private boolean primary = false;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View itemView;
@@ -92,7 +92,7 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
 
         @Override
         public boolean onLongClick(View v) {
-            if (primary == null)
+            if (!primary)
                 return false;
 
             int pos = getAdapterPosition();
@@ -115,15 +115,15 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
         this.inflater = LayoutInflater.from(context);
         setHasStableIds(true);
 
-        new SimpleTask<EntityAccount>() {
+        new SimpleTask<EntityFolder>() {
             @Override
-            protected EntityAccount onExecute(Context context, Bundle args) {
-                return DB.getInstance(context).account().getPrimaryAccount();
+            protected EntityFolder onExecute(Context context, Bundle args) {
+                return DB.getInstance(context).folder().getPrimaryDrafts();
             }
 
             @Override
-            protected void onExecuted(Bundle args, EntityAccount account) {
-                primary = account;
+            protected void onExecuted(Bundle args, EntityFolder drafts) {
+                primary = (drafts != null);
             }
 
             @Override
@@ -148,7 +148,7 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
 
         all = answers;
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new MessageDiffCallback(filtered, all));
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(filtered, all));
 
         filtered.clear();
         filtered.addAll(all);
@@ -177,11 +177,11 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
         diff.dispatchUpdatesTo(this);
     }
 
-    private class MessageDiffCallback extends DiffUtil.Callback {
+    private class DiffCallback extends DiffUtil.Callback {
         private List<EntityAnswer> prev;
         private List<EntityAnswer> next;
 
-        MessageDiffCallback(List<EntityAnswer> prev, List<EntityAnswer> next) {
+        DiffCallback(List<EntityAnswer> prev, List<EntityAnswer> next) {
             this.prev = prev;
             this.next = next;
         }

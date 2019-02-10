@@ -23,6 +23,8 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
+import com.sun.mail.imap.IMAPMessage;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -165,6 +167,26 @@ public class MessageHelper {
         props.put("mail.smtp.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
         props.put("mail.smtp.timeout", Integer.toString(NETWORK_TIMEOUT));
 
+        // https://javaee.github.io/javamail/docs/api/com/sun/mail/pop3/package-summary.html
+        props.put("mail.pop3s.ssl.checkserveridentity", checkserveridentity);
+        props.put("mail.pop3s.ssl.trust", "*");
+        props.put("mail.pop3s.starttls.enable", "false");
+        props.put("mail.pop3s.starttls.required", "false");
+
+        props.put("mail.pop3s.connectiontimeout", Integer.toString(NETWORK_TIMEOUT));
+        props.put("mail.pop3s.timeout", Integer.toString(NETWORK_TIMEOUT));
+        props.put("mail.pop3s.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
+
+        props.put("mail.pop3.ssl.checkserveridentity", checkserveridentity);
+        props.put("mail.pop3.ssl.trust", "*");
+        props.put("mail.pop3.starttls.enable", "true");
+        props.put("mail.pop3.starttls.required", "true");
+
+        props.put("mail.pop3.connectiontimeout", Integer.toString(NETWORK_TIMEOUT));
+        props.put("mail.pop3.timeout", Integer.toString(NETWORK_TIMEOUT));
+        props.put("mail.pop3.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
+
+        // MIME
         props.put("mail.mime.allowutf8", "true"); // SMTPTransport, MimeMessage
         props.put("mail.mime.address.strict", "false");
 
@@ -185,7 +207,7 @@ public class MessageHelper {
         return props;
     }
 
-    static MimeMessageEx from(Context context, EntityMessage message, Session isession) throws MessagingException, IOException {
+    static MimeMessageEx from(Context context, EntityMessage message, Session isession, boolean plainOnly) throws MessagingException, IOException {
         DB db = DB.getInstance(context);
         MimeMessageEx imessage = new MimeMessageEx(isession, message.msgid);
 
@@ -282,12 +304,12 @@ public class MessageHelper {
                 return imessage;
             }
 
-        build(context, message, imessage);
+        build(context, message, imessage, plainOnly);
 
         return imessage;
     }
 
-    static void build(Context context, EntityMessage message, MimeMessage imessage) throws IOException, MessagingException {
+    static void build(Context context, EntityMessage message, MimeMessage imessage, boolean plainOnly) throws IOException, MessagingException {
         DB db = DB.getInstance(context);
 
         StringBuilder body = new StringBuilder();
@@ -334,12 +356,18 @@ public class MessageHelper {
         Log.i("Attachments available=" + available);
 
         if (available == 0)
-            imessage.setContent(alternativePart);
+            if (plainOnly)
+                imessage.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
+            else
+                imessage.setContent(alternativePart);
         else {
             Multipart mixedPart = new MimeMultipart("mixed");
 
             BodyPart attachmentPart = new MimeBodyPart();
-            attachmentPart.setContent(alternativePart);
+            if (plainOnly)
+                attachmentPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
+            else
+                attachmentPart.setContent(alternativePart);
             mixedPart.addBodyPart(attachmentPart);
 
             for (final EntityAttachment attachment : attachments)
@@ -502,6 +530,18 @@ public class MessageHelper {
     Integer getSize() throws MessagingException {
         int size = imessage.getSize();
         return (size < 0 ? null : size);
+    }
+
+    long getReceived() throws MessagingException {
+        if (imessage instanceof IMAPMessage)
+            return imessage.getReceivedDate().getTime();
+        else
+            return new Date().getTime();
+    }
+
+    Long getSent() throws MessagingException {
+        Date date = imessage.getSentDate();
+        return (date == null ? null : date.getTime());
     }
 
     String getHeaders() throws MessagingException {
