@@ -43,8 +43,10 @@ public class SelectionPredicateMessage extends SelectionTracker.SelectionPredica
 
         AdapterMessage adapter = (AdapterMessage) recyclerView.getAdapter();
         TupleMessageEx message = adapter.getItemForKey(key);
+        if (message == null)
+            return false;
 
-        if (message != null && message.uid != null)
+        if (message.uid != null)
             return true;
 
         return false;
@@ -57,8 +59,10 @@ public class SelectionPredicateMessage extends SelectionTracker.SelectionPredica
 
         AdapterMessage adapter = (AdapterMessage) recyclerView.getAdapter();
         TupleMessageEx message = adapter.getItemAtPosition(position);
+        if (message == null)
+            return false;
 
-        if (message != null && message.uid != null)
+        if (message.uid != null)
             return true;
 
         return false;

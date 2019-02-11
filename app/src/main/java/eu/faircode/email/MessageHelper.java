@@ -23,8 +23,6 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
-import com.sun.mail.imap.IMAPMessage;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -36,13 +34,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -51,6 +46,7 @@ import javax.activation.FileTypeMap;
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Flags;
+import javax.mail.FolderClosedException;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -169,25 +165,6 @@ public class MessageHelper {
         props.put("mail.smtp.connectiontimeout", Integer.toString(NETWORK_TIMEOUT));
         props.put("mail.smtp.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
         props.put("mail.smtp.timeout", Integer.toString(NETWORK_TIMEOUT));
-
-        // https://javaee.github.io/javamail/docs/api/com/sun/mail/pop3/package-summary.html
-        props.put("mail.pop3s.ssl.checkserveridentity", checkserveridentity);
-        props.put("mail.pop3s.ssl.trust", "*");
-        props.put("mail.pop3s.starttls.enable", "false");
-        props.put("mail.pop3s.starttls.required", "false");
-
-        props.put("mail.pop3s.connectiontimeout", Integer.toString(NETWORK_TIMEOUT));
-        props.put("mail.pop3s.timeout", Integer.toString(NETWORK_TIMEOUT));
-        props.put("mail.pop3s.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
-
-        props.put("mail.pop3.ssl.checkserveridentity", checkserveridentity);
-        props.put("mail.pop3.ssl.trust", "*");
-        props.put("mail.pop3.starttls.enable", "true");
-        props.put("mail.pop3.starttls.required", "true");
-
-        props.put("mail.pop3.connectiontimeout", Integer.toString(NETWORK_TIMEOUT));
-        props.put("mail.pop3.timeout", Integer.toString(NETWORK_TIMEOUT));
-        props.put("mail.pop3.writetimeout", Integer.toString(NETWORK_TIMEOUT)); // one thread overhead
 
         // MIME
         props.put("mail.mime.allowutf8", "true"); // SMTPTransport, MimeMessage
@@ -536,23 +513,7 @@ public class MessageHelper {
     }
 
     long getReceived() throws MessagingException {
-        if (imessage instanceof IMAPMessage)
-            return imessage.getReceivedDate().getTime();
-        else {
-            String[] headers = imessage.getHeader("Received");
-            DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
-            if (headers != null)
-                for (String received : headers) {
-                    int i = received.lastIndexOf(';');
-                    if (i > 0)
-                        try {
-                            return df.parse(received.substring(i + 1).trim()).getTime();
-                        } catch (java.text.ParseException ex) {
-                            // Ignored
-                        }
-                }
-            return new Date().getTime();
-        }
+        return imessage.getReceivedDate().getTime();
     }
 
     Long getSent() throws MessagingException {
@@ -801,13 +762,13 @@ public class MessageHelper {
         Part part;
     }
 
-    MessageParts getMessageParts() throws IOException {
+    MessageParts getMessageParts() throws IOException, FolderClosedException {
         MessageParts parts = new MessageParts();
         getMessageParts(imessage, parts, false); // Can throw ParseException
         return parts;
     }
 
-    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException {
+    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException, FolderClosedException {
         try {
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart = (Multipart) part.getContent();
@@ -862,6 +823,8 @@ public class MessageHelper {
                     parts.attachments.add(apart);
                 }
             }
+        } catch (FolderClosedException ex) {
+            throw ex;
         } catch (MessagingException ex) {
             Log.w(ex);
             parts.warnings.add(Helper.formatThrowable(ex));
