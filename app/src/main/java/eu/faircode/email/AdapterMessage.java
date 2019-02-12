@@ -492,7 +492,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             itemView.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
             itemView.setAlpha(
                     message.uid == null &&
-                            !message.accountPop &&
                             !EntityFolder.OUTBOX.equals(message.folderType)
                             ? Helper.LOW_LIGHT : 1.0f);
 
@@ -884,10 +883,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     bnvActions.getMenu().findItem(R.id.action_delete).setVisible(
                             (inTrash && message.msgid != null) ||
-                                    message.accountPop ||
                                     (!inTrash && hasTrash && message.uid != null) ||
                                     (inOutbox && (!TextUtils.isEmpty(message.error) || !message.identitySynchronize)));
-                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash || message.accountPop ? R.string.title_delete : R.string.title_trash);
+                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash ? R.string.title_delete : R.string.title_trash);
 
                     bnvActions.getMenu().findItem(R.id.action_move).setVisible(
                             message.uid != null || (inOutbox && (message.ui_snoozed != null || message.error != null)));
@@ -938,7 +936,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean downloading = false;
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
-                if (attachment.isInline())
+                if (attachment.isInline() || TextUtils.isEmpty(attachment.name))
                     inline = true;
                 if (attachment.progress == null && !attachment.available)
                     download = true;
@@ -2204,7 +2202,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_reply_all).setEnabled(data.message.content);
             popupMenu.getMenu().findItem(R.id.menu_answer).setEnabled(data.message.content);
 
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null || data.message.accountPop);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null);
 
             popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
             popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(

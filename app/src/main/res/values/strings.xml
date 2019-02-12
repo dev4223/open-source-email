@@ -130,6 +130,7 @@
     <string name="title_setup_black_theme">Black theme</string>
     <string name="title_setup_system_theme">System theme</string>
     <string name="title_setup_defaults">Restore defaults</string>
+    <string name="title_setup_options">Options</string>
 
     <string name="title_advanced">Advanced options</string>
 
@@ -248,9 +249,10 @@
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
-    <string name="title_pop">POP is not supported</string>
     <string name="title_edit_html">Edit as HTML</string>
     <string name="title_last_connected">Last connected: %1$s</string>
+    <string name="title_pop3_hint">POP3 has significant limitations, so use IMAP whenever possible</string>
+    <string name="title_pop3_support">POP3 is not supported, see also the FAQ</string>
 
     <string name="title_unseen_count" translatable="false">%1$s (%2$d)</string>
 

@@ -47,7 +47,7 @@ public interface DaoMessage {
             "    AND NOT folder.type = '" + EntityFolder.DRAFTS + "' THEN 0 ELSE 1 END)";
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.pop as accountPop, account.notify AS accountNotify" +
+            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
             ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", COUNT(message.id) AS count" +
@@ -87,7 +87,7 @@ public interface DaoMessage {
             "    AND NOT (folder.id <> :folder AND folder.type = '" + EntityFolder.DRAFTS + "') THEN 0 ELSE 1 END)";
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.pop as accountPop, account.notify AS accountNotify" +
+            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
             ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", COUNT(message.id) AS count" +
@@ -119,7 +119,7 @@ public interface DaoMessage {
     DataSource.Factory<Integer, TupleMessageEx> pagedFolder(long folder, boolean threading, String sort, boolean snoozed, boolean found, boolean debug);
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.pop as accountPop, account.notify AS accountNotify" +
+            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
             ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
@@ -191,7 +191,7 @@ public interface DaoMessage {
     int countMessageByMsgId(long folder, String msgid);
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, identity.color AS accountColor, account.pop as accountPop, account.notify AS accountNotify" +
+            ", account.name AS accountName, identity.color AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
             ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
@@ -208,7 +208,7 @@ public interface DaoMessage {
     LiveData<TupleMessageEx> liveMessage(long id);
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.pop as accountPop, account.notify AS accountNotify" +
+            ", account.name AS accountName, IFNULL(identity.color, account.color) AS accountColor, account.notify AS accountNotify" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType" +
             ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", 1 AS count" +
@@ -235,6 +235,7 @@ public interface DaoMessage {
             " JOIN folder ON folder.id = message.folder" +
             " WHERE account.`synchronize`" +
             " AND folder.unified" +
+            " AND (account.created IS NULL OR message.received > account.created)" +
             " AND NOT message.ui_seen" +
             " AND NOT message.ui_hide" +
             " AND NOT message.ui_ignored" +

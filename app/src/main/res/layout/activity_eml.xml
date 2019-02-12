@@ -166,12 +166,13 @@
             android:fontFamily="monospace"
             android:text="Body"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textIsSelectable="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/vSeparatorBody" />
 
         <View
-            android:id="@+id/vSeparatorEml"
+            android:id="@+id/vSeparatorHtml"
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_marginTop="3dp"
@@ -181,6 +182,29 @@
             app:layout_constraintTop_toBottomOf="@id/tvBody" />
 
         <TextView
+            android:id="@+id/tvHtml"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:fontFamily="monospace"
+            android:text="HTML"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vSeparatorHtml" />
+
+        <View
+            android:id="@+id/vSeparatorEml"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="3dp"
+            android:background="?attr/colorSeparator"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvHtml" />
+
+        <TextView
             android:id="@+id/tvEml"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -188,6 +212,7 @@
             android:fontFamily="monospace"
             android:text="EML"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textIsSelectable="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/vSeparatorEml" />
@@ -216,6 +241,7 @@
             tvSubject,
             vSeparatorParts,tvParts,
             vSeparatorBody,tvBody,
+            vSeparatorHtml,tvHtml,
             vSeparatorEml,tvEml" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -1275,8 +1275,7 @@ public class FragmentMessages extends FragmentBase {
                                             List<EntityMessage> messages = db.message().getMessageByThread(
                                                     message.account, message.thread, threading ? null : id, message.folder);
                                             for (EntityMessage threaded : messages)
-                                                if (threaded.uid != null)
-                                                    EntityOperation.queue(context, db, threaded, EntityOperation.DELETE);
+                                                EntityOperation.queue(context, db, threaded, EntityOperation.DELETE);
                                         }
                                     }
 
@@ -1437,6 +1436,11 @@ public class FragmentMessages extends FragmentBase {
         for (String name : values.keySet())
             outState.putLongArray(name, Helper.toLongArray(values.get(name)));
 
+        if (rvMessage != null) {
+            Parcelable rv = rvMessage.getLayoutManager().onSaveInstanceState();
+            outState.putParcelable("rv", rv);
+        }
+
         if (selectionTracker != null)
             selectionTracker.onSaveInstanceState(outState);
     }
@@ -1454,6 +1458,11 @@ public class FragmentMessages extends FragmentBase {
                 values.put(name, new ArrayList<Long>());
                 for (Long value : savedInstanceState.getLongArray(name))
                     values.get(name).add(value);
+            }
+
+            if (rvMessage != null) {
+                Parcelable rv = savedInstanceState.getBundle("rv");
+                rvMessage.getLayoutManager().onRestoreInstanceState(rv);
             }
 
             if (selectionTracker != null)
@@ -2121,21 +2130,20 @@ public class FragmentMessages extends FragmentBase {
 
                             boolean trashable = false;
                             boolean archivable = false;
-                            for (EntityMessage message : messages)
-                                if (message.uid != null) {
-                                    EntityFolder folder = db.folder().getFolder(message.folder);
-                                    if (!EntityFolder.DRAFTS.equals(folder.type) &&
-                                            !EntityFolder.OUTBOX.equals(folder.type) &&
-                                            // allow sent
-                                            !EntityFolder.TRASH.equals(folder.type) &&
-                                            !EntityFolder.JUNK.equals(folder.type))
-                                        trashable = true;
-                                    if (!EntityFolder.isOutgoing(folder.type) &&
-                                            !EntityFolder.TRASH.equals(folder.type) &&
-                                            !EntityFolder.JUNK.equals(folder.type) &&
-                                            !EntityFolder.ARCHIVE.equals(folder.type))
-                                        archivable = true;
-                                }
+                            for (EntityMessage message : messages) {
+                                EntityFolder folder = db.folder().getFolder(message.folder);
+                                if (!EntityFolder.DRAFTS.equals(folder.type) &&
+                                        !EntityFolder.OUTBOX.equals(folder.type) &&
+                                        // allow sent
+                                        !EntityFolder.TRASH.equals(folder.type) &&
+                                        !EntityFolder.JUNK.equals(folder.type))
+                                    trashable = true;
+                                if (!EntityFolder.isOutgoing(folder.type) &&
+                                        !EntityFolder.TRASH.equals(folder.type) &&
+                                        !EntityFolder.JUNK.equals(folder.type) &&
+                                        !EntityFolder.ARCHIVE.equals(folder.type))
+                                    archivable = true;
+                            }
 
                             EntityFolder trash = db.folder().getFolderByType(account, EntityFolder.TRASH);
                             EntityFolder archive = db.folder().getFolderByType(account, EntityFolder.ARCHIVE);
@@ -2192,9 +2200,8 @@ public class FragmentMessages extends FragmentBase {
                     EntityMessage message = db.message().getMessage(id);
                     if (message == null)
                         return null;
-                    EntityAccount account = db.account().getAccount(message.account);
 
-                    if (message.uid != null || account.pop) {
+                    if (message.uid != null) {
                         if (!message.content)
                             EntityOperation.queue(context, db, message, EntityOperation.BODY);
                         if (!message.ui_seen)
