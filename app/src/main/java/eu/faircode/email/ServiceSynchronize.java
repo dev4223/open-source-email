@@ -149,7 +149,8 @@ public class ServiceSynchronize extends LifecycleService {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long RECONNECT_BACKOFF = 90 * 1000L; // milliseconds
-    private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
+    private static final int ACCOUNT_ERROR_AFTER = 90; // minutes
+    private static final int BACKOFF_ERROR_AFTER = 16; // seconds
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
     private static final long STOP_DELAY = 5000L; // milliseconds
     private static final long YIELD_DURATION = 200L; // milliseconds
@@ -920,7 +921,7 @@ public class ServiceSynchronize extends LifecycleService {
                             EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
                             long now = new Date().getTime();
                             long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
-                            if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L) {
+                            if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L && backoff > BACKOFF_ERROR_AFTER) {
                                 Log.i("Reporting sync error after=" + delayed);
                                 Throwable warning = new Throwable(
                                         getString(R.string.title_no_sync,
@@ -1305,7 +1306,9 @@ public class ServiceSynchronize extends LifecycleService {
                             backoff = CONNECT_BACKOFF_START;
 
                             // Record successful connection
-                            db.account().setAccountConnected(account.id, new Date().getTime());
+                            Date last_connected = new Date();
+                            EntityLog.log(this, account.name + " set last_connected=" + last_connected);
+                            db.account().setAccountConnected(account.id, last_connected.getTime());
                             db.account().setAccountError(account.id, capIdle ? null : getString(R.string.title_no_idle));
 
                             // Schedule keep alive alarm
@@ -1479,50 +1482,65 @@ public class ServiceSynchronize extends LifecycleService {
 
                         // Operations should use database transaction when needed
 
-                        if (EntityOperation.SEEN.equals(op.name))
-                            doSeen(folder, (IMAPFolder) ifolder, message, jargs, db);
+                        switch (op.name) {
+                            case EntityOperation.SEEN:
+                                doSeen(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.FLAG.equals(op.name))
-                            doFlag(folder, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.FLAG:
+                                doFlag(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.ANSWERED.equals(op.name))
-                            doAnswered(folder, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.ANSWERED:
+                                doAnswered(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.KEYWORD.equals(op.name))
-                            doKeyword(folder, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.KEYWORD:
+                                doKeyword(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.ADD.equals(op.name))
-                            doAdd(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.ADD:
+                                doAdd(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.MOVE.equals(op.name))
-                            doMove(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.MOVE:
+                                doMove(folder, isession, (IMAPStore) istore, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.DELETE.equals(op.name))
-                            doDelete(folder, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.DELETE:
+                                doDelete(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.SEND.equals(op.name))
-                            doSend(message, db);
+                            case EntityOperation.SEND:
+                                doSend(message, db);
+                                break;
 
-                        else if (EntityOperation.HEADERS.equals(op.name))
-                            doHeaders(folder, (IMAPFolder) ifolder, message, db);
+                            case EntityOperation.HEADERS:
+                                doHeaders(folder, (IMAPFolder) ifolder, message, db);
+                                break;
 
-                        else if (EntityOperation.RAW.equals(op.name))
-                            doRaw(folder, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.RAW:
+                                doRaw(folder, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.BODY.equals(op.name))
-                            doBody(folder, (IMAPFolder) ifolder, message, db);
+                            case EntityOperation.BODY:
+                                doBody(folder, (IMAPFolder) ifolder, message, db);
+                                break;
 
-                        else if (EntityOperation.ATTACHMENT.equals(op.name))
-                            doAttachment(folder, op, (IMAPFolder) ifolder, message, jargs, db);
+                            case EntityOperation.ATTACHMENT:
+                                doAttachment(folder, op, (IMAPFolder) ifolder, message, jargs, db);
+                                break;
 
-                        else if (EntityOperation.SYNC.equals(op.name))
-                            if (EntityFolder.OUTBOX.equals(folder.type))
-                                db.folder().setFolderError(folder.id, null);
-                            else
-                                synchronizeMessages(account, folder, (IMAPFolder) ifolder, jargs, state);
+                            case EntityOperation.SYNC:
+                                if (EntityFolder.OUTBOX.equals(folder.type))
+                                    db.folder().setFolderError(folder.id, null);
+                                else
+                                    synchronizeMessages(account, folder, (IMAPFolder) ifolder, jargs, state);
+                                break;
 
-                        else
-                            throw new MessagingException("Unknown operation name=" + op.name);
+                            default:
+                                throw new MessagingException("Unknown operation name=" + op.name);
+                        }
 
                         // Operation succeeded
                         db.operation().deleteOperation(op.id);
@@ -1902,7 +1920,10 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Get properties
         Properties props = MessageHelper.getSessionProperties(ident.auth_type, ident.realm, ident.insecure);
-        props.put("mail.smtp.localhost", ident.host);
+        if (ident.starttls)
+            props.put("mail.smtp.localhost", ident.host);
+        else
+            props.put("mail.smtps.localhost", ident.host);
 
         // Create session
         final Session isession = Session.getInstance(props, null);
@@ -2033,6 +2054,30 @@ public class ServiceSynchronize extends LifecycleService {
 
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.cancel("send", message.identity.intValue());
+
+                if (message.to != null)
+                    for (Address recipient : message.to) {
+                        String email = ((InternetAddress) recipient).getAddress();
+                        String name = ((InternetAddress) recipient).getPersonal();
+                        List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_TO, email);
+                        if (contacts.size() == 0) {
+                            EntityContact contact = new EntityContact();
+                            contact.type = EntityContact.TYPE_TO;
+                            contact.email = email;
+                            contact.name = name;
+                            db.contact().insertContact(contact);
+                            Log.i("Inserted recipient contact=" + contact);
+                        } else {
+                            EntityContact contact = contacts.get(0);
+                            if (name != null && !name.equals(contact.name)) {
+                                contact.name = name;
+                                db.contact().updateContact(contact);
+                                Log.i("Updated recipient contact=" + contact);
+                            }
+                        }
+                    }
+
+
             } catch (Throwable ex) {
                 if (sid != null)
                     db.message().deleteMessage(sid);
@@ -2279,9 +2324,9 @@ public class ServiceSynchronize extends LifecycleService {
                         // Compatibility
                         if ("Inbox_sub".equals(folder.type))
                             db.folder().setFolderType(folder.id, EntityFolder.USER);
-                        if (EntityFolder.USER.equals(folder.type) && EntityFolder.SYSTEM.equals(type))
+                        else if (EntityFolder.USER.equals(folder.type) && EntityFolder.SYSTEM.equals(type))
                             db.folder().setFolderType(folder.id, type);
-                        if (EntityFolder.SYSTEM.equals(folder.type) && EntityFolder.USER.equals(type))
+                        else if (EntityFolder.SYSTEM.equals(folder.type) && EntityFolder.USER.equals(type))
                             db.folder().setFolderType(folder.id, type);
                     }
                 }
@@ -2775,6 +2820,31 @@ public class ServiceSynchronize extends LifecycleService {
                 db.message().updateMessage(message);
             else
                 Log.i(folder.name + " unchanged uid=" + uid);
+        }
+
+        if (!folder.isOutgoing() && !EntityFolder.ARCHIVE.equals(folder.type)) {
+            Address[] senders = (message.reply != null ? message.reply : message.from);
+            if (senders != null)
+                for (Address sender : senders) {
+                    String email = ((InternetAddress) sender).getAddress();
+                    String name = ((InternetAddress) sender).getPersonal();
+                    List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_FROM, email);
+                    if (contacts.size() == 0) {
+                        EntityContact contact = new EntityContact();
+                        contact.type = EntityContact.TYPE_FROM;
+                        contact.email = email;
+                        contact.name = name;
+                        contact.id = db.contact().insertContact(contact);
+                        Log.i("Inserted sender contact=" + contact);
+                    } else {
+                        EntityContact contact = contacts.get(0);
+                        if (name != null && !name.equals(contact.name)) {
+                            contact.name = name;
+                            db.contact().updateContact(contact);
+                            Log.i("Updated sender contact=" + contact);
+                        }
+                    }
+                }
         }
 
         List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));
