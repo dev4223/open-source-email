@@ -136,9 +136,8 @@ public class FragmentCompose extends FragmentBase {
 
     private ViewGroup view;
     private Spinner spIdentity;
-    private TextView tvExtraPrefix;
     private EditText etExtra;
-    private TextView tvExtraSuffix;
+    private TextView tvDomain;
     private MultiAutoCompleteTextView etTo;
     private ImageView ivToAdd;
     private MultiAutoCompleteTextView etCc;
@@ -193,9 +192,8 @@ public class FragmentCompose extends FragmentBase {
 
         // Get controls
         spIdentity = view.findViewById(R.id.spIdentity);
-        tvExtraPrefix = view.findViewById(R.id.tvExtraPrefix);
         etExtra = view.findViewById(R.id.etExtra);
-        tvExtraSuffix = view.findViewById(R.id.tvExtraSuffix);
+        tvDomain = view.findViewById(R.id.tvDomain);
         etTo = view.findViewById(R.id.etTo);
         ivToAdd = view.findViewById(R.id.ivToAdd);
         etCc = view.findViewById(R.id.etCc);
@@ -228,8 +226,8 @@ public class FragmentCompose extends FragmentBase {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 EntityIdentity identity = (EntityIdentity) parent.getAdapter().getItem(position);
                 int at = (identity == null ? -1 : identity.email.indexOf('@'));
-                tvExtraPrefix.setText(at < 0 ? null : identity.email.substring(0, at));
-                tvExtraSuffix.setText(at < 0 ? null : identity.email.substring(at));
+                etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
+                tvDomain.setText(at < 0 ? null : identity.email.substring(at));
                 Spanned signature = null;
                 if (pro) {
                     if (identity != null && !TextUtils.isEmpty(identity.signature))
@@ -250,8 +248,8 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                tvExtraPrefix.setText(null);
-                tvExtraSuffix.setText(null);
+                etExtra.setHint("");
+                tvDomain.setText(null);
                 tvSignature.setText(null);
                 grpSignature.setVisibility(View.GONE);
             }
@@ -375,8 +373,8 @@ public class FragmentCompose extends FragmentBase {
 
         // Initialize
         setSubtitle(R.string.title_compose);
-        tvExtraPrefix.setText(null);
-        tvExtraSuffix.setText(null);
+        etExtra.setHint("");
+        tvDomain.setText(null);
 
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
@@ -395,31 +393,40 @@ public class FragmentCompose extends FragmentBase {
         getActivity().invalidateOptionsMenu();
         Helper.setViewsEnabled(view, false);
 
-        if (Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS)) {
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                    getContext(),
-                    android.R.layout.simple_list_item_2,
-                    null,
-                    new String[]{
-                            ContactsContract.Contacts.DISPLAY_NAME,
-                            ContactsContract.CommonDataKinds.Email.DATA
-                    },
-                    new int[]{
-                            android.R.id.text1,
-                            android.R.id.text2
-                    },
-                    0);
+        final DB db = DB.getInstance(getContext());
+        final boolean contacts = Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS);
 
-            etTo.setAdapter(adapter);
-            etCc.setAdapter(adapter);
-            etBcc.setAdapter(adapter);
+        SimpleCursorAdapter cadapter = new SimpleCursorAdapter(
+                getContext(),
+                R.layout.spinner_contact,
+                null,
+                contacts
+                        ? new String[]{
+                        ContactsContract.Contacts.DISPLAY_NAME,
+                        ContactsContract.CommonDataKinds.Email.DATA
+                }
+                        : new String[]{
+                        "name",
+                        "email",
+                        "type"
+                },
+                contacts
+                        ? new int[]{android.R.id.text1, android.R.id.text2}
+                        : new int[]{android.R.id.text1, android.R.id.text2, R.id.tvType},
+                0);
 
-            etTo.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-            etCc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-            etBcc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        etTo.setAdapter(cadapter);
+        etCc.setAdapter(cadapter);
+        etBcc.setAdapter(cadapter);
 
-            adapter.setFilterQueryProvider(new FilterQueryProvider() {
+        etTo.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        etCc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        etBcc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+
+        if (contacts)
+            cadapter.setFilterQueryProvider(new FilterQueryProvider() {
                 public Cursor runQuery(CharSequence typed) {
+                    Log.i("Searching provided contact=" + typed);
                     return getContext().getContentResolver().query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             new String[]{
@@ -436,24 +443,31 @@ public class FragmentCompose extends FragmentBase {
                                     ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE");
                 }
             });
-
-            adapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
-                public CharSequence convertToString(Cursor cursor) {
-                    int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-                    int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA);
-                    String name = cursor.getString(colName);
-                    String email = cursor.getString(colEmail);
-                    StringBuilder sb = new StringBuilder();
-                    if (name == null)
-                        sb.append(email);
-                    else {
-                        sb.append("\"").append(name).append("\" ");
-                        sb.append("<").append(email).append(">");
-                    }
-                    return sb.toString();
+        else
+            cadapter.setFilterQueryProvider(new FilterQueryProvider() {
+                @Override
+                public Cursor runQuery(CharSequence typed) {
+                    Log.i("Searching local contact=" + typed);
+                    return db.contact().searchContacts(null, "%" + typed + "%");
                 }
             });
-        }
+
+        cadapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
+            public CharSequence convertToString(Cursor cursor) {
+                int colName = cursor.getColumnIndex(contacts ? ContactsContract.Contacts.DISPLAY_NAME : "name");
+                int colEmail = cursor.getColumnIndex(contacts ? ContactsContract.CommonDataKinds.Email.DATA : "email");
+                String name = cursor.getString(colName);
+                String email = cursor.getString(colEmail);
+                StringBuilder sb = new StringBuilder();
+                if (name == null)
+                    sb.append(email);
+                else {
+                    sb.append("\"").append(name).append("\" ");
+                    sb.append("<").append(email).append(">");
+                }
+                return sb.toString();
+            }
+        });
 
         rvAttachment.setHasFixedSize(false);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
