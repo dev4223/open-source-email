@@ -25,6 +25,7 @@ For authorizing:
 
 ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
 
+A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
 
 ## Planned features
 
@@ -152,6 +153,12 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * Optional: *find accounts on the device* (GET_ACCOUNTS): to use [OAuth](https://en.wikipedia.org/wiki/OAuth) instead of passwords
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 * Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): needed to select accounts (not used/needed on later Android versions)
+
+FairEmail will keep a list of addresses you receive messages from and send messages to
+and will use this list for contact suggestions when no contacts permissions is granted to FairEmail.
+This means you can use FairEmail without the Android contacts provider (address book).
+Note that you can still pick contacts without granting contacts permissions to FairEmail,
+only suggesting contacts won't work without contacts permissions.
 
 <br />
 
@@ -308,6 +315,9 @@ Basically, POP supports only downloading and deleting messages from the inbox.
 So, common operations like setting message attributes (read, starred, answered, etc), adding (backing up) and moving messages is not possible.
 
 See also [what Google writes about it](https://support.google.com/mail/answer/7104828).
+
+For example [Gmail can import messages](https://support.google.com/mail/answer/21289) from another POP account,
+which can be used as a workaround for when your provider doesn't support IMAP.
 
 <br />
 
