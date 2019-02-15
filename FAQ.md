@@ -23,9 +23,8 @@ For authorizing:
 
 ## Known problems
 
-~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
-
-A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
+* ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
+* A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
 
 ## Planned features
 
@@ -1261,7 +1260,17 @@ You can also automate turning synchronization on and off by sending these comman
 
 Sending these commands will automatically turn scheduling off.
 
-Automation can be used for more advanced schedules.
+You can automatically send commands with for example [Tasker](https://tasker.joaoapps.com/userguide/en/intents.html):
+
+```
+New task: Something recognizable
+Action Category: Misc/Send Intent
+Action: eu.faircode.email.ENABLE
+Target: Service
+```
+
+Automation can be used for more advanced schedules,
+like for example multiple synchronization periods per day or different synchronization periods for different days.
 
 Scheduling is a pro feature.
 
