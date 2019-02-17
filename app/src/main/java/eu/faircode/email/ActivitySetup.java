@@ -170,6 +170,31 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
             }
         });
 
+        drawerList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                DrawerItem item = (DrawerItem) parent.getAdapter().getItem(position);
+                if (item.getId() == R.string.menu_privacy) {
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            int count = DB.getInstance(context).contact().clearContacts();
+                            Log.i("Cleared contacts=" + count);
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(ActivitySetup.this, ActivitySetup.this, ex);
+                        }
+                    }.execute(ActivitySetup.this, new Bundle(), "setup:privacy");
+
+                    return true;
+                }
+                return false;
+            }
+        });
+
         PackageManager pm = getPackageManager();
         DrawerAdapter drawerArray = new DrawerAdapter(this);
 
@@ -216,7 +241,7 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
         if (savedInstanceState != null)
             drawerToggle.setDrawerIndicatorEnabled(savedInstanceState.getBoolean("toggle"));
 
-        DB.getInstance(this).account().liveAccounts(true).observe(this, new Observer<List<EntityAccount>>() {
+        DB.getInstance(this).account().liveSynchronizingAccounts().observe(this, new Observer<List<EntityAccount>>() {
             @Override
             public void onChanged(List<EntityAccount> accounts) {
                 hasAccount = (accounts != null && accounts.size() > 0);
