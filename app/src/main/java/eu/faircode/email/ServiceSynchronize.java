@@ -839,6 +839,7 @@ public class ServiceSynchronize extends LifecycleService {
                                 wlAccount.acquire();
                                 String type = (e.getMessageType() == StoreEvent.ALERT ? "alert" : "notice");
                                 if (e.getMessageType() == StoreEvent.ALERT) {
+                                    Log.w(account.name + " " + type + ": " + e.getMessage());
                                     EntityLog.log(ServiceSynchronize.this, account.name + " " + type + ": " + e.getMessage());
                                     db.account().setAccountError(account.id, e.getMessage());
                                     reportError(account, null, new AlertException(e.getMessage()));
@@ -1550,6 +1551,7 @@ public class ServiceSynchronize extends LifecycleService {
                         db.operation().deleteOperation(op.id);
                     } catch (Throwable ex) {
                         // TODO: SMTP response codes: https://www.ietf.org/rfc/rfc821.txt
+                        Log.e(folder.name, ex);
                         reportError(account, folder, ex);
 
                         db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
@@ -1770,7 +1772,7 @@ public class ServiceSynchronize extends LifecycleService {
                 imessage.setFlag(Flags.Flag.DRAFT, true);
 
         // Add message
-        long uid = append(istore, ifolder, imessage, message.msgid);
+        long uid = append(istore, ifolder, imessage);
         Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
         db.message().setMessageUid(message.id, uid);
 
@@ -1820,10 +1822,9 @@ public class ServiceSynchronize extends LifecycleService {
                 !EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.DRAFTS.equals(target.type)) {
             // Autoread
-            if (ifolder.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+            if (ifolder.getPermanentFlags().contains(Flags.Flag.SEEN))
                 if (autoread && !imessage.isSet(Flags.Flag.SEEN))
                     imessage.setFlag(Flags.Flag.SEEN, true);
-            }
 
             // Move message to
             ifolder.moveMessages(new Message[]{imessage}, itarget);
@@ -1836,20 +1837,23 @@ public class ServiceSynchronize extends LifecycleService {
             imessage.writeTo(bos);
 
             // Deserialize target message
+            // Make sure the message has a message ID
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            Message icopy = new MimeMessage(isession, bis);
+            String msgid = message.msgid;
+            if (msgid == null) {
+                msgid = EntityMessage.generateMessageId();
+                Log.i(target.name + " generated message id=" + msgid);
+            }
+            Message icopy = new MimeMessageEx(isession, bis, msgid);
 
             try {
                 // Needed to read flags
                 itarget.open(Folder.READ_WRITE);
 
                 // Auto read
-                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
-                    if (autoread && !icopy.isSet(Flags.Flag.SEEN)) {
-                        Log.i("Copy autoread");
+                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN))
+                    if (autoread && !icopy.isSet(Flags.Flag.SEEN))
                         icopy.setFlag(Flags.Flag.SEEN, true);
-                    }
-                }
 
                 // Move from drafts
                 if (EntityFolder.DRAFTS.equals(folder.type))
@@ -1862,8 +1866,8 @@ public class ServiceSynchronize extends LifecycleService {
                         icopy.setFlag(Flags.Flag.DRAFT, true);
 
                 // Append target
-                long uid = append(istore, itarget, icopy, message.msgid);
-                Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
+                long uid = append(istore, itarget, (MimeMessage) icopy);
+                Log.i(target.name + " appended id=" + message.id + " uid=" + uid);
                 db.message().setMessageUid(message.id, uid);
 
                 // Some providers, like Gmail, don't honor the appended seen flag
@@ -1871,7 +1875,7 @@ public class ServiceSynchronize extends LifecycleService {
                     boolean seen = (autoread || message.ui_seen);
                     icopy = itarget.getMessageByUID(uid);
                     if (seen != icopy.isSet(Flags.Flag.SEEN)) {
-                        Log.i(folder.name + " Fixing id=" + message.id + " seen=" + seen);
+                        Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
                         icopy.setFlag(Flags.Flag.SEEN, seen);
                     }
                 }
@@ -1881,7 +1885,7 @@ public class ServiceSynchronize extends LifecycleService {
                     boolean draft = EntityFolder.DRAFTS.equals(target.type);
                     icopy = itarget.getMessageByUID(uid);
                     if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
-                        Log.i(folder.name + " Fixing id=" + message.id + " draft=" + draft);
+                        Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
                         icopy.setFlag(Flags.Flag.DRAFT, draft);
                     }
                 }
@@ -1978,115 +1982,71 @@ public class ServiceSynchronize extends LifecycleService {
             db.identity().setIdentityState(ident.id, "connected");
 
             // Send message
-            Long sid = null;
+            Address[] to = imessage.getAllRecipients();
+            itransport.sendMessage(imessage, to);
+            EntityLog.log(this, "Sent via " + ident.host + "/" + ident.user +
+                    " to " + TextUtils.join(", ", to));
+
+            File refFile = EntityMessage.getRefFile(this, message.id);
+
             try {
+                db.beginTransaction();
+
+                db.message().setMessageSent(message.id, imessage.getSentDate().getTime());
+                db.message().setMessageSeen(message.id, true);
+                db.message().setMessageUiSeen(message.id, true);
+                db.message().setMessageError(message.id, null);
+
                 // Append replied/forwarded text
-                String body = Helper.readText(EntityMessage.getFile(this, message.id));
-                File refFile = EntityMessage.getRefFile(this, message.id);
+                StringBuilder sb = new StringBuilder();
+                sb.append(Helper.readText(EntityMessage.getFile(this, message.id)));
                 if (refFile.exists())
-                    body += Helper.readText(refFile);
+                    sb.append(Helper.readText(refFile));
 
-                EntityFolder sent = db.folder().getFolderByType(ident.account, EntityFolder.SENT);
-                if (sent != null) {
-                    long id = message.id;
-                    long folder = message.folder;
+                Helper.writeText(EntityMessage.getFile(this, message.id), sb.toString());
 
-                    message.id = null;
-                    message.folder = sent.id;
-                    message.seen = true;
-                    message.ui_seen = true;
-                    message.ui_hide = true;
-                    message.ui_browsed = true; // prevent deleting on sync
-                    message.error = null;
-                    message.id = db.message().insertMessage(message);
-                    Helper.writeText(EntityMessage.getFile(this, message.id), body);
-
-                    sid = message.id;
-                    message.id = id;
-                    message.folder = folder;
-                    message.seen = false;
-                    message.ui_seen = false;
-                    message.ui_browsed = false;
-                    message.ui_hide = false;
-
-                    EntityAttachment.copy(this, db, message.id, sid);
-                }
-
-                Address[] to = imessage.getAllRecipients();
-                itransport.sendMessage(imessage, to);
-                EntityLog.log(this, "Sent via " + ident.host + "/" + ident.user +
-                        " to " + TextUtils.join(", ", to));
-
-                try {
-                    db.beginTransaction();
-
-                    if (sid == null) {
-                        db.message().setMessageSent(message.id, imessage.getSentDate().getTime());
-                        db.message().setMessageSeen(message.id, true);
-                        db.message().setMessageUiSeen(message.id, true);
-                        db.message().setMessageError(message.id, null);
-                        Helper.writeText(EntityMessage.getFile(this, message.id), body);
-                    } else {
-                        db.message().setMessageSent(sid, imessage.getSentDate().getTime());
-                        db.message().setMessageUiHide(sid, false);
-                        db.message().deleteMessage(message.id);
-
-                        if (ident.store_sent) {
-                            message.id = sid;
-                            message.folder = sent.id;
-                            EntityOperation.queue(this, db, message, EntityOperation.ADD);
-                        }
-                    }
-
-                    db.setTransactionSuccessful();
-                } finally {
-                    db.endTransaction();
-                }
-
-                if (refFile.exists())
-                    refFile.delete();
-
-                if (message.inreplyto != null) {
-                    List<EntityMessage> replieds = db.message().getMessageByMsgId(message.account, message.inreplyto);
-                    for (EntityMessage replied : replieds)
-                        if (replied.uid != null)
-                            EntityOperation.queue(this, db, replied, EntityOperation.ANSWERED, true);
-                }
-
-                db.identity().setIdentityConnected(ident.id, new Date().getTime());
-                db.identity().setIdentityError(ident.id, null);
-
-                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                nm.cancel("send", message.identity.intValue());
-
-                if (message.to != null)
-                    for (Address recipient : message.to) {
-                        String email = ((InternetAddress) recipient).getAddress();
-                        String name = ((InternetAddress) recipient).getPersonal();
-                        List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_TO, email);
-                        if (contacts.size() == 0) {
-                            EntityContact contact = new EntityContact();
-                            contact.type = EntityContact.TYPE_TO;
-                            contact.email = email;
-                            contact.name = name;
-                            db.contact().insertContact(contact);
-                            Log.i("Inserted recipient contact=" + contact);
-                        } else {
-                            EntityContact contact = contacts.get(0);
-                            if (name != null && !name.equals(contact.name)) {
-                                contact.name = name;
-                                db.contact().updateContact(contact);
-                                Log.i("Updated recipient contact=" + contact);
-                            }
-                        }
-                    }
-
-
-            } catch (Throwable ex) {
-                if (sid != null)
-                    db.message().deleteMessage(sid);
-                throw ex;
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
             }
+
+            if (refFile.exists())
+                refFile.delete();
+
+            if (message.inreplyto != null) {
+                List<EntityMessage> replieds = db.message().getMessageByMsgId(message.account, message.inreplyto);
+                for (EntityMessage replied : replieds)
+                    if (replied.uid != null)
+                        EntityOperation.queue(this, db, replied, EntityOperation.ANSWERED, true);
+            }
+
+            db.identity().setIdentityConnected(ident.id, new Date().getTime());
+            db.identity().setIdentityError(ident.id, null);
+
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            nm.cancel("send", message.identity.intValue());
+
+            if (message.to != null)
+                for (Address recipient : message.to) {
+                    String email = ((InternetAddress) recipient).getAddress();
+                    String name = ((InternetAddress) recipient).getPersonal();
+                    List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_TO, email);
+                    if (contacts.size() == 0) {
+                        EntityContact contact = new EntityContact();
+                        contact.type = EntityContact.TYPE_TO;
+                        contact.email = email;
+                        contact.name = name;
+                        db.contact().insertContact(contact);
+                        Log.i("Inserted recipient contact=" + contact);
+                    } else {
+                        EntityContact contact = contacts.get(0);
+                        if (name != null && !name.equals(contact.name)) {
+                            contact.name = name;
+                            db.contact().updateContact(contact);
+                            Log.i("Updated recipient contact=" + contact);
+                        }
+                    }
+                }
         } catch (MessagingException ex) {
             if (ex instanceof SendFailedException) {
                 SendFailedException sfe = (SendFailedException) ex;
@@ -2219,7 +2179,7 @@ public class ServiceSynchronize extends LifecycleService {
         parts.downloadAttachment(this, db, attachment.id, sequence);
     }
 
-    private long append(IMAPStore istore, IMAPFolder ifolder, Message imessage, String msgid) throws MessagingException {
+    private long append(IMAPStore istore, IMAPFolder ifolder, MimeMessage imessage) throws MessagingException {
         if (istore.hasCapability("UIDPLUS")) {
             AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
             if (uids == null || uids.length == 0)
@@ -2228,7 +2188,7 @@ public class ServiceSynchronize extends LifecycleService {
         } else {
             ifolder.appendMessages(new Message[]{imessage});
             long uid = -1;
-            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
+            Message[] messages = ifolder.search(new MessageIDTerm(imessage.getMessageID()));
             if (messages != null)
                 for (Message iappended : messages) {
                     long muid = ifolder.getUID(iappended);
@@ -2532,12 +2492,13 @@ public class ServiceSynchronize extends LifecycleService {
 
             // Add local sent messages to remote sent folder
             if (EntityFolder.SENT.equals(folder.type)) {
-                List<EntityMessage> orphans = db.message().getSentOrphans(folder.id);
-                Log.i(folder.name + " sent orphans=" + orphans.size());
+                List<EntityMessage> orphans = db.message().getSentOrphans(folder.account);
+                Log.i(folder.name + " sent orphans=" + orphans.size() + " account=" + folder.account);
                 for (EntityMessage orphan : orphans) {
-                    Log.i(folder.name + " adding orphan id=" + orphan.id);
+                    Log.i(folder.name + " adding orphan id=" + orphan.id + " sent=" + new Date(orphan.sent));
+                    orphan.folder = folder.id;
+                    db.message().updateMessage(orphan);
                     EntityOperation.queue(this, db, orphan, EntityOperation.ADD);
-                    db.message().setMessageUiBrowsed(orphan.id, false); // Prevent adding again
                 }
             }
 
@@ -2631,7 +2592,8 @@ public class ServiceSynchronize extends LifecycleService {
                         " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
                         " msgid=" + dup.msgid + " thread=" + dup.thread);
 
-                if (dup.folder.equals(folder.id)) {
+                if (dup.folder.equals(folder.id) ||
+                        (EntityFolder.OUTBOX.equals(dfolder.type) && EntityFolder.SENT.equals(folder.type))) {
                     String thread = helper.getThreadId(uid);
                     Log.i(folder.name + " found as id=" + dup.id +
                             " uid=" + dup.uid + "/" + uid +
