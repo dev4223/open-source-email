@@ -102,23 +102,11 @@ public class EntityOperation {
 
             EntityFolder folder = db.folder().getFolder(fid);
 
-            int sync_days = folder.sync_days;
-            if (folder.last_sync != null) {
-                int ago_days = (int) ((new Date().getTime() - folder.last_sync) / (24 * 3600 * 1000L)) + 1;
-                if (ago_days > sync_days)
-                    sync_days = ago_days;
-            }
-
-            JSONArray jargs = new JSONArray();
-            jargs.put(folder.initialize ? Math.min(EntityFolder.DEFAULT_INIT, folder.keep_days) : sync_days);
-            jargs.put(folder.keep_days);
-            jargs.put(folder.download);
-
             EntityOperation operation = new EntityOperation();
             operation.folder = folder.id;
             operation.message = null;
             operation.name = SYNC;
-            operation.args = jargs.toString();
+            operation.args = folder.getSyncArgs().toString();
             operation.created = new Date().getTime();
             operation.id = db.operation().insertOperation(operation);
 
