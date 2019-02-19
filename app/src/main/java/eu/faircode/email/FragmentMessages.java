@@ -544,9 +544,18 @@ public class FragmentMessages extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 swipeRefresh.setRefreshing(false);
 
-                if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
+                if (ex instanceof IllegalArgumentException) {
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    snackbar.setAction(R.string.title_enable, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("enabled", true).apply();
+                            ServiceSynchronize.reload(getContext(), "refresh/enabled");
+                        }
+                    });
+                    snackbar.show();
+                } else
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
         }.execute(FragmentMessages.this, args, "messages:refresh");
