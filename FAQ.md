@@ -29,6 +29,7 @@ For authorizing:
 ## Planned features
 
 * ~~Synchronize on demand~~
+* ~~Semi-automatic encryption~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -137,6 +138,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(76) What does 'Clear local messages' ?](#user-content-faq76)
 * [(77) Why are messages sometimes shown with a small delay?](#user-content-faq77)
 * [(78) How do I use schedules?](#user-content-faq78)
+* [(79) How do I use synchronize on demand?](#user-content-faq79)
 
 [I have another question.](#support)
 
@@ -327,9 +329,12 @@ which can be used as a workaround for when your provider doesn't support IMAP.
 **(12) How does encryption/decryption work?**
 
 First of all you need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/).
-To encrypt a message before sending, just select the menu *Encrypt*. Similarly, to decrypt a received message, just select the menu *Decrypt*.
+To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
+Similarly, to decrypt a received message, just select the menu *Decrypt* in the expanded message view.
+
+You can enable *Encrypt by default* in the identity settings.
+
 Encryption is [Autocrypt](https://autocrypt.org/) compatible. For security reasons received messages are not decrypted automatically.
-Encryption/decryption is a pro feature.
 
 Inline PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
 see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
@@ -337,13 +342,15 @@ see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about w
 S/MIME is not supported because it is not used much and because key management is complex.
 There are also [security concerns](https://security.stackexchange.com/a/83752).
 
-Note that signed only or encrypted only messages are not supported, see here for some considerations:
+Note that signed only or encrypted only messages are not supported, see here about why not:
 
 * [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
 * [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
 * [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
 If you want, you can verify a signature by opening the *signature.asc* attachment.
+
+Encryption/decryption is a pro feature.
 
 <br />
 
@@ -1092,6 +1099,7 @@ to justify making FairEmail available in the [Google Play Family Library](https:
 **(67) How can I snooze conversations?**
 
 Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*.
+Alternatively, use the *Snooze ...* 'more' menu in the expanded message view.
 Select the time the conversation(s) should snooze and confirm by tapping OK.
 The conversations will be hidden for the selected time and shown again afterwards.
 You will receive a new message notification as reminder.
@@ -1275,6 +1283,23 @@ Automation can be used for more advanced schedules,
 like for example multiple synchronization periods per day or different synchronization periods for different days.
 
 Scheduling is a pro feature.
+
+<br />
+
+<a name="faq79"></a>
+**(79) How do I use synchronize on demand?**
+
+Normally, FairEmail maintains a connection to the configured email servers whenever possible to receive messages in real-time.
+If you don't want this, for example to be not disturbed or to save on battery usage,
+you can enable on demand synchronization in the account settings.
+When enabled FairEmail will not keep a connection to the email server anymore,
+instead you can manually synchronize messages by either using pull-down-to-refresh or by using the folder menu *Synchronize now*.
+
+Note that both real-time and on demand synchronization requires FairEmail to be globally enabled.
+You can globally enable or disable FairEmail with the advanced option *Synchronize*,
+by using [a schedule](#user-content-faq78) or by using [a quick settings tile](#user-content-faq30).
+
+When globally enabled FairEmail will always show [a status bar notification](#user-content-faq2).
 
 <br />
 

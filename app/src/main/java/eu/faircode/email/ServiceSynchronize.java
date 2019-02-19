@@ -2030,8 +2030,7 @@ public class ServiceSynchronize extends LifecycleService {
             if (message.inreplyto != null) {
                 List<EntityMessage> replieds = db.message().getMessageByMsgId(message.account, message.inreplyto);
                 for (EntityMessage replied : replieds)
-                    if (replied.uid != null)
-                        EntityOperation.queue(this, db, replied, EntityOperation.ANSWERED, true);
+                    EntityOperation.queue(this, db, replied, EntityOperation.ANSWERED, true);
             }
 
             db.identity().setIdentityConnected(ident.id, new Date().getTime());
@@ -2257,6 +2256,9 @@ public class ServiceSynchronize extends LifecycleService {
             db.folder().setFolderState(folder.id, "connected");
             db.folder().setFolderError(folder.id, null);
             Log.i(folder.name + " connected");
+
+            // Process operations
+            processOperations(account, folder, isession, istore, ifolder, new ServiceState());
 
             // Synchronize messages
             synchronizeMessages(account, folder, (IMAPFolder) ifolder, folder.getSyncArgs(), new ServiceState());
