@@ -149,6 +149,7 @@ public class Helper {
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException ex) {
+                Log.w(ex);
                 Toast.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
             } catch (Throwable ex) {
                 Log.e(ex);
@@ -1000,5 +1001,9 @@ public class Helper {
             sb.append(kar);
         }
         return sb.toString();
+    }
+
+    static String sanitizeFilename(String name) {
+        return (name == null ? null : name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"));
     }
 }
