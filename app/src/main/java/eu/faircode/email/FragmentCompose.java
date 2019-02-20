@@ -1293,28 +1293,11 @@ public class FragmentCompose extends FragmentBase {
             finish();
         else if (isEmpty())
             onAction(R.id.action_delete);
-        else
-            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                    .setMessage(R.string.title_ask_discard)
-                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            onAction(R.id.action_delete);
-                        }
-                    })
-                    .setNegativeButton(R.string.title_no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                            finish();
-                        }
-                    })
-                    .show();
+        else {
+            autosave = false;
+            onAction(R.id.action_save);
+            finish();
+        }
     }
 
     private boolean isEmpty() {
@@ -1460,15 +1443,17 @@ public class FragmentCompose extends FragmentBase {
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeFile(file.getAbsolutePath(), options);
 
-                int scaleTo = REDUCED_IMAGE_SIZE;
-                int factor = Math.min(options.outWidth / scaleTo, options.outWidth / scaleTo);
+                int factor = 1;
+                while (options.outWidth / factor > REDUCED_IMAGE_SIZE ||
+                        options.outHeight / factor > REDUCED_IMAGE_SIZE)
+                    factor *= 2;
+
                 if (factor > 1) {
                     options.inJustDecodeBounds = false;
                     options.inSampleSize = factor;
 
                     Bitmap scaled = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
                     if (scaled != null) {
-
                         Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight());
 
                         OutputStream out = null;
@@ -1521,7 +1506,7 @@ public class FragmentCompose extends FragmentBase {
                 if (draft == null || draft.ui_hide) {
                     // New draft
                     if ("edit".equals(action))
-                        throw new IllegalStateException("Draft not found hide=" + (draft != null));
+                        throw new IllegalArgumentException("Draft not found hide=" + (draft != null));
 
                     List<TupleIdentityEx> identities = db.identity().getComposableIdentities(null);
 
@@ -1741,7 +1726,7 @@ public class FragmentCompose extends FragmentBase {
                 } else {
                     if (!draft.content) {
                         if (draft.uid == null)
-                            throw new IllegalStateException("Draft without uid");
+                            throw new IllegalArgumentException("Draft without uid");
                         EntityOperation.queue(context, db, draft, EntityOperation.BODY);
                     }
 
@@ -2118,7 +2103,7 @@ public class FragmentCompose extends FragmentBase {
 
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     if (!prefs.getBoolean("enabled", true))
-                        throw new IllegalArgumentException(context.getString(R.string.title_sync_disabled));
+                        throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
 
                     // Delete draft (cannot move to outbox)
                     EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
@@ -2198,7 +2183,18 @@ public class FragmentCompose extends FragmentBase {
                 finish();
             else if (ex instanceof IllegalArgumentException || ex instanceof AddressException)
                 Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-            else
+            else if (ex instanceof IllegalStateException) {
+                Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                snackbar.setAction(R.string.title_enable, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        prefs.edit().putBoolean("enabled", true).apply();
+                        ServiceSynchronize.reload(getContext(), "compose/disabled");
+                    }
+                });
+                snackbar.show();
+            } else
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
         }
     };

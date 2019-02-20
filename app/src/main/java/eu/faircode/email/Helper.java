@@ -149,6 +149,7 @@ public class Helper {
             try {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException ex) {
+                Log.w(ex);
                 Toast.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
             } catch (Throwable ex) {
                 Log.e(ex);
@@ -287,11 +288,17 @@ public class Helper {
 
     static String formatThrowable(Throwable ex, String separator) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ex.getMessage() == null ? ex.getClass().getName() : ex.getMessage());
+        if (BuildConfig.DEBUG)
+            sb.append(ex.toString());
+        else
+            sb.append(ex.getMessage() == null ? ex.getClass().getName() : ex.getMessage());
 
         Throwable cause = ex.getCause();
         while (cause != null) {
-            sb.append(separator).append(cause.getMessage() == null ? cause.getClass().getName() : cause.getMessage());
+            if (BuildConfig.DEBUG)
+                sb.append(separator).append(cause.toString());
+            else
+                sb.append(separator).append(cause.getMessage() == null ? cause.getClass().getName() : cause.getMessage());
             cause = cause.getCause();
         }
 
@@ -1000,5 +1007,9 @@ public class Helper {
             sb.append(kar);
         }
         return sb.toString();
+    }
+
+    static String sanitizeFilename(String name) {
+        return (name == null ? null : name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"));
     }
 }
