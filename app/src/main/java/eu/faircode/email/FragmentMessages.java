@@ -493,7 +493,7 @@ public class FragmentMessages extends FragmentBase {
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 if (!prefs.getBoolean("enabled", true))
-                    throw new IllegalArgumentException(context.getString(R.string.title_sync_disabled));
+                    throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
 
                 DB db = DB.getInstance(context);
                 try {
@@ -544,14 +544,16 @@ public class FragmentMessages extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 swipeRefresh.setRefreshing(false);
 
-                if (ex instanceof IllegalArgumentException) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else if (ex instanceof IllegalStateException) {
                     Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
                     snackbar.setAction(R.string.title_enable, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                             prefs.edit().putBoolean("enabled", true).apply();
-                            ServiceSynchronize.reload(getContext(), "refresh/enabled");
+                            ServiceSynchronize.reload(getContext(), "refresh/disabled");
                         }
                     });
                     snackbar.show();

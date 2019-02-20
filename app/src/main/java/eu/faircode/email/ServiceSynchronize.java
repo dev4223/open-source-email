@@ -1167,9 +1167,7 @@ public class ServiceSynchronize extends LifecycleService {
                                             ((IMAPFolder) ifolder).idle(false);
                                         }
                                     } catch (Throwable ex) {
-                                        Log.e(folder.name, ex);
-                                        reportError(account, folder, ex);
-                                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                                        Log.w(folder.name, ex);
                                         state.error();
                                     } finally {
                                         Log.i(folder.name + " end idle");
@@ -1748,11 +1746,6 @@ public class ServiceSynchronize extends LifecycleService {
             EntityIdentity identity =
                     (message.identity == null ? null : db.identity().getIdentity(message.identity));
 
-            List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-            for (EntityAttachment attachment : attachments)
-                if (!attachment.available)
-                    throw new IllegalArgumentException("Attachment missing");
-
             imessage = MessageHelper.from(this, message, isession,
                     identity == null ? false : identity.plain_only);
         } else {
@@ -1855,14 +1848,15 @@ public class ServiceSynchronize extends LifecycleService {
             imessage.writeTo(bos);
 
             // Deserialize target message
-            // Make sure the message has a message ID
             ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            String msgid = message.msgid;
-            if (msgid == null) {
-                msgid = EntityMessage.generateMessageId();
+            Message icopy = new MimeMessage(isession, bis);
+
+            // Make sure the message has a message ID
+            if (message.msgid == null) {
+                String msgid = EntityMessage.generateMessageId();
                 Log.i(target.name + " generated message id=" + msgid);
+                icopy.setHeader("Message-ID", msgid);
             }
-            Message icopy = new MimeMessageEx(isession, bis, msgid);
 
             try {
                 // Needed to read flags
@@ -2210,18 +2204,22 @@ public class ServiceSynchronize extends LifecycleService {
             return uids[0].uid;
         } else {
             ifolder.appendMessages(new Message[]{imessage});
+
             long uid = -1;
-            Message[] messages = ifolder.search(new MessageIDTerm(imessage.getMessageID()));
+            String msgid = imessage.getMessageID();
+            Log.i("Searching for appended msgid=" + msgid);
+            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
             if (messages != null)
                 for (Message iappended : messages) {
                     long muid = ifolder.getUID(iappended);
+                    Log.i("Found appended uid=" + muid);
                     // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
                     if (muid > uid)
                         uid = muid;
                 }
 
             if (uid < 0)
-                throw new MessageRemovedException("uid not found");
+                throw new IllegalArgumentException("uid not found");
 
             return uid;
         }
