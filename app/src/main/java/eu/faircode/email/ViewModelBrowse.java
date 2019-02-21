@@ -224,9 +224,10 @@ public class ViewModelBrowse extends ViewModel {
                                     return imessages;
                                 } else {
                                     // No UTF-8 support
-                                    String search = Normalizer
-                                            .normalize(state.search, Normalizer.Form.NFD)
+                                    String search = state.search.replace("ß", "ss"); // Eszett
+                                    search = Normalizer.normalize(search, Normalizer.Form.NFD)
                                             .replaceAll("[^\\p{ASCII}]", "");
+
                                     Log.i("Boundary ASCII search=" + search);
                                     SearchTerm term = new OrTerm(
                                             new OrTerm(
@@ -311,13 +312,12 @@ public class ViewModelBrowse extends ViewModel {
                     } catch (IOException ex) {
                         if (ex.getCause() instanceof MessagingException) {
                             Log.w(folder.name + " boundary", ex);
-                            if (!(ex.getCause() instanceof MessageRemovedException))
-                                db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                            db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                         } else
                             throw ex;
                     } catch (Throwable ex) {
                         Log.e(folder.name + " boundary", ex);
-                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                     } finally {
                         ((IMAPMessage) isub[j]).invalidateHeaders();
                     }
