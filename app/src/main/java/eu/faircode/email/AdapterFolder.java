@@ -246,8 +246,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 popupMenu.getMenu().add(Menu.NONE, action_empty_trash, 3, R.string.title_empty_trash);
 
             if (folder.account != null) {
-                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 4, R.string.title_edit_properties);
-                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 5, R.string.title_edit_rules);
+                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 4, R.string.title_edit_rules);
+                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 5, R.string.title_edit_properties);
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -266,12 +266,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             onActionEmptyTrash();
                             return true;
 
-                        case action_edit_properties:
-                            onActionEditProperties();
-                            return true;
-
                         case action_edit_rules:
                             onActionEditRules();
+                            return true;
+
+                        case action_edit_properties:
+                            onActionEditProperties();
                             return true;
 
                         default:
@@ -284,9 +284,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     args.putLong("account", folder.account == null ? -1 : folder.account);
                     args.putLong("folder", folder.id);
 
-                    new SimpleTask<Void>() {
+                    new SimpleTask<Boolean>() {
                         @Override
-                        protected Void onExecute(Context context, Bundle args) {
+                        protected Boolean onExecute(Context context, Bundle args) {
                             long aid = args.getLong("account");
                             long fid = args.getLong("folder");
 
@@ -294,27 +294,38 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             if (!prefs.getBoolean("enabled", true))
                                 throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
 
+                            boolean internet = (Helper.isMetered(context, true) != null);
+
                             DB db = DB.getInstance(context);
                             try {
                                 db.beginTransaction();
 
-                                if (aid < 0) // outbox
+                                boolean now;
+                                if (aid < 0) { // outbox
+                                    now = "connected".equals(folder.state);
                                     EntityOperation.sync(db, fid);
-                                else {
-                                    if ("connected".equals(db.account().getAccount(aid).state))
+                                } else {
+                                    if (!internet || "connected".equals(db.account().getAccount(aid).state)) {
+                                        now = internet;
                                         EntityOperation.sync(db, fid);
-                                    else {
-                                        db.folder().setFolderSyncState(folder.id, "requested");
+                                    } else {
+                                        now = true;
                                         ServiceSynchronize.sync(context, fid);
                                     }
                                 }
 
                                 db.setTransactionSuccessful();
+
+                                return now;
                             } finally {
                                 db.endTransaction();
                             }
+                        }
 
-                            return null;
+                        @Override
+                        protected void onExecuted(Bundle args, Boolean now) {
+                            if (!now)
+                                Snackbar.make(itemView, R.string.title_sync_delayed, Snackbar.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -404,19 +415,19 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             .show();
                 }
 
-                private void onActionEditProperties() {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                    lbm.sendBroadcast(
-                            new Intent(ActivityView.ACTION_EDIT_FOLDER)
-                                    .putExtra("id", folder.id));
-                }
-
                 private void onActionEditRules() {
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     lbm.sendBroadcast(
                             new Intent(ActivityView.ACTION_EDIT_RULES)
                                     .putExtra("account", folder.account)
                                     .putExtra("folder", folder.id));
+                }
+
+                private void onActionEditProperties() {
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(
+                            new Intent(ActivityView.ACTION_EDIT_FOLDER)
+                                    .putExtra("id", folder.id));
                 }
             });
 
@@ -447,14 +458,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         setHasStableIds(true);
     }
 
-    private boolean showAll = false;
-
     void showHidden(boolean show) {
-        showAll = show;
-        set(account, all);
+        set(account, show, all);
     }
 
-    public void set(long account, @NonNull List<TupleFolderEx> _folders) {
+    public void set(long account, boolean showAll, @NonNull List<TupleFolderEx> _folders) {
         Log.i("Set account=" + account + " folders=" + _folders.size());
 
         this.account = account;

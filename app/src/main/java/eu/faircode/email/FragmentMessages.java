@@ -495,6 +495,8 @@ public class FragmentMessages extends FragmentBase {
                 if (!prefs.getBoolean("enabled", true))
                     throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
 
+                boolean internet = (Helper.isMetered(context, true) != null);
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
@@ -513,15 +515,15 @@ public class FragmentMessages extends FragmentBase {
                     boolean now = false;
                     for (EntityFolder folder : folders)
                         if (folder.account == null) { // outbox
-                            now = ("connected".equals(folder.state));
+                            now = "connected".equals(folder.state);
                             EntityOperation.sync(db, folder.id);
                         } else {
-                            now = true;
                             EntityAccount account = db.account().getAccount(folder.account);
-                            if ("connected".equals(account.state))
+                            if (!internet || "connected".equals(account.state)) {
+                                now = internet;
                                 EntityOperation.sync(db, folder.id);
-                            else {
-                                db.folder().setFolderSyncState(folder.id, "requested");
+                            } else {
+                                now = true;
                                 ServiceSynchronize.sync(context, folder.id);
                             }
                         }
@@ -536,8 +538,10 @@ public class FragmentMessages extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Boolean now) {
-                if (!now)
+                if (!now) {
                     swipeRefresh.setRefreshing(false);
+                    Snackbar.make(view, R.string.title_sync_delayed, Snackbar.LENGTH_LONG).show();
+                }
             }
 
             @Override
