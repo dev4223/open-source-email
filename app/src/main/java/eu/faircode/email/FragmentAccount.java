@@ -159,8 +159,9 @@ public class FragmentAccount extends FragmentBase {
     @Override
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        setSubtitle(R.string.title_edit_account);
         setHasOptionsMenu(true);
+
+        setSubtitle(R.string.title_edit_account);
 
         view = (ViewGroup) inflater.inflate(R.layout.fragment_account, container, false);
 
@@ -239,6 +240,7 @@ public class FragmentAccount extends FragmentBase {
                 tvIdle.setVisibility(View.GONE);
                 tvMove.setVisibility(View.GONE);
                 tvUidPlus.setVisibility(View.GONE);
+                tvUtf8.setVisibility(View.GONE);
 
                 Object tag = adapterView.getTag();
                 if (tag != null && (Integer) tag == position)
@@ -445,6 +447,7 @@ public class FragmentAccount extends FragmentBase {
         tvIdle.setVisibility(View.GONE);
         tvMove.setVisibility(View.GONE);
         tvUidPlus.setVisibility(View.GONE);
+        tvUtf8.setVisibility(View.GONE);
 
         btnCheck.setVisibility(View.GONE);
         pbCheck.setVisibility(View.GONE);

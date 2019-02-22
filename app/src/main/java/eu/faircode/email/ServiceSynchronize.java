@@ -55,6 +55,7 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
+import com.sun.mail.smtp.SMTPTransport;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
@@ -72,6 +73,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -1551,7 +1554,7 @@ public class ServiceSynchronize extends LifecycleService {
                                 break;
 
                             case EntityOperation.SYNC:
-                                if (EntityFolder.OUTBOX.equals(folder.type))
+                                if (folder.account == null)
                                     db.folder().setFolderError(folder.id, null);
                                 else
                                     synchronizeMessages(account, folder, (IMAPFolder) ifolder, jargs, state);
@@ -1878,7 +1881,6 @@ public class ServiceSynchronize extends LifecycleService {
                 // Append target
                 long uid = append(istore, itarget, (MimeMessage) icopy);
                 Log.i(target.name + " appended id=" + message.id + " uid=" + uid);
-                db.message().setMessageUid(message.id, uid);
 
                 // Some providers, like Gmail, don't honor the appended seen flag
                 if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
@@ -1938,13 +1940,25 @@ public class ServiceSynchronize extends LifecycleService {
 
         // Get properties
         Properties props = MessageHelper.getSessionProperties(ident.auth_type, ident.realm, ident.insecure);
-        if (ident.starttls)
-            props.put("mail.smtp.localhost", ident.host);
-        else
-            props.put("mail.smtps.localhost", ident.host);
+        InetAddress ip = (ident.use_ip ? Helper.getLocalIp(ServiceSynchronize.this) : null);
+        if (ip == null) {
+            EntityLog.log(ServiceSynchronize.this, "Send local host=" + ident.host);
+            if (ident.starttls)
+                props.put("mail.smtp.localhost", ident.host);
+            else
+                props.put("mail.smtps.localhost", ident.host);
+        } else {
+            String haddr = (ip instanceof Inet6Address ? "IPv6:" : "") + ip.getHostAddress();
+            EntityLog.log(ServiceSynchronize.this, "Send local address=" + haddr);
+            if (ident.starttls)
+                props.put("mail.smtp.localaddress", haddr);
+            else
+                props.put("mail.smtps.localaddress", haddr);
+        }
 
         // Create session
         final Session isession = Session.getInstance(props, null);
+        isession.setDebug(true);
 
         // Create message
         MimeMessage imessage = MessageHelper.from(this, message, isession, ident.plain_only);
