@@ -109,6 +109,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.mail.Address;
@@ -550,14 +551,9 @@ public class FragmentCompose extends FragmentBase {
                 String plain = HtmlHelper.getText(ref);
                 String html = "<p>" + plain.replaceAll("\\r?\\n", "<br />" + "</p>");
 
-                BufferedWriter out = null;
-                try {
-                    out = new BufferedWriter(new FileWriter(file));
+                try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
                     out.write(body);
                     out.write(html);
-                } finally {
-                    if (out != null)
-                        out.close();
                 }
 
                 refFile.delete();
@@ -1086,16 +1082,11 @@ public class FragmentCompose extends FragmentBase {
 
                             File file1 = EntityAttachment.getFile(context, attachment1.id);
 
-                            OutputStream os1 = null;
-                            try {
-                                byte[] bytes1 = encrypted.toByteArray();
-                                os1 = new BufferedOutputStream(new FileOutputStream(file1));
+                            byte[] bytes1 = encrypted.toByteArray();
+                            try (OutputStream os1 = new BufferedOutputStream(new FileOutputStream(file1))) {
                                 os1.write(bytes1);
 
                                 db.attachment().setDownloaded(attachment1.id, (long) bytes1.length);
-                            } finally {
-                                if (os1 != null)
-                                    os1.close();
                             }
 
                             EntityAttachment attachment2 = new EntityAttachment();
@@ -1108,16 +1099,11 @@ public class FragmentCompose extends FragmentBase {
 
                             File file2 = EntityAttachment.getFile(context, attachment2.id);
 
-                            OutputStream os2 = null;
-                            try {
-                                byte[] bytes2 = key.getByteArrayExtra(OpenPgpApi.RESULT_DETACHED_SIGNATURE);
-                                os2 = new BufferedOutputStream(new FileOutputStream(file2));
+                            byte[] bytes2 = key.getByteArrayExtra(OpenPgpApi.RESULT_DETACHED_SIGNATURE);
+                            try (OutputStream os2 = new BufferedOutputStream(new FileOutputStream(file2))) {
                                 os2.write(bytes2);
 
                                 db.attachment().setDownloaded(attachment2.id, (long) bytes2.length);
-                            } finally {
-                                if (os2 != null)
-                                    os2.close();
                             }
 
                             db.setTransactionSuccessful();
@@ -1357,17 +1343,12 @@ public class FragmentCompose extends FragmentBase {
         String name = uri.getLastPathSegment();
         String s = null;
 
-        Cursor cursor = null;
-        try {
-            cursor = context.getContentResolver().query(uri, null, null, null, null, null);
+        try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
                 s = cursor.getString(cursor.getColumnIndex(OpenableColumns.SIZE));
             }
 
-        } finally {
-            if (cursor != null)
-                cursor.close();
         }
 
         DB db = DB.getInstance(context);
@@ -1456,16 +1437,12 @@ public class FragmentCompose extends FragmentBase {
                     if (scaled != null) {
                         Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight());
 
-                        OutputStream out = null;
-                        try {
-                            out = new BufferedOutputStream(new FileOutputStream(file));
+                        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
                             scaled.compress("image/jpeg".equals(attachment.type)
                                             ? Bitmap.CompressFormat.JPEG
                                             : Bitmap.CompressFormat.PNG,
                                     REDUCED_IMAGE_QUALITY, out);
                         } finally {
-                            if (out != null)
-                                out.close();
                             scaled.recycle();
                         }
 
@@ -2010,13 +1987,13 @@ public class FragmentCompose extends FragmentBase {
                         available++;
 
                 Long ident = (identity == null ? null : identity.id);
-                boolean dirty = ((draft.identity == null ? ident != null : !draft.identity.equals(ident)) ||
-                        (draft.extra == null ? extra != null : !draft.extra.equals(extra)) ||
+                boolean dirty = (!Objects.equals(draft.identity, ident) ||
+                        !Objects.equals(draft.extra, extra) ||
                         !MessageHelper.equal(draft.from, afrom) ||
                         !MessageHelper.equal(draft.to, ato) ||
                         !MessageHelper.equal(draft.cc, acc) ||
                         !MessageHelper.equal(draft.bcc, abcc) ||
-                        (draft.subject == null ? subject != null : !draft.subject.equals(subject)) ||
+                        !Objects.equals(draft.subject, subject) ||
                         last_available != available ||
                         !body.equals(Helper.readText(EntityMessage.getFile(context, draft.id))));
 

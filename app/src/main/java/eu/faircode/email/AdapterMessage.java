@@ -1161,16 +1161,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!TextUtils.isEmpty(email))
                     edit.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
 
-                Cursor cursor = null;
-                try {
-                    ContentResolver resolver = context.getContentResolver();
-                    cursor = resolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                            new String[]{
-                                    ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
-                                    ContactsContract.Contacts.LOOKUP_KEY
-                            },
-                            ContactsContract.CommonDataKinds.Email.ADDRESS + " = ?",
-                            new String[]{email}, null);
+                ContentResolver resolver = context.getContentResolver();
+                try (Cursor cursor = resolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                        new String[]{
+                                ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
+                                ContactsContract.Contacts.LOOKUP_KEY
+                        },
+                        ContactsContract.CommonDataKinds.Email.ADDRESS + " = ?",
+                        new String[]{email}, null)) {
                     if (cursor != null && cursor.moveToNext()) {
                         int colContactId = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.CONTACT_ID);
                         int colLookupKey = cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
@@ -1186,9 +1184,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         edit.setAction(Intent.ACTION_INSERT);
                         edit.setType(ContactsContract.Contacts.CONTENT_TYPE);
                     }
-                } finally {
-                    if (cursor != null)
-                        cursor.close();
                 }
 
                 PackageManager pm = context.getPackageManager();
@@ -1414,11 +1409,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     String cid = '<' + src.substring(4) + '>';
                                     EntityAttachment attachment = DB.getInstance(context).attachment().getAttachment(id, cid);
                                     if (attachment != null && attachment.available) {
-                                        InputStream is = null;
-                                        try {
-                                            File file = EntityAttachment.getFile(context, attachment.id);
-
-                                            is = new BufferedInputStream(new FileInputStream(file));
+                                        File file = EntityAttachment.getFile(context, attachment.id);
+                                        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
                                             byte[] bytes = new byte[(int) file.length()];
                                             if (is.read(bytes) != bytes.length)
                                                 throw new IOException("length");
@@ -1430,9 +1422,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                             sb.append(Base64.encodeToString(bytes, Base64.DEFAULT));
 
                                             img.attr("src", sb.toString());
-                                        } finally {
-                                            if (is != null)
-                                                is.close();
                                         }
                                     }
                                 }

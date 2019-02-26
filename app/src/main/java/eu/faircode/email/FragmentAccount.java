@@ -70,6 +70,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.mail.AuthenticationFailedException;
@@ -573,9 +574,7 @@ public class FragmentAccount extends FragmentBase {
                 Properties props = MessageHelper.getSessionProperties(auth_type, realm, insecure);
                 Session isession = Session.getInstance(props, null);
                 isession.setDebug(true);
-                Store istore = null;
-                try {
-                    istore = isession.getStore("imap" + (starttls ? "" : "s"));
+                try (Store istore = isession.getStore("imap" + (starttls ? "" : "s"))) {
                     try {
                         istore.connect(host, Integer.parseInt(port), user, password);
                     } catch (AuthenticationFailedException ex) {
@@ -680,9 +679,6 @@ public class FragmentAccount extends FragmentBase {
                         folder.display = folder.getDisplayName(getContext());
                     EntityFolder.sort(getContext(), result.folders);
 
-                } finally {
-                    if (istore != null)
-                        istore.close();
                 }
 
                 return result;
@@ -862,9 +858,9 @@ public class FragmentAccount extends FragmentBase {
                         auth_type != account.auth_type ||
                         !host.equals(account.host) || Integer.parseInt(port) != account.port ||
                         !user.equals(account.user) || !password.equals(account.password) ||
-                        (realm == null ? accountRealm != null : !realm.equals(accountRealm))));
+                        !Objects.equals(realm, accountRealm)));
                 boolean reload = (check || account == null ||
-                        (account.prefix == null ? prefix != null : !account.prefix.equals(prefix)) ||
+                        !Objects.equals(account.prefix, prefix) ||
                         account.synchronize != synchronize ||
                         account.ondemand != ondemand ||
                         !account.poll_interval.equals(Integer.parseInt(interval)));
@@ -880,9 +876,7 @@ public class FragmentAccount extends FragmentBase {
                     Session isession = Session.getInstance(props, null);
                     isession.setDebug(true);
 
-                    Store istore = null;
-                    try {
-                        istore = isession.getStore("imap" + (starttls ? "" : "s"));
+                    try (Store istore = isession.getStore("imap" + (starttls ? "" : "s"))) {
                         try {
                             istore.connect(host, Integer.parseInt(port), user, password);
                         } catch (AuthenticationFailedException ex) {
@@ -914,9 +908,6 @@ public class FragmentAccount extends FragmentBase {
                             }
                         }
 
-                    } finally {
-                        if (istore != null)
-                            istore.close();
                     }
                 }
 
