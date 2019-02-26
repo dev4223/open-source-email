@@ -54,7 +54,6 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
-import com.sun.mail.smtp.SMTPTransport;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
@@ -87,6 +86,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1851,6 +1851,10 @@ public class ServiceSynchronize extends LifecycleService {
                 long uid = append(istore, itarget, (MimeMessage) icopy);
                 Log.i(target.name + " appended id=" + message.id + " uid=" + uid);
 
+                // Fixed timing issue of at least Courier based servers
+                itarget.close(false);
+                itarget.open(Folder.READ_WRITE);
+
                 // Some providers, like Gmail, don't honor the appended seen flag
                 if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
                     boolean seen = (autoread || message.ui_seen);
@@ -1917,12 +1921,13 @@ public class ServiceSynchronize extends LifecycleService {
             else
                 props.put("mail.smtps.localhost", ident.host);
         } else {
-            String haddr = (ip instanceof Inet6Address ? "IPv6:" : "") + ip.getHostAddress();
+            InetAddress localhost = InetAddress.getLocalHost();
+            String haddr = "[" + (localhost instanceof Inet6Address ? "IPv6:" : "") + localhost.getHostAddress() + "]";
             EntityLog.log(ServiceSynchronize.this, "Send local address=" + haddr);
             if (ident.starttls)
-                props.put("mail.smtp.localaddress", haddr);
+                props.put("mail.smtp.localhost", haddr);
             else
-                props.put("mail.smtps.localaddress", haddr);
+                props.put("mail.smtps.localhost", haddr);
         }
 
         // Create session
@@ -2226,6 +2231,9 @@ public class ServiceSynchronize extends LifecycleService {
             Helper.connect(this, istore, account);
             db.account().setAccountState(account.id, "connected");
             Log.i(account.name + " connected");
+
+            // Synchronize folders
+            synchronizeFolders(account, istore, new ServiceState());
 
             // Connect folder
             Log.i(folder.name + " connecting");
@@ -2811,7 +2819,7 @@ public class ServiceSynchronize extends LifecycleService {
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flagged=" + flagged);
             }
 
-            if (flags == null ? message.flags != null : !flags.equals(message.flags)) {
+            if (!Objects.equals(flags, message.flags)) {
                 update = true;
                 message.flags = flags;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flags=" + flags);

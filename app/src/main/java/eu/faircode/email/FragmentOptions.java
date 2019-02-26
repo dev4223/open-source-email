@@ -50,6 +50,7 @@ import android.widget.TimePicker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -254,7 +255,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
                 Integer prev = (Integer) adapterView.getTag();
-                if (prev == null || !prev.equals(position)) {
+                if (!Objects.equals(prev, position)) {
                     adapterView.setTag(position);
 
                     int[] values = getResources().getIntArray(R.array.downloadValues);
@@ -593,6 +594,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
 
         swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
+        swNotifyPreview.setEnabled(Helper.isPro(getContext()));
         swSearchLocal.setChecked(prefs.getBoolean("search_local", false));
         swLight.setChecked(prefs.getBoolean("light", false));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
