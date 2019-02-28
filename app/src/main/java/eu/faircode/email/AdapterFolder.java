@@ -26,6 +26,8 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -143,7 +145,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 else if ("closing".equals(folder.state))
                     ivState.setImageResource(R.drawable.baseline_close_24);
                 else if (folder.state == null)
-                    ivState.setImageResource(R.drawable.baseline_cloud_off_24);
+                    if ("requested".equals(folder.sync_state))
+                        ivState.setImageResource(R.drawable.baseline_hourglass_empty_24);
+                    else
+                        ivState.setImageResource(R.drawable.baseline_cloud_off_24);
                 else
                     ivState.setImageResource(android.R.drawable.stat_sys_warning);
             } else {
@@ -236,8 +241,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             PopupMenu popupMenu = new PopupMenu(context, itemView);
 
-            popupMenu.getMenu().add(Menu.NONE, action_synchronize_now, 1, R.string.title_synchronize_now)
-                    .setEnabled(folder.account != null || "connected".equals(folder.state) /* outbox */);
+            popupMenu.getMenu().add(Menu.NONE, action_synchronize_now, 1, R.string.title_synchronize_now);
 
             if (folder.account != null)
                 popupMenu.getMenu().add(Menu.NONE, action_delete_local, 2, R.string.title_delete_local);
@@ -290,31 +294,33 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             long aid = args.getLong("account");
                             long fid = args.getLong("folder");
 
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                            if (!prefs.getBoolean("enabled", true))
-                                throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
-
-                            boolean internet = (Helper.isMetered(context, true) != null);
+                            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                            NetworkInfo ni = cm.getActiveNetworkInfo();
+                            boolean internet = (ni != null && ni.isConnected());
 
                             DB db = DB.getInstance(context);
                             try {
                                 db.beginTransaction();
 
                                 boolean now;
-                                if (aid < 0) { // outbox
-                                    now = "connected".equals(folder.state);
-                                    EntityOperation.sync(db, fid);
+                                if (aid < 0) {
+                                    // Outbox
+                                    if (internet) {
+                                        now = true;
+                                        EntityOperation.sync(context, db, fid);
+                                    } else
+                                        throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
                                 } else {
                                     EntityAccount account = db.account().getAccount(aid);
                                     if (account.ondemand) {
                                         if (internet) {
                                             now = true;
-                                            ServiceSynchronize.sync(context, fid);
+                                            ServiceUI.sync(context, fid);
                                         } else
                                             throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
                                     } else {
                                         now = "connected".equals(account.state);
-                                        EntityOperation.sync(db, fid);
+                                        EntityOperation.sync(context, db, fid);
                                     }
                                 }
 
@@ -336,18 +342,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         protected void onException(Bundle args, Throwable ex) {
                             if (ex instanceof IllegalArgumentException)
                                 Snackbar.make(itemView, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                            else if (ex instanceof IllegalStateException) {
-                                Snackbar snackbar = Snackbar.make(itemView, ex.getMessage(), Snackbar.LENGTH_LONG);
-                                snackbar.setAction(R.string.title_enable, new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                                        prefs.edit().putBoolean("enabled", true).apply();
-                                        ServiceSynchronize.reload(context, "refresh/disabled");
-                                    }
-                                });
-                                snackbar.show();
-                            } else
+                            else
                                 Helper.unexpectedError(context, owner, ex);
                         }
                     }.execute(context, owner, args, "folder:sync");

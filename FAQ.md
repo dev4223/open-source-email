@@ -1295,12 +1295,6 @@ you can enable on demand synchronization in the account settings.
 When enabled FairEmail will not keep a connection to the email server anymore,
 instead you can manually synchronize messages by either using pull-down-to-refresh or by using the folder menu *Synchronize now*.
 
-Note that both real-time and on demand synchronization requires FairEmail to be globally enabled.
-You can globally enable or disable FairEmail with the advanced option *Synchronize*,
-by using [a schedule](#user-content-faq78) or by using [a quick settings tile](#user-content-faq30).
-
-When globally enabled FairEmail will always show [a status bar notification](#user-content-faq2).
-
 <br />
 
 ## Support

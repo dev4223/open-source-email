@@ -31,6 +31,7 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.os.Handler;
@@ -491,11 +492,9 @@ public class FragmentMessages extends FragmentBase {
             protected Boolean onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                if (!prefs.getBoolean("enabled", true))
-                    throw new IllegalStateException(context.getString(R.string.title_sync_disabled));
-
-                boolean internet = (Helper.isMetered(context, true) != null);
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                boolean internet = (ni != null && ni.isConnected());
 
                 DB db = DB.getInstance(context);
                 try {
@@ -515,20 +514,24 @@ public class FragmentMessages extends FragmentBase {
                     boolean now = false;
                     boolean nointernet = false;
                     for (EntityFolder folder : folders)
-                        if (folder.account == null) { // outbox
-                            now = "connected".equals(folder.state);
-                            EntityOperation.sync(db, folder.id);
+                        if (folder.account == null) {
+                            // Outbox
+                            if (internet) {
+                                now = true;
+                                EntityOperation.sync(context, db, folder.id);
+                            } else
+                                nointernet = true;
                         } else {
                             EntityAccount account = db.account().getAccount(folder.account);
                             if (account.ondemand) {
                                 if (internet) {
                                     now = true;
-                                    ServiceSynchronize.sync(context, folder.id);
+                                    ServiceUI.sync(context, folder.id);
                                 } else
                                     nointernet = true;
                             } else {
                                 now = "connected".equals(account.state);
-                                EntityOperation.sync(db, folder.id);
+                                EntityOperation.sync(context, db, folder.id);
                             }
                         }
 
@@ -557,18 +560,7 @@ public class FragmentMessages extends FragmentBase {
 
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else if (ex instanceof IllegalStateException) {
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
-                    snackbar.setAction(R.string.title_enable, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            prefs.edit().putBoolean("enabled", true).apply();
-                            ServiceSynchronize.reload(getContext(), "refresh/disabled");
-                        }
-                    });
-                    snackbar.show();
-                } else
+                else
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
         }.execute(FragmentMessages.this, args, "messages:refresh");
@@ -1566,7 +1558,7 @@ public class FragmentMessages extends FragmentBase {
 
                         boolean refreshing = false;
                         for (TupleFolderEx folder : folders)
-                            if (folder.sync_state != null && "connected".equals(folder.accountState)) {
+                            if (folder.isSynchronizing()) {
                                 refreshing = true;
                                 break;
                             }
@@ -1596,10 +1588,7 @@ public class FragmentMessages extends FragmentBase {
                             }
                         }
 
-                        swipeRefresh.setRefreshing(
-                                folder != null && folder.sync_state != null &&
-                                        "connected".equals(EntityFolder.OUTBOX.equals(folder.type)
-                                                ? folder.state : folder.accountState));
+                        swipeRefresh.setRefreshing(folder != null && folder.isSynchronizing());
                     }
                 });
                 break;
@@ -1959,11 +1948,14 @@ public class FragmentMessages extends FragmentBase {
                             @Override
                             public void onError(Throwable ex) {
                                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                            .setMessage(Helper.formatThrowable(ex))
-                                            .setPositiveButton(android.R.string.cancel, null)
-                                            .create()
-                                            .show();
+                                    if (ex instanceof IllegalArgumentException)
+                                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                                    else
+                                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                                                .setMessage(Helper.formatThrowable(ex))
+                                                .setPositiveButton(android.R.string.cancel, null)
+                                                .create()
+                                                .show();
                             }
                         });
 

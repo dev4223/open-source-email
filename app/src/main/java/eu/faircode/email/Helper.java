@@ -21,6 +21,8 @@ package eu.faircode.email;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -34,8 +36,6 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
-import android.net.LinkAddress;
-import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
@@ -74,9 +74,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -100,6 +97,7 @@ import javax.net.ssl.SSLException;
 
 import androidx.annotation.NonNull;
 import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -109,7 +107,8 @@ import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_C
 
 public class Helper {
     static final int NOTIFICATION_SYNCHRONIZE = 1;
-    static final int NOTIFICATION_EXTERNAL = 2;
+    static final int NOTIFICATION_SEND = 2;
+    static final int NOTIFICATION_EXTERNAL = 3;
 
     static final int JOB_DAILY = 1001;
 
@@ -693,43 +692,6 @@ public class Helper {
         if (index < 0)
             return null;
         return filename.substring(index + 1);
-    }
-
-    static InetAddress getLocalIp(Context context) throws UnknownHostException {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M)
-            return InetAddress.getLocalHost();
-
-        Network active = cm.getActiveNetwork();
-        if (active == null)
-            return null;
-
-        NetworkInfo ani = cm.getNetworkInfo(active);
-        if (ani == null || !ani.isConnected())
-            return null;
-
-        NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-        if (caps == null)
-            return null;
-
-        if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN))
-            return null;
-
-        LinkProperties props = cm.getLinkProperties(active);
-        if (props == null)
-            return null;
-
-        List<LinkAddress> addresses = props.getLinkAddresses();
-        if (addresses == null || addresses.size() == 0)
-            return null;
-
-        // Prefer IPv4
-        for (LinkAddress address : addresses)
-            if (address.getAddress() instanceof Inet4Address)
-                return address.getAddress();
-
-        return addresses.get(0).getAddress();
     }
 
     static Boolean isMetered(Context context, boolean log) {

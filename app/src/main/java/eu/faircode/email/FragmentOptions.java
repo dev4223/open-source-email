@@ -197,7 +197,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 if (checked) {
                     if (Helper.isPro(getContext())) {
                         prefs.edit().putBoolean("schedule", true).apply();
-                        ServiceSynchronize.schedule(getContext());
+                        ServiceSynchronize.reschedule(getContext());
                     } else {
                         swSchedule.setChecked(false);
                         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
@@ -267,9 +267,9 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                             @Override
                             protected Void onExecute(Context context, Bundle args) {
                                 DB db = DB.getInstance(context);
-                                List<EntityFolder> folders = db.folder().getFoldersSynchronizing();
+                                List<EntityFolder> folders = db.folder().getFoldersAutoSync();
                                 for (EntityFolder folder : folders)
-                                    EntityOperation.sync(db, folder.id);
+                                    EntityOperation.sync(context, db, folder.id);
                                 return null;
                             }
 
@@ -645,7 +645,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             editor.putBoolean("schedule", true);
             editor.apply();
 
-            ServiceSynchronize.schedule(getContext());
+            ServiceSynchronize.reschedule(getContext());
         }
     }
 
