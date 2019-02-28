@@ -20,10 +20,9 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -44,6 +43,7 @@ import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Observer;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -132,15 +132,51 @@ public class FragmentFolders extends FragmentBase {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle args = new Bundle();
-                args.putLong("account", account);
-                FragmentFolder fragment = new FragmentFolder();
-                fragment.setArguments(args);
-                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
-                fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("folder");
-                fragmentTransaction.commit();
+                if (account < 0) {
+                    startActivity(new Intent(getContext(), ActivityCompose.class)
+                            .putExtra("action", "new")
+                            .putExtra("account", account)
+                    );
+                } else {
+                    Bundle args = new Bundle();
+                    args.putLong("account", account);
+                    FragmentFolder fragment = new FragmentFolder();
+                    fragment.setArguments(args);
+                    FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                    fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("folder");
+                    fragmentTransaction.commit();
+                }
             }
         });
+
+        if (account < 0)
+            fab.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    new SimpleTask<EntityFolder>() {
+                        @Override
+                        protected EntityFolder onExecute(Context context, Bundle args) {
+                            return DB.getInstance(context).folder().getPrimaryDrafts();
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, EntityFolder drafts) {
+                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                            lbm.sendBroadcast(
+                                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                            .putExtra("account", drafts.account)
+                                            .putExtra("folder", drafts.id));
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        }
+                    }.execute(FragmentFolders.this, new Bundle(), "folders:drafts");
+
+                    return true;
+                }
+            });
 
         // Initialize
         grpReady.setVisibility(View.GONE);
@@ -173,9 +209,22 @@ public class FragmentFolders extends FragmentBase {
         DB db = DB.getInstance(getContext());
 
         // Observe account
-        if (account < 0)
+        if (account < 0) {
             setSubtitle(R.string.title_folders_unified);
-        else
+
+            fab.setImageResource(R.drawable.baseline_edit_24);
+
+            db.identity().liveComposableIdentities(null).observe(getViewLifecycleOwner(),
+                    new Observer<List<TupleIdentityEx>>() {
+                        @Override
+                        public void onChanged(List<TupleIdentityEx> identities) {
+                            if (identities == null || identities.size() == 0)
+                                fab.hide();
+                            else
+                                fab.show();
+                        }
+                    });
+        } else
             db.account().liveAccount(account).observe(getViewLifecycleOwner(), new Observer<EntityAccount>() {
                 @Override
                 public void onChanged(@Nullable EntityAccount account) {
@@ -227,80 +276,43 @@ public class FragmentFolders extends FragmentBase {
         Bundle args = new Bundle();
         args.putLong("account", account);
 
-        new SimpleTask<Boolean>() {
+        new SimpleTask<Void>() {
             @Override
             protected void onPostExecute(Bundle args) {
                 swipeRefresh.setRefreshing(false);
             }
 
             @Override
-            protected Boolean onExecute(Context context, Bundle args) {
+            protected Void onExecute(Context context, Bundle args) {
                 long aid = args.getLong("account");
 
-                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo ni = cm.getActiveNetworkInfo();
-                boolean internet = (ni != null && ni.isConnected());
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean enabled = prefs.getBoolean("enabled", true);
+                if (!Helper.isConnected(context))
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
 
-                    boolean now = false;
-                    boolean nointernet = false;
-
                     if (aid < 0) {
                         // Unified inbox
                         List<EntityFolder> folders = db.folder().getFoldersSynchronizingUnified();
-                        for (EntityFolder folder : folders) {
-                            EntityAccount account = db.account().getAccount(folder.account);
-                            if (account.ondemand || !enabled)
-                                if (internet) {
-                                    now = true;
-                                    ServiceUI.sync(context, folder.id);
-                                } else
-                                    nointernet = true;
-                            else {
-                                now = "connected".equals(account.state);
-                                EntityOperation.sync(context, db, folder.id);
-                            }
-                        }
+                        for (EntityFolder folder : folders)
+                            EntityOperation.sync(context, folder.id);
                     } else {
+                        // Folder list
                         EntityAccount account = db.account().getAccount(aid);
-                        if (account.ondemand || !enabled) {
-                            if (internet) {
-                                now = true;
-                                List<EntityFolder> folders = db.folder().getFoldersOnDemandSync(aid);
-                                for (EntityFolder folder : folders)
-                                    ServiceUI.sync(context, folder.id);
-                            } else
-                                nointernet = true;
-                        } else {
-                            if (internet) {
-                                now = true;
-                                ServiceSynchronize.reload(getContext(), "refresh folders");
-                            } else
-                                nointernet = true;
-                        }
+                        if (account.ondemand)
+                            ServiceUI.fsync(context, aid);
+                        else
+                            ServiceSynchronize.reload(getContext(), "refresh folders");
                     }
 
                     db.setTransactionSuccessful();
-
-                    if (nointernet)
-                        throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
-
-                    return now;
                 } finally {
                     db.endTransaction();
                 }
-            }
 
-            @Override
-            protected void onExecuted(Bundle args, Boolean now) {
-                if (!now)
-                    Snackbar.make(view, R.string.title_sync_delayed, Snackbar.LENGTH_LONG).show();
+                return null;
             }
 
             @Override
