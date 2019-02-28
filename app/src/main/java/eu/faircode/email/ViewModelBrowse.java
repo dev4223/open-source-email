@@ -20,6 +20,8 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 import com.sun.mail.iap.Argument;
 import com.sun.mail.iap.Response;
@@ -154,6 +156,13 @@ public class ViewModelBrowse extends ViewModel {
             EntityAccount account = db.account().getAccount(folder.account);
 
             try {
+                // Check connectivity
+                ConnectivityManager cm = (ConnectivityManager) state.context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo ni = cm.getActiveNetworkInfo();
+                boolean internet = (ni != null && ni.isConnected());
+                if (!internet)
+                    throw new IllegalArgumentException(state.context.getString(R.string.title_no_internet));
+
                 Properties props = MessageHelper.getSessionProperties(account.auth_type, account.realm, account.insecure);
                 Session isession = Session.getInstance(props, null);
                 isession.setDebug(true);
@@ -306,7 +315,7 @@ public class ViewModelBrowse extends ViewModel {
                         Log.i("Boundary sync uid=" + uid);
                         EntityMessage message = db.message().getMessageByUid(folder.id, uid);
                         if (message == null) {
-                            message = ServiceSynchronize.synchronizeMessage(state.context,
+                            message = Core.synchronizeMessage(state.context,
                                     folder, state.ifolder, (IMAPMessage) isub[j],
                                     true,
                                     new ArrayList<EntityRule>());

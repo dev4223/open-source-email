@@ -405,8 +405,8 @@ public class FragmentSetup extends FragmentBase {
                 @Override
                 protected Void onExecute(Context context, Bundle args) {
                     DB db = DB.getInstance(context);
-                    for (EntityFolder folder : db.folder().getFoldersSynchronizing())
-                        EntityOperation.sync(db, folder.id);
+                    for (EntityFolder folder : db.folder().getFoldersAutoSync())
+                        EntityOperation.sync(context, db, folder.id);
                     return null;
                 }
 

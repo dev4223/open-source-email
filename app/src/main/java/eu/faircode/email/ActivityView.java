@@ -79,6 +79,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Properties;
 
 import javax.mail.Session;
@@ -99,7 +100,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class ActivityView extends ActivityBilling implements FragmentManager.OnBackStackChangedListener {
     private boolean unified;
-    private boolean threading;
 
     private View view;
     private DrawerLayout drawerLayout;
@@ -145,7 +145,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         unified = prefs.getBoolean("unified", true);
-        threading = prefs.getBoolean("threading", true);
 
         view = LayoutInflater.from(this).inflate(R.layout.activity_view, null);
         setContentView(view);
@@ -171,14 +170,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         drawerLayout.addDrawerListener(drawerToggle);
 
         drawerList = findViewById(R.id.drawer_list);
+
+        final DrawerAdapter drawerArray = new DrawerAdapter(ActivityView.this);
+        drawerList.setAdapter(drawerArray);
+
         drawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                DrawerItem item = (DrawerItem) parent.getAdapter().getItem(position);
-                switch (item.getId()) {
-                    case -1:
-                        onMenuFolders((long) item.getData());
-                        break;
+                DrawerItem item = drawerArray.getItem(position);
+                switch (item.getMenuId()) {
                     case R.string.menu_answers:
                         onMenuAnswers();
                         break;
@@ -188,7 +188,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     case R.string.menu_setup:
                         onMenuSetup();
                         break;
-
                     case R.string.menu_legend:
                         onMenuLegend();
                         break;
@@ -204,7 +203,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     case R.string.menu_about:
                         onMenuAbout();
                         break;
-
                     case R.string.menu_pro:
                         onMenuPro();
                         break;
@@ -217,19 +215,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     case R.string.menu_other:
                         onMenuOtherApps();
                         break;
+                    default:
+                        long account = item.getId();
+                        if (account > 0)
+                            onMenuFolders(account);
                 }
 
                 drawerLayout.closeDrawer(drawerList);
             }
         });
+
         drawerList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                DrawerItem item = (DrawerItem) parent.getAdapter().getItem(position);
-                switch (item.getId()) {
-                    case -1:
-                        onMenuInbox((long) item.getData());
-                        break;
+                DrawerItem item = drawerArray.getItem(position);
+                switch (item.getMenuId()) {
                     case R.string.menu_operations:
                         onShowLog();
                         break;
@@ -248,7 +248,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         checkUpdate(true);
                         break;
                     default:
-                        return false;
+                        long account = item.getId();
+                        if (account < 0)
+                            return false;
+                        else
+                            onMenuInbox(account);
                 }
 
                 drawerLayout.closeDrawer(drawerList);
@@ -258,29 +262,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         getSupportFragmentManager().addOnBackStackChangedListener(this);
 
-        DB.getInstance(this).account().liveAccountsEx().observe(this, new Observer<List<TupleAccountEx>>() {
+        DB db = DB.getInstance(this);
+
+        db.account().liveAccountsEx().observe(this, new Observer<List<TupleAccountEx>>() {
             private List<TupleAccountEx> last = new ArrayList<>();
 
             @Override
             public void onChanged(@Nullable List<TupleAccountEx> accounts) {
                 if (accounts == null)
                     accounts = new ArrayList<>();
-
-                boolean changed = false;
-                if (last.size() == accounts.size()) {
-                    for (int i = 0; i < accounts.size(); i++)
-                        if (!last.get(i).equals(accounts.get(i))) {
-                            changed = true;
-                            break;
-                        }
-                } else
-                    changed = true;
-
-                if (!changed)
-                    return;
-                last = accounts;
-
-                DrawerAdapter drawerArray = new DrawerAdapter(ActivityView.this);
 
                 final Collator collator = Collator.getInstance(Locale.getDefault());
                 collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
@@ -292,36 +282,54 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     }
                 });
 
+                boolean changed = false;
+                if (last.size() == accounts.size()) {
+                    for (int i = 0; i < accounts.size(); i++) {
+                        TupleAccountEx other = last.get(i);
+                        TupleAccountEx account = accounts.get(i);
+                        if (!account.id.equals(other.id) ||
+                                !Objects.equals(account.name, other.name) ||
+                                !Objects.equals(account.color, other.color) ||
+                                !Objects.equals(account.state, other.state) ||
+                                account.unseen != other.unseen) {
+                            changed = true;
+                            break;
+                        }
+                    }
+                } else
+                    changed = true;
+
+                if (!changed)
+                    return;
+                last = accounts;
+
+                drawerArray.clear();
+
                 for (TupleAccountEx account : accounts)
                     drawerArray.add(new DrawerItem(
-                            R.layout.item_drawer, -1,
+                            account.id,
                             "connected".equals(account.state) ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24,
                             account.color,
                             account.unseen > 0 ? getString(R.string.title_unseen_count, account.name, account.unseen) : account.toString(),
-                            account.unseen > 0,
-                            account.id));
+                            account.unseen > 0));
 
-                drawerArray.add(new DrawerItem(R.layout.item_drawer_separator));
-
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_reply_24, R.string.menu_answers));
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_list_24, R.string.menu_operations));
-
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_settings_applications_24, R.string.menu_setup));
-
-                drawerArray.add(new DrawerItem(R.layout.item_drawer_separator));
-
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_help_24, R.string.menu_legend));
+                drawerArray.add(new DrawerItem(-1));
+                drawerArray.add(new DrawerItem(-2, R.string.menu_answers, R.drawable.baseline_reply_24));
+                drawerArray.add(new DrawerItem(-3, R.string.menu_operations, R.drawable.baseline_list_24));
+                drawerArray.add(new DrawerItem(-4, R.string.menu_setup, R.drawable.baseline_settings_applications_24));
+                drawerArray.add(new DrawerItem(-5));
+                drawerArray.add(new DrawerItem(-6, R.string.menu_legend, R.drawable.baseline_help_24));
 
                 if (Helper.getIntentFAQ().resolveActivity(getPackageManager()) != null)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_question_answer_24, R.string.menu_faq));
+                    drawerArray.add(new DrawerItem(-7, R.string.menu_faq, R.drawable.baseline_question_answer_24));
 
                 if (BuildConfig.BETA_RELEASE)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_report_problem_24, R.string.menu_issue));
+                    drawerArray.add(new DrawerItem(-8, R.string.menu_issue, R.drawable.baseline_report_problem_24));
 
                 if (Helper.getIntentPrivacy().resolveActivity(getPackageManager()) != null)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_account_box_24, R.string.menu_privacy));
+                    drawerArray.add(new DrawerItem(-9, R.string.menu_privacy, R.drawable.baseline_account_box_24));
 
-                drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_info_24, R.string.menu_about));
+                drawerArray.add(new DrawerItem(-10, R.string.menu_about, R.drawable.baseline_info_24));
 
                 boolean pro = (getIntentPro() == null || getIntentPro().resolveActivity(getPackageManager()) != null);
                 boolean invite = (getIntentInvite().resolveActivity(getPackageManager()) != null);
@@ -329,21 +337,26 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean other = (getIntentOtherApps().resolveActivity(getPackageManager()) != null);
 
                 if (pro || invite || rate || other)
-                    drawerArray.add(new DrawerItem(R.layout.item_drawer_separator));
+                    drawerArray.add(new DrawerItem(-11));
 
                 if (pro)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_monetization_on_24, R.string.menu_pro));
+                    drawerArray.add(new DrawerItem(-12, R.string.menu_pro, R.drawable.baseline_monetization_on_24));
 
                 if (invite)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_people_24, R.string.menu_invite));
+                    drawerArray.add(new DrawerItem(-13, R.string.menu_invite, R.drawable.baseline_people_24));
 
                 if (rate)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_star_24, R.string.menu_rate));
+                    drawerArray.add(new DrawerItem(-14, R.string.menu_rate, R.drawable.baseline_star_24));
 
                 if (other)
-                    drawerArray.add(new DrawerItem(ActivityView.this, R.layout.item_drawer, R.drawable.baseline_get_app_24, R.string.menu_other));
+                    drawerArray.add(new DrawerItem(-15, R.string.menu_other, R.drawable.baseline_get_app_24));
+            }
+        });
 
-                drawerList.setAdapter(drawerArray);
+        db.message().liveUnseenNotify().observe(this, new Observer<List<TupleMessageEx>>() {
+            @Override
+            public void onChanged(List<TupleMessageEx> messages) {
+                Core.notifyMessages(ActivityView.this, messages);
             }
         });
 
