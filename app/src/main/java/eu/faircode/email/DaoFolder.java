@@ -41,14 +41,8 @@ public interface DaoFolder {
 
     @Query("SELECT folder.* FROM folder" +
             " JOIN account ON account.id = folder.account" +
-            " WHERE folder.synchronize" +
-            " AND account.id = :account" +
-            " AND (account.synchronize AND account.ondemand)")
-    List<EntityFolder> getFoldersOnDemandSync(long account);
-
-    @Query("SELECT folder.* FROM folder" +
-            " JOIN account ON account.id = folder.account" +
-            " WHERE account.synchronize AND folder.synchronize AND unified")
+            " WHERE account.synchronize" +
+            " AND folder.synchronize AND unified")
     List<EntityFolder> getFoldersSynchronizingUnified();
 
     @Query("SELECT folder.* FROM folder" +

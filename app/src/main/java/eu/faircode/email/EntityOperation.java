@@ -98,10 +98,14 @@ public class EntityOperation {
         queue(context, db, message, name, jargs);
     }
 
-    static void sync(Context context, DB db, long fid) {
+    static void sync(Context context, long fid) {
+        DB db = DB.getInstance(context);
         if (db.operation().getOperationCount(fid, EntityOperation.SYNC) == 0) {
 
             EntityFolder folder = db.folder().getFolder(fid);
+            EntityAccount account = null;
+            if (folder.account != null)
+                account = db.account().getAccount(folder.account);
 
             EntityOperation operation = new EntityOperation();
             operation.folder = folder.id;
@@ -111,10 +115,19 @@ public class EntityOperation {
             operation.created = new Date().getTime();
             operation.id = db.operation().insertOperation(operation);
 
-            db.folder().setFolderSyncState(fid, "requested");
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean enabled = prefs.getBoolean("enabled", true);
 
-            if (folder.account == null) // Outbox
+            if (account != null && (account.ondemand || !enabled)) {
+                db.folder().setFolderState(fid, "waiting");
+                db.folder().setFolderSyncState(fid, "manual");
+            } else
+                db.folder().setFolderSyncState(fid, "requested");
+
+            if (account == null) // Outbox
                 ServiceSend.start(context);
+            else if (account.ondemand || !enabled)
+                ServiceUI.process(context, fid);
 
             Log.i("Queued sync folder=" + folder);
         }
@@ -225,8 +238,6 @@ public class EntityOperation {
             } else if (DELETE.equals(name))
                 db.message().setMessageUiHide(message.id, true);
 
-            else if (SEND.equals(name))
-                ServiceSend.start(context);
         } catch (JSONException ex) {
             Log.e(ex);
         }
@@ -242,6 +253,14 @@ public class EntityOperation {
         Log.i("Queued op=" + operation.id + "/" + operation.name +
                 " msg=" + operation.folder + "/" + operation.message +
                 " args=" + operation.args);
+
+        if (SEND.equals(name))
+            ServiceSend.start(context);
+        else {
+            EntityAccount account = db.account().getAccount(message.account);
+            if (account.ondemand)
+                ServiceUI.process(context, operation.folder);
+        }
     }
 
     @Override
