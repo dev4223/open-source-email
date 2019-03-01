@@ -236,7 +236,6 @@
     <string name="title_authorizing">Authorizing account &#8230;</string>
     <string name="title_setup_advanced">Advanced</string>
     <string name="title_synchronize_account">Synchronize (receive messages)</string>
-    <string name="title_synchronize_ondemand">Synchronize on demand (manual)</string>
     <string name="title_synchronize_identity">Synchronize (send messages)</string>
     <string name="title_primary_account">Primary (default account)</string>
     <string name="title_primary_identity">Primary (default identity)</string>
@@ -318,6 +317,7 @@
     <string name="title_unflag">Remove star</string>
     <string name="title_forward">Forward</string>
     <string name="title_reply_all">Reply to all</string>
+    <string name="title_create_rule">Create rule &#8230;</string>
     <string name="title_share">Share</string>
     <string name="title_show_headers">Show headers</string>
     <string name="title_raw_download">Download raw message</string>
