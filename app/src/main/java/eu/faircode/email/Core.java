@@ -13,7 +13,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.util.LongSparseArray;
 
@@ -95,6 +94,15 @@ class Core {
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
 
+    static void init(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        for (String key : prefs.getAll().keySet())
+            if (key.startsWith("notifying:"))
+                editor.remove(key);
+        editor.apply();
+    }
+
     static void processOperations(
             Context context,
             EntityAccount account, EntityFolder folder,
@@ -161,7 +169,11 @@ class Core {
                                 break;
 
                             case EntityOperation.MOVE:
-                                onMove(context, jargs, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                onMove(context, jargs, false, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                break;
+
+                            case EntityOperation.COPY:
+                                onMove(context, jargs, true, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
                                 break;
 
                             case EntityOperation.DELETE:
@@ -210,7 +222,7 @@ class Core {
                         if (ex instanceof MessageRemovedException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException) {
-                            Log.w("Unrecoverable", ex);
+                            Log.w("Unrecoverable");
 
                             // There is no use in repeating
                             db.operation().deleteOperation(op.id);
@@ -242,10 +254,16 @@ class Core {
                         } else if (ex instanceof MessagingException) {
                             // Socket timeout is a recoverable condition (send message)
                             if (ex.getCause() instanceof SocketTimeoutException) {
-                                Log.w("Recoverable", ex);
+                                Log.w("Recoverable");
                                 // No need to inform user
                                 return;
                             }
+                        }
+
+                        if (EntityOperation.SYNC.equals(op.name) && jargs.getBoolean(3) /* foreground */) {
+                            Log.w("Deleting foreground SYNC");
+                            db.operation().deleteOperation(op.id);
+                            db.folder().setFolderSyncState(folder.id, null);
                         }
 
                         throw ex;
@@ -445,16 +463,13 @@ class Core {
         }
     }
 
-    private static void onMove(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, Session isession, IMAPStore istore, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
+    private static void onMove(Context context, JSONArray jargs, boolean copy, EntityFolder folder, EntityMessage message, Session isession, IMAPStore istore, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
         // Move message
         DB db = DB.getInstance(context);
 
         Message imessage = ifolder.getMessageByUID(message.uid);
         if (imessage == null)
             throw new MessageRemovedException();
-
-        // Get parameters
-        boolean autoread = jargs.getBoolean(1);
 
         // Get target folder
         long id = jargs.getLong(0);
@@ -463,8 +478,10 @@ class Core {
             throw new FolderNotFoundException();
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
+        boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
+
         boolean canMove = istore.hasCapability("MOVE");
-        if (canMove &&
+        if (!copy && canMove &&
                 !EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.DRAFTS.equals(target.type)) {
             // Autoread
@@ -475,8 +492,9 @@ class Core {
             // Move message to
             ifolder.moveMessages(new Message[]{imessage}, itarget);
         } else {
-            Log.w(folder.name + " MOVE by DELETE/APPEND" +
-                    " cap=" + canMove + " from=" + folder.type + " to=" + target.type);
+            if (!copy)
+                Log.w(folder.name + " MOVE by DELETE/APPEND" +
+                        " cap=" + canMove + " from=" + folder.type + " to=" + target.type);
 
             // Serialize source message
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -487,7 +505,7 @@ class Core {
             Message icopy = new MimeMessage(isession, bis);
 
             // Make sure the message has a message ID
-            if (message.msgid == null) {
+            if (copy || message.msgid == null) {
                 String msgid = EntityMessage.generateMessageId();
                 Log.i(target.name + " generated message id=" + msgid);
                 icopy.setHeader("Message-ID", msgid);
@@ -541,8 +559,10 @@ class Core {
                 }
 
                 // Delete source
-                imessage.setFlag(Flags.Flag.DELETED, true);
-                ifolder.expunge();
+                if (!copy) {
+                    imessage.setFlag(Flags.Flag.DELETED, true);
+                    ifolder.expunge();
+                }
             } catch (Throwable ex) {
                 if (itarget.isOpen())
                     itarget.close();
@@ -630,10 +650,9 @@ class Core {
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         MessageHelper.MessageParts parts = helper.getMessageParts();
         String body = parts.getHtml(context);
-        String preview = HtmlHelper.getPreview(body);
         Helper.writeText(EntityMessage.getFile(context, message.id), body);
-        db.message().setMessageContent(message.id, true, preview);
-        db.message().setMessageWarning(message.id, parts.getWarnings(message.warning));
+        db.message().setMessageContent(message.id, true,
+                HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
     }
 
     private static void onAttachment(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
@@ -792,7 +811,7 @@ class Core {
         }
     }
 
-    static void onSynchronizeMessages(
+    private static void onSynchronizeMessages(
             Context context, JSONArray jargs,
             EntityAccount account, final EntityFolder folder,
             IMAPFolder ifolder, State state) throws JSONException, MessagingException, IOException {
@@ -1002,13 +1021,11 @@ class Core {
 
                     for (int j = isub.length - 1; j >= 0 && state.running(); j--)
                         try {
-                            db.beginTransaction();
                             if (ids[from + j] != null)
                                 downloadMessage(
                                         context,
                                         folder, ifolder,
                                         (IMAPMessage) isub[j], ids[from + j]);
-                            db.setTransactionSuccessful();
                         } catch (FolderClosedException ex) {
                             throw ex;
                         } catch (FolderClosedIOException ex) {
@@ -1016,7 +1033,6 @@ class Core {
                         } catch (Throwable ex) {
                             Log.e(folder.name, ex);
                         } finally {
-                            db.endTransaction();
                             // Free memory
                             ((IMAPMessage) isub[j]).invalidateHeaders();
                         }
@@ -1216,6 +1232,8 @@ class Core {
                 update = true;
                 message.seen = seen;
                 message.ui_seen = seen;
+                if (seen)
+                    message.ui_ignored = true;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " seen=" + seen);
             }
 
@@ -1378,8 +1396,8 @@ class Core {
                 if (!metered || (message.size != null && message.size < maxSize)) {
                     String body = parts.getHtml(context);
                     Helper.writeText(EntityMessage.getFile(context, message.id), body);
-                    db.message().setMessageContent(message.id, true, HtmlHelper.getPreview(body));
-                    db.message().setMessageWarning(message.id, parts.getWarnings(message.warning));
+                    db.message().setMessageContent(message.id, true,
+                            HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
                     Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
                 }
             }
@@ -1397,86 +1415,89 @@ class Core {
 
         Widget.update(context, messages.size());
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit();
+
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         LongSparseArray<List<Long>> notifying = new LongSparseArray<>();
         LongSparseArray<String> accountName = new LongSparseArray<>();
         LongSparseArray<List<TupleMessageEx>> accountMessages = new LongSparseArray<>();
 
-        // Existing
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (StatusBarNotification notification : nm.getActiveNotifications()) {
-                Bundle args = notification.getNotification().extras;
-                long id = args.getLong("id", 0);
-                long account = args.getLong("account", 0);
-                Log.i("Notify showing=" + id);
-                if (id != 0) {
-                    if (notifying.indexOfKey(account) < 0) {
-                        notifying.put(account, new ArrayList<Long>());
-                        accountMessages.put(account, new ArrayList<TupleMessageEx>());
-                    }
-                    notifying.get(account).add(id);
-                }
+        // Previous
+        for (String key : prefs.getAll().keySet())
+            if (key.startsWith("notifying:")) {
+                long account = Long.parseLong(key.split(":")[1]);
+                notifying.put(account, new ArrayList<Long>());
+
+                for (String id : prefs.getString(key, null).split(","))
+                    notifying.get(account).add(Long.parseLong(id));
+
+                editor.remove(key);
             }
-        }
 
         // Current
         for (TupleMessageEx message : messages) {
             long account = (message.accountNotify ? message.account : 0);
             accountName.put(account, account > 0 ? message.accountName : null);
             if (accountMessages.indexOfKey(account) < 0) {
-                notifying.put(account, new ArrayList<Long>());
                 accountMessages.put(account, new ArrayList<TupleMessageEx>());
+                if (notifying.indexOfKey(account) < 0)
+                    notifying.put(account, new ArrayList<Long>());
             }
             accountMessages.get(account).add(message);
         }
 
         // Difference
-        for (int i = 0; i < accountMessages.size(); i++) {
-            long account = accountMessages.keyAt(i);
+        for (int i = 0; i < notifying.size(); i++) {
+            long account = notifying.keyAt(i);
             List<Notification> notifications = getNotificationUnseen(
                     context, account, accountName.get(account), accountMessages.get(account));
 
-            List<Long> all = new ArrayList<>();
-            List<Long> added = new ArrayList<>();
-            List<Long> removed = notifying.get(account);
+            List<String> all = new ArrayList<>();
+            List<Long> add = new ArrayList<>();
+            List<Long> remove = notifying.get(account);
             for (Notification notification : notifications) {
                 Long id = notification.extras.getLong("id", 0);
                 if (id != 0) {
-                    all.add(id);
-                    if (removed.contains(id)) {
-                        removed.remove(id);
-                        Log.i("Notify removing=" + id);
+                    all.add(Long.toString(id));
+                    if (remove.contains(id)) {
+                        remove.remove(id);
+                        Log.i("Notify existing=" + id);
                     } else {
-                        removed.remove(-id);
-                        added.add(id);
+                        remove.remove(-id);
+                        add.add(id);
                         Log.i("Notify adding=" + id);
                     }
                 }
             }
 
             int headers = 0;
-            for (Long id : added)
+            for (Long id : add)
                 if (id < 0)
                     headers++;
 
-            Log.i("Notify account=" + account +
-                    " count=" + notifications.size() + " all=" + all.size() +
-                    " added=" + added.size() + " removed=" + removed.size() + " headers=" + headers);
+            Log.i("Notify account=" + account + " count=" + notifications.size() +
+                    " added=" + add.size() + " removed=" + remove.size() + " headers=" + headers);
 
             if (notifications.size() == 0 ||
                     (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && headers > 0))
                 nm.cancel("unseen:" + account + ":0", 1);
 
-            for (Long id : removed)
+            for (Long id : remove)
                 nm.cancel("unseen:" + account + ":" + Math.abs(id), 1);
 
             for (Notification notification : notifications) {
                 long id = notification.extras.getLong("id", 0);
-                if ((id == 0 && added.size() + removed.size() > 0) || added.contains(id))
+                if ((id == 0 && add.size() + remove.size() > 0) || add.contains(id))
                     nm.notify("unseen:" + account + ":" + Math.abs(id), 1, notification);
             }
+
+            if (all.size() > 0)
+                editor.putString("notifying:" + account, TextUtils.join(",", all));
         }
+
+        editor.apply();
     }
 
     private static List<Notification> getNotificationUnseen(
@@ -1485,7 +1506,7 @@ class Core {
             List<TupleMessageEx> messages) {
         List<Notification> notifications = new ArrayList<>();
 
-        if (messages.size() == 0)
+        if (messages == null || messages.size() == 0)
             return notifications;
 
         boolean pro = Helper.isPro(context);

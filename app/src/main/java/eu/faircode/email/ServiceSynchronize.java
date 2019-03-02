@@ -239,13 +239,16 @@ public class ServiceSynchronize extends LifecycleService {
                 boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
                 //System.setProperty("mail.socket.debug", Boolean.toString(debug));
 
-                // Create session
+                // Get properties
                 Properties props = MessageHelper.getSessionProperties(account.auth_type, account.realm, account.insecure);
+
+                // Create session
                 final Session isession = Session.getInstance(props, null);
                 isession.setDebug(debug);
                 // adb -t 1 logcat | grep "fairemail\|System.out"
 
                 final Store istore = isession.getStore(account.getProtocol());
+
                 final Map<EntityFolder, Folder> folders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
                 List<Handler> handlers = new ArrayList<>();
@@ -435,15 +438,9 @@ public class ServiceSynchronize extends LifecycleService {
                                                 }
 
                                                 if (db.folder().getFolderDownload(folder.id))
-                                                    try {
-                                                        db.beginTransaction();
-                                                        Core.downloadMessage(ServiceSynchronize.this,
-                                                                folder, (IMAPFolder) ifolder,
-                                                                (IMAPMessage) imessage, message.id);
-                                                        db.setTransactionSuccessful();
-                                                    } finally {
-                                                        db.endTransaction();
-                                                    }
+                                                    Core.downloadMessage(ServiceSynchronize.this,
+                                                            folder, (IMAPFolder) ifolder,
+                                                            (IMAPMessage) imessage, message.id);
                                             } catch (MessageRemovedException ex) {
                                                 Log.w(folder.name, ex);
                                             } catch (FolderClosedException ex) {
@@ -524,15 +521,9 @@ public class ServiceSynchronize extends LifecycleService {
                                             }
 
                                             if (db.folder().getFolderDownload(folder.id))
-                                                try {
-                                                    db.beginTransaction();
-                                                    Core.downloadMessage(ServiceSynchronize.this,
-                                                            folder, (IMAPFolder) ifolder,
-                                                            (IMAPMessage) e.getMessage(), message.id);
-                                                    db.setTransactionSuccessful();
-                                                } finally {
-                                                    db.endTransaction();
-                                                }
+                                                Core.downloadMessage(ServiceSynchronize.this,
+                                                        folder, (IMAPFolder) ifolder,
+                                                        (IMAPMessage) e.getMessage(), message.id);
                                         } catch (MessageRemovedException ex) {
                                             Log.w(folder.name, ex);
                                         } catch (FolderClosedException ex) {
@@ -581,7 +572,7 @@ public class ServiceSynchronize extends LifecycleService {
                             idler.start();
                             idlers.add(idler);
 
-                            EntityOperation.sync(this, folder.id);
+                            EntityOperation.sync(this, folder.id, false);
                         } else
                             folders.put(folder, null);
 
@@ -722,7 +713,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         if (!folders.get(folder).isOpen())
                                             throw new FolderClosedException(folders.get(folder));
                                     } else
-                                        EntityOperation.sync(this, folder.id);
+                                        EntityOperation.sync(this, folder.id, false);
 
                             // Successfully connected: reset back off time
                             backoff = CONNECT_BACKOFF_START;

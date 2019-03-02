@@ -84,6 +84,9 @@ public class ServiceUI extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        // Under certain circumstances, a background app is placed on a temporary whitelist for several minutes
+        // - Executing a PendingIntent from a notification.
+        // https://developer.android.com/about/versions/oreo/background#services
         Log.i("Service UI intent=" + intent);
 
         if (intent == null)
@@ -127,6 +130,9 @@ public class ServiceUI extends IntentService {
 
             case "snooze":
                 // AlarmManager.RTC_WAKEUP
+                // When the alarm is dispatched, the app will also be added to the system's temporary whitelist
+                // for approximately 10 seconds to allow that application to acquire further wake locks in which to complete its work.
+                // https://developer.android.com/reference/android/app/AlarmManager
                 onSnooze(id);
                 break;
 
@@ -161,8 +167,6 @@ public class ServiceUI extends IntentService {
     }
 
     private void onSummary() {
-        DB.getInstance(this).message().ignoreAll();
-
         Intent view = new Intent(this, ActivityView.class);
         view.setAction("unified");
         view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -283,8 +287,13 @@ public class ServiceUI extends IntentService {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
 
-            // Create session
+            String protocol = account.getProtocol();
+
+            // Get properties
             Properties props = MessageHelper.getSessionProperties(account.auth_type, account.realm, account.insecure);
+            props.put("mail." + protocol + ".separatestoreconnection", "true");
+
+            // Create session
             final Session isession = Session.getInstance(props, null);
             isession.setDebug(debug);
 
@@ -293,7 +302,7 @@ public class ServiceUI extends IntentService {
                 // Connect account
                 Log.i(account.name + " connecting");
                 db.account().setAccountState(account.id, "connecting");
-                istore = isession.getStore(account.getProtocol());
+                istore = isession.getStore(protocol);
                 Helper.connect(this, istore, account);
                 db.account().setAccountState(account.id, "connected");
                 db.account().setAccountConnected(account.id, new Date().getTime());
@@ -348,15 +357,20 @@ public class ServiceUI extends IntentService {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
 
-            // Create session
+            String protocol = account.getProtocol();
+
+            // Get properties
             Properties props = MessageHelper.getSessionProperties(account.auth_type, account.realm, account.insecure);
+            props.put("mail." + protocol + ".separatestoreconnection", "true");
+
+            // Create session
             final Session isession = Session.getInstance(props, null);
             isession.setDebug(debug);
 
             // Connect account
             Log.i(account.name + " connecting");
             db.account().setAccountState(account.id, "connecting");
-            istore = isession.getStore(account.getProtocol());
+            istore = isession.getStore(protocol);
             Helper.connect(this, istore, account);
             db.account().setAccountState(account.id, "connected");
             db.account().setAccountConnected(account.id, new Date().getTime());
@@ -389,14 +403,24 @@ public class ServiceUI extends IntentService {
     }
 
     public static void process(Context context, long folder) {
-        context.startService(
-                new Intent(context, ServiceUI.class)
-                        .setAction("process:" + folder));
+        try {
+            context.startService(
+                    new Intent(context, ServiceUI.class)
+                            .setAction("process:" + folder));
+        } catch (IllegalStateException ex) {
+            Log.w(ex);
+            // The background service will handle the operation
+        }
     }
 
     public static void fsync(Context context, long account) {
-        context.startService(
-                new Intent(context, ServiceUI.class)
-                        .setAction("fsync:" + account));
+        try {
+            context.startService(
+                    new Intent(context, ServiceUI.class)
+                            .setAction("fsync:" + account));
+        } catch (IllegalStateException ex) {
+            Log.w(ex);
+            // The user went away
+        }
     }
 }

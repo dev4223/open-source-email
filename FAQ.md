@@ -17,7 +17,7 @@ for instance when two factor authentication is enabled.
 For authorizing:
 
 * Gmail / G suite: see [question 6](#user-content-faq6)
-* Outlook: see [question 14](#user-content-faq14)
+* Outlook / Hotmail: see [question 14](#user-content-faq14)
 * Microsoft Exchange: see [question 8](#user-content-faq8)
 
 
@@ -30,7 +30,7 @@ For authorizing:
 
 * ~~Synchronize on demand (manual)~~
 * ~~Semi-automatic encryption~~
-* Add message copy
+* ~~Copy message~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -67,14 +67,14 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(4) How can I use an invalid security certificate / IMAP STARTTLS / an empty password?](#user-content-faq4)
 * [(5) How can I customize the message view?](#user-content-faq5)
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
-* [~~(7) Why are messages in the outbox not moved to the sent folder?~~](#user-content-faq7)
+* [(7) Why are messages in the outbox not moved to the sent folder?](#user-content-faq7)
 * [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
 * [(9) What are identities?](#user-content-faq9)
 * [(11) Why is POP not supported?](#user-content-faq11)
 * [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
 * [(12) How does encryption/decryption work?](#user-content-faq12)
 * [(13) How does search on device/server work?](#user-content-faq13)
-* [(14) How can I setup Outlook with 2FA?](#user-content-faq14)
+* [(14) How can I setup Outlook / Hotmail with 2FA?](#user-content-faq14)
 * [(15) Why does the message text keep loading?](#user-content-faq15)
 * [(16) Why are messages not being synchronized?](#user-content-faq16)
 * [~~(17) Why does manual synchronize not work?~~](#user-content-faq17)
@@ -188,6 +188,7 @@ The low priority status bar notification shows the number of pending operations,
 
 * *add*: add message to remote folder
 * *move*: move message to another remote folder
+* *copy*: copy message to another remote folder
 * *delete*: delete message from remote folder
 * *send*: send message
 * *seen*: mark message as read/unread in remote folder
@@ -237,6 +238,7 @@ In the display section of the advanced settings you can enable or disable:
 * *Conversation threading*: to disable conversation threading and to show individual messages instead
 * *Show contact photos*: to hide contact photos
 * *Show identicons*: to show generated contact avatars
+* *Show stars*: to hide stars (favorites)
 * *Show message preview*: to show two lines of the message text
 * *Show address details by default*: to collapse the addresses section by default
 * *Conversation action bar*: to disable the bottom navigation bar
@@ -271,13 +273,12 @@ If this doesn't work, see here for more solutions: [https://support.google.com/m
 <br />
 
 <a name="faq7"></a>
-**~~(7) Why are messages in the outbox not moved to the sent folder?~~**
+**(7) Why are messages in the outbox not moved to the sent folder?**
 
-~~Messages in the outbox are moved to the sent folder as soon as your provider adds the message to the sent folder.
-Note that this requires a sent folder to be selected and to be set to synchronizing.
+Messages in the outbox are moved to the sent folder as soon as your provider adds the message to the sent folder.
+This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.
-In these cases you can use the advanced identity setting *Store a copy of sent messages in* and select the sent folder.
-There is a menu to move sent messages in the outbox to the sent folder.~~
+In these cases you can enable the advanced identity setting *Store sent messages* to workaround this.
 
 <br />
 
@@ -370,12 +371,12 @@ Searching messages is a pro feature.
 <br />
 
 <a name="faq14"></a>
-**(14) How can I setup Outlook with 2FA?**
+**(14) How can I setup Outlook / Hotmail with 2FA?**
 
-To use Outlook with two factor authentication enabled, you need to create an app password.
+To use Outlook or Hotmail with two factor authentication enabled, you need to create an app password.
 See [here](https://support.microsoft.com/en-us/help/12409/microsoft-account-app-passwords-two-step-verification) for the details.
 
-Unfortunately, Outlook doesn't properly support OAuth for IMAP/SMTP connections, so there is no other way.
+Unfortunately, Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections, so there is no other way.
 
 Technical background: [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only
 and OAuth requires embedding a client secret in the app.
@@ -694,7 +695,7 @@ Long version:
 Providers require passwords in plain text, so the background service that takes care of synchronizing messages needs to send passwords in plain text.
 Since encrypting passwords would require a secret and the background service needs to know this secret, this could only be done by storing that secret.
 Storing a secret together with encrypted passwords would not add anything, so passwords are stored in plain text in a safe, inaccessible place.
-Recent Android versions encrypt all data anyway.
+Recent Android versions encrypt all user data anyway.
 
 <br />
 
@@ -1038,7 +1039,7 @@ You can view these messages, but you cannot move these messages again until the 
 
 Some providers don't keep track of sent messages or you might be using an SMTP server not related to the provider.
 This will result in messages in the sent folder never to be synchronized.
-In these cases you should enable the advanced identity setting *Store sent messages*.
+See [this FAQ](#user-content-faq7) for more information on this.
 
 <br />
 
@@ -1133,7 +1134,7 @@ for example one listed [here](https://github.com/offa/android-foss#-document--pd
 <a name="faq69"></a>
 **(69) Can you add auto scroll up on new message?**
 
-The message list is automatically scrolled up when navigating from a new message notification.
+The message list is automatically scrolled up when navigating from a new message notification or after a manual refresh.
 Always automatically scrolling up on arrival of new messages would interfere with your own navigation and scrolling.
 
 <br />

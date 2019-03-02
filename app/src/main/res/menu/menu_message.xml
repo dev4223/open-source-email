@@ -5,20 +5,16 @@
         android:title="@string/title_forward" />
 
     <item
-        android:id="@+id/menu_reply_all"
-        android:title="@string/title_reply_all" />
-
-    <item
-        android:id="@+id/menu_answer"
-        android:title="@string/title_answer_reply" />
-
-    <item
         android:id="@+id/menu_unseen"
         android:title="@string/title_unseen" />
 
     <item
         android:id="@+id/menu_snooze"
         android:title="@string/title_snooze" />
+
+    <item
+        android:id="@+id/menu_copy"
+        android:title="@string/title_copy" />
 
     <item
         android:id="@+id/menu_delete"
