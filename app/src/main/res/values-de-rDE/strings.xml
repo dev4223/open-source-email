@@ -130,6 +130,7 @@
     <string name="title_advanced_avatars">Kontaktfotos anzeigen</string>
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
+    <string name="title_advanced_flags">Sterne / Favoriten anzeigen</string>
     <string name="title_advanced_preview">Nachrichtenvorschau anzeigen</string>
     <string name="title_advanced_addresses">Adressdetails standardmäßig anzeigen</string>
     <string name="title_advanced_html">Für bekannte Kontakte Mails automatisch im Original-Format anzeigen</string>
@@ -158,6 +159,7 @@
     <string name="title_advanced_unified_hint">Zeige die Ordner oder die E-Mails des Sammeleingangs an</string>
     <string name="title_advanced_threading_hint">E-Mails gruppieren, die miteinander verwandt sind</string>
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
+    <string name="title_advanced_flags_hint">Beachten Sie, dass markierte Nachrichten immer lokal gehalten werden</string>
     <string name="title_advanced_autoexpand_hint">Eine (ungelesene) Nachricht wird automatisch geöffnet</string>
     <string name="title_advanced_autocollapse_hint">Mehrere erweiterte Nachrichten werden immer auf \'zurück\' geschlossen</string>
     <string name="title_advanced_autoclose_hint">Automatisches Schließen des Unterhaltungsthreads, wenn alle E-Mails archiviert, gesendet oder gelöscht wurden</string>
@@ -273,7 +275,6 @@
     <string name="title_flag">Als Favorit markieren</string>
     <string name="title_unflag">Von Favoriten entfernen</string>
     <string name="title_forward">Weiterleiten</string>
-    <string name="title_reply_all">Antworten an alle</string>
     <string name="title_create_rule">Regel &#8230; erstellen</string>
     <string name="title_share">Teilen</string>
     <string name="title_show_headers">Kopfzeile anzeigen</string>
@@ -286,6 +287,7 @@
     <string name="title_save_all">Alles speichern</string>
     <string name="title_show_html">Original anzeigen</string>
     <string name="title_trash">Löschen</string>
+    <string name="title_copy">Kopiere &#8230;</string>
     <string name="title_delete">Löschen</string>
     <string name="title_more">Mehr</string>
     <string name="title_spam">Spam</string>
@@ -294,6 +296,9 @@
     <string name="title_snooze">Später lesen &#8230;</string>
     <string name="title_archive">Archivieren</string>
     <string name="title_reply">Antworten</string>
+    <string name="title_reply_to_sender">Nur dem Absender antworten</string>
+    <string name="title_reply_to_all">Allen Empfängern antworten</string>
+    <string name="title_reply_template">Für die Antwort eine Vorlage verwenden</string>
     <string name="title_moving">Verschiebe nach %1$s</string>
     <string name="title_open_with">Öffnen mit</string>
     <string name="title_no_answers">Keine Antwortvorlagen definiert</string>
@@ -410,6 +415,7 @@
     <string name="title_legend_flagged">Als wichtig markiert</string>
     <string name="title_legend_contacts">Kontakte verwalten</string>
     <string name="title_legend_view">Inhalt anzeigen</string>
+    <string name="title_legend_hide">Inhalt ausblenden</string>
     <string name="title_legend_download">Inhalt herunterladen</string>
     <string name="title_legend_external_image">Platzhalter für externe Bilder</string>
     <string name="title_legend_embedded_image">Platzhalter für eingebettete Bilder</string>

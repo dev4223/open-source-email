@@ -134,6 +134,7 @@ public class FragmentMessages extends FragmentBase {
     private boolean outbox = false;
     private boolean connected;
     private boolean searching = false;
+    private boolean manual = false;
     private AdapterMessage adapter;
 
     private AdapterMessage.ViewType viewType;
@@ -489,6 +490,11 @@ public class FragmentMessages extends FragmentBase {
 
         new SimpleTask<Boolean>() {
             @Override
+            protected void onPreExecute(Bundle args) {
+                manual = true;
+            }
+
+            @Override
             protected Boolean onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
 
@@ -502,11 +508,11 @@ public class FragmentMessages extends FragmentBase {
                     if (fid < 0) {
                         List<EntityFolder> folders = db.folder().getFoldersSynchronizingUnified();
                         for (EntityFolder folder : folders)
-                            EntityOperation.sync(context, folder.id);
+                            EntityOperation.sync(context, folder.id, true);
                     } else {
                         EntityFolder folder = db.folder().getFolder(fid);
                         if (folder != null)
-                            EntityOperation.sync(context, folder.id);
+                            EntityOperation.sync(context, folder.id, true);
                     }
 
                     db.setTransactionSuccessful();
@@ -519,6 +525,7 @@ public class FragmentMessages extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
+                manual = false;
                 swipeRefresh.setRefreshing(false);
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
@@ -1424,16 +1431,16 @@ public class FragmentMessages extends FragmentBase {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean("autoExpanded", autoExpanded);
-        outState.putInt("autoCloseCount", autoCloseCount);
+        outState.putBoolean("fair:autoExpanded", autoExpanded);
+        outState.putInt("fair:autoCloseCount", autoCloseCount);
 
-        outState.putStringArray("values", values.keySet().toArray(new String[0]));
+        outState.putStringArray("fair:values", values.keySet().toArray(new String[0]));
         for (String name : values.keySet())
-            outState.putLongArray(name, Helper.toLongArray(values.get(name)));
+            outState.putLongArray("fair:name:" + name, Helper.toLongArray(values.get(name)));
 
         if (rvMessage != null) {
             Parcelable rv = rvMessage.getLayoutManager().onSaveInstanceState();
-            outState.putParcelable("rv", rv);
+            outState.putParcelable("fair:rv", rv);
         }
 
         if (selectionTracker != null)
@@ -1445,18 +1452,18 @@ public class FragmentMessages extends FragmentBase {
         super.onActivityCreated(savedInstanceState);
 
         if (savedInstanceState != null) {
-            autoExpanded = savedInstanceState.getBoolean("autoExpanded");
-            autoCloseCount = savedInstanceState.getInt("autoCloseCount");
+            autoExpanded = savedInstanceState.getBoolean("fair:autoExpanded");
+            autoCloseCount = savedInstanceState.getInt("fair:autoCloseCount");
 
-            String[] names = savedInstanceState.getStringArray("values");
+            String[] names = savedInstanceState.getStringArray("fair:values");
             for (String name : names) {
                 values.put(name, new ArrayList<Long>());
-                for (Long value : savedInstanceState.getLongArray(name))
+                for (Long value : savedInstanceState.getLongArray("fair:name:" + name))
                     values.get(name).add(value);
             }
 
             if (rvMessage != null) {
-                Parcelable rv = savedInstanceState.getBundle("rv");
+                Parcelable rv = savedInstanceState.getBundle("fair:rv");
                 rvMessage.getLayoutManager().onRestoreInstanceState(rv);
             }
 
@@ -1525,6 +1532,11 @@ public class FragmentMessages extends FragmentBase {
                                 break;
                             }
 
+                        if (!refreshing && manual) {
+                            manual = false;
+                            rvMessage.scrollToPosition(0);
+                        }
+
                         swipeRefresh.setRefreshing(refreshing);
                     }
                 });
@@ -1550,7 +1562,14 @@ public class FragmentMessages extends FragmentBase {
                             }
                         }
 
-                        swipeRefresh.setRefreshing(folder != null && folder.isSynchronizing());
+                        boolean refreshing = (folder != null && folder.isSynchronizing());
+
+                        if (!refreshing && manual) {
+                            manual = false;
+                            rvMessage.scrollToPosition(0);
+                        }
+
+                        swipeRefresh.setRefreshing(refreshing);
                     }
                 });
                 break;

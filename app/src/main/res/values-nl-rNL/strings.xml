@@ -130,6 +130,7 @@
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
     <string name="title_advanced_identicons">Toon identicons</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
+    <string name="title_advanced_flags">Toon sterren (favorieten)</string>
     <string name="title_advanced_preview">Toon berichtvoorbeeld</string>
     <string name="title_advanced_addresses">Adresgegevens standaard weergeven</string>
     <string name="title_advanced_html">Automatisch originele bericht weergeven voor bekende contacten</string>
@@ -158,6 +159,7 @@
     <string name="title_advanced_unified_hint">Gecombineerd postvak in mappen of gecombineerd postvak in berichten weergeven</string>
     <string name="title_advanced_threading_hint">Groepeer gerelateerde berichten</string>
     <string name="title_advanced_name_email_hint">Indien uitgeschakeld, worden alleen namen weergegeven als deze beschikbaar zijn</string>
+    <string name="title_advanced_flags_hint">Merk op dat berichten met een ster altijd lokaal worden bewaard</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
     <string name="title_advanced_autocollapse_hint">Meerdere uitgeklapte berichten worden altijd gesloten bij \'terug\'</string>
     <string name="title_advanced_autoclose_hint">Gesprekken automatisch sluiten wanneer alle berichten zijn gearchiveerd, verzonden of weggegooid</string>
@@ -273,7 +275,6 @@
     <string name="title_flag">Ster toevoegen</string>
     <string name="title_unflag">Ster verwijderen</string>
     <string name="title_forward">Doorsturen</string>
-    <string name="title_reply_all">Allen beantwoorden</string>
     <string name="title_create_rule">Maak regel &#8230;</string>
     <string name="title_share">Delen</string>
     <string name="title_show_headers">Toon koppen</string>
@@ -286,6 +287,7 @@
     <string name="title_save_all">Alles opslaan</string>
     <string name="title_show_html">Toon origineel</string>
     <string name="title_trash">Weggooien</string>
+    <string name="title_copy">Kopieer &#8230;</string>
     <string name="title_delete">Verwijder</string>
     <string name="title_more">Meer</string>
     <string name="title_spam">Spam</string>
@@ -294,6 +296,9 @@
     <string name="title_snooze">Sluimeren &#8230;</string>
     <string name="title_archive">Archiveren</string>
     <string name="title_reply">Beantwoorden</string>
+    <string name="title_reply_to_sender">Afzender</string>
+    <string name="title_reply_to_all">Iedereen</string>
+    <string name="title_reply_template">Sjabloon</string>
     <string name="title_moving">Verplaatsen naar %1$s</string>
     <string name="title_open_with">Openen met</string>
     <string name="title_no_answers">Geen sjablonen gedefinieerd</string>
@@ -410,6 +415,7 @@
     <string name="title_legend_flagged">Heeft een star</string>
     <string name="title_legend_contacts">Contacten beheren</string>
     <string name="title_legend_view">Inhoud weergeven</string>
+    <string name="title_legend_hide">Inhoud verbergen</string>
     <string name="title_legend_download">Inhoud downloaden</string>
     <string name="title_legend_external_image">Plaatshouder externe afbeelding</string>
     <string name="title_legend_embedded_image">Plaatshouder ingesloten afbeelding</string>
@@ -459,6 +465,7 @@
     <string name="title_enable">Inschakelen</string>
     <string name="title_no_ask_again">Dit niet meer vragen</string>
     <string name="title_no_adobe">Adobe Acrobat reader kan veilig gedeelde bestanden niet openen, zie de FAQ voor meer informatie</string>
+    <string name="title_no_microsoft">Microsoft apps kunnen veilig gedeelde bestanden niet openen, zie de FAQ voor meer informatie</string>
     <string name="title_no_body">Geen berichttekst gevonden</string>
     <string name="title_no_charset">Codering niet ondersteund: %1$s</string>
     <string name="title_via">Via: %1$s</string>

@@ -27,8 +27,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
@@ -68,6 +70,7 @@ public class EntityOperation {
 
     static final String ADD = "add";
     static final String MOVE = "move";
+    static final String COPY = "copy";
     static final String DELETE = "delete";
     static final String SEND = "send";
     static final String SEEN = "seen";
@@ -80,57 +83,13 @@ public class EntityOperation {
     static final String ATTACHMENT = "attachment";
     static final String SYNC = "sync";
 
-    static void queue(Context context, DB db, EntityMessage message, String name) {
+    private static List<String> FOREGROUND = Arrays.asList(KEYWORD, HEADERS, RAW, BODY, ATTACHMENT);
+
+    static void queue(Context context, DB db, EntityMessage message, String name, Object... values) {
         JSONArray jargs = new JSONArray();
-        queue(context, db, message, name, jargs);
-    }
+        for (Object value : values)
+            jargs.put(value);
 
-    static void queue(Context context, DB db, EntityMessage message, String name, Object value) {
-        JSONArray jargs = new JSONArray();
-        jargs.put(value);
-        queue(context, db, message, name, jargs);
-    }
-
-    static void queue(Context context, DB db, EntityMessage message, String name, Object value1, Object value2) {
-        JSONArray jargs = new JSONArray();
-        jargs.put(value1);
-        jargs.put(value2);
-        queue(context, db, message, name, jargs);
-    }
-
-    static void sync(Context context, long fid) {
-        DB db = DB.getInstance(context);
-        if (db.operation().getOperationCount(fid, EntityOperation.SYNC) == 0) {
-
-            EntityFolder folder = db.folder().getFolder(fid);
-            EntityAccount account = null;
-            if (folder.account != null)
-                account = db.account().getAccount(folder.account);
-
-            EntityOperation operation = new EntityOperation();
-            operation.folder = folder.id;
-            operation.message = null;
-            operation.name = SYNC;
-            operation.args = folder.getSyncArgs().toString();
-            operation.created = new Date().getTime();
-            operation.id = db.operation().insertOperation(operation);
-
-            if (account != null && !"connected".equals(account.state)) {
-                db.folder().setFolderState(fid, "waiting");
-                db.folder().setFolderSyncState(fid, "manual");
-            } else
-                db.folder().setFolderSyncState(fid, "requested");
-
-            if (account == null) // Outbox
-                ServiceSend.start(context);
-            else if (!"connected".equals(account.state))
-                ServiceUI.process(context, fid);
-
-            Log.i("Queued sync folder=" + folder);
-        }
-    }
-
-    private static void queue(Context context, DB db, EntityMessage message, String name, JSONArray jargs) {
         long folder = message.folder;
         try {
             if (SEEN.equals(name)) {
@@ -207,7 +166,7 @@ public class EntityOperation {
                                     EntityMessage.getFile(context, newid));
                         } catch (IOException ex) {
                             Log.e(ex);
-                            db.message().setMessageContent(newid, false, null);
+                            db.message().setMessageContent(newid, false, null, null);
                         }
 
                     EntityAttachment.copy(context, db, message.id, newid);
@@ -253,10 +212,45 @@ public class EntityOperation {
 
         if (SEND.equals(name))
             ServiceSend.start(context);
-        else {
+        else if (FOREGROUND.contains(name)) {
             EntityAccount account = db.account().getAccount(message.account);
             if (account != null && !"connected".equals(account.state))
                 ServiceUI.process(context, operation.folder);
+        }
+    }
+
+    static void sync(Context context, long fid, boolean foreground) {
+        DB db = DB.getInstance(context);
+        if (db.operation().getOperationCount(fid, EntityOperation.SYNC) == 0) {
+
+            EntityFolder folder = db.folder().getFolder(fid);
+            EntityAccount account = null;
+            if (folder.account != null)
+                account = db.account().getAccount(folder.account);
+
+            JSONArray jargs = folder.getSyncArgs();
+            jargs.put(foreground);
+
+            EntityOperation operation = new EntityOperation();
+            operation.folder = folder.id;
+            operation.message = null;
+            operation.name = SYNC;
+            operation.args = jargs.toString();
+            operation.created = new Date().getTime();
+            operation.id = db.operation().insertOperation(operation);
+
+            if (account != null && !"connected".equals(account.state)) {
+                db.folder().setFolderState(fid, "waiting");
+                db.folder().setFolderSyncState(fid, "manual");
+            } else
+                db.folder().setFolderSyncState(fid, "requested");
+
+            if (account == null) // Outbox
+                ServiceSend.start(context);
+            else if (foreground && !"connected".equals(account.state))
+                ServiceUI.process(context, fid);
+
+            Log.i("Queued sync folder=" + folder + " foreground=" + foreground);
         }
     }
 

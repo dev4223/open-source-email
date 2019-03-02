@@ -273,7 +273,6 @@
     <string name="title_flag">Adicionar estrela</string>
     <string name="title_unflag">Remover estrela</string>
     <string name="title_forward">Encaminhar</string>
-    <string name="title_reply_all">Responder a todos</string>
     <string name="title_create_rule">Criar regra &#8230;</string>
     <string name="title_share">Compartilhar</string>
     <string name="title_show_headers">Mostrar cabeçalhos</string>
@@ -286,6 +285,7 @@
     <string name="title_save_all">Salvar todos</string>
     <string name="title_show_html">Mostrar original</string>
     <string name="title_trash">Lixeira</string>
+    <string name="title_copy">Copiar &#8230;</string>
     <string name="title_delete">Excluir</string>
     <string name="title_more">Mais</string>
     <string name="title_spam">Spam</string>
@@ -294,6 +294,9 @@
     <string name="title_snooze">Adiar &#8230;</string>
     <string name="title_archive">Arquivar</string>
     <string name="title_reply">Responder</string>
+    <string name="title_reply_to_sender">Remetente</string>
+    <string name="title_reply_to_all">Todos</string>
+    <string name="title_reply_template">Modelo</string>
     <string name="title_moving">Movendo para %1$s</string>
     <string name="title_open_with">Abrir com</string>
     <string name="title_no_answers">Nenhum modelo de resposta definido</string>
@@ -410,6 +413,7 @@
     <string name="title_legend_flagged">Possui estrela</string>
     <string name="title_legend_contacts">Gerenciar contatos</string>
     <string name="title_legend_view">Ver conteúdo</string>
+    <string name="title_legend_hide">Ocultar conteúdo</string>
     <string name="title_legend_download">Baixar conteúdo</string>
     <string name="title_legend_external_image">Espaço reservado a uma imagem externa</string>
     <string name="title_legend_embedded_image">Espaço reservado a uma imagem embutida</string>

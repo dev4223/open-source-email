@@ -594,8 +594,8 @@ public class FragmentCompose extends FragmentBase {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong("working", working);
-        outState.putBoolean("show_images", show_images);
+        outState.putLong("fair:working", working);
+        outState.putBoolean("fair:show_images", show_images);
     }
 
     @Override
@@ -628,8 +628,8 @@ public class FragmentCompose extends FragmentBase {
                 draftLoader.execute(this, args, "compose:edit");
             }
         } else {
-            working = savedInstanceState.getLong("working");
-            show_images = savedInstanceState.getBoolean("show_images");
+            working = savedInstanceState.getLong("fair:working");
+            show_images = savedInstanceState.getBoolean("fair:show_images");
 
             Bundle args = new Bundle();
             args.putString("action", working < 0 ? "new" : "edit");
@@ -695,7 +695,7 @@ public class FragmentCompose extends FragmentBase {
     };
 
     private void checkInternet() {
-        boolean internet = (Helper.isMetered(getContext(), false) != null);
+        boolean internet = Helper.isConnected(getContext());
 
         Boolean content = (Boolean) tvNoInternet.getTag();
         tvNoInternet.setVisibility(!internet && content != null && !content ? View.VISIBLE : View.GONE);
@@ -1671,7 +1671,7 @@ public class FragmentCompose extends FragmentBase {
                     draft.id = db.message().insertMessage(draft);
                     Helper.writeText(EntityMessage.getFile(context, draft.id), body);
 
-                    db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body));
+                    db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
 
                     // Write reference text
                     if (ref != null && ref.content) {
@@ -2020,7 +2020,7 @@ public class FragmentCompose extends FragmentBase {
                     draft.received = new Date().getTime();
                     db.message().updateMessage(draft);
                     Helper.writeText(EntityMessage.getFile(context, draft.id), body);
-                    db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body));
+                    db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
                 }
 
                 // Remove unused inline images
