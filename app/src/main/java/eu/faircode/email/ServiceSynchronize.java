@@ -41,6 +41,9 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -131,7 +134,7 @@ public class ServiceSynchronize extends LifecycleService {
             }
         });
 
-        JobDaily.schedule(this);
+        WorkerCleanup.queue();
     }
 
     @Override
@@ -145,7 +148,7 @@ public class ServiceSynchronize extends LifecycleService {
 
         Widget.update(this, -1);
 
-        JobDaily.cancel(this);
+        WorkerCleanup.cancel();
 
         stopForeground(true);
 
@@ -214,9 +217,8 @@ public class ServiceSynchronize extends LifecycleService {
                 .setVisibility(NotificationCompat.VISIBILITY_SECRET);
 
         if (lastStats.operations > 0)
-            builder.setStyle(new NotificationCompat.BigTextStyle().setSummaryText(
-                    getResources().getQuantityString(
-                            R.plurals.title_notification_operations, lastStats.operations, lastStats.operations)));
+            builder.setContentText(getResources().getQuantityString(
+                    R.plurals.title_notification_operations, lastStats.operations, lastStats.operations));
 
         return builder;
     }
@@ -259,17 +261,14 @@ public class ServiceSynchronize extends LifecycleService {
                         public void notification(StoreEvent e) {
                             try {
                                 wlAccount.acquire();
-                                String type = (e.getMessageType() == StoreEvent.ALERT ? "alert" : "notice");
                                 if (e.getMessageType() == StoreEvent.ALERT) {
-                                    Log.w(account.name + " " + type + ": " + e.getMessage());
-                                    EntityLog.log(ServiceSynchronize.this, account.name + " " + type + ": " + e.getMessage());
                                     db.account().setAccountError(account.id, e.getMessage());
                                     Core.reportError(
                                             ServiceSynchronize.this, account, null,
                                             new Core.AlertException(e.getMessage()));
                                     state.error();
                                 } else
-                                    Log.i(account.name + " " + type + ": " + e.getMessage());
+                                    Log.i(account.name + " notice: " + e.getMessage());
                             } finally {
                                 wlAccount.release();
                             }
@@ -1069,6 +1068,8 @@ public class ServiceSynchronize extends LifecycleService {
 
                 @Override
                 public void run() {
+                    DB db = DB.getInstance(ServiceSynchronize.this);
+
                     try {
                         wl.acquire();
 
@@ -1078,9 +1079,7 @@ public class ServiceSynchronize extends LifecycleService {
                         if (doStop)
                             stop();
 
-                        DB db = DB.getInstance(ServiceSynchronize.this);
-
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                             for (EntityAccount account : db.account().getAccountsTbd())
                                 nm.deleteNotificationChannel(EntityAccount.getNotificationChannelName(account.id));
@@ -1107,6 +1106,17 @@ public class ServiceSynchronize extends LifecycleService {
                             }
                             if (queued == 0 && !isEnabled()) {
                                 EntityLog.log(ServiceSynchronize.this, "Service stop");
+                                List<EntityOperation> ops = db.operation().getOperations(EntityOperation.SYNC);
+                                for (EntityOperation op : ops)
+                                    try {
+                                        JSONArray jargs = new JSONArray(op.args);
+                                        if (!jargs.getBoolean(3) /* foreground */) {
+                                            Log.i("Deleting bacground SYNC args=" + jargs);
+                                            db.operation().deleteOperation(op.id);
+                                        }
+                                    } catch (JSONException ex) {
+                                        Log.e(ex);
+                                    }
                                 stopSelf();
                             }
                         }
