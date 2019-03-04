@@ -448,7 +448,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         @SuppressLint("WrongConstant")
-        private void bindTo(int position, final TupleMessageEx message) {
+        private void bindTo(final TupleMessageEx message) {
             setDisplacement(0);
             pbLoading.setVisibility(View.GONE);
 
@@ -571,7 +571,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             // dev4223: dont show folder and attachemnt in compact view
-            if(ViewType.FOLDER == viewType && compact) {
+            // orig190304: tvFolder.setVisibility(compact && (!threading || viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) ? View.GONE : View.VISIBLE);
+            if((ViewType.FOLDER == viewType || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) && compact) {
                 tvFolder.setVisibility(View.GONE);
             } else if(compact) {
                 tvFolder.setVisibility(!threading ? View.VISIBLE : View.GONE);
@@ -1860,7 +1861,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (folders == null)
                         return null;
 
-                    EntityFolder.sort(context, folders);
+                    EntityFolder.sort(context, folders, true);
 
                     return folders;
                 }
@@ -2479,7 +2480,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 !EntityFolder.JUNK.equals(folder.type))
                             targets.add(folder);
 
-                    EntityFolder.sort(context, targets);
+                    EntityFolder.sort(context, targets, true);
 
                     return targets;
                 }
@@ -2823,7 +2824,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         if (message == null)
             holder.clear();
         else {
-            holder.bindTo(position, message);
+            holder.bindTo(message);
             holder.wire();
         }
     }

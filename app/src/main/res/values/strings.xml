@@ -203,6 +203,7 @@
     <string name="title_identity_reply_to">Reply to address</string>
     <string name="title_identity_plain_text">Send plain text only</string>
     <string name="title_identity_encrypt">Encrypt by default</string>
+    <string name="title_identity_use_ip_hint">In case of \'invalid greeting\', \'requires valid address\' or a similar error, try to change this setting</string>
     <string name="title_identity_read_receipt">Request read receipt</string>
     <string name="title_identity_delivery_receipt">Request delivery receipt</string>
     <string name="title_identity_receipt_remark">Most providers ignore receipt requests</string>
@@ -257,6 +258,7 @@
     <string name="title_no_uidplus">This provider does not support UIDPLUS</string>
     <string name="title_no_utf8">This provider does not support UTF-8</string>
     <string name="title_no_sync">Synchronization errors since %1$s</string>
+    <string name="title_sync_errors">Synchronizing some folders failed</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
