@@ -572,7 +572,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // dev4223: dont show folder and attachemnt in compact view
             // orig190304: tvFolder.setVisibility(compact && (!threading || viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) ? View.GONE : View.VISIBLE);
-            if((ViewType.FOLDER == viewType || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) && compact) {
+            if((viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) && compact) {
                 tvFolder.setVisibility(View.GONE);
             } else if(compact) {
                 tvFolder.setVisibility(!threading ? View.VISIBLE : View.GONE);
