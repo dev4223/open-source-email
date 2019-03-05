@@ -1515,6 +1515,7 @@ public class FragmentMessages extends FragmentBase {
                     public void onChanged(List<TupleFolderEx> folders) {
                         if (folders == null)
                             folders = new ArrayList<>();
+                        Log.i("Folder state updated count=" + folders.size());
 
                         int unseen = 0;
                         boolean errors = false;
@@ -1532,7 +1533,7 @@ public class FragmentMessages extends FragmentBase {
 
                         boolean refreshing = false;
                         for (TupleFolderEx folder : folders)
-                            if (folder.isSynchronizing()) {
+                            if (folder.sync_state != null) {
                                 refreshing = true;
                                 break;
                             }
@@ -1555,6 +1556,7 @@ public class FragmentMessages extends FragmentBase {
                 db.folder().liveFolderEx(folder).observe(getViewLifecycleOwner(), new Observer<TupleFolderEx>() {
                     @Override
                     public void onChanged(@Nullable TupleFolderEx folder) {
+                        Log.i("Folder state updated");
                         if (folder == null)
                             setSubtitle(null);
                         else {
@@ -1571,7 +1573,7 @@ public class FragmentMessages extends FragmentBase {
                             }
                         }
 
-                        boolean refreshing = (folder != null && folder.isSynchronizing());
+                        boolean refreshing = (folder != null && folder.sync_state != null);
 
                         if (!refreshing && manual) {
                             manual = false;
@@ -1742,6 +1744,8 @@ public class FragmentMessages extends FragmentBase {
             menu.findItem(R.id.menu_sort_on_starred).setChecked(true);
         else if ("sender".equals(sort))
             menu.findItem(R.id.menu_sort_on_sender).setChecked(true);
+        else if ("subject".equals(sort))
+            menu.findItem(R.id.menu_sort_on_subject).setChecked(true);
 
         menu.findItem(R.id.menu_zoom).setVisible(!selection);
 
@@ -1781,6 +1785,11 @@ public class FragmentMessages extends FragmentBase {
             case R.id.menu_sort_on_sender:
                 item.setChecked(true);
                 onMenuSort("sender");
+                return true;
+
+            case R.id.menu_sort_on_subject:
+                item.setChecked(true);
+                onMenuSort("subject");
                 return true;
 
             case R.id.menu_zoom:
