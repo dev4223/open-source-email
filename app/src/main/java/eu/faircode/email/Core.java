@@ -142,7 +142,8 @@ class Core {
                                 !(EntityOperation.ADD.equals(op.name) ||
                                         EntityOperation.DELETE.equals(op.name) ||
                                         EntityOperation.SEND.equals(op.name) ||
-                                        EntityOperation.SYNC.equals(op.name)))
+                                        EntityOperation.SYNC.equals(op.name) ||
+                                        EntityOperation.WAIT.equals(op.name)))
                             throw new IllegalArgumentException(op.name + " without uid " + op.args);
 
                         // Operations should use database transaction when needed
@@ -200,6 +201,9 @@ class Core {
                                 onSynchronizeMessages(context, jargs, account, folder, (IMAPFolder) ifolder, state);
                                 break;
 
+                            case EntityOperation.WAIT:
+                                return;
+
                             default:
                                 throw new IllegalArgumentException("Unknown operation=" + op.name);
                         }
@@ -212,12 +216,8 @@ class Core {
                         reportError(context, account, folder, ex);
 
                         db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
-
-                        if (message != null &&
-                                !(ex instanceof MessageRemovedException) &&
-                                !(ex instanceof FolderClosedException) &&
-                                !(ex instanceof IllegalStateException))
-                            db.message().setMessageError(message.id, Helper.formatThrowable(ex));
+                        if (message != null)
+                            db.message().setMessageError(message.id, Helper.formatThrowable(ex, true));
 
                         if (ex instanceof MessageRemovedException ||
                                 ex instanceof FolderNotFoundException ||
@@ -258,12 +258,6 @@ class Core {
                                 // No need to inform user
                                 return;
                             }
-                        }
-
-                        if (EntityOperation.SYNC.equals(op.name) && jargs.getBoolean(3) /* foreground */) {
-                            Log.w("Deleting foreground SYNC");
-                            db.operation().deleteOperation(op.id);
-                            db.folder().setFolderSyncState(folder.id, null);
                         }
 
                         throw ex;
@@ -1292,6 +1286,10 @@ class Core {
                 db.message().updateMessage(message);
             else if (BuildConfig.DEBUG)
                 Log.i(folder.name + " unchanged uid=" + uid);
+
+            int wait = db.operation().deleteOperationWait(message.id);
+            if (wait > 0)
+                Log.i(folder.name + " deleted wait id=" + message.id);
         }
 
         if (!folder.isOutgoing() && !EntityFolder.ARCHIVE.equals(folder.type)) {

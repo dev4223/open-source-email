@@ -322,6 +322,7 @@
     <string name="title_forward">Forward</string>
     <string name="title_create_rule">Create rule &#8230;</string>
     <string name="title_share">Share</string>
+    <string name="title_print">Print</string>
     <string name="title_show_headers">Show headers</string>
     <string name="title_raw_download">Download raw message</string>
     <string name="title_raw_save">Save raw message</string>
@@ -417,6 +418,7 @@
     <string name="title_sort_on_unread">Unread</string>
     <string name="title_sort_on_starred">Starred</string>
     <string name="title_sort_on_sender">Sender</string>
+    <string name="title_sort_on_subject">Subject</string>
 
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
