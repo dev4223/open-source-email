@@ -362,7 +362,7 @@ public class ServiceSynchronize extends LifecycleService {
                                 Throwable warning = new Throwable(
                                         getString(R.string.title_no_sync,
                                                 SimpleDateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
-                                                        .format((account.last_connected))), ex);
+                                                        .format(account.last_connected)), ex);
                                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                 nm.notify("receive", account.id.intValue(),
                                         Core.getNotificationError(this, "warning", account.name, warning, false)
@@ -737,9 +737,9 @@ public class ServiceSynchronize extends LifecycleService {
                             backoff = CONNECT_BACKOFF_START;
 
                             // Record successful connection
-                            Date last_connected = new Date();
-                            EntityLog.log(this, account.name + " set last_connected=" + last_connected);
-                            db.account().setAccountConnected(account.id, last_connected.getTime());
+                            account.last_connected = new Date().getTime();
+                            EntityLog.log(this, account.name + " set last_connected=" + new Date(account.last_connected));
+                            db.account().setAccountConnected(account.id, account.last_connected);
                             db.account().setAccountError(account.id, capIdle ? null : getString(R.string.title_no_idle));
 
                             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -887,7 +887,7 @@ public class ServiceSynchronize extends LifecycleService {
                     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                     EntityLog.log(ServiceSynchronize.this, "Available " + network + " " + cm.getNetworkInfo(network));
 
-                    if (!started && suitableNetwork())
+                    if (!started && Helper.suitableNetwork(ServiceSynchronize.this, true))
                         queue_reload(true, "connect " + network);
                 } catch (Throwable ex) {
                     Log.e(ex);
@@ -901,7 +901,7 @@ public class ServiceSynchronize extends LifecycleService {
                 try {
                     if (!started) {
                         EntityLog.log(ServiceSynchronize.this, "Network " + network + " capabilities " + capabilities);
-                        if (suitableNetwork())
+                        if (Helper.suitableNetwork(ServiceSynchronize.this, true))
                             queue_reload(true, "capabilities " + network);
                     }
                 } catch (Throwable ex) {
@@ -916,7 +916,7 @@ public class ServiceSynchronize extends LifecycleService {
                 try {
                     EntityLog.log(ServiceSynchronize.this, "Lost " + network);
 
-                    if (started && !suitableNetwork()) {
+                    if (started && !Helper.suitableNetwork(ServiceSynchronize.this, true)) {
                         lastLost = new Date().getTime();
                         queue_reload(false, "disconnect " + network);
                     }
@@ -924,20 +924,6 @@ public class ServiceSynchronize extends LifecycleService {
                     Log.e(ex);
                 }
             }
-        }
-
-        private boolean suitableNetwork() {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
-            boolean metered = prefs.getBoolean("metered", true);
-
-            Boolean isMetered = Helper.isMetered(ServiceSynchronize.this, true);
-
-            boolean suitable = (isMetered != null && (metered || !isMetered));
-            EntityLog.log(ServiceSynchronize.this,
-                    "suitable=" + suitable + " metered=" + metered + " isMetered=" + isMetered);
-
-            // The connected state is deliberately ignored
-            return suitable;
         }
 
         private boolean isEnabled() {
@@ -989,7 +975,7 @@ public class ServiceSynchronize extends LifecycleService {
             } else {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
                 prefs.edit().putBoolean("oneshot", false).apply();
-                queue_reload(false, "oneshot");
+                queue_reload(true, "oneshot");
             }
         }
 
@@ -1100,7 +1086,7 @@ public class ServiceSynchronize extends LifecycleService {
 
         private void queue_reload(final boolean start, final String reason) {
             final boolean doStop = started;
-            final boolean doStart = (start && isEnabled() && suitableNetwork());
+            final boolean doStart = (start && isEnabled() && Helper.suitableNetwork(ServiceSynchronize.this, true));
 
             EntityLog.log(ServiceSynchronize.this, "Queue reload" +
                     " doStop=" + doStop + " doStart=" + doStart + " queued=" + queued + " " + reason);
