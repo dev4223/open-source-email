@@ -498,7 +498,7 @@ public class FragmentMessages extends FragmentBase {
             protected Boolean onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
 
-                if (!Helper.isConnected(context))
+                if (!Helper.suitableNetwork(context, false))
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
                 DB db = DB.getInstance(context);
@@ -1640,6 +1640,12 @@ public class FragmentMessages extends FragmentBase {
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
+
+        // Restart spinner
+        if (swipeRefresh.isRefreshing()) {
+            swipeRefresh.setRefreshing(false);
+            swipeRefresh.setRefreshing(true);
+        }
     }
 
     @Override
