@@ -96,17 +96,17 @@ public class EntityAccount implements Serializable {
     }
 
     static String getNotificationChannelName(long account) {
-        return "notification." + account;
+        return "notification" + (account == 0 ? "" : "." + account);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     void createNotificationChannel(Context context) {
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel notification = new NotificationChannel(
+        NotificationChannel channel = new NotificationChannel(
                 getNotificationChannelName(id), name,
                 NotificationManager.IMPORTANCE_HIGH);
-        notification.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        nm.createNotificationChannel(notification);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        nm.createNotificationChannel(channel);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)

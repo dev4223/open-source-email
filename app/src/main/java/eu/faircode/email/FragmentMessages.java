@@ -134,6 +134,7 @@ public class FragmentMessages extends FragmentBase {
     private boolean outbox = false;
     private boolean connected;
     private boolean searching = false;
+    private boolean refresh = false;
     private boolean manual = false;
     private AdapterMessage adapter;
 
@@ -170,6 +171,18 @@ public class FragmentMessages extends FragmentBase {
     private static final int REMOTE_PAGE_SIZE = 10;
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
+
+    private static final List<String> DUPLICATE_ORDER = Arrays.asList(
+            EntityFolder.INBOX,
+            EntityFolder.OUTBOX,
+            EntityFolder.DRAFTS,
+            EntityFolder.SENT,
+            EntityFolder.TRASH,
+            EntityFolder.JUNK,
+            EntityFolder.SYSTEM,
+            EntityFolder.USER,
+            EntityFolder.ARCHIVE
+    );
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -246,6 +259,7 @@ public class FragmentMessages extends FragmentBase {
         int colorPrimary = Helper.resolveColor(getContext(), R.attr.colorPrimary);
         swipeRefresh.setColorSchemeColors(Color.WHITE, Color.WHITE, Color.WHITE);
         swipeRefresh.setProgressBackgroundColorSchemeColor(colorPrimary);
+
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -385,7 +399,7 @@ public class FragmentMessages extends FragmentBase {
         ((ActivityBase) getActivity()).addBackPressedListener(onBackPressedListener);
 
         // Initialize
-        swipeRefresh.setEnabled(pull);
+        swipeRefresh.setEnabled(false);
         tvNoEmail.setVisibility(View.GONE);
         seekBar.setEnabled(false);
         seekBar.setVisibility(View.GONE);
@@ -470,7 +484,7 @@ public class FragmentMessages extends FragmentBase {
                         fabMore.show();
                     } else {
                         fabMore.hide();
-                        swipeRefresh.setEnabled(pull);
+                        swipeRefresh.setEnabled(pull && refresh);
                     }
                 }
             });
@@ -488,32 +502,34 @@ public class FragmentMessages extends FragmentBase {
         Bundle args = new Bundle();
         args.putLong("folder", folder);
 
-        new SimpleTask<Boolean>() {
+        new SimpleTask<Void>() {
             @Override
             protected void onPreExecute(Bundle args) {
                 manual = true;
             }
 
             @Override
-            protected Boolean onExecute(Context context, Bundle args) {
+            protected Void onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
 
                 if (!Helper.suitableNetwork(context, false))
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
 
-                    if (fid < 0) {
-                        List<EntityFolder> folders = db.folder().getFoldersSynchronizingUnified();
-                        for (EntityFolder folder : folders)
-                            EntityOperation.sync(context, folder.id, true);
-                    } else {
+                    List<EntityFolder> folders = new ArrayList<>();
+                    if (fid < 0)
+                        folders.addAll(db.folder().getFoldersSynchronizingUnified());
+                    else {
                         EntityFolder folder = db.folder().getFolder(fid);
                         if (folder != null)
-                            EntityOperation.sync(context, folder.id, true);
+                            folders.add(folder);
                     }
+                    for (EntityFolder folder : folders)
+                        EntityOperation.sync(context, folder.id, true);
 
                     db.setTransactionSuccessful();
                 } finally {
@@ -745,7 +761,7 @@ public class FragmentMessages extends FragmentBase {
         @Override
         public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
             super.onSelectedChanged(viewHolder, actionState);
-            swipeRefresh.setEnabled(pull && actionState != ItemTouchHelper.ACTION_STATE_SWIPE);
+            swipeRefresh.setEnabled(pull && refresh && actionState != ItemTouchHelper.ACTION_STATE_SWIPE);
         }
 
         @Override
@@ -1518,9 +1534,12 @@ public class FragmentMessages extends FragmentBase {
                         Log.i("Folder state updated count=" + folders.size());
 
                         int unseen = 0;
+                        boolean sync = false;
                         boolean errors = false;
                         for (TupleFolderEx folder : folders) {
                             unseen += folder.unseen;
+                            if (folder.synchronize)
+                                sync = true;
                             if (folder.error != null || folder.accountError != null)
                                 errors = true;
                         }
@@ -1546,6 +1565,8 @@ public class FragmentMessages extends FragmentBase {
                         if (errors && !refreshing && swipeRefresh.isRefreshing())
                             Snackbar.make(view, R.string.title_sync_errors, Snackbar.LENGTH_LONG).show();
 
+                        refresh = sync;
+                        swipeRefresh.setEnabled(pull && refresh);
                         swipeRefresh.setRefreshing(refreshing);
                     }
                 });
@@ -1585,6 +1606,8 @@ public class FragmentMessages extends FragmentBase {
                         if (error != null && !refreshing && swipeRefresh.isRefreshing())
                             Snackbar.make(view, error, Snackbar.LENGTH_LONG).show();
 
+                        refresh = (folder != null);
+                        swipeRefresh.setEnabled(pull && refresh);
                         swipeRefresh.setRefreshing(refreshing);
                     }
                 });
@@ -2014,22 +2037,10 @@ public class FragmentMessages extends FragmentBase {
                     List<TupleMessageEx> dups = duplicates.get(msgid);
                     if (dups.size() > 1) {
                         Collections.sort(dups, new Comparator<TupleMessageEx>() {
-                            final List<String> ORDER = Arrays.asList(
-                                    EntityFolder.INBOX,
-                                    EntityFolder.OUTBOX,
-                                    EntityFolder.DRAFTS,
-                                    EntityFolder.SENT,
-                                    EntityFolder.TRASH,
-                                    EntityFolder.JUNK,
-                                    EntityFolder.SYSTEM,
-                                    EntityFolder.USER,
-                                    EntityFolder.ARCHIVE
-                            );
-
                             @Override
                             public int compare(TupleMessageEx d1, TupleMessageEx d2) {
-                                int o1 = ORDER.indexOf(d1.folderType);
-                                int o2 = ORDER.indexOf(d2.folderType);
+                                int o1 = DUPLICATE_ORDER.indexOf(d1.folderType);
+                                int o2 = DUPLICATE_ORDER.indexOf(d2.folderType);
                                 return ((Integer) o1).compareTo(o2);
                             }
                         });
