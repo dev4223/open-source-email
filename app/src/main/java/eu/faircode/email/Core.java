@@ -1,6 +1,7 @@
 package eu.faircode.email;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -14,7 +15,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
-import android.util.LongSparseArray;
 
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
@@ -481,8 +481,10 @@ class Core {
 
         boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
 
-        boolean canMove = istore.hasCapability("MOVE");
-        if (!copy && canMove &&
+        long uid;
+        if (!copy &&
+                istore.hasCapability("MOVE") &&
+                istore.hasCapability("UIDPLUS") &&
                 !EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.DRAFTS.equals(target.type)) {
             // Autoread
@@ -490,12 +492,14 @@ class Core {
                 if (autoread && !imessage.isSet(Flags.Flag.SEEN))
                     imessage.setFlag(Flags.Flag.SEEN, true);
 
-            // Move message to
-            ifolder.moveMessages(new Message[]{imessage}, itarget);
+            // Move message to target folder
+            AppendUID[] uids = ifolder.moveUIDMessages(new Message[]{imessage}, itarget);
+            if (uids == null || uids.length == 0)
+                throw new MessageRemovedException("Message not moved");
+            uid = uids[0].uid;
         } else {
             if (!copy)
-                Log.w(folder.name + " MOVE by DELETE/APPEND" +
-                        " cap=" + canMove + " from=" + folder.type + " to=" + target.type);
+                Log.w(folder.name + " MOVE by DELETE/APPEND");
 
             // Serialize source message
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -532,42 +536,63 @@ class Core {
                         icopy.setFlag(Flags.Flag.DRAFT, true);
 
                 // Append target
-                long uid = append(istore, itarget, (MimeMessage) icopy);
-                Log.i(target.name + " appended id=" + message.id + " uid=" + uid);
+                uid = append(istore, itarget, (MimeMessage) icopy);
 
-                // Fixed timing issue of at least Courier based servers
-                itarget.close(false);
-                itarget.open(Folder.READ_WRITE);
+                try {
+                    // Fixed timing issue of at least Courier based servers
+                    itarget.close(false);
+                    itarget.open(Folder.READ_WRITE);
 
-                // Some providers, like Gmail, don't honor the appended seen flag
-                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
-                    boolean seen = (autoread || message.ui_seen);
-                    icopy = itarget.getMessageByUID(uid);
-                    if (seen != icopy.isSet(Flags.Flag.SEEN)) {
-                        Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
-                        icopy.setFlag(Flags.Flag.SEEN, seen);
+                    // Some providers, like Gmail, don't honor the appended seen flag
+                    if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+                        boolean seen = (autoread || message.ui_seen);
+                        icopy = itarget.getMessageByUID(uid);
+                        if (seen != icopy.isSet(Flags.Flag.SEEN)) {
+                            Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
+                            icopy.setFlag(Flags.Flag.SEEN, seen);
+                        }
                     }
-                }
 
-                // This is not based on an actual case, so this is just a safeguard
-                if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
-                    boolean draft = EntityFolder.DRAFTS.equals(target.type);
-                    icopy = itarget.getMessageByUID(uid);
-                    if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
-                        Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
-                        icopy.setFlag(Flags.Flag.DRAFT, draft);
+                    // This is not based on an actual case, so this is just a safeguard
+                    if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
+                        boolean draft = EntityFolder.DRAFTS.equals(target.type);
+                        icopy = itarget.getMessageByUID(uid);
+                        if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
+                            Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
+                            icopy.setFlag(Flags.Flag.DRAFT, draft);
+                        }
                     }
-                }
 
-                // Delete source
-                if (!copy) {
-                    imessage.setFlag(Flags.Flag.DELETED, true);
-                    ifolder.expunge();
+                    // Delete source
+                    if (!copy) {
+                        imessage.setFlag(Flags.Flag.DELETED, true);
+                        ifolder.expunge();
+                    }
+                } catch (MessageRemovedException ignored) {
+                } catch (Throwable ex) {
+                    Log.w(ex);
                 }
-            } catch (Throwable ex) {
+            } finally {
                 if (itarget.isOpen())
                     itarget.close();
-                throw ex;
+            }
+        }
+
+        Log.i(folder.name + " moved uid=" + uid);
+        if (jargs.length() > 2 && !jargs.isNull(2)) {
+            long tmpid = jargs.getLong(2);
+            try {
+                db.beginTransaction();
+                db.message().setMessageUid(tmpid, uid);
+                int waits = -1;
+                if (jargs.length() > 3) {
+                    long waitid = jargs.getLong(3);
+                    waits = db.operation().deleteOperation(waitid);
+                }
+                db.setTransactionSuccessful();
+                Log.i(folder.name + " set id=" + tmpid + " uid=" + uid + " waits=" + waits);
+            } finally {
+                db.endTransaction();
             }
         }
     }
@@ -1293,10 +1318,6 @@ class Core {
                 db.message().updateMessage(message);
             else if (BuildConfig.DEBUG)
                 Log.i(folder.name + " unchanged uid=" + uid);
-
-            int wait = db.operation().deleteOperationWait(message.id);
-            if (wait > 0)
-                Log.i(folder.name + " deleted wait id=" + message.id);
         }
 
         if (!folder.isOutgoing() && !EntityFolder.ARCHIVE.equals(folder.type)) {
@@ -1428,43 +1449,43 @@ class Core {
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        LongSparseArray<List<Long>> notifying = new LongSparseArray<>();
-        LongSparseArray<String> accountName = new LongSparseArray<>();
-        LongSparseArray<List<TupleMessageEx>> accountMessages = new LongSparseArray<>();
+        Map<String, List<Long>> groupNotifying = new HashMap<>();
+        Map<String, List<TupleMessageEx>> groupMessages = new HashMap<>();
 
         // Previous
         for (String key : prefs.getAll().keySet())
             if (key.startsWith("notifying:")) {
-                long account = Long.parseLong(key.split(":")[1]);
-                notifying.put(account, new ArrayList<Long>());
+                String group = key.substring(key.indexOf(":") + 1);
+                groupNotifying.put(group, new ArrayList<Long>());
 
                 for (String id : prefs.getString(key, null).split(","))
-                    notifying.get(account).add(Long.parseLong(id));
+                    groupNotifying.get(group).add(Long.parseLong(id));
+
+                Log.i("Notifying " + group + "=" + TextUtils.join(",", groupNotifying.get(group)));
 
                 editor.remove(key);
             }
 
         // Current
         for (TupleMessageEx message : messages) {
-            long account = (message.accountNotify ? message.account : 0);
-            accountName.put(account, account > 0 ? message.accountName : null);
-            if (accountMessages.indexOfKey(account) < 0) {
-                accountMessages.put(account, new ArrayList<TupleMessageEx>());
-                if (notifying.indexOfKey(account) < 0)
-                    notifying.put(account, new ArrayList<Long>());
+            String group = Long.toString(message.accountNotify ? message.account : 0);
+
+            if (!groupMessages.containsKey(group)) {
+                groupMessages.put(group, new ArrayList<TupleMessageEx>());
+                if (!groupNotifying.containsKey(group))
+                    groupNotifying.put(group, new ArrayList<Long>());
             }
-            accountMessages.get(account).add(message);
+
+            groupMessages.get(group).add(message);
         }
 
         // Difference
-        for (int i = 0; i < notifying.size(); i++) {
-            long account = notifying.keyAt(i);
-            List<Notification> notifications = getNotificationUnseen(
-                    context, account, accountName.get(account), accountMessages.get(account));
+        for (String group : groupNotifying.keySet()) {
+            List<Notification> notifications = getNotificationUnseen(context, group, groupMessages.get(group));
 
             List<String> all = new ArrayList<>();
             List<Long> add = new ArrayList<>();
-            List<Long> remove = notifying.get(account);
+            List<Long> remove = groupNotifying.get(group);
             for (Notification notification : notifications) {
                 Long id = notification.extras.getLong("id", 0);
                 if (id != 0) {
@@ -1485,53 +1506,46 @@ class Core {
                 if (id < 0)
                     headers++;
 
-            Log.i("Notify account=" + account + " count=" + notifications.size() +
+            Log.i("Notify group=" + group + " count=" + notifications.size() +
                     " added=" + add.size() + " removed=" + remove.size() + " headers=" + headers);
 
             if (notifications.size() == 0 ||
                     (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && headers > 0))
-                nm.cancel("unseen:" + account + ":0", 1);
+                nm.cancel("unseen." + group + ":0", 1);
 
             for (Long id : remove)
-                nm.cancel("unseen:" + account + ":" + Math.abs(id), 1);
+                nm.cancel("unseen." + group + ":" + Math.abs(id), 1);
 
             for (Notification notification : notifications) {
                 long id = notification.extras.getLong("id", 0);
                 if ((id == 0 && add.size() + remove.size() > 0) || add.contains(id))
-                    nm.notify("unseen:" + account + ":" + Math.abs(id), 1, notification);
+                    nm.notify("unseen." + group + ":" + Math.abs(id), 1, notification);
             }
 
             if (all.size() > 0)
-                editor.putString("notifying:" + account, TextUtils.join(",", all));
+                editor.putString("notifying:" + group, TextUtils.join(",", all));
         }
 
         editor.apply();
     }
 
-    private static List<Notification> getNotificationUnseen(
-            Context context,
-            long account, String accountName,
-            List<TupleMessageEx> messages) {
+    private static List<Notification> getNotificationUnseen(Context context, String group, List<TupleMessageEx> messages) {
         List<Notification> notifications = new ArrayList<>();
+        // https://developer.android.com/training/notify-user/group
 
         if (messages == null || messages.size() == 0)
             return notifications;
 
         boolean pro = Helper.isPro(context);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        // https://developer.android.com/training/notify-user/group
-        String group = Long.toString(account);
-
-        String title = context.getResources().getQuantityString(
-                R.plurals.title_notification_unseen, messages.size(), messages.size());
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
         for (TupleMessageEx message : messages)
             messageContact.put(message, ContactInfo.get(context, message.from, false));
 
-        // Build pending intent
+        // Build pending intents
         Intent summary = new Intent(context, ServiceUI.class);
         summary.setAction("summary");
         PendingIntent piSummary = PendingIntent.getService(context, ServiceUI.PI_SUMMARY, summary, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -1540,44 +1554,29 @@ class Core {
         clear.setAction("clear");
         PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        String channelName = (account == 0 ? "notification" : EntityAccount.getNotificationChannelName(account));
+        // Build title
+        String title = context.getResources().getQuantityString(
+                R.plurals.title_notification_unseen, messages.size(), messages.size());
 
-        // Build public notification
-        NotificationCompat.Builder pbuilder = new NotificationCompat.Builder(context, channelName);
-
-        pbuilder
+        // Build notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notification");
+        builder
                 .setSmallIcon(R.drawable.baseline_email_white_24)
                 .setContentTitle(title)
                 .setContentIntent(piSummary)
                 .setNumber(messages.size())
                 .setShowWhen(false)
                 .setDeleteIntent(piClear)
-                .setPriority(Notification.PRIORITY_DEFAULT)
-                .setCategory(Notification.CATEGORY_STATUS)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-
-        if (!TextUtils.isEmpty(accountName))
-            pbuilder.setSubText(accountName);
-
-        // Build notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelName);
-
-        builder
-                .setSmallIcon(R.drawable.baseline_email_white_24)
-                .setContentTitle(context.getResources().getQuantityString(R.plurals.title_notification_unseen, messages.size(), messages.size()))
-                .setContentIntent(piSummary)
-                .setNumber(messages.size())
-                .setShowWhen(false)
-                .setDeleteIntent(piClear)
-                .setPriority(Notification.PRIORITY_DEFAULT)
-                .setCategory(Notification.CATEGORY_STATUS)
-                .setVisibility(Notification.VISIBILITY_PRIVATE)
-                .setPublicVersion(pbuilder.build())
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setGroup(group)
                 .setGroupSummary(true);
 
-        if (!TextUtils.isEmpty(accountName))
-            builder.setSubText(accountName);
+        Notification pub = builder.build();
+        builder
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPublicVersion(pub);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             boolean light = prefs.getBoolean("light", false);
@@ -1618,10 +1617,11 @@ class Core {
         for (TupleMessageEx message : messages) {
             ContactInfo info = messageContact.get(message);
 
+            // Build arguments
             Bundle args = new Bundle();
             args.putLong("id", message.content ? message.id : -message.id);
-            args.putLong("account", message.accountNotify ? message.account : 0);
 
+            // Build pending intents
             Intent thread = new Intent(context, ActivityView.class);
             thread.setAction("thread:" + message.thread);
             thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1646,6 +1646,7 @@ class Core {
             trash.setAction("trash:" + message.id);
             PendingIntent piTrash = PendingIntent.getService(context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
 
+            // Build actions
             NotificationCompat.Action.Builder actionSeen = new NotificationCompat.Action.Builder(
                     R.drawable.baseline_visibility_24,
                     context.getString(R.string.title_action_seen),
@@ -1661,12 +1662,25 @@ class Core {
                     context.getString(R.string.title_action_trash),
                     piTrash);
 
-            NotificationCompat.Builder mbuilder;
-            mbuilder = new NotificationCompat.Builder(context, channelName);
+            // Get channel name
+            String channelName = null;
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O &&
+                    message.from != null && message.from.length > 0) {
+                InternetAddress from = (InternetAddress) message.from[0];
+                NotificationChannel channel = nm.getNotificationChannel("notification." + from.getAddress().toLowerCase());
+                if (channel != null && channel.getImportance() != NotificationManager.IMPORTANCE_NONE)
+                    channelName = channel.getId();
+            }
+            if (channelName == null)
+                channelName = EntityAccount.getNotificationChannelName(message.accountNotify ? message.account : 0);
 
+            // Get folder name
             String folderName = message.folderDisplay == null
                     ? Helper.localizeFolderName(context, message.folderName)
                     : message.folderDisplay;
+
+            NotificationCompat.Builder mbuilder;
+            mbuilder = new NotificationCompat.Builder(context, channelName);
 
             mbuilder
                     .addExtras(args)
@@ -1676,12 +1690,12 @@ class Core {
                     .setContentIntent(piContent)
                     .setWhen(message.received)
                     .setDeleteIntent(piDelete)
-                    .setPriority(Notification.PRIORITY_DEFAULT)
-                    .setOnlyAlertOnce(true)
-                    .setCategory(Notification.CATEGORY_MESSAGE)
-                    .setVisibility(Notification.VISIBILITY_PRIVATE)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                     .setGroup(group)
                     .setGroupSummary(false)
+                    .setOnlyAlertOnce(true)
                     .addAction(actionSeen.build())
                     .addAction(actionArchive.build())
                     .addAction(actionTrash.build());
@@ -1809,9 +1823,9 @@ class Core {
                 .setContentIntent(pi)
                 .setAutoCancel(false)
                 .setShowWhen(true)
-                .setPriority(Notification.PRIORITY_MAX)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setOnlyAlertOnce(true)
-                .setCategory(Notification.CATEGORY_ERROR)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
                 .setVisibility(NotificationCompat.VISIBILITY_SECRET);
 
         builder.setStyle(new NotificationCompat.BigTextStyle()
