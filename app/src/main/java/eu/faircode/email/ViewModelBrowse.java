@@ -197,21 +197,27 @@ public class ViewModelBrowse extends ViewModel {
                                 }
 
                             try {
-                                if (protocol.supportsUtf8()) {
-                                    // SEARCH OR OR FROM "x" TO "x" OR SUBJECT "x" BODY "x" ALL
-                                    // SEARCH OR OR OR FROM "x" TO "x" OR SUBJECT "x" BODY "x" (KEYWORD x) ALL
-                                    // https://tools.ietf.org/html/rfc3501#section-6.4.4
-                                    Log.i("Boundary UTF8 search=" + state.search);
-                                    Argument arg = new Argument();
+                                // https://tools.ietf.org/html/rfc3501#section-6.4.4
+                                Argument arg = new Argument();
+                                if (state.search.startsWith("raw:") && state.istore.hasCapability("X-GM-EXT-1")) {
+                                    // https://support.google.com/mail/answer/7190
+                                    // https://developers.google.com/gmail/imap/imap-extensions#extension_of_the_search_command_x-gm-raw
+                                    arg.writeAtom("X-GM-RAW");
+                                    arg.writeString(state.search.substring(4));
+                                } else {
+                                    if (!protocol.supportsUtf8()) {
+                                        arg.writeAtom("CHARSET");
+                                        arg.writeAtom("UTF-8");
+                                    }
                                     if (keywords)
                                         arg.writeAtom("OR");
+                                    arg.writeAtom("OR");
                                     arg.writeAtom("OR");
                                     arg.writeAtom("OR");
                                     arg.writeAtom("FROM");
                                     arg.writeBytes(state.search.getBytes());
                                     arg.writeAtom("TO");
                                     arg.writeBytes(state.search.getBytes());
-                                    arg.writeAtom("OR");
                                     arg.writeAtom("SUBJECT");
                                     arg.writeBytes(state.search.getBytes());
                                     arg.writeAtom("BODY");
@@ -220,25 +226,19 @@ public class ViewModelBrowse extends ViewModel {
                                         arg.writeAtom("KEYWORD");
                                         arg.writeBytes(state.search.getBytes());
                                     }
-                                    arg.writeAtom("ALL");
-                                    Response[] responses = protocol.command("SEARCH", arg);
+                                }
 
-                                    int msgnum;
+                                Log.i("Boundary UTF8 search=" + state.search);
+                                Response[] responses = protocol.command("SEARCH", arg);
+                                if (responses.length > 0 && responses[responses.length - 1].isOK()) {
                                     List<Integer> msgnums = new ArrayList<>();
-                                    for (int i = 0; i < responses.length; i++) {
-                                        if (responses[i] instanceof IMAPResponse) {
-                                            IMAPResponse ir = (IMAPResponse) responses[i];
-                                            if (ir.keyEquals("SEARCH")) {
-                                                while ((msgnum = ir.readNumber()) != -1)
-                                                    msgnums.add(msgnum);
-                                            }
-                                        } else {
-                                            if (responses[i].isOK())
-                                                Log.i(folder.name + " response=" + responses[i]);
-                                            else
-                                                throw new MessagingException(responses[i].toString());
+
+                                    for (Response response : responses)
+                                        if (((IMAPResponse) response).keyEquals("SEARCH")) {
+                                            int msgnum;
+                                            while ((msgnum = response.readNumber()) != -1)
+                                                msgnums.add(msgnum);
                                         }
-                                    }
 
                                     Message[] imessages = new Message[msgnums.size()];
                                     for (int i = 0; i < msgnums.size(); i++)
@@ -246,7 +246,7 @@ public class ViewModelBrowse extends ViewModel {
 
                                     return imessages;
                                 } else {
-                                    // No UTF-8 support
+                                    // Assume no UTF-8 support
                                     String search = state.search.replace("ß", "ss"); // Eszett
                                     search = Normalizer.normalize(search, Normalizer.Form.NFD)
                                             .replaceAll("[^\\p{ASCII}]", "");
@@ -269,6 +269,7 @@ public class ViewModelBrowse extends ViewModel {
 
                                     return state.ifolder.search(term);
                                 }
+
                             } catch (MessagingException ex) {
                                 Log.e(ex);
                                 return ex;

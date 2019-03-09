@@ -61,7 +61,6 @@ import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
-import javax.mail.Store;
 import javax.mail.StoreClosedException;
 import javax.mail.UIDFolder;
 import javax.mail.event.ConnectionAdapter;
@@ -487,7 +486,7 @@ public class ServiceSynchronize extends LifecycleService {
                 isession.setDebug(debug);
                 // adb -t 1 logcat | grep "fairemail\|System.out"
 
-                final Store istore = isession.getStore(account.getProtocol());
+                final IMAPStore istore = (IMAPStore) isession.getStore(account.getProtocol());
 
                 final Map<EntityFolder, Folder> folders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
@@ -604,8 +603,7 @@ public class ServiceSynchronize extends LifecycleService {
                     }
 
                     final boolean capIdle = ((IMAPStore) istore).hasCapability("IDLE");
-                    final boolean capUidPlus = ((IMAPStore) istore).hasCapability("UIDPLUS");
-                    Log.i(account.name + " idle=" + capIdle + " uidplus=" + capUidPlus);
+                    Log.i(account.name + " idle=" + capIdle);
 
                     db.account().setAccountState(account.id, "connected");
                     EntityLog.log(this, account.name + " connected");
@@ -637,6 +635,9 @@ public class ServiceSynchronize extends LifecycleService {
 
                             db.folder().setFolderState(folder.id, "connected");
                             db.folder().setFolderError(folder.id, null);
+
+                            int count = ifolder.getMessageCount();
+                            db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
 
                             Log.i(account.name + " folder " + folder.name + " flags=" + ifolder.getPermanentFlags());
 
@@ -692,6 +693,9 @@ public class ServiceSynchronize extends LifecycleService {
                                                 Log.e(folder.name, ex);
                                                 db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                                             }
+
+                                        int count = ifolder.getMessageCount();
+                                        db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
                                         Core.reportError(ServiceSynchronize.this, account, folder, ex);
@@ -717,6 +721,9 @@ public class ServiceSynchronize extends LifecycleService {
                                             } catch (MessageRemovedException ex) {
                                                 Log.w(folder.name, ex);
                                             }
+
+                                        int count = ifolder.getMessageCount();
+                                        db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
                                         Core.reportError(ServiceSynchronize.this, account, folder, ex);
@@ -819,7 +826,6 @@ public class ServiceSynchronize extends LifecycleService {
                             @Override
                             public void run() {
                                 db.operation().liveOperations(folder.id).observe(owner, new Observer<List<EntityOperation>>() {
-                                    private List<Long> waiting = new ArrayList<>();
                                     private List<Long> handling = new ArrayList<>();
                                     private final ExecutorService folderExecutor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
                                     private final PowerManager.WakeLock wlFolder = pm.newWakeLock(
@@ -829,21 +835,11 @@ public class ServiceSynchronize extends LifecycleService {
                                     public void onChanged(final List<EntityOperation> operations) {
                                         boolean process = false;
                                         List<Long> ops = new ArrayList<>();
-                                        List<Long> waits = new ArrayList<>();
                                         for (EntityOperation op : operations) {
-                                            if (EntityOperation.WAIT.equals(op.name))
-                                                waits.add(op.id);
                                             if (!handling.contains(op.id))
                                                 process = true;
                                             ops.add(op.id);
                                         }
-                                        for (long wait : waits)
-                                            if (!waiting.contains(wait)) {
-                                                Log.i(folder.name + " not waiting anymore");
-                                                process = true;
-                                                break;
-                                            }
-                                        waiting = waits;
                                         handling = ops;
 
                                         if (handling.size() > 0 && process) {

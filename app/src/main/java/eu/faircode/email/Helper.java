@@ -56,6 +56,7 @@ import android.widget.Toast;
 
 import com.android.billingclient.api.BillingClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
@@ -73,6 +74,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -81,6 +84,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,8 +95,8 @@ import javax.mail.AuthenticationFailedException;
 import javax.mail.FolderClosedException;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
-import javax.mail.Store;
 import javax.mail.internet.InternetAddress;
+import javax.net.ssl.HttpsURLConnection;
 
 import androidx.annotation.NonNull;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -651,7 +655,7 @@ public class Helper {
             if (extra.length > 0)
                 a[0] = extra[0];
         }
-        return TextUtils.join("@", a);
+        return TextUtils.join("@", a).toLowerCase();
     }
 
     static void writeText(File file, String content) throws IOException {
@@ -799,8 +803,7 @@ public class Helper {
         return true;
     }
 
-    static void connect(Context context, Store istore, EntityAccount account) throws
-            MessagingException {
+    static void connect(Context context, IMAPStore istore, EntityAccount account) throws MessagingException {
         try {
             istore.connect(account.host, account.port, account.user, account.password);
         } catch (AuthenticationFailedException ex) {
@@ -811,6 +814,19 @@ public class Helper {
             } else
                 throw ex;
         }
+
+        // https://www.ietf.org/rfc/rfc2971.txt
+        if (istore.hasCapability("ID"))
+            try {
+                Map<String, String> id = new LinkedHashMap<>();
+                id.put("name", context.getString(R.string.app_name));
+                id.put("version", BuildConfig.VERSION_NAME);
+                Map<String, String> sid = istore.id(id);
+                for (String key : sid.keySet())
+                    Log.i("Server " + key + "=" + sid.get(key));
+            } catch (MessagingException ex) {
+                Log.w(ex);
+            }
     }
 
     static String refreshToken(Context context, String type, String name, String current) {
@@ -838,16 +854,7 @@ public class Helper {
     }
 
     static boolean isPlayStoreInstall(Context context) {
-        if (BuildConfig.PLAY_STORE_RELEASE)
-            return true;
-        if (false && BuildConfig.DEBUG)
-            return true;
-        try {
-            return "com.android.vending".equals(context.getPackageManager().getInstallerPackageName(context.getPackageName()));
-        } catch (Throwable ex) {
-            Log.e(ex);
-            return false;
-        }
+        return BuildConfig.PLAY_STORE_RELEASE;
     }
 
     static String sha256(String data) throws NoSuchAlgorithmException {
@@ -1008,5 +1015,20 @@ public class Helper {
 
     static String sanitizeFilename(String name) {
         return (name == null ? null : name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"));
+    }
+
+    static String getOrganization(String host) throws IOException {
+        InetAddress address = InetAddress.getByName(host);
+        URL url = new URL("https://ipinfo.io/" + address.getHostAddress() + "/org");
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setReadTimeout(15 * 1000);
+        connection.connect();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            String organization = reader.readLine();
+            if ("undefined".equals(organization))
+                organization = null;
+            return organization;
+        }
     }
 }

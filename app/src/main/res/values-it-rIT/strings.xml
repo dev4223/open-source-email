@@ -3,6 +3,7 @@
 <resources>
     <string name="app_welcome">FairEmail è un\'app opensource di posta focalizzata su privacy e sicurezza. Per questo motivo alcune caratteristiche potrebbero funzionare in modo diverso da quello a cui si è abituati.</string>
     <string name="app_limitations">Ad esempio, i messaggi verranno sempre riformattati per rimuovere elementi non sicuri e per migliorare la leggibilità e l\'apertura dei collegamenti deve essere confermata per sicurezza.</string>
+    <string name="app_crash">FairEmail non è supportata su questo dispositivo a causa di bug in Android che causano crash</string>
     <string name="channel_service">Servizio</string>
     <string name="channel_notification">Notifiche</string>
     <string name="channel_warning">Avvertenze</string>
@@ -130,6 +131,7 @@
     <string name="title_advanced_avatars">Mostra foto del contatto</string>
     <string name="title_advanced_identicons">Visualizza identicon</string>
     <string name="title_advanced_name_email">Mostra nomi e indirizzi email</string>
+    <string name="title_advanced_subject_italic">Mostra soggetto in corsivo</string>
     <string name="title_advanced_flags">Mostra stelle (preferiti)</string>
     <string name="title_advanced_preview">Mostra l\'anteprima del messaggio</string>
     <string name="title_advanced_addresses">Mostra i dettagli dell\'indirizzo per impostazione predefinita</string>
@@ -220,7 +222,6 @@
     <string name="title_no_primary_drafts">Nessun account principale o nessuna cartella bozze</string>
     <string name="title_no_idle">Questo fornitore non supporta i messaggi push. Ciò ritarderà la ricezione di nuovi messaggi e aumenterà l\'utilizzo della batteria.</string>
     <string name="title_no_move">Questo provider non supporta MOVE</string>
-    <string name="title_no_uidplus">Questo provider non supporta UIDPLUS</string>
     <string name="title_no_utf8">Questo provider non supporta UTF-8</string>
     <string name="title_no_sync">Errori di sincronizzazione da %1$s</string>
     <string name="title_sync_errors">Sincronizzazione di alcune cartelle fallita</string>
@@ -445,7 +446,7 @@
     <string name="title_legend_waiting">In attesa della prossima sincronizzazione</string>
     <string name="title_legend_stop">Interrompi le regole di elaborazione</string>
     <string name="title_legend_sync_keep">Numero di giorni da sincronizzare / di cui mantenere i messaggi</string>
-    <string name="title_legend_download_fetch">Numero di corpi messaggio scaricati / intestazioni recuperate</string>
+    <string name="title_legend_download_fetch">Numero di corpi messaggio scaricati / intestazioni recuperate / sul server</string>
     <string name="title_legend_metered">La connessione è a consumo</string>
     <string name="title_legend_unmetered">La connessione non è a consumo</string>
     <string name="title_hint_folder_actions">Tieni premuto per le opzioni</string>

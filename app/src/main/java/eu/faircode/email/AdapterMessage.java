@@ -141,6 +141,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private ViewType viewType;
     private boolean compact;
     private boolean name_email;
+    private boolean subject_italic;
     private int zoom;
     private String sort;
     private boolean internet;
@@ -160,6 +161,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private float textSize;
     private int colorPrimary;
     private int colorAccent;
+    private int colorWarning;
     private int textColorSecondary;
     private int colorUnread;
     private boolean hasWebView;
@@ -174,7 +176,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private static DateFormat dtf = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
-            View.OnClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
+            View.OnClickListener, View.OnLongClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
         private View itemView;
         private TextView tvDay;
         private View vwColor;
@@ -196,12 +198,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvPreview;
         private TextView tvError;
         private ContentLoadingProgressBar pbLoading;
+        private View vwRipple;
 
         private ImageView ivExpanderAddress;
-        private TextView tvFromEx;
+
         private ImageView ivSearchContact;
         private ImageView ivNotifyContact;
         private ImageView ivAddContact;
+
+        private TextView tvFromExTitle;
+        private TextView tvToTitle;
+        private TextView tvReplyToTitle;
+        private TextView tvCcTitle;
+        private TextView tvBccTitle;
+        private TextView tvIdentityTitle;
+        private TextView tvSizeExTitle;
+
+        private TextView tvFromEx;
         private TextView tvTo;
         private TextView tvReplyTo;
         private TextView tvCc;
@@ -209,6 +222,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvIdentity;
         private TextView tvTimeEx;
         private TextView tvSizeEx;
+
         private TextView tvSubjectEx;
         private TextView tvFlags;
         private TextView tvKeywords;
@@ -236,9 +250,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private RecyclerView rvImage;
 
         private Group grpDay;
+
         private Group grpAddress;
         private Group grpAddressMeta;
         private Group grpAddressMetaBottom;
+
         private Group grpHeaders;
         private Group grpAttachments;
         private Group grpExpanded;
@@ -274,12 +290,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivThread = itemView.findViewById(R.id.ivThread);
             tvError = itemView.findViewById(R.id.tvError);
             pbLoading = itemView.findViewById(R.id.pbLoading);
+            vwRipple = itemView.findViewById(R.id.vwRipple);
 
             ivExpanderAddress = itemView.findViewById(R.id.ivExpanderAddress);
-            tvFromEx = itemView.findViewById(R.id.tvFromEx);
+
             ivSearchContact = itemView.findViewById(R.id.ivSearchContact);
             ivNotifyContact = itemView.findViewById(R.id.ivNotifyContact);
             ivAddContact = itemView.findViewById(R.id.ivAddContact);
+
+            tvFromExTitle = itemView.findViewById(R.id.tvFromExTitle);
+            tvToTitle = itemView.findViewById(R.id.tvToTitle);
+            tvReplyToTitle = itemView.findViewById(R.id.tvReplyToTitle);
+            tvCcTitle = itemView.findViewById(R.id.tvCcTitle);
+            tvBccTitle = itemView.findViewById(R.id.tvBccTitle);
+            tvIdentityTitle = itemView.findViewById(R.id.tvIdentityTitle);
+            tvSizeExTitle = itemView.findViewById(R.id.tvSizeExTitle);
+
+            tvFromEx = itemView.findViewById(R.id.tvFromEx);
             tvTo = itemView.findViewById(R.id.tvTo);
             tvReplyTo = itemView.findViewById(R.id.tvReplyTo);
             tvCc = itemView.findViewById(R.id.tvCc);
@@ -287,6 +314,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity = itemView.findViewById(R.id.tvIdentity);
             tvTimeEx = itemView.findViewById(R.id.tvTimeEx);
             tvSizeEx = itemView.findViewById(R.id.tvSizeEx);
+
             tvSubjectEx = itemView.findViewById(R.id.tvSubjectEx);
             tvFlags = itemView.findViewById(R.id.tvFlags);
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
@@ -328,9 +356,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             rvImage.setAdapter(adapterImage);
 
             grpDay = itemView.findViewById(R.id.grpDay);
+
             grpAddress = itemView.findViewById(R.id.grpAddress);
             grpAddressMeta = itemView.findViewById(R.id.grpAddressMeta);
             grpAddressMetaBottom = itemView.findViewById(R.id.grpAddressMetaBottom);
+
             grpHeaders = itemView.findViewById(R.id.grpHeaders);
             grpAttachments = itemView.findViewById(R.id.grpAttachments);
             grpExpanded = itemView.findViewById(R.id.grpExpanded);
@@ -375,6 +405,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivExpanderAddress.setOnClickListener(this);
             ivSearchContact.setOnClickListener(this);
             ivNotifyContact.setOnClickListener(this);
+            ivNotifyContact.setOnLongClickListener(this);
             ivAddContact.setOnClickListener(this);
 
             btnDownloadAttachments.setOnClickListener(this);
@@ -398,6 +429,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivExpanderAddress.setOnClickListener(null);
             ivSearchContact.setOnClickListener(null);
             ivNotifyContact.setOnClickListener(null);
+            ivNotifyContact.setOnLongClickListener(null);
             ivAddContact.setOnClickListener(null);
             btnDownloadAttachments.setOnClickListener(null);
             btnSaveAttachments.setOnClickListener(null);
@@ -429,28 +461,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvError.setVisibility(View.GONE);
             pbLoading.setVisibility(View.VISIBLE);
 
-            tvFlags.setVisibility(View.GONE);
-            tvKeywords.setVisibility(View.GONE);
-
-            pbHeaders.setVisibility(View.GONE);
-            tvNoInternetHeaders.setVisibility(View.GONE);
-
-            cbInline.setVisibility(View.GONE);
-            btnDownloadAttachments.setVisibility(View.GONE);
-            btnSaveAttachments.setVisibility(View.GONE);
-            tvNoInternetAttachments.setVisibility(View.GONE);
-
-            btnHtml.setVisibility(View.GONE);
-            ibQuotes.setVisibility(View.GONE);
-            ibImages.setVisibility(View.GONE);
-            tvBody.setVisibility(View.GONE);
-            vwBody.setVisibility(View.GONE);
-            pbBody.setVisibility(View.GONE);
-            tvNoInternetBody.setVisibility(View.GONE);
-
-            rvImage.setVisibility(View.GONE);
+            clearExpanded();
 
             grpDay.setVisibility(View.GONE);
+
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
@@ -472,11 +486,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvDay.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 // dev4223: subject size smaller in list view
+                // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 if (zoom == 0)
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 else
-                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*8/10));
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*0.8f));
+
                 tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+
+                int px = Math.round(TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_PX, textSize * (compact ? 1.5f : 3.0f),
+                        context.getResources().getDisplayMetrics()));
+                if (compact && tvFrom.getMinHeight() != px)
+                    tvFrom.setMinimumHeight(px);
+
+                ViewGroup.LayoutParams lparams = ivAvatar.getLayoutParams();
+                if (lparams.height != px) {
+                    lparams.width = px;
+                    lparams.height = px;
+                    ivAvatar.requestLayout();
+                }
             }
 
             // Date header
@@ -537,7 +566,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setTypeface(null, typeface);
             tvSize.setTypeface(null, typeface);
             tvTime.setTypeface(null, typeface);
+
             // dev4223: subject not in italics
+            // ORIG: tvSubject.setTypeface(null, typeface | (subject_italic ? Typeface.ITALIC : 0));
             tvSubject.setTypeface(null, typeface);
             tvCount.setTypeface(null, typeface);
 
@@ -702,10 +733,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void clearExpanded() {
+
             tvSubject.setVisibility(View.VISIBLE);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
+
             grpHeaders.setVisibility(View.GONE);
             grpAttachments.setVisibility(View.GONE);
             grpExpanded.setVisibility(View.GONE);
@@ -713,8 +746,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSearchContact.setVisibility(View.GONE);
             ivNotifyContact.setVisibility(View.GONE);
             ivAddContact.setVisibility(View.GONE);
+
+            tvFromExTitle.setVisibility(View.GONE);
+            tvToTitle.setVisibility(View.GONE);
+            tvReplyToTitle.setVisibility(View.GONE);
+            tvCcTitle.setVisibility(View.GONE);
+            tvBccTitle.setVisibility(View.GONE);
+            tvIdentityTitle.setVisibility(View.GONE);
+            tvSizeExTitle.setVisibility(View.GONE);
+
+            tvFromEx.setVisibility(View.GONE);
+            tvTo.setVisibility(View.GONE);
+            tvReplyTo.setVisibility(View.GONE);
+            tvCc.setVisibility(View.GONE);
+            tvBcc.setVisibility(View.GONE);
+            tvIdentity.setVisibility(View.GONE);
+            tvTimeEx.setVisibility(View.GONE);
+            tvSizeEx.setVisibility(View.GONE);
+            tvSubjectEx.setVisibility(View.GONE);
             tvFlags.setVisibility(View.GONE);
             tvKeywords.setVisibility(View.GONE);
+
             pbHeaders.setVisibility(View.GONE);
             tvNoInternetHeaders.setVisibility(View.GONE);
 
@@ -757,12 +809,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             grpExpanded.setVisibility(View.VISIBLE);
 
-            boolean from = (message.from != null && message.from.length > 0);
-            boolean channel = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O);
-            grpAddress.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            boolean hasFrom = (message.from != null && message.from.length > 0);
+            boolean hasChannel = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O);
+
             ivSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
-            ivNotifyContact.setVisibility(show_addresses && channel && from ? View.VISIBLE : View.GONE);
-            ivAddContact.setVisibility(show_addresses && contacts && from ? View.VISIBLE : View.GONE);
+            ivNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
+            ivAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
 
             // dev4223: if expanded dont show subjects and anwsered-icon
             tvSubject.setVisibility(View.GONE);
@@ -793,35 +845,75 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Addresses
             ivExpanderAddress.setImageResource(show_addresses ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
-            tvFromEx.setText(MessageHelper.formatAddresses(message.from));
-            tvTo.setText(MessageHelper.formatAddresses(message.to));
-            tvReplyTo.setText(MessageHelper.formatAddresses(message.reply));
-            tvCc.setText(MessageHelper.formatAddresses(message.cc));
-            tvBcc.setText(MessageHelper.formatAddresses(message.bcc));
 
-            try {
-                InternetAddress via = new InternetAddress(message.identityEmail, message.identityName);
-                tvIdentity.setText(MessageHelper.formatAddresses(new Address[]{via}));
-            } catch (UnsupportedEncodingException ex) {
-                tvIdentity.setText(ex.getMessage());
-            }
+            String from = MessageHelper.formatAddresses(message.from);
+            String to = MessageHelper.formatAddresses(message.to);
+            String replyto = MessageHelper.formatAddresses(message.reply);
+            String cc = MessageHelper.formatAddresses(message.cc);
+            String bcc = MessageHelper.formatAddresses(message.bcc);
 
+            boolean self = false;
+            InternetAddress via = null;
+            if (message.identityEmail != null)
+                try {
+                    via = new InternetAddress(message.identityEmail, message.identityName);
+                    if (message.to != null) {
+                        String v = Helper.canonicalAddress(via.getAddress());
+                        for (Address t : message.to) {
+                            if (v.equals(Helper.canonicalAddress(((InternetAddress) t).getAddress()))) {
+                                self = true;
+                                break;
+                            }
+                        }
+                    }
+                } catch (UnsupportedEncodingException ignored) {
+                }
+
+            tvFromExTitle.setVisibility(show_addresses && !TextUtils.isEmpty(from) ? View.VISIBLE : View.GONE);
+            tvFromEx.setVisibility(show_addresses && !TextUtils.isEmpty(from) ? View.VISIBLE : View.GONE);
+            tvFromEx.setText(from);
+
+            tvToTitle.setVisibility(show_addresses && !TextUtils.isEmpty(to) ? View.VISIBLE : View.GONE);
+            tvTo.setVisibility(show_addresses && !TextUtils.isEmpty(to) ? View.VISIBLE : View.GONE);
+            tvTo.setText(to);
+            tvToTitle.setTextColor(self ? textColorSecondary : colorWarning);
+            tvTo.setTextColor(self ? textColorSecondary : colorWarning);
+
+            tvReplyToTitle.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
+            tvReplyTo.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
+            tvReplyTo.setText(replyto);
+
+            tvCcTitle.setVisibility(show_addresses && !TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
+            tvCc.setVisibility(show_addresses && !TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
+            tvCc.setText(cc);
+
+            tvBccTitle.setVisibility(show_addresses && !TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
+            tvBcc.setVisibility(show_addresses && !TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
+            tvBcc.setText(bcc);
+
+            tvIdentityTitle.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
+            tvIdentity.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
+            tvIdentity.setText(MessageHelper.formatAddresses(new Address[]{via}));
+
+            tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvTimeEx.setText(dtf.format(message.received));
 
-            tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
-            tvSizeEx.setVisibility(message.size == null ? View.GONE : View.VISIBLE);
+            tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
 
+            tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSubjectEx.setText(message.subject);
 
             // Flags
             tvFlags.setText(debug ? message.flags : null);
-            tvFlags.setVisibility(debug ? View.VISIBLE : View.GONE);
+            tvFlags.setVisibility(show_addresses && debug ? View.VISIBLE : View.GONE);
 
             // Keywords
             tvKeywords.setText(message.keywords.length > 0 ? TextUtils.join(" ", message.keywords) : null);
-            tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+            tvKeywords.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
             // dev4223: show Flags and Keywords dependand on show addresses
             grpAddressMeta.setVisibility(View.VISIBLE);
@@ -1051,6 +1143,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 else
                     onToggleMessage(message);
             } else {
+                vwRipple.setPressed(true);
+                vwRipple.setPressed(false);
+
                 if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1)
                     context.startActivity(
                             new Intent(context, ActivityCompose.class)
@@ -1066,6 +1161,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     .putExtra("found", viewType == ViewType.SEARCH));
                 }
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            TupleMessageEx message = getMessage();
+            if (message == null)
+                return false;
+
+            onNotifyContactDelete(message);
+            return true;
         }
 
         private void onShowSnoozed(TupleMessageEx message) {
@@ -1190,6 +1295,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName())
                     .putExtra(Settings.EXTRA_CHANNEL_ID, channelName);
             context.startActivity(intent);
+        }
+
+        @TargetApi(Build.VERSION_CODES.O)
+        private void onNotifyContactDelete(TupleMessageEx message) {
+            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            InternetAddress from = (InternetAddress) message.from[0];
+            String channelName = "notification." + from.getAddress().toLowerCase();
+            nm.deleteNotificationChannel(channelName);
         }
 
         private void onAddContact(TupleMessageEx message) {
@@ -1643,18 +1757,58 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onOpenLink(Uri uri) {
+        private void onOpenLink(final Uri uri) {
             if (BuildConfig.APPLICATION_ID.equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                 lbm.sendBroadcast(
                         new Intent(ActivityView.ACTION_ACTIVATE_PRO)
                                 .putExtra("uri", uri));
             } else {
+                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
                 View view = LayoutInflater.from(context).inflate(R.layout.dialog_link, null);
                 final EditText etLink = view.findViewById(R.id.etLink);
+                final CheckBox cbOrganization = view.findViewById(R.id.cbOrganization);
                 TextView tvInsecure = view.findViewById(R.id.tvInsecure);
 
+                cbOrganization.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        prefs.edit().putBoolean("show_organization", isChecked).apply();
+                        if (isChecked) {
+                            Bundle args = new Bundle();
+                            args.putParcelable("uri", uri);
+
+                            new SimpleTask<String>() {
+                                @Override
+                                protected void onPreExecute(Bundle args) {
+                                    cbOrganization.setText("…");
+                                }
+
+                                @Override
+                                protected String onExecute(Context context, Bundle args) throws Throwable {
+                                    Uri uri = args.getParcelable("uri");
+                                    String host = uri.getHost();
+                                    return (TextUtils.isEmpty(host) ? null : Helper.getOrganization(host));
+                                }
+
+                                @Override
+                                protected void onExecuted(Bundle args, String organization) {
+                                    cbOrganization.setText(organization == null ? "?" : organization);
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    cbOrganization.setText(ex.getMessage());
+                                }
+                            }.execute(context, owner, args, "link:domain");
+                        } else
+                            cbOrganization.setText(R.string.title_show_organization);
+                    }
+                });
+
                 etLink.setText(uri.toString());
+                cbOrganization.setChecked(prefs.getBoolean("show_organization", true));
                 tvInsecure.setVisibility("http".equals(uri.getScheme()) ? View.VISIBLE : View.GONE);
 
                 new DialogBuilderLifecycle(context, owner)
@@ -2816,6 +2970,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.viewType = viewType;
         this.compact = compact;
         this.name_email = prefs.getBoolean("name_email", !compact);
+        this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.zoom = zoom;
         this.sort = sort;
         this.internet = Helper.suitableNetwork(context, false);
@@ -2839,6 +2994,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.textSize = Helper.getTextSize(context, zoom);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
+        this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
         this.hasWebView = Helper.hasWebView(context);

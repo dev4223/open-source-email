@@ -40,6 +40,7 @@ import android.widget.TextView;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +67,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private List<TupleFolderEx> all = new ArrayList<>();
     private List<TupleFolderEx> filtered = new ArrayList<>();
 
+    private NumberFormat nf = NumberFormat.getInstance();
+
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View itemView;
         private View vwColor;
@@ -84,9 +87,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         private final static int action_synchronize_now = 1;
         private final static int action_delete_local = 2;
-        private final static int action_empty_trash = 3;
-        private final static int action_edit_properties = 4;
-        private final static int action_edit_rules = 5;
+        private final static int action_delete_browsed = 3;
+        private final static int action_empty_trash = 4;
+        private final static int action_edit_properties = 5;
+        private final static int action_edit_rules = 6;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -168,7 +172,17 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             tvName.setTypeface(null, folder.unseen > 0 ? Typeface.BOLD : Typeface.NORMAL);
             tvName.setTextColor(folder.unseen > 0 ? colorUnread : textColorSecondary);
 
-            tvMessages.setText(String.format("%d/%d", folder.content, folder.messages));
+            StringBuilder sb = new StringBuilder();
+            sb.append(nf.format(folder.content));
+            sb.append('/');
+            sb.append(nf.format(folder.messages));
+            sb.append('/');
+            if (folder.total == null)
+                sb.append('?');
+            else
+                sb.append(nf.format(folder.total));
+            tvMessages.setText(sb.toString());
+
             ivMessages.setImageResource(folder.download || EntityFolder.OUTBOX.equals(folder.type)
                     ? R.drawable.baseline_mail_24 : R.drawable.baseline_mail_outline_24);
 
@@ -236,15 +250,17 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             popupMenu.getMenu().add(Menu.NONE, action_synchronize_now, 1, R.string.title_synchronize_now);
 
-            if (folder.account != null)
+            if (folder.account != null) { // outbox
                 popupMenu.getMenu().add(Menu.NONE, action_delete_local, 2, R.string.title_delete_local);
+                popupMenu.getMenu().add(Menu.NONE, action_delete_browsed, 3, R.string.title_delete_browsed);
+            }
 
             if (EntityFolder.TRASH.equals(folder.type))
-                popupMenu.getMenu().add(Menu.NONE, action_empty_trash, 3, R.string.title_empty_trash);
+                popupMenu.getMenu().add(Menu.NONE, action_empty_trash, 4, R.string.title_empty_trash);
 
             if (folder.account != null) {
-                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 4, R.string.title_edit_rules);
-                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 5, R.string.title_edit_properties);
+                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 5, R.string.title_edit_rules);
+                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 6, R.string.title_edit_properties);
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -256,7 +272,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             return true;
 
                         case action_delete_local:
-                            OnActionDeleteLocal();
+                            OnActionDeleteLocal(false);
+                            return true;
+
+                        case action_delete_browsed:
+                            OnActionDeleteLocal(true);
                             return true;
 
                         case action_empty_trash:
@@ -313,19 +333,19 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     }.execute(context, owner, args, "folder:sync");
                 }
 
-                private void OnActionDeleteLocal() {
+                private void OnActionDeleteLocal(boolean browsed) {
                     Bundle args = new Bundle();
                     args.putLong("id", folder.id);
-                    args.putBoolean("outbox", folder.account == null);
+                    args.putBoolean("browsed", browsed);
 
                     new SimpleTask<Void>() {
                         @Override
                         protected Void onExecute(Context context, Bundle args) {
                             long id = args.getLong("id");
-                            boolean outbox = args.getBoolean("outbox");
-                            Log.i("Delete local messages outbox=" + outbox);
-                            if (outbox)
-                                DB.getInstance(context).message().deleteSeenMessages(id);
+                            boolean browsed = args.getBoolean("browsed");
+                            Log.i("Delete local messages browsed=" + browsed);
+                            if (browsed)
+                                DB.getInstance(context).message().deleteBrowsedMessages(id);
                             else
                                 DB.getInstance(context).message().deleteLocalMessages(id);
                             return null;

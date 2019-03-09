@@ -3,6 +3,7 @@
 <resources>
     <string name="app_welcome">FairEmail est une application de messagerie open source axée sur la confidentialité et la sécurité. C\'est pourquoi certaines fonctionnalités peuvent fonctionner différemment de ce à quoi vous êtes habitué.</string>
     <string name="app_limitations">Par exemple, les messages seront toujours reformatés pour enlever les éléments non sûrs et pour améliorer la lisibilité et l\'ouverture des liens doit être confirmée par sécurité.</string>
+    <string name="app_crash">FairEmail n\'est pas pris en charge sur cet appareil parce que des bogues dans Android provoquent des plantages</string>
     <string name="channel_service">Service</string>
     <string name="channel_notification">Notifications</string>
     <string name="channel_warning">Avertissements</string>
@@ -130,6 +131,7 @@
     <string name="title_advanced_avatars">Afficher les photos des contacts</string>
     <string name="title_advanced_identicons">Afficher les identicônes</string>
     <string name="title_advanced_name_email">Afficher les noms et les adresses e-mail</string>
+    <string name="title_advanced_subject_italic">Afficher le sujet en italique</string>
     <string name="title_advanced_flags">Montrer les messages suivis (favoris)</string>
     <string name="title_advanced_preview">Afficher l\'aperçu du message</string>
     <string name="title_advanced_addresses">Afficher par défaut les détails de l\'adresse</string>
@@ -220,7 +222,6 @@
     <string name="title_no_primary_drafts">Pas de compte principal ou pas de dossier Brouillons</string>
     <string name="title_no_idle">Ce fournisseur ne gère pas les messages en mode push. Cela va retarder la réception de nouveaux messages et augmenter l\'utilisation de la batterie.</string>
     <string name="title_no_move">Ce fournisseur ne prend pas en charge MOVE</string>
-    <string name="title_no_uidplus">Ce fournisseur ne prend pas en charge UIDPLUS</string>
     <string name="title_no_utf8">Ce fournisseur ne prend pas en charge l\'UTF-8</string>
     <string name="title_no_sync">Erreurs de synchronisation depuis %1$s</string>
     <string name="title_sync_errors">La synchronisation de certains dossiers a échoué</string>
@@ -445,7 +446,7 @@
     <string name="title_legend_waiting">En attente de la prochaine synchronisation</string>
     <string name="title_legend_stop">Arrêter le traitement des règles</string>
     <string name="title_legend_sync_keep">Nombre de jours à synchroniser / pour conserver les messages</string>
-    <string name="title_legend_download_fetch">Nombre de contenus de message téléchargés / en-têtes récupérés</string>
+    <string name="title_legend_download_fetch">Nombre de contenus de messages téléchargés / en-têtes récupérés / sur le serveur</string>
     <string name="title_legend_metered">La connexion est limitée</string>
     <string name="title_legend_unmetered">La connexion est illimitée</string>
     <string name="title_hint_folder_actions">Appui long pour les options</string>

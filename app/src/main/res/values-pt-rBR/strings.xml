@@ -3,6 +3,7 @@
 <resources>
     <string name="app_welcome">FairEmail é um aplicativo de e-mail de código aberto focado em privacidade e segurança. Por esse motivo, alguns recursos podem funcionar de maneira diferente do que você está acostumado.</string>
     <string name="app_limitations">Por exemplo, as mensagens serão sempre reformatadas para remover elementos inseguros e para melhorar a legibilidade, e a abertura de links devem ser confirmadas por questão de segurança.</string>
+    <string name="app_crash">O FairEmail não é suportado neste dispositivo porque bugs do Android causam tais falhas</string>
     <string name="channel_service">Serviço</string>
     <string name="channel_notification">Notificações</string>
     <string name="channel_warning">Avisos</string>
@@ -85,7 +86,7 @@
     <string name="title_setup_quick_hint">A configuração rápida irá buscar informações de configuração a partir de autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">Servidor IMAP para receber mensagens</string>
     <string name="title_setup_quick_smtp">Servidor SMTP para enviar mensagens</string>
-    <string name="title_setup_go">Ir</string>
+    <string name="title_setup_go">Iniciar</string>
     <string name="title_setup_setting_gmail">Permitir o acesso para apps \"menos seguros\"</string>
     <string name="title_setup_no_settings">Nenhuma configuração encontrada para \'%1$s\'</string>
     <string name="title_setup_quick_success">Uma conta e uma identidade foram adicionados com sucesso</string>
@@ -220,7 +221,6 @@
     <string name="title_no_primary_drafts">Nenhuma conta primária ou pasta de rascunhos</string>
     <string name="title_no_idle">Este provedor não suporta mensagens push. Isso irá atrasar o recebimento de novas mensagens e aumentar o uso da bateria.</string>
     <string name="title_no_move">Este provedor de e-mail não dá suporte a opção MOVER</string>
-    <string name="title_no_uidplus">Este provedor de e-mail não dá suporte a UIDPLUS</string>
     <string name="title_no_utf8">Este provedor de e-mail não suporta UTF-8</string>
     <string name="title_no_sync">Erros de sincronização desde %1$s</string>
     <string name="title_sync_errors">Falha ao sincronizar algumas pastas</string>
@@ -445,7 +445,6 @@
     <string name="title_legend_waiting">Aguardando a próxima sincronização</string>
     <string name="title_legend_stop">Parar o processamento de regras</string>
     <string name="title_legend_sync_keep">Número de dias para sincronizar / manter mensagens</string>
-    <string name="title_legend_download_fetch">Número de corpos de mensagens baixadas / cabeçalhos obtidos</string>
     <string name="title_legend_metered">A conexão é limitada</string>
     <string name="title_legend_unmetered">A conexão é ilimitada</string>
     <string name="title_hint_folder_actions">Mantenha pressionado para mais opções</string>

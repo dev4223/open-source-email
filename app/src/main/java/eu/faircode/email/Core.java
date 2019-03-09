@@ -18,7 +18,6 @@ import android.text.TextUtils;
 
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
-import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
@@ -202,7 +201,7 @@ class Core {
                                 break;
 
                             case EntityOperation.WAIT:
-                                return;
+                                break;
 
                             default:
                                 throw new IllegalArgumentException("Unknown operation=" + op.name);
@@ -329,6 +328,10 @@ class Core {
 
         boolean answered = jargs.getBoolean(0);
         if (message.answered.equals(answered))
+            return;
+
+        // This will be fixed when synchronizing the message
+        if (message.uid == null)
             return;
 
         Message imessage = ifolder.getMessageByUID(message.uid);
@@ -481,10 +484,8 @@ class Core {
 
         boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
 
-        long uid;
         if (!copy &&
                 istore.hasCapability("MOVE") &&
-                istore.hasCapability("UIDPLUS") &&
                 !EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.DRAFTS.equals(target.type)) {
             // Autoread
@@ -493,10 +494,7 @@ class Core {
                     imessage.setFlag(Flags.Flag.SEEN, true);
 
             // Move message to target folder
-            AppendUID[] uids = ifolder.moveUIDMessages(new Message[]{imessage}, itarget);
-            if (uids == null || uids.length == 0)
-                throw new MessageRemovedException("Message not moved");
-            uid = uids[0].uid;
+            ifolder.moveMessages(new Message[]{imessage}, itarget);
         } else {
             if (!copy)
                 Log.w(folder.name + " MOVE by DELETE/APPEND");
@@ -536,63 +534,40 @@ class Core {
                         icopy.setFlag(Flags.Flag.DRAFT, true);
 
                 // Append target
-                uid = append(istore, itarget, (MimeMessage) icopy);
+                long uid = append(istore, itarget, (MimeMessage) icopy);
 
-                try {
-                    // Fixed timing issue of at least Courier based servers
-                    itarget.close(false);
-                    itarget.open(Folder.READ_WRITE);
+                // Fixed timing issue of at least Courier based servers
+                itarget.close(false);
+                itarget.open(Folder.READ_WRITE);
 
-                    // Some providers, like Gmail, don't honor the appended seen flag
-                    if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
-                        boolean seen = (autoread || message.ui_seen);
-                        icopy = itarget.getMessageByUID(uid);
-                        if (seen != icopy.isSet(Flags.Flag.SEEN)) {
-                            Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
-                            icopy.setFlag(Flags.Flag.SEEN, seen);
-                        }
+                // Some providers, like Gmail, don't honor the appended seen flag
+                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+                    boolean seen = (autoread || message.ui_seen);
+                    icopy = itarget.getMessageByUID(uid);
+                    if (seen != icopy.isSet(Flags.Flag.SEEN)) {
+                        Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
+                        icopy.setFlag(Flags.Flag.SEEN, seen);
                     }
+                }
 
-                    // This is not based on an actual case, so this is just a safeguard
-                    if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
-                        boolean draft = EntityFolder.DRAFTS.equals(target.type);
-                        icopy = itarget.getMessageByUID(uid);
-                        if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
-                            Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
-                            icopy.setFlag(Flags.Flag.DRAFT, draft);
-                        }
+                // This is not based on an actual case, so this is just a safeguard
+                if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
+                    boolean draft = EntityFolder.DRAFTS.equals(target.type);
+                    icopy = itarget.getMessageByUID(uid);
+                    if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
+                        Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
+                        icopy.setFlag(Flags.Flag.DRAFT, draft);
                     }
+                }
 
-                    // Delete source
-                    if (!copy) {
-                        imessage.setFlag(Flags.Flag.DELETED, true);
-                        ifolder.expunge();
-                    }
-                } catch (MessageRemovedException ignored) {
-                } catch (Throwable ex) {
-                    Log.w(ex);
+                // Delete source
+                if (!copy) {
+                    imessage.setFlag(Flags.Flag.DELETED, true);
+                    ifolder.expunge();
                 }
             } finally {
                 if (itarget.isOpen())
                     itarget.close();
-            }
-        }
-
-        Log.i(folder.name + " moved uid=" + uid);
-        if (jargs.length() > 2 && !jargs.isNull(2)) {
-            long tmpid = jargs.getLong(2);
-            try {
-                db.beginTransaction();
-                db.message().setMessageUid(tmpid, uid);
-                int waits = -1;
-                if (jargs.length() > 3) {
-                    long waitid = jargs.getLong(3);
-                    waits = db.operation().deleteOperation(waitid);
-                }
-                db.setTransactionSuccessful();
-                Log.i(folder.name + " set id=" + tmpid + " uid=" + uid + " waits=" + waits);
-            } finally {
-                db.endTransaction();
             }
         }
     }
@@ -704,32 +679,25 @@ class Core {
     }
 
     private static long append(IMAPStore istore, IMAPFolder ifolder, MimeMessage imessage) throws MessagingException {
-        if (istore.hasCapability("UIDPLUS")) {
-            AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
-            if (uids == null || uids.length == 0)
-                throw new MessageRemovedException("Message not appended");
-            return uids[0].uid;
-        } else {
-            ifolder.appendMessages(new Message[]{imessage});
+        ifolder.appendMessages(new Message[]{imessage});
 
-            long uid = -1;
-            String msgid = imessage.getMessageID();
-            Log.i("Searching for appended msgid=" + msgid);
-            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
-            if (messages != null)
-                for (Message iappended : messages) {
-                    long muid = ifolder.getUID(iappended);
-                    Log.i("Found appended uid=" + muid);
-                    // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
-                    if (muid > uid)
-                        uid = muid;
-                }
+        long uid = -1;
+        String msgid = imessage.getMessageID();
+        Log.i("Searching for appended msgid=" + msgid);
+        Message[] messages = ifolder.search(new MessageIDTerm(msgid));
+        if (messages != null)
+            for (Message iappended : messages) {
+                long muid = ifolder.getUID(iappended);
+                Log.i("Found appended uid=" + muid);
+                // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
+                if (muid > uid)
+                    uid = muid;
+            }
 
-            if (uid < 0)
-                throw new IllegalArgumentException("uid not found");
+        if (uid < 0)
+            throw new IllegalArgumentException("uid not found");
 
-            return uid;
-        }
+        return uid;
     }
 
     static void onSynchronizeFolders(Context context, EntityAccount account, Store istore, State state) throws MessagingException {
@@ -884,7 +852,7 @@ class Core {
             Log.i(folder.name + " sync=" + new Date(sync_time) + " keep=" + new Date(keep_time));
 
             // Delete old local messages
-            int old = db.message().deleteMessagesBefore(folder.id, keep_time, false);
+            int old = db.message().deleteMessagesBefore(folder.id, keep_time);
             Log.i(folder.name + " local old=" + old);
 
             // Get list of local uids
@@ -921,31 +889,32 @@ class Core {
                 }
 
             if (uids.size() > 0) {
-                ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+                MessagingException ex = (MessagingException) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                     @Override
                     public Object doCommand(IMAPProtocol protocol) {
                         Log.i("Executing uid fetch count=" + uids.size());
                         Response[] responses = protocol.command(
                                 "UID FETCH " + TextUtils.join(",", uids) + " (UID)", null);
 
-                        for (int i = 0; i < responses.length; i++) {
-                            if (responses[i] instanceof FetchResponse) {
-                                FetchResponse fr = (FetchResponse) responses[i];
-                                UID uid = fr.getItem(UID.class);
-                                if (uid != null)
-                                    uids.remove(uid.uid);
-                            } else {
-                                if (responses[i].isOK())
-                                    Log.i(folder.name + " response=" + responses[i]);
-                                else {
-                                    Log.e(folder.name + " response=" + responses[i]);
-                                    db.folder().setFolderError(folder.id, responses[i].toString());
+                        if (responses.length > 0 && responses[responses.length - 1].isOK()) {
+                            for (Response response : responses)
+                                if (response instanceof FetchResponse) {
+                                    FetchResponse fr = (FetchResponse) response;
+                                    UID uid = fr.getItem(UID.class);
+                                    if (uid != null)
+                                        uids.remove(uid.uid);
                                 }
-                            }
+                            return null;
+                        } else {
+                            for (Response response : responses)
+                                if (response.isNO() || response.isBAD() || response.isBYE())
+                                    return new MessagingException(response.toString());
+                            return new MessagingException("UID FETCH failed");
                         }
-                        return null;
                     }
                 });
+                if (ex != null)
+                    throw ex;
 
                 long getuid = SystemClock.elapsedRealtime();
                 Log.i(folder.name + " remote uids=" + (SystemClock.elapsedRealtime() - getuid) + " ms");
@@ -1035,6 +1004,9 @@ class Core {
                     EntityOperation.queue(context, db, orphan, EntityOperation.ADD);
                 }
             }
+
+            int count = ifolder.getMessageCount();
+            db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
 
             if (download) {
                 db.folder().setFolderSyncState(folder.id, "downloading");
@@ -1267,6 +1239,11 @@ class Core {
             }
 
             if (!message.answered.equals(answered) || !message.answered.equals(message.ui_answered)) {
+                if (!answered && message.ui_answered && ifolder.getPermanentFlags().contains(Flags.Flag.ANSWERED)) {
+                    // This can happen when the answered operation was skipped because the message was moving
+                    answered = true;
+                    imessage.setFlag(Flags.Flag.ANSWERED, answered);
+                }
                 update = true;
                 message.answered = answered;
                 message.ui_answered = answered;

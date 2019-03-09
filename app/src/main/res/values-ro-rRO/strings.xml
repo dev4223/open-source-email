@@ -3,6 +3,7 @@
 <resources>
     <string name="app_welcome">FairEmail este o aplicație pentru e-mail, cu sursă deschisă, ce se concentrează pe confidențialitate și securitate. Din acest motiv se poate ca unele caracteristici să funcționeze diferit de cum erați obișnuiți.</string>
     <string name="app_limitations">De exemplu, mesajele vor fi mereu rescrise pentru a înlătura elementele nesigure și a îmbunătății lizibilitatea iar deschiderea legăturilor trebuie, pentru siguranță, confirmată.</string>
+    <string name="app_crash">FairEmail nu suportă acest dispozitiv din cauza erorilor din Android ce duc la blocaje</string>
     <string name="channel_service">Serviciu</string>
     <string name="channel_notification">Notificări</string>
     <string name="channel_warning">Atenționări</string>
@@ -138,6 +139,7 @@
     <string name="title_advanced_avatars">Arată pozele contactelor</string>
     <string name="title_advanced_identicons">Arată iconițe generate</string>
     <string name="title_advanced_name_email">Arată nume și adrese de e-mail</string>
+    <string name="title_advanced_subject_italic">Arată obiectul cursiv</string>
     <string name="title_advanced_flags">Arată marcate (favorite)</string>
     <string name="title_advanced_preview">Arată previzualizare mesaj</string>
     <string name="title_advanced_addresses">Implicit arată detaliile adreselor</string>
@@ -228,7 +230,6 @@
     <string name="title_no_primary_drafts">Nici un cont principal sau nici un dosar pentru ciorne</string>
     <string name="title_no_idle">Acest furnizor de servicii e-mail nu suporta mesaje push. Acest fapt va duce la întârzierea recepției mesajelor și un consum mai mare al bateriei.</string>
     <string name="title_no_move">Acest furnizor nu suportă MOVE</string>
-    <string name="title_no_uidplus">Acest furnizor nu suportă UIDPLUS</string>
     <string name="title_no_utf8">Acest furnizor nu suportă UTF-8</string>
     <string name="title_no_sync">Erori de sincronizare începând cu %1$s</string>
     <string name="title_sync_errors">Sincronizarea unor dosare a eșuat</string>
@@ -453,7 +454,7 @@
     <string name="title_legend_waiting">Așteptă următoarea sincronizare</string>
     <string name="title_legend_stop">Oprește procesarea regulilor</string>
     <string name="title_legend_sync_keep">Numărul de zile de sincronizat / păstrat mesaje</string>
-    <string name="title_legend_download_fetch">Numărul de mesaje / antete de descărcat</string>
+    <string name="title_legend_download_fetch">Numărul de mesaje / antete descărcate / antetele au fost extrase / Pe server</string>
     <string name="title_legend_metered">Conexiunea este contorizată</string>
     <string name="title_legend_unmetered">Conexiunea este necontorizată</string>
     <string name="title_hint_folder_actions">Atingeți lung pentru opțiuni</string>

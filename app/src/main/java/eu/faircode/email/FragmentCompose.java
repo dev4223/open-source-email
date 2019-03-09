@@ -794,17 +794,20 @@ public class FragmentCompose extends FragmentBase {
 
         switch (id) {
             case R.id.menu_bold:
-                if (start == end)
-                    Snackbar.make(view, R.string.title_no_selection, Snackbar.LENGTH_LONG).show();
-                else
-                    ss.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                break;
-
             case R.id.menu_italic:
                 if (start == end)
                     Snackbar.make(view, R.string.title_no_selection, Snackbar.LENGTH_LONG).show();
-                else
-                    ss.setSpan(new StyleSpan(Typeface.ITALIC), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                else {
+                    int style = (id == R.id.menu_bold ? Typeface.BOLD : Typeface.ITALIC);
+                    boolean has = false;
+                    for (StyleSpan span : ss.getSpans(start, end, StyleSpan.class))
+                        if (span.getStyle() == style) {
+                            has = true;
+                            ss.removeSpan(span);
+                        }
+                    if (!has)
+                        ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
                 break;
 
             case R.id.menu_clear:
@@ -989,7 +992,22 @@ public class FragmentCompose extends FragmentBase {
                 throw new IllegalArgumentException(getString(R.string.title_from_missing));
 
             String to = etTo.getText().toString();
-            InternetAddress ato[] = (TextUtils.isEmpty(to) ? new InternetAddress[0] : InternetAddress.parse(to));
+            String cc = etCc.getText().toString();
+            String bcc = etBcc.getText().toString();
+
+            InternetAddress ato[] = new InternetAddress[0];
+            InternetAddress acc[] = new InternetAddress[0];
+            InternetAddress abcc[] = new InternetAddress[0];
+
+            if (!TextUtils.isEmpty(to))
+                ato = InternetAddress.parse(to);
+
+            if (!TextUtils.isEmpty(cc))
+                acc = InternetAddress.parse(cc);
+
+            if (!TextUtils.isEmpty(bcc))
+                abcc = InternetAddress.parse(bcc);
+
             if (ato.length == 0)
                 throw new IllegalArgumentException(getString(R.string.title_to_missing));
 
@@ -997,8 +1015,10 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvMessage = dview.findViewById(R.id.tvMessage);
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
+            int plus = acc.length + abcc.length;
+
             tvMessage.setText(getString(R.string.title_ask_send_via,
-                    MessageHelper.formatAddressesShort(ato), ident.email));
+                    MessageHelper.formatAddressesShort(ato) + (plus > 0 ? " +" + plus : ""), ident.email));
 
             new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
                     .setView(dview)

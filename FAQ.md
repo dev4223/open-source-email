@@ -37,7 +37,7 @@ Anything on this list is in random order and *might* be added in the near future
 
 ## Frequently requested features
 
-* *Rich text editor*: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned.
+* *Rich text editor* / [Markdown](https://en.wikipedia.org/wiki/Markdown) support: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned. See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details.
 * *Widget to read messages*: widgets can have limited user interaction only, so a widget to read e-mail would not be very useful. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *Badge count*: there is no standard Android API for this and third party solutions might stop working anytime. For example *ShortcutBadger* [has lots of problems](https://github.com/leolin310148/ShortcutBadger/issues). You can use the provided widget instead.
 * *Switch language*: Android is not designed to change the language of an app and on recent Android versions it even causes problems. So, better fix the translation in your language if needed, see [this FAQ](#user-content-faq26) about how to.
@@ -141,6 +141,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(78) How do I use schedules?](#user-content-faq78)
 * [(79) How do I use synchronize on demand (manual)?](#user-content-faq79)
 * [(80) How can I fix 'Unable to load BODYSTRUCTURE'?](#user-content-faq80)
+* [(81) Can you make the background of the original message dark in the dark theme?](#user-content-faq81)
 
 [I have another question.](#support)
 
@@ -200,7 +201,6 @@ The low priority status bar notification shows the number of pending operations,
 * *body*: download message text
 * *attachment*: download attachment
 * *sync*: synchronize local and remote messages
-* *wait*: wait for message synchronization
 
 Operations are processed only when there is a connection to the email server or when manually synchronizing.
 See also [this FAQ](#user-content-faq16).
@@ -239,6 +239,8 @@ In the display section of the advanced options you can enable or disable:
 * *Conversation threading*: to disable conversation threading and to show individual messages instead
 * *Show contact photos*: to hide contact photos
 * *Show identicons*: to show generated contact avatars
+* *Show names and email addresses*: to show names or to show names and email addresses
+* *Show subject italic*: to show the message subject as normal text
 * *Show stars*: to hide stars (favorites)
 * *Show message preview*: to show two lines of the message text
 * *Show address details by default*: to collapse the addresses section by default
@@ -481,6 +483,7 @@ Before Android 8 Oreo: there is an advanced option in the setup for this.
 
 Android 8 Oreo and later: see [here](https://developer.android.com/training/notify-user/channels) about how to configure notification channels.
 You can use the button *Manage notifications* in the setup to directly go to the Android notification settings.
+Note that apps cannot change notification settings, including the notification light setting, on Android 8 Oreo and later anymore.
 
 <br />
 
@@ -1316,6 +1319,14 @@ The error message *Unable to load BODYSTRUCTURE* is caused by bugs in the email 
 see [here](https://javaee.github.io/javamail/FAQ#imapserverbug) for more details.
 
 FairEmail already tries to workaround these bugs, but if this fail you'll need to ask for support from your provider.
+
+<br />
+
+<a name="faq81"></a>
+**(81) Can you make the background of the original message dark in the dark theme?**
+
+The original message is shown as the sender has sent it, including all colors.
+Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.
 
 <br />
 
