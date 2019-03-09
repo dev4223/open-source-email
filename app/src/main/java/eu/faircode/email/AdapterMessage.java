@@ -893,16 +893,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
             tvIdentity.setText(show_addresses && via != null ? MessageHelper.formatAddresses(new Address[]{via}) : null);
 
-            tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            // dev4223: show always
+            //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvTimeEx.setText(dtf.format(message.received));
 
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
-            tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
-            tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            // dev4223: show always
+            //tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            //tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
 
-            tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            // dev4223: show always
+            //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSubjectEx.setText(message.subject);
 
             // Flags
