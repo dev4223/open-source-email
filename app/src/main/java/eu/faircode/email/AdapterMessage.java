@@ -567,9 +567,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setTypeface(null, typeface);
             tvTime.setTypeface(null, typeface);
 
-            // dev4223: subject not in italics
-            // ORIG: tvSubject.setTypeface(null, typeface | (subject_italic ? Typeface.ITALIC : 0));
-            tvSubject.setTypeface(null, typeface);
+            tvSubject.setTypeface(null, typeface | (subject_italic ? Typeface.ITALIC : 0));
             tvCount.setTypeface(null, typeface);
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
@@ -893,7 +891,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             tvIdentityTitle.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
             tvIdentity.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
-            tvIdentity.setText(MessageHelper.formatAddresses(new Address[]{via}));
+            tvIdentity.setText(show_addresses && via != null ? MessageHelper.formatAddresses(new Address[]{via}) : null);
 
             tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvTimeEx.setText(dtf.format(message.received));
