@@ -20,17 +20,20 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -65,49 +68,148 @@ public class HtmlHelper {
     private static final List<String> heads = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "ol", "ul", "br", "hr");
     private static final List<String> tails = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li");
 
-    static String sanitize(String html, boolean showQuotes) {
+    static String removeTracking(Context context, String html) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean remove_tracking = prefs.getBoolean("remove_tracking", true);
+        if (!remove_tracking)
+            return html;
+
+        Document document = Jsoup.parse(html);
+
+        // Remove tracking pixels
+        for (Element img : document.select("img")) {
+            String src = img.attr("src");
+            String height = img.attr("height").trim();
+            String width = img.attr("width").trim();
+            if ("1".equals(height) && "1".equals(width) && !TextUtils.isEmpty(src))
+                img.removeAttr("src");
+        }
+
+        // Remove Javascript
+        for (Element e : document.select("*"))
+            for (Attribute a : e.attributes())
+                if (a.getValue().trim().toLowerCase().startsWith("javascript:"))
+                    e.removeAttr(a.getKey());
+
+        // Remove scripts
+        document.select("script").remove();
+
+        return document.outerHtml();
+    }
+
+    static String sanitize(Context context, String html, boolean showQuotes) {
         final Document document = Jsoup.parse(Jsoup.clean(html, Whitelist
                 .relaxed()
+                .addTags("hr")
+                .removeTags("col", "colgroup", "thead", "tbody")
                 .addProtocols("img", "src", "cid")
                 .addProtocols("img", "src", "data")));
 
-        for (Element td : document.select("th,td")) {
-            Element next = td.nextElementSibling();
+        // Quotes
+        if (!showQuotes)
+            for (Element quote : document.select("blockquote"))
+                quote.html("&#8230;");
+
+        // Tables
+        for (Element col : document.select("th,td")) {
+            // prevent line breaks
+            col.select("br").tagName("span").html("&nbsp;");
+            col.select("div").tagName("span");
+
+            Element next = col.nextElementSibling();
             if (next != null && ("th".equals(next.tagName()) || "td".equals(next.tagName())))
-                td.append("<span> </span>");
+                col.append(" "); // separate columns by a space
             else
-                td.append("<br>");
+                col.appendElement("br"); // line break after last column
+        }
+        document.select("table").tagName("div");
+        document.select("caption").tagName("p");
+        document.select("td").tagName("span");
+        document.select("th").tagName("strong");
+
+        // Lists
+        for (Element li : document.select("li")) {
+            li.tagName("span");
+            li.prependText("* ");
+            li.appendElement("br"); // line break after list item
+        }
+        document.select("ol").tagName("div");
+        document.select("ul").tagName("div");
+
+        // Short quotes
+        for (Element q : document.select("q")) {
+            q.prependText("\"");
+            q.appendText("\"");
+            q.tagName("em");
         }
 
-        for (Element ol : document.select("ol,ul"))
-            ol.append("<br>");
+        // Pre formatted text
+        for (Element code : document.select("pre")) {
+            code.html(code.html().replaceAll("\\r?\\n", "<br />"));
+            code.tagName("div");
+        }
 
+        // Code
+        document.select("code").tagName("div");
+
+        // Lines
+        for (Element hr : document.select("hr")) {
+            hr.tagName("div");
+            hr.text("--------------------");
+        }
+
+        // Descriptions
+        document.select("dl").tagName("div");
+        for (Element dt : document.select("dt"))
+            dt.appendElement("br");
+        for (Element dt : document.select("dd"))
+            dt.appendElement("br").appendElement("br");
+        document.select("dt").tagName("strong");
+        document.select("dd").tagName("em");
+
+        // Images
         for (Element img : document.select("img")) {
-            img.prependElement("br");
-
             String src = img.attr("src");
-            if (src.startsWith("http://") || src.startsWith("https://")) {
+            String alt = img.attr("alt");
+            String height = img.attr("height").trim();
+            String width = img.attr("width").trim();
+
+            Element div = document.createElement("div");
+
+            Uri uri = Uri.parse(src);
+            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
                 boolean linked = false;
                 for (Element parent : img.parents())
                     if ("a".equals(parent.tagName())) {
                         if (TextUtils.isEmpty(parent.attr("href")))
-                            parent.attr("href", img.attr("src"));
+                            parent.attr("href", uri.toString());
                         linked = true;
                         break;
                     }
 
-                if (!linked) {
+                if (linked)
+                    div.appendChild(img);
+                else {
                     Element a = document.createElement("a");
-                    a.attr("href", src);
+                    a.attr("href", uri.toString());
                     a.appendChild(img.clone());
-                    img.replaceWith(a);
+                    div.appendChild(a);
                 }
             }
-        }
 
-        if (!showQuotes)
-            for (Element quote : document.select("blockquote"))
-                quote.html("&#8230;");
+            if (!TextUtils.isEmpty(alt)) {
+                div.appendElement("br");
+                div.appendElement("em").text(alt);
+            }
+
+            // Tracking image
+            if ("1".equals(height) && "1".equals(width) && !TextUtils.isEmpty(src)) {
+                div.appendElement("br");
+                div.appendElement("strong").text(context.getString(R.string.title_hint_tracking_image));
+            }
+
+            img.replaceWith(div);
+        }
 
         // Autolink
         NodeTraversor.traverse(new NodeVisitor() {
@@ -122,7 +224,7 @@ public class HtmlHelper {
                     Matcher matcher = PatternsCompat.WEB_URL.matcher(text);
                     while (matcher.find()) {
                         boolean linked = false;
-                        Node parent = node.parent();
+                        Node parent = tnode.parent();
                         while (parent != null) {
                             if ("a".equals(parent.nodeName())) {
                                 linked = true;

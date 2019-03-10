@@ -84,6 +84,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +109,8 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
 
 public class Helper {
+    private static Map<String, String> hostOrganization = new HashMap<>();
+
     static final int NOTIFICATION_SYNCHRONIZE = 1;
     static final int NOTIFICATION_SEND = 2;
     static final int NOTIFICATION_EXTERNAL = 3;
@@ -435,12 +438,13 @@ public class Helper {
 
         // Get version info
         String installer = context.getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
-        sb.append(String.format("%s: %s/%s %s/%s%s\r\n",
+        sb.append(String.format("%s: %s/%s %s/%s%s%s\r\n",
                 context.getString(R.string.app_name),
                 BuildConfig.APPLICATION_ID,
                 installer,
                 BuildConfig.VERSION_NAME,
                 hasValidFingerprint(context) ? "1" : "3",
+                BuildConfig.PLAY_STORE_RELEASE ? "p" : "",
                 isPro(context) ? "+" : ""));
         sb.append(String.format("Android: %s (SDK %d)\r\n", Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
         sb.append("\r\n");
@@ -822,8 +826,9 @@ public class Helper {
                 id.put("name", context.getString(R.string.app_name));
                 id.put("version", BuildConfig.VERSION_NAME);
                 Map<String, String> sid = istore.id(id);
-                for (String key : sid.keySet())
-                    Log.i("Server " + key + "=" + sid.get(key));
+                if (sid != null)
+                    for (String key : sid.keySet())
+                        Log.i("Server " + key + "=" + sid.get(key));
             } catch (MessagingException ex) {
                 Log.w(ex);
             }
@@ -995,7 +1000,7 @@ public class Helper {
             // flag-keyword    = atom
             // atom            = 1*ATOM-CHAR
             // ATOM-CHAR       = <any CHAR except atom-specials>
-            Character kar = keyword.charAt(i);
+            char kar = keyword.charAt(i);
             // atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards / quoted-specials / resp-specials
             if (kar == '(' || kar == ')' || kar == '{' || kar == ' ' || Character.isISOControl(kar))
                 continue;
@@ -1018,6 +1023,10 @@ public class Helper {
     }
 
     static String getOrganization(String host) throws IOException {
+        synchronized (hostOrganization) {
+            if (hostOrganization.containsKey(host))
+                return hostOrganization.get(host);
+        }
         InetAddress address = InetAddress.getByName(host);
         URL url = new URL("https://ipinfo.io/" + address.getHostAddress() + "/org");
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -1028,6 +1037,9 @@ public class Helper {
             String organization = reader.readLine();
             if ("undefined".equals(organization))
                 organization = null;
+            synchronized (hostOrganization) {
+                hostOrganization.put(host, organization);
+            }
             return organization;
         }
     }

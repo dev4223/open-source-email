@@ -136,6 +136,7 @@
     <string name="title_advanced_preview">Toon berichtvoorbeeld</string>
     <string name="title_advanced_addresses">Adresgegevens standaard weergeven</string>
     <string name="title_advanced_html">Automatisch originele bericht weergeven voor bekende contacten</string>
+    <string name="title_advanced_tracking">Probeer om tracking uit originele berichten te verwijderen</string>
     <string name="title_advanced_images">Automatisch afbeeldingen weergeven voor bekende contacten</string>
     <string name="title_advanced_actionbar">Actiebalk gesprek</string>
     <string name="title_advanced_pull_refresh">Omlaag schuiven om te verversen</string>
@@ -234,6 +235,7 @@
     <string name="title_pop3_support">POP3 wordt niet ondersteund, zie ook de FAQ</string>
     <string name="title_synchronize_now">Nu synchroniseren</string>
     <string name="title_delete_local">Verwijder lokale berichten</string>
+    <string name="title_delete_browsed">Verwijder gebladerde/gezochte berichten</string>
     <string name="title_empty_trash">Prullenbak leegmaken</string>
     <string name="title_edit_properties">Bewerk eigenschappen</string>
     <string name="title_edit_rules">Bewerk regels</string>
@@ -455,7 +457,9 @@
     <string name="title_hint_message_actions">Veeg naar links om weg te gooien; veeg naar rechts om te archiveren (indien beschikbaar)</string>
     <string name="title_hint_message_selection">Druk lang op een bericht om te beginnen met het selecteren van meerdere berichten</string>
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
+    <string name="title_hint_tracking_image">Tracking afbeelding</string>
     <string name="title_open_link">Link openen</string>
+    <string name="title_show_organization">Toon organisatie</string>
     <string name="title_insecure_link">Deze link is onveilig</string>
     <string name="title_select_app">Selecteer app</string>
     <string name="title_updated">Er is een update naar versie %1$s beschikbaar</string>

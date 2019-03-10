@@ -163,6 +163,7 @@
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_addresses">Show address details by default</string>
     <string name="title_advanced_html">Automatically show original message for known contacts</string>
+    <string name="title_advanced_tracking">Attempt to remove tracking from original messages</string>
     <string name="title_advanced_images">Automatically show images for known contacts</string>
     <string name="title_advanced_actionbar">Conversation action bar</string>
 
@@ -267,8 +268,6 @@
     <string name="title_last_connected">Last connected: %1$s</string>
     <string name="title_pop3_hint">POP3 has significant limitations, so use IMAP whenever possible</string>
     <string name="title_pop3_support">POP3 is not supported, see also the FAQ</string>
-
-    <string name="title_unseen_count" translatable="false">%1$s (%2$d)</string>
 
     <string name="title_synchronize_now">Synchronize now</string>
     <string name="title_delete_local">Delete local messages</string>
@@ -521,6 +520,7 @@
     <string name="title_hint_message_actions">Swipe left to trash; swipe right to archive (if available)</string>
     <string name="title_hint_message_selection">Long press a message to start selecting multiple messages</string>
     <string name="title_hint_sync">Downloading messages can take some time, depending on the speed of the provider, internet connection and device and on the number of messages. While downloading messages the app might respond slower.</string>
+    <string name="title_hint_tracking_image">Tracking image</string>
 
     <string name="title_open_link">Open link</string>
     <string name="title_show_organization">Show organization</string>

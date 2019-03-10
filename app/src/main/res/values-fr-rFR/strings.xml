@@ -131,11 +131,12 @@
     <string name="title_advanced_avatars">Afficher les photos des contacts</string>
     <string name="title_advanced_identicons">Afficher les identicônes</string>
     <string name="title_advanced_name_email">Afficher les noms et les adresses e-mail</string>
-    <string name="title_advanced_subject_italic">Afficher le sujet en italique</string>
+    <string name="title_advanced_subject_italic">Afficher l\'objet en italique</string>
     <string name="title_advanced_flags">Montrer les messages suivis (favoris)</string>
     <string name="title_advanced_preview">Afficher l\'aperçu du message</string>
     <string name="title_advanced_addresses">Afficher par défaut les détails de l\'adresse</string>
     <string name="title_advanced_html">Afficher automatiquement le message initial pour les contacts connus</string>
+    <string name="title_advanced_tracking">Tenter de supprimer le suivi des messages originaux</string>
     <string name="title_advanced_images">Afficher automatiquement les images des contacts connus</string>
     <string name="title_advanced_actionbar">Barre d\'action de conversation</string>
     <string name="title_advanced_pull_refresh">Tirer vers le bas pour actualiser</string>
@@ -234,6 +235,7 @@
     <string name="title_pop3_support">POP3 n\'est pas pris en charge, voir aussi la FAQ</string>
     <string name="title_synchronize_now">Synchroniser maintenant</string>
     <string name="title_delete_local">Supprimer les messages locaux</string>
+    <string name="title_delete_browsed">Supprimer les messages consultés/recherchés</string>
     <string name="title_empty_trash">Vider la corbeille</string>
     <string name="title_edit_properties">Éditer les propriétés</string>
     <string name="title_edit_rules">Modifier les règles</string>
@@ -455,7 +457,9 @@
     <string name="title_hint_message_actions">Balayer à gauche pour supprimer, balayer à droite pour archiver (si disponible)</string>
     <string name="title_hint_message_selection">Appuyer longtemps sur un message pour commencer à en sélectionner plusieurs</string>
     <string name="title_hint_sync">Le téléchargement des messages peut prendre un certain temps selon la vitesse du fournisseur d\'accès, la connexion internet et le périphérique et selon le nombre de messages. Lors du téléchargement des messages, l\'application peut répondre plus lentement.</string>
+    <string name="title_hint_tracking_image">Image de suivi</string>
     <string name="title_open_link">Ouvrir le lien</string>
+    <string name="title_show_organization">Afficher l\'organisation</string>
     <string name="title_insecure_link">Ce lien n’est pas sécurisé</string>
     <string name="title_select_app">Sélectionner une application</string>
     <string name="title_updated">Une mise à jour vers la version %1$s est disponible</string>

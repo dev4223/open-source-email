@@ -73,6 +73,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.text.Collator;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -111,6 +112,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private long attachment = -1;
 
     private OpenPgpServiceConnection pgpService;
+
+    private static NumberFormat nf = NumberFormat.getNumberInstance();
 
     static final int REQUEST_UNIFIED = 1;
     static final int REQUEST_THREAD = 2;
@@ -311,13 +314,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                 List<DrawerItem> items = new ArrayList<>();
 
-                for (TupleAccountEx account : accounts)
-                    items.add(new DrawerItem(
-                            account.id,
+                for (TupleAccountEx account : accounts) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(account);
+                    if (account.unseen > 0)
+                        sb.append(" (").append(nf.format(account.unseen)).append(")");
+                    items.add(new DrawerItem(account.id,
                             "connected".equals(account.state) ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24,
-                            account.color,
-                            account.unseen > 0 ? getString(R.string.title_unseen_count, account.name, account.unseen) : account.toString(),
-                            account.unseen > 0));
+                            account.color, sb.toString(), account.unseen > 0));
+                }
 
                 items.add(new DrawerItem(-1));
                 items.add(new DrawerItem(-2, R.string.menu_answers, R.drawable.baseline_reply_24));
@@ -1307,11 +1312,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                         db.attachment().deleteAttachment(a.id);
 
                                 // Add decrypted attachments
+                                attachments = parts.getAttachments();
                                 int sequence = db.attachment().getAttachmentSequence(id);
-                                for (EntityAttachment a : parts.getAttachments()) {
+                                for (int index = 0; index < attachments.size(); index++) {
+                                    EntityAttachment a = attachments.get(index);
                                     a.message = id;
                                     a.sequence = ++sequence;
                                     a.id = db.attachment().insertAttachment(a);
+                                    parts.downloadAttachment(context, index, a.id);
                                 }
 
                                 db.message().setMessageStored(id, new Date().getTime());

@@ -99,6 +99,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.Collator;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -172,6 +173,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     enum ViewType {UNIFIED, FOLDER, THREAD, SEARCH}
 
+    private static NumberFormat nf = NumberFormat.getNumberInstance();
     private static DateFormat tf = SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT);
     private static DateFormat dtf = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
@@ -630,7 +632,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvCount.setVisibility(View.GONE);
                 ivThread.setVisibility(View.GONE);
             } else {
-                tvCount.setText(Integer.toString(message.visible));
+                tvCount.setText(nf.format(message.visible));
                 ivThread.setVisibility(View.VISIBLE);
             }
 
@@ -891,7 +893,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             tvIdentityTitle.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
             tvIdentity.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
-            tvIdentity.setText(show_addresses && via != null ? MessageHelper.formatAddresses(new Address[]{via}) : null);
+            tvIdentity.setText(via == null ? null : MessageHelper.formatAddresses(new Address[]{via}));
 
             // dev4223: show always
             //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
@@ -907,6 +909,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSubjectEx.setText(message.subject);
+            tvSubjectEx.setTypeface(null, subject_italic ? Typeface.ITALIC : Typeface.NORMAL);
 
             // Flags
             tvFlags.setText(debug ? message.flags : null);
@@ -1490,6 +1493,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             settings.setBuiltInZoomControls(true);
             settings.setDisplayZoomControls(false);
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            settings.setAllowFileAccess(false);
 
             webView.setWebViewClient(new WebViewClient() {
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -1555,9 +1559,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 new SimpleTask<String>() {
                     @Override
-                    protected String onExecute(Context context, Bundle args) throws Throwable {
+                    protected String onExecute(Context context, Bundle args) throws IOException {
                         long id = args.getLong("id");
-                        return getHtmlEmbedded(id);
+                        return HtmlHelper.removeTracking(context, getHtmlEmbedded(id));
                     }
 
                     @Override
@@ -1703,7 +1707,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final boolean show_quotes = properties.getValue("quotes", message.id);
             final boolean show_images = properties.getValue("images", message.id);
 
-            return HtmlHelper.fromHtml(HtmlHelper.sanitize(body, show_quotes), new Html.ImageGetter() {
+            return HtmlHelper.fromHtml(HtmlHelper.sanitize(context, body, show_quotes), new Html.ImageGetter() {
                 @Override
                 public Drawable getDrawable(String source) {
                     Drawable image = HtmlHelper.decodeImage(source, context, message.id, show_images);
@@ -2257,9 +2261,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<String>() {
                 @Override
-                protected String onExecute(Context context, Bundle args) throws Throwable {
+                protected String onExecute(Context context, Bundle args) throws IOException {
                     long id = args.getLong("id");
-                    return getHtmlEmbedded(id);
+                    return HtmlHelper.removeTracking(context, getHtmlEmbedded(id));
                 }
 
                 @Override
@@ -2268,6 +2272,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     printWebView = new WebView(context);
                     WebSettings settings = printWebView.getSettings();
                     settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                    settings.setAllowFileAccess(false);
 
                     printWebView.setWebViewClient(new WebViewClient() {
                         public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -2539,7 +2544,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     data.hasJunk && !EntityFolder.JUNK.equals(data.message.folderType));
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(data.message.content);
-            popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(data.message.content);
+            popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(hasWebView && data.message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.uid != null);
