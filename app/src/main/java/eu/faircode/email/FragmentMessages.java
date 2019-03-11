@@ -857,7 +857,7 @@ public class FragmentMessages extends FragmentBase {
         }
     };
 
-    SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
+    private SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
         @Override
         public boolean onSwipeRight() {
             if (previous != null)
@@ -1543,7 +1543,7 @@ public class FragmentMessages extends FragmentBase {
                             unseen += folder.unseen;
                             if (folder.synchronize)
                                 sync = true;
-                            if (folder.error != null || folder.accountError != null)
+                            if (folder.error != null)
                                 errors = true;
                         }
 
@@ -1603,11 +1603,8 @@ public class FragmentMessages extends FragmentBase {
                             rvMessage.scrollToPosition(0);
                         }
 
-                        String error = null;
-                        if (folder != null)
-                            error = (folder.error == null ? folder.accountError : folder.error);
-                        if (error != null && !refreshing && swipeRefresh.isRefreshing())
-                            Snackbar.make(view, error, Snackbar.LENGTH_LONG).show();
+                        if (folder != null && folder.error != null && !refreshing && swipeRefresh.isRefreshing())
+                            Snackbar.make(view, folder.error, Snackbar.LENGTH_LONG).show();
 
                         refresh = (folder != null);
                         swipeRefresh.setEnabled(pull && refresh);
@@ -2115,8 +2112,9 @@ public class FragmentMessages extends FragmentBase {
                         int count = 0;
                         for (int i = 0; i < messages.size(); i++) {
                             TupleMessageEx message = messages.get(i);
-                            if (message != null &&
-                                    !EntityFolder.ARCHIVE.equals(message.folderType) &&
+                            if (message == null)
+                                continue;
+                            if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
                                     !EntityFolder.SENT.equals(message.folderType) &&
                                     !EntityFolder.TRASH.equals(message.folderType) &&
                                     !EntityFolder.JUNK.equals(message.folderType))

@@ -301,8 +301,8 @@
 
         <View
             android:id="@+id/vwRipple"
-            android:layout_width="411dp"
-            android:layout_height="125dp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:background="?android:attr/selectableItemBackground"
             app:layout_constraintBottom_toTopOf="@+id/vSeparatorAddress"
             app:layout_constraintEnd_toEndOf="parent"
@@ -568,6 +568,7 @@
             android:layout_marginEnd="6dp"
             android:fontFamily="monospace"
             android:minHeight="60dp"
+            android:paddingBottom="6dp"
             android:text="Body"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             app:layout_constraintEnd_toEndOf="parent"
