@@ -47,7 +47,6 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.ContactsContract;
 import android.provider.Settings;
-import android.text.Editable;
 import android.text.Html;
 import android.text.Layout;
 import android.text.Spannable;
@@ -71,7 +70,6 @@ import android.view.TouchDelegate;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.DownloadListener;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -90,7 +88,6 @@ import com.google.android.material.snackbar.Snackbar;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.xml.sax.XMLReader;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -1455,16 +1452,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .show();
         }
 
-        @SuppressLint({"SetJavaScriptEnabled", "ClickableViewAccessibility"})
         private void onShowHtmlConfirmed(final TupleMessageEx message) {
             properties.setValue("html", message.id, true);
             btnHtml.setVisibility(View.GONE);
             ibQuotes.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
             tvBody.setVisibility(View.GONE);
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean remove_tracking = prefs.getBoolean("remove_tracking", true);
 
             // For performance reasons the WebView is created when needed only
             if (!(vwBody instanceof WebView)) {
@@ -1490,7 +1483,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             webView.loadUrl("about:blank");
 
             WebSettings settings = webView.getSettings();
-            settings.setJavaScriptEnabled(true);
             settings.setUseWideViewPort(true);
             settings.setLoadWithOverviewMode(true);
             settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
@@ -1512,9 +1504,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return true;
                 }
             });
-
-            if (!remove_tracking)
-                webView.setWebChromeClient(new WebChromeClient());
 
             webView.setDownloadListener(new DownloadListener() {
                 public void onDownloadStart(
@@ -1721,7 +1710,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final boolean show_quotes = properties.getValue("quotes", message.id);
             final boolean show_images = properties.getValue("images", message.id);
 
-            return HtmlHelper.fromHtml(HtmlHelper.sanitize(context, body, show_quotes), new Html.ImageGetter() {
+            String html = HtmlHelper.sanitize(context, body, show_quotes);
+            if (debug)
+                html += "<pre>" + Html.escapeHtml(html) + "</pre>";
+
+            return HtmlHelper.fromHtml(html, new Html.ImageGetter() {
                 @Override
                 public Drawable getDrawable(String source) {
                     Drawable image = HtmlHelper.decodeImage(source, context, message.id, show_images);
@@ -1737,13 +1730,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     return image;
                 }
-            }, new Html.TagHandler() {
-                @Override
-                public void handleTag(boolean opening, String tag, Editable output, XMLReader xmlReader) {
-                    //if (BuildConfig.DEBUG)
-                    //    Log.i("HTML tag=" + tag + " opening=" + opening);
-                }
-            });
+            }, null);
         }
 
         private class UrlHandler extends ArrowKeyMovementMethod {

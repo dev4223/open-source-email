@@ -210,7 +210,6 @@ class Core {
                         // Operation succeeded
                         db.operation().deleteOperation(op.id);
                     } catch (Throwable ex) {
-                        // TODO: SMTP response codes: https://www.ietf.org/rfc/rfc821.txt
                         Log.e(folder.name, ex);
                         reportError(context, account, folder, ex);
 
@@ -250,13 +249,6 @@ class Core {
                             }
 
                             continue;
-                        } else if (ex instanceof MessagingException) {
-                            // Socket timeout is a recoverable condition (send message)
-                            if (ex.getCause() instanceof SocketTimeoutException) {
-                                Log.w("Recoverable");
-                                // No need to inform user
-                                return;
-                            }
                         }
 
                         throw ex;

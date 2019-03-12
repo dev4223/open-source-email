@@ -62,6 +62,8 @@
     <string name="title_notification_sending">Sending messages</string>
     <string name="title_notification_failed">\'%1$s\' failed</string>
 
+    <string name="title_name_count">%1$s (%2$s)</string>
+
     <string name="menu_answers">Templates</string>
     <string name="menu_operations">Operations</string>
     <string name="menu_setup">Setup</string>
@@ -193,7 +195,6 @@
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
     <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
     <string name="title_advanced_flags_hint">Note that starred messages will always be kept locally</string>
-    <string name="title_advanced_tracking_hint">Disabling this option enables potential unsafe scripts</string>
 
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
     <string name="title_advanced_autocollapse_hint">Multiple expanded messages will always be closed on \'back\'</string>
@@ -467,7 +468,7 @@
     <string name="title_legend_trash">Trash</string>
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_notify">Notify new messages</string>
-    <string name="title_legend_unified">Unified inbox</string>
+    <string name="title_legend_unified">Unified inbox / primary account</string>
     <string name="title_legend_primary_disconnected">Account disconnected</string>
     <string name="title_legend_primary_connected">Account connected</string>
 
@@ -522,7 +523,7 @@
     <string name="title_hint_message_actions">Swipe left to trash; swipe right to archive (if available)</string>
     <string name="title_hint_message_selection">Long press a message to start selecting multiple messages</string>
     <string name="title_hint_sync">Downloading messages can take some time, depending on the speed of the provider, internet connection and device and on the number of messages. While downloading messages the app might respond slower.</string>
-    <string name="title_hint_tracking_image">Tracking image</string>
+    <string name="title_hint_tracking_image">Tracking image %1$sx%2$s</string>
 
     <string name="title_open_link">Open link</string>
     <string name="title_show_organization">Show organization</string>

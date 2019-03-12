@@ -128,6 +128,7 @@
     <string name="title_advanced_preview">显示邮件预览</string>
     <string name="title_advanced_addresses">默认显示地址详情</string>
     <string name="title_advanced_html">自动显示已知联系人的原始消息</string>
+    <string name="title_advanced_tracking">尝试从原始消息中删除跟踪</string>
     <string name="title_advanced_images">自动显示来自已知联系人邮件中的图片</string>
     <string name="title_advanced_actionbar">对话操作栏</string>
     <string name="title_advanced_pull_refresh">下拉刷新</string>
@@ -399,7 +400,6 @@
     <string name="title_legend_trash">垃圾箱</string>
     <string name="title_legend_junk">垃圾邮件</string>
     <string name="title_legend_notify">通知新邮件</string>
-    <string name="title_legend_unified">聚合收件箱</string>
     <string name="title_legend_primary_disconnected">帐户已断开连接</string>
     <string name="title_legend_primary_connected">帐户已连接</string>
     <string name="title_legend_thread">对话</string>

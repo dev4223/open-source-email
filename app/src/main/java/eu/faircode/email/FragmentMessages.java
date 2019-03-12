@@ -1547,11 +1547,12 @@ public class FragmentMessages extends FragmentBase {
                                 errors = true;
                         }
 
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(getString(R.string.title_folder_unified));
                         if (unseen > 0)
-                            sb.append(" (").append(nf.format(unseen)).append(")");
-                        setSubtitle(sb.toString());
+                            setSubtitle(getString(R.string.title_name_count,
+                                    getString(R.string.title_folder_unified),
+                                    nf.format(unseen)));
+                        else
+                            setSubtitle(getString(R.string.title_folder_unified));
 
                         boolean refreshing = false;
                         for (TupleFolderEx folder : folders)
@@ -1583,11 +1584,12 @@ public class FragmentMessages extends FragmentBase {
                         if (folder == null)
                             setSubtitle(null);
                         else {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(folder.getDisplayName(getContext()));
                             if (folder.unseen > 0)
-                                sb.append(" (").append(nf.format(folder.unseen)).append(")");
-                            setSubtitle(sb.toString());
+                                setSubtitle(getString(R.string.title_name_count,
+                                        folder.getDisplayName(getContext()),
+                                        nf.format(folder.unseen)));
+                            else
+                                setSubtitle(folder.getDisplayName(getContext()));
 
                             boolean outbox = EntityFolder.OUTBOX.equals(folder.type);
                             if (FragmentMessages.this.outbox != outbox) {
@@ -1760,7 +1762,9 @@ public class FragmentMessages extends FragmentBase {
                 viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
 
         menu.findItem(R.id.menu_folders).setVisible(primary >= 0);
-        menu.findItem(R.id.menu_folders).setIcon(connected ? R.drawable.baseline_folder_24 : R.drawable.baseline_folder_open_24);
+        menu.findItem(R.id.menu_folders).setIcon(connected
+                ? R.drawable.baseline_folder_special_24
+                : R.drawable.baseline_folder_open_24);
 
         menu.findItem(R.id.menu_sort_on).setVisible(!selection &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));

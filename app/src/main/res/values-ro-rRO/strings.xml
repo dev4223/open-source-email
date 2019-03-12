@@ -139,7 +139,7 @@
     <string name="title_advanced_avatars">Arată pozele contactelor</string>
     <string name="title_advanced_identicons">Arată iconițe generate</string>
     <string name="title_advanced_name_email">Arată nume și adrese de e-mail</string>
-    <string name="title_advanced_subject_italic">Arată obiectul cursiv</string>
+    <string name="title_advanced_subject_italic">Arată subiectul cursiv</string>
     <string name="title_advanced_flags">Arată marcate (favorite)</string>
     <string name="title_advanced_preview">Arată previzualizare mesaj</string>
     <string name="title_advanced_addresses">Implicit arată detaliile adreselor</string>
@@ -243,7 +243,7 @@
     <string name="title_pop3_support">POP3 nu este suportat activ, vedeți de asemenea secțiunea de întrebări și răspunsuri</string>
     <string name="title_synchronize_now">Sincronizează acum</string>
     <string name="title_delete_local">Șterge mesajul local</string>
-    <string name="title_delete_browsed">Ștergere mesajele răsfoite/căutate</string>
+    <string name="title_delete_browsed">Șterge mesajele răsfoite/căutate</string>
     <string name="title_empty_trash">Golire coș de gunoi</string>
     <string name="title_edit_properties">Editare proprietăți</string>
     <string name="title_edit_rules">Editare reguli</string>
@@ -417,7 +417,7 @@
     <string name="title_legend_trash">Gunoi</string>
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_notify">Notificare la mesaje noi</string>
-    <string name="title_legend_unified">Căsuță poștală comună</string>
+    <string name="title_legend_unified">Inbox unificat / cont primar</string>
     <string name="title_legend_primary_disconnected">Cont deconectat</string>
     <string name="title_legend_primary_connected">Cont conectat</string>
     <string name="title_legend_thread">Conversație</string>
@@ -465,7 +465,6 @@
     <string name="title_hint_message_actions">Glisare spre stânga trimite la gunoi iar glisare spre dreapta la arhivă (dacă este disponibilă)</string>
     <string name="title_hint_message_selection">Apăsați lung un mesaj pentru a selecta multiple</string>
     <string name="title_hint_sync">Descărcarea mesajelor poate dura ceva timp, în funcție de viteza furnizorului, conexiunea la internet, de dispozitiv precum și de numărul de mesaje. În timpul descărcării mesajelor aplicația ar putea răspunde mai lent.</string>
-    <string name="title_hint_tracking_image">Imagine folosită la urmărire</string>
     <string name="title_open_link">Deschide legătura</string>
     <string name="title_show_organization">Arată organizația</string>
     <string name="title_insecure_link">Această legătură este nesigură</string>

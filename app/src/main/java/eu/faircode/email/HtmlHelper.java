@@ -38,6 +38,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
@@ -65,6 +66,7 @@ import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE;
 public class HtmlHelper {
     static final int PREVIEW_SIZE = 250;
 
+    private static final int TRACKING_PIXEL_SURFACE = 25;
     private static final List<String> heads = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "ol", "ul", "br", "hr");
     private static final List<String> tails = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li");
 
@@ -77,13 +79,9 @@ public class HtmlHelper {
         Document document = Jsoup.parse(html);
 
         // Remove tracking pixels
-        for (Element img : document.select("img")) {
-            String src = img.attr("src");
-            String height = img.attr("height").trim();
-            String width = img.attr("width").trim();
-            if ("1".equals(height) && "1".equals(width) && !TextUtils.isEmpty(src))
+        for (Element img : document.select("img"))
+            if (isTrackingPixel(img))
                 img.removeAttr("src");
-        }
 
         // Remove Javascript
         for (Element e : document.select("*"))
@@ -100,12 +98,16 @@ public class HtmlHelper {
     }
 
     static String sanitize(Context context, String html, boolean showQuotes) {
-        final Document document = Jsoup.parse(Jsoup.clean(html, Whitelist
-                .relaxed()
-                .addTags("hr")
+        Document parsed = Jsoup.parse(html);
+        Whitelist whitelist = Whitelist.relaxed()
+                .addTags("hr", "abbr")
                 .removeTags("col", "colgroup", "thead", "tbody")
+                .removeAttributes("table", "width")
+                .removeAttributes("td", "colspan", "rowspan", "width")
+                .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
-                .addProtocols("img", "src", "data")));
+                .addProtocols("img", "src", "data");
+        final Document document = new Cleaner(whitelist).clean(parsed);
 
         // Quotes
         if (!showQuotes)
@@ -115,12 +117,12 @@ public class HtmlHelper {
         // Tables
         for (Element col : document.select("th,td")) {
             // prevent line breaks
-            col.select("br").tagName("span").html(" ");
+            col.select("br").tagName("span").html("&nbsp;");
             col.select("div").tagName("span");
 
             // separate columns by a space
             if (col.nextElementSibling() != null)
-                col.append(" ");
+                col.append("&nbsp;");
 
             if ("th".equals(col.tagName()))
                 col.tagName("strong");
@@ -176,17 +178,25 @@ public class HtmlHelper {
             dd.appendElement("br").appendElement("br");
         }
 
+        // Abbreviations
+        document.select("abbr").tagName("u");
+
         // Images
         for (Element img : document.select("img")) {
             String src = img.attr("src");
             String alt = img.attr("alt");
-            String height = img.attr("height").trim();
-            String width = img.attr("width").trim();
+            String title = img.attr("title");
+
+            boolean tracking = isTrackingPixel(img);
 
             Element div = document.createElement("div");
 
             Uri uri = Uri.parse(src);
             if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+                // Remove link tracking pixel
+                if (tracking)
+                    img.removeAttr("src");
+
                 boolean linked = false;
                 for (Element parent : img.parents())
                     if ("a".equals(parent.tagName())) {
@@ -197,24 +207,31 @@ public class HtmlHelper {
                     }
 
                 if (linked)
-                    div.appendChild(img);
+                    div.appendChild(img.clone());
                 else {
                     Element a = document.createElement("a");
                     a.attr("href", uri.toString());
                     a.appendChild(img.clone());
                     div.appendChild(a);
                 }
-            }
+            } else
+                div.appendChild(img.clone());
 
             if (!TextUtils.isEmpty(alt)) {
                 div.appendElement("br");
                 div.appendElement("em").text(alt);
             }
-
-            // Tracking image
-            if ("1".equals(height) && "1".equals(width) && !TextUtils.isEmpty(src)) {
+            if (!TextUtils.isEmpty(title) && !title.equals(alt)) {
                 div.appendElement("br");
-                div.appendElement("strong").text(context.getString(R.string.title_hint_tracking_image));
+                div.appendElement("em").text(title);
+            }
+
+            // Tracking pixel
+            if (tracking) {
+                div.appendElement("br");
+                div.appendElement("strong").text(
+                        context.getString(R.string.title_hint_tracking_image,
+                                img.attr("width"), img.attr("height")));
             }
 
             img.replaceWith(div);
@@ -226,53 +243,62 @@ public class HtmlHelper {
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
                     TextNode tnode = (TextNode) node;
-                    Element span = document.createElement("span");
 
-                    int pos = 0;
                     String text = tnode.text();
                     Matcher matcher = PatternsCompat.WEB_URL.matcher(text);
-                    while (matcher.find()) {
-                        boolean linked = false;
-                        Node parent = tnode.parent();
-                        while (parent != null) {
-                            if ("a".equals(parent.nodeName())) {
-                                linked = true;
-                                break;
+                    if (matcher.matches()) {
+                        Element span = document.createElement("span");
+
+                        int pos = 0;
+                        while (matcher.find()) {
+                            boolean linked = false;
+                            Node parent = tnode.parent();
+                            while (parent != null) {
+                                if ("a".equals(parent.nodeName())) {
+                                    linked = true;
+                                    break;
+                                }
+                                parent = parent.parent();
                             }
-                            parent = parent.parent();
+
+                            String scheme = Uri.parse(matcher.group()).getScheme();
+
+                            if (BuildConfig.DEBUG)
+                                Log.i("Web url=" + matcher.group() + " linked=" + linked + " scheme=" + scheme);
+
+                            if (linked || scheme == null)
+                                span.appendText(text.substring(pos, matcher.end()));
+                            else {
+                                span.appendText(text.substring(pos, matcher.start()));
+
+                                Element a = document.createElement("a");
+                                a.attr("href", matcher.group());
+                                a.text(matcher.group());
+                                span.appendChild(a);
+                            }
+
+                            pos = matcher.end();
                         }
+                        span.appendText(text.substring(pos));
 
-                        String scheme = Uri.parse(matcher.group()).getScheme();
-
-                        if (BuildConfig.DEBUG)
-                            Log.i("Web url=" + matcher.group() + " linked=" + linked + " scheme=" + scheme);
-
-                        if (linked || scheme == null)
-                            span.appendText(text.substring(pos, matcher.end()));
-                        else {
-                            span.appendText(text.substring(pos, matcher.start()));
-
-                            Element a = document.createElement("a");
-                            a.attr("href", matcher.group());
-                            a.text(matcher.group());
-                            span.appendChild(a);
-                        }
-
-                        pos = matcher.end();
+                        tnode.before(span);
+                        tnode.text("");
                     }
-                    span.appendText(text.substring(pos));
-
-                    tnode.before(span);
-                    tnode.text("");
                 }
             }
 
             @Override
             public void tail(Node node, int depth) {
             }
-        }, document.body());
+        }, document);
 
-        return document.body().html();
+        // Remove block elements displaying nothing
+        for (Element e : document.select("*"))
+            if (e.isBlock() && !e.hasText() && e.select("img").size() == 0)
+                e.remove();
+
+        Element body = document.body();
+        return (body == null ? "" : body.html());
     }
 
     static Drawable decodeImage(String source, Context context, long id, boolean show) {
@@ -492,6 +518,23 @@ public class HtmlHelper {
         sb.append("\n");
 
         return sb.toString();
+    }
+
+    static boolean isTrackingPixel(Element img) {
+        String src = img.attr("src");
+        String width = img.attr("width").trim();
+        String height = img.attr("height").trim();
+
+        if (TextUtils.isEmpty(src))
+            return false;
+        if (TextUtils.isEmpty(width) || TextUtils.isEmpty(height))
+            return false;
+
+        try {
+            return (Integer.parseInt(width) * Integer.parseInt(height) <= TRACKING_PIXEL_SURFACE);
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
     }
 
     static void trimEnd(StringBuilder sb) {
