@@ -18,6 +18,7 @@ import android.text.TextUtils;
 
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
+import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
@@ -395,7 +396,7 @@ class Core {
                     identity == null ? false : identity.plain_only);
         } else {
             // Cross account move
-            File file = EntityMessage.getRawFile(context, message.id);
+            File file = message.getRawFile(context);
             if (!file.exists())
                 throw new IllegalArgumentException("raw message file not found");
 
@@ -467,100 +468,86 @@ class Core {
         if (imessage == null)
             throw new MessageRemovedException();
 
-        // Get target folder
+        // Get arguments
         long id = jargs.getLong(0);
+        boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
+        Long newid = (jargs.length() > 2 && !jargs.isNull(2) ? jargs.getLong(2) : null);
+
+        // Get target folder
         EntityFolder target = db.folder().getFolder(id);
         if (target == null)
             throw new FolderNotFoundException();
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
-        boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
+        // Serialize source message
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        imessage.writeTo(bos);
 
-        if (!copy &&
-                istore.hasCapability("MOVE") &&
-                !EntityFolder.DRAFTS.equals(folder.type) &&
-                !EntityFolder.DRAFTS.equals(target.type)) {
-            // Autoread
-            if (ifolder.getPermanentFlags().contains(Flags.Flag.SEEN))
-                if (autoread && !imessage.isSet(Flags.Flag.SEEN))
-                    imessage.setFlag(Flags.Flag.SEEN, true);
+        // Deserialize target message
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        Message icopy = new MimeMessage(isession, bis);
 
-            // Move message to target folder
-            ifolder.moveMessages(new Message[]{imessage}, itarget);
-        } else {
-            if (!copy)
-                Log.w(folder.name + " MOVE by DELETE/APPEND");
+        // Make sure the message has a message ID
+        if (copy || message.msgid == null) {
+            String msgid = EntityMessage.generateMessageId();
+            Log.i(target.name + " generated message id=" + msgid);
+            icopy.setHeader("Message-ID", msgid);
+        }
 
-            // Serialize source message
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            imessage.writeTo(bos);
+        try {
+            // Needed to read flags
+            itarget.open(Folder.READ_WRITE);
 
-            // Deserialize target message
-            ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-            Message icopy = new MimeMessage(isession, bis);
+            // Auto read
+            if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN))
+                if (autoread && !icopy.isSet(Flags.Flag.SEEN))
+                    icopy.setFlag(Flags.Flag.SEEN, true);
 
-            // Make sure the message has a message ID
-            if (copy || message.msgid == null) {
-                String msgid = EntityMessage.generateMessageId();
-                Log.i(target.name + " generated message id=" + msgid);
-                icopy.setHeader("Message-ID", msgid);
+            // Move from drafts
+            if (EntityFolder.DRAFTS.equals(folder.type))
+                if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT))
+                    icopy.setFlag(Flags.Flag.DRAFT, false);
+
+            // Move to drafts
+            if (EntityFolder.DRAFTS.equals(target.type))
+                if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT))
+                    icopy.setFlag(Flags.Flag.DRAFT, true);
+
+            // Append target
+            long uid = append(istore, itarget, (MimeMessage) icopy);
+            if (newid != null) {
+                Log.i("Moved id=" + newid + " uid=" + uid);
+                db.message().setMessageUid(newid, uid);
             }
 
-            try {
-                // Needed to read flags
-                itarget.open(Folder.READ_WRITE);
-
-                // Auto read
-                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN))
-                    if (autoread && !icopy.isSet(Flags.Flag.SEEN))
-                        icopy.setFlag(Flags.Flag.SEEN, true);
-
-                // Move from drafts
-                if (EntityFolder.DRAFTS.equals(folder.type))
-                    if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT))
-                        icopy.setFlag(Flags.Flag.DRAFT, false);
-
-                // Move to drafts
-                if (EntityFolder.DRAFTS.equals(target.type))
-                    if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT))
-                        icopy.setFlag(Flags.Flag.DRAFT, true);
-
-                // Append target
-                long uid = append(istore, itarget, (MimeMessage) icopy);
-
-                // Fixed timing issue of at least Courier based servers
-                itarget.close(false);
-                itarget.open(Folder.READ_WRITE);
-
-                // Some providers, like Gmail, don't honor the appended seen flag
-                if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
-                    boolean seen = (autoread || message.ui_seen);
-                    icopy = itarget.getMessageByUID(uid);
-                    if (seen != icopy.isSet(Flags.Flag.SEEN)) {
-                        Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
-                        icopy.setFlag(Flags.Flag.SEEN, seen);
-                    }
+            // Some providers, like Gmail, don't honor the appended seen flag
+            if (itarget.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+                boolean seen = (autoread || message.ui_seen);
+                icopy = itarget.getMessageByUID(uid);
+                if (seen != icopy.isSet(Flags.Flag.SEEN)) {
+                    Log.i(target.name + " Fixing id=" + message.id + " seen=" + seen);
+                    icopy.setFlag(Flags.Flag.SEEN, seen);
                 }
-
-                // This is not based on an actual case, so this is just a safeguard
-                if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
-                    boolean draft = EntityFolder.DRAFTS.equals(target.type);
-                    icopy = itarget.getMessageByUID(uid);
-                    if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
-                        Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
-                        icopy.setFlag(Flags.Flag.DRAFT, draft);
-                    }
-                }
-
-                // Delete source
-                if (!copy) {
-                    imessage.setFlag(Flags.Flag.DELETED, true);
-                    ifolder.expunge();
-                }
-            } finally {
-                if (itarget.isOpen())
-                    itarget.close();
             }
+
+            // This is not based on an actual case, so this is just a safeguard
+            if (itarget.getPermanentFlags().contains(Flags.Flag.DRAFT)) {
+                boolean draft = EntityFolder.DRAFTS.equals(target.type);
+                icopy = itarget.getMessageByUID(uid);
+                if (draft != icopy.isSet(Flags.Flag.DRAFT)) {
+                    Log.i(target.name + " Fixing id=" + message.id + " draft=" + draft);
+                    icopy.setFlag(Flags.Flag.DRAFT, draft);
+                }
+            }
+
+            // Delete source
+            if (!copy) {
+                imessage.setFlag(Flags.Flag.DELETED, true);
+                ifolder.expunge();
+            }
+        } finally {
+            if (itarget.isOpen())
+                itarget.close();
         }
     }
 
@@ -605,8 +592,7 @@ class Core {
             if (imessage == null)
                 throw new MessageRemovedException();
 
-            File file = EntityMessage.getRawFile(context, message.id);
-
+            File file = message.getRawFile(context);
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                 imessage.writeTo(os);
                 db.message().setMessageRaw(message.id, true);
@@ -643,7 +629,7 @@ class Core {
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         MessageHelper.MessageParts parts = helper.getMessageParts();
         String body = parts.getHtml(context);
-        Helper.writeText(EntityMessage.getFile(context, message.id), body);
+        Helper.writeText(message.getFile(context), body);
         db.message().setMessageContent(message.id, true,
                 HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
     }
@@ -671,11 +657,26 @@ class Core {
     }
 
     private static long append(IMAPStore istore, IMAPFolder ifolder, MimeMessage imessage) throws MessagingException {
-        ifolder.appendMessages(new Message[]{imessage});
+        String msgid = imessage.getMessageID();
+        if (msgid == null)
+            throw new IllegalArgumentException("Message ID missing");
+
+        if (istore.hasCapability("UIDPLUS")) {
+            AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
+            if (uids != null && uids.length > 0) {
+                Log.i("Appended uid=" + uids[0].uid);
+                return uids[0].uid;
+            }
+        } else
+            ifolder.appendMessages(new Message[]{imessage});
+
+        // Fixed timing issue of at least Courier based servers
+        ifolder.close(false);
+        ifolder.open(Folder.READ_WRITE);
+
+        Log.i("Searching for appended msgid=" + msgid);
 
         long uid = -1;
-        String msgid = imessage.getMessageID();
-        Log.i("Searching for appended msgid=" + msgid);
         Message[] messages = ifolder.search(new MessageIDTerm(msgid));
         if (messages != null)
             for (Message iappended : messages) {
@@ -1166,7 +1167,6 @@ class Core {
             message.inreplyto = helper.getInReplyTo();
             message.deliveredto = helper.getDeliveredTo();
             message.thread = helper.getThreadId(uid);
-            message.sender = MessageHelper.getSortKey(helper.getFrom());
             message.from = helper.getFrom();
             message.to = helper.getTo();
             message.cc = helper.getCc();
@@ -1190,6 +1190,7 @@ class Core {
             message.ui_ignored = seen;
             message.ui_browsed = browsed;
 
+            message.sender = MessageHelper.getSortKey(message.from);
             Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
             message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
@@ -1393,7 +1394,7 @@ class Core {
             if (!message.content) {
                 if (!metered || (message.size != null && message.size < maxSize)) {
                     String body = parts.getHtml(context);
-                    Helper.writeText(EntityMessage.getFile(context, message.id), body);
+                    Helper.writeText(message.getFile(context), body);
                     db.message().setMessageContent(message.id, true,
                             HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
                     Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
@@ -1403,8 +1404,11 @@ class Core {
             for (EntityAttachment attachment : attachments)
                 if (!attachment.available)
                     if (!metered || (attachment.size != null && attachment.size < maxSize))
-                        if (!parts.downloadAttachment(context, attachment.sequence - 1, attachment.id))
-                            break;
+                        try {
+                            parts.downloadAttachment(context, attachment.sequence - 1, attachment.id);
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
         }
     }
 
@@ -1515,9 +1519,9 @@ class Core {
             messageContact.put(message, ContactInfo.get(context, message.from, false));
 
         // Build pending intents
-        Intent summary = new Intent(context, ServiceUI.class);
-        summary.setAction("summary");
-        PendingIntent piSummary = PendingIntent.getService(context, ServiceUI.PI_SUMMARY, summary, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent summary = new Intent(context, ActivityView.class);
+        summary.setAction("unified");
+        PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Intent clear = new Intent(context, ServiceUI.class);
         clear.setAction("clear");
@@ -1678,7 +1682,7 @@ class Core {
 
                 if (message.content && preview)
                     try {
-                        String body = Helper.readText(EntityMessage.getFile(context, message.id));
+                        String body = Helper.readText(message.getFile(context));
                         StringBuilder sb = new StringBuilder();
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(message.subject).append("<br>");

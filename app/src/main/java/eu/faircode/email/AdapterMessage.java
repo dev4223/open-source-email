@@ -92,6 +92,7 @@ import org.jsoup.nodes.Element;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -1655,7 +1656,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 String body;
                 try {
-                    body = Helper.readText(EntityMessage.getFile(context, message.id));
+                    body = Helper.readText(message.getFile(context));
                 } catch (IOException ex) {
                     Log.e(ex);
                     db.message().setMessageContent(message.id, false, null, null);
@@ -2345,7 +2346,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return new String[]{
                             from,
                             message.subject,
-                            HtmlHelper.getText(Helper.readText(EntityMessage.getFile(context, message.id)))
+                            HtmlHelper.getText(Helper.readText(message.getFile(context)))
                     };
                 }
 
@@ -2700,6 +2701,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (EntityFolder.OUTBOX.equals(folder.type)) {
                             long id = message.id;
 
+                            File source = message.getFile(context);
+
                             // Insert into drafts
                             EntityFolder drafts = db.folder().getFolderByType(message.account, EntityFolder.DRAFTS);
                             message.id = null;
@@ -2707,8 +2710,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             message.ui_snoozed = null;
                             message.id = db.message().insertMessage(message);
 
-                            File source = EntityMessage.getFile(context, id);
-                            File target = EntityMessage.getFile(context, message.id);
+                            File target = message.getFile(context);
                             source.renameTo(target);
 
                             List<EntityAttachment> attachments = db.attachment().getAttachments(id);
@@ -2935,16 +2937,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private String getHtmlEmbedded(long id) throws IOException {
-            String html = Helper.readText(EntityMessage.getFile(context, id));
+            DB db = DB.getInstance(context);
+
+            EntityMessage message = db.message().getMessage(id);
+            if (message == null)
+                throw new FileNotFoundException();
+            String html = Helper.readText(message.getFile(context));
 
             Document doc = Jsoup.parse(html);
             for (Element img : doc.select("img")) {
                 String src = img.attr("src");
                 if (src.startsWith("cid:")) {
                     String cid = '<' + src.substring(4) + '>';
-                    EntityAttachment attachment = DB.getInstance(context).attachment().getAttachment(id, cid);
+                    EntityAttachment attachment = db.attachment().getAttachment(id, cid);
                     if (attachment != null && attachment.available) {
-                        File file = EntityAttachment.getFile(context, attachment.id);
+                        File file = attachment.getFile(context);
                         try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
                             byte[] bytes = new byte[(int) file.length()];
                             if (is.read(bytes) != bytes.length)

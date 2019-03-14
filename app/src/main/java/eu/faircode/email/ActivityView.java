@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -37,6 +38,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
@@ -64,6 +66,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -116,7 +119,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private static NumberFormat nf = NumberFormat.getNumberInstance();
 
     static final int REQUEST_UNIFIED = 1;
-    static final int REQUEST_THREAD = 2;
+    static final int REQUEST_WHY = 2;
+    static final int REQUEST_THREAD = 3;
 
     static final int REQUEST_RAW = 1;
     static final int REQUEST_ATTACHMENT = 2;
@@ -429,7 +433,22 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 if ("unified".equals(action))
                     init();
 
-                else if ("error".equals(action))
+                else if ("why".equals(action)) {
+                    init();
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityView.this);
+                    boolean why = prefs.getBoolean("why", false);
+                    if (!why) {
+                        prefs.edit().putBoolean("why", true).apply();
+
+                        Intent iwhy = new Intent(Intent.ACTION_VIEW);
+                        iwhy.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq2"));
+                        iwhy.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        if (iwhy.resolveActivity(getPackageManager()) != null)
+                            startActivity(iwhy);
+                    }
+
+                } else if ("error".equals(action))
                     onDebugInfo();
 
                 else if (action.startsWith("thread")) {
@@ -764,74 +783,93 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N_MR1)
             return;
 
-        ShortcutManager sm = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
+        new SimpleTask<List<ShortcutInfo>>() {
+            @Override
+            @TargetApi(Build.VERSION_CODES.N_MR1)
+            protected List<ShortcutInfo> onExecute(Context context, Bundle args) {
+                ShortcutManager sm = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
+                int count = sm.getMaxShortcutCountPerActivity() - sm.getManifestShortcuts().size();
+                Log.i("Shortcuts count=" + count +
+                        " app=" + sm.getMaxShortcutCountPerActivity() +
+                        " manifest=" + sm.getManifestShortcuts().size());
 
-        List<ShortcutInfo> shortcuts = new ArrayList<>();
+                List<ShortcutInfo> shortcuts = new ArrayList<>();
 
-        if (hasPermission(Manifest.permission.READ_CONTACTS)) {
-            // https://developer.android.com/guide/topics/providers/contacts-provider#ObsoleteData
-            try (Cursor cursor = getContentResolver().query(
-                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                    new String[]{
-                            ContactsContract.RawContacts._ID,
-                            ContactsContract.Contacts.LOOKUP_KEY,
-                            ContactsContract.Contacts.DISPLAY_NAME,
-                            ContactsContract.CommonDataKinds.Email.DATA,
-                            ContactsContract.Contacts.STARRED,
-                            ContactsContract.Contacts.TIMES_CONTACTED,
-                            ContactsContract.Contacts.LAST_TIME_CONTACTED
-                    },
-                    ContactsContract.CommonDataKinds.Email.DATA + " <> ''",
-                    null,
-                    ContactsContract.Contacts.STARRED + " DESC" +
-                            ", " + ContactsContract.Contacts.TIMES_CONTACTED + " DESC" +
-                            ", " + ContactsContract.Contacts.LAST_TIME_CONTACTED + " DESC")) {
-                while (cursor != null && cursor.moveToNext())
-                    try {
-                        long id = cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID));
-                        String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                        String email = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                        int starred = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.STARRED));
-                        int times = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.TIMES_CONTACTED));
-                        long last = cursor.getLong(cursor.getColumnIndex(ContactsContract.Contacts.LAST_TIME_CONTACTED));
+                if (hasPermission(Manifest.permission.READ_CONTACTS)) {
+                    // https://developer.android.com/guide/topics/providers/contacts-provider#ObsoleteData
+                    try (Cursor cursor = getContentResolver().query(
+                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                            new String[]{
+                                    ContactsContract.RawContacts._ID,
+                                    ContactsContract.Contacts.LOOKUP_KEY,
+                                    ContactsContract.Contacts.DISPLAY_NAME,
+                                    ContactsContract.CommonDataKinds.Email.DATA,
+                                    ContactsContract.Contacts.STARRED,
+                                    ContactsContract.Contacts.TIMES_CONTACTED,
+                                    ContactsContract.Contacts.LAST_TIME_CONTACTED
+                            },
+                            ContactsContract.CommonDataKinds.Email.DATA + " <> ''",
+                            null,
+                            ContactsContract.Contacts.STARRED + " DESC" +
+                                    ", " + ContactsContract.Contacts.TIMES_CONTACTED + " DESC" +
+                                    ", " + ContactsContract.Contacts.LAST_TIME_CONTACTED + " DESC")) {
+                        while (cursor != null && cursor.moveToNext() && shortcuts.size() < count)
+                            try {
+                                long id = cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID));
+                                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                                String email = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
+                                int starred = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.STARRED));
+                                int times = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.TIMES_CONTACTED));
+                                long last = cursor.getLong(cursor.getColumnIndex(ContactsContract.Contacts.LAST_TIME_CONTACTED));
 
-                        Log.i("Shortcut id=" + id + " email=" + email +
-                                " starred=" + starred + " times=" + times + " last=" + last);
+                                Log.i("Shortcut id=" + id + " email=" + email +
+                                        " starred=" + starred + " times=" + times + " last=" + last);
 
-                        if (starred == 0 && times == 0 && last == 0)
-                            continue;
+                                if (starred == 0 && times == 0 && last == 0)
+                                    continue;
 
-                        Uri uri = ContactsContract.Contacts.getLookupUri(
-                                cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
-                                cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY)));
-                        InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
-                                getContentResolver(), uri);
-                        Bitmap bitmap = BitmapFactory.decodeStream(is);
-                        Icon icon = (bitmap == null
-                                ? Icon.createWithResource(this, R.drawable.ic_shortcut_email)
-                                : Icon.createWithBitmap(bitmap));
+                                Uri uri = ContactsContract.Contacts.getLookupUri(
+                                        cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
+                                        cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY)));
+                                InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
+                                        getContentResolver(), uri);
+                                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                                Icon icon = (bitmap == null
+                                        ? Icon.createWithResource(context, R.drawable.ic_shortcut_email)
+                                        : Icon.createWithBitmap(bitmap));
 
-                        Intent intent = new Intent(this, ActivityCompose.class);
-                        intent.setAction(Intent.ACTION_SEND);
-                        intent.setData(Uri.parse("mailto:" + email));
+                                Intent intent = new Intent(context, ActivityCompose.class);
+                                intent.setAction(Intent.ACTION_SEND);
+                                intent.setData(Uri.parse("mailto:" + email));
 
-                        shortcuts.add(
-                                new ShortcutInfo.Builder(this, Long.toString(id))
-                                        .setIcon(icon)
-                                        .setRank(shortcuts.size() + 1)
-                                        .setShortLabel(name)
-                                        .setIntent(intent)
-                                        .build());
-
-                        if (sm.getManifestShortcuts().size() + shortcuts.size() >= sm.getMaxShortcutCountPerActivity())
-                            break;
-                    } catch (Throwable ex) {
-                        Log.e(ex);
+                                shortcuts.add(
+                                        new ShortcutInfo.Builder(context, Long.toString(id))
+                                                .setIcon(icon)
+                                                .setRank(shortcuts.size() + 1)
+                                                .setShortLabel(name)
+                                                .setIntent(intent)
+                                                .build());
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
                     }
-            }
-        }
+                }
 
-        sm.setDynamicShortcuts(shortcuts);
+                return shortcuts;
+            }
+
+            @Override
+            @TargetApi(Build.VERSION_CODES.N_MR1)
+            protected void onExecuted(Bundle args, List<ShortcutInfo> shortcuts) {
+                ShortcutManager sm = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
+                sm.setDynamicShortcuts(shortcuts);
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
+            }
+        }.execute(this, this, new Bundle(), "shortcuts:get");
     }
 
     private Intent getIntentInvite() {
@@ -1252,14 +1290,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         if (!attachment.available)
                             throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
 
-                        File file = EntityAttachment.getFile(context, attachment.id);
+                        File file = attachment.getFile(context);
                         encrypted = new BufferedInputStream(new FileInputStream(file));
                         break;
                     }
 
                 if (encrypted == null) {
                     EntityMessage message = db.message().getMessage(id);
-                    String body = Helper.readText(EntityMessage.getFile(context, message.id));
+                    String body = Helper.readText(message.getFile(context));
 
                     // https://tools.ietf.org/html/rfc4880#section-6.2
                     int begin = body.indexOf(PGP_BEGIN_MESSAGE);
@@ -1296,7 +1334,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                                 // Write decrypted body
                                 EntityMessage m = db.message().getMessage(id);
-                                Helper.writeText(EntityMessage.getFile(context, m.id), decrypted.toString());
+                                Helper.writeText(m.getFile(context), decrypted.toString());
 
                                 db.message().setMessageStored(id, new Date().getTime());
 
@@ -1319,7 +1357,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                                 // Write decrypted body
                                 EntityMessage m = db.message().getMessage(id);
-                                Helper.writeText(EntityMessage.getFile(context, m.id), parts.getHtml(context));
+                                Helper.writeText(m.getFile(context), parts.getHtml(context));
 
                                 // Remove previously decrypted attachments
                                 for (EntityAttachment a : attachments)
@@ -1334,7 +1372,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                     a.message = id;
                                     a.sequence = ++sequence;
                                     a.id = db.attachment().insertAttachment(a);
-                                    parts.downloadAttachment(context, index, a.id);
+                                    try {
+                                        parts.downloadAttachment(context, index, a.id);
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                    }
                                 }
 
                                 db.message().setMessageStored(id, new Date().getTime());
@@ -1421,7 +1463,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
                 }
 
-                File file = EntityMessage.getRawFile(context, id);
+                DB db = DB.getInstance(context);
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    throw new FileNotFoundException();
+                File file = message.getRawFile(context);
                 Log.i("Raw file=" + file);
 
                 ParcelFileDescriptor pfd = null;
@@ -1491,7 +1537,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
                 }
 
-                File file = EntityAttachment.getFile(context, id);
+                DB db = DB.getInstance(context);
+                EntityAttachment attachment = db.attachment().getAttachment(id);
+                if (attachment == null)
+                    throw new FileNotFoundException();
+                File file = attachment.getFile(context);
 
                 ParcelFileDescriptor pfd = null;
                 OutputStream os = null;
@@ -1557,8 +1607,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                 DB db = DB.getInstance(context);
                 DocumentFile tree = DocumentFile.fromTreeUri(context, uri);
-                for (EntityAttachment attachment : db.attachment().getAttachments(id)) {
-                    File file = EntityAttachment.getFile(context, attachment.id);
+                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                for (EntityAttachment attachment : attachments) {
+                    File file = attachment.getFile(context);
 
                     String name = attachment.name;
                     if (TextUtils.isEmpty(name))

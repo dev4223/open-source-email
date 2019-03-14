@@ -27,6 +27,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -234,7 +235,7 @@ public class MessageHelper {
             for (EntityAttachment attachment : attachments)
                 if (attachment.available && EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
                     InternetAddress from = (InternetAddress) message.from[0];
-                    File file = EntityAttachment.getFile(context, attachment.id);
+                    File file = attachment.getFile(context);
                     StringBuilder sb = new StringBuilder();
                     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                         String line;
@@ -257,7 +258,7 @@ public class MessageHelper {
                 BodyPart bpAttachment = new MimeBodyPart();
                 bpAttachment.setFileName(attachment.name);
 
-                File file = EntityAttachment.getFile(context, attachment.id);
+                File file = attachment.getFile(context);
                 FileDataSource dataSource = new FileDataSource(file);
                 dataSource.setFileTypeMap(new FileTypeMap() {
                     @Override
@@ -289,7 +290,7 @@ public class MessageHelper {
         DB db = DB.getInstance(context);
 
         StringBuilder body = new StringBuilder();
-        body.append(Helper.readText(EntityMessage.getFile(context, message.id)));
+        body.append(Helper.readText(message.getFile(context)));
 
         if (message.identity != null) {
             EntityIdentity identity = db.identity().getIdentity(message.identity);
@@ -297,7 +298,7 @@ public class MessageHelper {
                 body.append(identity.signature);
         }
 
-        File refFile = EntityMessage.getRefFile(context, message.id);
+        File refFile = message.getRefFile(context);
         if (refFile.exists())
             body.append(Helper.readText(refFile));
 
@@ -351,7 +352,7 @@ public class MessageHelper {
                     BodyPart bpAttachment = new MimeBodyPart();
                     bpAttachment.setFileName(attachment.name);
 
-                    File file = EntityAttachment.getFile(context, attachment.id);
+                    File file = attachment.getFile(context);
                     FileDataSource dataSource = new FileDataSource(file);
                     dataSource.setFileTypeMap(new FileTypeMap() {
                         @Override
@@ -697,20 +698,24 @@ public class MessageHelper {
             return result;
         }
 
-        boolean downloadAttachment(Context context, int index, long id) {
+        void downloadAttachment(Context context, int index, long id) throws MessagingException, IOException {
             Log.i("downloading attchment id=" + id + " seq=" + index);
             // Attachments of drafts might not have been uploaded yet
             if (index > attachments.size()) {
                 Log.w("Attachment unavailable sequence=" + index + " size=" + attachments.size());
-                return false;
+                return;
             }
+
+            DB db = DB.getInstance(context);
 
             // Get data
             AttachmentPart apart = attachments.get(index);
-            File file = EntityAttachment.getFile(context, id);
+            EntityAttachment attachment = db.attachment().getAttachment(id);
+            if (attachment == null)
+                throw new FileNotFoundException();
+            File file = attachment.getFile(context);
 
             // Download attachment
-            DB db = DB.getInstance(context);
             db.attachment().setProgress(id, null);
             try (InputStream is = apart.part.getInputStream()) {
                 long size = 0;
@@ -732,12 +737,10 @@ public class MessageHelper {
                 db.attachment().setDownloaded(id, size);
 
                 Log.i("Downloaded attachment size=" + size);
-                return true;
             } catch (Throwable ex) {
-                Log.w(ex);
                 // Reset progress on failure
                 db.attachment().setError(id, Helper.formatThrowable(ex));
-                return false;
+                throw ex;
             }
         }
 

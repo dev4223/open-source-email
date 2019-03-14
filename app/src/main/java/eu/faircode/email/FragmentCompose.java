@@ -97,6 +97,7 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -557,8 +558,13 @@ public class FragmentCompose extends FragmentBase {
                 long id = args.getLong("id");
                 String body = args.getString("body");
 
-                File file = EntityMessage.getFile(context, id);
-                File refFile = EntityMessage.getRefFile(context, id);
+                DB db = DB.getInstance(context);
+                EntityMessage draft = db.message().getMessage(id);
+                if (draft == null)
+                    throw new FileNotFoundException();
+
+                File file = draft.getFile(context);
+                File refFile = draft.getRefFile(context);
 
                 String ref = Helper.readText(refFile);
                 String plain = HtmlHelper.getText(ref);
@@ -1156,7 +1162,7 @@ public class FragmentCompose extends FragmentBase {
                             attachment1.encryption = EntityAttachment.PGP_MESSAGE;
                             attachment1.id = db.attachment().insertAttachment(attachment1);
 
-                            File file1 = EntityAttachment.getFile(context, attachment1.id);
+                            File file1 = attachment1.getFile(context);
 
                             byte[] bytes1 = encrypted.toByteArray();
                             try (OutputStream os1 = new BufferedOutputStream(new FileOutputStream(file1))) {
@@ -1173,7 +1179,7 @@ public class FragmentCompose extends FragmentBase {
                             attachment2.encryption = EntityAttachment.PGP_SIGNATURE;
                             attachment2.id = db.attachment().insertAttachment(attachment2);
 
-                            File file2 = EntityAttachment.getFile(context, attachment2.id);
+                            File file2 = attachment2.getFile(context);
 
                             byte[] bytes2 = key.getByteArrayExtra(OpenPgpApi.RESULT_DETACHED_SIGNATURE);
                             try (OutputStream os2 = new BufferedOutputStream(new FileOutputStream(file2))) {
@@ -1323,7 +1329,7 @@ public class FragmentCompose extends FragmentBase {
             @Override
             protected void onExecuted(Bundle args, final EntityAttachment attachment) {
                 if (image) {
-                    File file = EntityAttachment.getFile(getContext(), attachment.id);
+                    File file = attachment.getFile(getContext());
                     Drawable d = Drawable.createFromPath(file.getAbsolutePath());
                     d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
 
@@ -1459,7 +1465,7 @@ public class FragmentCompose extends FragmentBase {
 
         long size = 0;
         try {
-            File file = EntityAttachment.getFile(context, attachment.id);
+            File file = attachment.getFile(context);
 
             InputStream is = null;
             OutputStream os = null;
@@ -1741,11 +1747,13 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     draft.sender = MessageHelper.getSortKey(draft.from);
+                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
+                    draft.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                     draft.received = new Date().getTime();
 
                     draft.id = db.message().insertMessage(draft);
-                    Helper.writeText(EntityMessage.getFile(context, draft.id), body);
+                    Helper.writeText(draft.getFile(context), body);
 
                     db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
 
@@ -1754,8 +1762,8 @@ public class FragmentCompose extends FragmentBase {
                         String refBody = String.format("<p>%s %s:</p>\n<blockquote>%s</blockquote>",
                                 Html.escapeHtml(new Date(ref.received).toString()),
                                 Html.escapeHtml(MessageHelper.formatAddresses(ref.from)),
-                                Helper.readText(EntityMessage.getFile(context, ref.id)));
-                        Helper.writeText(EntityMessage.getRefFile(context, draft.id), refBody);
+                                Helper.readText(ref.getFile(context)));
+                        Helper.writeText(draft.getRefFile(context), refBody);
                     }
 
                     if ("new".equals(action)) {
@@ -1769,14 +1777,14 @@ public class FragmentCompose extends FragmentBase {
                         for (EntityAttachment attachment : attachments)
                             if (attachment.available &&
                                     ("forward".equals(action) || attachment.isInline())) {
-                                long orig = attachment.id;
+                                File source = attachment.getFile(context);
+
                                 attachment.id = null;
                                 attachment.message = draft.id;
                                 attachment.sequence = ++sequence;
                                 attachment.id = db.attachment().insertAttachment(attachment);
 
-                                File source = EntityAttachment.getFile(context, orig);
-                                File target = EntityAttachment.getFile(context, attachment.id);
+                                File target = attachment.getFile(context);
                                 Helper.copy(source, target);
                             }
                     }
@@ -2079,7 +2087,7 @@ public class FragmentCompose extends FragmentBase {
                         !MessageHelper.equal(draft.bcc, abcc) ||
                         !Objects.equals(draft.subject, subject) ||
                         last_available != available ||
-                        !body.equals(Helper.readText(EntityMessage.getFile(context, draft.id))));
+                        !body.equals(Helper.readText(draft.getFile(context))));
 
                 last_available = available;
 
@@ -2087,22 +2095,26 @@ public class FragmentCompose extends FragmentBase {
                     // Update draft
                     draft.identity = ident;
                     draft.extra = extra;
-                    draft.sender = MessageHelper.getSortKey(afrom);
                     draft.from = afrom;
                     draft.to = ato;
                     draft.cc = acc;
                     draft.bcc = abcc;
                     draft.subject = subject;
                     draft.received = new Date().getTime();
+
+                    draft.sender = MessageHelper.getSortKey(draft.from);
+                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
+                    draft.avatar = (lookupUri == null ? null : lookupUri.toString());
+
                     db.message().updateMessage(draft);
-                    Helper.writeText(EntityMessage.getFile(context, draft.id), body);
+                    Helper.writeText(draft.getFile(context), body);
                     db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
                 }
 
                 // Remove unused inline images
                 StringBuilder sb = new StringBuilder();
                 sb.append(body);
-                File rfile = EntityMessage.getRefFile(context, draft.id);
+                File rfile = draft.getRefFile(context);
                 if (rfile.exists())
                     sb.append(Helper.readText(rfile));
                 List<String> cids = new ArrayList<>();
@@ -2165,7 +2177,7 @@ public class FragmentCompose extends FragmentBase {
                     // Delete draft (cannot move to outbox)
                     EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
 
-                    File refDraftFile = EntityMessage.getRefFile(context, draft.id);
+                    File refDraftFile = draft.getRefFile(context);
 
                     // Copy message to outbox
                     draft.id = null;
@@ -2173,9 +2185,9 @@ public class FragmentCompose extends FragmentBase {
                     draft.uid = null;
                     draft.ui_hide = false;
                     draft.id = db.message().insertMessage(draft);
-                    Helper.writeText(EntityMessage.getFile(context, draft.id), body);
+                    Helper.writeText(draft.getFile(context), body);
                     if (refDraftFile.exists()) {
-                        File refFile = EntityMessage.getRefFile(context, draft.id);
+                        File refFile = draft.getRefFile(context);
                         refDraftFile.renameTo(refFile);
                     }
 
@@ -2328,11 +2340,17 @@ public class FragmentCompose extends FragmentBase {
                 final long id = args.getLong("id");
                 final boolean show_images = args.getBoolean("show_images", false);
 
-                String body = Helper.readText(EntityMessage.getFile(context, id));
+
+                DB db = DB.getInstance(context);
+                EntityMessage draft = db.message().getMessage(id);
+                if (draft == null)
+                    throw new FileNotFoundException();
+
+                String body = Helper.readText(draft.getFile(context));
                 Spanned spannedBody = HtmlHelper.fromHtml(body, cidGetter, null);
 
                 Spanned spannedReference = null;
-                File refFile = EntityMessage.getRefFile(context, id);
+                File refFile = draft.getRefFile(context);
                 if (refFile.exists()) {
                     String quote = HtmlHelper.sanitize(context, Helper.readText(refFile), true);
                     Spanned spannedQuote = HtmlHelper.fromHtml(quote,
@@ -2448,7 +2466,7 @@ public class FragmentCompose extends FragmentBase {
                                 if (attachment == null)
                                     return null;
 
-                                File file = EntityAttachment.getFile(getContext(), attachment.id);
+                                File file = attachment.getFile(context);
                                 return Drawable.createFromPath(file.getAbsolutePath());
                             }
 
