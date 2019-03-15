@@ -45,7 +45,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.OpenableColumns;
 import android.text.Editable;
@@ -127,6 +126,7 @@ import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -1776,6 +1776,7 @@ public class FragmentCompose extends FragmentBase {
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
                             if (attachment.available &&
+                                    attachment.encryption == null &&
                                     ("forward".equals(action) || attachment.isInline())) {
                                 File source = attachment.getFile(context);
 

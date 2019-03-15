@@ -41,7 +41,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
@@ -123,6 +122,7 @@ import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.paging.AsyncPagedListDiffer;
 import androidx.paging.PagedList;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
@@ -178,7 +178,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
             View.OnClickListener, View.OnLongClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
-        private View itemView;
+        private View view;
         private TextView tvDay;
         private View vwColor;
         private ImageView ivExpander;
@@ -270,7 +270,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         ViewHolder(final View itemView) {
             super(itemView);
 
-            this.itemView = itemView.findViewById(R.id.clItem);
+            view = itemView.findViewById(R.id.clItem);
             tvDay = itemView.findViewById(R.id.tvDay);
             vwColor = itemView.findViewById(R.id.vwColor);
             ivExpander = itemView.findViewById(R.id.ivExpander);
@@ -376,7 +376,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         void setDisplacement(float dx) {
-            ViewGroup group = (ViewGroup) itemView;
+            ViewGroup group = (ViewGroup) view;
             for (int i = 0; i < group.getChildCount(); i++) {
                 View child = group.getChildAt(i);
                 int id = child.getId();
@@ -388,15 +388,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void wire() {
             final View touch = (viewType == ViewType.THREAD && threading ? ivExpander : vwColor);
             touch.setOnClickListener(this);
-            itemView.post(new Runnable() {
+            view.post(new Runnable() {
                 @Override
                 public void run() {
                     Rect rect = new Rect(
-                            itemView.getLeft(),
+                            view.getLeft(),
                             vwColor.getTop(),
-                            itemView.getRight(),
+                            view.getRight(),
                             vwColor.getBottom());
-                    itemView.setTouchDelegate(new TouchDelegate(rect, touch));
+                    view.setTouchDelegate(new TouchDelegate(rect, touch));
                 }
             });
 
@@ -424,7 +424,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 vwColor.setOnClickListener(null);
                 ivExpander.setOnClickListener(null);
             } else
-                itemView.setOnClickListener(null);
+                view.setOnClickListener(null);
             ivSnoozed.setOnClickListener(null);
             ivFlagged.setOnClickListener(null);
             ivExpanderAddress.setOnClickListener(null);
@@ -535,8 +535,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpDay.setVisibility(message.day ? View.VISIBLE : View.GONE);
 
             // Selected / disabled
-            itemView.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
-            itemView.setAlpha(
+            view.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
+            view.setAlpha(
                     message.uid == null &&
                             !EntityFolder.OUTBOX.equals(message.folderType)
                             ? Helper.LOW_LIGHT : 1.0f);
@@ -1477,7 +1477,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 webView.setId(vwBody.getId());
                 webView.setVisibility(vwBody.getVisibility());
 
-                ConstraintLayout cl = (ConstraintLayout) itemView;
+                ConstraintLayout cl = (ConstraintLayout) view;
                 cl.removeView(vwBody);
                 cl.addView(webView, vwBody.getLayoutParams());
 
@@ -1547,7 +1547,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 public boolean onTouch(View v, MotionEvent me) {
                     if (me.getPointerCount() == 2) {
-                        ConstraintLayout cl = (ConstraintLayout) itemView;
+                        ConstraintLayout cl = (ConstraintLayout) view;
                         switch (me.getAction()) {
                             case MotionEvent.ACTION_DOWN:
                                 cl.requestDisallowInterceptTouchEvent(true);
@@ -2883,7 +2883,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onExecuted(Bundle args, List<EntityAnswer> answers) {
                     if (answers == null || answers.size() == 0) {
                         Snackbar snackbar = Snackbar.make(
-                                itemView,
+                                view,
                                 context.getString(R.string.title_no_answers),
                                 Snackbar.LENGTH_LONG);
                         snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
