@@ -896,6 +896,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // dev4223: show always
             //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvTimeEx.setVisibility(View.VISIBLE);
             tvTimeEx.setText(dtf.format(message.received));
 
             if (!message.duplicate)
@@ -903,10 +904,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // dev4223: show always
             //tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             //tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            tvSizeEx.setVisibility(View.VISIBLE);
             tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
 
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvSubjectEx.setVisibility(View.VISIBLE);
             tvSubjectEx.setText(message.subject);
             tvSubjectEx.setTypeface(null, subject_italic ? Typeface.ITALIC : Typeface.NORMAL);
 
