@@ -23,8 +23,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
@@ -38,6 +40,9 @@ import androidx.room.PrimaryKey;
         indices = {
                 @Index(value = {"email", "type"}, unique = true),
                 @Index(value = {"name", "type"}),
+                @Index(value = {"times_contacted"}),
+                @Index(value = {"last_contacted"}),
+                @Index(value = {"favorite"})
         }
 )
 public class EntityContact implements Serializable {
@@ -53,6 +58,13 @@ public class EntityContact implements Serializable {
     @NonNull
     public String email;
     public String name;
+    public String avatar;
+
+    @NonNull
+    public Integer times_contacted;
+    public Long last_contacted;
+    @NonNull
+    public Boolean favorite = false;
 
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
@@ -60,6 +72,10 @@ public class EntityContact implements Serializable {
         json.put("type", type);
         json.put("email", email);
         json.put("name", name);
+        json.put("avatar", avatar);
+        json.put("times_contacted", times_contacted);
+        json.put("last_contacted", last_contacted);
+        json.put("favorite", favorite);
         return json;
     }
 
@@ -68,9 +84,41 @@ public class EntityContact implements Serializable {
         // id
         contact.type = json.getInt("type");
         contact.email = json.getString("email");
-        if (json.has("name"))
+
+        if (json.has("name") && !json.isNull("name"))
             contact.name = json.getString("name");
+
+        if (json.has("avatar") && !json.isNull("avatar"))
+            contact.avatar = json.getString("avatar");
+
+        if (json.has("times_contacted"))
+            contact.times_contacted = json.getInt("times_contacted");
+        else
+            contact.times_contacted = 1;
+
+        if (json.has("last_contacted") && !json.isNull("last_contacted"))
+            contact.last_contacted = json.getLong("last_contacted");
+
+        if (json.has("favorite"))
+            contact.favorite = json.getBoolean("favorite");
+
         return contact;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj instanceof EntityContact) {
+            EntityContact other = (EntityContact) obj;
+            return (this.type == other.type &&
+                    this.email.equals(other.email) &&
+                    Objects.equals(this.name, other.name) &&
+                    Objects.equals(this.avatar, other.avatar) &&
+                    this.times_contacted == other.times_contacted &&
+                    Objects.equals(this.last_contacted, other.last_contacted) &&
+                    this.favorite == other.favorite);
+
+        } else
+            return false;
     }
 
     @NonNull

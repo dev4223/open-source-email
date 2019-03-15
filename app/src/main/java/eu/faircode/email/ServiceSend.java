@@ -26,6 +26,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.os.PowerManager;
 import android.text.TextUtils;
 
@@ -314,6 +315,7 @@ public class ServiceSend extends LifecycleService {
             // Send message
             Address[] to = imessage.getAllRecipients();
             itransport.sendMessage(imessage, to);
+            long time = new Date().getTime();
             EntityLog.log(this, "Sent via " + ident.host + "/" + ident.user +
                     " to " + TextUtils.join(", ", to));
 
@@ -328,7 +330,7 @@ public class ServiceSend extends LifecycleService {
             try {
                 db.beginTransaction();
 
-                db.message().setMessageSent(message.id, imessage.getSentDate().getTime());
+                db.message().setMessageSent(message.id, time);
                 db.message().setMessageSeen(message.id, true);
                 db.message().setMessageUiSeen(message.id, true);
                 db.message().setMessageError(message.id, null);
@@ -365,21 +367,25 @@ public class ServiceSend extends LifecycleService {
                 for (Address recipient : message.to) {
                     String email = ((InternetAddress) recipient).getAddress();
                     String name = ((InternetAddress) recipient).getPersonal();
-                    List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_TO, email);
-                    if (contacts.size() == 0) {
-                        EntityContact contact = new EntityContact();
+                    Uri avatar = ContactInfo.getLookupUri(this, new Address[]{recipient});
+                    EntityContact contact = db.contact().getContact(EntityContact.TYPE_TO, email);
+                    if (contact == null) {
+                        contact = new EntityContact();
                         contact.type = EntityContact.TYPE_TO;
                         contact.email = email;
                         contact.name = name;
-                        db.contact().insertContact(contact);
+                        contact.avatar = (avatar == null ? null : avatar.toString());
+                        contact.times_contacted = 1;
+                        contact.last_contacted = time;
+                        contact.id = db.contact().insertContact(contact);
                         Log.i("Inserted recipient contact=" + contact);
                     } else {
-                        EntityContact contact = contacts.get(0);
-                        if (name != null && !name.equals(contact.name)) {
-                            contact.name = name;
-                            db.contact().updateContact(contact);
-                            Log.i("Updated recipient contact=" + contact);
-                        }
+                        contact.name = name;
+                        contact.avatar = (avatar == null ? null : avatar.toString());
+                        contact.times_contacted++;
+                        contact.last_contacted = time;
+                        db.contact().updateContact(contact);
+                        Log.i("Updated recipient contact=" + contact);
                     }
                 }
         } catch (MessagingException ex) {

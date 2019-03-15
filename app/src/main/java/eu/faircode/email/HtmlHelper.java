@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -67,8 +68,10 @@ public class HtmlHelper {
     static final int PREVIEW_SIZE = 250;
 
     private static final int TRACKING_PIXEL_SURFACE = 25;
-    private static final List<String> heads = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "table", "ol", "ul", "br", "hr");
-    private static final List<String> tails = Arrays.asList("h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li");
+    private static final List<String> heads = Collections.unmodifiableList(Arrays.asList(
+            "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "table", "br", "hr"));
+    private static final List<String> tails = Collections.unmodifiableList(Arrays.asList(
+            "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li"));
 
     static String removeTracking(Context context, String html) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -223,7 +226,8 @@ public class HtmlHelper {
             // Split parent link and linked image
             boolean linked = false;
             for (Element parent : img.parents())
-                if ("a".equals(parent.tagName()) && !TextUtils.isEmpty(parent.attr("href"))) {
+                if ("a".equals(parent.tagName()) &&
+                        !TextUtils.isEmpty(parent.attr("href"))) {
                     String text = parent.attr("title").trim();
                     if (TextUtils.isEmpty(text))
                         text = parent.attr("alt").trim();
@@ -232,18 +236,20 @@ public class HtmlHelper {
 
                     img.remove();
                     parent.appendText(text);
+                    String outer = parent.outerHtml();
 
-                    Element span = document.createElement("span");
-                    span.appendChild(parent.clone());
-                    span.appendChild(div);
-                    parent.replaceWith(span);
+                    parent.tagName("span");
+                    parent.html(outer);
+                    parent.appendChild(div);
+
                     linked = true;
-
                     break;
                 }
 
-            if (!linked)
-                img.replaceWith(div);
+            if (!linked) {
+                img.tagName("div");
+                img.html(div.html());
+            }
         }
 
         // Autolink

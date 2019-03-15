@@ -50,7 +50,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 54,
+        version = 57,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -597,6 +597,31 @@ public abstract class DB extends RoomDatabase {
                                         cursor.close();
                                 }
                             }
+                    }
+                })
+                .addMigrations(new Migration(54, 55) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `contact` ADD COLUMN `avatar` TEXT");
+                        db.execSQL("ALTER TABLE `contact` ADD COLUMN `times_contacted` INTEGER NOT NULL DEFAULT 1");
+                        db.execSQL("ALTER TABLE `contact` ADD COLUMN `last_contacted` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(55, 56) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `contact` ADD COLUMN `favorite` INTEGER NOT NULL DEFAULT 0");
+                    }
+                })
+                .addMigrations(new Migration(56, 57) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("CREATE INDEX `index_contact_times_contacted` ON `contact` (`times_contacted`)");
+                        db.execSQL("CREATE INDEX `index_contact_last_contacted` ON `contact` (`last_contacted`)");
+                        db.execSQL("CREATE INDEX `index_contact_favorite` ON `contact` (`favorite`)");
                     }
                 })
                 .build();

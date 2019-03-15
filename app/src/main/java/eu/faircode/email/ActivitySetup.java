@@ -179,34 +179,6 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
             }
         });
 
-        drawerList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                DrawerItem item = drawerArray.getItem(position);
-                if (item == null)
-                    return false;
-
-                if (item.getMenuId() == R.string.menu_privacy) {
-                    new SimpleTask<Void>() {
-                        @Override
-                        protected Void onExecute(Context context, Bundle args) {
-                            int count = DB.getInstance(context).contact().clearContacts();
-                            Log.i("Cleared contacts=" + count);
-                            return null;
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(ActivitySetup.this, ActivitySetup.this, ex);
-                        }
-                    }.execute(ActivitySetup.this, new Bundle(), "setup:privacy");
-
-                    return true;
-                }
-                return false;
-            }
-        });
-
         List<DrawerItem> items = new ArrayList<>();
 
         PackageManager pm = getPackageManager();
@@ -422,12 +394,18 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     }
 
     private void onMenuOptions() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("options", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentOptions()).addToBackStack("options");
         fragmentTransaction.commit();
     }
 
     private void onMenuLegend() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("legend", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentLegend()).addToBackStack("legend");
         fragmentTransaction.commit();
@@ -442,6 +420,9 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     }
 
     private void onMenuAbout() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("about", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentAbout()).addToBackStack("about");
         fragmentTransaction.commit();
@@ -714,7 +695,7 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                     for (int c = 0; c < jcontacts.length(); c++) {
                         JSONObject jcontact = (JSONObject) jcontacts.get(c);
                         EntityContact contact = EntityContact.fromJSON(jcontact);
-                        if (db.contact().getContacts(contact.type, contact.email).size() == 0) {
+                        if (db.contact().getContact(contact.type, contact.email) == null) {
                             contact.id = db.contact().insertContact(contact);
                             Log.i("Imported contact=" + contact);
                         }

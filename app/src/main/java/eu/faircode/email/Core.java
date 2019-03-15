@@ -661,11 +661,12 @@ class Core {
         if (msgid == null)
             throw new IllegalArgumentException("Message ID missing");
 
+        long uid = -1;
         if (istore.hasCapability("UIDPLUS")) {
             AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
             if (uids != null && uids.length > 0) {
                 Log.i("Appended uid=" + uids[0].uid);
-                return uids[0].uid;
+                uid = uids[0].uid;
             }
         } else
             ifolder.appendMessages(new Message[]{imessage});
@@ -674,20 +675,20 @@ class Core {
         ifolder.close(false);
         ifolder.open(Folder.READ_WRITE);
 
-        Log.i("Searching for appended msgid=" + msgid);
+        if (uid <= 0) {
+            Log.i("Searching for appended msgid=" + msgid);
+            Message[] messages = ifolder.search(new MessageIDTerm(msgid));
+            if (messages != null)
+                for (Message iappended : messages) {
+                    long muid = ifolder.getUID(iappended);
+                    Log.i("Found appended uid=" + muid);
+                    // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
+                    if (muid > uid)
+                        uid = muid;
+                }
+        }
 
-        long uid = -1;
-        Message[] messages = ifolder.search(new MessageIDTerm(msgid));
-        if (messages != null)
-            for (Message iappended : messages) {
-                long muid = ifolder.getUID(iappended);
-                Log.i("Found appended uid=" + muid);
-                // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
-                if (muid > uid)
-                    uid = muid;
-            }
-
-        if (uid < 0)
+        if (uid <= 0)
             throw new IllegalArgumentException("uid not found");
 
         return uid;
@@ -1115,42 +1116,36 @@ class Core {
         }
 
         if (message == null) {
-            // Build list of addresses
-            Address[] recipients = helper.getTo();
-            Address[] senders = helper.getFrom();
-            if (recipients == null)
-                recipients = new Address[0];
-            if (senders == null)
-                senders = new Address[0];
-            Address[] all = Arrays.copyOf(recipients, recipients.length + senders.length);
-            System.arraycopy(senders, 0, all, recipients.length, senders.length);
-
-            List<String> emails = new ArrayList<>();
-            for (Address address : all) {
-                String to = ((InternetAddress) address).getAddress();
-                if (!TextUtils.isEmpty(to)) {
-                    to = to.toLowerCase();
-                    emails.add(to);
-                    String canonical = Helper.canonicalAddress(to);
-                    if (!to.equals(canonical))
-                        emails.add(canonical);
-                }
-            }
+            Address[] froms = helper.getFrom();
+            Address[] tos = helper.getTo();
+            Address[] ccs = helper.getCc();
             String delivered = helper.getDeliveredTo();
-            if (!TextUtils.isEmpty(delivered)) {
-                delivered = delivered.toLowerCase();
-                emails.add(delivered);
-                String canonical = Helper.canonicalAddress(delivered);
-                if (!delivered.equals(canonical))
-                    emails.add(canonical);
-            }
 
-            // Search for identity
+            // Build ordered list of addresses
+            List<Address> addresses = new ArrayList<>();
+            if (delivered != null)
+                addresses.add(new InternetAddress(delivered));
+            if (tos != null)
+                addresses.addAll(Arrays.asList(tos));
+            if (ccs != null)
+                addresses.addAll(Arrays.asList(ccs));
+            if (froms != null)
+                addresses.addAll(Arrays.asList(froms));
+
+            // Search for matching identity
             EntityIdentity identity = null;
-            for (String email : emails) {
-                identity = db.identity().getIdentity(folder.account, email);
-                if (identity != null)
-                    break;
+            for (Address address : addresses) {
+                String email = ((InternetAddress) address).getAddress();
+                if (!TextUtils.isEmpty(email)) {
+                    identity = db.identity().getIdentity(folder.account, email);
+                    if (identity == null) {
+                        String canonical = Helper.canonicalAddress(email);
+                        if (!canonical.equals(email))
+                            identity = db.identity().getIdentity(folder.account, canonical);
+                    }
+                    if (identity != null)
+                        break;
+                }
             }
 
             message = new EntityMessage();
@@ -1165,11 +1160,11 @@ class Core {
 
             message.references = TextUtils.join(" ", helper.getReferences());
             message.inreplyto = helper.getInReplyTo();
-            message.deliveredto = helper.getDeliveredTo();
+            message.deliveredto = delivered;
             message.thread = helper.getThreadId(uid);
-            message.from = helper.getFrom();
-            message.to = helper.getTo();
-            message.cc = helper.getCc();
+            message.from = froms;
+            message.to = tos;
+            message.cc = ccs;
             message.bcc = helper.getBcc();
             message.reply = helper.getReply();
             message.subject = helper.getSubject();
@@ -1194,15 +1189,13 @@ class Core {
             Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
             message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
-            // Check sender
-            Address sender = helper.getSender();
-            if (sender != null && senders.length > 0) {
-                String[] f = ((InternetAddress) senders[0]).getAddress().split("@");
+            Address sender = helper.getSender(); // header
+            if (sender != null) {
                 String[] s = ((InternetAddress) sender).getAddress().split("@");
-                if (f.length > 1 && s.length > 1) {
-                    if (!f[1].equals(s[1]))
-                        message.warning = context.getString(R.string.title_via, s[1]);
-                }
+                String[] f = (froms == null || froms.length == 0 ? null
+                        : (((InternetAddress) froms[0]).getAddress()).split("@"));
+                if (s.length > 1 && (f == null || (f.length > 1 && !s[1].equals(f[1]))))
+                    message.warning = context.getString(R.string.title_via, s[1]);
             }
 
             message.id = db.message().insertMessage(message);
@@ -1218,6 +1211,55 @@ class Core {
                 attachment.message = message.id;
                 attachment.sequence = sequence++;
                 attachment.id = db.attachment().insertAttachment(attachment);
+            }
+
+            if (!folder.isOutgoing() &&
+                    !EntityFolder.ARCHIVE.equals(folder.type) &&
+                    !EntityFolder.TRASH.equals(folder.type) &&
+                    !EntityFolder.JUNK.equals(folder.type)) {
+                Address[] replies = (message.reply != null ? message.reply : message.from);
+                if (replies != null) {
+                    // Check if from self
+                    boolean me = true;
+                    for (Address reply : replies) {
+                        String email = ((InternetAddress) reply).getAddress();
+                        String canonical = Helper.canonicalAddress(email);
+                        if (!TextUtils.isEmpty(email) &&
+                                db.identity().getIdentity(folder.account, email.toLowerCase()) == null &&
+                                (canonical.equals(email) ||
+                                        db.identity().getIdentity(folder.account, canonical) == null)) {
+                            me = false;
+                            break;
+                        }
+                    }
+                    if (me)
+                        replies = message.to;
+
+                    for (Address reply : replies) {
+                        String email = ((InternetAddress) reply).getAddress();
+                        String name = ((InternetAddress) reply).getPersonal();
+                        Uri avatar = ContactInfo.getLookupUri(context, new Address[]{reply});
+                        EntityContact contact = db.contact().getContact(EntityContact.TYPE_FROM, email);
+                        if (contact == null) {
+                            contact = new EntityContact();
+                            contact.type = EntityContact.TYPE_FROM;
+                            contact.email = email;
+                            contact.name = name;
+                            contact.avatar = (avatar == null ? null : avatar.toString());
+                            contact.times_contacted = 1;
+                            contact.last_contacted = message.received;
+                            contact.id = db.contact().insertContact(contact);
+                            Log.i("Inserted sender contact=" + contact);
+                        } else {
+                            contact.name = name;
+                            contact.avatar = (avatar == null ? null : avatar.toString());
+                            contact.times_contacted++;
+                            contact.last_contacted = message.received;
+                            db.contact().updateContact(contact);
+                            Log.i("Updated sender contact=" + contact);
+                        }
+                    }
+                }
             }
         } else {
             boolean update = false;
@@ -1288,31 +1330,6 @@ class Core {
                 db.message().updateMessage(message);
             else if (BuildConfig.DEBUG)
                 Log.i(folder.name + " unchanged uid=" + uid);
-        }
-
-        if (!folder.isOutgoing() && !EntityFolder.ARCHIVE.equals(folder.type)) {
-            Address[] senders = (message.reply != null ? message.reply : message.from);
-            if (senders != null)
-                for (Address sender : senders) {
-                    String email = ((InternetAddress) sender).getAddress();
-                    String name = ((InternetAddress) sender).getPersonal();
-                    List<EntityContact> contacts = db.contact().getContacts(EntityContact.TYPE_FROM, email);
-                    if (contacts.size() == 0) {
-                        EntityContact contact = new EntityContact();
-                        contact.type = EntityContact.TYPE_FROM;
-                        contact.email = email;
-                        contact.name = name;
-                        contact.id = db.contact().insertContact(contact);
-                        Log.i("Inserted sender contact=" + contact);
-                    } else {
-                        EntityContact contact = contacts.get(0);
-                        if (name != null && !name.equals(contact.name)) {
-                            contact.name = name;
-                            db.contact().updateContact(contact);
-                            Log.i("Updated sender contact=" + contact);
-                        }
-                    }
-                }
         }
 
         List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));

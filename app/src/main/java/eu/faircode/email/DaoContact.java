@@ -23,6 +23,7 @@ import android.database.Cursor;
 
 import java.util.List;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
@@ -33,11 +34,20 @@ public interface DaoContact {
     @Query("SELECT * FROM contact")
     List<EntityContact> getContacts();
 
+    @Query("SELECT * FROM contact" +
+            " ORDER BY favorite DESC, times_contacted DESC, last_contacted DESC")
+    LiveData<List<EntityContact>> liveContacts();
+
+    @Query("SELECT * FROM contact" +
+            " ORDER BY favorite DESC, times_contacted DESC, last_contacted DESC" +
+            " LIMIT :count")
+    List<EntityContact> getFrequentlyContacted(int count);
+
     @Query("SELECT *" +
             " FROM contact" +
             " WHERE email = :email" +
             " AND (:type IS NULL OR type = :type)")
-    List<EntityContact> getContacts(Integer type, String email);
+    EntityContact getContact(Integer type, String email);
 
     @Query("SELECT id AS _id, name, email" +
             ", CASE type" +
@@ -56,6 +66,18 @@ public interface DaoContact {
     @Update
     int updateContact(EntityContact contact);
 
-    @Query("DELETE from contact")
+    @Query("UPDATE contact SET favorite = :favorite WHERE id = :id")
+    int setContactFavorite(long id, boolean favorite);
+
+    @Query("DELETE FROM contact WHERE id= :id")
+    int deleteContact(long id);
+
+    @Query("DELETE FROM contact" +
+            " WHERE last_contacted IS NOT NULL" +
+            " AND last_contacted < :before" +
+            " AND NOT favorite")
+    int deleteContacts(long before);
+
+    @Query("DELETE FROM contact")
     int clearContacts();
 }

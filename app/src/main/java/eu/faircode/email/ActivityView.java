@@ -19,8 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -30,20 +28,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
-import android.content.pm.ShortcutInfo;
-import android.content.pm.ShortcutManager;
 import android.content.res.Configuration;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Icon;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -194,6 +184,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                         break;
                     case R.string.menu_operations:
                         onMenuOperations();
+                        break;
+                    case R.string.menu_contacts:
+                        onMenuContacts();
                         break;
                     case R.string.menu_setup:
                         onMenuSetup();
@@ -346,20 +339,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                             nf.format(operations));
                 items.add(new DrawerItem(-3, R.string.menu_operations, R.drawable.baseline_list_24, title, operations > 0));
 
-                items.add(new DrawerItem(-4, R.drawable.baseline_settings_applications_24, R.string.menu_setup));
-                items.add(new DrawerItem(-5));
-                items.add(new DrawerItem(-6, R.drawable.baseline_help_24, R.string.menu_legend));
+                items.add(new DrawerItem(-4, R.drawable.baseline_person_24, R.string.menu_contacts));
+                items.add(new DrawerItem(-5, R.drawable.baseline_settings_applications_24, R.string.menu_setup));
+                items.add(new DrawerItem(-6));
+                items.add(new DrawerItem(-7, R.drawable.baseline_help_24, R.string.menu_legend));
 
                 if (Helper.getIntentFAQ().resolveActivity(getPackageManager()) != null)
-                    items.add(new DrawerItem(-7, R.drawable.baseline_question_answer_24, R.string.menu_faq));
+                    items.add(new DrawerItem(-8, R.drawable.baseline_question_answer_24, R.string.menu_faq));
 
                 if (BuildConfig.BETA_RELEASE)
-                    items.add(new DrawerItem(-8, R.drawable.baseline_report_problem_24, R.string.menu_issue));
+                    items.add(new DrawerItem(-9, R.drawable.baseline_report_problem_24, R.string.menu_issue));
 
                 if (Helper.getIntentPrivacy().resolveActivity(getPackageManager()) != null)
-                    items.add(new DrawerItem(-9, R.drawable.baseline_account_box_24, R.string.menu_privacy));
+                    items.add(new DrawerItem(-10, R.drawable.baseline_account_box_24, R.string.menu_privacy));
 
-                items.add(new DrawerItem(-10, R.drawable.baseline_info_24, R.string.menu_about));
+                items.add(new DrawerItem(-11, R.drawable.baseline_info_24, R.string.menu_about));
 
                 boolean pro = (getIntentPro() == null || getIntentPro().resolveActivity(getPackageManager()) != null);
                 boolean invite = (getIntentInvite().resolveActivity(getPackageManager()) != null);
@@ -367,19 +361,19 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 boolean other = (getIntentOtherApps().resolveActivity(getPackageManager()) != null);
 
                 if (pro || invite || rate || other)
-                    items.add(new DrawerItem(-11));
+                    items.add(new DrawerItem(-12));
 
                 if (pro)
-                    items.add(new DrawerItem(-12, R.drawable.baseline_monetization_on_24, R.string.menu_pro));
+                    items.add(new DrawerItem(-13, R.drawable.baseline_monetization_on_24, R.string.menu_pro));
 
                 if (invite)
-                    items.add(new DrawerItem(-13, R.drawable.baseline_people_24, R.string.menu_invite));
+                    items.add(new DrawerItem(-14, R.drawable.baseline_people_24, R.string.menu_invite));
 
                 if (rate)
-                    items.add(new DrawerItem(-14, R.drawable.baseline_star_24, R.string.menu_rate));
+                    items.add(new DrawerItem(-15, R.drawable.baseline_star_24, R.string.menu_rate));
 
                 if (other)
-                    items.add(new DrawerItem(-15, R.drawable.baseline_get_app_24, R.string.menu_other));
+                    items.add(new DrawerItem(-16, R.drawable.baseline_get_app_24, R.string.menu_other));
 
                 drawerArray.set(items);
             }
@@ -401,7 +395,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         pgpService = new OpenPgpServiceConnection(this, "org.sufficientlysecure.keychain");
         pgpService.bindToService();
 
-        updateShortcuts();
+        Shortcuts.update(this, this);
     }
 
     private void init() {
@@ -779,99 +773,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }.execute(this, args, "update:check");
     }
 
-    private void updateShortcuts() {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N_MR1)
-            return;
-
-        new SimpleTask<List<ShortcutInfo>>() {
-            @Override
-            @TargetApi(Build.VERSION_CODES.N_MR1)
-            protected List<ShortcutInfo> onExecute(Context context, Bundle args) {
-                ShortcutManager sm = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
-                int count = sm.getMaxShortcutCountPerActivity() - sm.getManifestShortcuts().size();
-                Log.i("Shortcuts count=" + count +
-                        " app=" + sm.getMaxShortcutCountPerActivity() +
-                        " manifest=" + sm.getManifestShortcuts().size());
-
-                List<ShortcutInfo> shortcuts = new ArrayList<>();
-
-                if (hasPermission(Manifest.permission.READ_CONTACTS)) {
-                    // https://developer.android.com/guide/topics/providers/contacts-provider#ObsoleteData
-                    try (Cursor cursor = getContentResolver().query(
-                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                            new String[]{
-                                    ContactsContract.RawContacts._ID,
-                                    ContactsContract.Contacts.LOOKUP_KEY,
-                                    ContactsContract.Contacts.DISPLAY_NAME,
-                                    ContactsContract.CommonDataKinds.Email.DATA,
-                                    ContactsContract.Contacts.STARRED,
-                                    ContactsContract.Contacts.TIMES_CONTACTED,
-                                    ContactsContract.Contacts.LAST_TIME_CONTACTED
-                            },
-                            ContactsContract.CommonDataKinds.Email.DATA + " <> ''",
-                            null,
-                            ContactsContract.Contacts.STARRED + " DESC" +
-                                    ", " + ContactsContract.Contacts.TIMES_CONTACTED + " DESC" +
-                                    ", " + ContactsContract.Contacts.LAST_TIME_CONTACTED + " DESC")) {
-                        while (cursor != null && cursor.moveToNext() && shortcuts.size() < count)
-                            try {
-                                long id = cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID));
-                                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                                String email = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                                int starred = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.STARRED));
-                                int times = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.TIMES_CONTACTED));
-                                long last = cursor.getLong(cursor.getColumnIndex(ContactsContract.Contacts.LAST_TIME_CONTACTED));
-
-                                Log.i("Shortcut id=" + id + " email=" + email +
-                                        " starred=" + starred + " times=" + times + " last=" + last);
-
-                                if (starred == 0 && times == 0 && last == 0)
-                                    continue;
-
-                                Uri uri = ContactsContract.Contacts.getLookupUri(
-                                        cursor.getLong(cursor.getColumnIndex(ContactsContract.RawContacts._ID)),
-                                        cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY)));
-                                InputStream is = ContactsContract.Contacts.openContactPhotoInputStream(
-                                        getContentResolver(), uri);
-                                Bitmap bitmap = BitmapFactory.decodeStream(is);
-                                Icon icon = (bitmap == null
-                                        ? Icon.createWithResource(context, R.drawable.ic_shortcut_email)
-                                        : Icon.createWithBitmap(bitmap));
-
-                                Intent intent = new Intent(context, ActivityCompose.class);
-                                intent.setAction(Intent.ACTION_SEND);
-                                intent.setData(Uri.parse("mailto:" + email));
-
-                                shortcuts.add(
-                                        new ShortcutInfo.Builder(context, Long.toString(id))
-                                                .setIcon(icon)
-                                                .setRank(shortcuts.size() + 1)
-                                                .setShortLabel(name)
-                                                .setIntent(intent)
-                                                .build());
-                            } catch (Throwable ex) {
-                                Log.e(ex);
-                            }
-                    }
-                }
-
-                return shortcuts;
-            }
-
-            @Override
-            @TargetApi(Build.VERSION_CODES.N_MR1)
-            protected void onExecuted(Bundle args, List<ShortcutInfo> shortcuts) {
-                ShortcutManager sm = (ShortcutManager) getSystemService(Context.SHORTCUT_SERVICE);
-                sm.setDynamicShortcuts(shortcuts);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-            }
-        }.execute(this, this, new Bundle(), "shortcuts:get");
-    }
-
     private Intent getIntentInvite() {
         StringBuilder sb = new StringBuilder();
         sb.append(getString(R.string.title_try)).append("\n\n");
@@ -929,7 +830,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             protected void onExecuted(Bundle args, Long folder) {
                 long account = args.getLong("account");
 
-                getSupportFragmentManager().popBackStack("unified", 0);
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                    getSupportFragmentManager().popBackStack("unified", 0);
 
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(ActivityView.this);
                 lbm.sendBroadcast(
@@ -946,14 +848,29 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuAnswers() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("answers", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentAnswers()).addToBackStack("answers");
         fragmentTransaction.commit();
     }
 
     private void onMenuOperations() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("operations", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentOperations()).addToBackStack("operations");
+        fragmentTransaction.commit();
+    }
+
+    private void onMenuContacts() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("contacts", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.content_frame, new FragmentContacts()).addToBackStack("contacts");
         fragmentTransaction.commit();
     }
 
@@ -962,6 +879,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuLegend() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("legend", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentLegend()).addToBackStack("legend");
         fragmentTransaction.commit();
@@ -992,12 +912,18 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuAbout() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("about", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentAbout()).addToBackStack("about");
         fragmentTransaction.commit();
     }
 
     private void onMenuPro() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
         fragmentTransaction.commit();
@@ -1261,6 +1187,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onShowPro(Intent intent) {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
         fragmentTransaction.commit();
