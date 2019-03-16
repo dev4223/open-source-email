@@ -144,6 +144,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(81) Can you make the background of the original message dark in the dark theme?](#user-content-faq81)
 * [(82) What is a tracking image?](#user-content-faq82)
 * [(83) What does 'User is authenticated but not connected' mean?](#user-content-faq83)
+* [(84) What are local contacts for?](#user-content-faq84)
 
 [I have another question.](#support)
 
@@ -528,7 +529,7 @@ Possible causes are:
 * The previous connection was terminated abruptly for example by abruptly losing internet connectivity, for example when turning on flight mode
 
 If only FairEmail is connecting to the email server, first try to wait half an hour to see if the problem resolves itself,
-else enable the folder settings '*Poll instead of synchronize*' for some folders.
+else enable the folder setting '*Poll instead of synchronize*' for some folders.
 The poll interval can be configured in the account settings.
 
 The maximum number of simultaneous folder connections for Gmail is 15,
@@ -1361,6 +1362,18 @@ Less likely is  that you are synchronizing too many folders.
 This can also happen due to abruptly losing connectivity resulting in not properly closing connections.
 
 So, double check the password or reduce the number of folders to synchronize.
+
+<br />
+
+<a name="faq84"></a>
+**(84) What are local contacts for?**
+
+The main use of the local contacts storage is to offer auto completion when no contacts permission is of can be granted to FairEmail.
+
+Another use is to generate [shortcuts](#user-content-faq31) on recent Android versions to quickly send a message to frequently contacted people.
+This is also why the number of times contacted and the last time contacted is recorded and why you can make a contact a favorite or exclude it by long pressing it.
+
+The list of contacts is sorted on number of times contacted and the last time contacted.
 
 <br />
 

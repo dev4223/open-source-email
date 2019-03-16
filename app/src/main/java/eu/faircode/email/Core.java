@@ -437,7 +437,10 @@ class Core {
                     Log.i(folder.name + " append confirmed uid=" + duid);
                 else {
                     Log.i(folder.name + " deleting uid=" + duid + " msgid=" + message.msgid);
-                    idelete.setFlag(Flags.Flag.DELETED, true);
+                    try {
+                        idelete.setFlag(Flags.Flag.DELETED, true);
+                    } catch (MessageRemovedException ignored) {
+                    }
                 }
             }
             ifolder.expunge();
@@ -467,7 +470,6 @@ class Core {
         // Get arguments
         long id = jargs.getLong(0);
         boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
-        Long newid = (jargs.length() > 2 && !jargs.isNull(2) ? jargs.getLong(2) : null);
 
         // Get source message
         Message imessage = ifolder.getMessageByUID(message.uid);
@@ -519,10 +521,14 @@ class Core {
 
             // Append target
             long uid = append(istore, itarget, (MimeMessage) icopy);
-            if (newid != null) {
-                Log.i("Moved id=" + newid + " uid=" + uid);
-                db.message().setMessageUid(newid, uid);
-            }
+
+            // This won't work properly when deleting the same message in multiple folders
+            // For example Gmail's inbox/archive
+            //Long newid = (jargs.length() > 2 && !jargs.isNull(2) ? jargs.getLong(2) : null);
+            //if (newid != null) {
+            //    Log.i(folder.name + " moved newid=" + newid + " uid=" + uid);
+            //    db.message().setMessageUid(newid, uid);
+            //}
 
             // Fixed timing issue of at least Courier based servers
             itarget.close(false);
@@ -550,7 +556,10 @@ class Core {
 
             // Delete source
             if (!copy) {
-                imessage.setFlag(Flags.Flag.DELETED, true);
+                try {
+                    imessage.setFlag(Flags.Flag.DELETED, true);
+                } catch (MessageRemovedException ignored) {
+                }
                 ifolder.expunge();
             }
         } finally {
@@ -569,7 +578,10 @@ class Core {
         Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
         for (Message imessage : imessages) {
             Log.i(folder.name + " deleting uid=" + message.uid + " msgid=" + message.msgid);
-            imessage.setFlag(Flags.Flag.DELETED, true);
+            try {
+                imessage.setFlag(Flags.Flag.DELETED, true);
+            } catch (MessageRemovedException ignored) {
+            }
         }
         ifolder.expunge();
 
@@ -1025,7 +1037,7 @@ class Core {
                                 downloadMessage(
                                         context,
                                         folder, ifolder,
-                                        (IMAPMessage) isub[j], ids[from + j]);
+                                        (IMAPMessage) isub[j], ids[from + j], state);
                         } catch (FolderClosedException ex) {
                             throw ex;
                         } catch (FolderClosedIOException ex) {
@@ -1368,7 +1380,7 @@ class Core {
     static void downloadMessage(
             Context context,
             EntityFolder folder, IMAPFolder ifolder,
-            IMAPMessage imessage, long id) throws MessagingException, IOException {
+            IMAPMessage imessage, long id, State state) throws MessagingException, IOException {
         DB db = DB.getInstance(context);
         EntityMessage message = db.message().getMessage(id);
         if (message == null)
@@ -1381,18 +1393,16 @@ class Core {
 
         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
         MessageHelper helper = new MessageHelper(imessage);
-        Boolean isMetered = Helper.isMetered(context, false);
-        boolean metered = (isMetered == null || isMetered);
 
         boolean fetch = false;
         if (!message.content)
-            if (!metered || (message.size != null && message.size < maxSize))
+            if (state.getNetworkState().isUnmetered() || (message.size != null && message.size < maxSize))
                 fetch = true;
 
         if (!fetch)
             for (EntityAttachment attachment : attachments)
                 if (!attachment.available)
-                    if (!metered || (attachment.size != null && attachment.size < maxSize)) {
+                    if (state.getNetworkState().isUnmetered() || (attachment.size != null && attachment.size < maxSize)) {
                         fetch = true;
                         break;
                     }
@@ -1413,7 +1423,7 @@ class Core {
             MessageHelper.MessageParts parts = helper.getMessageParts();
 
             if (!message.content) {
-                if (!metered || (message.size != null && message.size < maxSize)) {
+                if (state.getNetworkState().isUnmetered() || (message.size != null && message.size < maxSize)) {
                     String body = parts.getHtml(context);
                     Helper.writeText(message.getFile(context), body);
                     db.message().setMessageContent(message.id, true,
@@ -1424,7 +1434,7 @@ class Core {
 
             for (EntityAttachment attachment : attachments)
                 if (!attachment.available)
-                    if (!metered || (attachment.size != null && attachment.size < maxSize))
+                    if (state.getNetworkState().isUnmetered() || (attachment.size != null && attachment.size < maxSize))
                         try {
                             parts.downloadAttachment(context, attachment.sequence - 1, attachment.id);
                         } catch (Throwable ex) {
@@ -1842,9 +1852,22 @@ class Core {
     }
 
     static class State {
+        private Helper.NetworkState networkState;
         private Thread thread;
         private Semaphore semaphore = new Semaphore(0);
         private boolean running = true;
+
+        State(Helper.NetworkState networkState) {
+            this.networkState = networkState;
+        }
+
+        State(State parent) {
+            this(parent.networkState);
+        }
+
+        Helper.NetworkState getNetworkState() {
+            return networkState;
+        }
 
         void runnable(Runnable runnable, String name) {
             thread = new Thread(runnable, name);

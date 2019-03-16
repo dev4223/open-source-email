@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -49,7 +50,9 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
     private int colorAccent;
     private int textColorSecondary;
 
-    private List<EntityContact> items = new ArrayList<>();
+    private String search = null;
+    private List<EntityContact> all = new ArrayList<>();
+    private List<EntityContact> selected = new ArrayList<>();
 
     private static NumberFormat nf = NumberFormat.getNumberInstance();
 
@@ -87,12 +90,12 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
         }
 
         private void bindTo(EntityContact contact) {
-            view.setAlpha(contact.state == 2 ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(contact.state == EntityContact.STATE_IGNORE ? Helper.LOW_LIGHT : 1.0f);
 
             if (contact.type == EntityContact.TYPE_FROM)
-                ivType.setImageResource(R.drawable.baseline_mail_24);
+                ivType.setImageResource(R.drawable.baseline_call_received_24);
             else if (contact.type == EntityContact.TYPE_TO)
-                ivType.setImageResource(R.drawable.baseline_send_24);
+                ivType.setImageResource(R.drawable.baseline_call_made_24);
             else
                 ivType.setImageDrawable(null);
 
@@ -107,8 +110,10 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
             tvLast.setText(contact.last_contacted == null ? null
                     : DateUtils.getRelativeTimeSpanString(context, contact.last_contacted));
 
-            ivFavorite.setImageResource(contact.state == 1 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-            ivFavorite.setImageTintList(ColorStateList.valueOf(contact.state == 1 ? colorAccent : textColorSecondary));
+            ivFavorite.setImageResource(contact.state == EntityContact.STATE_FAVORITE
+                    ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
+            ivFavorite.setImageTintList(ColorStateList.valueOf(
+                    contact.state == EntityContact.STATE_FAVORITE ? colorAccent : textColorSecondary));
 
             view.requestLayout();
         }
@@ -119,8 +124,12 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
             if (pos == RecyclerView.NO_POSITION)
                 return;
 
-            EntityContact contact = items.get(pos);
-            contact.state = ++contact.state % 3;
+            EntityContact contact = selected.get(pos);
+            if (contact.state == EntityContact.STATE_DEFAULT)
+                contact.state = EntityContact.STATE_FAVORITE;
+            else
+                contact.state = EntityContact.STATE_DEFAULT;
+
             notifyItemChanged(pos);
 
             Bundle args = new Bundle();
@@ -157,7 +166,7 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
             if (pos == RecyclerView.NO_POSITION)
                 return false;
 
-            EntityContact contact = items.get(pos);
+            EntityContact contact = selected.get(pos);
 
             Bundle args = new Bundle();
             args.putLong("id", contact.id);
@@ -168,7 +177,7 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
                     long id = args.getLong("id");
 
                     DB db = DB.getInstance(context);
-                    db.contact().deleteContact(id);
+                    db.contact().setContactState(id, EntityContact.STATE_IGNORE);
 
                     return null;
                 }
@@ -201,9 +210,23 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
     public void set(@NonNull List<EntityContact> contacts) {
         Log.i("Set contacts=" + contacts.size());
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, contacts), false);
+        all = contacts;
 
-        items = contacts;
+        List<EntityContact> items;
+        if (TextUtils.isEmpty(search))
+            items = all;
+        else {
+            items = new ArrayList<>();
+            String query = search.toLowerCase().trim();
+            for (EntityContact contact : contacts)
+                if (contact.email.toLowerCase().contains(query) ||
+                        (contact.name != null && contact.name.toLowerCase().contains(query)))
+                    items.add(contact);
+        }
+
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(selected, items), false);
+
+        selected = items;
 
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
@@ -227,6 +250,11 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
             }
         });
         diff.dispatchUpdatesTo(this);
+    }
+
+    public void search(String query) {
+        search = query;
+        set(all);
     }
 
     private class DiffCallback extends DiffUtil.Callback {
@@ -265,12 +293,12 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
 
     @Override
     public long getItemId(int position) {
-        return items.get(position).id;
+        return selected.get(position).id;
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return selected.size();
     }
 
     @Override
@@ -282,7 +310,7 @@ public class AdapterContact extends RecyclerView.Adapter<AdapterContact.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.unwire();
-        EntityContact contact = items.get(position);
+        EntityContact contact = selected.get(position);
         holder.bindTo(contact);
         holder.wire();
     }
