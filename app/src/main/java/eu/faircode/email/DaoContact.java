@@ -31,17 +31,21 @@ import androidx.room.Update;
 
 @Dao
 public interface DaoContact {
-    @Query("SELECT * FROM contact")
-    List<EntityContact> getContacts();
-
     @Query("SELECT * FROM contact" +
+            " WHERE account = :account")
+    List<EntityContact> getContacts(long account);
+
+    @Query("SELECT contact.*, account.name AS accountName" +
+            " FROM contact" +
+            " JOIN account ON account.id = contact.account" +
             " ORDER BY times_contacted DESC, last_contacted DESC")
-    LiveData<List<EntityContact>> liveContacts();
+    LiveData<List<TupleContactEx>> liveContacts();
 
     @Query("SELECT * FROM contact" +
-            " WHERE favorite <> " + EntityContact.STATE_IGNORE +
+            " WHERE state <> " + EntityContact.STATE_IGNORE +
             " ORDER BY" +
-            " CASE WHEN favorite = " + EntityContact.STATE_FAVORITE + " THEN 0 ELSE 1 END" +
+            " CASE WHEN state = " + EntityContact.STATE_FAVORITE + " THEN 0 ELSE 1 END" +
+            ", CASE WHEN avatar IS NULL THEN 1 ELSE 0 END" +
             ", times_contacted DESC" +
             ", last_contacted DESC" +
             " LIMIT :count")
@@ -49,9 +53,10 @@ public interface DaoContact {
 
     @Query("SELECT *" +
             " FROM contact" +
-            " WHERE email = :email" +
-            " AND (:type IS NULL OR type = :type)")
-    EntityContact getContact(Integer type, String email);
+            " WHERE account = :account" +
+            " AND type = :type" +
+            " AND email = :email")
+    EntityContact getContact(long account, int type, String email);
 
     @Query("SELECT id AS _id, name, email" +
             ", CASE type" +
@@ -60,9 +65,14 @@ public interface DaoContact {
             "  ELSE '?'" +
             " END AS type" +
             " FROM contact" +
-            " WHERE name LIKE :name" +
-            " AND (:type IS NULL OR type = :type)")
-    Cursor searchContacts(Integer type, String name);
+            " WHERE (:account IS NULL OR account = :account)" +
+            " AND (:type IS NULL OR type = :type)" +
+            " AND (email LIKE :query COLLATE NOCASE OR name LIKE :query COLLATE NOCASE)" +
+            " AND state <> " + EntityContact.STATE_IGNORE +
+            " ORDER BY" +
+            " CASE WHEN name IS NULL THEN 1 ELSE 0 END" +
+            ", name COLLATE NOCASE, email COLLATE NOCASE")
+    Cursor searchContacts(Long account, Integer type, String query);
 
     @Insert
     long insertContact(EntityContact contact);
@@ -70,13 +80,13 @@ public interface DaoContact {
     @Update
     int updateContact(EntityContact contact);
 
-    @Query("UPDATE contact SET favorite = :state WHERE id = :id")
+    @Query("UPDATE contact SET state = :state WHERE id = :id")
     int setContactState(long id, int state);
 
     @Query("DELETE FROM contact" +
             " WHERE last_contacted IS NOT NULL" +
             " AND last_contacted < :before" +
-            " AND favorite <> " + EntityContact.STATE_FAVORITE)
+            " AND state <> " + EntityContact.STATE_FAVORITE)
     int deleteContacts(long before);
 
     @Query("DELETE FROM contact")

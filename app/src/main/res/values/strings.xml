@@ -450,6 +450,7 @@
     <string name="title_rule_enabled">Enabled</string>
     <string name="title_rule_stop">Stop processing rules after executing this rule</string>
     <string name="title_rule_sender">Sender contains</string>
+    <string name="title_rule_recipient">Recipient contains</string>
     <string name="title_rule_subject">Subject contains</string>
     <string name="title_rule_header">Header contains</string>
     <string name="title_rule_regex">Regex</string>
@@ -462,6 +463,8 @@
     <string name="title_rule_cc">Reply to CC addresses</string>
     <string name="title_rule_name_missing">Rule name missing</string>
     <string name="title_rule_condition_missing">Condition missing</string>
+    <string name="title_rule_automation">Automation</string>
+    <string name="title_rule_automation_hint">This will send the intent \'%1$s\' with the extras \'%2$s\'</string>
 
     <string name="title_action_seen">Mark read</string>
     <string name="title_action_archive">Archive</string>

@@ -27,23 +27,28 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import static androidx.room.ForeignKey.CASCADE;
 
 // https://developer.android.com/training/data-storage/room/defining-data
 
 @Entity(
         tableName = EntityContact.TABLE_NAME,
         foreignKeys = {
+                @ForeignKey(childColumns = "account", entity = EntityAccount.class, parentColumns = "id", onDelete = CASCADE)
         },
         indices = {
-                @Index(value = {"email", "type"}, unique = true),
-                @Index(value = {"name", "type"}),
+                @Index(value = {"account", "type", "email"}, unique = true),
+                @Index(value = {"email"}),
+                @Index(value = {"name"}),
+                @Index(value = {"avatar"}),
                 @Index(value = {"times_contacted"}),
                 @Index(value = {"last_contacted"}),
-                @Index(value = {"favorite"})
+                @Index(value = {"state"})
         }
 )
 public class EntityContact implements Serializable {
@@ -59,6 +64,8 @@ public class EntityContact implements Serializable {
     @PrimaryKey(autoGenerate = true)
     public Long id;
     @NonNull
+    public Long account;
+    @NonNull
     public int type;
     @NonNull
     public String email;
@@ -67,9 +74,11 @@ public class EntityContact implements Serializable {
 
     @NonNull
     public Integer times_contacted;
+    @NonNull
+    public Long first_contacted;
+    @NonNull
     public Long last_contacted;
     @NonNull
-    @ColumnInfo(name = "favorite")
     public Integer state = STATE_DEFAULT;
 
     public JSONObject toJSON() throws JSONException {
@@ -80,6 +89,7 @@ public class EntityContact implements Serializable {
         json.put("name", name);
         json.put("avatar", avatar);
         json.put("times_contacted", times_contacted);
+        json.put("first_contacted", first_contacted);
         json.put("last_contacted", last_contacted);
         json.put("state", state);
         return json;
@@ -97,18 +107,10 @@ public class EntityContact implements Serializable {
         if (json.has("avatar") && !json.isNull("avatar"))
             contact.avatar = json.getString("avatar");
 
-        if (json.has("times_contacted"))
-            contact.times_contacted = json.getInt("times_contacted");
-        else
-            contact.times_contacted = 1;
-
-        if (json.has("last_contacted") && !json.isNull("last_contacted"))
-            contact.last_contacted = json.getLong("last_contacted");
-
-        if (json.has("favorite"))
-            contact.state = (json.getBoolean("favorite") ? 1 : 0);
-        if (json.has("state"))
-            contact.state = json.getInt("state");
+        contact.times_contacted = json.getInt("times_contacted");
+        contact.first_contacted = json.getLong("first_contacted");
+        contact.last_contacted = json.getLong("last_contacted");
+        contact.state = json.getInt("state");
 
         return contact;
     }
@@ -117,14 +119,15 @@ public class EntityContact implements Serializable {
     public boolean equals(@Nullable Object obj) {
         if (obj instanceof EntityContact) {
             EntityContact other = (EntityContact) obj;
-            return (this.type == other.type &&
+            return (this.account == other.account &&
+                    this.type == other.type &&
                     this.email.equals(other.email) &&
                     Objects.equals(this.name, other.name) &&
                     Objects.equals(this.avatar, other.avatar) &&
                     this.times_contacted.equals(other.times_contacted) &&
-                    Objects.equals(this.last_contacted, other.last_contacted) &&
+                    this.first_contacted.equals(first_contacted) &&
+                    this.last_contacted.equals(last_contacted) &&
                     this.state.equals(other.state));
-
         } else
             return false;
     }

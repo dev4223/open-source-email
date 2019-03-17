@@ -20,14 +20,18 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -78,11 +82,18 @@ public class EntityRule {
     static final int TYPE_UNSEEN = 2;
     static final int TYPE_MOVE = 3;
     static final int TYPE_ANSWER = 4;
+    static final int TYPE_AUTOMATION = 5;
+
+    static final String ACTION_AUTOMATION = BuildConfig.APPLICATION_ID + ".AUTOMATION";
+    static final String EXTRA_RULE = "rule";
+    static final String EXTRA_SENDER = "sender";
+    static final String EXTRA_SUBJECT = "subject";
 
     boolean matches(Context context, EntityMessage message, Message imessage) throws MessagingException {
         try {
             JSONObject jcondition = new JSONObject(condition);
 
+            // Sender
             JSONObject jsender = jcondition.optJSONObject("sender");
             if (jsender != null) {
                 String value = jsender.getString("value");
@@ -98,6 +109,31 @@ public class EntityRule {
                             matches = true;
                             break;
                         }
+                    }
+                }
+                if (!matches)
+                    return false;
+            }
+
+            // Recipient
+            JSONObject jrecipient = jcondition.optJSONObject("recipient");
+            if (jrecipient != null) {
+                String value = jrecipient.getString("value");
+                boolean regex = jrecipient.getBoolean("regex");
+
+                boolean matches = false;
+                List<Address> recipients = new ArrayList<>();
+                if (message.to != null)
+                    recipients.addAll(Arrays.asList(message.to));
+                if (message.cc != null)
+                    recipients.addAll(Arrays.asList(message.cc));
+                for (Address recipient : recipients) {
+                    InternetAddress ia = (InternetAddress) recipient;
+                    String personal = ia.getPersonal();
+                    String formatted = ((personal == null ? "" : personal + " ") + "<" + ia.getAddress() + ">");
+                    if (matches(context, value, formatted, regex)) {
+                        matches = true;
+                        break;
                     }
                 }
                 if (!matches)
@@ -133,7 +169,7 @@ public class EntityRule {
             }
 
             // Safeguard
-            if (jsender == null && jsubject == null && jheader == null)
+            if (jsender == null && jrecipient == null && jsubject == null && jheader == null)
                 return false;
         } catch (JSONException ex) {
             Log.e(ex);
@@ -175,6 +211,9 @@ public class EntityRule {
                     break;
                 case TYPE_ANSWER:
                     onActionAnswer(context, db, message, jargs);
+                    break;
+                case TYPE_AUTOMATION:
+                    onActionAutomation(context, db, message, jargs);
                     break;
             }
         } catch (JSONException ex) {
@@ -229,6 +268,23 @@ public class EntityRule {
         db.message().setMessageContent(reply.id, true, HtmlHelper.getPreview(body), null);
 
         EntityOperation.queue(context, db, reply, EntityOperation.SEND);
+    }
+
+    private void onActionAutomation(Context context, DB db, EntityMessage message, JSONObject jargs) throws JSONException {
+        String sender = (message.from == null || message.from.length == 0
+                ? null : ((InternetAddress) message.from[0]).getAddress());
+
+        Intent automation = new Intent(ACTION_AUTOMATION);
+        automation.putExtra(EXTRA_RULE, name);
+        automation.putExtra(EXTRA_SENDER, sender);
+        automation.putExtra(EXTRA_SUBJECT, message.subject);
+
+        Log.i("Sending " + automation);
+        try {
+            context.sendBroadcast(automation);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     @Override
