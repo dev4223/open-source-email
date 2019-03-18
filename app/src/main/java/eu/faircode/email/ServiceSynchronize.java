@@ -314,7 +314,7 @@ public class ServiceSynchronize extends LifecycleService {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         for (EntityAccount account : db.account().getAccountsTbd())
-                            nm.deleteNotificationChannel(EntityAccount.getNotificationChannelName(account.id));
+                            nm.deleteNotificationChannel(EntityAccount.getNotificationChannelId(account.id));
                     }
 
                     int accounts = db.account().deleteAccountsTbd();
@@ -668,7 +668,8 @@ public class ServiceSynchronize extends LifecycleService {
                                                     db.beginTransaction();
                                                     message = Core.synchronizeMessage(
                                                             ServiceSynchronize.this,
-                                                            folder, (IMAPFolder) ifolder, (IMAPMessage) imessage,
+                                                            account, folder,
+                                                            (IMAPFolder) ifolder, (IMAPMessage) imessage,
                                                             false,
                                                             db.rule().getEnabledRules(folder.id));
                                                     db.setTransactionSuccessful();
@@ -757,7 +758,8 @@ public class ServiceSynchronize extends LifecycleService {
                                                 db.beginTransaction();
                                                 message = Core.synchronizeMessage(
                                                         ServiceSynchronize.this,
-                                                        folder, (IMAPFolder) ifolder, (IMAPMessage) e.getMessage(),
+                                                        account, folder,
+                                                        (IMAPFolder) ifolder, (IMAPMessage) e.getMessage(),
                                                         false,
                                                         db.rule().getEnabledRules(folder.id));
                                                 db.setTransactionSuccessful();
@@ -1153,14 +1155,6 @@ public class ServiceSynchronize extends LifecycleService {
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         prefs.edit().remove("oneshot").apply();
 
-                        for (EntityAccount account : db.account().getAccounts())
-                            db.account().setAccountState(account.id, null);
-
-                        for (EntityFolder folder : db.folder().getFolders()) {
-                            db.folder().setFolderState(folder.id, null);
-                            db.folder().setFolderSyncState(folder.id, null);
-                        }
-
                         // Restore snooze timers
                         for (EntityMessage message : db.message().getSnoozed())
                             EntityMessage.snooze(context, message.id, message.ui_snoozed);
@@ -1175,6 +1169,15 @@ public class ServiceSynchronize extends LifecycleService {
                             ContextCompat.startForegroundService(context,
                                     new Intent(context, ServiceSynchronize.class)
                                             .setAction("init"));
+                        else {
+                            for (EntityAccount account : db.account().getAccounts())
+                                db.account().setAccountState(account.id, null);
+
+                            for (EntityFolder folder : db.folder().getFolders()) {
+                                db.folder().setFolderState(folder.id, null);
+                                db.folder().setFolderSyncState(folder.id, null);
+                            }
+                        }
                     } catch (Throwable ex) {
                         Log.e(ex);
                     }

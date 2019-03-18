@@ -742,6 +742,8 @@ class Core {
             Folder[] ifolders = defaultFolder.list("*");
             Log.i("Remote folder count=" + ifolders.length + " separator=" + separator);
 
+            Map<String, EntityFolder> nameFolder = new HashMap<>();
+            Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
             for (Folder ifolder : ifolders) {
                 String fullName = ifolder.getFullName();
                 String[] attrs = ((IMAPFolder) ifolder).getAttributes();
@@ -753,7 +755,6 @@ class Core {
                 if (type != null) {
                     names.remove(fullName);
 
-                    int level = EntityFolder.getLevel(separator, fullName);
                     String display = null;
                     if (account.prefix != null && fullName.startsWith(account.prefix + separator))
                         display = fullName.substring(account.prefix.length() + 1);
@@ -765,7 +766,6 @@ class Core {
                         folder.name = fullName;
                         folder.display = display;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
-                        folder.level = level;
                         folder.synchronize = false;
                         folder.poll = ("imap.gmail.com".equals(account.host));
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
@@ -789,8 +789,6 @@ class Core {
                             }
                         }
 
-                        db.folder().setFolderLevel(folder.id, level);
-
                         // Compatibility
                         if ("Inbox_sub".equals(folder.type))
                             db.folder().setFolderType(folder.id, EntityFolder.USER);
@@ -803,6 +801,18 @@ class Core {
                                 db.folder().setFolderType(folder.id, type);
                         }
                     }
+
+                    nameFolder.put(folder.name, folder);
+                    String parentName = folder.getParentName(separator);
+                    if (!parentFolders.containsKey(parentName))
+                        parentFolders.put(parentName, new ArrayList<EntityFolder>());
+                    parentFolders.get(parentName).add(folder);
+                }
+
+                for (String parentName : parentFolders.keySet()) {
+                    EntityFolder parent = nameFolder.get(parentName);
+                    for (EntityFolder child : parentFolders.get(parentName))
+                        db.folder().setFolderParent(child.id, parent == null ? null : parent.id);
                 }
             }
 
@@ -975,7 +985,8 @@ class Core {
                         db.beginTransaction();
                         EntityMessage message = synchronizeMessage(
                                 context,
-                                folder, ifolder, (IMAPMessage) isub[j],
+                                account, folder,
+                                ifolder, (IMAPMessage) isub[j],
                                 false,
                                 rules);
                         ids[from + j] = message.id;
@@ -1065,7 +1076,8 @@ class Core {
 
     static EntityMessage synchronizeMessage(
             Context context,
-            EntityFolder folder, IMAPFolder ifolder, IMAPMessage imessage,
+            EntityAccount account, EntityFolder folder,
+            IMAPFolder ifolder, IMAPMessage imessage,
             boolean browsed,
             List<EntityRule> rules) throws MessagingException, IOException {
         long uid = ifolder.getUID(imessage);
@@ -1229,7 +1241,8 @@ class Core {
                 attachment.id = db.attachment().insertAttachment(attachment);
             }
 
-            if (!EntityFolder.ARCHIVE.equals(folder.type) &&
+            if (message.received > account.created &&
+                    !EntityFolder.ARCHIVE.equals(folder.type) &&
                     !EntityFolder.TRASH.equals(folder.type) &&
                     !EntityFolder.JUNK.equals(folder.type)) {
                 int type = (folder.isOutgoing() ? EntityContact.TYPE_TO : EntityContact.TYPE_FROM);
@@ -1683,7 +1696,7 @@ class Core {
                     channelName = channel.getId();
             }
             if (channelName == null)
-                channelName = EntityAccount.getNotificationChannelName(message.accountNotify ? message.account : 0);
+                channelName = EntityAccount.getNotificationChannelId(message.accountNotify ? message.account : 0);
 
             // Get folder name
             String folderName = message.folderDisplay == null

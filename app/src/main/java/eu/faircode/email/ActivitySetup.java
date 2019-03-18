@@ -30,6 +30,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -538,6 +539,8 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                 jexport.put("accounts", jaccounts);
                 jexport.put("answers", janswers);
                 jexport.put("settings", jsettings);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    jexport.put("channels", ApplicationEx.channelsToJSON(context));
 
                 ContentResolver resolver = context.getContentResolver();
                 DocumentFile file = DocumentFile.fromSingleUri(context, uri);
@@ -748,6 +751,12 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                         }
                     }
                     editor.apply();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        if (jimport.has("channels")) {
+                            JSONArray jchannels = jimport.getJSONArray("channels");
+                            ApplicationEx.channelsFromJSON(context, jchannels);
+                        }
 
                     db.setTransactionSuccessful();
                 } finally {

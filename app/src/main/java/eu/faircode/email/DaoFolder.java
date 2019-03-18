@@ -56,21 +56,24 @@ public interface DaoFolder {
             ", COUNT(message.id) AS messages" +
             ", SUM(CASE WHEN message.content = 1 THEN 1 ELSE 0 END) AS content" +
             ", SUM(CASE WHEN message.ui_seen = 0 THEN 1 ELSE 0 END) AS unseen" +
+            ", (SELECT COUNT(child.id) FROM folder child WHERE child.parent = folder.id) AS childs" +
             " FROM folder" +
             " LEFT JOIN account ON account.id = folder.account" +
             " LEFT JOIN message ON message.folder = folder.id AND NOT message.ui_hide" +
             " WHERE CASE WHEN :account IS NULL" +
             "  THEN folder.unified AND account.synchronize" +
-            "  ELSE folder.account = :account OR folder.account IS NULL" +
+            "  ELSE folder.account = :account AND account.synchronize" +
+            "    AND CASE WHEN :parent IS NULL THEN folder.parent IS NULL ELSE folder.parent = :parent END" +
             " END" +
             " GROUP BY folder.id")
-    LiveData<List<TupleFolderEx>> liveFolders(Long account);
+    LiveData<List<TupleFolderEx>> liveFolders(Long account, Long parent);
 
     @Query("SELECT folder.*" +
             ", account.name AS accountName, account.color AS accountColor, account.state AS accountState" +
             ", COUNT(message.id) AS messages" +
             ", SUM(CASE WHEN message.content = 1 THEN 1 ELSE 0 END) AS content" +
             ", SUM(CASE WHEN message.ui_seen = 0 THEN 1 ELSE 0 END) AS unseen" +
+            ", (SELECT COUNT(child.id) FROM folder child WHERE child.parent = folder.id) AS childs" +
             " FROM folder" +
             " JOIN account ON account.id = folder.account" +
             " LEFT JOIN message ON message.folder = folder.id AND NOT message.ui_hide" +
@@ -91,6 +94,7 @@ public interface DaoFolder {
             ", COUNT(message.id) AS messages" +
             ", SUM(CASE WHEN message.content = 1 THEN 1 ELSE 0 END) AS content" +
             ", SUM(CASE WHEN message.ui_seen = 0 THEN 1 ELSE 0 END) AS unseen" +
+            ", (SELECT COUNT(child.id) FROM folder child WHERE child.parent = folder.id) AS childs" +
             " FROM folder" +
             " LEFT JOIN account ON account.id = folder.account" +
             " LEFT JOIN message ON message.folder = folder.id AND NOT message.ui_hide" +
@@ -152,8 +156,11 @@ public interface DaoFolder {
     @Query("UPDATE folder SET display = :display WHERE id = :id")
     int setFolderDisplay(long id, String display);
 
-    @Query("UPDATE folder SET level = :level WHERE id = :id")
-    int setFolderLevel(long id, int level);
+    @Query("UPDATE folder SET parent = :parent WHERE id = :id")
+    int setFolderParent(long id, Long parent);
+
+    @Query("UPDATE folder SET collapsed = :collapsed WHERE id = :id")
+    int setFolderCollapsed(long id, boolean collapsed);
 
     @Query("UPDATE folder" +
             " SET type = '" + EntityFolder.USER + "'" +
