@@ -24,6 +24,15 @@ public class TupleAccountEx extends EntityAccount {
     public int unsent;
     public int operations;
 
+    public boolean uiEquals(Object obj) {
+        if (obj instanceof TupleAccountEx) {
+            TupleAccountEx other = (TupleAccountEx) obj;
+            return (super.equals(obj) &&
+                    this.unseen == other.unseen);
+        } else
+            return false;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof TupleAccountEx) {

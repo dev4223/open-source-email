@@ -770,7 +770,7 @@ class Core {
                         folder.poll = ("imap.gmail.com".equals(account.host));
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
-                        db.folder().insertFolder(folder);
+                        folder.id = db.folder().insertFolder(folder);
                         Log.i(folder.name + " added type=" + folder.type);
                     } else {
                         Log.i(folder.name + " exists type=" + folder.type);
@@ -1724,9 +1724,6 @@ class Core {
                     .addAction(actionArchive.build())
                     .addAction(actionTrash.build());
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                mbuilder.setSound(null);
-
             if (pro) {
                 if (!TextUtils.isEmpty(message.subject))
                     mbuilder.setContentText(message.subject);
@@ -1765,7 +1762,10 @@ class Core {
                 }
             }
 
-            mbuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                mbuilder.setSound(null);
+            else
+                mbuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
             notifications.add(mbuilder.build());
         }
@@ -1830,12 +1830,12 @@ class Core {
 
     static NotificationCompat.Builder getNotificationError(Context context, String channel, String title, Throwable ex, boolean debug) {
         // Build pending intent
-        Intent intent = new Intent(context, ActivitySetup.class);
+        Intent intent = new Intent(context, ActivityView.class);
         if (debug)
             intent.setAction("error");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(
-                context, ActivitySetup.REQUEST_ERROR, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                context, ActivityView.REQUEST_ERROR, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Build notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channel);

@@ -10,8 +10,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 393
-        versionName "1.393"
+        versionCode 397
+        versionName "1.397"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -111,7 +111,7 @@ dependencies {
     def paging_version = "2.1.0"
     def preference_version = "1.0.0"
     def work_version = "1.0.0"
-    def billingclient_version = "1.2.1"
+    def billingclient_version = "1.2.2"
     def javamail_version = "1.6.3"
     def jsoup_version = "1.11.3"
     def dnsjava_version = "2.1.8"
