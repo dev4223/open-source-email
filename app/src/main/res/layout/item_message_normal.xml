@@ -342,16 +342,24 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ivExpanderAddress" />
 
+        <View
+            android:id="@+id/paddingAddressBottom"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/inAddresses" />
+
         <include
             android:id="@+id/inAddressesMeta"
             layout="@layout/include_addresses_meta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
-            android:layout_marginEnd="6dp"
+            android:layout_marginTop="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/inAddresses" />
+            app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
 
         <include
             android:id="@+id/inAddressesMetaBottom"
@@ -608,7 +616,7 @@
             android:id="@+id/grpAddress"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc,tvIdentityTitle,tvIdentity" />
+            app:constraint_referenced_ids="tvFromExTitle,tvFromEx,tvToTitle,tvTo,tvReplyToTitle,tvReplyTo,tvCcTitle,tvCc,tvBccTitle,tvBcc,tvIdentityTitle,tvIdentity,paddingAddressBottom" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/grpAddressMeta"

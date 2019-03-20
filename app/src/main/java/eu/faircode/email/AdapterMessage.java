@@ -251,6 +251,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private Group grpDay;
 
+        private View paddingAddressBottom;
         private Group grpAddress;
         private Group grpAddressMeta;
         private Group grpAddressMetaBottom;
@@ -356,6 +357,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             grpDay = itemView.findViewById(R.id.grpDay);
 
+            paddingAddressBottom = itemView.findViewById(R.id.paddingAddressBottom);
             grpAddress = itemView.findViewById(R.id.grpAddress);
             grpAddressMeta = itemView.findViewById(R.id.grpAddressMeta);
             grpAddressMetaBottom = itemView.findViewById(R.id.grpAddressMetaBottom);
@@ -464,6 +466,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             grpDay.setVisibility(View.GONE);
 
+            paddingAddressBottom.setMinimumHeight(0);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
@@ -732,6 +735,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void clearExpanded() {
 
             tvSubject.setVisibility(View.VISIBLE);
+            paddingAddressBottom.setMinimumHeight(0);
             grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
@@ -920,6 +924,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvKeywords.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
 
             // dev4223: show Flags and Keywords dependand on show addresses
+            paddingAddressBottom.setMinimumHeight(show_addresses ? (compact ? 18 : 36) : 0);
             grpAddressMeta.setVisibility(View.VISIBLE);
             if(BuildConfig.DEBUG || message.keywords.length > 0) {
                 grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
