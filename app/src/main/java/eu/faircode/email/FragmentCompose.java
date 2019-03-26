@@ -1633,8 +1633,25 @@ public class FragmentCompose extends FragmentBase {
                             draft.references = (ref.references == null ? "" : ref.references + " ") + ref.msgid;
                             draft.inreplyto = ref.msgid;
                             draft.thread = ref.thread;
-                            draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
-                            draft.from = ref.to;
+
+                            // Special case
+                            String from = null;
+                            String to = null;
+                            String me = Helper.canonicalAddress(Helper.myAddress().getAddress());
+                            if (ref.from != null && ref.from.length > 0)
+                                from = Helper.canonicalAddress(((InternetAddress) ref.from[0]).getAddress());
+                            if (ref.to != null && ref.to.length > 0)
+                                to = Helper.canonicalAddress(((InternetAddress) ref.to[0]).getAddress());
+                            if (from != null && from.equals(me)) {
+                                if (to != null && to.equals(me))
+                                    draft.to = ref.reply;
+                                else
+                                    draft.to = ref.to;
+                                draft.from = ref.from;
+                            } else {
+                                draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
+                                draft.from = ref.to;
+                            }
 
                             if ("reply_all".equals(action)) {
                                 List<Address> addresses = new ArrayList<>();
@@ -1665,7 +1682,7 @@ public class FragmentCompose extends FragmentBase {
                             draft.subject = context.getString(R.string.title_subject_forward,
                                     ref.subject == null ? "" : ref.subject);
 
-                        if (answer > 0 && ("reply".equals(action) || "reply_all".equals(action)))
+                        if (answer > 0)
                             body = EntityAnswer.getAnswerText(db, answer, draft.to) + body;
                     }
 
