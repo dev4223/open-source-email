@@ -106,7 +106,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private OpenPgpServiceConnection pgpService;
 
-    private static NumberFormat nf = NumberFormat.getNumberInstance();
+    private NumberFormat nf = NumberFormat.getNumberInstance();
 
     static final int REQUEST_UNIFIED = 1;
     static final int REQUEST_WHY = 2;
@@ -474,10 +474,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 } else if ("outbox".equals(action))
                     onMenuOutbox();
 
-                else if ("error".equals(action))
-                    onDebugInfo();
+                else if ("error".equals(action)) {
+                    Intent ifaq = new Intent(Intent.ACTION_VIEW);
+                    ifaq.setData(Uri.parse(Helper.FAQ_URI + "#frequently-asked-questions"));
+                    ifaq.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    if (ifaq.resolveActivity(getPackageManager()) != null)
+                        startActivity(ifaq);
 
-                else if (action.startsWith("thread")) {
+                } else if (action.startsWith("thread")) {
                     intent.putExtra("thread", action.split(":", 2)[1]);
                     onViewThread(intent);
                 }
@@ -899,7 +903,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(ActivityView.this);
                 lbm.sendBroadcast(
                         new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                .putExtra("account", -1)
+                                .putExtra("account", -1L)
                                 .putExtra("folder", folder));
             }
 
@@ -1530,7 +1534,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 DB db = DB.getInstance(context);
                 EntityAttachment attachment = db.attachment().getAttachment(id);
                 if (attachment == null)
-                    throw new FileNotFoundException();
+                    return null;
                 File file = attachment.getFile(context);
 
                 ParcelFileDescriptor pfd = null;

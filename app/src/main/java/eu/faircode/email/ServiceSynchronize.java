@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -155,15 +156,10 @@ public class ServiceSynchronize extends LifecycleService {
     @Override
     public void onDestroy() {
         Log.i("Service destroy");
+        EntityLog.log(this, "Service destroy");
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
-
-        synchronized (this) {
-            EntityLog.log(this, "Service destroy");
-            if (started)
-                queue_reload(false, "service destroy");
-        }
 
         Widget.update(this, -1);
 
@@ -305,58 +301,64 @@ public class ServiceSynchronize extends LifecycleService {
 
         started = doStart;
 
-        queued++;
-        queue.submit(new Runnable() {
-            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            PowerManager.WakeLock wl = pm.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":manage");
+        try {
+            queued++;
+            queue.submit(new Runnable() {
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                PowerManager.WakeLock wl = pm.newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":manage");
 
-            @Override
-            public void run() {
-                DB db = DB.getInstance(ServiceSynchronize.this);
+                @Override
+                public void run() {
+                    DB db = DB.getInstance(ServiceSynchronize.this);
 
-                try {
-                    wl.acquire();
+                    try {
+                        wl.acquire();
 
-                    EntityLog.log(ServiceSynchronize.this, "Reload" +
-                            " stop=" + doStop + " start=" + doStart + " queued=" + queued + " " + reason);
+                        EntityLog.log(ServiceSynchronize.this, "Reload" +
+                                " stop=" + doStop + " start=" + doStart + " queued=" + queued + " " + reason);
 
-                    if (doStop)
-                        stop();
+                        if (doStop)
+                            stop();
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        for (EntityAccount account : db.account().getAccountsTbd())
-                            nm.deleteNotificationChannel(EntityAccount.getNotificationChannelId(account.id));
-                    }
-
-                    int accounts = db.account().deleteAccountsTbd();
-                    int identities = db.identity().deleteIdentitiesTbd();
-                    if (accounts > 0 || identities > 0)
-                        Log.i("Deleted accounts=" + accounts + " identities=" + identities);
-
-                    if (doStart)
-                        start();
-
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                } finally {
-                    queued--;
-                    EntityLog.log(ServiceSynchronize.this, "Reload done queued=" + queued);
-
-                    if (queued == 0 && !isEnabled()) {
-                        try {
-                            Thread.sleep(STOP_DELAY);
-                        } catch (InterruptedException ignored) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            for (EntityAccount account : db.account().getAccountsTbd())
+                                nm.deleteNotificationChannel(EntityAccount.getNotificationChannelId(account.id));
                         }
-                        if (queued == 0 && !isEnabled())
-                            stopService();
-                    }
 
-                    wl.release();
+                        int accounts = db.account().deleteAccountsTbd();
+                        int identities = db.identity().deleteIdentitiesTbd();
+                        if (accounts > 0 || identities > 0)
+                            Log.i("Deleted accounts=" + accounts + " identities=" + identities);
+
+                        if (doStart)
+                            start();
+
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    } finally {
+                        queued--;
+                        EntityLog.log(ServiceSynchronize.this, "Reload done queued=" + queued);
+
+                        if (!doStart && queued == 0 && !isEnabled()) {
+                            try {
+                                Thread.sleep(STOP_DELAY);
+                            } catch (InterruptedException ignored) {
+                            }
+                            if (!doStart && queued == 0 && !isEnabled()) {
+                                queue.shutdownNow();
+                                stopService();
+                            }
+                        }
+
+                        wl.release();
+                    }
                 }
-            }
-        });
+            });
+        } catch (RejectedExecutionException ex) {
+            Log.w(ex);
+        }
     }
 
     private boolean isEnabled() {
@@ -502,7 +504,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                 final IMAPStore istore = (IMAPStore) isession.getStore(account.getProtocol());
 
-                final Map<EntityFolder, Folder> folders = new HashMap<>();
+                final Map<EntityFolder, IMAPFolder> folders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
                 List<TwoStateOwner> owners = new ArrayList<>();
                 try {
@@ -634,7 +636,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                             db.folder().setFolderState(folder.id, "connecting");
 
-                            final Folder ifolder = istore.getFolder(folder.name);
+                            final IMAPFolder ifolder = (IMAPFolder) istore.getFolder(folder.name);
                             try {
                                 ifolder.open(Folder.READ_WRITE);
                             } catch (MessagingException ex) {
@@ -683,7 +685,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                     message = Core.synchronizeMessage(
                                                             ServiceSynchronize.this,
                                                             account, folder,
-                                                            (IMAPFolder) ifolder, (IMAPMessage) imessage,
+                                                            ifolder, (IMAPMessage) imessage,
                                                             false,
                                                             db.rule().getEnabledRules(folder.id));
                                                     db.setTransactionSuccessful();
@@ -693,7 +695,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                                                 if (db.folder().getFolderDownload(folder.id))
                                                     Core.downloadMessage(ServiceSynchronize.this,
-                                                            folder, (IMAPFolder) ifolder,
+                                                            folder, ifolder,
                                                             (IMAPMessage) imessage, message.id, state);
                                             } catch (MessageRemovedException ex) {
                                                 Log.w(folder.name, ex);
@@ -728,7 +730,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         Log.i(folder.name + " messages removed");
                                         for (Message imessage : e.getMessages())
                                             try {
-                                                long uid = ((IMAPFolder) ifolder).getUID(imessage);
+                                                long uid = ifolder.getUID(imessage);
 
                                                 DB db = DB.getInstance(ServiceSynchronize.this);
                                                 int count = db.message().deleteMessage(folder.id, uid);
@@ -773,7 +775,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                 message = Core.synchronizeMessage(
                                                         ServiceSynchronize.this,
                                                         account, folder,
-                                                        (IMAPFolder) ifolder, (IMAPMessage) e.getMessage(),
+                                                        ifolder, (IMAPMessage) e.getMessage(),
                                                         false,
                                                         db.rule().getEnabledRules(folder.id));
                                                 db.setTransactionSuccessful();
@@ -783,7 +785,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                                             if (db.folder().getFolderDownload(folder.id))
                                                 Core.downloadMessage(ServiceSynchronize.this,
-                                                        folder, (IMAPFolder) ifolder,
+                                                        folder, ifolder,
                                                         (IMAPMessage) e.getMessage(), message.id, state);
                                         } catch (MessageRemovedException ex) {
                                             Log.w(folder.name, ex);
@@ -817,7 +819,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         Log.i(folder.name + " start idle");
                                         while (state.running()) {
                                             Log.i(folder.name + " do idle");
-                                            ((IMAPFolder) ifolder).idle(false);
+                                            ifolder.idle(false);
                                         }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
@@ -837,7 +839,7 @@ public class ServiceSynchronize extends LifecycleService {
                         } else
                             folders.put(folder, null);
 
-                        final TwoStateOwner owner = new TwoStateOwner();
+                        final TwoStateOwner owner = new TwoStateOwner(ServiceSynchronize.this);
 
                         new Handler(getMainLooper()).post(new Runnable() {
                             @Override
@@ -950,13 +952,13 @@ public class ServiceSynchronize extends LifecycleService {
                     AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                     try {
                         while (state.running()) {
-                            if (!istore.isConnected())
+                            if (!istore.isConnected()) // Sends store NOOP
                                 throw new StoreClosedException(istore);
 
                             for (EntityFolder folder : folders.keySet())
                                 if (folder.synchronize)
                                     if (!folder.poll && capIdle) {
-                                        if (!folders.get(folder).isOpen())
+                                        if (!folders.get(folder).isOpen()) // Sends folder NOOP
                                             throw new FolderClosedException(folders.get(folder));
                                     } else
                                         EntityOperation.sync(this, folder.id, false);
