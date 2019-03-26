@@ -141,6 +141,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean compact;
     private boolean name_email;
     private boolean subject_italic;
+    private boolean monospaced;
     private int zoom;
     private String sort;
     private boolean duplicates;
@@ -845,6 +846,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnHtml.setVisibility(!show_html ? View.INVISIBLE : View.GONE);
             ibQuotes.setVisibility(!show_html ? View.INVISIBLE : View.GONE);
             ibImages.setVisibility(!show_html ? View.INVISIBLE : View.GONE);
+
+            tvBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
             tvBody.setVisibility(!show_html ? View.INVISIBLE : View.GONE);
             vwBody.setVisibility(show_html ? View.INVISIBLE : View.GONE);
 
@@ -3000,6 +3003,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.compact = compact;
         this.name_email = prefs.getBoolean("name_email", !compact);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
+        this.monospaced = prefs.getBoolean("monospaced", true);
         this.zoom = zoom;
         this.sort = sort;
         this.duplicates = duplicates;
