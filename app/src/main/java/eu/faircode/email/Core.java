@@ -84,6 +84,7 @@ import javax.net.ssl.SSLException;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
+import me.leolin.shortcutbadger.ShortcutBadger;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
@@ -382,7 +383,8 @@ class Core {
 
         // Delete previous message(s) with same ID
         if (folder.id.equals(message.folder)) {
-            db.message().setMessageUid(message.id, null);
+            // Prevent deleting message
+            db.message().setMessageUid(message.id, -1L);
 
             Message[] ideletes = ifolder.search(new MessageIDTerm(message.msgid));
             for (Message idelete : ideletes) {
@@ -1393,6 +1395,7 @@ class Core {
         Log.i("Notify messages=" + messages.size());
 
         Widget.update(context, messages.size());
+        ShortcutBadger.applyCount(context, messages.size());
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = prefs.edit();

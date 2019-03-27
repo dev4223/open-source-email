@@ -264,7 +264,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private AdapterAttachment adapterAttachment;
         private AdapterImage adapterImage;
-        private TwoStateOwner cowner = new TwoStateOwner(owner);
+        private TwoStateOwner cowner = new TwoStateOwner(owner, "AdapterMessage");
 
         private WebView printWebView = null;
 
@@ -645,6 +645,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             bindFlagged(message);
 
             // Message text preview
+            tvPreview.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT, Typeface.ITALIC);
             tvPreview.setText(message.preview);
             tvPreview.setVisibility(preview && !TextUtils.isEmpty(message.preview) ? View.VISIBLE : View.GONE);
 
@@ -1106,7 +1107,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (attachment.type.startsWith("image/"))
                     images.add(attachment);
             adapterImage.set(images);
-            rvImage.setVisibility(images.size() > 0 ? View.VISIBLE : View.GONE);
 
             boolean show_html = properties.getValue("html", message.id);
             if (message.content && !show_html) {
@@ -1471,6 +1471,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibQuotes.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
             tvBody.setVisibility(View.GONE);
+            rvImage.setVisibility(View.GONE);
 
             // For performance reasons the WebView is created when needed only
             if (!(vwBody instanceof WebView)) {
@@ -1509,7 +1510,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     TypedValue.COMPLEX_UNIT_PX, textSize,
                     context.getResources().getDisplayMetrics()));
             settings.setDefaultFontSize(px);
-            settings.setStandardFontFamily("monospace");
+            if (monospaced)
+                settings.setStandardFontFamily("monospace");
 
             webView.setWebViewClient(new WebViewClient() {
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -1657,6 +1659,35 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putSerializable("message", message);
             bodyTask.execute(context, owner, args, "message:body");
+
+            // Download inline images
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
+
+                        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+                        for (EntityAttachment attachment : attachments)
+                            if (!attachment.available && !TextUtils.isEmpty(attachment.cid))
+                                EntityOperation.queue(context, db, message, EntityOperation.ATTACHMENT, attachment.sequence);
+
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+
+                    return null;
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args, "show:images");
         }
 
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
@@ -1717,6 +1748,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvBody.setMovementMethod(new UrlHandler());
                 tvBody.setVisibility(show_expanded ? View.VISIBLE : View.GONE);
                 pbBody.setVisibility(View.GONE);
+                rvImage.setVisibility(adapterImage.getItemCount() > 0 ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -1789,6 +1821,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         new Intent(ActivityView.ACTION_ACTIVATE_PRO)
                                 .putExtra("uri", uri));
             } else {
+                if ("cid".equals(uri.getScheme()))
+                    return;
+
                 final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
                 View view = LayoutInflater.from(context).inflate(R.layout.dialog_link, null);
@@ -3003,7 +3038,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.compact = compact;
         this.name_email = prefs.getBoolean("name_email", !compact);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
-        this.monospaced = prefs.getBoolean("monospaced", true);
+        this.monospaced = prefs.getBoolean("monospaced", false);
         this.zoom = zoom;
         this.sort = sort;
         this.duplicates = duplicates;

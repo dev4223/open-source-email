@@ -105,6 +105,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swLight;
     private Button btnSound;
 
+    private SwitchCompat swEnglish;
     private SwitchCompat swUpdates;
     private SwitchCompat swDebug;
 
@@ -128,7 +129,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "notify_preview", "search_local", "light", "sound",
             "updates", "debug",
             "first", "why", "last_update_check", "app_support", "message_swipe", "message_select", "folder_actions", "folder_sync",
-            "edit_ref_confirmed", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "show_organization"
+            "edit_ref_confirmed", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "show_organization", "style_toolbar"
     };
 
     @Override
@@ -182,6 +183,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swLight = view.findViewById(R.id.swLight);
         btnSound = view.findViewById(R.id.btnSound);
 
+        swEnglish = view.findViewById(R.id.swEnglish);
         swUpdates = view.findViewById(R.id.swUpdates);
         swDebug = view.findViewById(R.id.swDebug);
 
@@ -244,6 +246,18 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 DialogFragment timePicker = new TimePickerFragment();
                 timePicker.setArguments(args);
                 timePicker.show(getFragmentManager(), "timePicker");
+            }
+        });
+
+        swEnglish.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("english", checked).commit(); // apply won't work here
+
+                Intent intent = new Intent(getContext(), ActivityMain.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                Runtime.getRuntime().exit(0);
             }
         });
 
@@ -610,7 +624,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swFlags.setChecked(prefs.getBoolean("flags", true));
         swPreview.setChecked(prefs.getBoolean("preview", false));
         swAddresses.setChecked(prefs.getBoolean("addresses", true));
-        swMonospaced.setChecked(prefs.getBoolean("monospaced", true));
+        swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
         swHtml.setChecked(prefs.getBoolean("autohtml", false));
         swTracking.setChecked(prefs.getBoolean("remove_tracking", true));
         swImages.setChecked(prefs.getBoolean("autoimages", false));
@@ -634,6 +648,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swNotifyPreview.setEnabled(Helper.isPro(getContext()));
         swSearchLocal.setChecked(prefs.getBoolean("search_local", false));
         swLight.setChecked(prefs.getBoolean("light", false));
+        swEnglish.setChecked(prefs.getBoolean("english", false));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
         swUpdates.setVisibility(Helper.isPlayStoreInstall(getContext()) ? View.GONE : View.VISIBLE);
         swDebug.setChecked(prefs.getBoolean("debug", false));

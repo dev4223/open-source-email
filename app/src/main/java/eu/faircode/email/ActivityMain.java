@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -73,6 +74,10 @@ public class ActivityMain extends AppCompatActivity implements FragmentManager.O
                 }
             }.execute(this, new Bundle(), "main:accounts");
         } else {
+            // Enable compact view on small screens
+            if (!getResources().getConfiguration().isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL))
+                prefs.edit().putBoolean("compact", true).apply();
+
             setTheme(R.style.AppThemeLight);
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);

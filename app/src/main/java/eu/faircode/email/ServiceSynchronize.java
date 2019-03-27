@@ -80,6 +80,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
+import me.leolin.shortcutbadger.ShortcutBadger;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
@@ -129,7 +130,7 @@ public class ServiceSynchronize extends LifecycleService {
             }
         });
 
-        final TwoStateOwner cowner = new TwoStateOwner(this);
+        final TwoStateOwner cowner = new TwoStateOwner(this, "liveUnseenNotify");
 
         db.folder().liveSynchronizing().observe(this, new Observer<Integer>() {
             @Override
@@ -162,6 +163,7 @@ public class ServiceSynchronize extends LifecycleService {
         cm.unregisterNetworkCallback(networkCallback);
 
         Widget.update(this, -1);
+        ShortcutBadger.applyCount(this, 0);
 
         WorkerCleanup.cancel();
 
@@ -839,7 +841,7 @@ public class ServiceSynchronize extends LifecycleService {
                         } else
                             folders.put(folder, null);
 
-                        final TwoStateOwner owner = new TwoStateOwner(ServiceSynchronize.this);
+                        final TwoStateOwner owner = new TwoStateOwner(ServiceSynchronize.this, folder.name);
 
                         new Handler(getMainLooper()).post(new Runnable() {
                             @Override
@@ -970,7 +972,7 @@ public class ServiceSynchronize extends LifecycleService {
                             account.last_connected = new Date().getTime();
                             EntityLog.log(this, account.name + " set last_connected=" + new Date(account.last_connected));
                             db.account().setAccountConnected(account.id, account.last_connected);
-                            db.account().setAccountError(account.id, capIdle ? null : getString(R.string.title_no_idle));
+                            db.account().setAccountWarning(account.id, capIdle ? null : getString(R.string.title_no_idle));
 
                             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                             nm.cancel("receive", account.id.intValue());

@@ -34,6 +34,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
@@ -123,6 +124,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
@@ -175,6 +177,8 @@ public class FragmentCompose extends FragmentBase {
     private boolean autosave = false;
     private boolean busy = false;
 
+    private boolean monospaced = false;
+    private boolean style = true;
     private boolean encrypt = false;
     private OpenPgpServiceConnection pgpService;
 
@@ -185,6 +189,10 @@ public class FragmentCompose extends FragmentBase {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         pro = Helper.isPro(getContext());
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        monospaced = prefs.getBoolean("monospaced", false);
+        style = prefs.getBoolean("style_toolbar", true);
     }
 
     @Override
@@ -324,6 +332,8 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
+        etBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
+
         edit_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -336,10 +346,10 @@ public class FragmentCompose extends FragmentBase {
                         onMenuStyle(item.getItemId());
                         return true;
                     case R.id.menu_image:
-                        onMenuImage();
+                        onActionImage();
                         return true;
                     case R.id.menu_attachment:
-                        onMenuAttachment();
+                        onActionAttachment();
                         return true;
                     default:
                         return false;
@@ -733,16 +743,24 @@ public class FragmentCompose extends FragmentBase {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
+
         menu.findItem(R.id.menu_addresses).setVisible(working >= 0);
         menu.findItem(R.id.menu_zoom).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_style_toolbar).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_image).setVisible(state == State.LOADED && !style);
+        menu.findItem(R.id.menu_attachment).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_clear).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_encrypt).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_send_after).setVisible(state == State.LOADED);
 
         menu.findItem(R.id.menu_zoom).setEnabled(!busy);
+        menu.findItem(R.id.menu_image).setEnabled(!busy);
+        menu.findItem(R.id.menu_attachment).setEnabled(!busy);
         menu.findItem(R.id.menu_clear).setEnabled(!busy);
         menu.findItem(R.id.menu_encrypt).setEnabled(!busy);
         menu.findItem(R.id.menu_send_after).setEnabled(!busy);
+
+        menu.findItem(R.id.menu_style_toolbar).setChecked(style);
 
         menu.findItem(R.id.menu_encrypt).setChecked(encrypt);
         bottom_navigation.getMenu().findItem(R.id.action_send)
@@ -762,12 +780,20 @@ public class FragmentCompose extends FragmentBase {
             case R.id.menu_zoom:
                 onMenuZoom();
                 return true;
+            case R.id.menu_style_toolbar:
+                onMenuStyleToolbar();
+                return true;
+            case R.id.menu_image:
+                onActionImage();
+                return true;
+            case R.id.menu_attachment:
+                onActionAttachment();
+                return true;
             case R.id.menu_clear:
                 onMenuStyle(item.getItemId());
                 return true;
             case R.id.menu_encrypt:
-                encrypt = !encrypt;
-                getActivity().invalidateOptionsMenu();
+                onMenuEncrypt();
                 return true;
             case R.id.menu_send_after:
                 onMenuSendAfter();
@@ -775,6 +801,42 @@ public class FragmentCompose extends FragmentBase {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void onMenuAddresses() {
+        grpAddresses.setVisibility(grpAddresses.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+    }
+
+    private void onMenuZoom() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean compact = prefs.getBoolean("compact", false);
+        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
+        zoom = ++zoom % 3;
+        prefs.edit().putInt("zoom", zoom).apply();
+        setZoom();
+    }
+
+    private void setZoom() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean compact = prefs.getBoolean("compact", false);
+        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
+        setZoom(zoom);
+    }
+
+    private void setZoom(int zoom) {
+        float textSize = Helper.getTextSize(getContext(), zoom);
+        if (textSize != 0) {
+            etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+            tvReference.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+        }
+    }
+
+    private void onMenuStyleToolbar() {
+        style = !style;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("style_toolbar", style).apply();
+        getActivity().invalidateOptionsMenu();
+        edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
     }
 
     private void onMenuStyle(int id) {
@@ -879,6 +941,11 @@ public class FragmentCompose extends FragmentBase {
         etBody.setSelection(end);
     }
 
+    private void onMenuEncrypt() {
+        encrypt = !encrypt;
+        getActivity().invalidateOptionsMenu();
+    }
+
     private void onMenuSendAfter() {
         DialogDuration.show(getContext(), getViewLifecycleOwner(), R.string.title_send_at,
                 new DialogDuration.IDialogDuration() {
@@ -919,31 +986,7 @@ public class FragmentCompose extends FragmentBase {
                 });
     }
 
-    private void onMenuZoom() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean compact = prefs.getBoolean("compact", false);
-        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
-        zoom = ++zoom % 3;
-        prefs.edit().putInt("zoom", zoom).apply();
-        setZoom();
-    }
-
-    private void setZoom() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean compact = prefs.getBoolean("compact", false);
-        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
-        setZoom(zoom);
-    }
-
-    private void setZoom(int zoom) {
-        float textSize = Helper.getTextSize(getContext(), zoom);
-        if (textSize != 0) {
-            etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-            tvReference.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-        }
-    }
-
-    private void onMenuImage() {
+    private void onActionImage() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
@@ -954,7 +997,7 @@ public class FragmentCompose extends FragmentBase {
             startActivityForResult(Helper.getChooser(getContext(), intent), ActivityCompose.REQUEST_IMAGE);
     }
 
-    private void onMenuAttachment() {
+    private void onActionAttachment() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
@@ -964,10 +1007,6 @@ public class FragmentCompose extends FragmentBase {
             Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
         else
             startActivityForResult(Helper.getChooser(getContext(), intent), ActivityCompose.REQUEST_ATTACHMENT);
-    }
-
-    private void onMenuAddresses() {
-        grpAddresses.setVisibility(grpAddresses.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
     }
 
     private void onActionDelete() {
@@ -1512,13 +1551,21 @@ public class FragmentCompose extends FragmentBase {
                         options.outHeight / factor > REDUCED_IMAGE_SIZE)
                     factor *= 2;
 
-                if (factor > 1) {
+                Matrix rotation = ("image/jpeg".equals(attachment.type) ? getImageRotation(file) : null);
+
+                if (factor > 1 || rotation != null) {
                     options.inJustDecodeBounds = false;
                     options.inSampleSize = factor;
 
                     Bitmap scaled = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
                     if (scaled != null) {
-                        Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight());
+                        Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight() + " rotation=" + rotation);
+
+                        if (rotation != null) {
+                            Bitmap rotated = Bitmap.createBitmap(scaled, 0, 0, scaled.getWidth(), scaled.getHeight(), rotation, true);
+                            scaled.recycle();
+                            scaled = rotated;
+                        }
 
                         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
                             scaled.compress("image/jpeg".equals(attachment.type)
@@ -1546,6 +1593,43 @@ public class FragmentCompose extends FragmentBase {
         return attachment;
     }
 
+    private static Matrix getImageRotation(File file) throws IOException {
+        ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return null;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                return matrix;
+            default:
+                return null;
+        }
+    }
+
     private SimpleTask<EntityMessage> draftLoader = new SimpleTask<EntityMessage>() {
         @Override
         protected EntityMessage onExecute(Context context, Bundle args) throws IOException {
@@ -1567,8 +1651,6 @@ public class FragmentCompose extends FragmentBase {
                     // New draft
                     if ("edit".equals(action))
                         throw new IllegalStateException("Draft not found hide=" + (draft != null));
-
-                    List<TupleIdentityEx> identities = db.identity().getComposableIdentities(null);
 
                     EntityFolder drafts;
                     EntityMessage ref = db.message().getMessage(reference);
@@ -1654,6 +1736,7 @@ public class FragmentCompose extends FragmentBase {
                             }
 
                             if ("reply_all".equals(action)) {
+                                // Remove self from cc
                                 List<Address> addresses = new ArrayList<>();
                                 if (ref.to != null)
                                     addresses.addAll(Arrays.asList(ref.to));
@@ -1661,6 +1744,7 @@ public class FragmentCompose extends FragmentBase {
                                     addresses.addAll(Arrays.asList(ref.cc));
                                 for (Address address : new ArrayList<>(addresses)) {
                                     String cc = Helper.canonicalAddress(((InternetAddress) address).getAddress());
+                                    List<TupleIdentityEx> identities = db.identity().getComposableIdentities(ref.account);
                                     for (EntityIdentity identity : identities) {
                                         String email = Helper.canonicalAddress(identity.email);
                                         if (cc.equals(email))
@@ -1690,6 +1774,7 @@ public class FragmentCompose extends FragmentBase {
                     int icount = 0;
                     EntityIdentity first = null;
                     EntityIdentity primary = null;
+                    List<TupleIdentityEx> identities = db.identity().getComposableIdentities(null);
 
                     int iindex = -1;
                     do {
@@ -2251,7 +2336,7 @@ public class FragmentCompose extends FragmentBase {
                 DB db = DB.getInstance(context);
 
                 EntityMessage draft = db.message().getMessage(id);
-                if (!draft.content)
+                if (draft == null || !draft.content)
                     return null;
 
                 List<EntityAttachment> attachments = db.attachment().getAttachments(id);
@@ -2310,7 +2395,7 @@ public class FragmentCompose extends FragmentBase {
                 autosave = true;
 
                 pbWait.setVisibility(View.GONE);
-                edit_bar.setVisibility(View.VISIBLE);
+                edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
                 bottom_navigation.setVisibility(View.VISIBLE);
                 Helper.setViewsEnabled(view, true);
 
