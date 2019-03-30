@@ -333,6 +333,7 @@ public class FragmentCompose extends FragmentBase {
         });
 
         etBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
+        tvReference.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
 
         edit_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -1717,19 +1718,27 @@ public class FragmentCompose extends FragmentBase {
                             draft.thread = ref.thread;
 
                             // Special case
-                            String from = null;
-                            String to = null;
-                            String me = Helper.canonicalAddress(Helper.myAddress().getAddress());
-                            if (ref.from != null && ref.from.length > 0)
-                                from = Helper.canonicalAddress(((InternetAddress) ref.from[0]).getAddress());
-                            if (ref.to != null && ref.to.length > 0)
-                                to = Helper.canonicalAddress(((InternetAddress) ref.to[0]).getAddress());
-                            if (from != null && from.equals(me)) {
-                                if (to != null && to.equals(me))
-                                    draft.to = ref.reply;
-                                else
-                                    draft.to = ref.to;
-                                draft.from = ref.from;
+                            if (BuildConfig.DEBUG) {
+                                String from = null;
+                                String to = null;
+                                String delivered = Helper.canonicalAddress(ref.deliveredto);
+                                String me = Helper.canonicalAddress(Helper.myAddress().getAddress());
+
+                                if (ref.from != null && ref.from.length > 0)
+                                    from = Helper.canonicalAddress(((InternetAddress) ref.from[0]).getAddress());
+                                if (ref.to != null && ref.to.length > 0)
+                                    to = Helper.canonicalAddress(((InternetAddress) ref.to[0]).getAddress());
+
+                                if (delivered.equals(me) && from != null && from.equals(me)) {
+                                    if (to != null && to.equals(me))
+                                        draft.to = ref.reply;
+                                    else
+                                        draft.to = ref.to;
+                                    draft.from = ref.from;
+                                } else {
+                                    draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
+                                    draft.from = ref.to;
+                                }
                             } else {
                                 draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
                                 draft.from = ref.to;

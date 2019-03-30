@@ -11,8 +11,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 409
-        versionName "1.409"
+        versionCode 413
+        versionName "1.413"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -101,6 +101,7 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    def archcore_version = "2.0.1"
     def appcompat_version = "1.0.2"
     def recyclerview_version = "1.0.0"
     def coordinatorlayout_version = "1.0.0"
@@ -118,10 +119,12 @@ dependencies {
     def jsoup_version = "1.11.3"
     def dnsjava_version = "2.1.8"
     def openpgp_version = "12.0"
-    def requery_version = "3.27.1"
+    def requery_version = "3.27.2"
     def badge_version = "1.1.22"
 
     // https://developer.android.com/jetpack/androidx/releases/
+    implementation "androidx.arch.core:core-common:$archcore_version"
+    implementation "androidx.arch.core:core-runtime:$archcore_version"
 
     // https://mvnrepository.com/artifact/androidx.appcompat/appcompat
     implementation "androidx.appcompat:appcompat:$appcompat_version"
@@ -181,6 +184,7 @@ dependencies {
     // https://github.com/open-keychain/openpgp-api
     implementation "org.sufficientlysecure:openpgp-api:$openpgp_version"
 
+    // https://www.sqlite.org/changes.html
     // https://github.com/requery/sqlite-android/
     implementation "io.requery:sqlite-android:$requery_version"
 

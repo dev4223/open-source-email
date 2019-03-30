@@ -1109,11 +1109,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             adapterImage.set(images);
 
             boolean show_html = properties.getValue("html", message.id);
-            if (message.content && !show_html) {
-                Bundle args = new Bundle();
-                args.putSerializable("message", message);
-                bodyTask.execute(context, owner, args, "message:body");
-            }
+            if (message.content)
+                if (show_html)
+                    onShowHtmlConfirmed(message);
+                else {
+                    Bundle args = new Bundle();
+                    args.putSerializable("message", message);
+                    bodyTask.execute(context, owner, args, "message:body");
+                }
         }
 
         private TupleMessageEx getMessage() {
@@ -1197,12 +1200,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onToggleFlag(TupleMessageEx message) {
-            Log.i("Set message id=" + message.id +
-                    " flagged=" + message.ui_flagged + " " + message.unflagged + "/" + message.count);
+            int flagged = (message.count - message.unflagged);
+            Log.i("Set message id=" + message.id + " flagged=" + flagged);
 
             Bundle args = new Bundle();
             args.putLong("id", message.id);
-            args.putBoolean("flagged", !message.ui_flagged);
+            args.putBoolean("flagged", flagged == 0);
             args.putBoolean("thread", viewType != ViewType.THREAD);
 
             message.unflagged = message.ui_flagged ? message.count : 0;
@@ -1225,7 +1228,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return null;
 
                         List<EntityMessage> messages = db.message().getMessageByThread(
-                                message.account, message.thread, threading && thread ? null : id, message.folder);
+                                message.account, message.thread, threading && thread ? null : id, null);
                         for (EntityMessage threaded : messages)
                             EntityOperation.queue(context, db, threaded, EntityOperation.FLAG, flagged);
 
@@ -1375,10 +1378,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else {
                 boolean expanded = !properties.getValue("expanded", message.id);
                 properties.setValue("expanded", message.id, expanded);
-                if (!expanded) {
-                    properties.setValue("quotes", message.id, false);
-                    properties.setValue("images", message.id, false);
-                }
 
                 int pos = getAdapterPosition();
                 notifyItemChanged(pos);
@@ -1467,10 +1466,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         @SuppressLint("ClickableViewAccessibility")
         private void onShowHtmlConfirmed(final TupleMessageEx message) {
             properties.setValue("html", message.id, true);
+
+            boolean show_images = properties.getValue("images", message.id);
+
             btnHtml.setVisibility(View.GONE);
             ibQuotes.setVisibility(View.GONE);
-            ibImages.setVisibility(View.GONE);
-            tvBody.setVisibility(View.GONE);
+            ibImages.setVisibility(show_images ? View.GONE : View.INVISIBLE);
             rvImage.setVisibility(View.GONE);
 
             // For performance reasons the WebView is created when needed only
@@ -1483,6 +1484,70 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             setMeasuredDimension(getMeasuredWidth(), tvBody.getMinHeight());
                     }
                 };
+
+                webView.setWebViewClient(new WebViewClient() {
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        Log.i("Open url=" + url);
+
+                        Uri uri = Uri.parse(url);
+                        if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                            return false;
+
+                        onOpenLink(uri);
+                        return true;
+                    }
+                });
+
+                webView.setDownloadListener(new DownloadListener() {
+                    public void onDownloadStart(
+                            String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                        Log.i("Download url=" + url + " mime type=" + mimetype);
+                        Uri uri = Uri.parse(url);
+                        Helper.view(context, owner, uri, true);
+                    }
+                });
+
+                webView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
+                        WebView.HitTestResult result = ((WebView) view).getHitTestResult();
+                        if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
+                                result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                            Log.i("Long press url=" + result.getExtra());
+
+                            Uri uri = Uri.parse(result.getExtra());
+                            Helper.view(context, owner, uri, true);
+
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+                // Fix zooming
+                webView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent me) {
+                        if (me.getPointerCount() == 2) {
+                            ConstraintLayout cl = (ConstraintLayout) view;
+                            switch (me.getAction()) {
+                                case MotionEvent.ACTION_DOWN:
+                                    cl.requestDisallowInterceptTouchEvent(true);
+                                    break;
+
+                                case MotionEvent.ACTION_MOVE:
+                                    cl.requestDisallowInterceptTouchEvent(true);
+                                    break;
+
+                                case MotionEvent.ACTION_UP:
+                                    cl.requestDisallowInterceptTouchEvent(false);
+                                    break;
+                            }
+                        }
+                        return false;
+                    }
+                });
+
                 webView.setId(vwBody.getId());
                 webView.setVisibility(vwBody.getVisibility());
 
@@ -1504,6 +1569,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             settings.setDisplayZoomControls(false);
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             settings.setAllowFileAccess(false);
+            settings.setLoadsImagesAutomatically(show_images);
 
             // Set default font
             int px = Math.round(TypedValue.applyDimension(
@@ -1513,94 +1579,50 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (monospaced)
                 settings.setStandardFontFamily("monospace");
 
-            webView.setWebViewClient(new WebViewClient() {
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    Log.i("Open url=" + url);
-
-                    Uri uri = Uri.parse(url);
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                        return false;
-
-                    onOpenLink(uri);
-                    return true;
-                }
-            });
-
-            webView.setDownloadListener(new DownloadListener() {
-                public void onDownloadStart(
-                        String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                    Log.i("Download url=" + url + " mime type=" + mimetype);
-                    Uri uri = Uri.parse(url);
-                    Helper.view(context, owner, uri, true);
-                }
-            });
-
-            webView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    WebView.HitTestResult result = ((WebView) view).getHitTestResult();
-                    if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                            result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                        Log.i("Long press url=" + result.getExtra());
-
-                        Uri uri = Uri.parse(result.getExtra());
-                        Helper.view(context, owner, uri, true);
-
-                        return true;
-                    }
-                    return false;
-                }
-            });
-
-            // Fix zooming
-            webView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent me) {
-                    if (me.getPointerCount() == 2) {
-                        ConstraintLayout cl = (ConstraintLayout) view;
-                        switch (me.getAction()) {
-                            case MotionEvent.ACTION_DOWN:
-                                cl.requestDisallowInterceptTouchEvent(true);
-                                break;
-
-                            case MotionEvent.ACTION_MOVE:
-                                cl.requestDisallowInterceptTouchEvent(true);
-                                break;
-
-                            case MotionEvent.ACTION_UP:
-                                cl.requestDisallowInterceptTouchEvent(false);
-                                break;
-                        }
-                    }
-                    return false;
-                }
-            });
-
             String html = properties.getHtml(message.id);
             if (TextUtils.isEmpty(html)) {
                 Bundle args = new Bundle();
                 args.putLong("id", message.id);
 
-                new SimpleTask<String>() {
+                new SimpleTask<OriginalMessage>() {
                     @Override
-                    protected String onExecute(Context context, Bundle args) throws IOException {
+                    protected OriginalMessage onExecute(Context context, Bundle args) throws IOException {
                         long id = args.getLong("id");
-                        return HtmlHelper.removeTracking(context, getHtmlEmbedded(id));
+
+                        OriginalMessage original = new OriginalMessage();
+                        original.html = HtmlHelper.removeTracking(context, getHtmlEmbedded(id));
+
+                        Document doc = Jsoup.parse(original.html);
+                        for (Element img : doc.select("img")) {
+                            Uri uri = Uri.parse(img.attr("src"));
+                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+                                original.has_images = true;
+                                break;
+                            }
+                        }
+
+                        return original;
                     }
 
                     @Override
-                    protected void onExecuted(Bundle args, String html) {
+                    protected void onExecuted(Bundle args, OriginalMessage original) {
                         long id = args.getLong("id");
-                        properties.setHtml(id, html);
+                        properties.setHtml(id, original.html);
+                        if (!original.has_images)
+                            properties.setValue("images", id, true);
 
                         TupleMessageEx amessage = getMessage();
                         if (amessage == null || !amessage.id.equals(id))
                             return;
 
-                        webView.loadDataWithBaseURL("email://", html, "text/html", "UTF-8", null);
+                        boolean show_images = properties.getValue("images", id);
+                        ibImages.setVisibility(show_images ? View.GONE : View.VISIBLE);
+
+                        webView.loadDataWithBaseURL("email://", original.html, "text/html", "UTF-8", null);
 
                         boolean expanded = properties.getValue("expanded", id);
                         pbBody.setVisibility(View.GONE);
+                        tvBody.setVisibility(View.GONE);
                         webView.setVisibility(expanded ? View.VISIBLE : View.GONE);
                     }
 
@@ -1614,6 +1636,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 pbBody.setVisibility(View.GONE);
                 webView.setVisibility(View.VISIBLE);
             }
+        }
+
+        private class OriginalMessage {
+            String html;
+            boolean has_images;
         }
 
         private void onShowQuotes(final TupleMessageEx message) {
@@ -1654,11 +1681,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onShowImagesConfirmed(final TupleMessageEx message) {
             properties.setValue("images", message.id, true);
-            ibImages.setEnabled(false);
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
-            bodyTask.execute(context, owner, args, "message:body");
+
+            boolean show_html = properties.getValue("html", message.id);
+            if (show_html)
+                onShowHtmlConfirmed(message);
+            else {
+                ibImages.setEnabled(false);
+                bodyTask.execute(context, owner, args, "message:body");
+            }
 
             // Download inline images
             new SimpleTask<Void>() {
@@ -3057,7 +3090,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);
         this.autohtml = prefs.getBoolean("autohtml", false);
-        this.autoimages = (!this.autohtml && prefs.getBoolean("autoimages", false));
+        this.autoimages = prefs.getBoolean("autoimages", false);
         this.debug = prefs.getBoolean("debug", false);
 
         this.textSize = Helper.getTextSize(context, zoom);

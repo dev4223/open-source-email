@@ -508,7 +508,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                 final Map<EntityFolder, IMAPFolder> folders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
-                List<TwoStateOwner> owners = new ArrayList<>();
+                final List<TwoStateOwner> cowners = new ArrayList<>();
                 try {
                     // Listen for store events
                     istore.addStoreListener(new StoreListener() {
@@ -681,19 +681,12 @@ public class ServiceSynchronize extends LifecycleService {
 
                                         for (Message imessage : e.getMessages())
                                             try {
-                                                EntityMessage message;
-                                                try {
-                                                    db.beginTransaction();
-                                                    message = Core.synchronizeMessage(
-                                                            ServiceSynchronize.this,
-                                                            account, folder,
-                                                            ifolder, (IMAPMessage) imessage,
-                                                            false,
-                                                            db.rule().getEnabledRules(folder.id));
-                                                    db.setTransactionSuccessful();
-                                                } finally {
-                                                    db.endTransaction();
-                                                }
+                                                EntityMessage message = Core.synchronizeMessage(
+                                                        ServiceSynchronize.this,
+                                                        account, folder,
+                                                        ifolder, (IMAPMessage) imessage,
+                                                        false,
+                                                        db.rule().getEnabledRules(folder.id));
 
                                                 if (db.folder().getFolderDownload(folder.id))
                                                     Core.downloadMessage(ServiceSynchronize.this,
@@ -771,19 +764,12 @@ public class ServiceSynchronize extends LifecycleService {
                                             fp.add(IMAPFolder.FetchProfileItem.FLAGS);
                                             ifolder.fetch(new Message[]{e.getMessage()}, fp);
 
-                                            EntityMessage message;
-                                            try {
-                                                db.beginTransaction();
-                                                message = Core.synchronizeMessage(
-                                                        ServiceSynchronize.this,
-                                                        account, folder,
-                                                        ifolder, (IMAPMessage) e.getMessage(),
-                                                        false,
-                                                        db.rule().getEnabledRules(folder.id));
-                                                db.setTransactionSuccessful();
-                                            } finally {
-                                                db.endTransaction();
-                                            }
+                                            EntityMessage message = Core.synchronizeMessage(
+                                                    ServiceSynchronize.this,
+                                                    account, folder,
+                                                    ifolder, (IMAPMessage) e.getMessage(),
+                                                    false,
+                                                    db.rule().getEnabledRules(folder.id));
 
                                             if (db.folder().getFolderDownload(folder.id))
                                                 Core.downloadMessage(ServiceSynchronize.this,
@@ -841,12 +827,13 @@ public class ServiceSynchronize extends LifecycleService {
                         } else
                             folders.put(folder, null);
 
-                        final TwoStateOwner owner = new TwoStateOwner(ServiceSynchronize.this, folder.name);
+                        final TwoStateOwner cowner = new TwoStateOwner(ServiceSynchronize.this, folder.name);
+                        cowner.start();
 
                         new Handler(getMainLooper()).post(new Runnable() {
                             @Override
                             public void run() {
-                                db.operation().liveOperations(folder.id).observe(owner, new Observer<List<EntityOperation>>() {
+                                db.operation().liveOperations(folder.id).observe(cowner, new Observer<List<EntityOperation>>() {
                                     private List<Long> handling = new ArrayList<>();
                                     private final ExecutorService folderExecutor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
                                     private final PowerManager.WakeLock wlFolder = pm.newWakeLock(
@@ -931,8 +918,7 @@ public class ServiceSynchronize extends LifecycleService {
                             }
                         });
 
-                        owner.start();
-                        owners.add(owner);
+                        cowners.add(cowner);
                     }
 
                     // Keep alive alarm receiver
@@ -1006,16 +992,18 @@ public class ServiceSynchronize extends LifecycleService {
                     }
 
                     Log.i(account.name + " done state=" + state);
+                } catch (StoreClosedException ex) {
+                    Log.w(ex);
                 } catch (Throwable ex) {
                     Log.e(account.name, ex);
                     Core.reportError(this, account, null, ex);
                     db.account().setAccountError(account.id, Helper.formatThrowable(ex));
                 } finally {
                     // Stop watching for operations
-                    for (TwoStateOwner owner : owners)
-                        owner.stop();
-                    owners.clear();
+                    for (TwoStateOwner owner : cowners)
+                        owner.destroy();
 
+                    // Update state
                     EntityLog.log(this, account.name + " closing");
                     db.account().setAccountState(account.id, "closing");
                     for (EntityFolder folder : folders.keySet())
@@ -1039,6 +1027,7 @@ public class ServiceSynchronize extends LifecycleService {
                         state.join(idler);
                     idlers.clear();
 
+                    // Update state
                     for (EntityFolder folder : folders.keySet())
                         if (folder.synchronize && !folder.poll)
                             db.folder().setFolderState(folder.id, null);

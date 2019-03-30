@@ -24,8 +24,9 @@ For authorizing:
 ## Known problems
 
 * ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
-* A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
+* A [bug in Android](https://issuetracker.google.com/issues/119872129) "*Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
 * A [bug in Android 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format.
+* A [bug in Android](https://issuetracker.google.com/issues/62427912) "*ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
 
 ## Planned features
 
@@ -81,7 +82,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(19) Why are the pro features so expensive?](#user-content-faq19)
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort' and 'Connection reset by peer' mean?](#user-content-faq22)
+* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer' and 'Read timed out' mean?](#user-content-faq22)
 * [(23) Why do I get 'Too many simultaneous connections' ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
@@ -145,6 +146,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(83) What does 'User is authenticated but not connected' mean?](#user-content-faq83)
 * [(84) What are local contacts for?](#user-content-faq84)
 * [(85) Why is an identity not available?](#user-content-faq85)
+* [(86) What are 'extra privacy features'?](#user-content-faq86)
 
 [I have another question.](#support)
 
@@ -491,7 +493,7 @@ Note that apps cannot change notification settings, including the notification l
 <br />
 
 <a name="faq22"></a>
-**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort' and 'Connection reset by peer' mean?**
+**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer' and 'Read timed out' mean?**
 
 The messages *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
 mean that FairEmail was not able to connect to the email server.
@@ -501,6 +503,8 @@ means that the email server or something between FairEmail and the email server 
 This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
 The message *... Connection reset by peer ...* means that the email server actively terminated an existing connection.
+
+The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connction is bad.
 
 Possible causes are:
 
@@ -1392,6 +1396,16 @@ An identity is available for sending a new message or replying or forwarding an 
 * the associated account has a drafts folder
 
 FairEmail will try to select the best identity based on the *to* address of the message replied to / being forwarded.
+
+<br />
+
+<a name="faq86"></a>
+**(86) What are 'extra privacy features'?**
+
+The advanced option *extra privacy features* enables:
+
+* Detection and removal of [tracking images](#user-content-faq82)
+* Splitting linked images into an image and a link
 
 <br />
 

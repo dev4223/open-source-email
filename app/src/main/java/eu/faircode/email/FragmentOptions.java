@@ -84,7 +84,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swAddresses;
     private SwitchCompat swMonospaced;
     private SwitchCompat swHtml;
-    private SwitchCompat swTracking;
     private SwitchCompat swImages;
     private SwitchCompat swActionbar;
 
@@ -100,11 +99,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swSender;
     private SwitchCompat swAutoSend;
 
+    private SwitchCompat swBadge;
     private SwitchCompat swNotifyPreview;
     private SwitchCompat swSearchLocal;
     private SwitchCompat swLight;
     private Button btnSound;
 
+    private SwitchCompat swParanoid;
     private SwitchCompat swEnglish;
     private SwitchCompat swUpdates;
     private SwitchCompat swDebug;
@@ -123,11 +124,11 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "enabled", "schedule_start", "schedule_end",
             "metered", "download",
             "startup", "date", "threading", "avatars", "identicons", "name_email", "subject_italic", "flags", "preview",
-            "addresses", "monospaced", "autohtml", "remove_tracking", "autoimages", "actionbar",
+            "addresses", "monospaced", "autohtml", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext", "collapse", "autoread", "automove",
             "autoresize", "sender", "autosend",
             "notify_preview", "search_local", "light", "sound",
-            "updates", "debug",
+            "paranoid", "english", "updates", "debug",
             "first", "why", "last_update_check", "app_support", "message_swipe", "message_select", "folder_actions", "folder_sync",
             "edit_ref_confirmed", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "show_organization", "style_toolbar"
     };
@@ -162,7 +163,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAddresses = view.findViewById(R.id.swAddresses);
         swMonospaced = view.findViewById(R.id.swMonospaced);
         swHtml = view.findViewById(R.id.swHtml);
-        swTracking = view.findViewById(R.id.swTracking);
         swImages = view.findViewById(R.id.swImages);
         swActionbar = view.findViewById(R.id.swActionbar);
 
@@ -178,11 +178,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swSender = view.findViewById(R.id.swSender);
         swAutoSend = view.findViewById(R.id.swAutoSend);
 
+        swBadge = view.findViewById(R.id.swBadge);
         swNotifyPreview = view.findViewById(R.id.swNotifyPreview);
         swSearchLocal = view.findViewById(R.id.swSearchLocal);
         swLight = view.findViewById(R.id.swLight);
         btnSound = view.findViewById(R.id.btnSound);
 
+        swParanoid = view.findViewById(R.id.swParanoid);
         swEnglish = view.findViewById(R.id.swEnglish);
         swUpdates = view.findViewById(R.id.swUpdates);
         swDebug = view.findViewById(R.id.swDebug);
@@ -246,6 +248,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 DialogFragment timePicker = new TimePickerFragment();
                 timePicker.setArguments(args);
                 timePicker.show(getFragmentManager(), "timePicker");
+            }
+        });
+
+        swParanoid.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("paranoid", checked).apply();
             }
         });
 
@@ -383,14 +392,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("autohtml", checked).apply();
-                swImages.setEnabled(!checked);
-            }
-        });
-
-        swTracking.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("remove_tracking", checked).apply();
             }
         });
 
@@ -483,6 +484,14 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("autosend", !checked).apply();
+            }
+        });
+
+        swBadge.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("badge", checked).apply();
+                ServiceSynchronize.reload(getContext(), "badge");
             }
         });
 
@@ -626,9 +635,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAddresses.setChecked(prefs.getBoolean("addresses", true));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
         swHtml.setChecked(prefs.getBoolean("autohtml", false));
-        swTracking.setChecked(prefs.getBoolean("remove_tracking", true));
         swImages.setChecked(prefs.getBoolean("autoimages", false));
-        swImages.setEnabled(!swHtml.isChecked());
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));
 
         swPull.setChecked(prefs.getBoolean("pull", true));
@@ -644,10 +651,12 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swSender.setChecked(prefs.getBoolean("sender", false));
         swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
 
+        swBadge.setChecked(prefs.getBoolean("badge", true));
         swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
         swNotifyPreview.setEnabled(Helper.isPro(getContext()));
         swSearchLocal.setChecked(prefs.getBoolean("search_local", false));
         swLight.setChecked(prefs.getBoolean("light", false));
+        swParanoid.setChecked(prefs.getBoolean("paranoid", true));
         swEnglish.setChecked(prefs.getBoolean("english", false));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
         swUpdates.setVisibility(Helper.isPlayStoreInstall(getContext()) ? View.GONE : View.VISIBLE);

@@ -75,8 +75,8 @@ public class HtmlHelper {
 
     static String removeTracking(Context context, String html) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean remove_tracking = prefs.getBoolean("remove_tracking", true);
-        if (!remove_tracking)
+        boolean paranoid = prefs.getBoolean("paranoid", true);
+        if (!paranoid)
             return html;
 
         Document document = Jsoup.parse(html);
@@ -101,6 +101,9 @@ public class HtmlHelper {
     }
 
     static String sanitize(Context context, String html, boolean showQuotes) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean paranoid = prefs.getBoolean("paranoid", true);
+
         Document parsed = Jsoup.parse(html);
         Whitelist whitelist = Whitelist.relaxed()
                 .addTags("hr", "abbr")
@@ -190,7 +193,7 @@ public class HtmlHelper {
             String src = img.attr("src");
             String alt = img.attr("alt");
             String title = img.attr("title");
-            boolean tracking = isTrackingPixel(img);
+            boolean tracking = (paranoid && isTrackingPixel(img));
 
             // Create image container
             Element div = document.createElement("div");
@@ -225,29 +228,34 @@ public class HtmlHelper {
 
             // Split parent link and linked image
             boolean linked = false;
-            for (Element parent : img.parents())
-                if ("a".equals(parent.tagName()) &&
-                        !TextUtils.isEmpty(parent.attr("href"))) {
-                    String text = parent.attr("title").trim();
-                    if (TextUtils.isEmpty(text))
-                        text = parent.attr("alt").trim();
-                    if (TextUtils.isEmpty(text))
-                        text = context.getString(R.string.title_hint_image_link);
+            if (paranoid)
+                for (Element parent : img.parents())
+                    if ("a".equals(parent.tagName()) &&
+                            !TextUtils.isEmpty(parent.attr("href"))) {
+                        String text = parent.attr("title").trim();
+                        if (TextUtils.isEmpty(text))
+                            text = parent.attr("alt").trim();
+                        if (TextUtils.isEmpty(text))
+                            text = context.getString(R.string.title_hint_image_link);
 
-                    img.remove();
-                    parent.appendText(text);
-                    String outer = parent.outerHtml();
+                        img.remove();
+                        parent.appendText(text);
+                        String outer = parent.outerHtml();
 
-                    parent.tagName("span");
-                    parent.html(outer);
-                    parent.appendChild(div);
+                        parent.tagName("span");
+                        for (Attribute attr : parent.attributes().asList())
+                            parent.attributes().remove(attr.getKey());
+                        parent.html(outer);
+                        parent.appendChild(div);
 
-                    linked = true;
-                    break;
-                }
+                        linked = true;
+                        break;
+                    }
 
             if (!linked) {
                 img.tagName("div");
+                for (Attribute attr : img.attributes().asList())
+                    img.attributes().remove(attr.getKey());
                 img.html(div.html());
             }
         }
@@ -260,14 +268,13 @@ public class HtmlHelper {
                     TextNode tnode = (TextNode) node;
 
                     Matcher matcher = PatternsCompat.WEB_URL.matcher(tnode.text());
-                    if (matcher.matches()) {
+                    if (matcher.find()) {
                         Element span = document.createElement("span");
 
                         int pos = 0;
                         String text = tnode.text();
 
-                        matcher.reset();
-                        while (matcher.find()) {
+                        do {
                             boolean linked = false;
                             Node parent = tnode.parent();
                             while (parent != null) {
@@ -295,7 +302,7 @@ public class HtmlHelper {
                             }
 
                             pos = matcher.end();
-                        }
+                        } while (matcher.find());
                         span.appendText(text.substring(pos));
 
                         tnode.before(span);
