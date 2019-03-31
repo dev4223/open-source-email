@@ -50,7 +50,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 62,
+        version = 63,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -96,9 +96,9 @@ public abstract class DB extends RoomDatabase {
         if (sInstance == null) {
             sInstance = migrate(context, getBuilder(context));
 
-            Log.i("sqlite version=" + exec(sInstance, "SELECT sqlite_version() AS sqlite_version"));
-            Log.i("sqlite sync=" + exec(sInstance, "PRAGMA synchronous"));
-            Log.i("sqlite journal=" + exec(sInstance, "PRAGMA journal_mode"));
+            Log.i("SQLite version=" + exec(sInstance, "SELECT sqlite_version() AS sqlite_version"));
+            Log.i("SQLite sync=" + exec(sInstance, "PRAGMA synchronous"));
+            Log.i("SQLite journal=" + exec(sInstance, "PRAGMA journal_mode"));
         }
 
         return sInstance;
@@ -674,6 +674,14 @@ public abstract class DB extends RoomDatabase {
                     public void migrate(SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `account` ADD COLUMN `warning` TEXT");
+                    }
+                })
+                .addMigrations(new Migration(62, 63) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("DROP INDEX index_message_msgid_folder");
+                        db.execSQL("CREATE INDEX `index_message_msgid` ON `message` (`msgid`)");
                     }
                 })
                 .build();

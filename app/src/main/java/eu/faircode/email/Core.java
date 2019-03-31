@@ -72,7 +72,6 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.StoreClosedException;
 import javax.mail.UIDFolder;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.ComparisonTerm;
@@ -813,7 +812,16 @@ class Core {
                 searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
 
             long search = SystemClock.elapsedRealtime();
-            Message[] imessages = ifolder.search(searchTerm);
+            Message[] imessages;
+            try {
+                imessages = ifolder.search(searchTerm);
+            } catch (MessagingException ex) {
+                if (ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED)) {
+                    Log.w(ex.getMessage());
+                    imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
+                } else
+                    throw ex;
+            }
             Log.i(folder.name + " remote count=" + imessages.length +
                     " search=" + (SystemClock.elapsedRealtime() - search) + " ms");
 
@@ -1062,20 +1070,18 @@ class Core {
                     Log.i(folder.name + " found as id=" + dup.id +
                             " uid=" + dup.uid + "/" + uid +
                             " msgid=" + msgid + " thread=" + thread);
-                    dup.folder = folder.id; // outbox to sent
 
                     if (dup.uid == null) {
                         Log.i(folder.name + " set uid=" + uid);
+                        dup.folder = folder.id; // outbox to sent
                         dup.uid = uid;
+                        dup.msgid = msgid;
+                        dup.thread = thread;
+                        dup.error = null;
+                        message = dup;
+                        update = true;
                         filter = true;
-                    } else
-                        Log.w(folder.name + " changed uid=" + dup.uid + " -> " + uid);
-
-                    dup.msgid = msgid;
-                    dup.thread = thread;
-                    dup.error = null;
-                    update = true;
-                    message = dup;
+                    }
                 }
             }
 
@@ -1087,23 +1093,22 @@ class Core {
             Address[] froms = helper.getFrom();
             Address[] tos = helper.getTo();
             Address[] ccs = helper.getCc();
-            String delivered = helper.getDeliveredTo();
 
             // Build ordered list of addresses
             List<Address> addresses = new ArrayList<>();
-            if (delivered != null)
-                try {
-                    addresses.add(new InternetAddress(delivered));
-                } catch (AddressException ex) {
-                    // Local address contains control or whitespace in string ``mailing list someone@example.org''
-                    Log.w(ex);
+            if (folder.isOutgoing()) {
+                if (froms != null)
+                    addresses.addAll(Arrays.asList(froms));
+            } else {
+                if (tos != null)
+                    addresses.addAll(Arrays.asList(tos));
+                if (ccs != null)
+                    addresses.addAll(Arrays.asList(ccs));
+                if (EntityFolder.ARCHIVE.equals(folder.type)) {
+                    if (froms != null)
+                        addresses.addAll(Arrays.asList(froms));
                 }
-            if (tos != null)
-                addresses.addAll(Arrays.asList(tos));
-            if (ccs != null)
-                addresses.addAll(Arrays.asList(ccs));
-            if (froms != null)
-                addresses.addAll(Arrays.asList(froms));
+            }
 
             // Search for matching identity
             EntityIdentity identity = null;
@@ -1135,7 +1140,8 @@ class Core {
 
             message.references = TextUtils.join(" ", helper.getReferences());
             message.inreplyto = helper.getInReplyTo();
-            message.deliveredto = delivered;
+            // Local address contains control or whitespace in string ``mailing list someone@example.org''
+            message.deliveredto = helper.getDeliveredTo();
             message.thread = helper.getThreadId(context, account.id, uid);
             message.from = froms;
             message.to = tos;
@@ -1161,7 +1167,7 @@ class Core {
             message.ui_browsed = browsed;
 
             message.sender = MessageHelper.getSortKey(message.from);
-            Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
+            Uri lookupUri = ContactInfo.getLookupUri(context, message.from, true);
             message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
             Address sender = helper.getSender(); // header
@@ -1255,13 +1261,6 @@ class Core {
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unbrowse");
             }
 
-            Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
-            if ((message.avatar == null) != (lookupUri == null)) {
-                update = true;
-                message.avatar = (lookupUri == null ? null : lookupUri.toString());
-                Log.i(folder.name + " updated id=" + message.id + " lookup=" + lookupUri);
-            }
-
             if (update)
                 try {
                     db.beginTransaction();
@@ -1296,6 +1295,24 @@ class Core {
         return message;
     }
 
+    private static void runRules(Context context, IMAPMessage imessage, EntityMessage message, List<EntityRule> rules) {
+        if (!Helper.isPro(context))
+            return;
+
+        DB db = DB.getInstance(context);
+        try {
+            for (EntityRule rule : rules)
+                if (rule.matches(context, message, imessage)) {
+                    rule.execute(context, db, message);
+                    if (rule.stop)
+                        break;
+                }
+        } catch (Throwable ex) {
+            Log.e(ex);
+            db.message().setMessageError(message.id, Helper.formatThrowable(ex));
+        }
+    }
+
     private static void updateContactInfo(Context context, EntityFolder folder, EntityMessage message) {
         DB db = DB.getInstance(context);
 
@@ -1325,7 +1342,7 @@ class Core {
             for (Address recipient : recipients) {
                 String email = ((InternetAddress) recipient).getAddress();
                 String name = ((InternetAddress) recipient).getPersonal();
-                Uri avatar = ContactInfo.getLookupUri(context, new Address[]{recipient});
+                Uri avatar = ContactInfo.getLookupUri(context, new Address[]{recipient}, true);
                 EntityContact contact = db.contact().getContact(folder.account, type, email);
                 if (contact == null) {
                     contact = new EntityContact();
@@ -1349,24 +1366,6 @@ class Core {
                     Log.i("Updated contact=" + contact + " type=" + type);
                 }
             }
-        }
-    }
-
-    private static void runRules(Context context, IMAPMessage imessage, EntityMessage message, List<EntityRule> rules) {
-        if (!Helper.isPro(context))
-            return;
-
-        DB db = DB.getInstance(context);
-        try {
-            for (EntityRule rule : rules)
-                if (rule.matches(context, message, imessage)) {
-                    rule.execute(context, db, message);
-                    if (rule.stop)
-                        break;
-                }
-        } catch (Throwable ex) {
-            Log.e(ex);
-            db.message().setMessageError(message.id, Helper.formatThrowable(ex));
         }
     }
 

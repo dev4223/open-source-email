@@ -678,12 +678,11 @@ Note that this is independent of receiving messages.
 <a name="faq34"></a>
 **(34) How are identities matched?**
 
-Identities are matched on e-mail address in this order:
+Identities are as expected matched by account.
+For incoming messages the *to* and *cc* address will be checked and for outgoing messages the *from* addresses will be checked.
+Archived messages will be considered as incoming messages, but additionally the *from* address will be checked.
 
-1. *Delivered-To* header address
-1. *To* header address
-1. *Cc* header address
-1. *From* header address
+The matched address will be shown as *via* in the addresses section.
 
 Matched identities can be used to color code messages.
 The identity color takes precedence over the account color.
@@ -1109,7 +1108,8 @@ There is an advanced option to disable automatically resizing of image attachmen
 The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.
 The most natural action in the context of an email app is moving the message out of the folder to another folder.
 You can select the folder to move to in the account settings.
-Other actions, like marking messages read and adding stars to messages are available via multiple selection.
+Other actions, like marking messages read and snoozing messages are available via multiple selection.
+You can long press a message to start multiple selection.
 
 <br />
 

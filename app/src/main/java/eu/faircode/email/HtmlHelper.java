@@ -120,37 +120,6 @@ public class HtmlHelper {
             for (Element quote : document.select("blockquote"))
                 quote.html("&#8230;");
 
-        // Tables
-        for (Element col : document.select("th,td")) {
-            // prevent line breaks
-            //col.select("br").tagName("span").html("&nbsp;");
-            //col.select("div").tagName("span");
-
-            // separate columns by a space
-            if (col.nextElementSibling() != null)
-                col.append("&nbsp;");
-
-            if ("th".equals(col.tagName()))
-                col.tagName("strong");
-            else
-                col.tagName("span");
-        }
-
-        for (Element row : document.select("tr"))
-            row.tagName("span").appendElement("br");
-
-        document.select("caption").tagName("p");
-        document.select("table").tagName("div");
-
-        // Lists
-        for (Element li : document.select("li")) {
-            li.tagName("span");
-            li.prependText("* ");
-            li.appendElement("br"); // line break after list item
-        }
-        document.select("ol").tagName("div");
-        document.select("ul").tagName("div");
-
         // Short quotes
         for (Element q : document.select("q")) {
             q.prependText("\"");
@@ -221,7 +190,7 @@ public class HtmlHelper {
             // Show when tracking pixel
             if (tracking) {
                 div.appendElement("br");
-                div.appendElement("strong").text(
+                div.appendElement("em").text(
                         context.getString(R.string.title_hint_tracking_image,
                                 img.attr("width"), img.attr("height")));
             }
@@ -246,7 +215,7 @@ public class HtmlHelper {
                         for (Attribute attr : parent.attributes().asList())
                             parent.attributes().remove(attr.getKey());
                         parent.html(outer);
-                        parent.appendChild(div);
+                        parent.prependChild(div);
 
                         linked = true;
                         break;
@@ -259,6 +228,36 @@ public class HtmlHelper {
                 img.html(div.html());
             }
         }
+
+        // Tables
+        for (Element col : document.select("th,td")) {
+            // separate columns by a space
+            if (col.nextElementSibling() == null) {
+                if (col.selectFirst("div") == null)
+                    col.appendElement("br");
+            } else
+                col.append("&nbsp;");
+
+            if ("th".equals(col.tagName()))
+                col.tagName("strong");
+            else
+                col.tagName("span");
+        }
+
+        for (Element row : document.select("tr"))
+            row.tagName("span");
+
+        document.select("caption").tagName("p");
+        document.select("table").tagName("div");
+
+        // Lists
+        for (Element li : document.select("li")) {
+            li.tagName("span");
+            li.prependText("* ");
+            li.appendElement("br"); // line break after list item
+        }
+        document.select("ol").tagName("div");
+        document.select("ul").tagName("div");
 
         // Autolink
         NodeTraversor.traverse(new NodeVisitor() {
@@ -326,7 +325,11 @@ public class HtmlHelper {
     }
 
     static Drawable decodeImage(String source, Context context, long id, boolean show) {
-        int px = Helper.dp2pixels(context, 48);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean compact = prefs.getBoolean("compact", false);
+        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
+
+        int px = Helper.dp2pixels(context, (zoom + 1) * 24);
 
         if (TextUtils.isEmpty(source)) {
             Drawable d = context.getResources().getDrawable(R.drawable.baseline_broken_image_24, context.getTheme());

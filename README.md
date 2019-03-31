@@ -69,8 +69,8 @@ This app starts a foreground service with a low priority status bar notification
 
 * Quick setup
 * Easy navigation
-* No unnecessary settings
 * No bells and whistles
+* No distracting "eye candy"
 
 ## Secure
 
