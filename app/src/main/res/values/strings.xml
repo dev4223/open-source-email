@@ -81,6 +81,10 @@
     <string name="menu_rate">Rate this app</string>
     <string name="menu_other">Other apps</string>
 
+    <string name="title_issue_type">Do you have a question or problem?</string>
+    <string name="title_issue_question">Question</string>
+    <string name="title_issue_problem">Problem</string>
+
     <string name="title_welcome">Welcome</string>
     <string name="title_eula">End-user license agreement</string>
     <string name="title_agree">I agree</string>
@@ -293,7 +297,8 @@
 
     <string name="title_folder_name">Folder name</string>
     <string name="title_display_name">Display name</string>
-    <string name="title_hide_folder">Hide from menus</string>
+    <string name="title_show_folders">Show hidden folders</string>
+    <string name="title_hide_folder">Hide folder</string>
     <string name="title_unified_folder">Show in unified inbox</string>
     <string name="title_synchronize_folder">Synchronize (receive messages)</string>
     <string name="title_poll_folder">Check periodically instead of continuous synchronize</string>
@@ -431,6 +436,7 @@
     <string name="title_sort_on_starred">Starred</string>
     <string name="title_sort_on_sender">Sender</string>
     <string name="title_sort_on_subject">Subject</string>
+    <string name="title_sort_on_size">Size</string>
 
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>

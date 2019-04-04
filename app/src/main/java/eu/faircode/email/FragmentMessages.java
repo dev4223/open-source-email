@@ -38,7 +38,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.LongSparseArray;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,8 +64,10 @@ import java.text.Collator;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -96,6 +100,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import static android.text.format.DateUtils.DAY_IN_MILLIS;
+import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
+import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
+
 public class FragmentMessages extends FragmentBase {
     private ViewGroup view;
     private SwipeRefreshLayout swipeRefresh;
@@ -124,6 +132,7 @@ public class FragmentMessages extends FragmentBase {
     private String search;
     private boolean pane;
 
+    private boolean date;
     private boolean threading;
     private boolean pull;
     private boolean actionbar;
@@ -152,6 +161,7 @@ public class FragmentMessages extends FragmentBase {
     private Map<String, List<Long>> values = new HashMap<>();
     private Map<Long, Spanned> bodies = new HashMap<>();
     private Map<Long, String> html = new HashMap<>();
+    private LongSparseArray<List<EntityAttachment>> attachments = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
     private BoundaryCallbackMessages boundaryCallback = null;
@@ -222,6 +232,7 @@ public class FragmentMessages extends FragmentBase {
         else
             pull = false;
 
+        date = prefs.getBoolean("date", true);
         threading = prefs.getBoolean("threading", true);
         actionbar = prefs.getBoolean("actionbar", true);
         autoexpand = prefs.getBoolean("autoexpand", true);
@@ -310,9 +321,104 @@ public class FragmentMessages extends FragmentBase {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvMessage.setLayoutManager(llm);
 
-        DividerItemDecoration itemDecorator = new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL);
+        DividerItemDecoration itemDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
+            @Override
+            public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+                if (view.findViewById(R.id.clItem).getVisibility() == View.GONE)
+                    outRect.setEmpty();
+                else
+                    super.getItemOffsets(outRect, view, parent, state);
+            }
+        };
         itemDecorator.setDrawable(getContext().getDrawable(R.drawable.divider));
         rvMessage.addItemDecoration(itemDecorator);
+
+        DividerItemDecoration dateDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
+            @Override
+            public void onDraw(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
+                for (int i = 0; i < parent.getChildCount(); i++) {
+                    View view = parent.getChildAt(i);
+                    int pos = parent.getChildAdapterPosition(view);
+                    View header = getView(parent, pos);
+                    if (header != null) {
+                        canvas.save();
+                        canvas.translate(0, parent.getChildAt(i).getTop() - header.getMeasuredHeight());
+                        header.draw(canvas);
+                        canvas.restore();
+                    }
+                }
+            }
+
+            @Override
+            public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+                int pos = parent.getChildAdapterPosition(view);
+                View header = getView(parent, pos);
+                if (header == null)
+                    outRect.setEmpty();
+                else
+                    outRect.top = header.getMeasuredHeight();
+            }
+
+            private View getView(RecyclerView parent, int pos) {
+                if (!date || !"time".equals(adapter.getSort()))
+                    return null;
+
+                if (pos == RecyclerView.NO_POSITION)
+                    return null;
+
+                TupleMessageEx prev = (pos > 0 ? adapter.getCurrentList().get(pos - 1) : null);
+                TupleMessageEx message = adapter.getCurrentList().get(pos);
+                if (pos > 0 && prev == null)
+                    return null;
+                if (message == null)
+                    return null;
+
+                if (pos > 0) {
+                    Calendar cal0 = Calendar.getInstance();
+                    Calendar cal1 = Calendar.getInstance();
+                    cal0.setTimeInMillis(prev.received);
+                    cal1.setTimeInMillis(message.received);
+                    int year0 = cal0.get(Calendar.YEAR);
+                    int year1 = cal1.get(Calendar.YEAR);
+                    int day0 = cal0.get(Calendar.DAY_OF_YEAR);
+                    int day1 = cal1.get(Calendar.DAY_OF_YEAR);
+                    if (year0 == year1 && day0 == day1)
+                        return null;
+                }
+
+                View header = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_date, parent, false);
+                TextView tvDate = header.findViewById(R.id.tvDate);
+                tvDate.setTextSize(TypedValue.COMPLEX_UNIT_PX, Helper.getTextSize(parent.getContext(), adapter.getZoom()));
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(new Date());
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                cal.set(Calendar.MILLISECOND, 0);
+                cal.add(Calendar.DAY_OF_MONTH, -2);
+                if (message.received <= cal.getTimeInMillis())
+                    tvDate.setText(
+                            DateUtils.formatDateRange(
+                                    parent.getContext(),
+                                    message.received,
+                                    message.received,
+                                    FORMAT_SHOW_WEEKDAY | FORMAT_SHOW_DATE));
+                else
+                    tvDate.setText(
+                            DateUtils.getRelativeTimeSpanString(
+                                    message.received,
+                                    new Date().getTime(),
+                                    DAY_IN_MILLIS, 0));
+
+                header.measure(View.MeasureSpec.makeMeasureSpec(parent.getWidth(), View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                header.layout(0, 0, header.getMeasuredWidth(), header.getMeasuredHeight());
+
+                return header;
+            }
+        };
+        rvMessage.addItemDecoration(dateDecorator);
 
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
@@ -609,6 +715,16 @@ public class FragmentMessages extends FragmentBase {
         }
 
         @Override
+        public void setAttchments(long id, List<EntityAttachment> list) {
+            attachments.put(id, list);
+        }
+
+        @Override
+        public List<EntityAttachment> getAttachments(long id) {
+            return attachments.get(id);
+        }
+
+        @Override
         public void scrollTo(final int pos, final int dy) {
             new Handler().post(new Runnable() {
                 @Override
@@ -721,8 +837,7 @@ public class FragmentMessages extends FragmentBase {
         public void onChildDraw(
                 @NonNull Canvas canvas, @NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
                 float dX, float dY, int actionState, boolean isCurrentlyActive) {
-            AdapterMessage.ViewHolder holder = ((AdapterMessage.ViewHolder) viewHolder);
-            holder.setDisplacement(dX);
+            super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
 
             if (selectionPredicate != null) {
                 handler.removeCallbacks(enableSelection);
@@ -740,6 +855,7 @@ public class FragmentMessages extends FragmentBase {
             if (swipes == null)
                 return;
 
+            AdapterMessage.ViewHolder holder = ((AdapterMessage.ViewHolder) viewHolder);
             Rect rect = holder.getItemRect();
             int margin = Helper.dp2pixels(getContext(), 12);
             int size = Helper.dp2pixels(getContext(), 24);
@@ -1833,6 +1949,8 @@ public class FragmentMessages extends FragmentBase {
             menu.findItem(R.id.menu_sort_on_sender).setChecked(true);
         else if ("subject".equals(sort))
             menu.findItem(R.id.menu_sort_on_subject).setChecked(true);
+        else if ("size".equals(sort))
+            menu.findItem(R.id.menu_sort_on_size).setChecked(true);
 
         menu.findItem(R.id.menu_zoom).setVisible(!selection);
 
@@ -1880,6 +1998,11 @@ public class FragmentMessages extends FragmentBase {
             case R.id.menu_sort_on_subject:
                 item.setChecked(true);
                 onMenuSort("subject");
+                return true;
+
+            case R.id.menu_sort_on_size:
+                item.setChecked(true);
+                onMenuSort("size");
                 return true;
 
             case R.id.menu_zoom:

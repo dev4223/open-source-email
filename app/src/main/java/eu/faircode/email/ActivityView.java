@@ -34,6 +34,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -744,6 +745,13 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     while ((line = br.readLine()) != null)
                         response.append(line);
 
+                    if (status == HttpsURLConnection.HTTP_FORBIDDEN) {
+                        // {"message":"API rate limit exceeded for ...","documentation_url":"https://developer.github.com/v3/#rate-limiting"}
+                        JSONObject jmessage = new JSONObject(response.toString());
+                        if (jmessage.has("message"))
+                            throw new IllegalArgumentException(jmessage.getString("message"));
+                        throw new IOException("HTTP " + status + ": " + response.toString());
+                    }
                     if (status != HttpsURLConnection.HTTP_OK)
                         throw new IOException("HTTP " + status + ": " + response.toString());
 
@@ -787,8 +795,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             @Override
             protected void onExecuted(Bundle args, UpdateInfo info) {
                 if (info == null) {
-                    if (args.getBoolean("always"))
-                        Toast.makeText(ActivityView.this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG).show();
+                    if (args.getBoolean("always")) {
+                        Toast toast = Toast.makeText(ActivityView.this, BuildConfig.VERSION_NAME, Toast.LENGTH_LONG);
+                        toast.setGravity(Gravity.CENTER, 0, 0);
+                        toast.show();
+                    }
                     return;
                 }
 
@@ -808,7 +819,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (args.getBoolean("always"))
-                    Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
+                    if (ex instanceof IllegalArgumentException)
+                        Snackbar.make(getVisibleView(), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    else
+                        Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
             }
         }.execute(this, args, "update:check");
     }
@@ -953,6 +967,24 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuIssue() {
+        new DialogBuilderLifecycle(this, this)
+                .setMessage(R.string.title_issue_type)
+                .setPositiveButton(R.string.title_issue_question, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Helper.view(ActivityView.this, ActivityView.this, Helper.getIntentFAQ());
+                    }
+                })
+                .setNegativeButton(R.string.title_issue_problem, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        onReportIssue();
+                    }
+                })
+                .show();
+    }
+
+    void onReportIssue() {
         try {
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(this) ? "1" : "3") +
