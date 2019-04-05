@@ -993,8 +993,6 @@ class Core {
                     orphan.folder = folder.id;
                     db.message().updateMessage(orphan);
                     EntityOperation.queue(context, db, orphan, EntityOperation.ADD);
-
-                    db.identity().setIdentityStoreSent(orphan.identity, true);
                 }
             }
 
@@ -1473,7 +1471,7 @@ class Core {
         if (message == null || !message.content)
             return;
 
-        int size = (int) message.getFile(context).length();
+        long size = message.getFile(context).length();
         if (size == 0)
             return;
 
@@ -1502,7 +1500,11 @@ class Core {
         boolean badge = prefs.getBoolean("badge", true);
 
         Widget.update(context, messages.size());
-        ShortcutBadger.applyCount(context, badge ? messages.size() : 0);
+        try {
+            ShortcutBadger.applyCount(context, badge ? messages.size() : 0);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
