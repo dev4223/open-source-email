@@ -21,6 +21,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+
 public class WorkerCleanup extends Worker {
     private static final int CLEANUP_INTERVAL = 4; // hours
     private static final long CACHE_IMAGE_DURATION = 3 * 24 * 3600 * 1000L; // milliseconds
@@ -41,8 +43,7 @@ public class WorkerCleanup extends Worker {
     static void cleanup(Context context, boolean manual) {
         DB db = DB.getInstance(context);
         try {
-            db.beginTransaction();
-
+            Thread.currentThread().setPriority(THREAD_PRIORITY_BACKGROUND);
             Log.i("Start cleanup manual=" + manual);
 
             // Cleanup folders
@@ -124,6 +125,7 @@ public class WorkerCleanup extends Worker {
             Log.i("Deleted logs=" + logs);
 
             Log.i("Update lookup URIs");
+            ContactInfo.clearCache();
             List<EntityFolder> folders = db.folder().getSynchronizingFolders();
             for (EntityFolder folder : folders) {
                 Calendar cal = Calendar.getInstance();
@@ -140,7 +142,7 @@ public class WorkerCleanup extends Worker {
                 List<TupleMessageLookup> avatars = db.message().getAvatars(folder.id, sync_time);
                 for (TupleMessageLookup message : avatars) {
                     Uri uri = (message.avatar == null ? null : Uri.parse(message.avatar));
-                    Uri lookup = ContactInfo.getLookupUri(context, message.from, false);
+                    Uri lookup = ContactInfo.getLookupUri(context, message.from);
                     if (!Objects.equals(uri, lookup)) {
                         Log.i("Updating email=" + MessageHelper.formatAddresses(message.from) + " uri=" + lookup);
                         db.message().setMessageAvatar(message.id, lookup == null ? null : lookup.toString());
@@ -148,12 +150,9 @@ public class WorkerCleanup extends Worker {
                 }
             }
             Log.i("Updated lookup URIs");
-
-            db.setTransactionSuccessful();
         } catch (Throwable ex) {
             Log.e(ex);
         } finally {
-            db.endTransaction();
             Log.i("End cleanup");
         }
     }
@@ -175,6 +174,7 @@ public class WorkerCleanup extends Worker {
         Constraints.Builder constraints = new Constraints.Builder();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !BuildConfig.DEBUG)
             constraints.setRequiresDeviceIdle(true);
+        constraints.setRequiresBatteryNotLow(true);
 
         PeriodicWorkRequest workRequest =
                 new PeriodicWorkRequest.Builder(WorkerCleanup.class, CLEANUP_INTERVAL, TimeUnit.HOURS)

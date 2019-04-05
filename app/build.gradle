@@ -11,8 +11,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 418
-        versionName "1.418"
+        versionCode 420
+        versionName "1.420"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -193,6 +193,7 @@ dependencies {
     implementation "io.requery:sqlite-android:$requery_version"
 
     // https://github.com/leolin310148/ShortcutBadger
+    // https://mvnrepository.com/artifact/me.leolin/ShortcutBadger
     implementation "me.leolin:ShortcutBadger:$badge_version"
 
     // git clone https://android.googlesource.com/platform/frameworks/opt/colorpicker

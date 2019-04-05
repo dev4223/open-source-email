@@ -1815,7 +1815,7 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     draft.sender = MessageHelper.getSortKey(draft.from);
-                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from, true);
+                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
                     draft.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                     draft.received = new Date().getTime();
@@ -1826,6 +1826,8 @@ public class FragmentCompose extends FragmentBase {
                     Helper.writeText(draft.getFile(context), body);
 
                     db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
+
+                    Core.updateMessageSize(context, draft.id);
 
                     // Write reference text
                     if (ref != null && ref.content) {
@@ -2174,12 +2176,14 @@ public class FragmentCompose extends FragmentBase {
                     draft.received = new Date().getTime();
 
                     draft.sender = MessageHelper.getSortKey(draft.from);
-                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from, true);
+                    Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
                     draft.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                     db.message().updateMessage(draft);
                     Helper.writeText(draft.getFile(context), body);
                     db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
+
+                    Core.updateMessageSize(context, draft.id);
                 }
 
                 // Remove unused inline images

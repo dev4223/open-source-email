@@ -626,6 +626,8 @@ class Core {
         Helper.writeText(message.getFile(context), body);
         db.message().setMessageContent(message.id, true,
                 HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
+
+        updateMessageSize(context, message.id);
     }
 
     private static void onAttachment(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
@@ -648,14 +650,27 @@ class Core {
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         MessageHelper.MessageParts parts = helper.getMessageParts();
         parts.downloadAttachment(context, sequence - 1, attachment.id);
+
+        updateMessageSize(context, message.id);
     }
 
     static void onSynchronizeFolders(Context context, EntityAccount account, Store istore, State state) throws MessagingException {
         DB db = DB.getInstance(context);
         try {
-            db.beginTransaction();
-
             Log.i("Start sync folders account=" + account.name);
+
+            // Get remote folders
+            Folder defaultFolder = istore.getDefaultFolder();
+            char separator = defaultFolder.getSeparator();
+            EntityLog.log(context, account.name + " folder separator=" + separator);
+
+            Folder[] ifolders = defaultFolder.list("*");
+            Map<Folder, String[]> attrs = new HashMap<>();
+            for (Folder ifolder : ifolders)
+                attrs.put(ifolder, ((IMAPFolder) ifolder).getAttributes());
+            Log.i("Remote folder count=" + ifolders.length + " separator=" + separator);
+
+            db.beginTransaction();
 
             List<String> names = new ArrayList<>();
             for (EntityFolder folder : db.folder().getFolders(account.id))
@@ -675,22 +690,15 @@ class Core {
                     names.add(folder.name);
             Log.i("Local folder count=" + names.size());
 
-            Folder defaultFolder = istore.getDefaultFolder();
-            char separator = defaultFolder.getSeparator();
-            EntityLog.log(context, account.name + " folder separator=" + separator);
-
-            Folder[] ifolders = defaultFolder.list("*");
-            Log.i("Remote folder count=" + ifolders.length + " separator=" + separator);
-
             Map<String, EntityFolder> nameFolder = new HashMap<>();
             Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
             for (Folder ifolder : ifolders) {
                 String fullName = ifolder.getFullName();
-                String[] attrs = ((IMAPFolder) ifolder).getAttributes();
-                String type = EntityFolder.getType(attrs, fullName);
+                String[] attr = attrs.get(ifolder);
+                String type = EntityFolder.getType(attr, fullName);
 
                 EntityLog.log(context, account.name + ":" + fullName +
-                        " attrs=" + TextUtils.join(" ", attrs) + " type=" + type);
+                        " attrs=" + TextUtils.join(" ", attr) + " type=" + type);
 
                 if (type != null) {
                     names.remove(fullName);
@@ -1095,6 +1103,8 @@ class Core {
                             dup.uid = uid;
                             dup.msgid = msgid;
                             dup.thread = thread;
+                            if (dup.size == null)
+                                dup.size = helper.getSize();
                             dup.error = null;
                             message = dup;
                             update = true;
@@ -1122,7 +1132,7 @@ class Core {
                         addresses.addAll(Arrays.asList(tos));
                     if (ccs != null)
                         addresses.addAll(Arrays.asList(ccs));
-                    if (EntityFolder.ARCHIVE.equals(folder.type)) {
+                    if (EntityFolder.ARCHIVE.equals(folder.type) || BuildConfig.DEBUG) {
                         if (froms != null)
                             addresses.addAll(Arrays.asList(froms));
                     }
@@ -1185,7 +1195,7 @@ class Core {
                 message.ui_browsed = browsed;
 
                 message.sender = MessageHelper.getSortKey(message.from);
-                Uri lookupUri = ContactInfo.getLookupUri(context, message.from, true);
+                Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
                 message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                 Address sender = helper.getSender(); // header
@@ -1361,7 +1371,7 @@ class Core {
             for (Address recipient : recipients) {
                 String email = ((InternetAddress) recipient).getAddress();
                 String name = ((InternetAddress) recipient).getPersonal();
-                Uri avatar = ContactInfo.getLookupUri(context, new Address[]{recipient}, true);
+                Uri avatar = ContactInfo.getLookupUri(context, new Address[]{recipient});
                 EntityContact contact = db.contact().getContact(folder.account, type, email);
                 if (contact == null) {
                     contact = new EntityContact();
@@ -1451,7 +1461,36 @@ class Core {
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
+
+            updateMessageSize(context, message.id);
         }
+    }
+
+    static void updateMessageSize(Context context, long id) {
+        DB db = DB.getInstance(context);
+
+        EntityMessage message = db.message().getMessage(id);
+        if (message == null || !message.content)
+            return;
+
+        int size = (int) message.getFile(context).length();
+        if (size == 0)
+            return;
+
+        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+        for (EntityAttachment attachment : attachments) {
+            if (!attachment.available)
+                return;
+
+            long asize = attachment.getFile(context).length();
+            if (asize == 0)
+                return;
+
+            size += asize;
+        }
+
+        Log.i("Setting message=" + id + " size=" + message.size + "/" + size);
+        db.message().setMessageSize(message.id, size);
     }
 
     static void notifyMessages(Context context, List<TupleMessageEx> messages) {

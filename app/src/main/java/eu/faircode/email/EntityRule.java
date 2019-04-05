@@ -260,12 +260,14 @@ public class EntityRule {
         reply.received = new Date().getTime();
 
         reply.sender = MessageHelper.getSortKey(reply.from);
-        Uri lookupUri = ContactInfo.getLookupUri(context, reply.from, true);
+        Uri lookupUri = ContactInfo.getLookupUri(context, reply.from);
         reply.avatar = (lookupUri == null ? null : lookupUri.toString());
 
         reply.id = db.message().insertMessage(reply);
         Helper.writeText(reply.getFile(context), body);
         db.message().setMessageContent(reply.id, true, HtmlHelper.getPreview(body), null);
+
+        Core.updateMessageSize(context, reply.id);
 
         EntityOperation.queue(context, db, reply, EntityOperation.SEND);
     }
