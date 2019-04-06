@@ -204,6 +204,11 @@ public class ServiceSynchronize extends LifecycleService {
                         onReload(intent.getStringExtra("reason"));
                         break;
 
+                    case "reset":
+                        lastLost = 0;
+                        onReload("reset");
+                        break;
+
                     case "oneshot_start":
                         onOneshot(true);
                         break;
@@ -500,7 +505,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                 // Debug
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
+                boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.DEBUG);
                 //System.setProperty("mail.socket.debug", Boolean.toString(debug));
 
                 // Get properties
@@ -1275,6 +1280,12 @@ public class ServiceSynchronize extends LifecycleService {
                 new Intent(context, ServiceSynchronize.class)
                         .setAction("reload")
                         .putExtra("reason", reason));
+    }
+
+    static void reset(Context context) {
+        ContextCompat.startForegroundService(context,
+                new Intent(context, ServiceSynchronize.class)
+                        .setAction("reset"));
     }
 
     static void process(Context context) {

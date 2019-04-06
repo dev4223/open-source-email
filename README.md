@@ -2,7 +2,7 @@
 
 *Open source, privacy friendly email app for Android*
 
-This email app might be for you if your current email app:
+This open source, privacy friendly email app might be for you if your current email app:
 
 * takes long to receive or to show messages
 * can manage only one email address
@@ -57,7 +57,7 @@ This app starts a foreground service with a low priority status bar notification
 * Notification sound per sender (requires Android 8 Oreo or later)
 * Snooze messages ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq67))
 * Send messages after selected time
-* Synchronization schedules ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq78))
+* Synchronization scheduling ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq78))
 * Reply templates
 * Filter rules ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq71))
 * Search on device or server ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq13))
