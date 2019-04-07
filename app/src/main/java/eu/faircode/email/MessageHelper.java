@@ -71,6 +71,7 @@ public class MessageHelper {
     private final static int POOL_TIMEOUT = 45 * 1000; // milliseconds, default 45 sec
 
     static final int ATTACHMENT_BUFFER_SIZE = 8192; // bytes
+    static final int DEFAULT_ATTACHMENT_DOWNLOAD_SIZE = 65536; // bytes
 
     static void setSystemProperties() {
         System.setProperty("mail.mime.decodetext.strict", "false");
@@ -197,6 +198,7 @@ public class MessageHelper {
         if (message.inreplyto != null)
             imessage.addHeader("In-Reply-To", message.inreplyto);
 
+        imessage.addHeader("X-Mailer", context.getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME);
         imessage.addHeader("X-FairEmail-ID", message.msgid);
 
         imessage.setFlag(Flags.Flag.SEEN, message.seen);
@@ -468,11 +470,7 @@ public class MessageHelper {
         if (address == null || address.length == 0)
             return null;
 
-        try {
-            address[0].setPersonal(decodeMime(address[0].getPersonal()));
-        } catch (UnsupportedEncodingException ex) {
-            Log.w(ex);
-        }
+        fix(address[0]);
 
         return address[0];
     }
@@ -504,13 +502,29 @@ public class MessageHelper {
     private static Address[] fix(Address[] addresses) {
         if (addresses != null)
             for (int i = 0; i < addresses.length; i++)
-                try {
-                    ((InternetAddress) addresses[i]).setPersonal(
-                            decodeMime(((InternetAddress) addresses[i]).getPersonal()));
-                } catch (UnsupportedEncodingException ex) {
-                    Log.w(ex);
-                }
+                fix((InternetAddress) addresses[i]);
         return addresses;
+    }
+
+    private static void fix(InternetAddress address) {
+        try {
+            String email = decodeMime(address.getAddress());
+            String personal = decodeMime(address.getPersonal());
+            try {
+                InternetAddress[] a = InternetAddress.parse(email);
+                if (a.length < 1)
+                    throw new AddressException("empty");
+                String p = a[0].getPersonal();
+                address.setAddress(a[0].getAddress());
+                address.setPersonal(TextUtils.isEmpty(personal) ? p : personal + (p == null ? "" : " " + p));
+            } catch (AddressException ex) {
+                Log.w(ex);
+                address.setAddress(email);
+                address.setPersonal(personal);
+            }
+        } catch (UnsupportedEncodingException ex) {
+            Log.w(ex);
+        }
     }
 
     String getSubject() throws MessagingException {
