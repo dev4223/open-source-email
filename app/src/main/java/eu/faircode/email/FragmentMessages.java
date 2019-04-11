@@ -335,7 +335,7 @@ public class FragmentMessages extends FragmentBase {
 
         DividerItemDecoration dateDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
             @Override
-            public void onDraw(Canvas canvas, RecyclerView parent, RecyclerView.State state) {
+            public void onDrawOver(@NonNull Canvas canvas, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
                 for (int i = 0; i < parent.getChildCount(); i++) {
                     View view = parent.getChildAt(i);
                     int pos = parent.getChildAdapterPosition(view);
@@ -629,7 +629,6 @@ public class FragmentMessages extends FragmentBase {
 
                 if (!Helper.getNetworkState(context).isSuitable())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
-
 
                 DB db = DB.getInstance(context);
                 try {

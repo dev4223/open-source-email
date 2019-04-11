@@ -42,6 +42,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.os.PowerManager;
 import android.text.TextUtils;
 import android.view.Display;
@@ -422,6 +423,8 @@ public class Helper {
             draft.to = new Address[]{myAddress()};
             draft.subject = context.getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME + " debug info";
             draft.received = new Date().getTime();
+            draft.seen = true;
+            draft.ui_seen = true;
             draft.id = db.message().insertMessage(draft);
             writeText(draft.getFile(context), body);
             db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
@@ -1139,6 +1142,7 @@ public class Helper {
         }
         InetAddress address = InetAddress.getByName(host);
         URL url = new URL("https://ipinfo.io/" + address.getHostAddress() + "/org");
+        Log.i("GET " + url);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setReadTimeout(15 * 1000);
@@ -1152,5 +1156,11 @@ public class Helper {
             }
             return organization;
         }
+    }
+
+    static int getSize(Bundle bundle) {
+        Parcel p = Parcel.obtain();
+        bundle.writeToParcel(p, 0);
+        return p.dataSize();
     }
 }

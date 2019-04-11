@@ -229,11 +229,9 @@ class Core {
                         Log.e(folder.name, ex);
                         reportError(context, account, folder, ex);
 
-                        if (!(ex instanceof FolderClosedException)) {
-                            db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
-                            if (message != null)
-                                db.message().setMessageError(message.id, Helper.formatThrowable(ex, true));
-                        }
+                        db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
+                        if (message != null)
+                            db.message().setMessageError(message.id, Helper.formatThrowable(ex, true));
 
                         if (ex instanceof MessageRemovedException ||
                                 ex instanceof FolderNotFoundException ||
@@ -546,10 +544,15 @@ class Core {
         // Delete message
         DB db = DB.getInstance(context);
 
+        Message[] imessages;
         if (TextUtils.isEmpty(message.msgid))
-            throw new IllegalArgumentException("Message ID missing");
+            if (message.uid == null)
+                throw new IllegalArgumentException("Delete without ID");
+            else
+                imessages = new Message[]{ifolder.getMessageByUID(message.uid)};
+        else
+            imessages = ifolder.search(new MessageIDTerm(message.msgid));
 
-        Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
         for (Message imessage : imessages) {
             Log.i(folder.name + " deleting uid=" + message.uid + " msgid=" + message.msgid);
             try {
@@ -557,6 +560,7 @@ class Core {
             } catch (MessageRemovedException ignored) {
             }
         }
+
         ifolder.expunge();
 
         db.message().deleteMessage(message.id);
@@ -1913,6 +1917,7 @@ class Core {
         private Thread thread;
         private Semaphore semaphore = new Semaphore(0);
         private boolean running = true;
+        private boolean recoverable = true;
 
         State(Helper.NetworkState networkState) {
             this.networkState = networkState;
@@ -1944,9 +1949,14 @@ class Core {
             return semaphore.tryAcquire(milliseconds, TimeUnit.MILLISECONDS);
         }
 
-        void error() {
+        void error(Throwable ex) {
+            recoverable = (recoverable && !(ex instanceof FolderClosedException));
             thread.interrupt();
             yield();
+        }
+
+        void reset() {
+            recoverable = true;
         }
 
         private void yield() {
@@ -1972,6 +1982,10 @@ class Core {
 
         boolean running() {
             return running;
+        }
+
+        boolean recoverable() {
+            return recoverable;
         }
 
         void join(Thread thread) {
