@@ -90,6 +90,9 @@ public class EntityMessage implements Serializable {
     public String deliveredto;
     public String inreplyto;
     public String thread; // compose = null
+    public Boolean dkim;
+    public Boolean spf;
+    public Boolean dmarc;
     public String avatar; // lookup URI from sender
     public String sender; // sort key
     public Address[] from;

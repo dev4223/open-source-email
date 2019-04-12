@@ -81,7 +81,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -144,6 +143,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean preview;
     private boolean autohtml;
     private boolean autoimages;
+    private boolean paranoid;
     private boolean debug;
 
     private float textSize;
@@ -167,6 +167,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View.OnClickListener, View.OnLongClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
         private View view;
         private View vwColor;
+        private View vwStatus;
         private ImageView ivExpander;
         private ImageView ivFlagged;
         private ImageView ivAvatar;
@@ -256,6 +257,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             view = itemView.findViewById(R.id.clItem);
             vwColor = itemView.findViewById(R.id.vwColor);
+            vwStatus = itemView.findViewById(R.id.vwStatus);
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivFlagged = itemView.findViewById(R.id.ivFlagged);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
@@ -417,6 +419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void clear() {
             vwColor.setVisibility(View.GONE);
+            vwStatus.setVisibility(View.GONE);
             ivExpander.setVisibility(View.GONE);
             ivFlagged.setVisibility(View.GONE);
             ivAvatar.setVisibility(View.GONE);
@@ -532,6 +535,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Account color
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
             vwColor.setVisibility(View.VISIBLE);
+
+            vwStatus.setBackgroundColor(
+                    Boolean.FALSE.equals(message.dkim) ||
+                            Boolean.FALSE.equals(message.spf) ||
+                            Boolean.FALSE.equals(message.dmarc)
+                            ? colorWarning : Color.TRANSPARENT);
+            vwStatus.setVisibility(paranoid ? View.VISIBLE : View.GONE);
 
             // Expander
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
@@ -1546,13 +1556,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         original.html = HtmlHelper.removeTracking(context, original.html);
 
                         Document doc = Jsoup.parse(original.html);
-                        for (Element img : doc.select("img")) {
-                            Uri uri = Uri.parse(img.attr("src"));
-                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
-                                original.has_images = true;
-                                break;
-                            }
-                        }
+                        original.has_images = (doc.select("img").size() > 0);
 
                         return original;
                     }
@@ -3012,6 +3016,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.preview = prefs.getBoolean("preview", false);
         this.autohtml = prefs.getBoolean("autohtml", false);
         this.autoimages = prefs.getBoolean("autoimages", false);
+        this.paranoid = prefs.getBoolean("paranoid", true);
         this.debug = prefs.getBoolean("debug", false);
 
         this.textSize = Helper.getTextSize(context, zoom);

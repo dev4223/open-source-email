@@ -1156,6 +1156,7 @@ class Core {
                     }
                 }
 
+                String authentication = helper.getAuthentication();
                 MessageHelper.MessageParts parts = helper.getMessageParts();
 
                 message = new EntityMessage();
@@ -1173,6 +1174,9 @@ class Core {
                 // Local address contains control or whitespace in string ``mailing list someone@example.org''
                 message.deliveredto = helper.getDeliveredTo();
                 message.thread = helper.getThreadId(context, account.id, uid);
+                message.dkim = MessageHelper.getAuthentication("dkim", authentication);
+                message.spf = MessageHelper.getAuthentication("spf", authentication);
+                message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
                 message.from = froms;
                 message.to = tos;
                 message.cc = ccs;
