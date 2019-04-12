@@ -220,8 +220,6 @@ public class FragmentFolders extends FragmentBase {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
         outState.putString("fair:searching", searching);
 
         outState.putLongArray("fair:parents", Helper.toLongArray(parentChilds.keySet()));
@@ -231,6 +229,8 @@ public class FragmentFolders extends FragmentBase {
             for (int i = 0; i < childs.size(); i++)
                 outState.putSerializable("fair:childs:" + parent + ":" + i, childs.get(i));
         }
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -317,6 +317,8 @@ public class FragmentFolders extends FragmentBase {
                 if (!Helper.getNetworkState(context).isSuitable())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
+                boolean now = true;
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
@@ -324,8 +326,15 @@ public class FragmentFolders extends FragmentBase {
                     if (aid < 0) {
                         // Unified inbox
                         List<EntityFolder> folders = db.folder().getFoldersSynchronizingUnified();
-                        for (EntityFolder folder : folders)
+                        for (EntityFolder folder : folders) {
                             EntityOperation.sync(context, folder.id, true);
+
+                            if (folder.account != null) {
+                                EntityAccount account = db.account().getAccount(folder.account);
+                                if (account != null && !"connected".equals(account.state))
+                                    now = false;
+                            }
+                        }
                     } else {
                         // Folder list
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -340,6 +349,9 @@ public class FragmentFolders extends FragmentBase {
                 } finally {
                     db.endTransaction();
                 }
+
+                if (!now)
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
 
                 return null;
             }

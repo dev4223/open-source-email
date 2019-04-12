@@ -630,6 +630,8 @@ public class FragmentMessages extends FragmentBase {
                 if (!Helper.getNetworkState(context).isSuitable())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
+                boolean now = true;
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
@@ -642,13 +644,24 @@ public class FragmentMessages extends FragmentBase {
                         if (folder != null)
                             folders.add(folder);
                     }
-                    for (EntityFolder folder : folders)
+
+                    for (EntityFolder folder : folders) {
                         EntityOperation.sync(context, folder.id, true);
+
+                        if (folder.account != null) {
+                            EntityAccount account = db.account().getAccount(folder.account);
+                            if (account != null && !"connected".equals(account.state))
+                                now = false;
+                        }
+                    }
 
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }
+
+                if (!now)
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
 
                 return null;
             }
@@ -1292,6 +1305,8 @@ public class FragmentMessages extends FragmentBase {
                     @Override
                     public void onDurationSelected(long duration, long time) {
                         if (Helper.isPro(getContext())) {
+                            selectionTracker.clearSelection();
+
                             Bundle args = new Bundle();
                             args.putLongArray("ids", getSelection());
                             args.putLong("wakeup", duration == 0 ? -1 : time);
@@ -1343,7 +1358,6 @@ public class FragmentMessages extends FragmentBase {
 
                     @Override
                     public void onDismiss() {
-                        selectionTracker.clearSelection();
                     }
                 });
     }
@@ -1494,8 +1508,6 @@ public class FragmentMessages extends FragmentBase {
         args.putString("type", type);
         args.putLongArray("ids", getSelection());
 
-        selectionTracker.clearSelection();
-
         new SimpleTask<ArrayList<MessageTarget>>() {
             @Override
             protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
@@ -1548,8 +1560,6 @@ public class FragmentMessages extends FragmentBase {
         Bundle args = new Bundle();
         args.putLongArray("ids", getSelection());
         args.putLong("target", target);
-
-        selectionTracker.clearSelection();
 
         new SimpleTask<ArrayList<MessageTarget>>() {
             @Override
@@ -1605,8 +1615,6 @@ public class FragmentMessages extends FragmentBase {
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
         outState.putString("fair:searching", searching);
 
         outState.putBoolean("fair:autoExpanded", autoExpanded);
@@ -1633,6 +1641,8 @@ public class FragmentMessages extends FragmentBase {
 
         if (selectionTracker != null)
             selectionTracker.onSaveInstanceState(outState);
+
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -1732,7 +1742,7 @@ public class FragmentMessages extends FragmentBase {
 
                         boolean refreshing = false;
                         for (TupleFolderEx folder : folders)
-                            if (folder.sync_state != null) {
+                            if (folder.sync_state != null && (folder.account == null || "connected".equals(folder.accountState))) {
                                 refreshing = true;
                                 break;
                             }
@@ -1796,6 +1806,20 @@ public class FragmentMessages extends FragmentBase {
                     @Override
                     public void onChanged(EntityAccount account) {
                         setSubtitle(getString(R.string.title_folder_thread, account == null ? "" : account.name));
+                    }
+                });
+                db.message().liveHidden(account, thread).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+                    @Override
+                    public void onChanged(List<Long> ids) {
+                        if (ids != null)
+                            for (long id : ids) {
+                                Log.i("Hidden id=" + id);
+                                for (String key : values.keySet())
+                                    values.get(key).remove(id);
+                                bodies.remove(id);
+                                html.remove(id);
+                                attachments.remove(id);
+                            }
                     }
                 });
                 break;
@@ -2562,6 +2586,9 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void moveAskConfirmed(ArrayList<MessageTarget> result) {
+        if (selectionTracker != null)
+            selectionTracker.clearSelection();
+
         Bundle args = new Bundle();
         args.putParcelableArrayList("result", result);
 

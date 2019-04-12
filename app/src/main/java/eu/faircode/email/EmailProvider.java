@@ -129,19 +129,22 @@ public class EmailProvider {
 
     static EmailProvider fromDomain(Context context, String domain) throws IOException {
         try {
-            return EmailProvider.fromISPDB(context, domain);
+            Log.i("Provider from ISPDB domain=" + domain);
+            return addSpecials(context, fromISPDB(domain));
         } catch (Throwable ex) {
             Log.w(ex);
             try {
-                return EmailProvider.fromDNS(context, domain);
+                Log.i("Provider from DNS domain=" + domain);
+                return addSpecials(context, fromDNS(domain));
             } catch (UnknownHostException ex1) {
                 Log.w(ex1);
-                throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
+                Log.i("Provider from template domain=" + domain);
+                return addSpecials(context, fromTemplate(domain));
             }
         }
     }
 
-    private static EmailProvider fromISPDB(Context context, String domain) throws IOException, XmlPullParserException {
+    private static EmailProvider fromISPDB(String domain) throws IOException, XmlPullParserException {
         EmailProvider provider = new EmailProvider(domain);
 
         // https://wiki.mozilla.org/Thunderbird:Autoconfiguration:ConfigFileFormat
@@ -316,10 +319,10 @@ public class EmailProvider {
         Log.i("imap=" + provider.imap_host + ":" + provider.imap_port + ":" + provider.imap_starttls);
         Log.i("smtp=" + provider.smtp_host + ":" + provider.smtp_port + ":" + provider.smtp_starttls);
 
-        return addSpecials(context, provider);
+        return provider;
     }
 
-    private static EmailProvider fromDNS(Context context, String domain) throws TextParseException, UnknownHostException {
+    private static EmailProvider fromDNS(String domain) throws TextParseException, UnknownHostException {
         // https://tools.ietf.org/html/rfc6186
         SRVRecord imap = lookup("_imaps._tcp." + domain);
         SRVRecord smtp = lookup("_submission._tcp." + domain);
@@ -333,7 +336,20 @@ public class EmailProvider {
         provider.smtp_port = smtp.getPort();
         provider.smtp_starttls = (provider.smtp_port == 587);
 
-        return addSpecials(context, provider);
+        return provider;
+    }
+
+    private static EmailProvider fromTemplate(String domain) {
+        EmailProvider provider = new EmailProvider(domain);
+        provider.imap_host = "imap." + domain;
+        provider.imap_port = 993;
+        provider.imap_starttls = false;
+
+        provider.smtp_host = "smtp." + domain;
+        provider.smtp_port = 587;
+        provider.smtp_starttls = true;
+
+        return provider;
     }
 
     private static void addDocumentation(EmailProvider provider, String href, String title) {
@@ -356,6 +372,11 @@ public class EmailProvider {
             addDocumentation(provider,
                     "https://www.google.com/settings/security/lesssecureapps",
                     context.getString(R.string.title_setup_setting_gmail));
+
+        if (provider.imap_host.endsWith("yahoo.com"))
+            addDocumentation(provider,
+                    "https://login.yahoo.com/account/security#less-secure-apps",
+                    context.getString(R.string.title_setup_setting_yahoo));
 
         return provider;
     }

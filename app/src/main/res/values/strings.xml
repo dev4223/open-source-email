@@ -118,6 +118,7 @@
     <string name="title_setup_quick_smtp">SMTP server to send messages</string>
     <string name="title_setup_go">Go</string>
     <string name="title_setup_setting_gmail">Enable access for "less secure" apps</string>
+    <string name="title_setup_setting_yahoo">Enable access for "less secure" apps</string>
     <string name="title_setup_no_settings">No settings found for \'%1$s\'</string>
     <string name="title_setup_quick_success">An account and an identity have successfully been added</string>
     <string name="title_setup_quick_failed">You can try to configure an account and an identity below too</string>
@@ -371,6 +372,7 @@
     <string name="title_no_stream">An outdated app sent a file path instead of a file stream</string>
     <string name="title_no_contacts">Contact picker not available</string>
     <string name="title_no_internet">No or no suitable internet connection</string>
+    <string name="title_no_connection">Synchronization will be performed on next account connection</string>
     <string name="title_no_folder">Folder does not exist</string>
     <string name="title_accross_remark">Messages moved across accounts will be downloaded again resulting in extra data usage</string>
     <string name="title_raw_saved">Raw message saved</string>

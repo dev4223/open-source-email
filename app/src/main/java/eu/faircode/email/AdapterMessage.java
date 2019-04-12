@@ -2236,7 +2236,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return null;
                         db.message().deleteMessage(id);
 
-                        EntityOperation.sync(context, message.folder, true);
+                        EntityOperation.sync(context, message.folder, false);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -3123,6 +3123,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        holder.clearExpanded();
+    }
+
     void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
         this.selectionTracker = selectionTracker;
     }
@@ -3164,7 +3169,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return message;
                 }
             }
-        Log.i("Item=" + null + " @Key" + key);
+        Log.i("Item=" + null + " @Key=" + key);
         return null;
     }
 
