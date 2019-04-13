@@ -695,6 +695,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void clearExpanded() {
+            cowner.stop();
 
             tvSubject.setVisibility(View.VISIBLE);
             paddingAddressBottom.setMinimumHeight(0);
@@ -915,7 +916,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Attachments
             bindAttachments(message, properties.getAttachments(message.id));
-            cowner.restart();
+            cowner.recreate();
+            cowner.start();
             db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
                 @Override
                 public void onChanged(@Nullable List<EntityAttachment> attachments) {
@@ -3130,7 +3132,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
-        holder.clearExpanded();
+        holder.cowner.stop();
     }
 
     void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
