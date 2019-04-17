@@ -143,7 +143,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean preview;
     private boolean autohtml;
     private boolean autoimages;
-    private boolean paranoid;
+    private boolean authentication;
     private boolean debug;
 
     private float textSize;
@@ -162,6 +162,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private NumberFormat nf = NumberFormat.getNumberInstance();
     private DateFormat tf = SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT);
     private DateFormat dtf = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+
+    private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_term",
+            "utm_content"
+    ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
             View.OnClickListener, View.OnLongClickListener, BottomNavigationView.OnNavigationItemSelectedListener {
@@ -465,13 +473,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Text size
             if (textSize != 0) {
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+
                 // dev4223: subject size smaller in list view
                 // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 if (zoom == 0)
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 else
-                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, (textSize*0.8f));
-
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
+				
+				tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
                 int px = Math.round(TypedValue.applyDimension(
@@ -540,8 +550,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Boolean.FALSE.equals(message.dkim) ||
                             Boolean.FALSE.equals(message.spf) ||
                             Boolean.FALSE.equals(message.dmarc)
-                            ? colorWarning : Color.TRANSPARENT);
-            vwStatus.setVisibility(paranoid ? View.VISIBLE : View.GONE);
+                            ? colorAccent : Color.TRANSPARENT);
+            vwStatus.setVisibility(authentication ? View.VISIBLE : View.GONE);
 
             // Expander
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
@@ -1337,18 +1347,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean expanded = !properties.getValue("expanded", message.id);
                 properties.setValue("expanded", message.id, expanded);
 
-                int pos = getAdapterPosition();
-                notifyItemChanged(pos);
+                ivExpander.setImageResource(expanded ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
 
-                if (expanded)
-                    properties.scrollTo(pos, 0);
+                if (expanded) {
+                    bindExpanded(message);
+                    properties.scrollTo(getAdapterPosition(), 0);
+                } else
+                    clearExpanded();
             }
         }
 
         private void onToggleAddresses(TupleMessageEx message) {
             boolean addresses = !properties.getValue("addresses", message.id);
             properties.setValue("addresses", message.id, addresses);
-            notifyItemChanged(getAdapterPosition());
+            bindExpanded(message);
         }
 
         private void onDownloadAttachments(final TupleMessageEx message) {
@@ -1820,6 +1832,38 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return;
 
                 final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean paranoid = prefs.getBoolean("paranoid", true);
+
+                final Uri _uri;
+                if (paranoid) {
+                    // https://en.wikipedia.org/wiki/UTM_parameters
+                    Uri.Builder builder = new Uri.Builder();
+
+                    String scheme = uri.getScheme();
+                    if (!TextUtils.isEmpty(scheme))
+                        builder.scheme(scheme);
+
+                    String authority = uri.getAuthority();
+                    if (!TextUtils.isEmpty(authority))
+                        builder.authority(authority);
+
+                    String path = uri.getPath();
+                    if (!TextUtils.isEmpty(path))
+                        builder.path(path);
+
+                    for (String key : uri.getQueryParameterNames()) {
+                        Log.i("Query " + key + "=" + uri.getQueryParameter(key));
+                        if (!PARANOID_QUERY.contains(key.toLowerCase()))
+                            builder.appendQueryParameter(key, uri.getQueryParameter(key));
+                    }
+
+                    String fragment = uri.getFragment();
+                    if (!TextUtils.isEmpty(fragment))
+                        builder.fragment(fragment);
+
+                    _uri = builder.build();
+                } else
+                    _uri = uri;
 
                 View view = LayoutInflater.from(context).inflate(R.layout.dialog_link, null);
                 final EditText etLink = view.findViewById(R.id.etLink);
@@ -1832,7 +1876,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         prefs.edit().putBoolean("show_organization", isChecked).apply();
                         if (isChecked) {
                             Bundle args = new Bundle();
-                            args.putParcelable("uri", uri);
+                            args.putParcelable("uri", _uri);
 
                             new SimpleTask<String>() {
                                 @Override
@@ -1862,9 +1906,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 });
 
-                etLink.setText(uri.toString());
+                etLink.setText(_uri.toString());
                 cbOrganization.setChecked(prefs.getBoolean("show_organization", true));
-                tvInsecure.setVisibility("http".equals(uri.getScheme()) ? View.VISIBLE : View.GONE);
+                tvInsecure.setVisibility("http".equals(_uri.getScheme()) ? View.VISIBLE : View.GONE);
 
                 new DialogBuilderLifecycle(context, owner)
                         .setView(view)
@@ -1885,7 +1929,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         .setNegativeButton(R.string.title_no, null)
                         .show();
             }
-
         }
 
         private class ActionData {
@@ -3018,7 +3061,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.preview = prefs.getBoolean("preview", false);
         this.autohtml = prefs.getBoolean("autohtml", false);
         this.autoimages = prefs.getBoolean("autoimages", false);
-        this.paranoid = prefs.getBoolean("paranoid", true);
+        this.authentication = prefs.getBoolean("authentication", false);
         this.debug = prefs.getBoolean("debug", false);
 
         this.textSize = Helper.getTextSize(context, zoom);

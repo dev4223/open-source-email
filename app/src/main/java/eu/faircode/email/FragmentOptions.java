@@ -48,7 +48,6 @@ import android.widget.TimePicker;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -96,7 +95,10 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swAutoRead;
     private SwitchCompat swAutoMove;
     private SwitchCompat swAutoResize;
+    private Spinner spAutoResize;
+    private TextView tvAutoResize;
     private SwitchCompat swSender;
+    private SwitchCompat swPrefixOnce;
     private SwitchCompat swAutoSend;
 
     private SwitchCompat swBadge;
@@ -105,6 +107,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swLight;
     private Button btnSound;
 
+    private SwitchCompat swAuthentication;
     private SwitchCompat swParanoid;
     private SwitchCompat swEnglish;
     private SwitchCompat swUpdates;
@@ -117,7 +120,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "startup", "date", "threading", "avatars", "identicons", "name_email", "subject_italic", "flags", "preview",
             "addresses", "monospaced", "autohtml", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext",
-            "debug"
+            "authentication", "debug"
     };
 
     private final static String[] ADVANCED_OPTIONS = new String[]{
@@ -126,9 +129,9 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "startup", "date", "threading", "avatars", "identicons", "name_email", "subject_italic", "flags", "preview",
             "addresses", "monospaced", "autohtml", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext", "collapse", "autoread", "automove",
-            "autoresize", "sender", "autosend",
+            "autoresize", "resize", "sender", "prefix_once", "autosend",
             "notify_preview", "search_local", "light", "sound",
-            "paranoid", "english", "updates", "debug",
+            "authentication", "paranoid", "english", "updates", "debug",
             "first", "why", "last_update_check", "app_support", "message_swipe", "message_select", "folder_actions", "folder_sync",
             "edit_ref_confirmed", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "show_organization", "style_toolbar"
     };
@@ -175,7 +178,10 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoRead = view.findViewById(R.id.swAutoRead);
         swAutoMove = view.findViewById(R.id.swAutoMove);
         swAutoResize = view.findViewById(R.id.swAutoResize);
+        spAutoResize = view.findViewById(R.id.spAutoResize);
+        tvAutoResize = view.findViewById(R.id.tvAutoResize);
         swSender = view.findViewById(R.id.swSender);
+        swPrefixOnce = view.findViewById(R.id.swPrefixOnce);
         swAutoSend = view.findViewById(R.id.swAutoSend);
 
         swBadge = view.findViewById(R.id.swBadge);
@@ -184,6 +190,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swLight = view.findViewById(R.id.swLight);
         btnSound = view.findViewById(R.id.btnSound);
 
+        swAuthentication = view.findViewById(R.id.swAuthentication);
         swParanoid = view.findViewById(R.id.swParanoid);
         swEnglish = view.findViewById(R.id.swEnglish);
         swUpdates = view.findViewById(R.id.swUpdates);
@@ -202,7 +209,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("enabled", checked).apply();
-                ServiceSynchronize.reload(getContext(), "enabled=" + checked);
+                ServiceSynchronize.reload(getContext(), true, "enabled=" + checked);
             }
         });
 
@@ -251,6 +258,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             }
         });
 
+        swAuthentication.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("authentication", checked).apply();
+            }
+        });
+
         swParanoid.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -288,13 +302,8 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         spDownload.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                Integer prev = (Integer) adapterView.getTag();
-                if (!Objects.equals(prev, position)) {
-                    adapterView.setTag(position);
-
-                    int[] values = getResources().getIntArray(R.array.downloadValues);
-                    prefs.edit().putInt("download", values[position]).apply();
-                }
+                int[] values = getResources().getIntArray(R.array.downloadValues);
+                prefs.edit().putInt("download", values[position]).apply();
             }
 
             @Override
@@ -470,6 +479,21 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("autoresize", checked).apply();
+                spAutoResize.setEnabled(checked);
+            }
+        });
+
+        spAutoResize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                int[] values = getResources().getIntArray(R.array.resizeValues);
+                prefs.edit().putInt("resize", values[position]).apply();
+                tvAutoResize.setText(getString(R.string.title_advanced_resize_pixels, values[position]));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("resize").apply();
             }
         });
 
@@ -477,6 +501,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("sender", checked).apply();
+            }
+        });
+
+        swPrefixOnce.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("prefix_once", checked).apply();
             }
         });
 
@@ -609,7 +640,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         int[] downloadValues = getResources().getIntArray(R.array.downloadValues);
         for (int pos = 0; pos < downloadValues.length; pos++)
             if (downloadValues[pos] == download) {
-                spDownload.setTag(pos);
                 spDownload.setSelection(pos);
                 break;
             }
@@ -632,7 +662,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swSubjectItalic.setChecked(prefs.getBoolean("subject_italic", true));
         swFlags.setChecked(prefs.getBoolean("flags", true));
         swPreview.setChecked(prefs.getBoolean("preview", false));
-        swAddresses.setChecked(prefs.getBoolean("addresses", true));
+        swAddresses.setChecked(prefs.getBoolean("addresses", false));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
         swHtml.setChecked(prefs.getBoolean("autohtml", false));
         swImages.setChecked(prefs.getBoolean("autoimages", false));
@@ -648,7 +678,19 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoRead.setChecked(prefs.getBoolean("autoread", false));
         swAutoMove.setChecked(!prefs.getBoolean("automove", false));
         swAutoResize.setChecked(prefs.getBoolean("autoresize", true));
+
+        int resize = prefs.getInt("resize", FragmentCompose.REDUCED_IMAGE_SIZE);
+        int[] resizeValues = getResources().getIntArray(R.array.resizeValues);
+        for (int pos = 0; pos < resizeValues.length; pos++)
+            if (resizeValues[pos] == resize) {
+                spAutoResize.setSelection(pos);
+                tvAutoResize.setText(getString(R.string.title_advanced_resize_pixels, resizeValues[pos]));
+                break;
+            }
+        spAutoResize.setEnabled(swAutoResize.isChecked());
+
         swSender.setChecked(prefs.getBoolean("sender", false));
+        swPrefixOnce.setChecked(prefs.getBoolean("prefix_once", false));
         swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
 
         swBadge.setChecked(prefs.getBoolean("badge", true));
@@ -656,6 +698,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swNotifyPreview.setEnabled(Helper.isPro(getContext()));
         swSearchLocal.setChecked(prefs.getBoolean("search_local", false));
         swLight.setChecked(prefs.getBoolean("light", false));
+        swAuthentication.setChecked(prefs.getBoolean("authentication", false));
         swParanoid.setChecked(prefs.getBoolean("paranoid", true));
         swEnglish.setChecked(prefs.getBoolean("english", false));
         swUpdates.setChecked(prefs.getBoolean("updates", true));

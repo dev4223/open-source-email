@@ -25,7 +25,7 @@ For authorizing:
 
 * ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
 * A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
-* A [bug in Android 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format.
+* A [bug in Android 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue.
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
 * A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty.
 * "*... Couldn't read row ...*" causes sometimes a crash. This could be caused by a bug in the [Room Persistence Library](https://developer.android.com/topic/libraries/architecture/room) or indicate a corrupt database.
@@ -45,6 +45,9 @@ Anything on this list is in random order and *might* be added in the near future
 * *Widget to read messages*: widgets can have limited user interaction only, so a widget to read e-mail would not be very useful. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too.
 * *ActiveSync*: using the Exchange ActiveSync protocol requires [a license](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing), so this cannot be added. Moreover, the ActiveSync protocol is being phased out.
+
+The goal of the design is to be minimalistic and non distracting (so, no fancy colors and animations).
+All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
 
 Since FairEmail is meant to be privacy friendly, the following will not be added:
 
@@ -1118,9 +1121,9 @@ If your provider requires an unsupported authentication method, you'll likely ge
 Large inline or attached [PNG](https://en.wikipedia.org/wiki/Portable_Network_Graphics) and [JPEG](https://en.wikipedia.org/wiki/JPEG) images
 will automatically be resized for displaying on screens.
 This is because email messages are limited in size, depending on the provider mostly between 10 and 50 MB.
-Image will be resized to a maximum width and height of about 1440 pixels and saved with a compression ratio of 90 %.
+Image will by default be resized to a maximum width and height of about 1440 pixels and saved with a compression ratio of 90 %.
 Images are scaled down using whole number factors to reduce memory usage and to retain image quality.
-There is an advanced option to disable automatically resizing of image attachments. Inline (embedded) images will always be resized.
+There is an advanced option to disable automatically resizing and to set the target image size.
 
 <br />
 
@@ -1435,6 +1438,7 @@ The advanced option *extra privacy features* enables:
 * Detection and removal of [tracking images](#user-content-faq82)
 * Splitting linked images into an image and a link
 * Showing the [DKIM, SPF and DMARC authentication result](#user-content-faq92)
+* Removal of [Urchin Tracking Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
 
 <br />
 
