@@ -4,6 +4,14 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
+import androidx.work.Constraints;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,14 +20,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import androidx.annotation.NonNull;
-import androidx.work.Constraints;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
-import androidx.work.Worker;
-import androidx.work.WorkerParameters;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
@@ -70,11 +70,14 @@ public class WorkerCleanup extends Worker {
 
             List<File> files = new ArrayList<>();
             File[] messages = new File(context.getFilesDir(), "messages").listFiles();
+            File[] revision = new File(context.getFilesDir(), "revision").listFiles();
             File[] references = new File(context.getFilesDir(), "references").listFiles();
             File[] raws = new File(context.getFilesDir(), "raw").listFiles();
 
             if (messages != null)
                 files.addAll(Arrays.asList(messages));
+            if (revision != null)
+                files.addAll(Arrays.asList(revision));
             if (references != null)
                 files.addAll(Arrays.asList(references));
             if (raws != null)
@@ -83,7 +86,7 @@ public class WorkerCleanup extends Worker {
             // Cleanup message files
             Log.i("Cleanup message files");
             for (File file : files) {
-                long id = Long.parseLong(file.getName());
+                long id = Long.parseLong(file.getName().split("\\.")[0]);
                 if (db.message().countMessage(id) == 0) {
                     Log.i("Deleting " + file);
                     if (!file.delete())

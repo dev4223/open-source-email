@@ -19,8 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import java.util.List;
-
 import androidx.lifecycle.LiveData;
 import androidx.paging.DataSource;
 import androidx.room.Dao;
@@ -28,6 +26,8 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.RoomWarnings;
 import androidx.room.Update;
+
+import java.util.List;
 
 @Dao
 public interface DaoMessage {
@@ -324,11 +324,20 @@ public interface DaoMessage {
     @Query("UPDATE message SET sent = :sent WHERE id = :id")
     int setMessageSent(long id, Long sent);
 
+    @Query("UPDATE message SET receipt_request = :receipt_request WHERE id = :id")
+    int setMessageReceiptRequested(long id, Boolean receipt_request);
+
     @Query("UPDATE message SET avatar = :avatar WHERE id = :id")
     int setMessageAvatar(long id, String avatar);
 
     @Query("UPDATE message SET error = :error WHERE id = :id")
     int setMessageError(long id, String error);
+
+    @Query("UPDATE message SET revision = :revision WHERE id = :id")
+    int setMessageRevision(long id, Integer revision);
+
+    @Query("UPDATE message SET revisions = :revisions WHERE id = :id")
+    int setMessageRevisions(long id, Integer revisions);
 
     @Query("UPDATE message SET content = :content, preview = :preview, warning = :warning WHERE id = :id")
     int setMessageContent(long id, boolean content, String preview, String warning);

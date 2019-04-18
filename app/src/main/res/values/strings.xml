@@ -215,10 +215,11 @@
     <string name="title_advanced_autoclose_hint">Automatically close conversations when all messages are archived, sent or trashed</string>
     <string name="title_advanced_sender_hint">Most providers do not allow modified sender addresses</string>
 
-    <string name="title_advanced_badge_hint">Only available on supported devices</string>
+    <string name="title_advanced_badge_hint">Only available on supported launchers</string>
     <string name="title_advanced_preview_hint">Only available when message text was downloaded</string>
     <string name="title_advanced_search_local_hint">Instead of searching in the primary archive folder on the server</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
+    <string name="title_advanced_paranoid_hint">See the FAQ for details</string>
 
     <string name="title_select">Select &#8230;</string>
     <string name="title_identity_name">Your name</string>
@@ -505,6 +506,7 @@
     <string name="title_legend_snoozed">Is snoozed</string>
     <string name="title_legend_browsed">Is browsed or searched</string>
     <string name="title_legend_answered">Has been answered</string>
+    <string name="title_legend_receipt">Receipt was requested</string>
     <string name="title_legend_attachment">Has attachment</string>
     <string name="title_legend_flagged">Is starred</string>
     <string name="title_legend_contacts">Manage contacts</string>
@@ -544,6 +546,20 @@
     <string name="title_legend_metered">Connection is metered</string>
     <string name="title_legend_unmetered">Connection is unmetered</string>
 
+    <string name="title_legend_expander">Expander</string>
+    <string name="title_legend_avatar">Avatar</string>
+    <string name="title_legend_show_quotes">Show quotes</string>
+    <string name="title_legend_show_images">Show images</string>
+    <string name="title_legend_edit">Edit</string>
+    <string name="title_legend_default_color">Default color</string>
+    <string name="title_legend_close_hint">Close hint</string>
+    <string name="title_legend_connection_state">Connection state</string>
+    <string name="title_legend_sync_state">Synchronization state</string>
+    <string name="title_legend_download_state">Download state</string>
+    <string name="title_legend_save">Save</string>
+    <string name="title_legend_delete">Delete</string>
+    <string name="title_legend_count">Count</string>
+
     <string name="title_hint_folder_actions">Long press for options</string>
     <string name="title_hint_folder_sync">To limit battery and network usage not all folders and not all messages will be synchronized by default</string>
     <string name="title_hint_support">If you have a question or a problem, please use the support menu to get help</string>
@@ -563,6 +579,7 @@
     <string name="title_yes">Yes</string>
     <string name="title_no">No</string>
     <string name="title_undo">Undo</string>
+    <string name="title_redo">Redo</string>
     <string name="title_add">Add</string>
     <string name="title_browse">Browse</string>
     <string name="title_info">Info</string>

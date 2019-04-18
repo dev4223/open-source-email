@@ -54,7 +54,7 @@
     <string name="menu_contacts">Contacts locaux</string>
     <string name="menu_setup">Configuration</string>
     <string name="menu_legend">Légende</string>
-    <string name="menu_faq">Assistance</string>
+    <string name="menu_faq">Support</string>
     <string name="menu_issue">Signaler un problème</string>
     <string name="menu_privacy">Confidentialité</string>
     <string name="menu_about">À propos</string>
@@ -88,7 +88,7 @@
     <string name="title_setup_exported">Paramètres exportés</string>
     <string name="title_setup_imported">Paramètres importés</string>
     <string name="title_setup_quick">Configuration rapide</string>
-    <string name="title_setup_quick_remark">Pour configurer rapidement un compte et une identité pour la plupart des fournisseurs principaux</string>
+    <string name="title_setup_quick_remark">Pour configurer rapidement un compte et une identité pour la plupart des fournisseurs</string>
     <string name="title_setup_quick_hint">La configuration rapide récupérera les informations de configuration de autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">Serveur IMAP pour recevoir des messages</string>
     <string name="title_setup_quick_smtp">Serveur SMTP pour envoyer des messages</string>
@@ -114,6 +114,7 @@
     <string name="title_setup_notifications">Gérer les notifications</string>
     <string name="title_setup_to_do">À faire</string>
     <string name="title_setup_done">Fait</string>
+    <string name="title_setup_theme">Choisir le thème</string>
     <string name="title_setup_light_theme">Thème clair</string>
     <string name="title_setup_dark_theme">Thème sombre</string>
     <string name="title_setup_black_theme">Thème noir</string>
@@ -155,7 +156,9 @@
     <string name="title_advanced_autoread">Marquer automatiquement le message comme lu lors de son déplacement</string>
     <string name="title_advanced_automove">Confirmer le déplacement des messages</string>
     <string name="title_advanced_autoresize">Redimensionner automatiquement les images pour l\'affichage sur écrans</string>
+    <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_sender">Autoriser la modification de l\'adresse de l\'expéditeur</string>
+    <string name="title_advanced_prefix_once">Ne préfixer le sujet qu\'une seule fois lors de la réponse ou du transfert</string>
     <string name="title_advanced_autosend">Confirmer l\'envoi des messages</string>
     <string name="title_advanced_badge">Afficher l\'icône du lanceur avec le nombre de nouveaux messages</string>
     <string name="title_advanced_notify_preview">Afficher l\'aperçu du message dans les notifications</string>
@@ -163,11 +166,13 @@
     <string name="title_advanced_light">Utiliser le voyant de notification</string>
     <string name="title_advanced_sound">Sélectionner le son pour les notifications</string>
     <string name="title_advanced_english">Forcer la langue anglaise</string>
+    <string name="title_advanced_authentication">Afficher un avertissement lorsque le serveur de réception n\'a pas pu authentifier le message</string>
     <string name="title_advanced_paranoid">Fonctions de confidentialité supplémentaires</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
     <string name="title_advanced_debug">Débogage</string>
     <string name="title_advanced_enabled_hint">Désactiver ou activer globalement la réception et l\'envoi de messages</string>
     <string name="title_advanced_metered_hint">Les connexions limitées sont généralement des connexions mobiles ou des points d\'accès Wi-Fi payants</string>
+    <string name="title_advanced_metered_warning">Désactiver cette option désactivera la réception et l\'envoi de messages sur les connexions Internet mobiles</string>
     <string name="title_advanced_browse_hint">Télécharger plus de messages en faisant défiler vers le bas</string>
     <string name="title_advanced_threading_hint">Groupe de messages liés les uns aux autres</string>
     <string name="title_advanced_name_email_hint">Si désactivé, seuls les noms seront affichés si disponibles</string>
@@ -176,10 +181,11 @@
     <string name="title_advanced_autocollapse_hint">Les messages étendus multiples seront toujours fermés par \'retour\'</string>
     <string name="title_advanced_autoclose_hint">Fermer automatiquement les fils de conversation quand tous les messages sont archivés, envoyés ou mis à la corbeille</string>
     <string name="title_advanced_sender_hint">La plupart des fournisseurs n\'autorisent pas les adresses d\'expéditeur modifiées</string>
-    <string name="title_advanced_badge_hint">Disponible uniquement sur les appareils pris en charge</string>
+    <string name="title_advanced_badge_hint">Uniquement disponible sur les lanceurs pris en charge</string>
     <string name="title_advanced_preview_hint">Disponible uniquement lorsque le texte du message a été téléchargé</string>
     <string name="title_advanced_search_local_hint">Au lieu de chercher dans le dossier de l’archive principale sur le serveur</string>
     <string name="title_advanced_english_hint">Cela va redémarrer l’application</string>
+    <string name="title_advanced_paranoid_hint">Voir la FAQ pour les détails</string>
     <string name="title_select">Sélectionner &#8230;</string>
     <string name="title_identity_name">Votre nom</string>
     <string name="title_identity_email">Votre adresse e-mail</string>
@@ -438,6 +444,7 @@
     <string name="title_legend_snoozed">Est différé</string>
     <string name="title_legend_browsed">Est parcouru ou recherché</string>
     <string name="title_legend_answered">A reçu une réponse</string>
+    <string name="title_legend_receipt">Un accusé de réception a été demandé</string>
     <string name="title_legend_attachment">A une pièce jointe</string>
     <string name="title_legend_flagged">Est suivi</string>
     <string name="title_legend_contacts">Gérer les contacts</string>
@@ -489,6 +496,7 @@
     <string name="title_yes">Oui</string>
     <string name="title_no">Non</string>
     <string name="title_undo">Annuler</string>
+    <string name="title_redo">Recommencer</string>
     <string name="title_add">Ajouter</string>
     <string name="title_browse">Parcourir</string>
     <string name="title_info">Info</string>
@@ -515,6 +523,11 @@
     <string name="title_debug_info">Information de débogage</string>
     <string name="title_debug_info_remark">Veuillez décrire le problème et indiquer l\'heure à laquelle il est survenu :</string>
     <string name="title_crash_info_remark">Veuillez décrire ce que vous faisiez lorsque l\'application s\'est arrêtée :</string>
+    <string-array name="startupNames">
+        <item>Boite de réception unifiée</item>
+        <item>Dossiers unifiés</item>
+        <item>Comptes</item>
+    </string-array>
     <string-array name="downloadNames">
         <item>16 ko</item>
         <item>32 ko</item>
@@ -526,9 +539,9 @@
         <item>2 Mo</item>
         <item>&#8734;</item>
     </string-array>
-    <string-array name="startupNames">
-        <item>Boite de réception unifiée</item>
-        <item>Dossiers unifiés</item>
-        <item>Comptes</item>
+    <string-array name="resizeNames">
+        <item>Petit</item>
+        <item>Moyen</item>
+        <item>Grand</item>
     </string-array>
 </resources>

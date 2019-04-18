@@ -82,6 +82,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.Group;
+import androidx.cursoradapter.widget.SimpleCursorAdapter;
+import androidx.exifinterface.media.ExifInterface;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.Observer;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
@@ -119,18 +131,6 @@ import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.Group;
-import androidx.cursoradapter.widget.SimpleCursorAdapter;
-import androidx.exifinterface.media.ExifInterface;
-import androidx.fragment.app.FragmentTransaction;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.Observer;
-import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -177,7 +177,6 @@ public class FragmentCompose extends FragmentBase {
     private boolean autosave = false;
     private boolean busy = false;
 
-    private boolean sender_extra = false;
     private boolean prefix_once = false;
     private boolean monospaced = false;
     private boolean style = true;
@@ -193,7 +192,6 @@ public class FragmentCompose extends FragmentBase {
         pro = Helper.isPro(getContext());
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        sender_extra = prefs.getBoolean("sender", false);
         prefix_once = prefs.getBoolean("prefix_once", false);
         monospaced = prefs.getBoolean("monospaced", false);
         style = prefs.getBoolean("style_toolbar", true);
@@ -246,6 +244,7 @@ public class FragmentCompose extends FragmentBase {
                 int at = (identity == null ? -1 : identity.email.indexOf('@'));
                 etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
                 tvDomain.setText(at < 0 ? null : identity.email.substring(at));
+                grpExtra.setVisibility(identity != null && identity.sender_extra ? View.VISIBLE : View.GONE);
 
                 Spanned signature = null;
                 if (pro) {
@@ -407,8 +406,7 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
-        ((ActivityBase) getActivity()).addBackPressedListener(onBackPressedListener);
-
+        addBackPressedListener(onBackPressedListener);
 
         // Initialize
         setSubtitle(R.string.title_compose);
@@ -613,8 +611,6 @@ public class FragmentCompose extends FragmentBase {
 
         if (pgpService != null)
             pgpService.unbindFromService();
-
-        ((ActivityBase) getActivity()).removeBackPressedListener(onBackPressedListener);
 
         super.onDestroyView();
     }
@@ -1157,7 +1153,7 @@ public class FragmentCompose extends FragmentBase {
                 Properties props = MessageHelper.getSessionProperties(Helper.AUTH_TYPE_PASSWORD, null, false);
                 Session isession = Session.getInstance(props, null);
                 MimeMessage imessage = new MimeMessage(isession);
-                MessageHelper.build(context, message, imessage, identity == null ? false : identity.plain_only);
+                MessageHelper.build(context, message, identity, imessage);
 
                 // Serialize message
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -1712,6 +1708,13 @@ public class FragmentCompose extends FragmentBase {
                             body = EntityAnswer.getAnswerText(db, answer, null) + body;
                     } else {
                         if ("reply".equals(action) || "reply_all".equals(action)) {
+                            if (ref.to != null && ref.to.length > 0) {
+                                String to = ((InternetAddress) ref.to[0]).getAddress();
+                                int at = to.indexOf('@');
+                                if (at > 0)
+                                    draft.extra = to.substring(0, at);
+                            }
+
                             draft.references = (ref.references == null ? "" : ref.references + " ") + ref.msgid;
                             draft.inreplyto = ref.msgid;
                             draft.thread = ref.thread;
@@ -1909,8 +1912,10 @@ public class FragmentCompose extends FragmentBase {
             etSubject.setTag(reference < 0 ? "" : etSubject.getText().toString());
 
             grpHeader.setVisibility(View.VISIBLE);
-            grpExtra.setVisibility(sender_extra ? View.VISIBLE : View.GONE);
             grpAddresses.setVisibility("reply_all".equals(action) ? View.VISIBLE : View.GONE);
+
+            bottom_navigation.getMenu().findItem(R.id.action_undo).setEnabled(draft.revision != null && draft.revision > 1);
+            bottom_navigation.getMenu().findItem(R.id.action_redo).setEnabled(draft.revision != null && !draft.revision.equals(draft.revisions));
 
             getActivity().invalidateOptionsMenu();
 
@@ -1945,7 +1950,6 @@ public class FragmentCompose extends FragmentBase {
 
                     // Show identities
                     IdentityAdapter adapter = new IdentityAdapter(getContext(), identities);
-                    adapter.setDropDownViewResource(R.layout.spinner_item1_dropdown);
                     spIdentity.setAdapter(adapter);
 
                     // Select identity
@@ -2164,8 +2168,7 @@ public class FragmentCompose extends FragmentBase {
                         !MessageHelper.equal(draft.cc, acc) ||
                         !MessageHelper.equal(draft.bcc, abcc) ||
                         !Objects.equals(draft.subject, subject) ||
-                        last_available != available ||
-                        !body.equals(Helper.readText(draft.getFile(context))));
+                        last_available != available);
 
                 last_available = available;
 
@@ -2179,16 +2182,52 @@ public class FragmentCompose extends FragmentBase {
                     draft.bcc = abcc;
                     draft.subject = subject;
                     draft.received = new Date().getTime();
-
                     draft.sender = MessageHelper.getSortKey(draft.from);
                     Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
                     draft.avatar = (lookupUri == null ? null : lookupUri.toString());
-
                     db.message().updateMessage(draft);
-                    Helper.writeText(draft.getFile(context), body);
-                    db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
+                }
 
-                    Core.updateMessageSize(context, draft.id);
+                if (action == R.id.action_undo || action == R.id.action_redo) {
+                    if (draft.revision != null && draft.revisions != null) {
+                        dirty = true;
+
+                        if (action == R.id.action_undo) {
+                            if (draft.revision > 1)
+                                draft.revision--;
+                        } else {
+                            if (draft.revision < draft.revisions)
+                                draft.revision++;
+                        }
+
+                        body = Helper.readText(draft.getFile(context, draft.revision));
+                        Helper.writeText(draft.getFile(context), body);
+
+                        db.message().setMessageRevision(draft.id, draft.revision);
+
+                        db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
+                        Core.updateMessageSize(context, draft.id);
+                    }
+                } else {
+                    String previous = Helper.readText(draft.getFile(context));
+                    if (!body.equals(previous)) {
+                        dirty = true;
+
+                        if (draft.revisions == null)
+                            draft.revisions = 1;
+                        else
+                            draft.revisions++;
+                        draft.revision = draft.revisions;
+
+                        Helper.writeText(draft.getFile(context), body);
+                        Helper.writeText(draft.getFile(context, draft.revisions), body);
+
+                        db.message().setMessageRevision(draft.id, draft.revision);
+                        db.message().setMessageRevisions(draft.id, draft.revisions);
+
+                        db.message().setMessageContent(draft.id, true, HtmlHelper.getPreview(body), null);
+                        Core.updateMessageSize(context, draft.id);
+                    }
                 }
 
                 // Remove unused inline images
@@ -2215,11 +2254,8 @@ public class FragmentCompose extends FragmentBase {
                     EntityFolder trash = db.folder().getFolderByType(draft.account, EntityFolder.TRASH);
                     if (empty || trash == null)
                         EntityOperation.queue(context, db, draft, EntityOperation.DELETE);
-                    else {
-                        EntityOperation.queue(context, db, draft, EntityOperation.SEEN, true);
-                        draft.ui_seen = true;
+                    else
                         EntityOperation.queue(context, db, draft, EntityOperation.MOVE, trash.id);
-                    }
 
                     if (!empty) {
                         Handler handler = new Handler(context.getMainLooper());
@@ -2229,7 +2265,10 @@ public class FragmentCompose extends FragmentBase {
                             }
                         });
                     }
-                } else if (action == R.id.action_save || action == R.id.menu_encrypt) {
+                } else if (action == R.id.action_save ||
+                        action == R.id.action_undo ||
+                        action == R.id.action_redo ||
+                        action == R.id.menu_encrypt) {
                     if (BuildConfig.DEBUG || dirty)
                         EntityOperation.queue(context, db, draft, EntityOperation.ADD);
 
@@ -2309,9 +2348,15 @@ public class FragmentCompose extends FragmentBase {
             etCc.setText(MessageHelper.formatAddressesCompose(draft.cc));
             etBcc.setText(MessageHelper.formatAddressesCompose(draft.bcc));
 
+            bottom_navigation.getMenu().findItem(R.id.action_undo).setEnabled(draft.revision != null && draft.revision > 1);
+            bottom_navigation.getMenu().findItem(R.id.action_redo).setEnabled(draft.revision != null && !draft.revision.equals(draft.revisions));
+
             if (action == R.id.action_delete) {
                 autosave = false;
                 finish();
+
+            } else if (action == R.id.action_undo || action == R.id.action_redo) {
+                showDraft(draft);
 
             } else if (action == R.id.action_save) {
                 // Do nothing
@@ -2395,7 +2440,7 @@ public class FragmentCompose extends FragmentBase {
         }.execute(FragmentCompose.this, args, "compose:show");
     }
 
-    private void showDraft(EntityMessage draft) {
+    private void showDraft(final EntityMessage draft) {
         Bundle args = new Bundle();
         args.putLong("id", draft.id);
         args.putBoolean("show_images", show_images);
@@ -2410,6 +2455,8 @@ public class FragmentCompose extends FragmentBase {
                 edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
                 bottom_navigation.setVisibility(View.VISIBLE);
                 Helper.setViewsEnabled(view, true);
+                bottom_navigation.getMenu().findItem(R.id.action_undo).setEnabled(draft.revision != null && draft.revision > 1);
+                bottom_navigation.getMenu().findItem(R.id.action_redo).setEnabled(draft.revision != null && !draft.revision.equals(draft.revisions));
 
                 getActivity().invalidateOptionsMenu();
             }
@@ -2418,7 +2465,6 @@ public class FragmentCompose extends FragmentBase {
             protected Spanned[] onExecute(final Context context, Bundle args) throws Throwable {
                 final long id = args.getLong("id");
                 final boolean show_images = args.getBoolean("show_images", false);
-
 
                 DB db = DB.getInstance(context);
                 EntityMessage draft = db.message().getMessage(id);

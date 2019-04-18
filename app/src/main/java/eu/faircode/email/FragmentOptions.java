@@ -46,9 +46,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
@@ -58,6 +55,9 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -97,7 +97,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private SwitchCompat swAutoResize;
     private Spinner spAutoResize;
     private TextView tvAutoResize;
-    private SwitchCompat swSender;
     private SwitchCompat swPrefixOnce;
     private SwitchCompat swAutoSend;
 
@@ -109,6 +108,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
 
     private SwitchCompat swAuthentication;
     private SwitchCompat swParanoid;
+    private TextView tvParanoidHint;
     private SwitchCompat swEnglish;
     private SwitchCompat swUpdates;
     private SwitchCompat swDebug;
@@ -129,7 +129,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             "startup", "date", "threading", "avatars", "identicons", "name_email", "subject_italic", "flags", "preview",
             "addresses", "monospaced", "autohtml", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext", "collapse", "autoread", "automove",
-            "autoresize", "resize", "sender", "prefix_once", "autosend",
+            "autoresize", "resize", "prefix_once", "autosend",
             "notify_preview", "search_local", "light", "sound",
             "authentication", "paranoid", "english", "updates", "debug",
             "first", "why", "last_update_check", "app_support", "message_swipe", "message_select", "folder_actions", "folder_sync",
@@ -180,7 +180,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swAutoResize = view.findViewById(R.id.swAutoResize);
         spAutoResize = view.findViewById(R.id.spAutoResize);
         tvAutoResize = view.findViewById(R.id.tvAutoResize);
-        swSender = view.findViewById(R.id.swSender);
         swPrefixOnce = view.findViewById(R.id.swPrefixOnce);
         swAutoSend = view.findViewById(R.id.swAutoSend);
 
@@ -192,6 +191,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
 
         swAuthentication = view.findViewById(R.id.swAuthentication);
         swParanoid = view.findViewById(R.id.swParanoid);
+        tvParanoidHint = view.findViewById(R.id.tvParanoidHint);
         swEnglish = view.findViewById(R.id.swEnglish);
         swUpdates = view.findViewById(R.id.swUpdates);
         swDebug = view.findViewById(R.id.swDebug);
@@ -255,39 +255,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 DialogFragment timePicker = new TimePickerFragment();
                 timePicker.setArguments(args);
                 timePicker.show(getFragmentManager(), "timePicker");
-            }
-        });
-
-        swAuthentication.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("authentication", checked).apply();
-            }
-        });
-
-        swParanoid.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("paranoid", checked).apply();
-            }
-        });
-
-        swEnglish.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("english", checked).commit(); // apply won't work here
-
-                Intent intent = new Intent(getContext(), ActivityMain.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                Runtime.getRuntime().exit(0);
-            }
-        });
-
-        swUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("updates", checked).apply();
             }
         });
 
@@ -497,13 +464,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             }
         });
 
-        swSender.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("sender", checked).apply();
-            }
-        });
-
         swPrefixOnce.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -558,6 +518,52 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
                 intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, sound == null ? null : Uri.parse(sound));
                 startActivityForResult(Helper.getChooser(getContext(), intent), ActivitySetup.REQUEST_SOUND);
+            }
+        });
+
+        swAuthentication.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("authentication", checked).apply();
+            }
+        });
+
+        swParanoid.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("paranoid", checked).apply();
+            }
+        });
+
+        final Intent faq = new Intent(Intent.ACTION_VIEW);
+        faq.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq86"));
+        faq.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (faq.resolveActivity(getContext().getPackageManager()) != null) {
+            tvParanoidHint.getPaint().setUnderlineText(true);
+            tvParanoidHint.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(faq);
+                }
+            });
+        }
+
+        swEnglish.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("english", checked).commit(); // apply won't work here
+
+                Intent intent = new Intent(getContext(), ActivityMain.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                Runtime.getRuntime().exit(0);
+            }
+        });
+
+        swUpdates.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("updates", checked).apply();
             }
         });
 
@@ -689,7 +695,6 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             }
         spAutoResize.setEnabled(swAutoResize.isChecked());
 
-        swSender.setChecked(prefs.getBoolean("sender", false));
         swPrefixOnce.setChecked(prefs.getBoolean("prefix_once", false));
         swAutoSend.setChecked(!prefs.getBoolean("autosend", false));
 

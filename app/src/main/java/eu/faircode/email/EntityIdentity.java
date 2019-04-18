@@ -19,16 +19,16 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Objects;
-
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Objects;
 
 import static androidx.room.ForeignKey.CASCADE;
 
@@ -77,6 +77,8 @@ public class EntityIdentity {
     public Boolean synchronize;
     @NonNull
     public Boolean primary;
+    @NonNull
+    public boolean sender_extra = false;
     public String replyto;
     public String bcc;
     @NonNull

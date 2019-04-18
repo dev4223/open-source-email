@@ -15,6 +15,10 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.preference.PreferenceManager;
+
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
 import com.sun.mail.imap.AppendUID;
@@ -82,9 +86,6 @@ import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
 import javax.net.ssl.SSLException;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-import androidx.preference.PreferenceManager;
 import me.leolin.shortcutbadger.ShortcutBadger;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -399,7 +400,7 @@ class Core {
 
         // Delete previous message(s) with same ID
         if (folder.id.equals(message.folder)) {
-            // Prevent deleting message
+            // Prevent adding/deleting message
             db.message().setMessageUid(message.id, -1L);
 
             Message[] ideletes = ifolder.search(new MessageIDTerm(message.msgid));
@@ -424,8 +425,7 @@ class Core {
             EntityIdentity identity =
                     (message.identity == null ? null : db.identity().getIdentity(message.identity));
 
-            imessage = MessageHelper.from(context, message, isession,
-                    identity == null ? false : identity.plain_only);
+            imessage = MessageHelper.from(context, message, identity, isession);
         } else {
             // Cross account move
             File file = message.getRawFile(context);
@@ -1111,7 +1111,8 @@ class Core {
                             message = dup;
                             update = true;
                             filter = true;
-                        }
+                        } else if (dup.uid < 0)
+                            throw new MessageRemovedException();
                     }
                 }
 
@@ -1174,6 +1175,7 @@ class Core {
                 // Local address contains control or whitespace in string ``mailing list someone@example.org''
                 message.deliveredto = helper.getDeliveredTo();
                 message.thread = helper.getThreadId(context, account.id, uid);
+                message.receipt_request = helper.getReceiptRequested();
                 message.dkim = MessageHelper.getAuthentication("dkim", authentication);
                 message.spf = MessageHelper.getAuthentication("spf", authentication);
                 message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
@@ -2016,7 +2018,7 @@ class Core {
         @NonNull
         @Override
         public String toString() {
-            return "[running=" + running + "]";
+            return "[running=" + running + ",recoverable=" + recoverable + "]";
         }
     }
 }

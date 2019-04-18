@@ -76,6 +76,24 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Group;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.paging.AsyncPagedListDiffer;
+import androidx.paging.PagedList;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -100,24 +118,6 @@ import java.util.Locale;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.Group;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.paging.AsyncPagedListDiffer;
-import androidx.paging.PagedList;
-import androidx.preference.PreferenceManager;
-import androidx.recyclerview.selection.ItemDetailsLookup;
-import androidx.recyclerview.selection.SelectionTracker;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHolder> {
     private Context context;
@@ -186,6 +186,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageView ivSnoozed;
         private ImageView ivBrowsed;
         private ImageView ivAnswered;
+        private ImageView ivReceipt;
         private ImageView ivAttachments;
         private TextView tvSubject;
         private TextView tvFolder;
@@ -276,6 +277,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSnoozed = itemView.findViewById(R.id.ivSnoozed);
             ivBrowsed = itemView.findViewById(R.id.ivBrowsed);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
+            ivReceipt = itemView.findViewById(R.id.ivReceipt);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
             tvSubject = itemView.findViewById(R.id.tvSubject);
             tvPreview = itemView.findViewById(R.id.tvPreview);
@@ -438,6 +440,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSnoozed.setVisibility(View.GONE);
             ivBrowsed.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
+            ivReceipt.setVisibility(View.GONE);
             ivAttachments.setVisibility(View.GONE);
             tvSubject.setText(null);
             tvFolder.setText(null);
@@ -517,6 +520,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivSnoozed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivBrowsed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivReceipt.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAttachments.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvSubject.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvFolder.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -577,6 +581,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
+            ivReceipt.setVisibility(message.receipt_request != null && message.receipt_request ? View.VISIBLE : View.GONE);
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
 
             if (viewType == ViewType.FOLDER)
@@ -1843,25 +1848,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!TextUtils.isEmpty(scheme))
                         builder.scheme(scheme);
 
-                    String authority = uri.getAuthority();
+                    String authority = uri.getEncodedAuthority();
                     if (!TextUtils.isEmpty(authority))
-                        builder.authority(authority);
+                        builder.encodedAuthority(authority);
 
-                    String path = uri.getPath();
+                    String path = uri.getEncodedPath();
                     if (!TextUtils.isEmpty(path))
-                        builder.path(path);
+                        builder.encodedPath(path);
 
-                    for (String key : uri.getQueryParameterNames()) {
-                        Log.i("Query " + key + "=" + uri.getQueryParameter(key));
+                    for (String key : uri.getQueryParameterNames())
                         if (!PARANOID_QUERY.contains(key.toLowerCase()))
-                            builder.appendQueryParameter(key, uri.getQueryParameter(key));
-                    }
+                            for (String value : uri.getQueryParameters(key))
+                                builder.appendQueryParameter(key, value);
 
-                    String fragment = uri.getFragment();
+                    String fragment = uri.getEncodedFragment();
                     if (!TextUtils.isEmpty(fragment))
-                        builder.fragment(fragment);
+                        builder.encodedFragment(fragment);
 
                     _uri = builder.build();
+
+                    Log.i("Source uri=" + uri);
+                    Log.i("Target uri=" + _uri);
                 } else
                     _uri = uri;
 
@@ -2638,7 +2645,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(data.message.uid != null);
 
-            popupMenu.getMenu().findItem(R.id.menu_raw).setVisible(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_raw).setEnabled(
                     data.message.uid != null && (data.message.raw == null || data.message.raw));
             popupMenu.getMenu().findItem(R.id.menu_raw).setTitle(

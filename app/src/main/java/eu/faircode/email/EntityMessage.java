@@ -24,6 +24,12 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+
 import java.io.File;
 import java.io.Serializable;
 import java.util.Date;
@@ -31,12 +37,6 @@ import java.util.Objects;
 import java.util.Random;
 
 import javax.mail.Address;
-
-import androidx.annotation.NonNull;
-import androidx.room.Entity;
-import androidx.room.ForeignKey;
-import androidx.room.Index;
-import androidx.room.PrimaryKey;
 
 import static androidx.room.ForeignKey.CASCADE;
 import static androidx.room.ForeignKey.SET_NULL;
@@ -90,6 +90,7 @@ public class EntityMessage implements Serializable {
     public String deliveredto;
     public String inreplyto;
     public String thread; // compose = null
+    public Boolean receipt_request;
     public Boolean dkim;
     public Boolean spf;
     public Boolean dmarc;
@@ -135,6 +136,8 @@ public class EntityMessage implements Serializable {
     @NonNull
     public Boolean ui_browsed = false;
     public Long ui_snoozed;
+    public Integer revision; // compose
+    public Integer revisions; // compose
     public String warning; // persistent
     public String error; // volatile
     public Long last_attempt; // send
@@ -154,6 +157,13 @@ public class EntityMessage implements Serializable {
         if (!dir.exists())
             dir.mkdir();
         return new File(dir, id.toString());
+    }
+
+    File getFile(Context context, int revision) {
+        File dir = new File(context.getFilesDir(), "revision");
+        if (!dir.exists())
+            dir.mkdir();
+        return new File(dir, id + "." + revision);
     }
 
     File getRefFile(Context context) {

@@ -5,6 +5,15 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.text.TextUtils;
 
+import androidx.preference.PreferenceManager;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.room.TypeConverter;
+import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,14 +27,6 @@ import java.util.concurrent.Executors;
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
-import androidx.preference.PreferenceManager;
-import androidx.room.Database;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
-import androidx.room.TypeConverter;
-import androidx.room.TypeConverters;
-import androidx.room.migration.Migration;
-import androidx.sqlite.db.SupportSQLiteDatabase;
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 
 /*
@@ -50,7 +51,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 64,
+        version = 68,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -692,6 +693,35 @@ public abstract class DB extends RoomDatabase {
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `dkim` INTEGER");
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `spf` INTEGER");
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `dmarc` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(64, 65) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `sender_extra` INTEGER NOT NULL DEFAULT 0");
+                    }
+                })
+                .addMigrations(new Migration(65, 66) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `receipt_request` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(66, 67) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `revision` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(67, 68) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `revisions` INTEGER");
+                        db.execSQL("UPDATE message SET revisions = revision");
                     }
                 })
                 .build();
