@@ -68,8 +68,10 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
     private TextView tvScheduleEnd;
 
     private TextView tvConnectionType;
+    private TextView tvConnectionRoaming;
     private SwitchCompat swMetered;
     private Spinner spDownload;
+    private SwitchCompat swRoaming;
 
     private Spinner spStartup;
     private SwitchCompat swDate;
@@ -125,7 +127,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
 
     private final static String[] ADVANCED_OPTIONS = new String[]{
             "enabled", "schedule_start", "schedule_end",
-            "metered", "download",
+            "metered", "download", "roaming",
             "startup", "date", "threading", "avatars", "identicons", "name_email", "subject_italic", "flags", "preview",
             "addresses", "monospaced", "autohtml", "autoimages", "actionbar",
             "pull", "swipenav", "autoexpand", "autoclose", "autonext", "collapse", "autoread", "automove",
@@ -151,8 +153,10 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         tvScheduleEnd = view.findViewById(R.id.tvScheduleEnd);
 
         tvConnectionType = view.findViewById(R.id.tvConnectionType);
+        tvConnectionRoaming = view.findViewById(R.id.tvConnectionRoaming);
         swMetered = view.findViewById(R.id.swMetered);
         spDownload = view.findViewById(R.id.spDownload);
+        swRoaming = view.findViewById(R.id.swRoaming);
 
         spStartup = view.findViewById(R.id.spStartup);
         swDate = view.findViewById(R.id.swDate);
@@ -276,6 +280,14 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("download").apply();
+            }
+        });
+
+        swRoaming.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("roaming", checked).apply();
+                ServiceSynchronize.reload(getContext(), "roaming=" + checked);
             }
         });
 
@@ -637,8 +649,8 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         swEnabled.setChecked(prefs.getBoolean("enabled", true));
         swSchedule.setChecked(prefs.getBoolean("schedule", false));
 
-        tvScheduleStart.setText(formatHour(prefs.getInt("schedule_start", 0)));
-        tvScheduleEnd.setText(formatHour(prefs.getInt("schedule_end", 0)));
+        tvScheduleStart.setText(formatHour(getContext(), prefs.getInt("schedule_start", 0)));
+        tvScheduleEnd.setText(formatHour(getContext(), prefs.getInt("schedule_end", 0)));
 
         swMetered.setChecked(prefs.getBoolean("metered", true));
 
@@ -649,6 +661,8 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
                 spDownload.setSelection(pos);
                 break;
             }
+
+        swRoaming.setChecked(prefs.getBoolean("roaming", true));
 
         boolean compact = prefs.getBoolean("compact", false);
 
@@ -714,13 +728,13 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         grpNotification.setVisibility(Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ? View.VISIBLE : View.GONE);
     }
 
-    private String formatHour(int minutes) {
+    private String formatHour(Context context, int minutes) {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, minutes / 60);
         cal.set(Calendar.MINUTE, minutes % 60);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
-        return SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT).format(cal.getTime());
+        return Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(cal.getTime());
     }
 
     public static class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
@@ -789,6 +803,7 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
 
                     tvConnectionType.setText(networkState.isUnmetered() ? R.string.title_legend_unmetered : R.string.title_legend_metered);
                     tvConnectionType.setVisibility(networkState.isConnected() ? View.VISIBLE : View.GONE);
+                    tvConnectionRoaming.setVisibility(networkState.isRoaming() ? View.VISIBLE : View.GONE);
                 }
             }
         });
@@ -819,8 +834,8 @@ public class FragmentOptions extends FragmentBase implements SharedPreferences.O
         else if ("schedule".equals(key))
             swSchedule.setChecked(prefs.getBoolean(key, false));
         else if ("schedule_start".equals(key))
-            tvScheduleStart.setText(formatHour(prefs.getInt(key, 0)));
+            tvScheduleStart.setText(formatHour(getContext(), prefs.getInt(key, 0)));
         else if ("schedule_end".equals(key))
-            tvScheduleEnd.setText(formatHour(prefs.getInt(key, 0)));
+            tvScheduleEnd.setText(formatHour(getContext(), prefs.getInt(key, 0)));
     }
 }

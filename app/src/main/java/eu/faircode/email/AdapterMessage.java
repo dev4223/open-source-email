@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -35,6 +36,8 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -49,7 +52,6 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
@@ -81,8 +83,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.OnLifecycleEvent;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.paging.AsyncPagedListDiffer;
 import androidx.paging.PagedList;
@@ -94,6 +99,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.github.chrisbanes.photoview.PhotoView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -134,6 +140,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean suitable;
     private IProperties properties;
 
+    private boolean dark;
     private boolean date;
     private boolean threading;
     private boolean contacts;
@@ -159,9 +166,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     enum ViewType {UNIFIED, FOLDER, THREAD, SEARCH}
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
-    private DateFormat tf = SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT);
-    private DateFormat dtf = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+    private NumberFormat NF = NumberFormat.getNumberInstance();
+    private DateFormat TF;
+    private DateFormat DTF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             "utm_source",
@@ -570,8 +577,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setText(size == null ? null : Helper.humanReadableByteCount(size, true));
             tvSize.setVisibility(size == null || (message.content && !"size".equals(sort)) ? View.GONE : View.VISIBLE);
             tvTime.setText(date && "time".equals(sort)
-                    ? tf.format(message.received)
-                    : DateUtils.getRelativeTimeSpanString(context, message.received));
+                    ? TF.format(message.received)
+                    : Helper.getRelativeTimeSpanString(context, message.received));
 
             // Line 2
             tvSubject.setText(message.subject);
@@ -608,7 +615,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvCount.setVisibility(View.GONE);
                 ivThread.setVisibility(View.GONE);
             } else {
-                tvCount.setText(nf.format(message.visible));
+                tvCount.setText(NF.format(message.visible));
                 ivThread.setVisibility(View.VISIBLE);
             }
 
@@ -630,7 +637,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (debug) {
                 String text = "error=" + error +
-                        "\nuid=" + message.uid + " id=" + message.id + " " + dtf.format(new Date(message.received)) +
+                        "\nuid=" + message.uid + " id=" + message.id + " " + DTF.format(new Date(message.received)) +
                         "\n" + (message.ui_hide ? "HIDDEN " : "") +
                         "seen=" + message.seen + "/" + message.ui_seen +
                         " unseen=" + message.unseen +
@@ -879,7 +886,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // dev4223: show always
             //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvTimeEx.setVisibility(View.VISIBLE);
-            tvTimeEx.setText(dtf.format(message.received));
+            tvTimeEx.setText(DTF.format(message.received));
 
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
@@ -1077,7 +1084,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             List<EntityAttachment> images = new ArrayList<>();
             for (EntityAttachment attachment : attachments)
-                if (attachment.type.startsWith("image/"))
+                if (!attachment.isInline() && attachment.type.startsWith("image/"))
                     images.add(attachment);
             adapterImage.set(images);
 
@@ -1460,6 +1467,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 };
 
+                if (dark) {
+                    float[] NEGATIVE = new float[]{
+                            -1, 0, 0, 0, 255, // red
+                            0, -1, 0, 0, 255, // green
+                            0, 0, -1, 0, 255, // blue
+                            0, 0, 0, 1, 0 // alpha
+                    };
+
+                    Paint paint = new Paint();
+                    paint.setColorFilter(new ColorMatrixColorFilter(NEGATIVE));
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, paint);
+                }
+
                 webView.setWebViewClient(new WebViewClient() {
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
                         Log.i("Open url=" + url);
@@ -1612,6 +1632,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 pbBody.setVisibility(View.GONE);
                 webView.setVisibility(View.VISIBLE);
             }
+
+            rvImage.setVisibility(adapterImage.getItemCount() > 0 ? View.VISIBLE : View.GONE);
         }
 
         private class OriginalMessage {
@@ -1755,7 +1777,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvBody.setText(body);
                 tvBody.setTextIsSelectable(false);
                 tvBody.setTextIsSelectable(true);
-                tvBody.setMovementMethod(new UrlHandler());
+                tvBody.setMovementMethod(new TouchHandler(message.id));
                 tvBody.setVisibility(show_expanded ? View.VISIBLE : View.GONE);
                 pbBody.setVisibility(View.GONE);
                 rvImage.setVisibility(adapterImage.getItemCount() > 0 ? View.VISIBLE : View.GONE);
@@ -1794,7 +1816,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }, null);
         }
 
-        private class UrlHandler extends ArrowKeyMovementMethod {
+        private class TouchHandler extends ArrowKeyMovementMethod {
+            private long id;
+
+            TouchHandler(long id) {
+                this.id = id;
+            }
+
             @Override
             public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -1811,14 +1839,24 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     int line = layout.getLineForVertical(y);
                     int off = layout.getOffsetForHorizontal(line, x);
 
-                    URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
-                    if (link.length != 0) {
-                        String url = link[0].getURL();
-                        Uri uri = Uri.parse(url);
-                        if (uri.getScheme() == null)
-                            uri = Uri.parse("https://" + url);
-                        onOpenLink(uri);
-                        return true;
+                    boolean show_images = properties.getValue("images", id);
+
+                    if (show_images) {
+                        ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
+                        if (image.length > 0) {
+                            onOpenImage(image[0].getDrawable(), image[0].getSource());
+                            return true;
+                        }
+                    } else {
+                        URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
+                        if (link.length > 0) {
+                            String url = link[0].getURL();
+                            Uri uri = Uri.parse(url);
+                            if (uri.getScheme() == null)
+                                uri = Uri.parse("https://" + url);
+                            onOpenLink(uri);
+                            return true;
+                        }
                     }
                 }
 
@@ -1936,6 +1974,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         .setNegativeButton(R.string.title_no, null)
                         .show();
             }
+        }
+
+        private void onOpenImage(Drawable drawable, String source) {
+            PhotoView pv = new PhotoView(context);
+            pv.setImageDrawable(drawable);
+
+            final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            dialog.setContentView(pv);
+
+            owner.getLifecycle().addObserver(new LifecycleObserver() {
+                @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+                public void onCreate() {
+                    dialog.show();
+                }
+
+                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                public void onDestroyed() {
+                    dialog.dismiss();
+                }
+            });
         }
 
         private class ActionData {
@@ -2895,16 +2953,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View anchor = bnvActions.findViewById(R.id.action_reply);
             PopupMenu popupMenu = new PopupMenu(context, anchor);
             popupMenu.inflate(R.menu.menu_reply);
+            popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(data.message.receipt_to != null);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem target) {
                     switch (target.getItemId()) {
                         case R.id.menu_reply_to_sender:
-                            onMenuReply(data, false);
+                            onMenuReply(data, "reply");
                             return true;
                         case R.id.menu_reply_to_all:
-                            onMenuReply(data, true);
+                            onMenuReply(data, "reply_all");
+                            return true;
+                        case R.id.menu_reply_receipt:
+                            onMenuReply(data, "receipt");
                             return true;
                         case R.id.menu_reply_template:
                             onMenuAnswer(data);
@@ -2918,9 +2980,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         }
 
-        private void onMenuReply(final ActionData data, final boolean all) {
+        private void onMenuReply(final ActionData data, String action) {
             Bundle args = new Bundle();
             args.putLong("id", data.message.id);
+            args.putString("action", action);
 
             new SimpleTask<Boolean>() {
                 @Override
@@ -2936,7 +2999,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected void onExecuted(Bundle args, Boolean available) {
                     final Intent reply = new Intent(context, ActivityCompose.class)
-                            .putExtra("action", all ? "reply_all" : "reply")
+                            .putExtra("action", args.getString("action"))
                             .putExtra("reference", data.message.id);
                     if (available)
                         context.startActivity(reply);
@@ -2964,7 +3027,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             new SimpleTask<List<EntityAnswer>>() {
                 @Override
                 protected List<EntityAnswer> onExecute(Context context, Bundle args) {
-                    return DB.getInstance(context).answer().getAnswers();
+                    return DB.getInstance(context).answer().getAnswers(false);
                 }
 
                 @Override
@@ -3040,6 +3103,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                    ViewType viewType, boolean compact, int zoom, String sort, boolean duplicates, IProperties properties) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
+        this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
+
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
@@ -3054,6 +3119,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.suitable = Helper.getNetworkState(context).isSuitable();
         this.properties = properties;
 
+        TypedValue tv = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.themeName, tv, true);
+        this.dark = !"light".equals(tv.string);
 
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);

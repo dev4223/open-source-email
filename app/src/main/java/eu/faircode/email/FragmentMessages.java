@@ -1305,11 +1305,11 @@ public class FragmentMessages extends FragmentBase {
                     @Override
                     public void onDurationSelected(long duration, long time) {
                         if (Helper.isPro(getContext())) {
-                            selectionTracker.clearSelection();
-
                             Bundle args = new Bundle();
                             args.putLongArray("ids", getSelection());
                             args.putLong("wakeup", duration == 0 ? -1 : time);
+
+                            selectionTracker.clearSelection();
 
                             new SimpleTask<Void>() {
                                 @Override
@@ -1941,19 +1941,15 @@ public class FragmentMessages extends FragmentBase {
     public void onPrepareOptionsMenu(Menu menu) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        boolean selection = (selectionTracker != null && selectionTracker.hasSelection());
-
         menu.findItem(R.id.menu_search).setVisible(
                 viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
 
-        menu.findItem(R.id.menu_folders).setVisible(
-                viewType == AdapterMessage.ViewType.UNIFIED && primary >= 0);
+        menu.findItem(R.id.menu_folders).setVisible(viewType == AdapterMessage.ViewType.UNIFIED && primary >= 0);
         menu.findItem(R.id.menu_folders).setIcon(connected
-                ? R.drawable.baseline_folder_special_24
-                : R.drawable.baseline_folder_open_24);
+                ? R.drawable.baseline_folder_special_24 : R.drawable.baseline_folder_open_24);
 
-        menu.findItem(R.id.menu_sort_on).setVisible(!selection &&
-                (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
+        menu.findItem(R.id.menu_sort_on).setVisible(
+                viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
 
         String sort = prefs.getString("sort", "time");
         if ("time".equals(sort))
@@ -1969,17 +1965,17 @@ public class FragmentMessages extends FragmentBase {
         else if ("size".equals(sort))
             menu.findItem(R.id.menu_sort_on_size).setChecked(true);
 
-        menu.findItem(R.id.menu_zoom).setVisible(!selection);
-
-        menu.findItem(R.id.menu_compact).setVisible(!selection);
         menu.findItem(R.id.menu_compact).setChecked(prefs.getBoolean("compact", false));
 
-        menu.findItem(R.id.menu_snoozed).setVisible(!selection && !outbox &&
+        menu.findItem(R.id.menu_snoozed).setVisible(!outbox &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
         menu.findItem(R.id.menu_snoozed).setChecked(prefs.getBoolean("snoozed", false));
 
         menu.findItem(R.id.menu_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
         menu.findItem(R.id.menu_duplicates).setChecked(prefs.getBoolean("duplicates", true));
+
+        menu.findItem(R.id.menu_select_all).setVisible(!outbox &&
+                (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -2036,6 +2032,10 @@ public class FragmentMessages extends FragmentBase {
 
             case R.id.menu_duplicates:
                 onMenuDuplicates();
+                return true;
+
+            case R.id.menu_select_all:
+                onMenuSelectAll();
                 return true;
 
             default:
@@ -2099,6 +2099,37 @@ public class FragmentMessages extends FragmentBase {
         boolean duplicates = prefs.getBoolean("duplicates", true);
         prefs.edit().putBoolean("duplicates", !duplicates).apply();
         adapter.setDuplicates(!duplicates);
+    }
+
+    private void onMenuSelectAll() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean snoozed = prefs.getBoolean("snoozed", false);
+
+        Bundle args = new Bundle();
+        args.putLong("id", folder);
+        args.putBoolean("snoozed", snoozed);
+
+        new SimpleTask<List<Long>>() {
+            @Override
+            protected List<Long> onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                boolean snoozed = args.getBoolean("snoozed");
+
+                DB db = DB.getInstance(context);
+                return db.message().getMessageAll(id < 0 ? null : id, snoozed);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, List<Long> ids) {
+                for (long id : ids)
+                    selectionTracker.select(id);
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+            }
+        }.execute(this, args, "messages:all");
     }
 
     private void loadMessages() {

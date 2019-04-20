@@ -25,10 +25,10 @@ For authorizing:
 
 * ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
 * A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
-* A [bug in Android 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue.
+* ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue.~~
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
-* A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty.
-* "*... Couldn't read row ...*" causes sometimes a crash. This could be caused by a bug in the [Room Persistence Library](https://developer.android.com/topic/libraries/architecture/room) or indicate a corrupt database.
+* ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty.~~
+* "*... Couldn't read row ...*" causes sometimes a crash. This could be caused by a bug in the [Room Persistence Library](https://developer.android.com/topic/libraries/architecture/room) but more likely indicates a corrupt database.
 
 ## Planned features
 
@@ -41,13 +41,14 @@ Anything on this list is in random order and *might* be added in the near future
 
 ## Frequently requested features
 
-* *Rich text editor* / [Markdown](https://en.wikipedia.org/wiki/Markdown) support: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned. See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details.
+* [Rich text](https://en.wikipedia.org/wiki/Formatted_text) / [Markdown](https://en.wikipedia.org/wiki/Markdown) support: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned. See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details.
 * *Widget to read messages*: widgets can have limited user interaction only, so a widget to read e-mail would not be very useful. Moreover, it would be not very useful to duplicate functions which are already available in the app.
-* *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too.
+* *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too. See below for the design goals.
 * *ActiveSync*: using the Exchange ActiveSync protocol requires [a license](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing), so this cannot be added.
 
-The goal of the design is to be minimalistic and non distracting (so, no fancy colors and animations).
+The goal of the design is to be minimalistic and non distracting (so, no fancy colors, animations, etc).
 All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
+Fonts, sizes, colors, etc should be material design wherever possible.
 
 Since FairEmail is meant to be privacy friendly, the following will not be added:
 
@@ -58,7 +59,7 @@ Since FairEmail is meant to be privacy friendly, the following will not be added
 Confirmation is just one tap, which is just a small price for better privacy.
 Note that your contacts could unknowingly send malicious messages if they got infected with malware.
 
-Stripped and reformatted messages are often better readable than original messages because the margins are removed and font sizes are standardized.
+Stripped and reformatted messages are often better readable than original messages because the margins are removed, and font colors and sizes are standardized.
 
 FairEmail does not allow other apps access to your messages and attachments without your approval.
 
@@ -146,7 +147,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(78) How do I use schedules?](#user-content-faq78)
 * [(79) How do I use synchronize on demand (manual)?](#user-content-faq79)
 * [(80) How can I fix 'Unable to load BODYSTRUCTURE'?](#user-content-faq80)
-* [(81) Can you make the background of the original message dark in the dark theme?](#user-content-faq81)
+* [~~(81) Can you make the background of the original message dark in the dark theme?~~](#user-content-faq81)
 * [(82) What is a tracking image?](#user-content-faq82)
 * [(83) What does 'User is authenticated but not connected' mean?](#user-content-faq83)
 * [(84) What are local contacts for?](#user-content-faq84)
@@ -160,6 +161,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(92) Can you add spam filtering, verification of the DKIM signature and SPF authorization?](#user-content-faq92)
 * [(93) Can you allow installation on external storage?](#user-content-faq93)
 * [(94) What does the red/orange stripe at the end of the header mean?](#user-content-faq94)
+* [(95) Why are not all apps shown when selecting an attachment or image?](#user-content-faq95)
 
 [I have another question.](#support)
 
@@ -188,7 +190,7 @@ only suggesting contacts won't work without contacts permissions.
 <a name="faq2"></a>
 **(2) Why is there a permanent notification shown?**
 
-A permanent status bar notification with the number of accounts being synchronized, the number of messages to send and the number of operations pending (see next question) is shown
+A permanent status bar notification with the number of accounts being synchronized and the number of operations pending (see next question) is shown
 to prevent Android from killing the service that takes care of receiving and sending email.
 
 Most, if not all, other email apps don't show a notification
@@ -261,11 +263,11 @@ In the display section of the advanced options you can enable or disable:
 * *Show subject italic*: to show the message subject as normal text
 * *Show stars*: to hide stars (favorites)
 * *Show message preview*: to show two lines of the message text
-* *Show address details by default*: to collapse the addresses section by default
+* *Show address details by default*: to expand the addresses section by default
 * *Use monospaced font for message text*: to use a fixed width typeface for message texts
-* *Conversation action bar*: to disable the bottom navigation bar
 * *Automatically show original message for known contacts*: to automatically show original messages for contacts on your device, please read [this FAQ](#user-content-faq35)
 * *Automatically show images for known contacts*: to automatically show images for contacts on your device, please read [this FAQ](#user-content-faq35)
+* *Conversation action bar*: to disable the bottom navigation bar
 
 Note that messages can be previewed only when the message text was downloaded.
 Larger message texts are not downloaded by default on metered (generally mobile) networks.
@@ -353,6 +355,8 @@ See also [what Google writes about it](https://support.google.com/mail/answer/71
 
 For example [Gmail can import messages](https://support.google.com/mail/answer/21289) from another POP account,
 which can be used as a workaround for when your provider doesn't support IMAP.
+
+tl;dr; consider to switch to IMAP.
 
 <br />
 
@@ -885,10 +889,10 @@ FairEmail does and will not alter this in any way.
 <br />
 
 <a name="faq44"></a>
-**(44) Can you show contact photos / identicons in the sent folder?**
+**~~(44) Can you show contact photos / identicons in the sent folder?~~**
 
-Contact photos and identicons are always shown for the sender because this is necessary for conversation threads.
-Getting contact photos for both the sender and receiver is not really an option because getting contact photo is an expensive operation.
+~~Contact photos and identicons are always shown for the sender because this is necessary for conversation threads.~~
+~~Getting contact photos for both the sender and receiver is not really an option because getting contact photo is an expensive operation.~~
 
 <br />
 
@@ -985,13 +989,16 @@ Trying to reconnect to an account while the account connection was terminated fo
 like [too many simultaneous connections](#user-content-faq23) or even the account being blocked.
 To prevent such problems, FairEmail waits 90 seconds until trying to reconnect again.
 
+You can long press *Settings* in the navigation menu to reconnect immediately.
+
 <br />
 
 <a name="faq53"></a>
 **(53) Can you stick the message action bar to the top/bottom?**
 
-The message action bar works on a message and the bottom action bar works on the conversation.
+The message action bar works on a single message and the bottom action bar works on all the messages in the conversation.
 Since there is often more than one message in a conversation, this is not possible.
+Moreover, there are quite some message specific actions, like forwarding.
 
 <br />
 
@@ -1023,7 +1030,7 @@ Then use the three dot action button to execute the desired action.
 **(56) Can you add support for JMAP?**
 
 There are almost no providers offering the [JMAP](https://jmap.io/) protocol,
-so it is not worth to add support for this to FairEmail.
+so it is not worth a lot of effort to add support for this to FairEmail.
 
 <br />
 
@@ -1034,9 +1041,11 @@ Yes, you can use HTML in signatures if you paste HTML formatted text into the si
 
 See [here](https://stackoverflow.com/questions/44410675/supported-html-tags-on-android-textview) for which HTML tags are supported.
 
-You can for example past this into the signature field:
+You can for example paste this into the signature field:
 
 This is *italic*, this is *bold* and this is [a link](https://example.org).
+
+Alternatively, you can use the button *Edit as HTML*.
 
 <br />
 
@@ -1105,7 +1114,7 @@ The following authentication methods are supported and used in this order:
 * LOGIN
 * PLAIN
 * NTLM (untested)
-* XOAUTH2 (used when an account was selected)
+* XOAUTH2 (used when a Google account is selected)
 
 SASL authentication methods, like CRAM-MD5, are not supported
 because [JavaMail for Android](https://javaee.github.io/javamail/Android) does not support SASL authentication.
@@ -1235,6 +1244,7 @@ You can select one of these actions to apply to matching messages:
 * Mark as unread
 * Move
 * Reply template
+* Automation
 
 Filter rules are applied direct after the message header has been fetched, before the message text has been downloaded,
 so it is not possible to apply filter rules to the message text.
@@ -1279,14 +1289,15 @@ FairEmail shows all these messages, except for one, dimmed, to indicate that the
 Gmail allows one message to have multiple labels, which are presented to FairEmail as folders.
 This means that messages with multiple labels will be shown multiple times as well.
 
-Since there is not really an original message because it is in fact just the same message, it is not really possible to show just one message.
+You can hide duplicate messages by disabling *Show duplicates* in the three dots overflow menu.
 
 <br />
 
 <a name="faq75"></a>
 **(75) Can you make an iOS, Windows, etc version?**
 
-I develop apps for Android only.
+A lot of knowledge and experience is required to successfully develop an app for a specific platform,
+which is why I develop apps for Android only.
 
 <br />
 
@@ -1360,6 +1371,7 @@ Normally, FairEmail maintains a connection to the configured email servers whene
 If you don't want this, for example to not be disturbed or to save on battery usage, just disable synchronization in the advanced options.
 This will stop the background service which takes care of automatic synchronization and will remove the associated status bar notification.
 You can use pull-down-to-refresh in a folder or use the folder menu *Synchronize now* to manually synchronize messages.
+This will start the synchronization service for 90 seconds.
 
 <br />
 
@@ -1374,10 +1386,12 @@ FairEmail already tries to workaround these bugs, but if this fail you'll need t
 <br />
 
 <a name="faq81"></a>
-**(81) Can you make the background of the original message dark in the dark theme?**
+**~~(81) Can you make the background of the original message dark in the dark theme?~~**
 
-The original message is shown as the sender has sent it, including all colors.
-Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.
+~~The original message is shown as the sender has sent it, including all colors.~~
+~~Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.~~
+
+Recent versions of FairEmail will invert all colors of the original message when using a dark or black theme.
 
 <br />
 
@@ -1437,8 +1451,7 @@ The advanced option *extra privacy features* enables:
 
 * Detection and removal of [tracking images](#user-content-faq82)
 * Splitting linked images into an image and a link
-* Showing the [DKIM, SPF and DMARC authentication result](#user-content-faq92)
-* Removal of [Urchin Tracking Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters)
+* Removal of [Urchin Tracking Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters) from links
 
 <br />
 
@@ -1500,9 +1513,9 @@ so periodically synchronizing messages will not result in saving battery power, 
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature
 and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client.
 
-However, FairEmail will show a small vertical warning stripe at the end of the message header
-if DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server
-and the [extra privacy features](#user-content-faq86) are enabled.
+However, FairEmail can show a small vertical warning stripe at the end of the message header
+if DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server.
+You can enable this in the advanced options.
 
 <br />
 
@@ -1522,6 +1535,17 @@ See also [this FAQ](#user-content-faq92).
 
 <br />
 
+<a name="faq95"></a>
+**(95) Why are not all apps shown when selecting an attachment or image?**
+
+For privacy and security reasons FairEmail does not have permissions to directly access files,
+instead the Storage Access Framework, available and recommended since Android 4.4 KitKat (released in 2013), is used to select files.
+If an app is listed depends on if the app implements a [document provider](https://developer.android.com/guide/topics/providers/document-provider).
+
+Android Q will make it harder and maybe even impossible to directly access files,
+see [here](https://developer.android.com/preview/privacy/scoped-storage) for more details.
+
+<br />
 
 ## Support
 

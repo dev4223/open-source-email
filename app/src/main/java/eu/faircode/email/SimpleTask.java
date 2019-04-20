@@ -32,24 +32,19 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.OnLifecycleEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-//
 // This simple task is simple to use, but it is also simple to cause bugs that can easily lead to crashes
 // Make sure to not access any member in any outer scope from onExecute
 // Results will not be delivered to destroyed fragments
-//
 
 public abstract class SimpleTask<T> implements LifecycleObserver {
-    private LifecycleOwner owner;
-    private boolean paused;
-    private boolean destroyed;
-    private Bundle args;
-    private String name;
-    private Result stored;
+    private static final List<SimpleTask> tasks = new ArrayList<>();
 
-    private static ExecutorService executor = Executors.newFixedThreadPool(
+    private static final ExecutorService executor = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors(), Helper.backgroundThreadFactory);
 
     public void execute(Context context, LifecycleOwner owner, @NonNull Bundle args, @NonNull String name) {
@@ -72,57 +67,13 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    public void onStart() {
-        Log.i("Start task " + this);
-    }
+    private void run(final Context context, final LifecycleOwner owner, final Bundle args, final String name) {
+        final Handler handler = new Handler();
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onStop() {
-        Log.i("Stop task " + this);
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    public void onResume() {
-        Log.i("Resume task " + this);
-        paused = false;
-        if (stored != null) {
-            Log.i("Deferred delivery task " + this);
-            deliver(args, stored);
-            stored = null;
+        // prevent garbage collection
+        synchronized (tasks) {
+            tasks.add(this);
         }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    public void onPause() {
-        Log.i("Pause task " + this);
-        paused = true;
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    public void onCreated() {
-        Log.i("Created task " + this);
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    public void onDestroyed() {
-        Log.i("Destroy task " + this);
-        owner.getLifecycle().removeObserver(this);
-        owner = null;
-        destroyed = true;
-        args = null;
-        stored = null;
-    }
-
-    private void run(final Context context, LifecycleOwner owner, final Bundle args, String name) {
-        this.owner = owner;
-        this.paused = false;
-        this.destroyed = false;
-        this.args = null;
-        this.name = name;
-        this.stored = null;
-
-        owner.getLifecycle().addObserver(this);
 
         try {
             onPreExecute(args);
@@ -130,58 +81,79 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
             Log.e(ex);
         }
 
-        final Handler handler = new Handler();
-
-        // Run in background thread
         executor.submit(new Runnable() {
+            private Object data;
+            private Throwable ex;
+
             @Override
             public void run() {
-                final Result result = new Result();
-
+                // Run in background thread
                 try {
-                    result.data = onExecute(context, args);
+                    data = onExecute(context, args);
                 } catch (Throwable ex) {
                     Log.e(ex);
-                    result.ex = ex;
+                    this.ex = ex;
                 }
 
-                // Run on main thread
+                // Run on UI thread
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        deliver(args, result);
+                        Lifecycle.State state = owner.getLifecycle().getCurrentState();
+                        if (state.equals(Lifecycle.State.DESTROYED)) {
+                            // No delivery
+                            cleanup();
+                        } else if (state.isAtLeast(Lifecycle.State.RESUMED)) {
+                            // Inline delivery
+                            Log.i("Deliver task " + name);
+                            deliver();
+                            cleanup();
+                        } else
+                            owner.getLifecycle().addObserver(new LifecycleObserver() {
+                                @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
+                                public void onResume() {
+                                    // Deferred delivery
+                                    Log.i("Resume task " + name);
+                                    owner.getLifecycle().removeObserver(this);
+                                    deliver();
+                                    cleanup();
+                                }
+
+                                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                                public void onDestroyed() {
+                                    // No delivery
+                                    Log.i("Destroy task " + name);
+                                    owner.getLifecycle().removeObserver(this);
+                                    cleanup();
+                                }
+                            });
+                    }
+
+                    private void deliver() {
+                        try {
+                            onPostExecute(args);
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        } finally {
+                            try {
+                                if (ex == null)
+                                    onExecuted(args, (T) data);
+                                else
+                                    onException(args, ex);
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
                     }
                 });
             }
         });
     }
 
-    private void deliver(Bundle args, Result result) {
-        if (destroyed)
-            return;
-
-        if (paused) {
-            Log.i("Deferring delivery task " + this);
-            this.args = args;
-            this.stored = result;
-            return;
-        }
-
-        Log.i("Delivery task " + this);
-        try {
-            onPostExecute(args);
-        } catch (Throwable ex) {
-            Log.e(ex);
-        } finally {
-            try {
-                if (result.ex == null)
-                    onExecuted(args, (T) result.data);
-                else
-                    onException(args, result.ex);
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-            onDestroyed();
+    private void cleanup() {
+        synchronized (tasks) {
+            tasks.remove(this);
+            Log.i("Remaining tasks=" + tasks.size());
         }
     }
 
@@ -196,16 +168,5 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     protected abstract void onException(Bundle args, Throwable ex);
 
     protected void onPostExecute(Bundle args) {
-    }
-
-    private static class Result {
-        Throwable ex;
-        Object data;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return (name == null ? super.toString() : name);
     }
 }

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FairEmail</string>
     <string name="app_copyright" translatable="false">Copyright &#x24B8; 2018–2019 by M. Bokhorst</string>
+    <string name="app_changelog">Changelog</string>
     <string name="app_welcome">FairEmail is an open source email app focused on privacy and security. For this reason some features might work differently from what you are used to.</string>
     <string name="app_limitations">For example, messages will always be reformatted to remove unsafe elements and to improve readability and opening links needs to be confirmed for safety.</string>
     <string name="app_eula" translatable="false">THIS SOFTWARE IS PROVIDED BY THE AUTHOR \'\'AS IS\'\' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</string>
@@ -160,6 +161,7 @@
 
     <string name="title_advanced_metered">Use metered connections</string>
     <string name="title_advanced_download">Automatically download messages and attachments on a metered connection up to</string>
+    <string name="title_advanced_roaming">Download messages and attachments while roaming</string>
     <string name="title_advanced_browse">Browse messages on the server</string>
 
     <string name="title_advanced_startup">Show on start screen</string>
@@ -368,9 +370,13 @@
     <string name="title_reply">Reply</string>
     <string name="title_reply_to_sender">Sender</string>
     <string name="title_reply_to_all">All</string>
+    <string name="title_reply_receipt">Read receipt</string>
     <string name="title_reply_template">Template</string>
     <string name="title_moving">Moving to %1$s</string>
     <string name="title_open_with">Open with</string>
+
+    <string name="title_receipt_subject">Read receipt: %1$s</string>
+    <string name="title_receipt_text">This read receipt only acknowledges that the message was displayed. There is no guarantee that the recipient has read the message contents.</string>
 
     <string name="title_no_answers">No reply templates defined</string>
     <string name="title_no_viewer">No viewer app available for %1$s</string>
@@ -380,6 +386,7 @@
     <string name="title_no_internet">No or no suitable internet connection</string>
     <string name="title_no_connection">Synchronization will be performed on next account connection</string>
     <string name="title_no_folder">Folder does not exist</string>
+    <string name="title_no_format">The originally received message will be included</string>
     <string name="title_accross_remark">Messages moved across accounts will be downloaded again resulting in extra data usage</string>
     <string name="title_raw_saved">Raw message saved</string>
     <string name="title_attachment_saved">Attachment saved</string>
@@ -450,18 +457,20 @@
 
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
+    <string name="title_snoozed">Snoozed</string>
+    <string name="title_duplicates">Show duplicates</string>
+    <string name="title_select_all">Select all</string>
 
     <string name="title_address_sent">Sent:</string>
     <string name="title_address_unsent">Unsent:</string>
     <string name="title_address_invalid">Invalid:</string>
-    <string name="title_snoozed">Snoozed</string>
-    <string name="title_duplicates">Show duplicates</string>
 
     <string name="title_previous">Previous</string>
     <string name="title_next">Next</string>
 
     <string name="title_answer_reply">Reply template</string>
     <string name="title_answer_name">Template name</string>
+    <string name="title_answer_hide">Hide from menus</string>
     <string name="title_answer_text">Template text</string>
     <string name="title_answer_template_name">$name$ will be replaced by the sender full name</string>
     <string name="title_answer_template_email">$email$ will be replaced by the sender email address</string>
@@ -545,6 +554,7 @@
 
     <string name="title_legend_metered">Connection is metered</string>
     <string name="title_legend_unmetered">Connection is unmetered</string>
+    <string name="title_legend_roaming">Roaming</string>
 
     <string name="title_legend_expander">Expander</string>
     <string name="title_legend_avatar">Avatar</string>

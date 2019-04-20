@@ -45,6 +45,8 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
+import android.text.format.Time;
 import android.view.Display;
 import android.view.Menu;
 import android.view.View;
@@ -101,6 +103,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -777,6 +780,7 @@ public class Helper {
         private Boolean connected = null;
         private Boolean suitable = null;
         private Boolean unmetered = null;
+        private Boolean roaming = null;
 
         boolean isConnected() {
             return (connected != null && connected);
@@ -790,6 +794,10 @@ public class Helper {
             return (unmetered != null && unmetered);
         }
 
+        boolean isRoaming() {
+            return (roaming != null && roaming);
+        }
+
         public void update(NetworkState newState) {
             connected = newState.connected;
             unmetered = newState.unmetered;
@@ -800,12 +808,30 @@ public class Helper {
     static NetworkState getNetworkState(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean metered = prefs.getBoolean("metered", true);
+        boolean roaming = prefs.getBoolean("roaming", true);
 
         NetworkState state = new NetworkState();
         Boolean isMetered = isMetered(context);
         state.connected = (isMetered != null);
         state.unmetered = (isMetered != null && !isMetered);
         state.suitable = (isMetered != null && (metered || !isMetered));
+
+        if (state.connected && !roaming) {
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                NetworkInfo ani = cm.getActiveNetworkInfo();
+                if (ani != null)
+                    state.roaming = ani.isRoaming();
+            } else {
+                Network active = cm.getActiveNetwork();
+                if (active != null) {
+                    NetworkCapabilities caps = cm.getNetworkCapabilities(active);
+                    if (caps != null)
+                        state.roaming = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
+                }
+            }
+        }
+
         return state;
     }
 
@@ -1162,5 +1188,33 @@ public class Helper {
         Parcel p = Parcel.obtain();
         bundle.writeToParcel(p, 0);
         return p.dataSize();
+    }
+
+    static DateFormat getTimeInstance(Context context, int style) {
+        // https://issuetracker.google.com/issues/37054851
+        if (context != null &&
+                (style == SimpleDateFormat.SHORT || style == SimpleDateFormat.MEDIUM)) {
+            Locale locale = Locale.getDefault();
+            boolean is24Hour = android.text.format.DateFormat.is24HourFormat(context);
+            String skeleton = (is24Hour ? "Hm" : "hm");
+            if (style == SimpleDateFormat.MEDIUM)
+                skeleton += "s";
+            String pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton);
+            return new SimpleDateFormat(pattern, locale);
+        } else
+            return SimpleDateFormat.getTimeInstance(style);
+    }
+
+    static CharSequence getRelativeTimeSpanString(Context context, long millis) {
+        long now = System.currentTimeMillis();
+        long span = Math.abs(now - millis);
+        Time nowTime = new Time();
+        Time thenTime = new Time();
+        nowTime.set(now);
+        thenTime.set(millis);
+        if (span < DateUtils.DAY_IN_MILLIS && nowTime.weekDay == thenTime.weekDay)
+            return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
+        else
+            return DateUtils.getRelativeTimeSpanString(context, millis);
     }
 }
