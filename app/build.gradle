@@ -11,8 +11,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 442
-        versionName "1.442"
+        versionCode 444
+        versionName "1.444"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
@@ -85,11 +85,6 @@ android {
 
     packagingOptions {
         pickFirst 'META-INF/LICENSE.txt'
-
-        // keep lib/armeabi-v7a/libsqlite3x.so
-        // keep lib/arm64-v8a/libsqlite3x.so
-        // keep lib/x86/libsqlite3x.so
-        // keep lib/x86_64/libsqlite3x.so
     }
 }
 

@@ -140,7 +140,7 @@
     <string name="title_advanced_schedule">Programat</string>
     <string name="title_advanced_metered">Folosește conexiuni contorizate</string>
     <string name="title_advanced_download">Descarcă automat mesajele și atașamentele, folosind o conexiune contorizată, până în</string>
-    <string name="title_advanced_roaming">Descărcarea mesajelor și atașărilor în roaming</string>
+    <string name="title_advanced_roaming">Descărcarea mesajelor și a atașamentelor prin conexiuni roaming</string>
     <string name="title_advanced_browse">Răsfoiește mesajele de pe server</string>
     <string name="title_advanced_startup">Arată pe ecranul de start</string>
     <string name="title_advanced_date_header">Grupare după dată</string>
@@ -209,6 +209,7 @@
     <string name="title_identity_store_sent">Stochează mesajele trimise</string>
     <string name="title_identity_store_sent_remark">Activați doar dacă furnizorul nu stochează în mod automat mesajele trimise</string>
     <string name="title_optional">Opțional</string>
+    <string name="title_recommended">Recomandat</string>
     <string name="title_account_linked">Cont asociat</string>
     <string name="title_account_name">Nume cont</string>
     <string name="title_account_name_hint">Folosit la diferențierea dosarelor</string>
@@ -419,7 +420,7 @@
     <string name="title_next">Următor</string>
     <string name="title_answer_reply">Șablon răspuns</string>
     <string name="title_answer_name">Nume șablon</string>
-    <string name="title_answer_hide">Ascunde de meniuri</string>
+    <string name="title_answer_hide">Ascunde din meniuri</string>
     <string name="title_answer_text">Text șablon</string>
     <string name="title_answer_template_name">$name$ va fi înlocuit cu numele expeditorului</string>
     <string name="title_answer_template_email">$email$ va fi înlocuit cu adresa de e-mail a expeditorului</string>

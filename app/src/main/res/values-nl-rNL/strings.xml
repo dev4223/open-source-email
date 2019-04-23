@@ -147,7 +147,6 @@
     <string name="title_advanced_monospaced">Gebruik vaste breedte lettertype voor berichttekst</string>
     <string name="title_advanced_html">Automatisch originele bericht weergeven voor bekende contacten</string>
     <string name="title_advanced_images">Automatisch afbeeldingen weergeven voor bekende contacten</string>
-    <string name="title_advanced_invert">Kleuren van het oorspronkelijke bericht omkeren bij het gebruik van een donker thema</string>
     <string name="title_advanced_actionbar">Actiebalk gesprek</string>
     <string name="title_advanced_pull_refresh">Omlaag schuiven om te verversen</string>
     <string name="title_advanced_swipenav">Veeg links/rechts om naar het volgende/vorige gesprek te gaan</string>
@@ -181,7 +180,6 @@
     <string name="title_advanced_name_email_hint">Indien uitgeschakeld, worden alleen namen weergegeven als deze beschikbaar zijn</string>
     <string name="title_advanced_flags_hint">Merk op dat berichten met een ster altijd lokaal worden bewaard</string>
     <string name="title_advanced_preview_hint">Alleen beschikbaar wanneer de berichttekst werd gedownload</string>
-    <string name="title_advanced_crash_hint">Het inschakelen van deze optie kan crashes veroorzaken</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
     <string name="title_advanced_autocollapse_hint">Meerdere uitgeklapte berichten worden altijd gesloten bij \'terug\'</string>
     <string name="title_advanced_autoclose_hint">Gesprekken automatisch sluiten wanneer alle berichten zijn gearchiveerd, verzonden of weggegooid</string>
@@ -203,6 +201,7 @@
     <string name="title_identity_store_sent">Sla verzonden berichten op</string>
     <string name="title_identity_store_sent_remark">Dit alleen inschakelen als uw provider niet automatisch verzonden berichten opslaat</string>
     <string name="title_optional">Optioneel</string>
+    <string name="title_recommended">Aanbevolen</string>
     <string name="title_account_linked">Gekoppeld account</string>
     <string name="title_account_name">Accountnaam</string>
     <string name="title_account_name_hint">Wordt gebruikt voor het onderscheiden van mappen</string>
@@ -325,6 +324,7 @@
     <string name="title_reply">Beantwoorden</string>
     <string name="title_reply_to_sender">Afzender</string>
     <string name="title_reply_to_all">Iedereen</string>
+    <string name="title_reply_list">Lijst</string>
     <string name="title_reply_receipt">Leesbevestiging</string>
     <string name="title_reply_template">Sjabloon</string>
     <string name="title_moving">Verplaatsen naar %1$s</string>

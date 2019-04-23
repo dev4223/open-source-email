@@ -24,12 +24,11 @@ For authorizing:
 ## Known problems
 
 * ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
-* A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
 * ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue.~~
-* A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
 * ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty.~~
 * "*... Couldn't read row ...*" causes sometimes a crash. This could be caused by a bug in the [Room Persistence Library](https://developer.android.com/topic/libraries/architecture/room) but more likely indicates a corrupt database.
-* "*... Unable to create layer ...*" causes a crash on some devices when inverting the colors of an original message due to a [bug in AndroidX](https://bugs.chromium.org/p/chromium/issues/detail?id=578150)
+* A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
+* A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
 
 ## Planned features
 
@@ -1144,12 +1143,14 @@ There is an advanced option to disable automatically resizing and to set the tar
 The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.
 The most natural action in the context of an email app is moving the message out of the folder to another folder.
 You can select the folder to move to in the account settings.
+
 Other actions, like marking messages read and snoozing messages are available via multiple selection.
 You can long press a message to start multiple selection. See also [this question](#user-content-faq55).
 
 Swiping left or right to mark a message read or unread is unnatural because the message first goes away and later comes back in a different shape.
 Note that there is an advanced option to mark messages automatically read on moving,
 which is in most cases a perfect replacement for the sequence mark read and move to some folder.
+You can also mark messages read from new message notifications.
 
 If you want to read a message later, you can hide it until a specific time by using the *snooze* menu.
 
@@ -1392,10 +1393,6 @@ FairEmail already tries to workaround these bugs, but if this fail you'll need t
 
 ~~The original message is shown as the sender has sent it, including all colors.~~
 ~~Changing the background color would not only make the original view not original anymore, it can also result in unreadable messages.~~
-
-Recent versions of FairEmail can invert all colors of the original message when using a dark or black theme.
-You can turn this on the advanced settings.
-Be aware that this can cause [crashes](https://bugs.chromium.org/p/chromium/issues/detail?id=578150) on some devices.
 
 <br />
 

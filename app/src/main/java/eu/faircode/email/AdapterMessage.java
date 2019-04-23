@@ -36,8 +36,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.ColorMatrixColorFilter;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -1461,21 +1459,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 WebView webView = new WebView(context) {
                     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                        int height = getMeasuredHeight();
-                        if (height < tvBody.getMinHeight())
-                            setMeasuredDimension(getMeasuredWidth(), tvBody.getMinHeight());
+                        int w = getMeasuredWidth();
+                        int h = getMeasuredHeight();
+                        Log.i("WebView " + w + "x" + h);
+                        setMeasuredDimension(w, Math.max(tvBody.getMinHeight(), h));
                     }
                 };
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean invert = prefs.getBoolean("invert", false);
-
-                if (dark && invert) {
-                    // https://bugs.chromium.org/p/chromium/issues/detail?id=578150
-                    Paint paint = new Paint();
-                    paint.setColorFilter(new ColorMatrixColorFilter(Helper.MATRIX_NEGATIVE));
-                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, paint);
-                }
 
                 webView.setWebViewClient(new WebViewClient() {
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -1552,6 +1541,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             final WebView webView = (WebView) vwBody;
             webView.loadUrl("about:blank");
+            webView.setBackgroundColor(Color.TRANSPARENT);
 
             WebSettings settings = webView.getSettings();
             settings.setUseWideViewPort(true);
@@ -1575,11 +1565,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (TextUtils.isEmpty(html)) {
                 Bundle args = new Bundle();
                 args.putLong("id", message.id);
+                args.putBoolean("dark", dark);
+                args.putInt("color", textColorSecondary);
 
                 new SimpleTask<OriginalMessage>() {
                     @Override
                     protected OriginalMessage onExecute(Context context, Bundle args) throws IOException {
                         long id = args.getLong("id");
+                        boolean dark = args.getBoolean("dark");
 
                         DB db = DB.getInstance(context);
                         EntityMessage message = db.message().getMessage(id);
@@ -1590,6 +1583,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         original.html = Helper.readText(message.getFile(context));
                         original.html = HtmlHelper.getHtmlEmbedded(context, id, original.html);
                         original.html = HtmlHelper.removeTracking(context, original.html);
+
+                        if (dark) {
+                            String color = String.format("#%06X", (args.getInt("color") & 0xFFFFFF));
+                            original.html = "<style type=\"text/css\">" +
+                                    "* { background: transparent !important; color: " + color + " !important }" +
+                                    "</style>" + original.html;
+                        }
 
                         Document doc = Jsoup.parse(original.html);
                         original.has_images = (doc.select("img").size() > 0);
@@ -2950,6 +2950,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View anchor = bnvActions.findViewById(R.id.action_reply);
             PopupMenu popupMenu = new PopupMenu(context, anchor);
             popupMenu.inflate(R.menu.menu_reply);
+            popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(data.message.list_post != null);
             popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(data.message.receipt_to != null);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -2961,6 +2962,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_reply_to_all:
                             onMenuReply(data, "reply_all");
+                            return true;
+                        case R.id.menu_reply_list:
+                            onMenuReply(data, "list");
                             return true;
                         case R.id.menu_reply_receipt:
                             onMenuReply(data, "receipt");
