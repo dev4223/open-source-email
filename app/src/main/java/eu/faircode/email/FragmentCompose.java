@@ -170,6 +170,7 @@ public class FragmentCompose extends FragmentBase {
     private Group grpSignature;
     private Group grpReference;
 
+    private ContentResolver resolver;
     private AdapterAttachment adapter;
 
     private boolean pro;
@@ -236,6 +237,8 @@ public class FragmentCompose extends FragmentBase {
         grpBody = view.findViewById(R.id.grpBody);
         grpSignature = view.findViewById(R.id.grpSignature);
         grpReference = view.findViewById(R.id.grpReference);
+
+        resolver = getContext().getContentResolver();
 
         // Wire controls
         spIdentity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -452,6 +455,23 @@ public class FragmentCompose extends FragmentBase {
                 new int[]{android.R.id.text1, android.R.id.text2},
                 0);
 
+        cadapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
+            public CharSequence convertToString(Cursor cursor) {
+                int colName = cursor.getColumnIndex(contacts ? ContactsContract.Contacts.DISPLAY_NAME : "name");
+                int colEmail = cursor.getColumnIndex(contacts ? ContactsContract.CommonDataKinds.Email.DATA : "email");
+                String name = cursor.getString(colName);
+                String email = cursor.getString(colEmail);
+                StringBuilder sb = new StringBuilder();
+                if (name == null)
+                    sb.append(email);
+                else {
+                    sb.append("\"").append(name).append("\" ");
+                    sb.append("<").append(email).append(">");
+                }
+                return sb.toString();
+            }
+        });
+
         etTo.setAdapter(cadapter);
         etCc.setAdapter(cadapter);
         etBcc.setAdapter(cadapter);
@@ -460,8 +480,7 @@ public class FragmentCompose extends FragmentBase {
         etCc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
         etBcc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
-        if (contacts) {
-            final ContentResolver resolver = getContext().getContentResolver();
+        if (contacts)
             cadapter.setFilterQueryProvider(new FilterQueryProvider() {
                 public Cursor runQuery(CharSequence typed) {
                     Log.i("Searching provided contact=" + typed);
@@ -481,7 +500,7 @@ public class FragmentCompose extends FragmentBase {
                                     ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE");
                 }
             });
-        } else
+        else
             cadapter.setFilterQueryProvider(new FilterQueryProvider() {
                 @Override
                 public Cursor runQuery(CharSequence typed) {
@@ -489,23 +508,6 @@ public class FragmentCompose extends FragmentBase {
                     return db.contact().searchContacts(null, null, "%" + typed + "%");
                 }
             });
-
-        cadapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
-            public CharSequence convertToString(Cursor cursor) {
-                int colName = cursor.getColumnIndex(contacts ? ContactsContract.Contacts.DISPLAY_NAME : "name");
-                int colEmail = cursor.getColumnIndex(contacts ? ContactsContract.CommonDataKinds.Email.DATA : "email");
-                String name = cursor.getString(colName);
-                String email = cursor.getString(colEmail);
-                StringBuilder sb = new StringBuilder();
-                if (name == null)
-                    sb.append(email);
-                else {
-                    sb.append("\"").append(name).append("\" ");
-                    sb.append("<").append(email).append(">");
-                }
-                return sb.toString();
-            }
-        });
 
         rvAttachment.setHasFixedSize(false);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
@@ -1101,9 +1103,9 @@ public class FragmentCompose extends FragmentBase {
                     for (int i = 0; i < ato.length; i++)
                         tos[i] = ato[i].getAddress();
 
-                    Intent data = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                    data.putExtra(OpenPgpApi.EXTRA_USER_IDS, tos);
-                    encrypt(data);
+                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                    intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, tos);
+                    encrypt(intent);
                 } catch (Throwable ex) {
                     if (ex instanceof IllegalArgumentException)
                         Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
@@ -1206,7 +1208,8 @@ public class FragmentCompose extends FragmentBase {
                                         : result.getByteArrayExtra(OpenPgpApi.RESULT_DETACHED_SIGNATURE));
 
                                 File file = attachment.getFile(context);
-                                Log.i("Writing " + file + " size=" + bytes.length);
+                                if (BuildConfig.BETA_RELEASE)
+                                    Log.i("Writing " + file + " size=" + bytes.length);
                                 try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
                                     out.write(bytes);
                                     db.attachment().setDownloaded(attachment.id, (long) bytes.length);
@@ -1233,12 +1236,6 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                     case OpenPgpApi.RESULT_CODE_USER_INTERACTION_REQUIRED:
-                        if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction()))
-                            args.putInt("request", ActivityCompose.REQUEST_KEY);
-                        else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction()))
-                            args.putInt("request", ActivityCompose.REQUEST_ENCRYPT);
-                        else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction()))
-                            args.putInt("request", ActivityCompose.REQUEST_SIGN);
                         return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                     case OpenPgpApi.RESULT_CODE_ERROR:
@@ -1255,14 +1252,14 @@ public class FragmentCompose extends FragmentBase {
                 if (result == null)
                     onAction(R.id.action_send);
                 else if (result instanceof Intent) {
-                    Intent data = (Intent) result;
-                    encrypt(data);
+                    Intent intent = (Intent) result;
+                    encrypt(intent);
                 } else if (result instanceof PendingIntent)
                     try {
                         PendingIntent pi = (PendingIntent) result;
                         startIntentSenderForResult(
                                 pi.getIntentSender(),
-                                args.getInt("request"),
+                                ActivityCompose.REQUEST_ENCRYPT,
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
                         Log.e(ex);
@@ -1305,29 +1302,23 @@ public class FragmentCompose extends FragmentBase {
                         }
                     }
                 }
-            } else if (requestCode == ActivityCompose.REQUEST_KEY) {
+            } else if (requestCode == ActivityCompose.REQUEST_ENCRYPT) {
                 if (data != null) {
                     if (BuildConfig.BETA_RELEASE)
                         Log.logExtras(data);
-                    if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
-                        Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
+
+                    String action = data.getAction();
+                    if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(action))
+                        action = OpenPgpApi.ACTION_SIGN_AND_ENCRYPT;
+
+                    Intent intent = new Intent(action);
+                    if (data.hasExtra(OpenPgpApi.EXTRA_USER_IDS))
                         intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, data.getStringArrayExtra(OpenPgpApi.EXTRA_USER_IDS));
+                    if (data.hasExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID))
                         intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, data.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, -1));
+                    if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(action))
                         intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                        encrypt(intent);
-                    } else {
-                        data.removeExtra(OpenPgpApi.EXTRA_CALL_UUID1);
-                        data.removeExtra(OpenPgpApi.EXTRA_CALL_UUID2);
-                        encrypt(data);
-                    }
-                }
-            } else if (requestCode == ActivityCompose.REQUEST_ENCRYPT || requestCode == ActivityCompose.REQUEST_SIGN) {
-                if (data != null) {
-                    if (BuildConfig.BETA_RELEASE)
-                        Log.logExtras(data);
-                    data.removeExtra(OpenPgpApi.EXTRA_CALL_UUID1);
-                    data.removeExtra(OpenPgpApi.EXTRA_CALL_UUID2);
-                    encrypt(data);
+                    encrypt(intent);
                 }
             } else {
                 if (data != null)
@@ -1341,7 +1332,7 @@ public class FragmentCompose extends FragmentBase {
         try {
             Uri uri = data.getData();
             if (uri != null)
-                cursor = getContext().getContentResolver().query(uri,
+                cursor = resolver.query(uri,
                         new String[]{
                                 ContactsContract.CommonDataKinds.Email.ADDRESS,
                                 ContactsContract.Contacts.DISPLAY_NAME
