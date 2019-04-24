@@ -1587,7 +1587,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (dark) {
                             String color = String.format("#%06X", (args.getInt("color") & 0xFFFFFF));
                             original.html = "<style type=\"text/css\">" +
-                                    "* { background: transparent !important; color: " + color + " !important }" +
+                                    "* { background: black !important; color: " + color + " !important }" +
                                     "</style>" + original.html;
                         }
 
@@ -1846,12 +1846,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return true;
                     }
 
-                    boolean show_images = properties.getValue("images", id);
-                    if (show_images) {
-                        ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
-                        if (image.length > 0) {
-                            onOpenImage(image[0].getDrawable(), image[0].getSource());
+                    ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
+                    if (image.length > 0 && image[0].getSource() != null) {
+                        boolean show_images = properties.getValue("images", id);
+                        if (show_images) {
+                            onOpenImage(image[0].getDrawable());
                             return true;
+                        } else {
+                            Uri uri = Uri.parse(image[0].getSource());
+                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+                                onOpenLink(uri);
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1972,7 +1978,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onOpenImage(Drawable drawable, String source) {
+        private void onOpenImage(Drawable drawable) {
             PhotoView pv = new PhotoView(context);
             pv.setImageDrawable(drawable);
 
