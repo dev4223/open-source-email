@@ -84,14 +84,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.text.Collator;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -193,11 +189,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 Log.i("Navigation id=" + item.getId() + " menu=" + item.getMenuId());
 
                 switch (item.getMenuId()) {
-                    case R.string.menu_answers:
-                        onMenuAnswers();
-                        break;
                     case R.string.menu_operations:
                         onMenuOperations();
+                        break;
+                    case R.string.menu_answers:
+                        onMenuAnswers();
                         break;
                     case R.string.menu_setup:
                         onMenuSetup();
@@ -290,16 +286,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             public void onChanged(@Nullable List<TupleAccountEx> accounts) {
                 if (accounts == null)
                     accounts = new ArrayList<>();
-
-                final Collator collator = Collator.getInstance(Locale.getDefault());
-                collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
-
-                Collections.sort(accounts, new Comparator<EntityAccount>() {
-                    @Override
-                    public int compare(EntityAccount a1, EntityAccount a2) {
-                        return collator.compare(a1.name, a2.name);
-                    }
-                });
 
                 boolean changed = false;
                 if (last.size() == accounts.size()) {
@@ -946,21 +932,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }.execute(this, args, "menu:inbox");
     }
 
-    private void onMenuAnswers() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-            getSupportFragmentManager().popBackStack("answers", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame, new FragmentAnswers()).addToBackStack("answers");
-        fragmentTransaction.commit();
-    }
-
     private void onMenuOperations() {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
             getSupportFragmentManager().popBackStack("operations", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentOperations()).addToBackStack("operations");
+        fragmentTransaction.commit();
+    }
+
+    private void onMenuAnswers() {
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            getSupportFragmentManager().popBackStack("answers", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.content_frame, new FragmentAnswers()).addToBackStack("answers");
         fragmentTransaction.commit();
     }
 

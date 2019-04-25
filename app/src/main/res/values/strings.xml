@@ -168,6 +168,7 @@
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_identicons">Show identicons</string>
+    <string name="title_advanced_circular">Show round icons</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_subject_italic">Show subject italic</string>
     <string name="title_advanced_flags">Show stars (favorites)</string>
@@ -202,6 +203,7 @@
     <string name="title_advanced_paranoid">Extra privacy features</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_debug">Debug mode</string>
+    <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving and sending of messages</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
@@ -450,6 +452,8 @@
     <string name="title_search_hint">Search on server</string>
     <string name="title_search_device">Search on device</string>
     <string name="title_searching">Searching \'%1$s\'</string>
+
+    <string name="title_reset_order">Reset order</string>
 
     <string name="title_sort_on">Sort on</string>
     <string name="title_sort_on_time">Time</string>

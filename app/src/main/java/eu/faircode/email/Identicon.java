@@ -24,6 +24,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 
 import androidx.core.graphics.ColorUtils;
 
@@ -31,13 +32,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 class Identicon {
-    static Bitmap generate(String email, int size, int pixels, boolean dark) {
-        byte[] hash;
-        try {
-            hash = MessageDigest.getInstance("MD5").digest(email.getBytes());
-        } catch (NoSuchAlgorithmException ignored) {
-            hash = email.getBytes();
-        }
+    static Bitmap icon(String email, int size, int pixels, boolean dark) {
+        byte[] hash = getHash(email);
 
         int color = Color.argb(255, hash[0], hash[1], hash[2]);
         color = ColorUtils.blendARGB(color, dark ? Color.WHITE : Color.BLACK, 0.2f);
@@ -62,5 +58,38 @@ class Identicon {
         }
 
         return bitmap;
+    }
+
+    static Bitmap letter(String email, int size, boolean dark) {
+        byte[] hash = getHash(email);
+
+        int color = Color.argb(255, hash[0], hash[1], hash[2]);
+        color = ColorUtils.blendARGB(color, dark ? Color.WHITE : Color.BLACK, 0.2f);
+
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(color);
+
+        float y = (299 * Color.red(color) + 587 * Color.green(color) + 114 * Color.blue(color)) / 1000f;
+
+        Paint paint = new Paint();
+        paint.setColor(y < 128 ? Color.WHITE : Color.BLACK);
+        paint.setTextSize(size / 2f);
+        paint.setTypeface(Typeface.DEFAULT_BOLD);
+        String text = email.substring(0, 1).toUpperCase();
+        canvas.drawText(
+                text,
+                size / 2f - paint.measureText(text) / 2,
+                size / 2f - (paint.descent() + paint.ascent()) / 2, paint);
+
+        return bitmap;
+    }
+
+    private static byte[] getHash(String email) {
+        try {
+            return MessageDigest.getInstance("MD5").digest(email.getBytes());
+        } catch (NoSuchAlgorithmException ignored) {
+            return email.getBytes();
+        }
     }
 }

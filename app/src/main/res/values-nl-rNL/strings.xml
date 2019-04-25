@@ -139,6 +139,7 @@
     <string name="title_advanced_threading">Gesprekken groeperen</string>
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
     <string name="title_advanced_identicons">Toon identicons</string>
+    <string name="title_advanced_circular">Toon ronde iconen</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
     <string name="title_advanced_subject_italic">Toon onderwerp cursief</string>
     <string name="title_advanced_flags">Toon sterren (favorieten)</string>
@@ -171,6 +172,7 @@
     <string name="title_advanced_paranoid">Extra privacy functies</string>
     <string name="title_advanced_updates">Controleren op updates</string>
     <string name="title_advanced_debug">Foutopsporing modus</string>
+    <string name="title_advanced_last_cleanup">Laatste schoonmaak: %1$s</string>
     <string name="title_advanced_enabled_hint">Globaal in- of uitschakelen van het ontvangen en verzenden van berichten</string>
     <string name="title_advanced_schedule_hint">Tik op een tijd om een tijd in te stellen</string>
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
@@ -395,6 +397,7 @@
     <string name="title_search_hint">Zoek op server</string>
     <string name="title_search_device">Zoeken op apparaat</string>
     <string name="title_searching">Zoeken naar \'%1$s\'</string>
+    <string name="title_reset_order">Reset volgorde</string>
     <string name="title_sort_on">Sorteer op</string>
     <string name="title_sort_on_time">Tijd</string>
     <string name="title_sort_on_unread">Ongelezen</string>
