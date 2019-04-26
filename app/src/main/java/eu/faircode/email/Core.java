@@ -28,7 +28,6 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
-import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MailConnectException;
 
 import org.json.JSONArray;
@@ -132,7 +131,9 @@ class Core {
                     JSONArray jargs = new JSONArray(op.args);
 
                     try {
-                        if (message == null && !EntityOperation.SYNC.equals(op.name))
+                        if (message == null &&
+                                !EntityOperation.SYNC.equals(op.name) &&
+                                !EntityOperation.SUBSCRIBE.equals(op.name))
                             throw new MessageRemovedException();
 
                         db.operation().setOperationError(op.id, null);
@@ -144,7 +145,7 @@ class Core {
                                         EntityOperation.DELETE.equals(op.name) ||
                                         EntityOperation.SEND.equals(op.name) ||
                                         EntityOperation.SYNC.equals(op.name) ||
-                                        EntityOperation.WAIT.equals(op.name)))
+                                        EntityOperation.SUBSCRIBE.equals(op.name)))
                             throw new IllegalArgumentException(op.name + " without uid " + op.args);
 
                         // Operations should use database transaction when needed
@@ -217,7 +218,8 @@ class Core {
                                 onSynchronizeMessages(context, jargs, account, folder, (IMAPFolder) ifolder, state);
                                 break;
 
-                            case EntityOperation.WAIT:
+                            case EntityOperation.SUBSCRIBE:
+                                onSubscribeFolder(context, jargs, folder, (IMAPFolder) ifolder);
                                 break;
 
                             default:
@@ -704,6 +706,7 @@ class Core {
             Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
             for (Folder ifolder : ifolders) {
                 String fullName = ifolder.getFullName();
+                boolean subscribed = ifolder.isSubscribed();
                 String[] attr = attrs.get(ifolder);
                 String type = EntityFolder.getType(attr, fullName);
 
@@ -725,6 +728,7 @@ class Core {
                         folder.display = display;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.synchronize = false;
+                        folder.subscribed = subscribed;
                         folder.poll = ("imap.gmail.com".equals(account.host));
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
@@ -732,6 +736,9 @@ class Core {
                         Log.i(folder.name + " added type=" + folder.type);
                     } else {
                         Log.i(folder.name + " exists type=" + folder.type);
+
+                        if (folder.subscribed == null || !folder.subscribed.equals(subscribed))
+                            db.folder().setFolderSubscribed(folder.id, subscribed);
 
                         if (folder.display == null) {
                             if (display != null) {
@@ -785,6 +792,17 @@ class Core {
             db.endTransaction();
             Log.i("End sync folder");
         }
+    }
+
+    private static void onSubscribeFolder(Context context, JSONArray jargs, EntityFolder folder, IMAPFolder ifolder)
+            throws JSONException, MessagingException {
+        boolean subscribe = jargs.getBoolean(0);
+        ifolder.setSubscribed(subscribe);
+
+        DB db = DB.getInstance(context);
+        db.folder().setFolderSubscribed(folder.id, subscribe);
+
+        Log.i(folder.name + " subscribed=" + subscribe);
     }
 
     private static void onSynchronizeMessages(
@@ -1030,8 +1048,6 @@ class Core {
                                         folder, ifolder,
                                         (IMAPMessage) isub[j], ids[from + j], state);
                         } catch (FolderClosedException ex) {
-                            throw ex;
-                        } catch (FolderClosedIOException ex) {
                             throw ex;
                         } catch (Throwable ex) {
                             Log.e(folder.name, ex);

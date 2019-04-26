@@ -73,6 +73,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private EntityFolder parent;
     private boolean collapsable;
     private IProperties properties;
+    private boolean subscriptions;
     private boolean debug;
     private int dp12;
     private float textSize;
@@ -90,6 +91,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private View vwLevel;
         private ImageView ivExpander;
         private ImageView ivNotify;
+        private ImageView ivSubscribed;
         private TextView tvName;
         private TextView tvMessages;
         private ImageView ivMessages;
@@ -99,6 +101,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private ImageView ivSync;
         private TextView tvKeywords;
         private TextView tvError;
+        private View vwHidden;
         private View vwRipple;
         private RecyclerView rvChilds;
 
@@ -121,6 +124,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             vwLevel = itemView.findViewById(R.id.vwLevel);
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivNotify = itemView.findViewById(R.id.ivNotify);
+            ivSubscribed = itemView.findViewById(R.id.ivSubscribed);
             tvName = itemView.findViewById(R.id.tvName);
             tvMessages = itemView.findViewById(R.id.tvMessages);
             ivMessages = itemView.findViewById(R.id.ivMessages);
@@ -130,6 +134,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             ivSync = itemView.findViewById(R.id.ivSync);
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
             tvError = itemView.findViewById(R.id.tvError);
+            vwHidden = itemView.findViewById(R.id.vwHidden);
             vwRipple = itemView.findViewById(R.id.vwRipple);
 
             rvChilds = itemView.findViewById(R.id.rvChilds);
@@ -181,9 +186,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         }
 
         private void bindTo(final TupleFolderEx folder) {
-            view.setVisibility(folder.hide && !show_hidden ? View.GONE : View.VISIBLE);
+            view.setVisibility(folder.isHidden(context) && !show_hidden ? View.GONE : View.VISIBLE);
             view.setActivated(folder.tbc != null || folder.tbd != null);
-            view.setAlpha(folder.hide ? Helper.LOW_LIGHT : 1.0f);
+            vwHidden.setAlpha(folder.hide ? Helper.LOW_LIGHT : 0.0f);
 
             if (textSize != 0)
                 tvName.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
@@ -225,6 +230,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             ivExpander.setVisibility(account < 0 || !collapsable ? View.GONE : (folder.childs > 0 ? View.VISIBLE : View.INVISIBLE));
 
             ivNotify.setVisibility(folder.notify ? View.VISIBLE : View.GONE);
+            ivSubscribed.setVisibility(subscriptions && folder.subscribed != null && folder.subscribed ? View.VISIBLE : View.GONE);
 
             if (folder.unseen > 0)
                 tvName.setText(context.getString(R.string.title_name_count,
@@ -590,6 +596,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         if (zoom == 0)
             zoom = 1;
 
+        this.subscriptions = prefs.getBoolean("subscriptions", false);
         this.debug = prefs.getBoolean("debug", false);
 
         this.dp12 = Helper.dp2pixels(context, 12);

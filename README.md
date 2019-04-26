@@ -10,7 +10,7 @@ This open source, privacy friendly email app might be for you if your current em
 * cannot show conversations
 * cannot work offline
 * looks outdated
-* is not maintained
+* is not maintained and supported
 * stores your email on their servers
 * is closed source, potentially violating your privacy
 
@@ -108,7 +108,7 @@ One line command to display certificate fingerprints:
 
 ```unzip -p fairemail.apk META-INF/CERT.RSA | keytool -printcert```
 
-* [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/)
+* [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/) ([last build](https://f-droid.org/wiki/page/eu.faircode.email/lastbuild))
 
 Note that F-Droid builds new versions irregularly.
 To get updates in a timely fashion you are advised to use the GitHub release.

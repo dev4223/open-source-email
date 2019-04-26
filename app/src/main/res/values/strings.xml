@@ -194,6 +194,7 @@
     <string name="title_advanced_autosend">Confirm sending messages</string>
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
+    <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_search_local">External search on device</string>
     <string name="title_advanced_light">Use notification light</string>
@@ -214,6 +215,7 @@
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
     <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
     <string name="title_advanced_flags_hint">Note that starred messages will always be kept locally</string>
+    <string name="title_advanced_subscriptions_hint">Folders not subscribed to will be hidden</string>
     <string name="title_advanced_preview_hint">Only available when message text was downloaded</string>
 
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
@@ -365,6 +367,7 @@
 
     <string name="title_trash">Trash</string>
     <string name="title_copy">Copy &#8230;</string>
+    <string name="title_subscribe">Subscribe</string>
     <string name="title_delete">Delete</string>
     <string name="title_more">More</string>
     <string name="title_spam">Spam</string>
@@ -513,6 +516,7 @@
     <string name="title_legend_trash">Trash</string>
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_notify">Notify new messages</string>
+    <string name="title_legend_subscribed">Subscribed to</string>
     <string name="title_legend_unified">Unified inbox / primary account</string>
     <string name="title_legend_primary_disconnected">Account disconnected</string>
     <string name="title_legend_primary_connected">Account connected</string>
@@ -589,7 +593,7 @@
     <string name="title_hint_ignore_contact">Long press a contact to never consider it as a favorite</string>
 
     <string name="title_open_link">Open link</string>
-    <string name="title_show_organization">Show organization</string>
+    <string name="title_ip_owner">Owner IP address</string>
     <string name="title_insecure_link">This link is insecure</string>
     <string name="title_select_app">Select app</string>
     <string name="title_updated">There is an update to version %1$s available</string>
@@ -628,6 +632,22 @@
     <string name="title_debug_info_remark">Please describe the problem and indicate the time of the problem:</string>
     <string name="title_crash_info_remark">Please describe what you were doing when the app crashed:</string>
     <string name="title_issue_subject" translatable="false">FairEmail %1$s issue</string>
+
+    <string-array name="pollIntervalNames">
+        <item>Always</item>
+        <item>Every half hour</item>
+        <item>Every hour</item>
+        <item>Every 2 hours</item>
+        <item>Every 4 hours</item>
+    </string-array>
+
+    <integer-array name="pollIntervalValues" translatable="false">
+        <item>0</item>
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+        <item>240</item>
+    </integer-array>
 
     <string-array name="startupValues" translatable="false">
         <item>unified</item>

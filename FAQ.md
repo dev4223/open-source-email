@@ -158,7 +158,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(88) How can I use a Yahoo! account?](#user-content-faq88)
 * [(89) How can I send plain text only messages?](#user-content-faq89)
 * [(90) Why are some texts linked while not being a link?](#user-content-faq90)
-* [(91) Can you add periodical synchronization to save battery power?](#user-content-faq91)
+* [~~(91) Can you add periodical synchronization to save battery power?~~](#user-content-faq91)
 * [(92) Can you add spam filtering, verification of the DKIM signature and SPF authorization?](#user-content-faq92)
 * [(93) Can you allow installation on external storage?](#user-content-faq93)
 * [(94) What does the red/orange stripe at the end of the header mean?](#user-content-faq94)
@@ -223,6 +223,7 @@ The low priority status bar notification shows the number of pending operations,
 * *body*: download message text
 * *attachment*: download attachment
 * *sync*: synchronize local and remote messages
+* *subscribe*: subscribe to remote folder
 
 Operations are processed only when there is a connection to the email server or when manually synchronizing.
 See also [this FAQ](#user-content-faq16).
@@ -887,8 +888,10 @@ See below about how to contact me.
 <a name="faq43"></a>
 **(43) Can you show the original ... ?**
 
-Show original, shows the original message as the sender has sent it, including original margins, styling, etc.
-FairEmail does and will not alter this in any way.
+Show original, shows the original message as the sender has sent it, including original fonts, colors, margins, etc.
+FairEmail does and will not alter this in any way,
+except for requesting [TEXT_AUTOSIZING](https://developer.android.com/reference/android/webkit/WebSettings.LayoutAlgorithm),
+which will *attempt* to make small text more readable.
 
 <br />
 
@@ -1377,7 +1380,11 @@ Normally, FairEmail maintains a connection to the configured email servers whene
 If you don't want this, for example to not be disturbed or to save on battery usage, just disable synchronization in the advanced options.
 This will stop the background service which takes care of automatic synchronization and will remove the associated status bar notification.
 You can use pull-down-to-refresh in a folder or use the folder menu *Synchronize now* to manually synchronize messages.
-This will start the synchronization service for 90 seconds.
+This will start the synchronization service for 90 seconds for all configured accounts.
+
+The synchronization process will also be started to execute [operations](#user-content-faq3),
+for example to mark a message read, move a message or store a draft.
+This is to keep the local and remote message store synchronized.
 
 <br />
 
@@ -1453,6 +1460,7 @@ FairEmail will try to select the best identity based on the *to* address of the 
 
 The advanced option *extra privacy features* enables:
 
+* Looking up the owner of the IP address of a link
 * Detection and removal of [tracking images](#user-content-faq82)
 * Removal of [Urchin Tracking Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters) from links
 
@@ -1503,10 +1511,13 @@ This is why texts with dots are sometimes incorrectly recognized as links, which
 <br />
 
 <a name="faq91"></a>
-**(91) Can you add periodical synchronization to save battery power?**
+**~~(91) Can you add periodical synchronization to save battery power?~~**
 
-Synchronizing messages is an expensive proces because the local and remote messages need to be compared,
-so periodically synchronizing messages will not result in saving battery power, more likely the contrary.
+~~Synchronizing messages is an expensive proces because the local and remote messages need to be compared,~~
+~~so periodically synchronizing messages will not result in saving battery power, more likely the contrary.~~
+
+~~See [this FAQ](#user-content-faq39) about optimizing battery usage.~~
+
 
 <br />
 

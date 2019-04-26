@@ -515,7 +515,6 @@
     <string name="title_hint_tracking_image">Imagen de seguimiento %1$sx%2$s</string>
     <string name="title_hint_ignore_contact">Mantener pulsado un contacto para no considerarlo nunca como favorito</string>
     <string name="title_open_link">Abrir enlace</string>
-    <string name="title_show_organization">Mostrar organización</string>
     <string name="title_insecure_link">Este enlace es inseguro</string>
     <string name="title_select_app">Seleccionar aplicación</string>
     <string name="title_updated">Hay una actualización a la version %1$s disponible</string>
@@ -550,6 +549,13 @@
     <string name="title_debug_info">Información de depuración</string>
     <string name="title_debug_info_remark">Por favor describa el problema e indique el momento del mismo:</string>
     <string name="title_crash_info_remark">Por favor describa que estaba haciendo cuando la app falló:</string>
+    <string-array name="pollIntervalNames">
+        <item>Siempre</item>
+        <item>Media hora</item>
+        <item>1 hora</item>
+        <item>2 horas</item>
+        <item>4 horas</item>
+    </string-array>
     <string-array name="startupNames">
         <item>Bandeja de entrada unificada</item>
         <item>Carpetas unificadas</item>

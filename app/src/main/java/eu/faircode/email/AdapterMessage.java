@@ -35,7 +35,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
@@ -82,8 +81,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -147,7 +144,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean contacts;
     private boolean search;
     private boolean avatars;
-    private boolean circular;
     private boolean flags;
     private boolean preview;
     private boolean autohtml;
@@ -781,15 +777,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
-            if (info.hasPhoto()) {
-                Bitmap bm = info.getPhotoBitmap();
-                if (circular) {
-                    RoundedBitmapDrawable rounded = RoundedBitmapDrawableFactory.create(context.getResources(), bm);
-                    rounded.setCircular(true);
-                    ivAvatar.setImageDrawable(rounded);
-                } else
-                    ivAvatar.setImageBitmap(info.getPhotoBitmap());
-            } else
+            if (info.hasPhoto())
+                ivAvatar.setImageBitmap(info.getPhotoBitmap());
+            else
                 ivAvatar.setImageResource(R.drawable.baseline_person_24);
             ivAvatar.setVisibility(avatars ? View.VISIBLE : View.GONE);
             tvFrom.setText(info.getDisplayName(name_email));
@@ -1924,48 +1914,43 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 View view = LayoutInflater.from(context).inflate(R.layout.dialog_link, null);
                 final EditText etLink = view.findViewById(R.id.etLink);
-                final CheckBox cbOrganization = view.findViewById(R.id.cbOrganization);
                 TextView tvInsecure = view.findViewById(R.id.tvInsecure);
-
-                cbOrganization.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        prefs.edit().putBoolean("show_organization", isChecked).apply();
-                        if (isChecked) {
-                            Bundle args = new Bundle();
-                            args.putParcelable("uri", _uri);
-
-                            new SimpleTask<String>() {
-                                @Override
-                                protected void onPreExecute(Bundle args) {
-                                    cbOrganization.setText("…");
-                                }
-
-                                @Override
-                                protected String onExecute(Context context, Bundle args) throws Throwable {
-                                    Uri uri = args.getParcelable("uri");
-                                    String host = uri.getHost();
-                                    return (TextUtils.isEmpty(host) ? null : Helper.getOrganization(host));
-                                }
-
-                                @Override
-                                protected void onExecuted(Bundle args, String organization) {
-                                    cbOrganization.setText(organization == null ? "?" : organization);
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    cbOrganization.setText(ex.getMessage());
-                                }
-                            }.execute(context, owner, args, "link:domain");
-                        } else
-                            cbOrganization.setText(R.string.title_show_organization);
-                    }
-                });
+                final TextView tvOwner = view.findViewById(R.id.tvOwner);
+                Group grpOwner = view.findViewById(R.id.grpOwner);
 
                 etLink.setText(_uri.toString());
-                cbOrganization.setChecked(prefs.getBoolean("show_organization", true));
                 tvInsecure.setVisibility("http".equals(_uri.getScheme()) ? View.VISIBLE : View.GONE);
+                grpOwner.setVisibility(paranoid ? View.VISIBLE : View.GONE);
+
+                if (paranoid) {
+                    Bundle args = new Bundle();
+                    args.putParcelable("uri", _uri);
+
+                    new SimpleTask<String>() {
+                        @Override
+                        protected void onPreExecute(Bundle args) {
+                            tvOwner.setText("…");
+                        }
+
+                        @Override
+                        protected String onExecute(Context context, Bundle args) throws Throwable {
+                            Uri uri = args.getParcelable("uri");
+                            String host = uri.getHost();
+                            return (TextUtils.isEmpty(host) ? null : Helper.getOrganization(host));
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, String organization) {
+                            tvOwner.setText(organization == null ? "?" : organization);
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            tvOwner.setText(ex.getMessage());
+                        }
+                    }.execute(context, owner, args, "link:domain");
+                }
+
 
                 new DialogBuilderLifecycle(context, owner)
                         .setView(view)
@@ -2895,7 +2880,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     List<EntityFolder> targets = new ArrayList<>();
                     for (EntityFolder folder : folders)
-                        if (!folder.hide &&
+                        if (!folder.isHidden(context) &&
                                 !folder.id.equals(message.folder) &&
                                 !EntityFolder.ARCHIVE.equals(folder.type) &&
                                 !EntityFolder.TRASH.equals(folder.type) &&
@@ -3147,7 +3132,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
         this.avatars = (prefs.getBoolean("avatars", true) ||
                 prefs.getBoolean("identicons", false));
-        this.circular = prefs.getBoolean("circular", true);
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);
         this.autohtml = prefs.getBoolean("autohtml", false);

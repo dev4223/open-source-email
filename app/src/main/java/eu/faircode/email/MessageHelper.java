@@ -23,6 +23,8 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
+import com.sun.mail.util.FolderClosedIOException;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -686,7 +688,7 @@ public class MessageHelper {
         return TextUtils.join(", ", formatted);
     }
 
-    private static String decodeMime(String text) {
+    static String decodeMime(String text) {
         if (text == null)
             return null;
 
@@ -696,9 +698,12 @@ public class MessageHelper {
         while (s >= 0 && e >= 0 && i < text.length()) {
             String decode = text.substring(s, e + 2);
             try {
-                String decoded = MimeUtility.decodeText(decode);
-                text = text.substring(0, i) + decoded + text.substring(e + 2);
+                String decoded = MimeUtility.decodeWord(decode);
+                text = text.substring(0, s) + decoded + text.substring(e + 2);
                 i += decoded.length();
+            } catch (ParseException ex) {
+                Log.w(ex);
+                i += decode.length();
             } catch (UnsupportedEncodingException ex) {
                 Log.w(ex);
                 i += decode.length();
@@ -706,6 +711,7 @@ public class MessageHelper {
             s = text.indexOf("=?", i);
             e = text.indexOf("?=", i);
         }
+
         return text;
     }
 
@@ -724,7 +730,7 @@ public class MessageHelper {
         private List<AttachmentPart> attachments = new ArrayList<>();
         private ArrayList<String> warnings = new ArrayList<>();
 
-        String getHtml(Context context) throws MessagingException, IOException {
+        String getHtml(Context context) throws MessagingException {
             if (plain == null && html == null) {
                 warnings.add(context.getString(R.string.title_no_body));
                 return null;
@@ -743,12 +749,10 @@ public class MessageHelper {
                     result = readStream((InputStream) content, "UTF-8");
                 else
                     result = content.toString();
-            } catch (MessagingException ex) {
-                // Including FolderClosedException
+            } catch (FolderClosedException ex) {
                 throw ex;
-            } catch (IOException ex) {
-                // Including FolderClosedIOException
-                throw ex;
+            } catch (FolderClosedIOException ex) {
+                throw new FolderClosedException(ex.getFolder(), "getHtml", ex);
             } catch (Throwable ex) {
                 Log.w(ex);
                 text = true;
@@ -876,6 +880,8 @@ public class MessageHelper {
                 db.attachment().setDownloaded(id, size);
 
                 Log.i("Downloaded attachment size=" + size);
+            } catch (FolderClosedIOException ex) {
+                throw new FolderClosedException(ex.getFolder(), "downloadAttachment", ex);
             } catch (Throwable ex) {
                 // Reset progress on failure
                 db.attachment().setError(id, Helper.formatThrowable(ex));
