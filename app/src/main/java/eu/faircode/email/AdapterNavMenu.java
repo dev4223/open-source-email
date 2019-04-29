@@ -20,41 +20,42 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder> {
+public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHolder> {
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
 
-    private List<EntityAnswer> items = new ArrayList<>();
+    private List<NavMenuItem> items = new ArrayList<>();
 
-    private boolean primary = false;
+    private NumberFormat nf = NumberFormat.getNumberInstance();
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
-        private TextView tvName;
+        private ImageView ivItem;
+        private TextView tvItem;
 
         ViewHolder(View itemView) {
             super(itemView);
 
             view = itemView.findViewById(R.id.clItem);
-            tvName = itemView.findViewById(R.id.tvName);
+            ivItem = itemView.findViewById(R.id.ivItem);
+            tvItem = itemView.findViewById(R.id.tvItem);
         }
 
         private void wire() {
@@ -67,9 +68,17 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
             view.setOnLongClickListener(null);
         }
 
-        private void bindTo(EntityAnswer answer) {
-            view.setAlpha(answer.hide ? Helper.LOW_LIGHT : 1.0f);
-            tvName.setText(answer.name);
+        private void bindTo(NavMenuItem menu) {
+            ivItem.setImageResource(menu.getIcon());
+
+            if (menu.getCount() == null)
+                tvItem.setText(menu.getTitle());
+            else
+                tvItem.setText(context.getString(R.string.title_name_count,
+                        context.getString(menu.getTitle()), nf.format(menu.getCount())));
+
+            tvItem.setTextColor(Helper.resolveColor(context,
+                    menu.getCount() == null ? android.R.attr.textColorSecondary : R.attr.colorUnread));
         }
 
         @Override
@@ -78,63 +87,34 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
             if (pos == RecyclerView.NO_POSITION)
                 return;
 
-            EntityAnswer answer = items.get(pos);
-
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(
-                    new Intent(ActivityView.ACTION_EDIT_ANSWER)
-                            .putExtra("id", answer.id));
+            NavMenuItem menu = items.get(pos);
+            menu.onClick();
         }
 
         @Override
         public boolean onLongClick(View v) {
-            if (!primary)
-                return false;
-
             int pos = getAdapterPosition();
             if (pos == RecyclerView.NO_POSITION)
                 return false;
 
-            EntityAnswer answer = items.get(pos);
-
-            context.startActivity(new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "new")
-                    .putExtra("answer", answer.id));
-
-            return false;
+            NavMenuItem menu = items.get(pos);
+            return menu.onLongClick();
         }
     }
 
-    AdapterAnswer(Context context, LifecycleOwner owner) {
+    AdapterNavMenu(Context context, LifecycleOwner owner) {
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
         setHasStableIds(true);
-
-        new SimpleTask<EntityFolder>() {
-            @Override
-            protected EntityFolder onExecute(Context context, Bundle args) {
-                return DB.getInstance(context).folder().getPrimaryDrafts();
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityFolder drafts) {
-                primary = (drafts != null);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(AdapterAnswer.this.context, AdapterAnswer.this.owner, ex);
-            }
-        }.execute(context, owner, new Bundle(), "answer:account:primary");
     }
 
-    public void set(@NonNull List<EntityAnswer> answers) {
-        Log.i("Set answers=" + answers.size());
+    public void set(@NonNull List<NavMenuItem> menus) {
+        Log.i("Set nav menus=" + menus.size());
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, answers), false);
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, menus), false);
 
-        items = answers;
+        items = menus;
 
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
@@ -160,11 +140,15 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
         diff.dispatchUpdatesTo(this);
     }
 
-    private class DiffCallback extends DiffUtil.Callback {
-        private List<EntityAnswer> prev = new ArrayList<>();
-        private List<EntityAnswer> next = new ArrayList<>();
+    NavMenuItem get(int pos) {
+        return items.get(pos);
+    }
 
-        DiffCallback(List<EntityAnswer> prev, List<EntityAnswer> next) {
+    private class DiffCallback extends DiffUtil.Callback {
+        private List<NavMenuItem> prev = new ArrayList<>();
+        private List<NavMenuItem> next = new ArrayList<>();
+
+        DiffCallback(List<NavMenuItem> prev, List<NavMenuItem> next) {
             this.prev.addAll(prev);
             this.next.addAll(next);
         }
@@ -181,22 +165,22 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
 
         @Override
         public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
-            return a1.id.equals(a2.id);
+            NavMenuItem m1 = prev.get(oldItemPosition);
+            NavMenuItem m2 = next.get(newItemPosition);
+            return m1.getTitle() == m2.getTitle();
         }
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
-            return a1.equals(a2);
+            NavMenuItem m1 = prev.get(oldItemPosition);
+            NavMenuItem m2 = next.get(newItemPosition);
+            return m1.equals(m2);
         }
     }
 
     @Override
     public long getItemId(int position) {
-        return items.get(position).id;
+        return items.get(position).getTitle();
     }
 
     @Override
@@ -207,14 +191,14 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(R.layout.item_answer, parent, false));
+        return new ViewHolder(inflater.inflate(R.layout.item_nav, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.unwire();
-        EntityAnswer answer = items.get(position);
-        holder.bindTo(answer);
+        NavMenuItem menu = items.get(position);
+        holder.bindTo(menu);
         holder.wire();
     }
 }

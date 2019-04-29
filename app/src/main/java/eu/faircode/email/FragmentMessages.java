@@ -52,6 +52,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -424,11 +425,11 @@ public class FragmentMessages extends FragmentBase {
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
         String sort = prefs.getString("sort", "time");
-        boolean duplicates = prefs.getBoolean("duplicates", true);
+        boolean filter_duplicates = prefs.getBoolean("filter_duplicates", false);
 
         adapter = new AdapterMessage(
                 getContext(), getViewLifecycleOwner(),
-                viewType, compact, zoom, sort, duplicates, iProperties);
+                viewType, compact, zoom, sort, filter_duplicates, iProperties);
 
         rvMessage.setAdapter(adapter);
 
@@ -738,12 +739,21 @@ public class FragmentMessages extends FragmentBase {
         }
 
         @Override
-        public void scrollTo(final int pos, final int dy) {
+        public void scrollTo(final int pos) {
             new Handler().post(new Runnable() {
                 @Override
                 public void run() {
                     rvMessage.scrollToPosition(pos);
-                    rvMessage.scrollBy(0, dy);
+                }
+            });
+        }
+
+        @Override
+        public void scrollBy(final int dx, final int dy) {
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    rvMessage.scrollBy(dx, dy);
                 }
             });
         }
@@ -873,9 +883,10 @@ public class FragmentMessages extends FragmentBase {
             int margin = Helper.dp2pixels(getContext(), 12);
             int size = Helper.dp2pixels(getContext(), 24);
 
-            if (dX > margin) {
+            if (dX > 0) {
                 // Right swipe
                 Drawable d = getResources().getDrawable(EntityFolder.getIcon(swipes.right_type), getContext().getTheme());
+                d.setAlpha(Math.round(255 * Math.min(dX / (2 * margin + size), 1.0f)));
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + margin,
@@ -883,9 +894,10 @@ public class FragmentMessages extends FragmentBase {
                         rect.left + margin + size,
                         rect.top + padding / 2 + size);
                 d.draw(canvas);
-            } else if (dX < -margin) {
+            } else if (dX < 0) {
                 // Left swipe
                 Drawable d = getResources().getDrawable(EntityFolder.getIcon(swipes.left_type), getContext().getTheme());
+                d.setAlpha(Math.round(255 * Math.min(-dX / (2 * margin + size), 1.0f)));
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + rect.width() - size - margin,
@@ -1149,18 +1161,6 @@ public class FragmentMessages extends FragmentBase {
                 if (result.hasJunk == null) result.hasJunk = false;
 
                 result.accounts = db.account().getSynchronizingAccounts();
-
-                final Collator collator = Collator.getInstance(Locale.getDefault());
-                collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
-                Collections.sort(result.accounts, new Comparator<EntityAccount>() {
-                    @Override
-                    public int compare(EntityAccount a1, EntityAccount a2) {
-                        int p = -a1.primary.compareTo(a2.primary);
-                        if (p != 0)
-                            return p;
-                        return collator.compare(a1.name, a2.name);
-                    }
-                });
 
                 for (EntityAccount account : result.accounts) {
                     List<EntityFolder> targets = new ArrayList<>();
@@ -1972,6 +1972,52 @@ public class FragmentMessages extends FragmentBase {
             }
         });
 
+        menu.findItem(R.id.menu_folders).setActionView(R.layout.action_button);
+        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
+        ib.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onMenuFolders(primary);
+            }
+        });
+        ib.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Bundle args = new Bundle();
+
+                new SimpleTask<List<EntityAccount>>() {
+                    @Override
+                    protected List<EntityAccount> onExecute(Context context, Bundle args) {
+                        DB db = DB.getInstance(context);
+                        return db.account().getSynchronizingAccounts();
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
+                        final ArrayAdapter<EntityAccount> adapter =
+                                new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, accounts);
+
+                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                                .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        EntityAccount account = adapter.getItem(which);
+                                        onMenuFolders(account.id);
+                                    }
+                                })
+                                .show();
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    }
+                }.execute(getContext(), getViewLifecycleOwner(), args, "messages:accounts");
+                return true;
+            }
+        });
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -1983,7 +2029,8 @@ public class FragmentMessages extends FragmentBase {
                 viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
 
         menu.findItem(R.id.menu_folders).setVisible(viewType == AdapterMessage.ViewType.UNIFIED && primary >= 0);
-        menu.findItem(R.id.menu_folders).setIcon(connected
+        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
+        ib.setImageResource(connected
                 ? R.drawable.baseline_folder_special_24 : R.drawable.baseline_folder_open_24);
 
         menu.findItem(R.id.menu_sort_on).setVisible(
@@ -2003,14 +2050,15 @@ public class FragmentMessages extends FragmentBase {
         else if ("size".equals(sort))
             menu.findItem(R.id.menu_sort_on_size).setChecked(true);
 
+        menu.findItem(R.id.menu_filter).setVisible(viewType != AdapterMessage.ViewType.SEARCH && !outbox);
+        menu.findItem(R.id.menu_filter_seen).setVisible(viewType != AdapterMessage.ViewType.THREAD);
+        menu.findItem(R.id.menu_filter_snoozed).setVisible(viewType != AdapterMessage.ViewType.THREAD);
+        menu.findItem(R.id.menu_filter_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
+        menu.findItem(R.id.menu_filter_seen).setChecked(prefs.getBoolean("filter_seen", false));
+        menu.findItem(R.id.menu_filter_snoozed).setChecked(prefs.getBoolean("filter_snoozed", true));
+        menu.findItem(R.id.menu_filter_duplicates).setChecked(prefs.getBoolean("filter_duplicates", false));
+
         menu.findItem(R.id.menu_compact).setChecked(prefs.getBoolean("compact", false));
-
-        menu.findItem(R.id.menu_snoozed).setVisible(!outbox &&
-                (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
-        menu.findItem(R.id.menu_snoozed).setChecked(prefs.getBoolean("snoozed", false));
-
-        menu.findItem(R.id.menu_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
-        menu.findItem(R.id.menu_duplicates).setChecked(prefs.getBoolean("duplicates", true));
 
         menu.findItem(R.id.menu_select_all).setVisible(!outbox &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
@@ -2022,8 +2070,8 @@ public class FragmentMessages extends FragmentBase {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_folders:
-                onMenuFolders();
-                loadMessages();
+                // Obsolete
+                onMenuFolders(primary);
                 return true;
 
             case R.id.menu_sort_on_time:
@@ -2056,20 +2104,24 @@ public class FragmentMessages extends FragmentBase {
                 onMenuSort("size");
                 return true;
 
+            case R.id.menu_filter_seen:
+                onMenuFilterRead(!item.isChecked());
+                return true;
+
+            case R.id.menu_filter_snoozed:
+                onMenuFilterSnoozed(!item.isChecked());
+                return true;
+
+            case R.id.menu_filter_duplicates:
+                onMenuFilterDuplicates(!item.isChecked());
+                return true;
+
             case R.id.menu_zoom:
                 onMenuZoom();
                 return true;
 
             case R.id.menu_compact:
                 onMenuCompact();
-                return true;
-
-            case R.id.menu_snoozed:
-                onMenuSnoozed();
-                return true;
-
-            case R.id.menu_duplicates:
-                onMenuDuplicates();
                 return true;
 
             case R.id.menu_select_all:
@@ -2081,12 +2133,12 @@ public class FragmentMessages extends FragmentBase {
         }
     }
 
-    private void onMenuFolders() {
+    private void onMenuFolders(long account) {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
             getFragmentManager().popBackStack("unified", 0);
 
         Bundle args = new Bundle();
-        args.putLong("account", primary);
+        args.putLong("account", account);
 
         FragmentFolders fragment = new FragmentFolders();
         fragment.setArguments(args);
@@ -2101,6 +2153,31 @@ public class FragmentMessages extends FragmentBase {
         prefs.edit().putString("sort", sort).apply();
         adapter.setSort(sort);
         loadMessages();
+    }
+
+    private void onMenuFilterRead(boolean filter) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("filter_seen", filter).apply();
+        getActivity().invalidateOptionsMenu();
+        if (selectionTracker != null)
+            selectionTracker.clearSelection();
+        loadMessages();
+    }
+
+    private void onMenuFilterSnoozed(boolean filter) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("filter_snoozed", filter).apply();
+        getActivity().invalidateOptionsMenu();
+        if (selectionTracker != null)
+            selectionTracker.clearSelection();
+        loadMessages();
+    }
+
+    private void onMenuFilterDuplicates(boolean filter) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("filter_duplicates", filter).apply();
+        getActivity().invalidateOptionsMenu();
+        adapter.setFilterDuplicates(filter);
     }
 
     private void onMenuZoom() {
@@ -2123,22 +2200,6 @@ public class FragmentMessages extends FragmentBase {
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
         getActivity().invalidateOptionsMenu();
-    }
-
-    private void onMenuSnoozed() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean snoozed = prefs.getBoolean("snoozed", false);
-        prefs.edit().putBoolean("snoozed", !snoozed).apply();
-        if (selectionTracker != null)
-            selectionTracker.clearSelection();
-        loadMessages();
-    }
-
-    private void onMenuDuplicates() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean duplicates = prefs.getBoolean("duplicates", true);
-        prefs.edit().putBoolean("duplicates", !duplicates).apply();
-        adapter.setDuplicates(!duplicates);
     }
 
     private void onMenuSelectAll() {
@@ -2244,9 +2305,11 @@ public class FragmentMessages extends FragmentBase {
         // Observe folder/messages/search
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         String sort = prefs.getString("sort", "time");
-        boolean snoozed = prefs.getBoolean("snoozed", false);
+        boolean filter_seen = prefs.getBoolean("filter_seen", false);
+        boolean filter_snoozed = prefs.getBoolean("filter_snoozed", true);
         boolean debug = prefs.getBoolean("debug", false);
-        Log.i("Load messages type=" + viewType + " sort=" + sort + " debug=" + debug);
+        Log.i("Load messages type=" + viewType +
+                " sort=" + sort + " filter seen=" + filter_seen + " snoozed=" + filter_snoozed + " debug=" + debug);
 
         // Sort changed
         final ViewModelMessages modelMessages = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
@@ -2257,7 +2320,7 @@ public class FragmentMessages extends FragmentBase {
         switch (viewType) {
             case UNIFIED:
                 builder = new LivePagedListBuilder<>(
-                        db.message().pagedUnifiedInbox(threading, sort, snoozed, false, debug), LOCAL_PAGE_SIZE);
+                        db.message().pagedUnifiedInbox(threading, sort, filter_seen, filter_snoozed, false, debug), LOCAL_PAGE_SIZE);
                 break;
 
             case FOLDER:
@@ -2266,7 +2329,7 @@ public class FragmentMessages extends FragmentBase {
                         .setPrefetchDistance(REMOTE_PAGE_SIZE)
                         .build();
                 builder = new LivePagedListBuilder<>(
-                        db.message().pagedFolder(folder, threading, sort, snoozed, false, debug), configFolder);
+                        db.message().pagedFolder(folder, threading, sort, filter_seen, filter_snoozed, false, debug), configFolder);
                 builder.setBoundaryCallback(boundaryCallback);
                 break;
 
@@ -2282,10 +2345,10 @@ public class FragmentMessages extends FragmentBase {
                         .build();
                 if (folder < 0)
                     builder = new LivePagedListBuilder<>(
-                            db.message().pagedUnifiedInbox(threading, "time", snoozed, true, debug), configSearch);
+                            db.message().pagedUnifiedInbox(threading, "time", false, false, true, debug), configSearch);
                 else
                     builder = new LivePagedListBuilder<>(
-                            db.message().pagedFolder(folder, threading, "time", snoozed, true, debug), configSearch);
+                            db.message().pagedFolder(folder, threading, "time", false, false, true, debug), configSearch);
                 builder.setBoundaryCallback(boundaryCallback);
                 break;
         }

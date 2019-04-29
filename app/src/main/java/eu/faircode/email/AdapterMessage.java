@@ -108,17 +108,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.text.Collator;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -134,7 +131,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean monospaced;
     private int zoom;
     private String sort;
-    private boolean duplicates;
+    private boolean filter_duplicates;
     private boolean suitable;
     private IProperties properties;
 
@@ -476,7 +473,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbLoading.setVisibility(View.GONE);
 
             if (viewType == ViewType.THREAD)
-                view.setVisibility(duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
+                view.setVisibility(!filter_duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
 
             // Text size
             if (textSize != 0) {
@@ -564,7 +561,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Expander
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
-            ivExpander.setImageResource(expanded ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
+            ivExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
             if (viewType == ViewType.THREAD && threading)
                 ivExpander.setVisibility(EntityFolder.DRAFTS.equals(message.folderType) ? View.INVISIBLE : View.VISIBLE);
             else
@@ -830,7 +827,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             vwBody.setVisibility(show_html ? View.INVISIBLE : View.GONE);
 
             // Addresses
-            ivExpanderAddress.setImageResource(show_addresses ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
+            ivExpanderAddress.setImageLevel(show_addresses ? 0 /* less */ : 1 /* more */);
 
             String from = MessageHelper.formatAddresses(message.from);
             String to = MessageHelper.formatAddresses(message.to);
@@ -989,10 +986,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     bnvActions.getMenu().findItem(R.id.action_more).setVisible(!inOutbox);
 
-                    bnvActions.getMenu().findItem(R.id.action_delete).setVisible(
+                    bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
                             (inTrash && message.msgid != null) ||
-                                    (!inTrash && hasTrash && message.uid != null) ||
-                                    (inOutbox && (!TextUtils.isEmpty(message.error) || !message.identitySynchronize)));
+                            (!inTrash && hasTrash && message.uid != null) ||
+                            (inOutbox && (!TextUtils.isEmpty(message.error) || !message.identitySynchronize)));
                     bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash ? R.string.title_delete : R.string.title_trash);
 
                     bnvActions.getMenu().findItem(R.id.action_move).setVisible(
@@ -1294,11 +1291,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         @TargetApi(Build.VERSION_CODES.O)
         private void onNotifyContactDelete(TupleMessageEx message) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (message.from != null && message.from.length > 0) {
+                NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            InternetAddress from = (InternetAddress) message.from[0];
-            String channelName = "notification." + from.getAddress().toLowerCase();
-            nm.deleteNotificationChannel(channelName);
+                InternetAddress from = (InternetAddress) message.from[0];
+                String channelName = "notification." + from.getAddress().toLowerCase();
+                nm.deleteNotificationChannel(channelName);
+            }
         }
 
         private void onAddContact(TupleMessageEx message) {
@@ -1357,11 +1356,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean expanded = !properties.getValue("expanded", message.id);
                 properties.setValue("expanded", message.id, expanded);
 
-                ivExpander.setImageResource(expanded ? R.drawable.baseline_expand_less_24 : R.drawable.baseline_expand_more_24);
+                ivExpander.setImageLevel(expanded ? 0 /* less*/ : 1 /* more */);
 
                 if (expanded) {
                     bindExpanded(message);
-                    properties.scrollTo(getAdapterPosition(), 0);
+                    properties.scrollTo(getAdapterPosition());
                 } else
                     clearExpanded();
             }
@@ -1459,10 +1458,38 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 WebView webView = new WebView(context) {
                     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                        int w = getMeasuredWidth();
-                        int h = getMeasuredHeight();
-                        Log.i("WebView " + w + "x" + h);
-                        setMeasuredDimension(w, Math.max(tvBody.getMinHeight(), h));
+                        setMeasuredDimension(
+                                getMeasuredWidth(),
+                                Math.max(tvBody.getMinHeight(), getMeasuredHeight()));
+                    }
+
+                    @Override
+                    public boolean onTouchEvent(MotionEvent event) {
+                        if (event.getPointerCount() == 1) {
+                            int range = computeVerticalScrollRange() - computeVerticalScrollExtent();
+                            if (range > 0) // scroll
+                                getParent().requestDisallowInterceptTouchEvent(true);
+                        } else // zoom
+                            getParent().requestDisallowInterceptTouchEvent(true);
+                        return super.onTouchEvent(event);
+                    }
+
+                    int dy = 0;
+
+                    @Override
+                    protected boolean overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY, boolean isTouchEvent) {
+                        dy = deltaY;
+                        return super.overScrollBy(deltaX, deltaY, scrollX, scrollY, scrollRangeX, scrollRangeY, maxOverScrollX, maxOverScrollY, isTouchEvent);
+                    }
+
+                    @Override
+                    protected void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
+                        super.onOverScrolled(scrollX, scrollY, clampedX, clampedY);
+                        if (clampedY) {
+                            int range = computeVerticalScrollRange() - computeVerticalScrollExtent();
+                            if (range > 0) // This is to prevent flicker
+                                properties.scrollBy(0, dy);
+                        }
                     }
                 };
 
@@ -1505,29 +1532,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 });
 
-                // Fix zooming
-                webView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent me) {
-                        if (me.getPointerCount() == 2) {
-                            ConstraintLayout cl = (ConstraintLayout) view;
-                            switch (me.getAction()) {
-                                case MotionEvent.ACTION_DOWN:
-                                    cl.requestDisallowInterceptTouchEvent(true);
-                                    break;
+                webView.setBackgroundColor(Color.TRANSPARENT);
 
-                                case MotionEvent.ACTION_MOVE:
-                                    cl.requestDisallowInterceptTouchEvent(true);
-                                    break;
+                WebSettings settings = webView.getSettings();
+                settings.setUseWideViewPort(true);
+                settings.setLoadWithOverviewMode(true);
+                settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+                settings.setBuiltInZoomControls(true);
+                settings.setDisplayZoomControls(false);
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                settings.setAllowFileAccess(false);
 
-                                case MotionEvent.ACTION_UP:
-                                    cl.requestDisallowInterceptTouchEvent(false);
-                                    break;
-                            }
-                        }
-                        return false;
-                    }
-                });
+                if (monospaced)
+                    settings.setStandardFontFamily("monospace");
 
                 webView.setId(vwBody.getId());
                 webView.setVisibility(vwBody.getVisibility());
@@ -1540,29 +1557,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             final WebView webView = (WebView) vwBody;
-            webView.loadUrl("about:blank");
-            webView.setBackgroundColor(Color.TRANSPARENT);
-
-            WebSettings settings = webView.getSettings();
-            settings.setUseWideViewPort(true);
-            settings.setLoadWithOverviewMode(true);
-            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
-            settings.setBuiltInZoomControls(true);
-            settings.setDisplayZoomControls(false);
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-            settings.setAllowFileAccess(false);
-            settings.setLoadsImagesAutomatically(show_images);
-
-            // Set default font
-            int px = Math.round(TypedValue.applyDimension(
-                    TypedValue.COMPLEX_UNIT_PX, textSize,
-                    context.getResources().getDisplayMetrics()));
-            settings.setDefaultFontSize(px);
-            if (monospaced)
-                settings.setStandardFontFamily("monospace");
+            webView.getSettings().setLoadsImagesAutomatically(show_images);
 
             String html = properties.getHtml(message.id);
             if (TextUtils.isEmpty(html)) {
+                webView.loadUrl("about:blank");
+
                 Bundle args = new Bundle();
                 args.putLong("id", message.id);
                 args.putBoolean("dark", dark);
@@ -2969,7 +2969,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         case R.id.menu_reply_receipt:
                             onMenuReply(data, "receipt");
                             return true;
-                        case R.id.menu_reply_template:
+                        case R.id.menu_reply_answer:
                             onMenuAnswer(data);
                             return true;
                         default:
@@ -3047,16 +3047,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         });
                         snackbar.show();
                     } else {
-                        final Collator collator = Collator.getInstance(Locale.getDefault());
-                        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
-
-                        Collections.sort(answers, new Comparator<EntityAnswer>() {
-                            @Override
-                            public int compare(EntityAnswer a1, EntityAnswer a2) {
-                                return collator.compare(a1.name, a2.name);
-                            }
-                        });
-
                         View anchor = bnvActions.findViewById(R.id.action_reply);
                         PopupMenu popupMenu = new PopupMenu(context, anchor);
 
@@ -3101,7 +3091,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     AdapterMessage(Context context, LifecycleOwner owner,
-                   ViewType viewType, boolean compact, int zoom, String sort, boolean duplicates, IProperties properties) {
+                   ViewType viewType, boolean compact, int zoom, String sort, boolean filter_duplicates, IProperties properties) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
@@ -3116,7 +3106,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.monospaced = prefs.getBoolean("monospaced", false);
         this.zoom = zoom;
         this.sort = sort;
-        this.duplicates = duplicates;
+        this.filter_duplicates = filter_duplicates;
         this.suitable = Helper.getNetworkState(context).isSuitable();
         this.properties = properties;
 
@@ -3189,9 +3179,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         return this.sort;
     }
 
-    void setDuplicates(boolean duplicates) {
-        if (this.duplicates != duplicates) {
-            this.duplicates = duplicates;
+    void setFilterDuplicates(boolean filter_duplicates) {
+        if (this.filter_duplicates != filter_duplicates) {
+            this.filter_duplicates = filter_duplicates;
             notifyDataSetChanged();
         }
     }
@@ -3322,7 +3312,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         List<EntityAttachment> getAttachments(long id);
 
-        void scrollTo(int pos, int dy);
+        void scrollTo(int pos);
+
+        void scrollBy(int dx, int dy);
 
         void move(long id, String target, boolean type);
 

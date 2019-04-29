@@ -21,10 +21,10 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,42 +34,68 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.Collator;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
-public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder> {
+public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.ViewHolder> {
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
 
-    private List<EntityAnswer> items = new ArrayList<>();
+    private List<TupleFolderNav> items = new ArrayList<>();
 
-    private boolean primary = false;
+    private NumberFormat nf = NumberFormat.getNumberInstance();
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private View view;
-        private TextView tvName;
+        private ImageView ivItem;
+        private TextView tvItem;
 
         ViewHolder(View itemView) {
             super(itemView);
 
             view = itemView.findViewById(R.id.clItem);
-            tvName = itemView.findViewById(R.id.tvName);
+            ivItem = itemView.findViewById(R.id.ivItem);
+            tvItem = itemView.findViewById(R.id.tvItem);
         }
 
         private void wire() {
             view.setOnClickListener(this);
-            view.setOnLongClickListener(this);
         }
 
         private void unwire() {
             view.setOnClickListener(null);
-            view.setOnLongClickListener(null);
         }
 
-        private void bindTo(EntityAnswer answer) {
-            view.setAlpha(answer.hide ? Helper.LOW_LIGHT : 1.0f);
-            tvName.setText(answer.name);
+        private void bindTo(TupleFolderNav folder) {
+            if (EntityFolder.OUTBOX.equals(folder.type)) {
+                ivItem.setImageResource(R.drawable.baseline_send_24);
+                ivItem.clearColorFilter();
+            } else {
+                ivItem.setImageResource("connected".equals(folder.state)
+                        ? R.drawable.baseline_folder_24
+                        : R.drawable.baseline_folder_open_24);
+                if (folder.color == null)
+                    ivItem.clearColorFilter();
+                else
+                    ivItem.setColorFilter(folder.color);
+            }
+
+            int count = (EntityFolder.OUTBOX.equals(folder.type) ? folder.operations : folder.unseen);
+
+            if (count == 0)
+                tvItem.setText(folder.getDisplayName(context));
+            else
+                tvItem.setText(context.getString(R.string.title_name_count,
+                        folder.getDisplayName(context), nf.format(count)));
+
+            tvItem.setTextColor(Helper.resolveColor(context,
+                    count == 0 ? android.R.attr.textColorSecondary : R.attr.colorUnread));
         }
 
         @Override
@@ -78,63 +104,47 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
             if (pos == RecyclerView.NO_POSITION)
                 return;
 
-            EntityAnswer answer = items.get(pos);
+            TupleFolderNav folder = items.get(pos);
+            if (folder == null)
+                return;
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
-                    new Intent(ActivityView.ACTION_EDIT_ANSWER)
-                            .putExtra("id", answer.id));
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            if (!primary)
-                return false;
-
-            int pos = getAdapterPosition();
-            if (pos == RecyclerView.NO_POSITION)
-                return false;
-
-            EntityAnswer answer = items.get(pos);
-
-            context.startActivity(new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "new")
-                    .putExtra("answer", answer.id));
-
-            return false;
+                    new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                            .putExtra("account", folder.account)
+                            .putExtra("folder", folder.id));
         }
     }
 
-    AdapterAnswer(Context context, LifecycleOwner owner) {
+    AdapterNavFolder(Context context, LifecycleOwner owner) {
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
         setHasStableIds(true);
-
-        new SimpleTask<EntityFolder>() {
-            @Override
-            protected EntityFolder onExecute(Context context, Bundle args) {
-                return DB.getInstance(context).folder().getPrimaryDrafts();
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityFolder drafts) {
-                primary = (drafts != null);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(AdapterAnswer.this.context, AdapterAnswer.this.owner, ex);
-            }
-        }.execute(context, owner, new Bundle(), "answer:account:primary");
     }
 
-    public void set(@NonNull List<EntityAnswer> answers) {
-        Log.i("Set answers=" + answers.size());
+    public void set(@NonNull List<TupleFolderNav> folders) {
+        Log.i("Set nav folders=" + folders.size());
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, answers), false);
+        final Collator collator = Collator.getInstance(Locale.getDefault());
+        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
 
-        items = answers;
+        Collections.sort(folders, new Comparator<EntityFolder>() {
+            @Override
+            public int compare(EntityFolder f1, EntityFolder f2) {
+                int o = Boolean.compare(EntityFolder.OUTBOX.equals(f1.type), EntityFolder.OUTBOX.equals(f2.type));
+                if (o != 0)
+                    return o;
+
+                String name1 = f1.getDisplayName(context);
+                String name2 = f2.getDisplayName(context);
+                return collator.compare(name1, name2);
+            }
+        });
+
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, folders), false);
+
+        items = folders;
 
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
@@ -161,10 +171,10 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     }
 
     private class DiffCallback extends DiffUtil.Callback {
-        private List<EntityAnswer> prev = new ArrayList<>();
-        private List<EntityAnswer> next = new ArrayList<>();
+        private List<TupleFolderNav> prev = new ArrayList<>();
+        private List<TupleFolderNav> next = new ArrayList<>();
 
-        DiffCallback(List<EntityAnswer> prev, List<EntityAnswer> next) {
+        DiffCallback(List<TupleFolderNav> prev, List<TupleFolderNav> next) {
             this.prev.addAll(prev);
             this.next.addAll(next);
         }
@@ -181,16 +191,16 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
 
         @Override
         public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
-            return a1.id.equals(a2.id);
+            TupleFolderNav f1 = prev.get(oldItemPosition);
+            TupleFolderNav f2 = next.get(newItemPosition);
+            return f1.id.equals(f2.id);
         }
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
-            return a1.equals(a2);
+            TupleFolderNav f1 = prev.get(oldItemPosition);
+            TupleFolderNav f2 = next.get(newItemPosition);
+            return f1.equals(f2);
         }
     }
 
@@ -207,14 +217,14 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(R.layout.item_answer, parent, false));
+        return new ViewHolder(inflater.inflate(R.layout.item_nav, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.unwire();
-        EntityAnswer answer = items.get(position);
-        holder.bindTo(answer);
+        TupleFolderNav folder = items.get(position);
+        holder.bindTo(folder);
         holder.wire();
     }
 }

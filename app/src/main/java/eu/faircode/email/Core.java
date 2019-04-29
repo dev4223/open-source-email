@@ -120,6 +120,7 @@ class Core {
                 try {
                     Log.i(folder.name +
                             " start op=" + op.id + "/" + op.name +
+                            " folder=" + op.folder +
                             " msg=" + op.message +
                             " args=" + op.args);
 
@@ -405,7 +406,7 @@ class Core {
             // Delete previous message(s) with same ID
             if (folder.id.equals(message.folder)) {
                 // Prevent adding/deleting message
-                db.message().setMessageUid(message.id, -1L);
+                db.message().setMessageUid(message.id, message.uid == null ? -1L : -message.uid);
 
                 Message[] ideletes = ifolder.search(new MessageIDTerm(message.msgid));
                 for (Message idelete : ideletes) {
@@ -488,18 +489,27 @@ class Core {
                 throw new IllegalArgumentException("uid not found");
 
             Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
-            db.message().setMessageUid(message.id, uid);
 
-            if (!folder.id.equals(message.folder))
+            if (folder.id.equals(message.folder)) {
+                Log.i(folder.name + " Setting id=" + message.id + " uid=" + uid);
+                db.message().setMessageUid(message.id, uid);
+            } else {
+                // Cross account move
+                if (jargs.length() > 0 && !jargs.isNull(0)) {
+                    long tmpid = jargs.getLong(0);
+                    Log.i(folder.name + " Setting id=" + tmpid + " (tmp) appended uid=" + uid);
+                    db.message().setMessageUid(tmpid, uid);
+                }
                 try {
                     db.beginTransaction();
 
-                    // Cross account move
+                    // Mark source read
                     if (autoread) {
                         Log.i(folder.name + " queuing SEEN id=" + message.id);
                         EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
                     }
 
+                    // Delete source
                     Log.i(folder.name + " queuing DELETE id=" + message.id);
                     EntityOperation.queue(context, db, message, EntityOperation.DELETE);
 
@@ -507,8 +517,10 @@ class Core {
                 } finally {
                     db.endTransaction();
                 }
+            }
         } catch (Throwable ex) {
-            db.message().setMessageUid(message.id, null);
+            if (folder.id.equals(message.folder))
+                db.message().setMessageUid(message.id, message.uid);
             throw ex;
         }
     }
@@ -606,6 +618,7 @@ class Core {
         }
 
         if (jargs.length() > 0) {
+            // Cross account move
             long target = jargs.getLong(2);
             jargs.remove(2);
             Log.i(folder.name + " queuing ADD id=" + message.id + ":" + target);

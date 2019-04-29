@@ -164,6 +164,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(94) What does the red/orange stripe at the end of the header mean?](#user-content-faq94)
 * [(95) Why are not all apps shown when selecting an attachment or image?](#user-content-faq95)
 * [(96) Where can I find the IMAP and SMTP settings?](#user-content-faq96)
+* [(97) What is 'cleanup' ?](#user-content-faq97)
 
 [I have another question.](#support)
 
@@ -370,9 +371,9 @@ First of all you need to install and configure [OpenKeychain](https://f-droid.or
 To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
 Similarly, to decrypt a received message, just select the menu *Decrypt* in the expanded message view.
 
-You can enable *Encrypt by default* in the identity settings.
+You can enable *Encrypt by default* in the identity settings, which replaces *Send* by *Encrypt and send*.
 
-Encryption is [Autocrypt](https://autocrypt.org/) compatible.
+FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for other email clients.
 Received messages are not decrypted automatically because of security reasons and because often manual interaction is required.
 
 The decrypted message text and decrypted attachments are stored. If you want to undo this, you can use the *resync* message 'more' menu.
@@ -1095,6 +1096,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can swipe a conversation left or right to go to the next or previous conversation?
 * Did you know that you can tap on an image to see where it will be downloaded from?
 * Did you know that you can long press the bell icon to delete the notification channel for the email address?
+* Did you know that you can long press the folder icon in the action bar to select an account?
 
 <br />
 
@@ -1565,6 +1567,24 @@ see [here](https://developer.android.com/preview/privacy/scoped-storage) for mor
 **(96) Where can I find the IMAP and SMTP settings?**
 
 The IMAP settings are part of the (custom) account settings and the SMTP settings are part of the identity settings.
+
+<br />
+
+<a name="faq97"></a>
+**(97) What is 'cleanup' ?**
+
+About each four hours FairEmail runs a cleanup job that:
+
+* Removes old message texts
+* Removes old attachment files
+* Removes old image files
+* Removes old local contacts
+* Removes old log entries
+* Updates contact photos of messages
+
+You can see when the last cleanup was performed at the bottom of the advanced options.
+
+Note that the cleanup job will only run when the synchronize service is active.
 
 <br />
 

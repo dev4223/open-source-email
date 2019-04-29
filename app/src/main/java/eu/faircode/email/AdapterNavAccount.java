@@ -21,10 +21,10 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,42 +34,58 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder> {
+public class AdapterNavAccount extends RecyclerView.Adapter<AdapterNavAccount.ViewHolder> {
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
 
-    private List<EntityAnswer> items = new ArrayList<>();
+    private List<TupleAccountEx> items = new ArrayList<>();
 
-    private boolean primary = false;
+    private NumberFormat nf = NumberFormat.getNumberInstance();
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private View view;
-        private TextView tvName;
+        private ImageView ivItem;
+        private TextView tvItem;
 
         ViewHolder(View itemView) {
             super(itemView);
 
             view = itemView.findViewById(R.id.clItem);
-            tvName = itemView.findViewById(R.id.tvName);
+            ivItem = itemView.findViewById(R.id.ivItem);
+            tvItem = itemView.findViewById(R.id.tvItem);
         }
 
         private void wire() {
             view.setOnClickListener(this);
-            view.setOnLongClickListener(this);
         }
 
         private void unwire() {
             view.setOnClickListener(null);
-            view.setOnLongClickListener(null);
         }
 
-        private void bindTo(EntityAnswer answer) {
-            view.setAlpha(answer.hide ? Helper.LOW_LIGHT : 1.0f);
-            tvName.setText(answer.name);
+        private void bindTo(TupleAccountEx account) {
+            ivItem.setImageResource("connected".equals(account.state)
+                    ? account.primary ? R.drawable.baseline_folder_special_24 : R.drawable.baseline_folder_24
+                    : R.drawable.baseline_folder_open_24);
+            if (account.color == null)
+                ivItem.clearColorFilter();
+            else
+                ivItem.setColorFilter(account.color);
+
+            if (account.unseen == 0)
+                tvItem.setText(account.name);
+            else
+                tvItem.setText(context.getString(R.string.title_name_count,
+                        account.name, nf.format(account.unseen)));
+
+            tvItem.setTextColor(Helper.resolveColor(context,
+                    account.unseen == 0 ? android.R.attr.textColorSecondary : R.attr.colorUnread));
         }
 
         @Override
@@ -78,63 +94,30 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
             if (pos == RecyclerView.NO_POSITION)
                 return;
 
-            EntityAnswer answer = items.get(pos);
+            TupleAccountEx account = items.get(pos);
+            if (account == null)
+                return;
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
-                    new Intent(ActivityView.ACTION_EDIT_ANSWER)
-                            .putExtra("id", answer.id));
-        }
-
-        @Override
-        public boolean onLongClick(View v) {
-            if (!primary)
-                return false;
-
-            int pos = getAdapterPosition();
-            if (pos == RecyclerView.NO_POSITION)
-                return false;
-
-            EntityAnswer answer = items.get(pos);
-
-            context.startActivity(new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "new")
-                    .putExtra("answer", answer.id));
-
-            return false;
+                    new Intent(ActivityView.ACTION_VIEW_FOLDERS)
+                            .putExtra("id", account.id));
         }
     }
 
-    AdapterAnswer(Context context, LifecycleOwner owner) {
+    AdapterNavAccount(Context context, LifecycleOwner owner) {
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
         setHasStableIds(true);
-
-        new SimpleTask<EntityFolder>() {
-            @Override
-            protected EntityFolder onExecute(Context context, Bundle args) {
-                return DB.getInstance(context).folder().getPrimaryDrafts();
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityFolder drafts) {
-                primary = (drafts != null);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(AdapterAnswer.this.context, AdapterAnswer.this.owner, ex);
-            }
-        }.execute(context, owner, new Bundle(), "answer:account:primary");
     }
 
-    public void set(@NonNull List<EntityAnswer> answers) {
-        Log.i("Set answers=" + answers.size());
+    public void set(@NonNull List<TupleAccountEx> accounts) {
+        Log.i("Set nav accounts=" + accounts.size());
 
-        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, answers), false);
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, accounts), false);
 
-        items = answers;
+        items = accounts;
 
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
@@ -161,10 +144,10 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     }
 
     private class DiffCallback extends DiffUtil.Callback {
-        private List<EntityAnswer> prev = new ArrayList<>();
-        private List<EntityAnswer> next = new ArrayList<>();
+        private List<TupleAccountEx> prev = new ArrayList<>();
+        private List<TupleAccountEx> next = new ArrayList<>();
 
-        DiffCallback(List<EntityAnswer> prev, List<EntityAnswer> next) {
+        DiffCallback(List<TupleAccountEx> prev, List<TupleAccountEx> next) {
             this.prev.addAll(prev);
             this.next.addAll(next);
         }
@@ -181,16 +164,19 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
 
         @Override
         public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
+            TupleAccountEx a1 = prev.get(oldItemPosition);
+            TupleAccountEx a2 = next.get(newItemPosition);
             return a1.id.equals(a2.id);
         }
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            EntityAnswer a1 = prev.get(oldItemPosition);
-            EntityAnswer a2 = next.get(newItemPosition);
-            return a1.equals(a2);
+            TupleAccountEx a1 = prev.get(oldItemPosition);
+            TupleAccountEx a2 = next.get(newItemPosition);
+            return Objects.equals(a1.name, a2.name) &&
+                    Objects.equals(a1.color, a2.color) &&
+                    a1.unseen == a2.unseen &&
+                    Objects.equals(a1.state, a2.state);
         }
     }
 
@@ -207,14 +193,14 @@ public class AdapterAnswer extends RecyclerView.Adapter<AdapterAnswer.ViewHolder
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(R.layout.item_answer, parent, false));
+        return new ViewHolder(inflater.inflate(R.layout.item_nav, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         holder.unwire();
-        EntityAnswer answer = items.get(position);
-        holder.bindTo(answer);
+        TupleAccountEx account = items.get(position);
+        holder.bindTo(account);
         holder.wire();
     }
 }

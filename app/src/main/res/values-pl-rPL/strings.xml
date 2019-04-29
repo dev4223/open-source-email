@@ -72,9 +72,6 @@
     <string name="menu_invite">Zaproś</string>
     <string name="menu_rate">Oceń aplikację</string>
     <string name="menu_other">Inne aplikacje</string>
-    <string name="title_issue_type">Czy masz pytanie lub problem?</string>
-    <string name="title_issue_question">Pytanie</string>
-    <string name="title_issue_problem">Problem</string>
     <string name="title_welcome">Witaj</string>
     <string name="title_eula">Umowa licencyjna użytkownika końcowego</string>
     <string name="title_agree">Zgadzam się</string>
@@ -382,8 +379,6 @@
     <string name="title_sort_on_size">Rozmiar</string>
     <string name="title_compact">Widok kompaktowy</string>
     <string name="title_zoom">Rozmiar tekstu</string>
-    <string name="title_snoozed">Uśpiony</string>
-    <string name="title_duplicates">Pokaż duplikaty</string>
     <string name="title_address_sent">Wysłane:</string>
     <string name="title_address_unsent">Niewysłane:</string>
     <string name="title_address_invalid">Nieprawidłowy:</string>
@@ -474,7 +469,6 @@
     <string name="title_hint_ignore_contact">Długo naciśnij kontakt, aby nigdy nie uznać go za ulubiony</string>
     <string name="title_open_link">Otwórz link</string>
     <string name="title_insecure_link">Ten link nie jest bezpieczny</string>
-    <string name="title_select_app">Wybierz aplikację</string>
     <string name="title_updated">Jest dostępna aktualizacja do wersji %1$s</string>
     <string name="title_issue">Masz pytanie lub problem?</string>
     <string name="title_yes">Tak</string>

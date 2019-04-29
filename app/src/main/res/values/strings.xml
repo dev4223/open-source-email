@@ -82,10 +82,6 @@
     <string name="menu_rate">Rate this app</string>
     <string name="menu_other">Other apps</string>
 
-    <string name="title_issue_type">Do you have a question or problem?</string>
-    <string name="title_issue_question">Question</string>
-    <string name="title_issue_problem">Problem</string>
-
     <string name="title_welcome">Welcome</string>
     <string name="title_eula">End-user license agreement</string>
     <string name="title_agree">I agree</string>
@@ -292,6 +288,7 @@
     <string name="title_no_utf8">This provider does not support UTF-8</string>
     <string name="title_no_sync">Synchronization errors since %1$s</string>
     <string name="title_sync_errors">Synchronizing some folders failed</string>
+    <string name="title_identity_required">An identity is required to send messages</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
@@ -317,6 +314,7 @@
     <string name="title_show_folders">Show hidden folders</string>
     <string name="title_hide_folder">Hide folder</string>
     <string name="title_unified_folder">Show in unified inbox</string>
+    <string name="title_navigation_folder">Show in navigation menu</string>
     <string name="title_synchronize_folder">Synchronize (receive messages)</string>
     <string name="title_poll_folder">Check periodically instead of continuous synchronize</string>
     <string name="title_download_folder">Automatically download message texts and attachments</string>
@@ -436,6 +434,8 @@
     <string name="title_style_toolbar">Style toolbar</string>
     <string name="title_add_attachment">Add attachment</string>
     <string name="title_show_addresses">Show CC/BCC</string>
+    <string name="title_insert_contact_group">Insert contact group</string>
+    <string name="title_insert_template">Insert template</string>
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
@@ -466,10 +466,13 @@
     <string name="title_sort_on_subject">Subject</string>
     <string name="title_sort_on_size">Size</string>
 
+    <string name="title_filter">Filter</string>
+    <string name="title_filter_seen">Read</string>
+    <string name="title_filter_snoozed">Snoozed</string>
+    <string name="title_filter_duplicates">Duplicates</string>
+
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
-    <string name="title_snoozed">Snoozed</string>
-    <string name="title_duplicates">Show duplicates</string>
     <string name="title_select_all">Select all</string>
 
     <string name="title_address_sent">Sent:</string>
@@ -696,6 +699,12 @@
         <item>1440</item>
         <item>1920</item>
     </integer-array>
+
+    <string-array name="targetNames">
+        <item>To</item>
+        <item>Cc</item>
+        <item>Bcc</item>
+    </string-array>
 
     <array name="colorPicker">
         <item>@color/red</item>

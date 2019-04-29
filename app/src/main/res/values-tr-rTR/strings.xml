@@ -63,9 +63,6 @@
     <string name="menu_invite">Davet et</string>
     <string name="menu_rate">Bu uygulamaya puan verin</string>
     <string name="menu_other">Diğer uygulamalar</string>
-    <string name="title_issue_type">Bir soru ya da sorun var mı?</string>
-    <string name="title_issue_question">Soru</string>
-    <string name="title_issue_problem">Sorun</string>
     <string name="title_welcome">Hoşgeldiniz</string>
     <string name="title_eula">Son Kullanıcı Lisans Sözleşmesi</string>
     <string name="title_agree">Kabul ediyorum</string>
@@ -406,8 +403,6 @@
     <string name="title_sort_on_size">Boyut</string>
     <string name="title_compact">Derlitoplu görünüm</string>
     <string name="title_zoom">Metin boyutu</string>
-    <string name="title_snoozed">Ertelendi</string>
-    <string name="title_duplicates">Kopyaları göster</string>
     <string name="title_select_all">Hepsini seç</string>
     <string name="title_address_sent">Gönderilen:</string>
     <string name="title_address_unsent">Gönderilmemiş:</string>
@@ -550,6 +545,13 @@
     <string name="title_debug_info">Hata ayıklama bilgisi</string>
     <string name="title_debug_info_remark">Lütfen sorunu açıklayın ve sorunun zamanını belirtin:</string>
     <string name="title_crash_info_remark">Lütfen uygulama çöktüğü sırada ne yaptığınızı açıklayın:</string>
+    <string-array name="pollIntervalNames">
+        <item>Her Zaman</item>
+        <item>Her yarım saatte bir</item>
+        <item>Saatte bir</item>
+        <item>2 saatte bir</item>
+        <item>4 saatte bir</item>
+    </string-array>
     <string-array name="startupNames">
         <item>Birleşik Gelen Kutusu</item>
         <item>Birleşik klasörler</item>

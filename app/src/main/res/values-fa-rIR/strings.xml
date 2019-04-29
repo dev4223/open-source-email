@@ -301,7 +301,6 @@
     <string name="title_sort_on_sender">فرستنده</string>
     <string name="title_compact">نمایش فشرده</string>
     <string name="title_zoom">اندازه متن</string>
-    <string name="title_snoozed">به تعویق افتاده</string>
     <string name="title_address_sent">ارسال شده:</string>
     <string name="title_address_unsent">فرستاده نشده:</string>
     <string name="title_address_invalid">نامعتبر:</string>
@@ -381,7 +380,6 @@
     <string name="title_hint_message_selection">برای انتخاب چند پیام بر روی یک پیام لمس طولانی کنید</string>
     <string name="title_hint_sync">دریافت پیامها می تواند زمانی بسته به سرعت سرویس دهنده، اتصال به اینترنت، دستگاه و تعداد پیام‌ها طول بکشد. هنگام دریافت پیامها ممکن است عملکرد برنامه کند شود.</string>
     <string name="title_open_link">بازکردن لینک</string>
-    <string name="title_select_app">برنامه را انتخاب کنید</string>
     <string name="title_updated">یک بروز رسانی به نسخه %1$s وجود دارد</string>
     <string name="title_issue">سوال یا مشکلی دارید؟</string>
     <string name="title_yes">بله</string>

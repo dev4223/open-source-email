@@ -34,6 +34,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -79,6 +80,7 @@ import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -86,6 +88,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.exifinterface.media.ExifInterface;
@@ -484,20 +487,50 @@ public class FragmentCompose extends FragmentBase {
             cadapter.setFilterQueryProvider(new FilterQueryProvider() {
                 public Cursor runQuery(CharSequence typed) {
                     Log.i("Searching provided contact=" + typed);
-                    return resolver.query(
+                    String wildcard = "%" + typed + "%";
+                    return new CursorWrapper(resolver.query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             new String[]{
-                                    ContactsContract.RawContacts._ID,
+                                    ContactsContract.CommonDataKinds.Email.CONTACT_ID,
                                     ContactsContract.Contacts.DISPLAY_NAME,
                                     ContactsContract.CommonDataKinds.Email.DATA
                             },
                             ContactsContract.CommonDataKinds.Email.DATA + " <> ''" +
-                                    " AND (" + ContactsContract.Contacts.DISPLAY_NAME + " LIKE '%" + typed + "%'" +
-                                    " OR " + ContactsContract.CommonDataKinds.Email.DATA + " LIKE '%" + typed + "%')",
-                            null,
+                                    " AND (" + ContactsContract.Contacts.DISPLAY_NAME + " LIKE ?" +
+                                    " OR " + ContactsContract.CommonDataKinds.Email.DATA + " LIKE ?)",
+                            new String[]{wildcard, wildcard},
                             "CASE WHEN " + ContactsContract.Contacts.DISPLAY_NAME + " NOT LIKE '%@%' THEN 0 ELSE 1 END" +
-                                    ", " + ContactsContract.Contacts.DISPLAY_NAME +
-                                    ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE");
+                                    ", " + ContactsContract.Contacts.DISPLAY_NAME + " COLLATE NOCASE" +
+                                    ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE")) {
+
+                        @Override
+                        public String[] getColumnNames() {
+                            String[] names = super.getColumnNames();
+                            names[0] = "_id";
+                            return names;
+                        }
+
+                        @Override
+                        public String getColumnName(int index) {
+                            if (index == 0)
+                                return "_id";
+                            return super.getColumnName(index);
+                        }
+
+                        @Override
+                        public int getColumnIndex(String name) {
+                            if ("_id".equals(name))
+                                return 0;
+                            return super.getColumnIndex(name);
+                        }
+
+                        @Override
+                        public int getColumnIndexOrThrow(String name) throws IllegalArgumentException {
+                            if ("_id".equals(name))
+                                return 0;
+                            return super.getColumnIndexOrThrow(name);
+                        }
+                    };
                 }
             });
         else
@@ -505,7 +538,8 @@ public class FragmentCompose extends FragmentBase {
                 @Override
                 public Cursor runQuery(CharSequence typed) {
                     Log.i("Searching local contact=" + typed);
-                    return db.contact().searchContacts(null, null, "%" + typed + "%");
+                    String wildcard = "%" + typed + "%";
+                    return db.contact().searchContacts(null, null, wildcard);
                 }
             });
 
@@ -752,6 +786,8 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_image).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_attachment).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_clear).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_contact_group).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_answer).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_encrypt).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_send_after).setVisible(state == State.LOADED);
 
@@ -759,6 +795,8 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_image).setEnabled(!busy);
         menu.findItem(R.id.menu_attachment).setEnabled(!busy);
         menu.findItem(R.id.menu_clear).setEnabled(!busy);
+        menu.findItem(R.id.menu_contact_group).setEnabled(!busy);
+        menu.findItem(R.id.menu_answer).setEnabled(!busy);
         menu.findItem(R.id.menu_encrypt).setEnabled(!busy);
         menu.findItem(R.id.menu_send_after).setEnabled(!busy);
 
@@ -793,6 +831,12 @@ public class FragmentCompose extends FragmentBase {
                 return true;
             case R.id.menu_clear:
                 onMenuStyle(item.getItemId());
+                return true;
+            case R.id.menu_contact_group:
+                onMenuContactGroup();
+                return true;
+            case R.id.menu_answer:
+                onMenuAnswer();
                 return true;
             case R.id.menu_encrypt:
                 onMenuEncrypt();
@@ -941,6 +985,189 @@ public class FragmentCompose extends FragmentBase {
 
         etBody.setText(ss);
         etBody.setSelection(end);
+    }
+
+    private void onMenuContactGroup() {
+        View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_contact_group, null);
+        final ListView lvGroup = dview.findViewById(R.id.lvGroup);
+        final Spinner spTarget = dview.findViewById(R.id.spTarget);
+
+        Cursor groups = resolver.query(
+                ContactsContract.Groups.CONTENT_URI,
+                new String[]{
+                        ContactsContract.Groups._ID,
+                        ContactsContract.Groups.TITLE
+                },
+                null, null, ContactsContract.Groups.TITLE
+        );
+
+        final SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                getContext(),
+                R.layout.spinner_item1_dropdown,
+                groups,
+                new String[]{ContactsContract.Groups.TITLE},
+                new int[]{android.R.id.text1},
+                0);
+
+        lvGroup.setAdapter(adapter);
+
+        final AlertDialog dialog = new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setView(dview)
+                .create();
+
+        lvGroup.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                dialog.dismiss();
+
+                int target = spTarget.getSelectedItemPosition();
+                Cursor cursor = (Cursor) adapter.getItem(position);
+                long group = cursor.getLong(0);
+
+                if (target > 0)
+                    grpAddresses.setVisibility(View.VISIBLE);
+
+                Bundle args = new Bundle();
+                args.putLong("id", working);
+                args.putInt("target", target);
+                args.putLong("group", group);
+
+                new SimpleTask<EntityMessage>() {
+                    @Override
+                    protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+                        long id = args.getLong("id");
+                        int target = args.getInt("target");
+                        long group = args.getLong("group");
+
+                        List<Address> selected = new ArrayList<>();
+
+                        try (Cursor cursor = context.getContentResolver().query(
+                                ContactsContract.Data.CONTENT_URI,
+                                new String[]{ContactsContract.Data.CONTACT_ID},
+                                ContactsContract.CommonDataKinds.GroupMembership.GROUP_ROW_ID + "= ?" + " AND "
+                                        + ContactsContract.CommonDataKinds.GroupMembership.MIMETYPE + "='"
+                                        + ContactsContract.CommonDataKinds.GroupMembership.CONTENT_ITEM_TYPE + "'",
+                                new String[]{String.valueOf(group)}, null)) {
+                            while (cursor != null && cursor.moveToNext()) {
+                                try (Cursor contact = resolver.query(
+                                        ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                                        new String[]{
+                                                ContactsContract.Contacts.DISPLAY_NAME,
+                                                ContactsContract.CommonDataKinds.Email.DATA
+                                        },
+                                        ContactsContract.Data.CONTACT_ID + " = ?",
+                                        new String[]{cursor.getString(0)},
+                                        null)) {
+                                    if (contact != null && contact.moveToNext()) {
+                                        String name = contact.getString(0);
+                                        String email = contact.getString(1);
+                                        selected.add(new InternetAddress(email, name));
+                                    }
+                                }
+                            }
+                        }
+
+                        EntityMessage draft;
+                        DB db = DB.getInstance(context);
+
+                        try {
+                            db.beginTransaction();
+
+                            draft = db.message().getMessage(id);
+                            if (draft == null)
+                                return null;
+
+                            Address[] address = null;
+                            if (target == 0)
+                                address = draft.to;
+                            else if (target == 1)
+                                address = draft.cc;
+                            else if (target == 2)
+                                address = draft.bcc;
+
+                            List<Address> list = new ArrayList<>();
+                            if (address != null)
+                                list.addAll(Arrays.asList(address));
+
+                            list.addAll(selected);
+
+                            if (target == 0)
+                                draft.to = list.toArray(new Address[0]);
+                            else if (target == 1)
+                                draft.cc = list.toArray(new Address[0]);
+                            else if (target == 2)
+                                draft.bcc = list.toArray(new Address[0]);
+
+                            db.message().updateMessage(draft);
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+
+                        return draft;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityMessage draft) {
+                        if (draft != null) {
+                            etTo.setText(MessageHelper.formatAddressesCompose(draft.to));
+                            etCc.setText(MessageHelper.formatAddressesCompose(draft.cc));
+                            etBcc.setText(MessageHelper.formatAddressesCompose(draft.bcc));
+                        }
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    }
+                }.execute(getContext(), getViewLifecycleOwner(), args, "compose:picked");
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void onMenuAnswer() {
+        if (!Helper.isPro(getContext())) {
+            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
+            fragmentTransaction.commit();
+            return;
+        }
+        new SimpleTask<List<EntityAnswer>>() {
+            @Override
+            protected List<EntityAnswer> onExecute(Context context, Bundle args) {
+                DB db = DB.getInstance(getContext());
+                return db.answer().getAnswers(false);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, List<EntityAnswer> answers) {
+                final ArrayAdapter<EntityAnswer> adapter =
+                        new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, answers);
+
+                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                        .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                EntityAnswer answer = adapter.getItem(which);
+
+                                String text = EntityAnswer.replacePlaceholders(answer.text, null, null, null, null);
+                                Spanned spanned = HtmlHelper.fromHtml(text);
+
+                                etBody.getText().insert(etBody.getSelectionStart(), spanned);
+                            }
+                        })
+                        .show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+            }
+        }.execute(this, new Bundle(), "compose:answer");
     }
 
     private void onMenuEncrypt() {
@@ -1332,47 +1559,92 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void handlePickContact(int requestCode, Intent data) {
-        Cursor cursor = null;
-        try {
-            Uri uri = data.getData();
-            if (uri != null)
-                cursor = resolver.query(uri,
+        Uri uri = data.getData();
+        if (uri == null)
+            return;
+
+        Bundle args = new Bundle();
+        args.putLong("id", working);
+        args.putInt("requestCode", requestCode);
+        args.putParcelable("uri", uri);
+
+        new SimpleTask<EntityMessage>() {
+            @Override
+            protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                int requestCode = args.getInt("requestCode");
+                Uri uri = args.getParcelable("uri");
+
+                EntityMessage draft = null;
+                DB db = DB.getInstance(context);
+
+                try (Cursor cursor = context.getContentResolver().query(
+                        uri,
                         new String[]{
                                 ContactsContract.CommonDataKinds.Email.ADDRESS,
                                 ContactsContract.Contacts.DISPLAY_NAME
                         },
-                        null, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
-                int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
-                String email = cursor.getString(colEmail);
-                String name = cursor.getString(colName);
+                        null, null, null)) {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
+                        int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+                        String email = cursor.getString(colEmail);
+                        String name = cursor.getString(colName);
 
-                String text = null;
-                if (requestCode == ActivityCompose.REQUEST_CONTACT_TO)
-                    text = etTo.getText().toString();
-                else if (requestCode == ActivityCompose.REQUEST_CONTACT_CC)
-                    text = etCc.getText().toString();
-                else if (requestCode == ActivityCompose.REQUEST_CONTACT_BCC)
-                    text = etBcc.getText().toString();
+                        try {
+                            db.beginTransaction();
 
-                StringBuilder sb = new StringBuilder(text);
-                sb.append("\"").append(name).append("\" <").append(email).append(">, ");
+                            draft = db.message().getMessage(id);
+                            if (draft == null)
+                                return null;
 
-                if (requestCode == ActivityCompose.REQUEST_CONTACT_TO)
-                    etTo.setText(sb.toString());
-                else if (requestCode == ActivityCompose.REQUEST_CONTACT_CC)
-                    etCc.setText(sb.toString());
-                else if (requestCode == ActivityCompose.REQUEST_CONTACT_BCC)
-                    etBcc.setText(sb.toString());
+                            Address[] address = null;
+                            if (requestCode == ActivityCompose.REQUEST_CONTACT_TO)
+                                address = draft.to;
+                            else if (requestCode == ActivityCompose.REQUEST_CONTACT_CC)
+                                address = draft.cc;
+                            else if (requestCode == ActivityCompose.REQUEST_CONTACT_BCC)
+                                address = draft.bcc;
+
+                            List<Address> list = new ArrayList<>();
+                            if (address != null)
+                                list.addAll(Arrays.asList(address));
+
+                            list.add(new InternetAddress(email, name));
+
+                            if (requestCode == ActivityCompose.REQUEST_CONTACT_TO)
+                                draft.to = list.toArray(new Address[0]);
+                            else if (requestCode == ActivityCompose.REQUEST_CONTACT_CC)
+                                draft.cc = list.toArray(new Address[0]);
+                            else if (requestCode == ActivityCompose.REQUEST_CONTACT_BCC)
+                                draft.bcc = list.toArray(new Address[0]);
+
+                            db.message().updateMessage(draft);
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+                    }
+                }
+
+                return draft;
             }
-        } catch (Throwable ex) {
-            Log.e(ex);
-            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-        } finally {
-            if (cursor != null)
-                cursor.close();
-        }
+
+            @Override
+            protected void onExecuted(Bundle args, EntityMessage draft) {
+                if (draft != null) {
+                    etTo.setText(MessageHelper.formatAddressesCompose(draft.to));
+                    etCc.setText(MessageHelper.formatAddressesCompose(draft.cc));
+                    etBcc.setText(MessageHelper.formatAddressesCompose(draft.bcc));
+                }
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+            }
+        }.execute(this, args, "compose:picked");
     }
 
     private void handleAddAttachment(Uri uri, final boolean image) {
@@ -2143,6 +2415,7 @@ public class FragmentCompose extends FragmentBase {
 
                 // Move draft to new account
                 if (draft.account != aid && aid >= 0) {
+                    Log.i("Account changed");
                     Long uid = draft.uid;
                     String msgid = draft.msgid;
 
@@ -2168,6 +2441,7 @@ public class FragmentCompose extends FragmentBase {
                     draft.msgid = EntityMessage.generateMessageId();
                     draft.content = true;
                     draft.ui_hide = false;
+                    db.message().updateMessage(draft);
                     EntityOperation.queue(context, db, draft, EntityOperation.ADD);
                 }
 
