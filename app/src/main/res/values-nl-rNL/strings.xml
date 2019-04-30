@@ -271,6 +271,7 @@
     <string name="title_show_folders">Toon verborgen mappen</string>
     <string name="title_hide_folder">Verberg map</string>
     <string name="title_unified_folder">Toon in het gecombineerde postvak in</string>
+    <string name="title_navigation_folder">Toon in navigatiemenu</string>
     <string name="title_synchronize_folder">Synchroniseren (ontvang berichten)</string>
     <string name="title_poll_folder">Controleer periodiek in plaats van continu synchroniseren</string>
     <string name="title_download_folder">Berichtteksten en bijlagen automatisch downloaden</string>
@@ -503,6 +504,7 @@
     <string name="title_legend_avatar">Avatar</string>
     <string name="title_legend_show_quotes">Toon citaten</string>
     <string name="title_legend_show_images">Toon afbeeldingen</string>
+    <string name="title_legend_show_full">Toon volledig scherm</string>
     <string name="title_legend_edit">Bewerken</string>
     <string name="title_legend_default_color">Standaard kleur</string>
     <string name="title_legend_close_hint">Sluit hint</string>
@@ -537,6 +539,7 @@
     <string name="title_report">Rapporteer</string>
     <string name="title_fix">Oplossen</string>
     <string name="title_enable">Inschakelen</string>
+    <string name="title_reorder">Herschikken</string>
     <string name="title_no_ask_again">Dit niet meer vragen</string>
     <string name="title_no_body">Geen berichttekst gevonden</string>
     <string name="title_no_charset">Codering niet ondersteund: %1$s</string>

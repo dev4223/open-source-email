@@ -271,6 +271,7 @@
     <string name="title_show_folders">Zeige ausgeblendete Ordner</string>
     <string name="title_hide_folder">Ordner ausblenden</string>
     <string name="title_unified_folder">Im Sammeleingang anzeigen</string>
+    <string name="title_navigation_folder">Im Navigationsmenü anzeigen</string>
     <string name="title_synchronize_folder">Synchronisieren (E-Mails empfangen)</string>
     <string name="title_poll_folder">Periodisch überprüfen anstatt einer dauerhaften Synchronisierung</string>
     <string name="title_download_folder">Automatisch den Nachrichtentext und Anhänge herunterladen</string>
@@ -461,7 +462,7 @@
     <string name="title_legend_thread">Konversation</string>
     <string name="title_legend_zoom">Textgröße ändern</string>
     <string name="title_legend_draft">Entwurf vorhanden</string>
-    <string name="title_legend_snoozed">Schlummert</string>
+    <string name="title_legend_snoozed">Wurde zurückgestellt</string>
     <string name="title_legend_browsed">Gesehen oder gesucht</string>
     <string name="title_legend_answered">Wurde beantwortet</string>
     <string name="title_legend_receipt">Lesebestätigung wurde angefordert</string>
@@ -503,6 +504,7 @@
     <string name="title_legend_avatar">Benutzerbild</string>
     <string name="title_legend_show_quotes">Zitate anzeigen</string>
     <string name="title_legend_show_images">Bilder anzeigen</string>
+    <string name="title_legend_show_full">Vollbild anzeigen</string>
     <string name="title_legend_edit">Bearbeiten</string>
     <string name="title_legend_default_color">Standardfarbe</string>
     <string name="title_legend_close_hint">Hinweis schließen</string>
@@ -537,6 +539,7 @@
     <string name="title_report">Bericht</string>
     <string name="title_fix">Problem beheben</string>
     <string name="title_enable">Aktivieren</string>
+    <string name="title_reorder">Sortieren</string>
     <string name="title_no_ask_again">Dies nicht mehr anzeigen</string>
     <string name="title_no_body">Kein Nachrichtentext gefunden</string>
     <string name="title_no_charset">Nicht unterstützte Codierung: %1$s</string>

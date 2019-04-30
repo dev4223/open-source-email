@@ -67,6 +67,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private LayoutInflater inflater;
     private LifecycleOwner owner;
     private boolean show_hidden;
+    private boolean reorder = false;
 
     private long account;
     private int level;
@@ -88,6 +89,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private View view;
         private View vwColor;
         private ImageView ivState;
+        private ImageView ivReadOnly;
         private View vwLevel;
         private ImageView ivExpander;
         private ImageView ivNotify;
@@ -121,6 +123,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             view = itemView.findViewById(R.id.clItem);
             vwColor = itemView.findViewById(R.id.vwColor);
             ivState = itemView.findViewById(R.id.ivState);
+            ivReadOnly = itemView.findViewById(R.id.ivReadOnly);
             vwLevel = itemView.findViewById(R.id.vwLevel);
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivNotify = itemView.findViewById(R.id.ivNotify);
@@ -220,6 +223,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             ivState.setVisibility(
                     folder.synchronize || folder.state != null || folder.sync_state != null
                             ? View.VISIBLE : View.INVISIBLE);
+
+            ivReadOnly.setVisibility(folder.read_only ? View.VISIBLE : View.GONE);
 
             ViewGroup.LayoutParams lp = vwLevel.getLayoutParams();
             lp.width = (account < 0 || !collapsable ? 1 : level) * dp12;
@@ -367,6 +372,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         @Override
         public boolean onLongClick(View v) {
+            if (reorder)
+                return false;
+
             int pos = getAdapterPosition();
             if (pos == RecyclerView.NO_POSITION)
                 return false;
@@ -631,6 +639,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             @Override
             public int compare(TupleFolderEx f1, TupleFolderEx f2) {
                 if (account < 0) {
+                    int o = Integer.compare(
+                            f1.order == null ? -1 : f1.order,
+                            f2.order == null ? -1 : f2.order);
+                    if (o != 0)
+                        return o;
+
                     String name1 = f1.getDisplayName(context);
                     String name2 = f2.getDisplayName(context);
                     int n = collator.compare(name1, name2);
@@ -694,6 +708,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         }
     }
 
+    void setReorder(boolean reorder) {
+        this.reorder = reorder;
+    }
+
     private class DiffCallback extends DiffUtil.Callback {
         private List<TupleFolderEx> prev = new ArrayList<>();
         private List<TupleFolderEx> next = new ArrayList<>();
@@ -736,6 +754,51 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     @Override
     public int getItemCount() {
         return items.size();
+    }
+
+    void onMove(int from, int to) {
+        if (from < 0 || from >= items.size() ||
+                to < 0 || to >= items.size())
+            return;
+
+        if (from < to)
+            for (int i = from; i < to; i++)
+                Collections.swap(items, i, i + 1);
+        else
+            for (int i = from; i > to; i--)
+                Collections.swap(items, i, i - 1);
+        notifyItemMoved(from, to);
+
+        List<Long> order = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++)
+            order.add(items.get(i).id);
+
+        Bundle args = new Bundle();
+        args.putLongArray("order", Helper.toLongArray(order));
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                final long[] order = args.getLongArray("order");
+
+                final DB db = DB.getInstance(context);
+                db.runInTransaction(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < order.length; i++)
+                            db.folder().setFolderOrder(order[i], i);
+                    }
+                });
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(context, owner, ex);
+
+            }
+        }.execute(context, owner, args, "folders:order");
     }
 
     @Override

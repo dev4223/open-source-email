@@ -67,6 +67,7 @@ import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
+import javax.mail.ReadOnlyFolderException;
 import javax.mail.Session;
 import javax.mail.StoreClosedException;
 import javax.mail.UIDFolder;
@@ -664,9 +665,24 @@ public class ServiceSynchronize extends LifecycleService {
 
                             final IMAPFolder ifolder = (IMAPFolder) istore.getFolder(folder.name);
                             try {
+                                //if ("Postausgang".equals(folder.name))
+                                //    throw new ReadOnlyFolderException(ifolder);
                                 ifolder.open(Folder.READ_WRITE);
+                                db.folder().setFolderReadOnly(folder.id, false);
+                            } catch (ReadOnlyFolderException ex) {
+                                Log.w(folder.name + " read only");
+                                db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
+                                try {
+                                    ifolder.open(Folder.READ_ONLY);
+                                    db.folder().setFolderReadOnly(folder.id, true);
+                                } catch (MessagingException ex1) {
+                                    Log.w(ex1);
+                                    db.folder().setFolderState(folder.id, null);
+                                    db.folder().setFolderError(folder.id, Helper.formatThrowable(ex1, true));
+                                    continue;
+                                }
                             } catch (MessagingException ex) {
-                                // Including ReadOnlyFolderException
+                                Log.w(ex);
                                 db.folder().setFolderState(folder.id, null);
                                 db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                                 continue;

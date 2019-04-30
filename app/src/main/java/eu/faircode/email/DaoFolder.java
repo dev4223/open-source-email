@@ -176,6 +176,9 @@ public interface DaoFolder {
     @Query("UPDATE folder SET display = :display WHERE id = :id")
     int setFolderDisplay(long id, String display);
 
+    @Query("UPDATE folder SET `order` = :order WHERE id = :id")
+    int setFolderOrder(long id, Integer order);
+
     @Query("UPDATE folder SET parent = :parent WHERE id = :id")
     int setFolderParent(long id, Long parent);
 
@@ -218,6 +221,12 @@ public interface DaoFolder {
 
     @Query("UPDATE folder SET last_sync = :last_sync WHERE id = :id")
     int setFolderSync(long id, long last_sync);
+
+    @Query("UPDATE folder SET read_only = :read_only WHERE id = :id")
+    int setFolderReadOnly(long id, boolean read_only);
+
+    @Query("UPDATE folder SET `order` = NULL")
+    int resetFolderOrder();
 
     @Query("UPDATE folder SET tbc = null WHERE id = :id")
     int resetFolderTbc(long id);

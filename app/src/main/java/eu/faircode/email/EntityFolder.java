@@ -84,6 +84,7 @@ public class EntityFolder implements Serializable {
     @NonNull
     public Integer keep_days;
     public String display;
+    public Integer order;
     @NonNull
     public Boolean hide = false;
     @NonNull
@@ -104,6 +105,8 @@ public class EntityFolder implements Serializable {
     public Boolean tbd; // to be deleted
     public String state;
     public String sync_state;
+    @NonNull
+    public Boolean read_only = false;
     public String error;
     public Long last_sync;
 
@@ -278,12 +281,14 @@ public class EntityFolder implements Serializable {
                     this.sync_days.equals(other.sync_days) &&
                     this.keep_days.equals(other.keep_days) &&
                     Objects.equals(this.display, other.display) &&
+                    Objects.equals(this.order, other.order) &&
                     this.hide == other.hide &&
                     this.collapsed == other.collapsed &&
                     this.unified == other.unified &&
                     this.notify == other.notify &&
                     Objects.equals(this.total, other.total) &&
                     Helper.equal(this.keywords, other.keywords) &&
+                    Objects.equals(this.tbc, other.tbc) &&
                     Objects.equals(this.tbd, other.tbd) &&
                     Objects.equals(this.state, other.state) &&
                     Objects.equals(this.sync_state, other.sync_state) &&
@@ -312,6 +317,7 @@ public class EntityFolder implements Serializable {
         json.put("hide", hide);
         json.put("collapsed", collapsed);
         json.put("unified", unified);
+        json.put("navigation", navigation);
         json.put("notify", notify);
         return json;
     }
@@ -351,6 +357,9 @@ public class EntityFolder implements Serializable {
             folder.collapsed = json.getBoolean("collapsed");
 
         folder.unified = json.getBoolean("unified");
+
+        if (json.has("navigation"))
+            folder.navigation = json.getBoolean("navigation");
 
         if (json.has("notify"))
             folder.notify = json.getBoolean("notify");

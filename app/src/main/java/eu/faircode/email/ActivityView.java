@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -233,6 +234,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         getSupportFragmentManager().addOnBackStackChangedListener(this);
 
+        PackageManager pm = getPackageManager();
         final List<NavMenuItem> menus = new ArrayList<>();
 
         final NavMenuItem navOperations = new NavMenuItem(R.drawable.baseline_list_24, R.string.menu_operations, new Runnable() {
@@ -285,7 +287,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         }));
 
-        if (Helper.getIntentFAQ().resolveActivity(getPackageManager()) != null)
+        if (Helper.getIntentFAQ().resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_question_answer_24, R.string.menu_faq, new Runnable() {
                 @Override
                 public void run() {
@@ -300,7 +302,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if (Helper.getIntentPrivacy().resolveActivity(getPackageManager()) != null)
+        if (Helper.getIntentPrivacy().resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_account_box_24, R.string.menu_privacy, new Runnable() {
                 @Override
                 public void run() {
@@ -323,14 +325,14 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }, new Runnable() {
             @Override
             public void run() {
-                if (Helper.isPlayStoreInstall(ActivityView.this)) {
+                if (!Helper.isPlayStoreInstall(ActivityView.this)) {
                     drawerLayout.closeDrawer(drawerContainer);
                     checkUpdate(true);
                 }
             }
         }).setSeparated());
 
-        if (getIntentPro() == null || getIntentPro().resolveActivity(getPackageManager()) != null)
+        if (getIntentPro() == null || getIntentPro().resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_monetization_on_24, R.string.menu_pro, new Runnable() {
                 @Override
                 public void run() {
@@ -339,7 +341,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if ((getIntentInvite().resolveActivity(getPackageManager()) != null))
+        if ((getIntentInvite().resolveActivity(pm) != null))
             extra.add(new NavMenuItem(R.drawable.baseline_people_24, R.string.menu_invite, new Runnable() {
                 @Override
                 public void run() {
@@ -348,7 +350,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if (getIntentRate().resolveActivity(getPackageManager()) != null)
+        if (getIntentRate().resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_star_24, R.string.menu_rate, new Runnable() {
                 @Override
                 public void run() {
@@ -357,7 +359,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if (getIntentOtherApps().resolveActivity(getPackageManager()) != null)
+        if (getIntentOtherApps().resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_get_app_24, R.string.menu_other, new Runnable() {
                 @Override
                 public void run() {
@@ -876,40 +878,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         fragmentTransaction.commit();
     }
 
-    private void onMenuInbox(long account) {
-        Bundle args = new Bundle();
-        args.putLong("account", account);
-
-        new SimpleTask<Long>() {
-            @Override
-            protected Long onExecute(Context context, Bundle args) {
-                long account = args.getLong("account");
-                DB db = DB.getInstance(context);
-                EntityFolder inbox = db.folder().getFolderByType(account, EntityFolder.INBOX);
-                return (inbox == null ? -1 : inbox.id);
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, Long folder) {
-                long account = args.getLong("account");
-
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                    getSupportFragmentManager().popBackStack("unified", 0);
-
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(ActivityView.this);
-                lbm.sendBroadcast(
-                        new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                .putExtra("account", account)
-                                .putExtra("folder", folder));
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-            }
-        }.execute(this, args, "menu:inbox");
-    }
-
     private void onMenuOutbox() {
         Bundle args = new Bundle();
 
@@ -960,14 +928,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     private void onMenuSetup() {
         startActivity(new Intent(ActivityView.this, ActivitySetup.class));
-    }
-
-    private void onMenuCollapse() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean minimal = !prefs.getBoolean("minimal", false);
-        prefs.edit().putBoolean("minimal", minimal).apply();
-        //drawerArray.set(minimal);
-        //drawerArray.notifyDataSetChanged();
     }
 
     private void onMenuLegend() {
