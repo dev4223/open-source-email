@@ -59,7 +59,7 @@ import static androidx.room.ForeignKey.CASCADE;
         }
 )
 
-public class EntityFolder implements Serializable {
+public class EntityFolder extends EntityOrder implements Serializable {
     static final String TABLE_NAME = "folder";
 
     @PrimaryKey(autoGenerate = true)
@@ -83,8 +83,9 @@ public class EntityFolder implements Serializable {
     public Integer sync_days;
     @NonNull
     public Integer keep_days;
+    @NonNull
+    public Boolean auto_delete = false;
     public String display;
-    public Integer order;
     @NonNull
     public Boolean hide = false;
     @NonNull
@@ -190,6 +191,7 @@ public class EntityFolder implements Serializable {
         jargs.put(initialize ? Math.min(DEFAULT_INIT, keep_days) : days);
         jargs.put(keep_days);
         jargs.put(download);
+        jargs.put(auto_delete);
 
         return jargs;
     }
@@ -225,6 +227,21 @@ public class EntityFolder implements Serializable {
         if (parent != null && name.startsWith(parent.name))
             n = n.substring(parent.name.length() + 1);
         return (display == null ? Helper.localizeFolderName(context, n) : display);
+    }
+
+    @Override
+    Long getSortId() {
+        return id;
+    }
+
+    @Override
+    String getSortKey(Context context) {
+        return getDisplayName(context);
+    }
+
+    @Override
+    String[] getSortTitle(Context context) {
+        return new String[]{getDisplayName(context), null};
     }
 
     boolean isOutgoing() {
@@ -313,6 +330,7 @@ public class EntityFolder implements Serializable {
         json.put("download", download);
         json.put("sync_days", sync_days);
         json.put("keep_days", keep_days);
+        json.put("auto_delete", auto_delete);
         json.put("display", display);
         json.put("hide", hide);
         json.put("collapsed", collapsed);
@@ -347,6 +365,9 @@ public class EntityFolder implements Serializable {
             folder.keep_days = json.getInt("keep_days");
         else
             folder.keep_days = folder.sync_days;
+
+        if (json.has("auto_delete"))
+            folder.auto_delete = json.getBoolean("auto_delete");
 
         if (json.has("display") && !json.isNull("display"))
             folder.display = json.getString("display");

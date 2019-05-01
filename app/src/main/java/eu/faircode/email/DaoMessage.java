@@ -340,7 +340,7 @@ public interface DaoMessage {
     @Query("UPDATE message SET ui_ignored = :ui_ignored WHERE id = :id")
     int setMessageUiIgnored(long id, boolean ui_ignored);
 
-    @Query("UPDATE message SET sent = :sent WHERE id = :id")
+    @Query("UPDATE message SET received = :sent, sent = :sent WHERE id = :id")
     int setMessageSent(long id, Long sent);
 
     @Query("UPDATE message SET receipt_request = :receipt_request WHERE id = :id")
@@ -420,6 +420,13 @@ public interface DaoMessage {
             "  WHERE operation.message = message.id" +
             "  AND operation.name = '" + EntityOperation.ADD + "')")
     int deleteOrphans(long folder);
+
+    @Query("SELECT id FROM message" +
+            " WHERE folder = :folder" +
+            " AND received < :received" +
+            " AND NOT uid IS NULL" +
+            " AND NOT ui_flagged")
+    List<Long> getMessagesBefore(long folder, long received);
 
     @Query("DELETE FROM message" +
             " WHERE folder = :folder" +

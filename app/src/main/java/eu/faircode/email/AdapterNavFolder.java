@@ -75,12 +75,22 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
 
         private void bindTo(TupleFolderNav folder) {
             if (EntityFolder.OUTBOX.equals(folder.type)) {
-                ivItem.setImageResource(R.drawable.baseline_send_24);
+                if ("syncing".equals(folder.sync_state))
+                    ivItem.setImageResource(R.drawable.baseline_compare_arrows_24);
+                else
+                    ivItem.setImageResource(R.drawable.baseline_send_24);
+
                 ivItem.clearColorFilter();
             } else {
-                ivItem.setImageResource("connected".equals(folder.state)
-                        ? R.drawable.baseline_folder_24
-                        : R.drawable.baseline_folder_open_24);
+                if ("syncing".equals(folder.sync_state))
+                    ivItem.setImageResource(R.drawable.baseline_compare_arrows_24);
+                else if ("downloading".equals(folder.sync_state))
+                    ivItem.setImageResource(R.drawable.baseline_cloud_download_24);
+                else
+                    ivItem.setImageResource("connected".equals(folder.state)
+                            ? R.drawable.baseline_folder_24
+                            : R.drawable.baseline_folder_open_24);
+
                 if (folder.color == null)
                     ivItem.clearColorFilter();
                 else
@@ -130,10 +140,14 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
         final Collator collator = Collator.getInstance(Locale.getDefault());
         collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
 
-        Collections.sort(folders, new Comparator<EntityFolder>() {
+        Collections.sort(folders, new Comparator<TupleFolderNav>() {
             @Override
-            public int compare(EntityFolder f1, EntityFolder f2) {
-                int o = Boolean.compare(EntityFolder.OUTBOX.equals(f1.type), EntityFolder.OUTBOX.equals(f2.type));
+            public int compare(TupleFolderNav f1, TupleFolderNav f2) {
+                int s = Boolean.compare(EntityFolder.OUTBOX.equals(f1.type), EntityFolder.OUTBOX.equals(f2.type));
+                if (s != 0)
+                    return s;
+
+                int o = Integer.compare(f1.order == null ? -1 : f1.order, f2.order == null ? -1 : f2.order);
                 if (o != 0)
                     return o;
 

@@ -52,6 +52,13 @@ public interface DaoFolder {
     EntityFolder getBrowsableFolder(long folder, boolean search);
 
     @Query("SELECT folder.*" +
+            ", account.name AS accountName" +
+            " FROM folder" +
+            " JOIN account ON account.id = folder.account" +
+            " WHERE account.`synchronize`")
+    LiveData<List<TupleFolderSort>> liveSort();
+
+    @Query("SELECT folder.*" +
             ", account.name AS accountName, account.color AS accountColor, account.state AS accountState" +
             ", COUNT(message.id) AS messages" +
             ", SUM(CASE WHEN message.content = 1 THEN 1 ELSE 0 END) AS content" +
@@ -203,12 +210,13 @@ public interface DaoFolder {
             ", download = :download" +
             ", `sync_days` = :sync_days" +
             ", `keep_days` = :keep_days" +
+            ", auto_delete = :auto_delete" +
             " WHERE id = :id")
     int setFolderProperties(
             long id,
             String display, boolean unified, boolean navigation, boolean notify, boolean hide,
             boolean synchronize, boolean poll, boolean download,
-            int sync_days, int keep_days);
+            int sync_days, int keep_days, boolean auto_delete);
 
     @Query("UPDATE folder SET keywords = :keywords WHERE id = :id")
     int setFolderKeywords(long id, String keywords);
