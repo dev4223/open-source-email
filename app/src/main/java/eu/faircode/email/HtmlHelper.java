@@ -110,7 +110,7 @@ public class HtmlHelper {
         return document.outerHtml();
     }
 
-    static String sanitize(Context context, String html, boolean showQuotes) {
+    static String sanitize(Context context, String html) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean paranoid = prefs.getBoolean("paranoid", true);
 
@@ -124,11 +124,6 @@ public class HtmlHelper {
                 .addProtocols("img", "src", "cid")
                 .addProtocols("img", "src", "data");
         final Document document = new Cleaner(whitelist).clean(parsed);
-
-        // Quotes
-        if (!showQuotes)
-            for (Element quote : document.select("blockquote"))
-                quote.html("&#8230;");
 
         // Short quotes
         for (Element q : document.select("q")) {
@@ -630,6 +625,27 @@ public class HtmlHelper {
     }
 
     static String toHtml(Spanned spanned) {
-        return HtmlCompat.toHtml(spanned, TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+        String html = HtmlCompat.toHtml(spanned, TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
+
+        // @Google: why convert size to and from in a different way?
+        Document doc = Jsoup.parse(html);
+        for (Element element : doc.select("span")) {
+            String style = element.attr("style");
+            if (style.startsWith("font-size:")) {
+                int colon = style.indexOf(':');
+                int semi = style.indexOf("em;", colon);
+                if (semi > colon)
+                    try {
+                        String hsize = style.substring(colon + 1, semi).replace(',', '.');
+                        float size = Float.parseFloat(hsize);
+                        element.tagName(size < 1.0f ? "small" : "big");
+                        element.attributes().remove("style");
+                    } catch (NumberFormatException ex) {
+                        Log.e(ex);
+                    }
+            }
+        }
+
+        return doc.outerHtml();
     }
 }

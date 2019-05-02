@@ -37,6 +37,7 @@ import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -58,8 +59,10 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
+import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
@@ -99,6 +102,8 @@ import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.colorpicker.ColorPickerDialog;
+import com.android.colorpicker.ColorPickerSwatch;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
@@ -246,49 +251,7 @@ public class FragmentCompose extends FragmentBase {
         resolver = getContext().getContentResolver();
 
         // Wire controls
-        spIdentity.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                EntityIdentity identity = (EntityIdentity) parent.getAdapter().getItem(position);
-
-                encrypt = (identity != null && identity.encrypt);
-                getActivity().invalidateOptionsMenu();
-
-                int at = (identity == null ? -1 : identity.email.indexOf('@'));
-                etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
-                tvDomain.setText(at < 0 ? null : identity.email.substring(at));
-                grpExtra.setVisibility(identity != null && identity.sender_extra ? View.VISIBLE : View.GONE);
-
-                Spanned signature = null;
-                if (pro) {
-                    if (identity != null && !TextUtils.isEmpty(identity.signature))
-                        signature = HtmlHelper.fromHtml(identity.signature, new Html.ImageGetter() {
-                            @Override
-                            public Drawable getDrawable(String source) {
-                                int px = Helper.dp2pixels(getContext(), 24);
-                                Drawable d = getContext().getResources()
-                                        .getDrawable(R.drawable.baseline_image_24, getContext().getTheme());
-                                d.setBounds(0, 0, px, px);
-                                return d;
-                            }
-                        }, null);
-                }
-                tvSignature.setText(signature);
-                grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                encrypt = false;
-                getActivity().invalidateOptionsMenu();
-
-                etExtra.setHint("");
-                tvDomain.setText(null);
-
-                tvSignature.setText(null);
-                grpSignature.setVisibility(View.GONE);
-            }
-        });
+        spIdentity.setOnItemSelectedListener(identitySelected);
 
         etTo.setMaxLines(Integer.MAX_VALUE);
         etTo.setHorizontallyScrolling(false);
@@ -341,91 +304,7 @@ public class FragmentCompose extends FragmentBase {
 
         setZoom();
 
-        etBody.setCustomSelectionActionModeCallback(new ActionMode.Callback() {
-            @Override
-            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-                menu.add(1, R.string.title_style_bold, 1, R.string.title_style_bold).setIcon(R.drawable.baseline_format_bold_24);
-                menu.add(1, R.string.title_style_italic, 2, R.string.title_style_italic).setIcon(R.drawable.baseline_format_italic_24);
-                menu.add(1, R.string.title_style_underline, 3, R.string.title_style_underline).setIcon(R.drawable.baseline_format_underlined_24);
-                menu.add(1, R.string.title_style_size, 4, R.string.title_style_size).setIcon(R.drawable.baseline_format_size_24);
-                menu.add(1, R.string.title_style_color, 5, R.string.title_style_color).setIcon(R.drawable.baseline_format_color_text_24);
-                return true;
-            }
-
-            @Override
-            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-                return false;
-            }
-
-            @Override
-            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-                Log.i("Action=" + item.getGroupId() + ":" + item.getItemId());
-
-                if (item.getGroupId() != 1)
-                    return false;
-
-                int s = etBody.getSelectionStart();
-                int e = etBody.getSelectionEnd();
-
-                if (s < 0)
-                    s = 0;
-                if (e < 0)
-                    e = 0;
-
-                if (s > e) {
-                    int tmp = s;
-                    s = e;
-                    e = tmp;
-                }
-
-                final int start = s;
-                final int end = e;
-
-                final SpannableString ss = new SpannableString(etBody.getText());
-
-                switch (item.getItemId()) {
-                    case R.string.title_style_bold:
-                    case R.string.title_style_italic: {
-                        int style = (item.getItemId() == R.string.title_style_bold ? Typeface.BOLD : Typeface.ITALIC);
-                        boolean has = false;
-                        for (StyleSpan span : ss.getSpans(start, end, StyleSpan.class))
-                            if (span.getStyle() == style) {
-                                has = true;
-                                ss.removeSpan(span);
-                            }
-
-                        if (!has)
-                            ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                        etBody.setText(ss);
-                        etBody.setSelection(end);
-                        return true;
-                    }
-
-                    case R.string.title_style_underline: {
-                        boolean has = false;
-                        for (UnderlineSpan span : ss.getSpans(start, end, UnderlineSpan.class)) {
-                            has = true;
-                            ss.removeSpan(span);
-                        }
-
-                        if (!has)
-                            ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                        etBody.setText(ss);
-                        etBody.setSelection(end);
-                        return true;
-                    }
-
-                    default:
-                        return false;
-                }
-            }
-
-            @Override
-            public void onDestroyActionMode(ActionMode mode) {
-            }
-        });
+        etBody.setCustomSelectionActionModeCallback(actionCallback);
 
         ibReferenceEdit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -450,9 +329,8 @@ public class FragmentCompose extends FragmentBase {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int action = item.getItemId();
                 switch (action) {
-                    case R.id.menu_clear:
                     case R.id.menu_link:
-                        onMenuStyle(item.getItemId());
+                        onActionLink();
                         return true;
                     case R.id.menu_image:
                         onActionImage();
@@ -470,46 +348,21 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 final int action = item.getItemId();
-
                 switch (action) {
                     case R.id.action_delete:
                         onActionDelete();
                         break;
-
                     case R.id.action_send:
                         onActionSend();
                         break;
-
                     default:
                         onAction(action);
                 }
-
                 return true;
             }
         });
 
-        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int bottom = view.getBottom()
-                        - edit_bar.getHeight()
-                        - Helper.dp2pixels(view.getContext(), 56); // full bottom navigation
-                int remain = bottom - etBody.getTop();
-                int threshold = Helper.dp2pixels(view.getContext(), 100);
-                Log.i("Reduce remain=" + remain + " threshold=" + threshold);
-
-                boolean reduce = (remain < threshold);
-                boolean reduced = (bottom_navigation.getLabelVisibilityMode() == LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED);
-                if (reduce != reduced) {
-                    bottom_navigation.setLabelVisibilityMode(reduce
-                            ? LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED
-                            : LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
-                    ViewGroup.LayoutParams params = bottom_navigation.getLayoutParams();
-                    params.height = Helper.dp2pixels(view.getContext(), reduce ? 36 : 56);
-                    bottom_navigation.setLayoutParams(params);
-                }
-            }
-        });
+        view.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
 
         addBackPressedListener(onBackPressedListener);
 
@@ -878,6 +731,7 @@ public class FragmentCompose extends FragmentBase {
         //menu.findItem(R.id.menu_addresses).setVisible(working >= 0);
         menu.findItem(R.id.menu_zoom).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_style_toolbar).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_link).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_image).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_attachment).setVisible(state == State.LOADED && !style);
         menu.findItem(R.id.menu_clear).setVisible(state == State.LOADED);
@@ -887,6 +741,7 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_send_after).setVisible(state == State.LOADED);
 
         menu.findItem(R.id.menu_zoom).setEnabled(!busy);
+        menu.findItem(R.id.menu_link).setEnabled(!busy);
         menu.findItem(R.id.menu_image).setEnabled(!busy);
         menu.findItem(R.id.menu_attachment).setEnabled(!busy);
         menu.findItem(R.id.menu_clear).setEnabled(!busy);
@@ -918,6 +773,9 @@ public class FragmentCompose extends FragmentBase {
             case R.id.menu_style_toolbar:
                 onMenuStyleToolbar();
                 return true;
+            case R.id.menu_link:
+                onActionLink();
+                return true;
             case R.id.menu_image:
                 onActionImage();
                 return true;
@@ -925,7 +783,7 @@ public class FragmentCompose extends FragmentBase {
                 onActionAttachment();
                 return true;
             case R.id.menu_clear:
-                onMenuStyle(item.getItemId());
+                onMenuClear();
                 return true;
             case R.id.menu_contact_group:
                 onMenuContactGroup();
@@ -980,86 +838,16 @@ public class FragmentCompose extends FragmentBase {
         edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
     }
 
-    private void onMenuStyle(int id) {
-        int s = etBody.getSelectionStart();
-        int e = etBody.getSelectionEnd();
+    private void onMenuClear() {
+        int end = etBody.getSelectionEnd();
+        if (end < 0)
+            end = 0;
 
-        if (s < 0)
-            s = 0;
-        if (e < 0)
-            e = 0;
+        SpannableString ss = new SpannableString(etBody.getText());
 
-        if (s > e) {
-            int tmp = s;
-            s = e;
-            e = tmp;
-        }
-
-        final int start = s;
-        final int end = e;
-
-        final SpannableString ss = new SpannableString(etBody.getText());
-
-        switch (id) {
-            case R.id.menu_clear:
-                for (Object span : ss.getSpans(0, ss.length(), Object.class))
-                    if (!(span instanceof ImageSpan))
-                        ss.removeSpan(span);
-                break;
-
-            case R.id.menu_link:
-                Uri uri = null;
-
-                ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-                if (cbm.hasPrimaryClip()) {
-                    String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
-                    uri = Uri.parse(link);
-                    if (uri.getScheme() == null)
-                        uri = null;
-                }
-
-                View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_insert_link, null);
-                final EditText etLink = view.findViewById(R.id.etLink);
-                final TextView tvInsecure = view.findViewById(R.id.tvInsecure);
-
-                etLink.setText(uri == null ? "https://" : uri.toString());
-                tvInsecure.setVisibility(View.GONE);
-
-                etLink.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        tvInsecure.setVisibility("http".equals(Uri.parse(s.toString()).getScheme()) ? View.VISIBLE : View.GONE);
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                    }
-                });
-
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setView(view)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ss.setSpan(new URLSpan(etLink.getText().toString()), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                etBody.setText(ss);
-                                etBody.setSelection(end);
-                            }
-                        })
-                        .show();
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        etLink.requestFocus();
-                    }
-                });
-
-                return;
-        }
+        for (Object span : ss.getSpans(0, ss.length(), Object.class))
+            if (!(span instanceof ImageSpan))
+                ss.removeSpan(span);
 
         etBody.setText(ss);
         etBody.setSelection(end);
@@ -1291,6 +1079,83 @@ public class FragmentCompose extends FragmentBase {
 
                     }
                 });
+    }
+
+    private void onActionLink() {
+        Uri uri = null;
+
+        ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (cbm.hasPrimaryClip()) {
+            String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
+            uri = Uri.parse(link);
+            if (uri.getScheme() == null)
+                uri = null;
+        }
+
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_insert_link, null);
+        final EditText etLink = view.findViewById(R.id.etLink);
+        final TextView tvInsecure = view.findViewById(R.id.tvInsecure);
+
+        etLink.setText(uri == null ? "https://" : uri.toString());
+        tvInsecure.setVisibility(View.GONE);
+
+        etLink.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                tvInsecure.setVisibility("http".equals(Uri.parse(s.toString()).getScheme()) ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int start = etBody.getSelectionStart();
+                        int end = etBody.getSelectionEnd();
+
+                        if (start < 0)
+                            start = 0;
+                        if (end < 0)
+                            end = 0;
+
+                        if (start > end) {
+                            int tmp = start;
+                            start = end;
+                            end = tmp;
+                        }
+
+                        String link = etLink.getText().toString();
+                        if (start == end) {
+                            etBody.setText(etBody.getText().insert(start, link));
+                            end = start + link.length();
+                        }
+
+                        SpannableString ss = new SpannableString(etBody.getText());
+
+                        for (URLSpan span : ss.getSpans(start, end, URLSpan.class))
+                            ss.removeSpan(span);
+
+                        ss.setSpan(new URLSpan(link), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        etBody.setText(ss);
+                        etBody.setSelection(end);
+                    }
+                })
+                .show();
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                etLink.requestFocus();
+            }
+        });
     }
 
     private void onActionImage() {
@@ -2003,7 +1868,7 @@ public class FragmentCompose extends FragmentBase {
 
     private SimpleTask<EntityMessage> draftLoader = new SimpleTask<EntityMessage>() {
         @Override
-        protected EntityMessage onExecute(Context context, Bundle args) throws IOException {
+        protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
             String action = args.getString("action");
             long id = args.getLong("id", -1);
             long reference = args.getLong("reference", -1);
@@ -2021,7 +1886,7 @@ public class FragmentCompose extends FragmentBase {
                 if (draft == null || draft.ui_hide) {
                     // New draft
                     if ("edit".equals(action))
-                        throw new IllegalStateException("Draft not found hide=" + (draft != null));
+                        throw new MessageRemovedException("Draft for edit was deleted hide=" + (draft != null));
 
                     EntityFolder drafts;
                     EntityMessage ref = db.message().getMessage(reference);
@@ -2411,7 +2276,9 @@ public class FragmentCompose extends FragmentBase {
             pbWait.setVisibility(View.GONE);
 
             // External app sending absolute file
-            if (ex instanceof SecurityException)
+            if (ex instanceof MessageRemovedException)
+                finish();
+            else if (ex instanceof SecurityException)
                 handleFileShare();
             else if (ex instanceof IllegalArgumentException)
                 Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
@@ -2483,8 +2350,8 @@ public class FragmentCompose extends FragmentBase {
                 EntityIdentity identity = db.identity().getIdentity(iid);
 
                 // Draft deleted by server
-                if (draft == null)
-                    throw new MessageRemovedException("Draft for action was deleted");
+                if (draft == null || draft.ui_hide)
+                    throw new MessageRemovedException("Draft for action was deleted hide=" + (draft != null));
 
                 Log.i("Load action id=" + draft.id + " action=" + action);
 
@@ -2888,7 +2755,7 @@ public class FragmentCompose extends FragmentBase {
                 Spanned spannedReference = null;
                 File refFile = draft.getRefFile(context);
                 if (refFile.exists()) {
-                    String quote = HtmlHelper.sanitize(context, Helper.readText(refFile), true);
+                    String quote = HtmlHelper.sanitize(context, Helper.readText(refFile));
                     Spanned spannedQuote = HtmlHelper.fromHtml(quote,
                             new Html.ImageGetter() {
                                 @Override
@@ -3076,6 +2943,204 @@ public class FragmentCompose extends FragmentBase {
             return view;
         }
     }
+
+    private AdapterView.OnItemSelectedListener identitySelected = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            EntityIdentity identity = (EntityIdentity) parent.getAdapter().getItem(position);
+
+            encrypt = (identity != null && identity.encrypt);
+            getActivity().invalidateOptionsMenu();
+
+            int at = (identity == null ? -1 : identity.email.indexOf('@'));
+            etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
+            tvDomain.setText(at < 0 ? null : identity.email.substring(at));
+            grpExtra.setVisibility(identity != null && identity.sender_extra ? View.VISIBLE : View.GONE);
+
+            Spanned signature = null;
+            if (pro) {
+                if (identity != null && !TextUtils.isEmpty(identity.signature))
+                    signature = HtmlHelper.fromHtml(identity.signature, new Html.ImageGetter() {
+                        @Override
+                        public Drawable getDrawable(String source) {
+                            int px = Helper.dp2pixels(getContext(), 24);
+                            Drawable d = getContext().getResources()
+                                    .getDrawable(R.drawable.baseline_image_24, getContext().getTheme());
+                            d.setBounds(0, 0, px, px);
+                            return d;
+                        }
+                    }, null);
+            }
+            tvSignature.setText(signature);
+            grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+            encrypt = false;
+            getActivity().invalidateOptionsMenu();
+
+            etExtra.setHint("");
+            tvDomain.setText(null);
+
+            tvSignature.setText(null);
+            grpSignature.setVisibility(View.GONE);
+        }
+    };
+
+    private ActionMode.Callback actionCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            menu.add(1, R.string.title_style_bold, 1, R.string.title_style_bold).setIcon(R.drawable.baseline_format_bold_24);
+            menu.add(1, R.string.title_style_italic, 2, R.string.title_style_italic).setIcon(R.drawable.baseline_format_italic_24);
+            menu.add(1, R.string.title_style_underline, 3, R.string.title_style_underline).setIcon(R.drawable.baseline_format_underlined_24);
+            menu.add(1, R.string.title_style_size, 4, R.string.title_style_size).setIcon(R.drawable.baseline_format_size_24);
+            menu.add(1, R.string.title_style_color, 5, R.string.title_style_color).setIcon(R.drawable.baseline_format_color_text_24);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            Log.i("Action=" + item.getGroupId() + ":" + item.getItemId());
+
+            if (item.getGroupId() != 1)
+                return false;
+
+            int start = etBody.getSelectionStart();
+            int end = etBody.getSelectionEnd();
+
+            if (start < 0)
+                start = 0;
+            if (end < 0)
+                end = 0;
+
+            if (start > end) {
+                int tmp = start;
+                start = end;
+                end = tmp;
+            }
+
+            final SpannableString ss = new SpannableString(etBody.getText());
+
+            switch (item.getItemId()) {
+                case R.string.title_style_bold:
+                case R.string.title_style_italic: {
+                    int style = (item.getItemId() == R.string.title_style_bold ? Typeface.BOLD : Typeface.ITALIC);
+                    boolean has = false;
+                    for (StyleSpan span : ss.getSpans(start, end, StyleSpan.class))
+                        if (span.getStyle() == style) {
+                            has = true;
+                            ss.removeSpan(span);
+                        }
+
+                    if (!has)
+                        ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    etBody.setText(ss);
+                    etBody.setSelection(end);
+                    return true;
+                }
+
+                case R.string.title_style_underline: {
+                    boolean has = false;
+                    for (UnderlineSpan span : ss.getSpans(start, end, UnderlineSpan.class)) {
+                        has = true;
+                        ss.removeSpan(span);
+                    }
+
+                    if (!has)
+                        ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    etBody.setText(ss);
+                    etBody.setSelection(end);
+                    return true;
+                }
+
+                case R.string.title_style_size: {
+                    RelativeSizeSpan[] spans = ss.getSpans(start, end, RelativeSizeSpan.class);
+                    float size = (spans.length > 0 ? spans[0].getSizeChange() : 1.0f);
+
+                    // Match small/big
+                    if (size == 0.8f)
+                        size = 1.0f;
+                    else if (size == 1.0)
+                        size = 1.25f;
+                    else
+                        size = 0.8f;
+
+                    for (RelativeSizeSpan span : spans)
+                        ss.removeSpan(span);
+
+                    if (size != 1.0f)
+                        ss.setSpan(new RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                    etBody.setText(ss);
+                    etBody.setSelection(end);
+                    return false;
+                }
+
+                case R.string.title_style_color: {
+                    final int s = start;
+                    final int e = end;
+
+                    ForegroundColorSpan[] spans = ss.getSpans(start, end, ForegroundColorSpan.class);
+                    int color = (spans.length > 0 ? spans[0].getForegroundColor() : Color.TRANSPARENT);
+
+                    int[] colors = getContext().getResources().getIntArray(R.array.colorPicker);
+                    ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
+                    colorPickerDialog.initialize(R.string.title_account_color, colors, color, 4, colors.length);
+                    colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
+                        @Override
+                        public void onColorSelected(int color) {
+                            for (ForegroundColorSpan span : ss.getSpans(s, e, ForegroundColorSpan.class))
+                                ss.removeSpan(span);
+                            ss.setSpan(new ForegroundColorSpan(color), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            etBody.setText(ss);
+                            etBody.setSelection(e);
+                        }
+                    });
+                    colorPickerDialog.show(getFragmentManager(), "colorpicker");
+
+                    return true;
+                }
+
+                default:
+                    return false;
+            }
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+        }
+    };
+
+    private ViewTreeObserver.OnGlobalLayoutListener layoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            int bottom = view.getBottom()
+                    - edit_bar.getHeight()
+                    - Helper.dp2pixels(view.getContext(), 56); // full bottom navigation
+            int remain = bottom - etBody.getTop();
+            int threshold = Helper.dp2pixels(view.getContext(), 100);
+            Log.i("Reduce remain=" + remain + " threshold=" + threshold);
+
+            boolean reduce = (remain < threshold);
+            boolean reduced = (bottom_navigation.getLabelVisibilityMode() == LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED);
+            if (reduce != reduced) {
+                bottom_navigation.setLabelVisibilityMode(reduce
+                        ? LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED
+                        : LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
+                ViewGroup.LayoutParams params = bottom_navigation.getLayoutParams();
+                params.height = Helper.dp2pixels(view.getContext(), reduce ? 36 : 56);
+                bottom_navigation.setLayoutParams(params);
+            }
+        }
+    };
 
     private ActivityBase.IBackPressedListener onBackPressedListener = new ActivityBase.IBackPressedListener() {
         @Override

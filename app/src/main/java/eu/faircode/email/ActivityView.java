@@ -146,7 +146,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
     static final String ACTION_SHOW_PRO = BuildConfig.APPLICATION_ID + ".SHOW_PRO";
 
-    static final long UPDATE_INTERVAL = 12 * 3600 * 1000L; // milliseconds
+    static final long UPDATE_INTERVAL = (BuildConfig.BETA_RELEASE ? 4 : 12) * 3600 * 1000L; // milliseconds
 
     private static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     private static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
@@ -308,12 +308,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 public void run() {
                     drawerLayout.closeDrawer(drawerContainer);
                     onMenuPrivacy();
-                }
-            }, new Runnable() {
-                @Override
-                public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
-                    onCleanup();
                 }
             }));
 
@@ -1023,21 +1017,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
 
         }.execute(this, new Bundle(), "debug:info");
-    }
-
-    private void onCleanup() {
-        new SimpleTask<Void>() {
-            @Override
-            protected Void onExecute(Context context, Bundle args) {
-                WorkerCleanup.cleanup(ActivityView.this, true);
-                return null;
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-            }
-        }.execute(this, new Bundle(), "cleanup:job");
     }
 
     private void onShowLog() {

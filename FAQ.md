@@ -42,12 +42,11 @@ Anything on this list is in random order and *might* be added in the near future
 
 ## Frequently requested features
 
-* [Rich text](https://en.wikipedia.org/wiki/Formatted_text) / [Markdown](https://en.wikipedia.org/wiki/Markdown) support: besides that very few people would use this on a small mobile device, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned. See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details.
-* *Widget to read messages*: widgets can have limited user interaction only, so a widget to read e-mail would not be very useful. Moreover, it would be not very useful to duplicate functions which are already available in the app.
+* *Widget to read messages*: widgets can have limited user interaction only, so a widget to read conversations would not be very convenient. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too. See below for the design goals.
 * *ActiveSync*: using the Exchange ActiveSync protocol requires [a license](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing), so this cannot be added.
 
-The goal of the design is to be minimalistic and non distracting (so, no fancy colors, animations, etc).
+The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
 All displayed things should be useful in one or another way and should be carefully positioned for easy usage.
 Fonts, sizes, colors, etc should be material design wherever possible.
 
@@ -142,7 +141,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(72) What are primary accounts/identities?](#user-content-faq72)
 * [(73) Is moving messages across accounts safe/efficient?](#user-content-faq73)
 * [(74) Why do I see duplicate messages?](#user-content-faq74)
-* [(75) Can you make an iOS, Windows, etc version?](#user-content-faq75)
+* [(75) Can you make an iOS, Windows, Linux, etc version?](#user-content-faq75)
 * [(76) What does 'Clear local messages' ?](#user-content-faq76)
 * [(77) Why are messages sometimes shown with a small delay?](#user-content-faq77)
 * [(78) How do I use schedules?](#user-content-faq78)
@@ -166,6 +165,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(96) Where can I find the IMAP and SMTP settings?](#user-content-faq96)
 * [(97) What is 'cleanup' ?](#user-content-faq97)
 * [(98) Why can I still pick contacts after revoking contacts permissions?](#user-content-faq98)
+* [(99) Can you add a rich text or markdown editor?](#user-content-faq99)
 
 [I have another question.](#support)
 
@@ -1309,7 +1309,7 @@ You can hide duplicate messages by disabling *Show duplicates* in the three dots
 <br />
 
 <a name="faq75"></a>
-**(75) Can you make an iOS, Windows, etc version?**
+**(75) Can you make an iOS, Windows, Linux, etc version?**
 
 A lot of knowledge and experience is required to successfully develop an app for a specific platform,
 which is why I develop apps for Android only.
@@ -1438,13 +1438,16 @@ So, double check the password or reduce the number of folders to synchronize.
 <a name="faq84"></a>
 **(84) What are local contacts for?**
 
-The main use of the local contacts storage is to offer auto completion when no contacts permission is or can be granted to FairEmail.
+The main use of the local contacts storage is to offer auto completion when no contacts permission has been granted to FairEmail.
 
 Another use is to generate [shortcuts](#user-content-faq31) on recent Android versions to quickly send a message to frequently contacted people.
-This is also why the number of times contacted and the last time contacted is recorded
-and why you can make a contact a favorite or exclude from favorites by long pressing it.
+This is also why the number of times contacted and the last time contacted is being recorded
+and why you can make a contact a favorite or exclude it from favorites by long pressing it.
 
 The list of contacts is sorted on number of times contacted and the last time contacted.
+
+Local contacts will be used for auto completion only when no contacts permission has been granted to FairEmail.
+You can revoke contacts permission in the Android app settings.
 
 <br />
 
@@ -1597,6 +1600,18 @@ Note that the cleanup job will only run when the synchronize service is active.
 
 After revoking contacts permissions Android does not allow FairEmail access to your contacts anymore.
 However, picking contacts is delegated to and done by Android and not by FairEmail, so this will still be possible without contacts permissions.
+
+<br />
+
+<a name="faq99"></a>
+**(99) Can you add a rich text or markdown editor?**
+
+FairEmail provides common text formatting (bold, italic, underline, text size and color) via the Android text selection menu.
+
+A [Rich text](https://en.wikipedia.org/wiki/Formatted_text) or [Markdown](https://en.wikipedia.org/wiki/Markdown) editor
+would not be used by many people on a small mobile device and, more important,
+Android doesn't support a rich text editor and most rich text editor open source projects are abandoned.
+See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details about this.
 
 <br />
 
