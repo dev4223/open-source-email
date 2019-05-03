@@ -895,6 +895,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // dev4223: show always
             //tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             //tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
+            tvSizeExTitle.setVisibility(View.VISIBLE);
             tvSizeEx.setVisibility(View.VISIBLE);
             tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
 
