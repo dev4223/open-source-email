@@ -1034,6 +1034,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
                     args.putBoolean("show_quotes", show_quotes);
+                    args.putInt("zoom", zoom);
                     bodyTask.execute(context, owner, args, "message:body");
                 }
         }
@@ -1104,6 +1105,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
                     args.putBoolean("show_quotes", show_quotes);
+                    args.putInt("zoom", zoom);
                     bodyTask.execute(context, owner, args, "message:body");
                 }
         }
@@ -1499,9 +1501,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 getMeasuredWidth(),
                                 Math.max(tvBody.getMinHeight(), getMeasuredHeight()));
                     }
+
+                    @Override
+                    public void scrollTo(int x, int y) {
+                        // Do nothing
+                    }
+
+                    @Override
+                    public void computeScroll() {
+                        // Do nothing
+                    }
                 };
 
                 setupWebView(webView);
+                webView.setScrollContainer(false);
 
                 webView.setId(vwBody.getId());
                 webView.setVisibility(vwBody.getVisibility());
@@ -1568,7 +1581,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         ibFull.setVisibility(View.VISIBLE);
                         ibImages.setVisibility(show_images ? View.GONE : View.VISIBLE);
 
-                        webView.loadDataWithBaseURL("email://", themeHtml(original.html), "text/html", "UTF-8", null);
+                        webView.loadDataWithBaseURL("about:blank", themeHtml(original.html), "text/html", "UTF-8", null);
 
                         pbBody.setVisibility(View.GONE);
                         tvBody.setVisibility(View.GONE);
@@ -1584,7 +1597,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFull.setVisibility(View.VISIBLE);
                 ibImages.setVisibility(show_images ? View.GONE : View.VISIBLE);
 
-                webView.loadDataWithBaseURL("email://", themeHtml(html), "text/html", "UTF-8", null);
+                webView.loadDataWithBaseURL("about:blank", themeHtml(html), "text/html", "UTF-8", null);
 
                 pbBody.setVisibility(View.GONE);
                 tvBody.setVisibility(View.GONE);
@@ -1610,6 +1623,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putSerializable("message", message);
             args.putBoolean("show_quotes", show_quotes);
+            args.putInt("zoom", zoom);
             bodyTask.execute(context, owner, args, "message:body");
         }
 
@@ -1640,7 +1654,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             settings.setDisplayZoomControls(false);
 
             String html = properties.getHtml(message.id);
-            webView.loadDataWithBaseURL("email://", html, "text/html", "UTF-8", null);
+            webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null);
 
             final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             dialog.setContentView(webView);
@@ -1744,6 +1758,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putSerializable("message", message);
             args.putBoolean("show_quotes", show_quotes);
+            args.putInt("zoom", zoom);
 
             boolean show_html = properties.getValue("html", message.id);
             if (show_html)
@@ -1789,6 +1804,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 DB db = DB.getInstance(context);
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                 boolean show_quotes = args.getBoolean("show_quotes");
+                int zoom = args.getInt("zoom");
 
                 String body;
                 try {
@@ -1821,6 +1837,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 if (!show_quotes) {
+                    final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
+
                     StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
                     for (StyledQuoteSpan squote : squotes)
                         builder.setSpan(new DynamicDrawableSpan() {
@@ -1828,7 +1846,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                             public Drawable getDrawable() {
                                                 Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
                                                 d.setTint(colorAccent);
-                                                d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+                                                d.setBounds(0, 0, px, px);
                                                 return d;
                                             }
                                         },
@@ -1837,7 +1855,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 builder.getSpanFlags(squote));
                 }
 
-                args.putBoolean("has_quotes", builder.getSpans(0, body.length(), StyledQuoteSpan.class).length > 0);
                 args.putBoolean("has_images", builder.getSpans(0, body.length(), ImageSpan.class).length > 0);
 
                 return builder;
@@ -1856,9 +1873,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!show_expanded)
                     return;
 
-                boolean has_quotes = args.getBoolean("has_quotes");
                 boolean has_images = args.getBoolean("has_images");
-                boolean show_quotes = properties.getValue("quotes", message.id);
                 boolean show_images = properties.getValue("images", message.id);
 
                 tbHtml.setVisibility(hasWebView ? View.VISIBLE : View.GONE);
@@ -1959,6 +1974,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Bundle args = new Bundle();
                         args.putSerializable("message", message);
                         args.putBoolean("show_quotes", true);
+                        args.putInt("zoom", zoom);
                         bodyTask.execute(context, owner, args, "message:body");
                     }
                 }
@@ -1968,6 +1984,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onOpenLink(final Uri uri) {
+            Log.i("Opening uri=" + uri);
+
             if (BuildConfig.APPLICATION_ID.equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                 lbm.sendBroadcast(
