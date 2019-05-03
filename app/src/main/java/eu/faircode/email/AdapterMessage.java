@@ -1029,10 +1029,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvBody.setText(body);
                     tvBody.setMovementMethod(null);
 
+                    boolean show_images = properties.getValue("images", message.id);
                     boolean show_quotes = properties.getValue("quotes", message.id);
 
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
+                    args.putBoolean("show_images", show_images);
                     args.putBoolean("show_quotes", show_quotes);
                     args.putInt("zoom", zoom);
                     bodyTask.execute(context, owner, args, "message:body");
@@ -1100,10 +1102,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (show_html)
                     onShowHtmlConfirmed(message);
                 else {
+                    boolean show_images = properties.getValue("images", message.id);
                     boolean show_quotes = properties.getValue("quotes", message.id);
 
                     Bundle args = new Bundle();
                     args.putSerializable("message", message);
+                    args.putBoolean("show_images", show_images);
                     args.putBoolean("show_quotes", show_quotes);
                     args.putInt("zoom", zoom);
                     bodyTask.execute(context, owner, args, "message:body");
@@ -1501,20 +1505,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 getMeasuredWidth(),
                                 Math.max(tvBody.getMinHeight(), getMeasuredHeight()));
                     }
-
-                    @Override
-                    public void scrollTo(int x, int y) {
-                        // Do nothing
-                    }
-
-                    @Override
-                    public void computeScroll() {
-                        // Do nothing
-                    }
                 };
 
                 setupWebView(webView);
-                webView.setScrollContainer(false);
 
                 webView.setId(vwBody.getId());
                 webView.setVisibility(vwBody.getVisibility());
@@ -1618,10 +1611,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBody.setText(body);
             tvBody.setMovementMethod(null);
 
+            boolean show_images = properties.getValue("images", message.id);
             boolean show_quotes = properties.getValue("quotes", message.id);
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
+            args.putBoolean("show_images", show_images);
             args.putBoolean("show_quotes", show_quotes);
             args.putInt("zoom", zoom);
             bodyTask.execute(context, owner, args, "message:body");
@@ -1753,10 +1748,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onShowImagesConfirmed(final TupleMessageEx message) {
             properties.setValue("images", message.id, true);
 
+            boolean show_images = properties.getValue("images", message.id);
             boolean show_quotes = properties.getValue("quotes", message.id);
 
             Bundle args = new Bundle();
             args.putSerializable("message", message);
+            args.putBoolean("show_images", show_images);
             args.putBoolean("show_quotes", show_quotes);
             args.putInt("zoom", zoom);
 
@@ -1802,7 +1799,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             @Override
             protected SpannableStringBuilder onExecute(final Context context, final Bundle args) {
                 DB db = DB.getInstance(context);
-                TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                final TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                final boolean show_images = args.getBoolean("show_images");
                 boolean show_quotes = args.getBoolean("show_quotes");
                 int zoom = args.getInt("zoom");
 
@@ -1823,9 +1821,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     body = document.html();
                 }
 
-                Spanned html = decodeHtml(context, message, body);
+                String html = HtmlHelper.sanitize(context, body);
+                if (debug)
+                    html += "<pre>" + Html.escapeHtml(html) + "</pre>";
 
-                SpannableStringBuilder builder = new SpannableStringBuilder(html);
+                Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
+                    @Override
+                    public Drawable getDrawable(String source) {
+                        return HtmlHelper.decodeImage(source, message.id, show_images, tvBody);
+                    }
+                }, null);
+
+                SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
                 QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
                 for (QuoteSpan quoteSpan : quoteSpans) {
                     builder.setSpan(
@@ -1893,32 +1900,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         };
 
-        private Spanned decodeHtml(final Context context, final EntityMessage message, String body) {
-            final boolean show_images = properties.getValue("images", message.id);
-
-            String html = HtmlHelper.sanitize(context, body);
-            if (debug)
-                html += "<pre>" + Html.escapeHtml(html) + "</pre>";
-
-            return HtmlHelper.fromHtml(html, new Html.ImageGetter() {
-                @Override
-                public Drawable getDrawable(String source) {
-                    Drawable image = HtmlHelper.decodeImage(source, message.id, show_images, tvBody);
-
-                    float width = context.getResources().getDisplayMetrics().widthPixels -
-                            Helper.dp2pixels(context, 12); // margins
-                    if (image.getIntrinsicWidth() > width) {
-                        float scale = width / image.getIntrinsicWidth();
-                        image.setBounds(0, 0,
-                                Math.round(image.getIntrinsicWidth() * scale),
-                                Math.round(image.getIntrinsicHeight() * scale));
-                    }
-
-                    return image;
-                }
-            }, null);
-        }
-
         private class TouchHandler extends ArrowKeyMovementMethod {
             private TupleMessageEx message;
 
@@ -1942,6 +1923,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     int line = layout.getLineForVertical(y);
                     int off = layout.getOffsetForHorizontal(line, x);
 
+                    boolean show_images = properties.getValue("images", message.id);
+                    if (!show_images) {
+                        ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
+                        if (image.length > 0 && image[0].getSource() != null) {
+                            Uri uri = Uri.parse(image[0].getSource());
+                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
+                                onOpenLink(uri);
+                                return true;
+                            }
+                        }
+                    }
+
                     URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
                     if (link.length > 0) {
                         String url = link[0].getURL();
@@ -1954,17 +1947,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
                     if (image.length > 0 && image[0].getSource() != null) {
-                        boolean show_images = properties.getValue("images", message.id);
-                        if (show_images) {
-                            onOpenImage(image[0].getDrawable());
-                            return true;
-                        } else {
-                            Uri uri = Uri.parse(image[0].getSource());
-                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
-                                onOpenLink(uri);
-                                return true;
-                            }
-                        }
+                        onOpenImage(image[0].getDrawable());
+                        return true;
                     }
 
                     DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
@@ -1973,6 +1957,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         Bundle args = new Bundle();
                         args.putSerializable("message", message);
+                        args.putBoolean("show_images", show_images);
                         args.putBoolean("show_quotes", true);
                         args.putInt("zoom", zoom);
                         bodyTask.execute(context, owner, args, "message:body");
