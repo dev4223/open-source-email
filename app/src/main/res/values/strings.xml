@@ -183,6 +183,7 @@
     <string name="title_advanced_actionbar">Conversation action bar</string>
 
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
+    <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
     <string name="title_advanced_swipenav">Swipe left/right to go to next/previous conversation</string>
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
     <string name="title_advanced_collapse">Collapse messages in conversations on \'back\'</string>
@@ -561,7 +562,7 @@
     <string name="title_legend_picture">Insert picture</string>
     <string name="title_legend_file">Attach file</string>
 
-    <string name="title_legend_download_off">Download message content on demand </string>
+    <string name="title_legend_download_off">Download message content on demand</string>
     <string name="title_legend_download_on">Download message content automatically</string>
     <string name="title_legend_synchronize_on">Synchronize on</string>
     <string name="title_legend_synchronize_off">Synchronize off</string>

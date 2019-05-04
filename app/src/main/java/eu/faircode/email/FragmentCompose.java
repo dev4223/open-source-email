@@ -160,7 +160,7 @@ public class FragmentCompose extends FragmentBase {
     private ImageView ivCcBcc;
     private RecyclerView rvAttachment;
     private TextView tvNoInternetAttachments;
-    private EditText etBody;
+    private EditTextCompose etBody;
     private TextView tvNoInternet;
     private TextView tvSignature;
     private TextView tvReference;
@@ -305,6 +305,13 @@ public class FragmentCompose extends FragmentBase {
         setZoom();
 
         etBody.setCustomSelectionActionModeCallback(actionCallback);
+
+        etBody.setInputContentListener(new EditTextCompose.IInputContentListener() {
+            @Override
+            public void onInputContent(Uri uri) {
+                handleAddAttachment(uri, true);
+            }
+        });
 
         ibReferenceEdit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -2760,7 +2767,17 @@ public class FragmentCompose extends FragmentBase {
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
-                                    return HtmlHelper.decodeImage(source, id, show_images, tvReference);
+                                    Drawable image = HtmlHelper.decodeImage(source, id, show_images, tvReference);
+
+                                    float width = tvReference.getWidth();
+                                    if (image.getIntrinsicWidth() > width) {
+                                        float scale = width / image.getIntrinsicWidth();
+                                        image.setBounds(0, 0,
+                                                Math.round(image.getIntrinsicWidth() * scale),
+                                                Math.round(image.getIntrinsicHeight() * scale));
+                                    }
+
+                                    return image;
                                 }
                             },
                             null);
@@ -2871,8 +2888,7 @@ public class FragmentCompose extends FragmentBase {
                                     lld.setLevel(2); // image
 
                                     float scale = 1.0f;
-                                    float width = getContext().getResources().getDisplayMetrics().widthPixels -
-                                            Helper.dp2pixels(getContext(), 12); // margins;
+                                    float width = etBody.getWidth();
                                     if (image.getIntrinsicWidth() > width)
                                         scale = width / image.getIntrinsicWidth();
 

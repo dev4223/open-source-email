@@ -81,7 +81,7 @@ public class HtmlHelper {
     private static final List<String> tails = Collections.unmodifiableList(Arrays.asList(
             "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li"));
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     static String removeTracking(Context context, String html) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -268,7 +268,7 @@ public class HtmlHelper {
         return (body == null ? "" : body.html());
     }
 
-    static Drawable decodeImage(final String source, long id, boolean show, final TextView view) {
+    static Drawable decodeImage(final String source, final long id, boolean show, final TextView view) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(view.getContext());
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
@@ -313,7 +313,7 @@ public class HtmlHelper {
                 return d;
             } else {
                 Bitmap bm = Helper.decodeImage(attachment.getFile(view.getContext()),
-                        res.getDisplayMetrics().widthPixels);
+                        res.getDisplayMetrics().widthPixels * 2);
                 if (bm == null) {
                     Drawable d = res.getDrawable(R.drawable.baseline_broken_image_24, theme);
                     d.setBounds(0, 0, px, px);
@@ -357,30 +357,26 @@ public class HtmlHelper {
             dir.mkdir();
         final File file = new File(dir, id + "_" + Math.abs(source.hashCode()) + ".png");
 
-        if (file.exists()) {
-            Log.i("Using cached " + file);
-            Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
-            if (bm == null) {
-                Drawable d = res.getDrawable(R.drawable.baseline_broken_image_24, theme);
-                d.setBounds(0, 0, px, px);
-                return d;
-            } else {
-                Drawable d = new BitmapDrawable(res, bm);
-                d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
-                return d;
-            }
-        }
+        Drawable cached = getCachedImage(view.getContext(), file);
+        if (cached != null)
+            return cached;
 
         final LevelListDrawable lld = new LevelListDrawable();
         Drawable wait = res.getDrawable(R.drawable.baseline_hourglass_empty_24, theme);
         lld.addLevel(0, 0, wait);
         lld.setBounds(0, 0, px, px);
 
-        final Handler handler = new Handler(view.getContext().getMainLooper());
+        final Context context = view.getContext().getApplicationContext();
         executor.submit(new Runnable() {
             @Override
             public void run() {
                 try {
+                    Drawable cached = getCachedImage(context, file);
+                    if (cached != null) {
+                        post(cached, source);
+                        return;
+                    }
+
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     Log.i("Probe " + source);
                     try (InputStream probe = new URL(source).openStream()) {
@@ -432,12 +428,24 @@ public class HtmlHelper {
 
             private void post(final Drawable d, String source) {
                 Log.i("Posting image=" + source);
-                handler.post(new Runnable() {
+                new Handler(context.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
+                        int w = d.getIntrinsicWidth();
+                        int h = d.getIntrinsicHeight();
+
+                        float width = view.getWidth();
+                        if (w > width) {
+                            float scale = width / w;
+                            w = Math.round(w * scale);
+                            h = Math.round(h * scale);
+                            d.setBounds(0, 0, w, h);
+                        }
+
                         lld.addLevel(1, 1, d);
-                        lld.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+                        lld.setBounds(0, 0, w, h);
                         lld.setLevel(1);
+
                         view.setText(view.getText());
                     }
                 });
@@ -445,6 +453,20 @@ public class HtmlHelper {
         });
 
         return lld;
+    }
+
+    static private Drawable getCachedImage(Context context, File file) {
+        if (file.exists()) {
+            Log.i("Using cached " + file);
+            Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+            if (bm != null) {
+                Drawable d = new BitmapDrawable(context.getResources(), bm);
+                d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
+                return d;
+            }
+        }
+
+        return null;
     }
 
     static String getPreview(String body) {
