@@ -89,6 +89,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 public class ServiceSynchronize extends LifecycleService {
     private Helper.NetworkState networkState = new Helper.NetworkState();
     private Core.State state;
+    private boolean oneshot = false;
     private boolean started = false;
     private int queued = 0;
     private long lastLost = 0;
@@ -285,11 +286,13 @@ public class ServiceSynchronize extends LifecycleService {
     }
 
     private void onOneshot(boolean start) {
-        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Log.i("Oneshot start=" + start);
 
         Intent alarm = new Intent(this, ServiceSynchronize.class);
         alarm.setAction("oneshot_end");
         PendingIntent piOneshot;
+
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             piOneshot = PendingIntent.getService(this, PI_ONESHOT, alarm, PendingIntent.FLAG_UPDATE_CURRENT);
         else
@@ -297,17 +300,16 @@ public class ServiceSynchronize extends LifecycleService {
 
         am.cancel(piOneshot);
 
+        oneshot = start;
+
         if (start) {
             // Network events will manage the service
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
                 am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + ONESHOT_DURATION, piOneshot);
             else
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + ONESHOT_DURATION, piOneshot);
-        } else {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            prefs.edit().putBoolean("oneshot", false).apply();
-            queue_reload(true, true, "oneshot");
-        }
+        } else
+            onReload(true, "oneshot");
     }
 
     private void queue_reload(final boolean start, final boolean clear, final String reason) {
@@ -315,7 +317,7 @@ public class ServiceSynchronize extends LifecycleService {
         final boolean doStart = (start && isEnabled() && networkState.isSuitable());
 
         EntityLog.log(this, "Queue reload" +
-                " doStop=" + doStop + " doStart=" + doStart + " queued=" + queued + " " + reason);
+                " doStop=" + doStop + " doStart=" + doStart + " queued=" + queued + " reason=" + reason);
 
         started = doStart;
 
@@ -386,7 +388,6 @@ public class ServiceSynchronize extends LifecycleService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean enabled = prefs.getBoolean("enabled", true);
         int pollInterval = prefs.getInt("poll_interval", 0);
-        boolean oneshot = prefs.getBoolean("oneshot", false);
         return ((enabled && pollInterval == 0) || oneshot);
     }
 
@@ -852,9 +853,7 @@ public class ServiceSynchronize extends LifecycleService {
                                         }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
-                                        Core.reportError(ServiceSynchronize.this, account, folder, ex);
-                                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
-                                        state.error(ex);
+                                        state.error(new FolderClosedException(ifolder, "IDLE"));
                                     } finally {
                                         Log.i(folder.name + " end idle");
                                     }
@@ -1149,8 +1148,44 @@ public class ServiceSynchronize extends LifecycleService {
                     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                     EntityLog.log(ServiceSynchronize.this, "Available " + network + " capabilities " + cm.getNetworkCapabilities(network));
 
-                    if (!started && networkState.isSuitable())
-                        queue_reload(true, false, "connect " + network);
+                    if (networkState.isSuitable())
+                        if (started) {
+                            EntityLog.log(ServiceSynchronize.this, "Checking account states");
+
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        DB db = DB.getInstance(ServiceSynchronize.this);
+
+                                        boolean disconnected = false;
+                                        List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
+                                        for (EntityAccount account : accounts)
+                                            if (!"connected".equals(account.state)) {
+                                                disconnected = true;
+                                                break;
+                                            }
+
+                                        if (disconnected)
+                                            new Handler(getMainLooper()).post(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    try {
+                                                        synchronized (ServiceSynchronize.this) {
+                                                            queue_reload(true, false, "Some accounts disconnected");
+                                                        }
+                                                    } catch (Throwable ex) {
+                                                        Log.e(ex);
+                                                    }
+                                                }
+                                            });
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                    }
+                                }
+                            }).start();
+                        } else
+                            queue_reload(true, false, "connect " + network);
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
@@ -1203,10 +1238,6 @@ public class ServiceSynchronize extends LifecycleService {
                     try {
                         DB db = DB.getInstance(context);
 
-                        // Reset state
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        prefs.edit().remove("oneshot").apply();
-
                         // Restore snooze timers
                         for (EntityMessage message : db.message().getSnoozed())
                             EntityMessage.snooze(context, message.id, message.ui_snoozed);
@@ -1215,6 +1246,7 @@ public class ServiceSynchronize extends LifecycleService {
                         schedule(context);
 
                         // Conditionally init service
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         boolean enabled = prefs.getBoolean("enabled", true);
                         int pollInterval = prefs.getInt("poll_interval", 0);
                         int accounts = db.account().getSynchronizingAccounts().size();
@@ -1329,17 +1361,8 @@ public class ServiceSynchronize extends LifecycleService {
         boolean enabled = prefs.getBoolean("enabled", true);
         int pollInterval = prefs.getInt("poll_interval", 0);
         if (!enabled || pollInterval > 0)
-            onshot(context);
-    }
-
-    static void onshot(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean oneshot = prefs.getBoolean("oneshot", false);
-        if (!oneshot) {
-            prefs.edit().putBoolean("oneshot", true).apply();
             ContextCompat.startForegroundService(context,
                     new Intent(context, ServiceSynchronize.class)
                             .setAction("oneshot_start"));
-        }
     }
 }

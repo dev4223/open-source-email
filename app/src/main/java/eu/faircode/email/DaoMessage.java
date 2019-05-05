@@ -151,6 +151,18 @@ public interface DaoMessage {
             ", CASE WHEN folder.type = '" + EntityFolder.ARCHIVE + "' THEN 1 ELSE 0 END")
     DataSource.Factory<Integer, TupleMessageEx> pagedThread(long account, String thread, Long id, boolean debug);
 
+    @Query("SELECT account.name AS accountName" +
+            ", COUNT(message.id) AS count" +
+            ", SUM(message.ui_seen) AS seen" +
+            " FROM message" +
+            " JOIN account ON account.id = message.account" +
+            " WHERE message.account = :account" +
+            " AND message.thread = :thread" +
+            " AND (:id IS NULL OR message.id = :id)" +
+            " AND NOT message.ui_hide" +
+            " GROUP BY account.id")
+    LiveData<TupleThreadStats> liveThreadStats(long account, String thread, Long id);
+
     @Query("SELECT message.id FROM folder" +
             " JOIN message ON message.folder = folder.id" +
             " WHERE CASE WHEN :folder IS NULL THEN folder.unified ELSE folder.id = :folder END" +
@@ -358,8 +370,8 @@ public interface DaoMessage {
     @Query("UPDATE message SET revisions = :revisions WHERE id = :id")
     int setMessageRevisions(long id, Integer revisions);
 
-    @Query("UPDATE message SET content = :content, preview = :preview, warning = :warning WHERE id = :id")
-    int setMessageContent(long id, boolean content, String preview, String warning);
+    @Query("UPDATE message SET content = :content, plain_only = :plain_only, preview = :preview, warning = :warning WHERE id = :id")
+    int setMessageContent(long id, boolean content, Boolean plain_only, String preview, String warning);
 
     @Query("UPDATE message SET size = :size WHERE id = :id")
     int setMessageSize(long id, Long size);
@@ -425,13 +437,15 @@ public interface DaoMessage {
             " WHERE folder = :folder" +
             " AND received < :received" +
             " AND NOT uid IS NULL" +
+            " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged")
-    List<Long> getMessagesBefore(long folder, long received);
+    List<Long> getMessagesBefore(long folder, long received, boolean unseen);
 
     @Query("DELETE FROM message" +
             " WHERE folder = :folder" +
             " AND received < :received" +
             " AND NOT uid IS NULL" +
+            " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged")
-    int deleteMessagesBefore(long folder, long received);
+    int deleteMessagesBefore(long folder, long received, boolean unseen);
 }

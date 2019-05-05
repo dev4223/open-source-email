@@ -1,5 +1,24 @@
 package eu.faircode.email;
 
+/*
+    This file is part of FairEmail.
+
+    FairEmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FairEmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+*/
+
 import android.app.IntentService;
 import android.content.Intent;
 
@@ -7,11 +26,12 @@ import androidx.annotation.Nullable;
 
 public class ServiceUI extends IntentService {
     static final int PI_CLEAR = 1;
-    static final int PI_SEEN = 2;
+    static final int PI_TRASH = 2;
     static final int PI_ARCHIVE = 3;
-    static final int PI_TRASH = 4;
-    static final int PI_IGNORED = 5;
-    static final int PI_SNOOZED = 6;
+    static final int PI_REPLY = 4;
+    static final int PI_SEEN = 5;
+    static final int PI_IGNORED = 6;
+    static final int PI_SNOOZED = 7;
 
     public ServiceUI() {
         this(ServiceUI.class.getName());
@@ -54,14 +74,17 @@ public class ServiceUI extends IntentService {
             case "clear":
                 onClear();
                 break;
-            case "seen":
-                onSeen(id);
+            case "trash":
+                onTrash(id);
                 break;
             case "archive":
                 onArchive(id);
                 break;
-            case "trash":
-                onTrash(id);
+            case "reply":
+                onReply(id);
+                break;
+            case "seen":
+                onSeen(id);
                 break;
             case "ignore":
                 onIgnore(id);
@@ -82,14 +105,17 @@ public class ServiceUI extends IntentService {
         DB.getInstance(this).message().ignoreAll();
     }
 
-    private void onSeen(long id) {
+    private void onTrash(long id) {
         DB db = DB.getInstance(this);
         try {
             db.beginTransaction();
 
             EntityMessage message = db.message().getMessage(id);
-            if (message != null)
-                EntityOperation.queue(this, db, message, EntityOperation.SEEN, true);
+            if (message != null) {
+                EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
+                if (trash != null)
+                    EntityOperation.queue(this, db, message, EntityOperation.MOVE, trash.id);
+            }
 
             db.setTransactionSuccessful();
         } finally {
@@ -117,17 +143,25 @@ public class ServiceUI extends IntentService {
         }
     }
 
-    private void onTrash(long id) {
+    private void onReply(long id) {
+        onSeen(id);
+
+        // No check for attachments
+        Intent reply = new Intent(this, ActivityCompose.class)
+                .putExtra("action", "reply")
+                .putExtra("reference", id);
+        reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(reply);
+    }
+
+    private void onSeen(long id) {
         DB db = DB.getInstance(this);
         try {
             db.beginTransaction();
 
             EntityMessage message = db.message().getMessage(id);
-            if (message != null) {
-                EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
-                if (trash != null)
-                    EntityOperation.queue(this, db, message, EntityOperation.MOVE, trash.id);
-            }
+            if (message != null)
+                EntityOperation.queue(this, db, message, EntityOperation.SEEN, true);
 
             db.setTransactionSuccessful();
         } finally {

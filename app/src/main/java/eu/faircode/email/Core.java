@@ -1,5 +1,24 @@
 package eu.faircode.email;
 
+/*
+    This file is part of FairEmail.
+
+    FairEmail is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    FairEmail is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+*/
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -574,8 +593,12 @@ class Core {
         if (TextUtils.isEmpty(message.msgid))
             if (message.uid == null)
                 throw new IllegalArgumentException("Delete without ID");
-            else
-                imessages = new Message[]{ifolder.getMessageByUID(message.uid)};
+            else {
+                Message imessage = ifolder.getMessageByUID(message.uid);
+                if (imessage == null)
+                    throw new MessageRemovedException();
+                imessages = new Message[]{imessage};
+            }
         else
             imessages = ifolder.search(new MessageIDTerm(message.msgid));
 
@@ -655,8 +678,11 @@ class Core {
         MessageHelper.MessageParts parts = helper.getMessageParts();
         String body = parts.getHtml(context);
         Helper.writeText(message.getFile(context), body);
-        db.message().setMessageContent(message.id, true,
-                HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
+        db.message().setMessageContent(message.id,
+                true,
+                parts.isPlainOnly(),
+                HtmlHelper.getPreview(body),
+                parts.getWarnings(message.warning));
 
         updateMessageSize(context, message.id);
     }
@@ -765,18 +791,10 @@ class Core {
                         if (folder.subscribed == null || !folder.subscribed.equals(subscribed))
                             db.folder().setFolderSubscribed(folder.id, subscribed.get(ifolder));
 
-                        if (folder.display == null) {
-                            if (display != null) {
-                                db.folder().setFolderDisplay(folder.id, display);
-                                EntityLog.log(context, account.name + ":" + folder.name +
-                                        " removed prefix display=" + display + " separator=" + separator);
-                            }
-                        } else {
-                            if (account.prefix == null && folder.name.endsWith(separator + folder.display)) {
-                                db.folder().setFolderDisplay(folder.id, null);
-                                EntityLog.log(context, account.name + ":" + folder.name +
-                                        " restored prefix display=" + folder.display + " separator=" + separator);
-                            }
+                        if (folder.display == null && display != null) {
+                            db.folder().setFolderDisplay(folder.id, display);
+                            EntityLog.log(context, account.name + ":" + folder.name +
+                                    " removed prefix display=" + display + " separator=" + separator);
                         }
 
                         // Compatibility
@@ -879,7 +897,7 @@ class Core {
 
             // Delete old local messages
             if (auto_delete && EntityFolder.TRASH.equals(folder.type)) {
-                List<Long> tbds = db.message().getMessagesBefore(folder.id, keep_time);
+                List<Long> tbds = db.message().getMessagesBefore(folder.id, keep_time, false);
                 Log.i(folder.name + " local tbd=" + tbds.size());
                 for (Long tbd : tbds) {
                     EntityMessage message = db.message().getMessage(tbd);
@@ -887,7 +905,7 @@ class Core {
                         EntityOperation.queue(context, db, message, EntityOperation.DELETE);
                 }
             } else {
-                int old = db.message().deleteMessagesBefore(folder.id, keep_time);
+                int old = db.message().deleteMessagesBefore(folder.id, keep_time, false);
                 Log.i(folder.name + " local old=" + old);
             }
 
@@ -897,6 +915,7 @@ class Core {
 
             // Reduce list of local uids
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
+            searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
             if (ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED))
                 searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
 
@@ -905,11 +924,9 @@ class Core {
             try {
                 imessages = ifolder.search(searchTerm);
             } catch (MessagingException ex) {
-                if (ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED)) {
-                    Log.w(ex.getMessage());
-                    imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
-                } else
-                    throw ex;
+                Log.w(ex.getMessage());
+                // Fallback to date only search
+                imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
             }
             Log.i(folder.name + " remote count=" + imessages.length +
                     " search=" + (SystemClock.elapsedRealtime() - search) + " ms");
@@ -1522,8 +1539,11 @@ class Core {
                 if (state.getNetworkState().isUnmetered() || (message.size != null && message.size < maxSize)) {
                     String body = parts.getHtml(context);
                     Helper.writeText(message.getFile(context), body);
-                    db.message().setMessageContent(message.id, true,
-                            HtmlHelper.getPreview(body), parts.getWarnings(message.warning));
+                    db.message().setMessageContent(message.id,
+                            true,
+                            parts.isPlainOnly(),
+                            HtmlHelper.getPreview(body),
+                            parts.getWarnings(message.warning));
                     Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
                 }
             }
@@ -1682,6 +1702,11 @@ class Core {
 
         boolean pro = Helper.isPro(context);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean notify_trash = prefs.getBoolean("notify_trash", true);
+        boolean notify_archive = prefs.getBoolean("notify_archive", true);
+        boolean notify_reply = prefs.getBoolean("notify_reply", false);
+        boolean notify_seen = prefs.getBoolean("notify_seen", true);
+
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Get contact info
@@ -1690,12 +1715,10 @@ class Core {
             messageContact.put(message, ContactInfo.get(context, message.from, false));
 
         // Build pending intents
-        Intent summary = new Intent(context, ActivityView.class);
-        summary.setAction("unified");
+        Intent summary = new Intent(context, ActivityView.class).setAction("unified");
         PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Intent clear = new Intent(context, ServiceUI.class);
-        clear.setAction("clear");
+        Intent clear = new Intent(context, ServiceUI.class).setAction("clear");
         PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Build title
@@ -1773,37 +1796,8 @@ class Core {
             PendingIntent piContent = PendingIntent.getActivity(
                     context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            Intent ignored = new Intent(context, ServiceUI.class);
-            ignored.setAction("ignore:" + message.id);
-            PendingIntent piDelete = PendingIntent.getService(context, ServiceUI.PI_IGNORED, ignored, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            Intent seen = new Intent(context, ServiceUI.class);
-            seen.setAction("seen:" + message.id);
-            PendingIntent piSeen = PendingIntent.getService(context, ServiceUI.PI_SEEN, seen, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            Intent archive = new Intent(context, ServiceUI.class);
-            archive.setAction("archive:" + message.id);
-            PendingIntent piArchive = PendingIntent.getService(context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            Intent trash = new Intent(context, ServiceUI.class);
-            trash.setAction("trash:" + message.id);
-            PendingIntent piTrash = PendingIntent.getService(context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            // Build actions
-            NotificationCompat.Action.Builder actionSeen = new NotificationCompat.Action.Builder(
-                    R.drawable.baseline_visibility_24,
-                    context.getString(R.string.title_action_seen),
-                    piSeen);
-
-            NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
-                    R.drawable.baseline_archive_24,
-                    context.getString(R.string.title_action_archive),
-                    piArchive);
-
-            NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
-                    R.drawable.baseline_delete_24,
-                    context.getString(R.string.title_action_trash),
-                    piTrash);
+            Intent ignore = new Intent(context, ServiceUI.class).setAction("ignore:" + message.id);
+            PendingIntent piIgnore = PendingIntent.getService(context, ServiceUI.PI_IGNORED, ignore, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Get channel name
             String channelName = null;
@@ -1832,16 +1826,53 @@ class Core {
                     .setSubText(message.accountName + " · " + folderName)
                     .setContentIntent(piContent)
                     .setWhen(message.received)
-                    .setDeleteIntent(piDelete)
+                    .setDeleteIntent(piIgnore)
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                     .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                     .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                     .setGroup(group)
                     .setGroupSummary(false)
-                    .setOnlyAlertOnce(true)
-                    .addAction(actionSeen.build())
-                    .addAction(actionArchive.build())
-                    .addAction(actionTrash.build());
+                    .setOnlyAlertOnce(true);
+
+            if (notify_trash) {
+                Intent trash = new Intent(context, ServiceUI.class).setAction("trash:" + message.id);
+                PendingIntent piTrash = PendingIntent.getService(context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
+                        R.drawable.baseline_delete_24,
+                        context.getString(R.string.title_advanced_notify_action_trash),
+                        piTrash);
+                mbuilder.addAction(actionTrash.build());
+            }
+
+            if (notify_archive) {
+                Intent archive = new Intent(context, ServiceUI.class).setAction("archive:" + message.id);
+                PendingIntent piArchive = PendingIntent.getService(context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
+                        R.drawable.baseline_archive_24,
+                        context.getString(R.string.title_advanced_notify_action_archive),
+                        piArchive);
+                mbuilder.addAction(actionArchive.build());
+            }
+
+            if (notify_reply) {
+                Intent reply = new Intent(context, ServiceUI.class).setAction("reply:" + message.id);
+                PendingIntent piReply = PendingIntent.getService(context, ServiceUI.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
+                        R.drawable.baseline_reply_24,
+                        context.getString(R.string.title_advanced_notify_action_reply),
+                        piReply);
+                mbuilder.addAction(actionReply.build());
+            }
+
+            if (notify_seen) {
+                Intent seen = new Intent(context, ServiceUI.class).setAction("seen:" + message.id);
+                PendingIntent piSeen = PendingIntent.getService(context, ServiceUI.PI_SEEN, seen, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionSeen = new NotificationCompat.Action.Builder(
+                        R.drawable.baseline_visibility_24,
+                        context.getString(R.string.title_advanced_notify_action_seen),
+                        piSeen);
+                mbuilder.addAction(actionSeen.build());
+            }
 
             if (pro) {
                 if (!TextUtils.isEmpty(message.subject))

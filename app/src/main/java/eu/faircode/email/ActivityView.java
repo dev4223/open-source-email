@@ -384,10 +384,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         });
 
-        db.operation().liveCount().observe(this, new Observer<Integer>() {
+        db.operation().liveStats().observe(this, new Observer<TupleOperationStats>() {
             @Override
-            public void onChanged(Integer count) {
-                navOperations.setCount(count);
+            public void onChanged(TupleOperationStats stats) {
+                navOperations.setWarning(stats != null && stats.errors != null && stats.errors > 0);
+                navOperations.setCount(stats == null ? 0 : stats.pending);
                 madapter.notifyDataSetChanged();
             }
         });

@@ -156,6 +156,7 @@
     <string name="title_advanced_section_connection">Connection</string>
     <string name="title_advanced_section_display">Display</string>
     <string name="title_advanced_section_behavior">Behavior</string>
+    <string name="title_advanced_section_notifications">Notifications</string>
     <string name="title_advanced_section_misc">Miscellaneous</string>
 
     <string name="title_advanced_enabled">Synchronize</string>
@@ -197,12 +198,19 @@
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_autosend">Confirm sending messages</string>
 
-    <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
-    <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
-    <string name="title_advanced_search_local">External search on device</string>
+    <string name="title_advanced_notify_actions">Notification actions</string>
+    <string name="title_advanced_notify_action_trash">Trash</string>
+    <string name="title_advanced_notify_action_archive">Archive</string>
+    <string name="title_advanced_notify_action_reply">Reply</string>
+    <string name="title_advanced_notify_action_seen">Read</string>
+    <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
     <string name="title_advanced_light">Use notification light</string>
     <string name="title_advanced_sound">Select notification sound</string>
+
+    <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
+    <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
+    <string name="title_advanced_search_local">External search on device</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_paranoid">Extra privacy features</string>
@@ -237,7 +245,6 @@
     <string name="title_identity_name">Your name</string>
     <string name="title_identity_email">Your email address</string>
     <string name="title_identity_reply_to">Reply to address</string>
-    <string name="title_identity_plain_text">Send plain text only</string>
     <string name="title_identity_encrypt">Encrypt by default</string>
     <string name="title_identity_use_ip_hint">In case of \'invalid greeting\', \'requires valid address\' or a similar error, try to change this setting</string>
     <string name="title_identity_read_receipt">Request read receipt</string>
@@ -295,7 +302,6 @@
     <string name="title_no_idle">This provider does not support push messages. This will delay reception of new messages and increase battery usage.</string>
     <string name="title_no_utf8">This provider does not support UTF-8</string>
     <string name="title_no_sync">Synchronization errors since %1$s</string>
-    <string name="title_sync_errors">Synchronizing some folders failed</string>
     <string name="title_identity_required">An identity is required to send messages</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>
@@ -448,6 +454,7 @@
     <string name="title_show_addresses">Show CC/BCC</string>
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
+    <string name="title_send_plain_text">Send plain text only</string>
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
@@ -523,10 +530,6 @@
     <string name="title_rule_automation">Automation</string>
     <string name="title_rule_automation_hint">This will send the intent \'%1$s\' with the extras \'%2$s\'</string>
 
-    <string name="title_action_seen">Mark read</string>
-    <string name="title_action_archive">Archive</string>
-    <string name="title_action_trash">Trash</string>
-
     <string name="title_legend_inbox">Inbox</string>
     <string name="title_legend_archive">Archive</string>
     <string name="title_legend_trash">Trash</string>
@@ -543,6 +546,7 @@
     <string name="title_legend_snoozed">Is snoozed</string>
     <string name="title_legend_browsed">Is browsed or searched</string>
     <string name="title_legend_answered">Has been answered</string>
+    <string name="title_legend_plain_only">Is plain text only</string>
     <string name="title_legend_receipt">Receipt was requested</string>
     <string name="title_legend_attachment">Has attachment</string>
     <string name="title_legend_flagged">Is starred</string>
