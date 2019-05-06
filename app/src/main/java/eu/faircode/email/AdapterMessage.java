@@ -1057,7 +1057,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
                 boolean inline = (TextUtils.isEmpty(attachment.name) ||
-                        (attachment.isInline() && attachment.type.startsWith("image/")));
+                        (attachment.isInline() && attachment.isImage()));
                 if (inline)
                     has_inline = true;
                 if (attachment.progress == null && !attachment.available)
@@ -1094,7 +1094,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             List<EntityAttachment> images = new ArrayList<>();
             for (EntityAttachment attachment : attachments)
-                if (!attachment.isInline() && attachment.type.startsWith("image/"))
+                if (!attachment.isInline() && attachment.isImage())
                     images.add(attachment);
             adapterImage.set(images);
 
@@ -1793,7 +1793,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
             @Override
             protected SpannableStringBuilder onExecute(final Context context, final Bundle args) throws IOException {
-                DB db = DB.getInstance(context);
                 final TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                 final boolean show_images = args.getBoolean("show_images");
                 boolean show_quotes = args.getBoolean("show_quotes");
@@ -2131,7 +2130,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected Boolean onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
-                    List<EntityAttachment> attachments = DB.getInstance(context).attachment().getAttachments(id);
+
+                    DB db = DB.getInstance(context);
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
                     for (EntityAttachment attachment : attachments)
                         if (!attachment.available)
                             return false;
@@ -2222,7 +2223,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (folders == null)
                         return null;
 
-                    EntityFolder.sort(context, folders, true);
+                    if (folders.size() > 0)
+                        Collections.sort(folders, folders.get(0).getComparator(context));
 
                     return folders;
                 }
@@ -2472,7 +2474,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                             boolean[] dirty = args.getBooleanArray("dirty");
 
                                             DB db = DB.getInstance(context);
-
                                             try {
                                                 db.beginTransaction();
 
@@ -2918,7 +2919,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 !EntityFolder.JUNK.equals(folder.type))
                             targets.add(folder);
 
-                    EntityFolder.sort(context, targets, true);
+                    if (targets.size() > 0)
+                        Collections.sort(targets, targets.get(0).getComparator(context));
 
                     return targets;
                 }
@@ -3021,9 +3023,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected Boolean onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
-                    List<EntityAttachment> attachments = DB.getInstance(context).attachment().getAttachments(id);
+
+                    DB db = DB.getInstance(context);
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
                     for (EntityAttachment attachment : attachments)
-                        if (!attachment.available && attachment.isInline())
+                        if (!attachment.available && attachment.isInline() && attachment.isImage())
                             return false;
                     return true;
                 }

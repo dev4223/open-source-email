@@ -140,12 +140,10 @@
     <string name="title_setup_defaults">Przywróć domyślne</string>
     <string name="title_setup_options">Opcje</string>
     <string name="title_advanced">Opcje zaawansowane</string>
-    <string name="title_advanced_section_general">Ogólne</string>
     <string name="title_advanced_section_connection">Połączenie</string>
     <string name="title_advanced_section_display">Wyświetlanie</string>
     <string name="title_advanced_section_behavior">Zachowanie</string>
     <string name="title_advanced_section_misc">Różne</string>
-    <string name="title_advanced_enabled">Synchronizuj</string>
     <string name="title_advanced_schedule">Harmonogram</string>
     <string name="title_advanced_metered">Użyj połączeń taryfowych</string>
     <string name="title_advanced_download">Automatycznie pobieraj wiadomości i załączniki przy połączeniach taryfowych do</string>
@@ -176,11 +174,11 @@
     <string name="title_advanced_resize_pixels">&lt; %1$d pixeli</string>
     <string name="title_advanced_sender">Zezwól na edycję adresu nadawcy</string>
     <string name="title_advanced_autosend">Potwierdź wysłanie wiadomości</string>
-    <string name="title_advanced_badge">Pokaż liczbę nowych wiadomości na ikonie launchera</string>
-    <string name="title_advanced_subscriptions">Zarządzaj subskrypcjami folderów</string>
     <string name="title_advanced_notify_preview">Pokaż podgląd wiadomości w powiadomieniach</string>
     <string name="title_advanced_light">Użyj diody powiadomień</string>
     <string name="title_advanced_sound">Wybierz dźwięk powiadomienia</string>
+    <string name="title_advanced_badge">Pokaż liczbę nowych wiadomości na ikonie launchera</string>
+    <string name="title_advanced_subscriptions">Zarządzaj subskrypcjami folderów</string>
     <string name="title_advanced_english">Wymuś język angielski</string>
     <string name="title_advanced_authentication">Pokaż ostrzeżenie, gdy serwer odbierający nie może uwierzytelnić wiadomości</string>
     <string name="title_advanced_paranoid">Dodatkowe funkcje prywatności</string>
@@ -453,9 +451,6 @@
     <string name="title_rule_name_missing">Brak nazwy reguły</string>
     <string name="title_rule_condition_missing">Brak warunku</string>
     <string name="title_rule_automation">Automatyzacja</string>
-    <string name="title_action_seen">Oznacz przeczytane</string>
-    <string name="title_action_archive">Archiwum</string>
-    <string name="title_action_trash">Kosz</string>
     <string name="title_legend_inbox">Odebrane</string>
     <string name="title_legend_archive">Archiwum</string>
     <string name="title_legend_trash">Kosz</string>

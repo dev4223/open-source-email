@@ -29,13 +29,13 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.Observer;
+import androidx.preference.PreferenceManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +58,8 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
+import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public class ServiceSend extends LifecycleService {
     private int lastUnsent = 0;
@@ -244,6 +246,7 @@ public class ServiceSend extends LifecycleService {
                     }
                 }
             });
+            thread.setPriority(THREAD_PRIORITY_BACKGROUND);
             thread.start();
         }
     };
@@ -446,6 +449,7 @@ public class ServiceSend extends LifecycleService {
                     }
                 }
             });
+            thread.setPriority(THREAD_PRIORITY_BACKGROUND);
             thread.start();
         }
     }

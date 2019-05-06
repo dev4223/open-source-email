@@ -107,12 +107,10 @@
     <string name="title_setup_defaults">İlkin vəziyyətinə qaytar</string>
     <string name="title_setup_options">Seçimlər</string>
     <string name="title_advanced">Qabaqcıl variantlar</string>
-    <string name="title_advanced_section_general">Ümumi</string>
     <string name="title_advanced_section_connection">Bağlantı</string>
     <string name="title_advanced_section_display">Görüntü</string>
     <string name="title_advanced_section_behavior">Davranış</string>
     <string name="title_advanced_section_misc">Qarışıq</string>
-    <string name="title_advanced_enabled">Eyniləşdirmə</string>
     <string name="title_advanced_schedule">Cədvəl</string>
     <string name="title_advanced_metered">Ölçülmüş bağlantıları istifadə et</string>
     <string name="title_advanced_download">Mesajları və qoşmaları ölçülmüş bağlantıda avtomatik endir</string>
@@ -140,9 +138,9 @@
     <string name="title_advanced_sender">Göndərənin ünvanına düzəlişə icazə ver</string>
     <string name="title_advanced_autosend">Mesajların göndərilməsini təsdiqlə</string>
     <string name="title_advanced_notify_preview">Bildirişlərdə mesaja ön baxışı göstər</string>
-    <string name="title_advanced_search_local">Cihazda xarici axtarış</string>
     <string name="title_advanced_light">Bildiriş işığından istifadə et</string>
     <string name="title_advanced_sound">Bildiriş səsi seç</string>
+    <string name="title_advanced_search_local">Cihazda xarici axtarış</string>
     <string name="title_advanced_updates">Yeniləmələri yoxla</string>
     <string name="title_advanced_debug">Sazlama rejimi</string>
     <string name="title_advanced_enabled_hint">Qlobal olaraq mesajların göndərilməsi və alınmasını fəallaşdır və ya ləğv et</string>
@@ -329,9 +327,6 @@
     <string name="title_rule_regex">Müntəzəm ifadə</string>
     <string name="title_rule_and">VƏ</string>
     <string name="title_rule_action">Hərəkət</string>
-    <string name="title_action_seen">Oxundu kimi işarələ</string>
-    <string name="title_action_archive">Arxiv</string>
-    <string name="title_action_trash">Tullantı</string>
     <string name="title_legend_inbox">Gələn qutusu</string>
     <string name="title_legend_archive">Arxiv</string>
     <string name="title_legend_trash">Tullantı</string>

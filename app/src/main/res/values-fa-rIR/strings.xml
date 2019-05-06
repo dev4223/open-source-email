@@ -80,12 +80,10 @@
     <string name="title_setup_advanced">پیشرفته</string>
     <string name="title_setup_defaults">بازیابی پیش‌فرض‌ها</string>
     <string name="title_advanced">گزینه‌های پیشرفته</string>
-    <string name="title_advanced_section_general">عمومی</string>
     <string name="title_advanced_section_connection">اتصال</string>
     <string name="title_advanced_section_display">نمایش</string>
     <string name="title_advanced_section_behavior">رفتار</string>
     <string name="title_advanced_section_misc">متفرقه</string>
-    <string name="title_advanced_enabled">همگام سازی</string>
     <string name="title_advanced_metered">استفاده از شبکه موبایل</string>
     <string name="title_advanced_download">دریافت خودکار پیام‌ها و پیوست‌ها روی شبکه موبایل</string>
     <string name="title_advanced_browse">مرور پیام‌های روی سرور</string>
@@ -324,9 +322,6 @@
     <string name="title_rule_answer">الگوی پاسخ</string>
     <string name="title_rule_name_missing">نام دستور موجود نیست</string>
     <string name="title_rule_condition_missing">فاقد شرایط</string>
-    <string name="title_action_seen">علامت گذاری به عنوان خوانده شده</string>
-    <string name="title_action_archive">بایگانی</string>
-    <string name="title_action_trash">سطل آشغال</string>
     <string name="title_legend_inbox">صندوق دریافت</string>
     <string name="title_legend_archive">بایگانی</string>
     <string name="title_legend_trash">سطل آشغال</string>

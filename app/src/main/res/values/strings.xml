@@ -152,15 +152,18 @@
 
     <string name="title_advanced">Advanced options</string>
 
-    <string name="title_advanced_section_general">General</string>
+    <string name="title_advanced_section_synchronize">Synchronize</string>
     <string name="title_advanced_section_connection">Connection</string>
     <string name="title_advanced_section_display">Display</string>
     <string name="title_advanced_section_behavior">Behavior</string>
     <string name="title_advanced_section_notifications">Notifications</string>
     <string name="title_advanced_section_misc">Miscellaneous</string>
 
-    <string name="title_advanced_enabled">Synchronize</string>
+    <string name="title_advanced_enabled">Enabled</string>
+    <string name="title_advanced_when">When</string>
     <string name="title_advanced_schedule">Schedule</string>
+    <string name="title_advanced_unseen">All unread messages</string>
+    <string name="title_advanced_flagged">All starred messages</string>
 
     <string name="title_advanced_metered">Use metered connections</string>
     <string name="title_advanced_download">Automatically download messages and attachments on a metered connection up to</string>
@@ -203,6 +206,7 @@
     <string name="title_advanced_notify_action_trash">Trash</string>
     <string name="title_advanced_notify_action_archive">Archive</string>
     <string name="title_advanced_notify_action_reply">Reply</string>
+    <string name="title_advanced_notify_action_flag">Star</string>
     <string name="title_advanced_notify_action_seen">Read</string>
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
     <string name="title_advanced_light">Use notification light</string>
@@ -312,6 +316,7 @@
     <string name="title_pop3_support">POP3 is not supported, see also the FAQ</string>
 
     <string name="title_synchronize_now">Synchronize now</string>
+    <string name="title_synchronize_enabled">Synchronize</string>
     <string name="title_delete_local">Delete local messages</string>
     <string name="title_delete_browsed">Delete browsed/searched messages</string>
     <string name="title_empty_trash">Empty trash</string>

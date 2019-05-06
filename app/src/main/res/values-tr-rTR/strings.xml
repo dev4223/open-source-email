@@ -121,12 +121,10 @@
     <string name="title_setup_defaults">Öntanımlıları geri yükle</string>
     <string name="title_setup_options">Seçenekler</string>
     <string name="title_advanced">Gelişmiş seçenekler</string>
-    <string name="title_advanced_section_general">Genel</string>
     <string name="title_advanced_section_connection">Bağlantı</string>
     <string name="title_advanced_section_display">Görüntüle</string>
     <string name="title_advanced_section_behavior">Davranış</string>
     <string name="title_advanced_section_misc">Çeşitli</string>
-    <string name="title_advanced_enabled">Eşzamanlama</string>
     <string name="title_advanced_schedule">Program</string>
     <string name="title_advanced_metered">Ölçülü bağlantıları kullan</string>
     <string name="title_advanced_download">Mesajları ve ekleri ölçülü bir bağlantıya kadar otomatik olarak indir</string>
@@ -158,11 +156,11 @@
     <string name="title_advanced_resize_pixels">&lt; %1$d piksel</string>
     <string name="title_advanced_sender">Gönderici adresini düzenlemeye izin ver</string>
     <string name="title_advanced_autosend">İleti göndermeyi onayla</string>
-    <string name="title_advanced_badge">Yeni ileti sayısını başlatıcıdaki simgede göster</string>
     <string name="title_advanced_notify_preview">Bildirimlerde ileti önizlemesini göster</string>
-    <string name="title_advanced_search_local">Aygıtta harici arama</string>
     <string name="title_advanced_light">Bildirim ışığını kullan</string>
     <string name="title_advanced_sound">Bildirim sesini seçin</string>
+    <string name="title_advanced_badge">Yeni ileti sayısını başlatıcıdaki simgede göster</string>
+    <string name="title_advanced_search_local">Aygıtta harici arama</string>
     <string name="title_advanced_english">İngilizce Diline Zorla</string>
     <string name="title_advanced_authentication">Alıcı sunucu iletinin kimliğini doğrulayamadığında bir uyarı göster</string>
     <string name="title_advanced_paranoid">Fazladan gizlilik özellikleri</string>
@@ -445,9 +443,6 @@
     <string name="title_rule_condition_missing">Koşul kayıp</string>
     <string name="title_rule_automation">Özdevinim</string>
     <string name="title_rule_automation_hint">%1$s gönderme isteğinizi %2$s ekleyerek gönderecek</string>
-    <string name="title_action_seen">Okundu işareti</string>
-    <string name="title_action_archive">Arşiv</string>
-    <string name="title_action_trash">Çöp kutusu</string>
     <string name="title_legend_inbox">Gelen kutusu</string>
     <string name="title_legend_archive">Arşiv</string>
     <string name="title_legend_trash">Çöp Kutusu</string>

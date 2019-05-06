@@ -33,11 +33,12 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.DeadSystemException;
+import android.os.Handler;
 import android.os.RemoteException;
-import android.preference.PreferenceManager;
 import android.webkit.CookieManager;
 
 import androidx.annotation.RequiresApi;
+import androidx.preference.PreferenceManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -90,10 +91,15 @@ public class ApplicationEx extends Application {
             }
         });
 
+        upgrade(this);
+
         createNotificationChannels();
+
         if (Helper.hasWebView(this))
             CookieManager.getInstance().setAcceptCookie(false);
+
         MessageHelper.setSystemProperties();
+        ContactInfo.init(this, new Handler());
         Core.init(this);
     }
 
@@ -116,6 +122,25 @@ public class ApplicationEx extends Application {
         int mb = Math.round(mi.availMem / 0x100000L);
         int perc = Math.round(mi.availMem / (float) mi.totalMem * 100.0f);
         Log.i(message + " " + mb + " MB" + " " + perc + " %");
+    }
+
+    static void upgrade(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int version = prefs.getInt("version", 468);
+        if (version < BuildConfig.VERSION_CODE) {
+            Log.i("Upgrading from " + version + " to " + BuildConfig.VERSION_CODE);
+
+            SharedPreferences.Editor editor = prefs.edit();
+
+            editor.remove("notify_trash");
+            editor.remove("notify_archive");
+            editor.remove("notify_reply");
+            editor.remove("notify_flag");
+            editor.remove("notify_seen");
+
+            editor.putInt("version", BuildConfig.VERSION_CODE);
+            editor.apply();
+        }
     }
 
     static Context getLocalizedContext(Context context) {

@@ -866,7 +866,12 @@ class Core {
             if (keep_days == sync_days)
                 keep_days++;
 
-            Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean sync_unseen = prefs.getBoolean("sync_unseen", false);
+            boolean sync_flagged = prefs.getBoolean("sync_flagged", true);
+
+            Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days +
+                    " unseen=" + sync_unseen + " sync_flagged=" + sync_flagged);
 
             db.folder().setFolderSyncState(folder.id, "syncing");
 
@@ -915,8 +920,9 @@ class Core {
 
             // Reduce list of local uids
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
-            searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-            if (ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED))
+            if (sync_unseen)
+                searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+            if (sync_flagged && ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED))
                 searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
 
             long search = SystemClock.elapsedRealtime();
@@ -1377,6 +1383,14 @@ class Core {
                     Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unbrowse");
                 }
 
+                Uri uri = ContactInfo.getLookupUri(context, message.from);
+                String avatar = (uri == null ? null : uri.toString());
+                if (!Objects.equals(message.avatar, avatar)) {
+                    update = true;
+                    message.avatar = avatar;
+                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " avatar=" + avatar);
+                }
+
                 if (update)
                     try {
                         db.beginTransaction();
@@ -1702,9 +1716,11 @@ class Core {
 
         boolean pro = Helper.isPro(context);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean flags = prefs.getBoolean("flags", true);
         boolean notify_trash = prefs.getBoolean("notify_trash", true);
         boolean notify_archive = prefs.getBoolean("notify_archive", true);
         boolean notify_reply = prefs.getBoolean("notify_reply", false);
+        boolean notify_flag = prefs.getBoolean("notify_flag", false);
         boolean notify_seen = prefs.getBoolean("notify_seen", true);
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1761,21 +1777,19 @@ class Core {
         } else
             builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
-        if (pro) {
-            DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
-            StringBuilder sb = new StringBuilder();
-            for (EntityMessage message : messages) {
-                sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
-                if (!TextUtils.isEmpty(message.subject))
-                    sb.append(": ").append(message.subject);
-                sb.append(" ").append(df.format(message.received));
-                sb.append("<br>");
-            }
-
-            builder.setStyle(new NotificationCompat.BigTextStyle()
-                    .bigText(HtmlHelper.fromHtml(sb.toString()))
-                    .setSummaryText(title));
+        DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+        StringBuilder sb = new StringBuilder();
+        for (EntityMessage message : messages) {
+            sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
+            if (!TextUtils.isEmpty(message.subject))
+                sb.append(": ").append(message.subject);
+            sb.append(" ").append(df.format(message.received));
+            sb.append("<br>");
         }
+
+        builder.setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(HtmlHelper.fromHtml(sb.toString()))
+                .setSummaryText(title));
 
         notifications.add(builder.build());
 
@@ -1854,7 +1868,7 @@ class Core {
                 mbuilder.addAction(actionArchive.build());
             }
 
-            if (notify_reply) {
+            if (notify_reply && message.content) {
                 Intent reply = new Intent(context, ServiceUI.class).setAction("reply:" + message.id);
                 PendingIntent piReply = PendingIntent.getService(context, ServiceUI.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
@@ -1862,6 +1876,16 @@ class Core {
                         context.getString(R.string.title_advanced_notify_action_reply),
                         piReply);
                 mbuilder.addAction(actionReply.build());
+            }
+
+            if (notify_flag && flags) {
+                Intent flag = new Intent(context, ServiceUI.class).setAction("flag:" + message.id);
+                PendingIntent piFlag = PendingIntent.getService(context, ServiceUI.PI_FLAG, flag, PendingIntent.FLAG_UPDATE_CURRENT);
+                NotificationCompat.Action.Builder actionFlag = new NotificationCompat.Action.Builder(
+                        R.drawable.baseline_star_24,
+                        context.getString(R.string.title_advanced_notify_action_flag),
+                        piFlag);
+                mbuilder.addAction(actionFlag.build());
             }
 
             if (notify_seen) {
@@ -1874,42 +1898,40 @@ class Core {
                 mbuilder.addAction(actionSeen.build());
             }
 
-            if (pro) {
-                if (!TextUtils.isEmpty(message.subject))
-                    mbuilder.setContentText(message.subject);
+            if (!TextUtils.isEmpty(message.subject))
+                mbuilder.setContentText(message.subject);
 
-                if (message.content && preview)
-                    try {
-                        String body = Helper.readText(message.getFile(context));
-                        StringBuilder sb = new StringBuilder();
-                        if (!TextUtils.isEmpty(message.subject))
-                            sb.append(message.subject).append("<br>");
-                        String text = Jsoup.parse(body).text();
-                        if (!TextUtils.isEmpty(text)) {
-                            sb.append("<em>");
-                            if (text.length() > HtmlHelper.PREVIEW_SIZE) {
-                                sb.append(text.substring(0, HtmlHelper.PREVIEW_SIZE));
-                                sb.append("…");
-                            } else
-                                sb.append(text);
-                            sb.append("</em>");
-                        }
-                        mbuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(HtmlHelper.fromHtml(sb.toString())));
-                    } catch (IOException ex) {
-                        Log.e(ex);
-                        mbuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(ex.toString()));
+            if (message.content && preview)
+                try {
+                    String body = Helper.readText(message.getFile(context));
+                    StringBuilder sbm = new StringBuilder();
+                    if (!TextUtils.isEmpty(message.subject))
+                        sbm.append(message.subject).append("<br>");
+                    String text = Jsoup.parse(body).text();
+                    if (!TextUtils.isEmpty(text)) {
+                        sbm.append("<em>");
+                        if (text.length() > HtmlHelper.PREVIEW_SIZE) {
+                            sbm.append(text.substring(0, HtmlHelper.PREVIEW_SIZE));
+                            sbm.append("…");
+                        } else
+                            sbm.append(text);
+                        sbm.append("</em>");
                     }
-
-                if (info.hasPhoto())
-                    mbuilder.setLargeIcon(info.getPhotoBitmap());
-
-                if (info.hasLookupUri())
-                    mbuilder.addPerson(info.getLookupUri().toString());
-
-                if (message.accountColor != null) {
-                    mbuilder.setColor(message.accountColor);
-                    mbuilder.setColorized(true);
+                    mbuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(HtmlHelper.fromHtml(sbm.toString())));
+                } catch (IOException ex) {
+                    Log.e(ex);
+                    mbuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(ex.toString()));
                 }
+
+            if (info.hasPhoto())
+                mbuilder.setLargeIcon(info.getPhotoBitmap());
+
+            if (info.hasLookupUri())
+                mbuilder.addPerson(info.getLookupUri().toString());
+
+            if (pro && message.accountColor != null) {
+                mbuilder.setColor(message.accountColor);
+                mbuilder.setColorized(true);
             }
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
