@@ -46,16 +46,19 @@ public class TupleFolderNav extends EntityFolder implements Serializable {
                 TupleFolderNav f1 = (TupleFolderNav) o1;
                 TupleFolderNav f2 = (TupleFolderNav) o2;
 
+                // Outbox
+                if (f1.accountName == null && f2.accountName == null)
+                    return 0;
+                else if (f1.accountName == null)
+                    return 1;
+                else if (f2.accountName == null)
+                    return -1;
+
                 int o = Integer.compare(
                         f1.accountOrder == null ? -1 : f1.accountOrder,
                         f2.accountOrder == null ? -1 : f2.accountOrder);
                 if (o != 0)
                     return o;
-
-                if (f1.accountName == null)
-                    return (f2.accountName == null ? 0 : 1);
-                else if (f2.accountName == null)
-                    return -1;
 
                 int a = collator.compare(f1.accountName, f2.accountName);
                 if (a != 0)

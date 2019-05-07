@@ -66,18 +66,19 @@ public class TupleFolderEx extends EntityFolder implements Serializable {
                 TupleFolderEx f1 = (TupleFolderEx) o1;
                 TupleFolderEx f2 = (TupleFolderEx) o2;
 
-                int o = Integer.compare(
-                        f1.accountOrder == null ? -1 : f1.accountOrder,
-                        f2.accountOrder == null ? -1 : f2.accountOrder);
-                if (o != 0)
-                    return o;
-
+                // Outbox
                 if (f1.accountName == null && f2.accountName == null)
                     return 0;
                 else if (f1.accountName == null)
                     return 1;
                 else if (f2.accountName == null)
                     return -1;
+
+                int o = Integer.compare(
+                        f1.accountOrder == null ? -1 : f1.accountOrder,
+                        f2.accountOrder == null ? -1 : f2.accountOrder);
+                if (o != 0)
+                    return o;
 
                 int a = collator.compare(f1.accountName, f2.accountName);
                 if (a != 0)

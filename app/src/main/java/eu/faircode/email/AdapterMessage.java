@@ -1006,7 +1006,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
                             (inTrash && message.msgid != null) ||
                             (!inTrash && hasTrash && message.uid != null) ||
-                            (inOutbox && (!TextUtils.isEmpty(message.error) || !message.identitySynchronize)));
+                            (inOutbox && !TextUtils.isEmpty(message.error)));
                     bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash ? R.string.title_delete : R.string.title_trash);
 
                     bnvActions.getMenu().findItem(R.id.action_move).setVisible(
@@ -1569,7 +1569,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         ibImages.setVisibility(original.has_images && !show_images ? View.VISIBLE : View.GONE);
                         ibFull.setVisibility(View.VISIBLE);
 
-                        webView.loadDataWithBaseURL("about:blank", themeHtml(original.html), "text/html", "UTF-8", null);
+                        webView.loadDataWithBaseURL("", themeHtml(original.html), "text/html", "UTF-8", null);
 
                         pbBody.setVisibility(View.GONE);
                     }
@@ -1586,7 +1586,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibImages.setVisibility(has_images && !show_images ? View.VISIBLE : View.GONE);
                 ibFull.setVisibility(View.VISIBLE);
 
-                webView.loadDataWithBaseURL("about:blank", themeHtml(html), "text/html", "UTF-8", null);
+                webView.loadDataWithBaseURL("", themeHtml(html), "text/html", "UTF-8", null);
                 webView.setVisibility(View.VISIBLE);
 
                 pbBody.setVisibility(View.GONE);
@@ -1636,7 +1636,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             settings.setDisplayZoomControls(false);
 
             String html = properties.getHtml(message.id);
-            webView.loadDataWithBaseURL("about:blank", html, "text/html", "UTF-8", null);
+            webView.loadDataWithBaseURL("", html, "text/html", "UTF-8", null);
 
             final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             dialog.setContentView(webView);
