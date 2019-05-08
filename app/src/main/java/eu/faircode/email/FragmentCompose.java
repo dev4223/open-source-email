@@ -92,6 +92,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.exifinterface.media.ExifInterface;
@@ -2074,6 +2075,8 @@ public class FragmentCompose extends FragmentBase {
                         draft.plain_only = ref.plain_only;
                         if (answer > 0)
                             body = EntityAnswer.getAnswerText(db, answer, draft.to) + body;
+
+                        EntityOperation.queue(context, db, ref, EntityOperation.SEEN, true);
                     }
 
                     // Select identity matching from address
@@ -2156,18 +2159,21 @@ public class FragmentCompose extends FragmentBase {
                         int sequence = 0;
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
-                            if (attachment.available &&
-                                    attachment.encryption == null &&
-                                    ("forward".equals(action) || attachment.isInline())) {
-                                File source = attachment.getFile(context);
+                            if (attachment.encryption == null &&
+                                    ("forward".equals(action) ||
+                                            (attachment.isInline() && attachment.isImage()))) {
+                                if (attachment.available) {
+                                    File source = attachment.getFile(context);
 
-                                attachment.id = null;
-                                attachment.message = draft.id;
-                                attachment.sequence = ++sequence;
-                                attachment.id = db.attachment().insertAttachment(attachment);
+                                    attachment.id = null;
+                                    attachment.message = draft.id;
+                                    attachment.sequence = ++sequence;
+                                    attachment.id = db.attachment().insertAttachment(attachment);
 
-                                File target = attachment.getFile(context);
-                                Helper.copy(source, target);
+                                    File target = attachment.getFile(context);
+                                    Helper.copy(source, target);
+                                } else
+                                    args.putBoolean("incomplete", true);
                             }
                     }
 
@@ -2182,7 +2188,7 @@ public class FragmentCompose extends FragmentBase {
                     List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);
                     for (EntityAttachment attachment : attachments)
                         if (!attachment.available)
-                            EntityOperation.queue(context, db, draft, EntityOperation.ATTACHMENT, attachment.sequence);
+                            EntityOperation.queue(context, db, draft, EntityOperation.ATTACHMENT, attachment.id);
                 }
 
                 db.setTransactionSuccessful();
@@ -2218,6 +2224,9 @@ public class FragmentCompose extends FragmentBase {
 
             plain_only = (draft.plain_only != null && draft.plain_only);
             getActivity().invalidateOptionsMenu();
+
+            if (args.getBoolean("incomplete"))
+                Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_LONG).show();
 
             new SimpleTask<List<TupleIdentityEx>>() {
                 @Override
@@ -2810,7 +2819,10 @@ public class FragmentCompose extends FragmentBase {
                                 public Drawable getDrawable(String source) {
                                     Drawable image = HtmlHelper.decodeImage(source, id, show_images, tvReference);
 
-                                    float width = tvReference.getWidth();
+                                    ConstraintLayout.LayoutParams params =
+                                            (ConstraintLayout.LayoutParams) tvReference.getLayoutParams();
+                                    float width = context.getResources().getDisplayMetrics().widthPixels
+                                            - params.leftMargin - params.rightMargin;
                                     if (image.getIntrinsicWidth() > width) {
                                         float scale = width / image.getIntrinsicWidth();
                                         image.setBounds(0, 0,

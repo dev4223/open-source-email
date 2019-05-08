@@ -209,9 +209,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private ImageView ivExpanderAddress;
 
-        private ImageView ivSearchContact;
-        private ImageView ivNotifyContact;
-        private ImageView ivAddContact;
+        private ImageButton ibSearchContact;
+        private ImageButton ibNotifyContact;
+        private ImageButton ibAddContact;
 
         private TextView tvFromExTitle;
         private TextView tvToTitle;
@@ -303,9 +303,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ivExpanderAddress = itemView.findViewById(R.id.ivExpanderAddress);
 
-            ivSearchContact = itemView.findViewById(R.id.ivSearchContact);
-            ivNotifyContact = itemView.findViewById(R.id.ivNotifyContact);
-            ivAddContact = itemView.findViewById(R.id.ivAddContact);
+            ibSearchContact = itemView.findViewById(R.id.ibSearchContact);
+            ibNotifyContact = itemView.findViewById(R.id.ibNotifyContact);
+            ibAddContact = itemView.findViewById(R.id.ibAddContact);
 
             tvFromExTitle = itemView.findViewById(R.id.tvFromExTitle);
             tvToTitle = itemView.findViewById(R.id.tvToTitle);
@@ -403,10 +403,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivFlagged.setOnClickListener(this);
 
             ivExpanderAddress.setOnClickListener(this);
-            ivSearchContact.setOnClickListener(this);
-            ivNotifyContact.setOnClickListener(this);
-            ivNotifyContact.setOnLongClickListener(this);
-            ivAddContact.setOnClickListener(this);
+            ibSearchContact.setOnClickListener(this);
+            ibNotifyContact.setOnClickListener(this);
+            ibNotifyContact.setOnLongClickListener(this);
+            ibAddContact.setOnClickListener(this);
 
             btnDownloadAttachments.setOnClickListener(this);
             btnSaveAttachments.setOnClickListener(this);
@@ -427,10 +427,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivSnoozed.setOnClickListener(null);
             ivFlagged.setOnClickListener(null);
             ivExpanderAddress.setOnClickListener(null);
-            ivSearchContact.setOnClickListener(null);
-            ivNotifyContact.setOnClickListener(null);
-            ivNotifyContact.setOnLongClickListener(null);
-            ivAddContact.setOnClickListener(null);
+            ibSearchContact.setOnClickListener(null);
+            ibNotifyContact.setOnClickListener(null);
+            ibNotifyContact.setOnLongClickListener(null);
+            ibAddContact.setOnClickListener(null);
             btnDownloadAttachments.setOnClickListener(null);
             btnSaveAttachments.setOnClickListener(null);
             tbHtml.setOnCheckedChangeListener(null);
@@ -738,9 +738,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAttachments.setVisibility(View.GONE);
             grpExpanded.setVisibility(View.GONE);
 
-            ivSearchContact.setVisibility(View.GONE);
-            ivNotifyContact.setVisibility(View.GONE);
-            ivAddContact.setVisibility(View.GONE);
+            ibSearchContact.setVisibility(View.GONE);
+            ibNotifyContact.setVisibility(View.GONE);
+            ibAddContact.setVisibility(View.GONE);
 
             tvFromExTitle.setVisibility(View.GONE);
             tvToTitle.setVisibility(View.GONE);
@@ -808,9 +808,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean hasFrom = (message.from != null && message.from.length > 0);
             boolean hasChannel = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O);
 
-            ivSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
-            ivNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
-            ivAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
+            ibSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+            ibNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
+            ibAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
 
             // dev4223: if expanded dont show subjects and anwsered-icon
             tvSubject.setVisibility(View.GONE);
@@ -1123,11 +1123,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 onShowSnoozed(message);
             else if (view.getId() == R.id.ivFlagged)
                 onToggleFlag(message);
-            else if (view.getId() == R.id.ivSearchContact)
+            else if (view.getId() == R.id.ibSearchContact)
                 onSearchContact(message);
-            else if (view.getId() == R.id.ivNotifyContact)
+            else if (view.getId() == R.id.ibNotifyContact)
                 onNotifyContact(message);
-            else if (view.getId() == R.id.ivAddContact)
+            else if (view.getId() == R.id.ibAddContact)
                 onAddContact(message);
             else if (viewType == ViewType.THREAD) {
                 if (view.getId() == R.id.ivExpanderAddress)
@@ -1411,7 +1411,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             for (EntityAttachment attachment : db.attachment().getAttachments(message.id))
                                 if (attachment.progress == null && !attachment.available) {
                                     db.attachment().setProgress(attachment.id, 0);
-                                    EntityOperation.queue(context, db, msg, EntityOperation.ATTACHMENT, attachment.sequence);
+                                    EntityOperation.queue(context, db, msg, EntityOperation.ATTACHMENT, attachment.id);
                                 }
 
                         db.setTransactionSuccessful();
@@ -1759,7 +1759,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                         for (EntityAttachment attachment : attachments)
                             if (!attachment.available && !TextUtils.isEmpty(attachment.cid))
-                                EntityOperation.queue(context, db, message, EntityOperation.ATTACHMENT, attachment.sequence);
+                                EntityOperation.queue(context, db, message, EntityOperation.ATTACHMENT, attachment.id);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1816,7 +1816,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     public Drawable getDrawable(String source) {
                         Drawable image = HtmlHelper.decodeImage(source, message.id, show_images, tvBody);
 
-                        float width = tvBody.getWidth();
+                        ConstraintLayout.LayoutParams params =
+                                (ConstraintLayout.LayoutParams) tvBody.getLayoutParams();
+                        float width = context.getResources().getDisplayMetrics().widthPixels
+                                - params.leftMargin - params.rightMargin;
                         if (image.getIntrinsicWidth() > width) {
                             float scale = width / image.getIntrinsicWidth();
                             image.setBounds(0, 0,
@@ -2123,47 +2126,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuForward(final ActionData data) {
-            Bundle args = new Bundle();
-            args.putLong("id", data.message.id);
-
-            new SimpleTask<Boolean>() {
-                @Override
-                protected Boolean onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                    for (EntityAttachment attachment : attachments)
-                        if (!attachment.available)
-                            return false;
-                    return true;
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, Boolean available) {
-                    final Intent forward = new Intent(context, ActivityCompose.class)
-                            .putExtra("action", "forward")
-                            .putExtra("reference", data.message.id);
-                    if (available)
-                        context.startActivity(forward);
-                    else
-                        new DialogBuilderLifecycle(context, owner)
-                                .setMessage(R.string.title_attachment_unavailable)
-                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        context.startActivity(forward);
-                                    }
-                                })
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show();
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
-                }
-            }.execute(context, owner, args, "message:forward");
+            Intent forward = new Intent(context, ActivityCompose.class)
+                    .putExtra("action", "forward")
+                    .putExtra("reference", data.message.id);
+            context.startActivity(forward);
         }
 
         private void onMenuUnseen(final ActionData data) {
@@ -3015,48 +2981,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuReply(final ActionData data, String action) {
-            Bundle args = new Bundle();
-            args.putLong("id", data.message.id);
-            args.putString("action", action);
-
-            new SimpleTask<Boolean>() {
-                @Override
-                protected Boolean onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                    for (EntityAttachment attachment : attachments)
-                        if (!attachment.available && attachment.isInline() && attachment.isImage())
-                            return false;
-                    return true;
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, Boolean available) {
-                    final Intent reply = new Intent(context, ActivityCompose.class)
-                            .putExtra("action", args.getString("action"))
-                            .putExtra("reference", data.message.id);
-                    if (available)
-                        context.startActivity(reply);
-                    else
-                        new DialogBuilderLifecycle(context, owner)
-                                .setMessage(R.string.title_image_unavailable)
-                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        context.startActivity(reply);
-                                    }
-                                })
-                                .setNegativeButton(android.R.string.cancel, null)
-                                .show();
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
-                }
-            }.execute(context, owner, args, "message:reply");
+            Intent reply = new Intent(context, ActivityCompose.class)
+                    .putExtra("action", action)
+                    .putExtra("reference", data.message.id);
+            context.startActivity(reply);
         }
 
         private void onMenuAnswer(final ActionData data) {

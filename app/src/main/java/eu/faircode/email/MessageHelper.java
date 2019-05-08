@@ -196,7 +196,6 @@ public class MessageHelper {
         return props;
     }
 
-
     static MimeMessageEx from(Context context, EntityMessage message, EntityIdentity identity, Session isession)
             throws MessagingException, IOException {
         DB db = DB.getInstance(context);
@@ -297,8 +296,6 @@ public class MessageHelper {
     }
 
     static void build(Context context, EntityMessage message, List<EntityAttachment> attachments, EntityIdentity identity, MimeMessage imessage) throws IOException, MessagingException {
-        DB db = DB.getInstance(context);
-
         if (message.receipt_request != null && message.receipt_request) {
             // https://www.ietf.org/rfc/rfc3798.txt
             Multipart report = new MimeMultipart("report; report-type=disposition-notification");
@@ -824,52 +821,22 @@ public class MessageHelper {
 
         List<EntityAttachment> getAttachments() {
             List<EntityAttachment> result = new ArrayList<>();
-
             for (AttachmentPart apart : attachments)
                 result.add(apart.attachment);
-
-            // Fix duplicate CIDs
-            for (int i = 0; i < result.size(); i++) {
-                String cid = result.get(i).cid;
-                if (cid != null)
-                    for (int j = i + 1; j < result.size(); j++) {
-                        EntityAttachment a = result.get(j);
-                        if (cid.equals(a.cid))
-                            a.cid = null;
-                    }
-            }
-
             return result;
         }
 
-        void downloadAttachment(Context context, int index, long id) throws MessagingException, IOException {
-            Log.i("downloading attchment id=" + id + " seq=" + index);
-
-            // Attachments of drafts might not have been uploaded yet
-            if (index >= attachments.size()) {
-                Log.w("Attachment unavailable sequence=" + index + " size=" + attachments.size());
-                return;
-            }
+        void downloadAttachment(Context context, EntityAttachment attachment) throws MessagingException, IOException {
+            Log.i("downloading attachment id=" + attachment.id);
 
             DB db = DB.getInstance(context);
 
             // Get data
-            AttachmentPart apart = attachments.get(index);
-            EntityAttachment attachment = db.attachment().getAttachment(id);
-            if (attachment == null)
-                return;
-
-            // Set info again in case ordering changed
-            db.attachment().setInfo(id,
-                    apart.attachment.name,
-                    apart.attachment.type,
-                    apart.attachment.disposition,
-                    apart.attachment.cid,
-                    apart.attachment.encryption);
+            AttachmentPart apart = attachments.get(attachment.sequence - 1);
 
             // Download attachment
             File file = attachment.getFile(context);
-            db.attachment().setProgress(id, null);
+            db.attachment().setProgress(attachment.id, null);
             try (InputStream is = apart.part.getInputStream()) {
                 long size = 0;
                 long total = apart.part.getSize();
@@ -882,19 +849,19 @@ public class MessageHelper {
 
                         // Update progress
                         if (total > 0)
-                            db.attachment().setProgress(id, (int) (size * 100 / total));
+                            db.attachment().setProgress(attachment.id, (int) (size * 100 / total));
                     }
                 }
 
                 // Store attachment data
-                db.attachment().setDownloaded(id, size);
+                db.attachment().setDownloaded(attachment.id, size);
 
                 Log.i("Downloaded attachment size=" + size);
             } catch (FolderClosedIOException ex) {
                 throw new FolderClosedException(ex.getFolder(), "downloadAttachment", ex);
             } catch (Throwable ex) {
                 // Reset progress on failure
-                db.attachment().setError(id, Helper.formatThrowable(ex));
+                db.attachment().setError(attachment.id, Helper.formatThrowable(ex));
                 throw ex;
             }
         }

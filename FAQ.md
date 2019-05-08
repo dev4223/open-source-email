@@ -169,6 +169,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(98) Why can I still pick contacts after revoking contacts permissions?](#user-content-faq98)
 * [(99) Can you add a rich text or markdown editor?](#user-content-faq99)
 * [(100) How can I synchronize Gmail categories?](#user-content-faq100)
+* [(101) What does the blue/orange dot at the bottom of the conversations mean?](#user-content-faq101)
 
 [I have another question.](#support)
 
@@ -402,6 +403,9 @@ If you want, you can verify a signature by opening the *signature.asc* attachmen
 Encryption/decryption is a pro feature.
 
 Please see the [known problems](#known-problems) about YubiKey.
+
+Please see [this comment](https://forum.xda-developers.com/showpost.php?p=79444379&postcount=5609)
+about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-signature-spoofing.html).
 
 <br />
 
@@ -1255,6 +1259,8 @@ All the conditions of a rule need to be true for a filter rule to be executed.
 Conditions are optional, but there needs to be at least one condition.
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression).
 
+In the *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
+
 You can select one of these actions to apply to matching messages:
 
 * Mark as read
@@ -1639,6 +1645,14 @@ and long press the category folders to enable synchronization.
 
 <br />
 
+<a name="faq101"></a>
+**(101) What does the blue/orange dot at the bottom of the conversations mean?**
+
+The dot shows the relative position of the conversation in the message list.
+The dot will be show orange when the conversation is the first or last in the message list, else it will be blue.
+The dot is meant as an aid when swiping left/right to go to the previous/next conversation.
+
+<br />
 
 ## Support
 

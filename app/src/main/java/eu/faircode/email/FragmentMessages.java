@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
@@ -138,12 +139,16 @@ public class FragmentMessages extends FragmentBase {
     private boolean date;
     private boolean threading;
     private boolean pull;
+    private boolean swipenav;
     private boolean autoscroll;
     private boolean actionbar;
     private boolean autoexpand;
     private boolean autoclose;
     private boolean autonext;
     private boolean addresses;
+
+    private int colorPrimary;
+    private int colorAccent;
 
     private long primary;
     private boolean outbox = false;
@@ -237,6 +242,7 @@ public class FragmentMessages extends FragmentBase {
         else
             pull = false;
 
+        swipenav = prefs.getBoolean("swipenav", true);
         autoscroll = prefs.getBoolean("autoscroll", false);
         date = prefs.getBoolean("date", true);
         threading = prefs.getBoolean("threading", true);
@@ -245,6 +251,9 @@ public class FragmentMessages extends FragmentBase {
         autoclose = prefs.getBoolean("autoclose", true);
         autonext = (!autoclose && prefs.getBoolean("autonext", false));
         addresses = prefs.getBoolean("addresses", false);
+
+        colorPrimary = Helper.resolveColor(getContext(), R.attr.colorPrimary);
+        colorAccent = Helper.resolveColor(getContext(), R.attr.colorAccent);
     }
 
     @Override
@@ -278,7 +287,6 @@ public class FragmentMessages extends FragmentBase {
 
         // Wire controls
 
-        int colorPrimary = Helper.resolveColor(getContext(), R.attr.colorPrimary);
         swipeRefresh.setColorSchemeColors(Color.WHITE, Color.WHITE, Color.WHITE);
         swipeRefresh.setProgressBackgroundColorSchemeColor(colorPrimary);
 
@@ -438,6 +446,21 @@ public class FragmentMessages extends FragmentBase {
 
         rvMessage.setAdapter(adapter);
 
+        rvMessage.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                int pos = (rv.getChildCount() == 0 ? 0 : rv.getChildAt(0).getTop());
+                swipeRefresh.setEnabled(pull && pos >= 0);
+            }
+        });
+
+        seekBar.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return false;
+            }
+        });
+
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -534,7 +557,6 @@ public class FragmentMessages extends FragmentBase {
         // Initialize
         swipeRefresh.setEnabled(pull);
         tvNoEmail.setVisibility(View.GONE);
-        seekBar.setEnabled(false);
         seekBar.setVisibility(View.GONE);
         bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(false);
         bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(false);
@@ -566,12 +588,15 @@ public class FragmentMessages extends FragmentBase {
                     if (actionbar) {
                         seekBar.setMax(size - 1);
                         seekBar.setProgress(size - 1 - position);
+                        seekBar.getProgressDrawable().setAlpha(0);
+                        seekBar.getThumb().setColorFilter(
+                                position == 0 || position == size - 1 ? colorAccent : colorPrimary,
+                                PorterDuff.Mode.SRC_IN);
                         seekBar.setVisibility(size > 1 ? View.VISIBLE : View.GONE);
                     }
                 }
             });
 
-            boolean swipenav = prefs.getBoolean("swipenav", true);
             if (swipenav) {
                 Log.i("Swipe navigation");
 

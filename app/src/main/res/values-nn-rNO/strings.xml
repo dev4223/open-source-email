@@ -168,6 +168,7 @@
     <string name="title_advanced_sender">Tillat redigering av avsenderadresse</string>
     <string name="title_advanced_prefix_once">Prefiks emne bare en gang på svar eller videresending</string>
     <string name="title_advanced_autosend">Bekreft sending av meldinger</string>
+    <string name="title_advanced_notify_group">Grupper nye meldingsvarsler</string>
     <string name="title_advanced_notify_preview">Vis forhåndsvisning av melding i varsler</string>
     <string name="title_advanced_notify_actions">Varselshandlinger</string>
     <string name="title_advanced_notify_action_trash">Søppel</string>
@@ -264,6 +265,7 @@
     <string name="title_no_sync">Synkroniseringsfeil siden %1$s</string>
     <string name="title_identity_required">En identitet er nødvendig for å sende meldinger</string>
     <string name="title_drafts_required">Det kreves en kladd mappe for å kunne sende meldinger</string>
+    <string name="title_account_setup_identity">Legg til en identitet etter å ha lagret denne kontoen</string>
     <string name="title_account_delete">Slett denne konto en permanent?</string>
     <string name="title_identity_delete">Slett denne identiteten permanent?</string>
     <string name="title_edit_html">Rediger som HTML</string>
@@ -366,8 +368,7 @@
     <string name="title_raw_saved">Rå melding lagret</string>
     <string name="title_attachment_saved">Vedlegg lagret</string>
     <string name="title_attachments_saved">Vedlegg lagret</string>
-    <string name="title_attachment_unavailable">Noen vedlegg blir ikke lastet ned og vil ikke bli lagt til, fortsett?</string>
-    <string name="title_image_unavailable">Noen bilder lastes ikke ned og vil ikke bli lagt til, fortsett?</string>
+    <string name="title_attachments_incomplete">Noen vedlegg eller bilder ble ikke lastet ned og kunne ikke legges til</string>
     <string name="title_ask_delete">Slett melding permanent?</string>
     <string name="title_ask_delete_answer">Slett svarmal permanent?</string>
     <string name="title_ask_delete_rule">Slett regel permanent?</string>

@@ -309,6 +309,7 @@
     <string name="title_no_sync">Synchronization errors since %1$s</string>
     <string name="title_identity_required">An identity is required to send messages</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
+    <string name="title_account_setup_identity">Add an identity after saving this account</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>
@@ -420,8 +421,7 @@
     <string name="title_raw_saved">Raw message saved</string>
     <string name="title_attachment_saved">Attachment saved</string>
     <string name="title_attachments_saved">Attachments saved</string>
-    <string name="title_attachment_unavailable">Some attachments are not downloaded and will not be added, continue?</string>
-    <string name="title_image_unavailable">Some images are not downloaded and will not be added, continue?</string>
+    <string name="title_attachments_incomplete">Some attachments or images were not downloaded and could not be added</string>
     <string name="title_ask_delete">Delete message permanently?</string>
     <string name="title_ask_delete_answer">Delete reply template permanently?</string>
     <string name="title_ask_delete_rule">Delete rule permanently?</string>
