@@ -21,6 +21,8 @@ package eu.faircode.email;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.accounts.AuthenticatorException;
+import android.accounts.OperationCanceledException;
 import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -225,6 +227,22 @@ public class Helper {
     static Intent getIntentOpenKeychain() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://f-droid.org/en/packages/org.sufficientlysecure.keychain/"));
+        return intent;
+    }
+
+    static Intent getIntentIssue(Context context) {
+        String version = BuildConfig.VERSION_NAME + "/" +
+                (Helper.hasValidFingerprint(context) ? "1" : "3") +
+                (Helper.isPro(context) ? "+" : "");
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setPackage(BuildConfig.APPLICATION_ID);
+        intent.setType("text/plain");
+        try {
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{Helper.myAddress().getAddress()});
+        } catch (UnsupportedEncodingException ex) {
+            Log.w(ex);
+        }
+        intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.title_issue_subject, version));
         return intent;
     }
 
@@ -934,7 +952,8 @@ public class Helper {
         return true;
     }
 
-    static void connect(Context context, IMAPStore istore, EntityAccount account) throws MessagingException {
+    static void connect(Context context, IMAPStore istore, EntityAccount account)
+            throws MessagingException, AuthenticatorException, OperationCanceledException, IOException {
         try {
             istore.connect(account.host, account.port, account.user, account.password);
         } catch (AuthenticationFailedException ex) {
@@ -961,21 +980,18 @@ public class Helper {
             }
     }
 
-    static String refreshToken(Context context, String type, String name, String current) {
-        try {
-            AccountManager am = AccountManager.get(context);
-            Account[] accounts = am.getAccountsByType(type);
-            for (Account account : accounts)
-                if (name.equals(account.name)) {
-                    Log.i("Refreshing token");
-                    am.invalidateAuthToken(type, current);
-                    String refreshed = am.blockingGetAuthToken(account, getAuthTokenType(type), true);
-                    Log.i("Refreshed token");
-                    return refreshed;
-                }
-        } catch (Throwable ex) {
-            Log.w(ex);
-        }
+    static String refreshToken(Context context, String type, String name, String current)
+            throws AuthenticatorException, OperationCanceledException, IOException {
+        AccountManager am = AccountManager.get(context);
+        Account[] accounts = am.getAccountsByType(type);
+        for (Account account : accounts)
+            if (name.equals(account.name)) {
+                Log.i("Refreshing token");
+                am.invalidateAuthToken(type, current);
+                String refreshed = am.blockingGetAuthToken(account, getAuthTokenType(type), true);
+                Log.i("Refreshed token");
+                return refreshed;
+            }
         return current;
     }
 

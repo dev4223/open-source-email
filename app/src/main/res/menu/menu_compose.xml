@@ -2,36 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_addresses"
-        android:icon="@drawable/baseline_people_24"
-        android:title="@string/title_show_addresses"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/menu_zoom"
         android:icon="@drawable/baseline_format_size_24"
         android:title="@string/title_zoom"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/menu_style_toolbar"
+        android:id="@+id/menu_media_toolbar"
         android:checkable="true"
-        android:title="@string/title_style_toolbar"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/menu_link"
-        android:title="@string/title_style_link"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/menu_image"
-        android:title="@string/title_style_image"
-        app:showAsAction="never" />
-
-    <item
-        android:id="@+id/menu_attachment"
-        android:title="@string/title_add_attachment"
+        android:title="@string/title_media_toolbar"
         app:showAsAction="never" />
 
     <item
