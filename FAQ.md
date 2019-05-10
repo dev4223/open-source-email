@@ -173,6 +173,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(101) What does the blue/orange dot at the bottom of the conversations mean?](#user-content-faq101)
 * [(102) How can I enable auto rotation of images?](#user-content-faq102)
 * [(103) How can I record audio?](#user-content-faq103)
+* [(104) What do I need to know about error reporting?](#user-content-faq104)
 
 [I have another question.](#support)
 
@@ -1020,6 +1021,8 @@ The message action bar works on a single message and the bottom action bar works
 Since there is often more than one message in a conversation, this is not possible.
 Moreover, there are quite some message specific actions, like forwarding.
 
+You can use the *Home* button to quickly go to the top of the message.
+
 <br />
 
 <a name="faq54"></a>
@@ -1673,10 +1676,26 @@ Note that only [JPEG](https://en.wikipedia.org/wiki/JPEG) and [PNG](https://en.w
 
 You can record audio if you have a recording app installed
 which supports the [RECORD_SOUND_ACTION](https://developer.android.com/reference/android/provider/MediaStore.Audio.Media#RECORD_SOUND_ACTION) intent.
+If no supported app is installed, FairEmail will not show a record audio action/icon.
 
 Unfortunately and surprisingly, most recording apps do not seem to support this intent (they should).
 
 <br />
+
+<a name="faq104"></a>
+**(104) What do I need to know about error reporting?**
+
+* Error reports will help improve FairEmail
+* Error reporting is optional and opt-in
+* Error reporting can be enabled/disabled in the advanced options, section miscellaneous
+* Error reports will be sent anonymously to [Bugsnag](https://www.bugsnag.com/)
+* Bugsnag for Android is [open source](https://github.com/bugsnag/bugsnag-android)
+* See [here](https://docs.bugsnag.com/platforms/android/automatically-captured-data/) about what data will be sent in case of errors
+* See [here](https://docs.bugsnag.com/legal/privacy-policy/) for the privacy policy of Bugsnag
+* Error reports will be sent to *sessions.bugsnag.com:443* and *notify.bugsnag.com:443*
+
+<br />
+
 
 ## Support
 

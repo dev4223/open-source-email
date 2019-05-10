@@ -37,8 +37,15 @@ import android.os.Handler;
 import android.os.RemoteException;
 import android.webkit.CookieManager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.preference.PreferenceManager;
+
+import com.bugsnag.android.BeforeNotify;
+import com.bugsnag.android.BeforeSend;
+import com.bugsnag.android.Bugsnag;
+import com.bugsnag.android.Error;
+import com.bugsnag.android.Report;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,11 +54,14 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import javax.mail.MessagingException;
 
 public class ApplicationEx extends Application {
     private Thread.UncaughtExceptionHandler prev = null;
@@ -68,6 +78,7 @@ public class ApplicationEx extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
         logMemory("App create version=" + BuildConfig.VERSION_NAME);
 
         prev = Thread.getDefaultUncaughtExceptionHandler();
@@ -90,6 +101,8 @@ public class ApplicationEx extends Application {
                 }
             }
         });
+
+        setupBugsnag();
 
         upgrade(this);
 
@@ -122,6 +135,77 @@ public class ApplicationEx extends Application {
         int mb = Math.round(mi.availMem / 0x100000L);
         int perc = Math.round(mi.availMem / (float) mi.totalMem * 100.0f);
         Log.i(message + " " + mb + " MB" + " " + perc + " %");
+    }
+
+    private void setupBugsnag() {
+        // https://docs.bugsnag.com/platforms/android/sdk/
+        com.bugsnag.android.Configuration config =
+                new com.bugsnag.android.Configuration("9d2d57476a0614974449a3ec33f2604a");
+
+        if (BuildConfig.DEBUG)
+            config.setReleaseStage("development");
+        else if (BuildConfig.BETA_RELEASE)
+            config.setReleaseStage(BuildConfig.PLAY_STORE_RELEASE ? "beta/play" : "beta");
+        else
+            config.setReleaseStage(BuildConfig.PLAY_STORE_RELEASE ? "stable/play" : "stable");
+
+        config.setAutoCaptureSessions(false);
+
+        config.setDetectAnrs(false);
+
+        List<String> ignore = new ArrayList<>();
+
+        ignore.add("com.sun.mail.util.MailConnectException");
+        ignore.add("javax.mail.AuthenticationFailedException");
+
+        ignore.add("javax.mail.StoreClosedException");
+        ignore.add("javax.mail.FolderClosedException");
+        ignore.add("javax.mail.ReadOnlyFolderException");
+
+        ignore.add("javax.mail.MessageRemovedException");
+        ignore.add("javax.mail.internet.AddressException");
+
+        config.setIgnoreClasses(ignore.toArray(new String[0]));
+
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        config.beforeSend(new BeforeSend() {
+            @Override
+            public boolean run(@NonNull Report report) {
+                Error error = report.getError();
+                if (error != null) {
+                    Throwable ex = error.getException();
+
+                    if (ex instanceof IllegalStateException &&
+                            ("Not connected".equals(ex.getMessage()) ||
+                                    "This operation is not allowed on a closed folder".equals(ex.getMessage())))
+                        return false;
+
+                    if (ex instanceof MessagingException &&
+                            ("connection failure".equals(ex.getMessage()) ||
+                                    "failed to create new store connection".equals(ex.getMessage())))
+                        return false;
+                }
+
+                return prefs.getBoolean("crash_reports", false); // opt-in
+            }
+        });
+
+        Bugsnag.init(this, config);
+        if (prefs.getBoolean("crash_reports", false))
+            Bugsnag.startSession();
+
+        final String installer = getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
+        final boolean fingerprint = Helper.hasValidFingerprint(this);
+
+        Bugsnag.beforeNotify(new BeforeNotify() {
+            @Override
+            public boolean run(@NonNull Error error) {
+                error.addToTab("extra", "installer", installer == null ? "-" : installer);
+                error.addToTab("extra", "fingerprint", fingerprint);
+                return true;
+            }
+        });
     }
 
     static void upgrade(Context context) {

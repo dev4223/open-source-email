@@ -38,6 +38,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
 
+import com.bugsnag.android.BreadcrumbType;
+import com.bugsnag.android.Bugsnag;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
@@ -143,6 +145,13 @@ class Core {
                             " folder=" + op.folder +
                             " msg=" + op.message +
                             " args=" + op.args);
+
+                    Map<String, String> crumb = new HashMap<>();
+                    crumb.put("name", op.name);
+                    crumb.put("args", op.args);
+                    crumb.put("folder", folder.type);
+                    crumb.put("UIDPLUS", Boolean.toString(((IMAPStore) istore).hasCapability("UIDPLUS")));
+                    Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.STATE, crumb);
 
                     // Fetch most recent copy of message
                     EntityMessage message = null;
@@ -2134,7 +2143,14 @@ class Core {
         }
 
         void error(Throwable ex) {
-            recoverable = (recoverable && !(ex instanceof FolderClosedException));
+            if (ex instanceof FolderClosedException)
+                recoverable = false;
+
+            if (ex instanceof IllegalStateException && (
+                    "Not connected".equals(ex.getMessage()) ||
+                            "This operation is not allowed on a closed folder".equals(ex.getMessage())))
+                recoverable = false;
+
             thread.interrupt();
             yield();
         }

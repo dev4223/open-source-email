@@ -39,6 +39,8 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.preference.PreferenceManager;
 
+import com.bugsnag.android.Bugsnag;
+
 import java.text.SimpleDateFormat;
 
 public class FragmentOptionsMisc extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -50,6 +52,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swParanoid;
     private TextView tvParanoidHint;
     private SwitchCompat swUpdates;
+    private SwitchCompat swCrashReports;
     private SwitchCompat swDebug;
 
     private TextView tvLastCleanup;
@@ -57,11 +60,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpSearchLocal;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "badge", "subscriptions", "search_local", "english", "authentication", "paranoid", "updates", "debug"
+            "badge", "subscriptions", "search_local", "english", "authentication", "paranoid", "updates", "crash_reports", "debug"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
-            "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "edit_ref_confirmed"
+            "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "edit_ref_confirmed", "crash_reports_confirmed"
     };
 
     @Override
@@ -82,6 +85,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swParanoid = view.findViewById(R.id.swParanoid);
         tvParanoidHint = view.findViewById(R.id.tvParanoidHint);
         swUpdates = view.findViewById(R.id.swUpdates);
+        swCrashReports = view.findViewById(R.id.swCrashReports);
         swDebug = view.findViewById(R.id.swDebug);
 
         tvLastCleanup = view.findViewById(R.id.tvLastCleanup);
@@ -120,11 +124,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("english", checked).commit(); // apply won't work here
-
-                Intent intent = new Intent(getContext(), ActivityMain.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                Runtime.getRuntime().exit(0);
+                restart();
             }
         });
 
@@ -159,6 +159,17 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("updates", checked).apply();
+            }
+        });
+
+        swCrashReports.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("crash_reports", checked).apply();
+                if (checked)
+                    Bugsnag.startSession();
+                else
+                    Bugsnag.stopSession();
             }
         });
 
@@ -229,6 +240,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swParanoid.setChecked(prefs.getBoolean("paranoid", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
         swUpdates.setVisibility(Helper.isPlayStoreInstall(getContext()) ? View.GONE : View.VISIBLE);
+        swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
         swDebug.setChecked(prefs.getBoolean("debug", false));
 
         grpSearchLocal.setVisibility(Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M ? View.GONE : View.VISIBLE);
@@ -239,5 +251,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvLastCleanup.setText(
                 getString(R.string.title_advanced_last_cleanup,
                         time < 0 ? "-" : df.format(time)));
+    }
+
+    private void restart() {
+        Intent intent = new Intent(getContext(), ActivityMain.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        Runtime.getRuntime().exit(0);
     }
 }
