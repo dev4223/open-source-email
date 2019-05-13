@@ -5,36 +5,6 @@
     android:layout_height="wrap_content">
 
     <View
-        android:id="@+id/paddingAddressBottom"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/inAddresses" />
-
-    <include
-        android:id="@+id/inAddressesMeta"
-        layout="@layout/include_addresses_meta"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
-
-    <include
-        android:id="@+id/inAddressesMetaBottom"
-        layout="@layout/include_addresses_meta_bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:layout_marginEnd="6dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/inAddressesMeta" />
-
-    <View
         android:id="@+id/vSeparatorAddress"
         android:layout_width="0dp"
         android:layout_height="1dp"
@@ -68,6 +38,36 @@
         app:layout_constraintTop_toBottomOf="@id/ivExpanderAddress" />
 
     <View
+        android:id="@+id/paddingAddressBottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inAddresses" />
+
+    <include
+        android:id="@+id/inAddressesMeta"
+        layout="@layout/include_addresses_meta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
+
+    <include
+        android:id="@+id/inAddressesMetaBottom"
+        layout="@layout/include_addresses_meta_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inAddressesMeta" />
+
+    <View
         android:id="@+id/vSeparatorHeaders"
         android:layout_width="0dp"
         android:layout_height="1dp"
@@ -77,7 +77,7 @@
         android:background="?attr/colorSeparator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/inAddresses" />
+        app:layout_constraintTop_toBottomOf="@id/inAddressesMetaBottom" />
 
     <TextView
         android:id="@+id/tvHeaders"
