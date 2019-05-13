@@ -26,7 +26,6 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -144,7 +143,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private boolean hasWebView;
     private boolean contacts;
-    private boolean search;
     private float textSize;
 
     private boolean date;
@@ -805,9 +803,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpExpanded.setVisibility(View.VISIBLE);
 
             boolean hasFrom = (message.from != null && message.from.length > 0);
+            boolean hasTo = (message.to != null && message.to.length > 0);
             boolean hasChannel = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O);
 
-            ibSearchContact.setVisibility(show_addresses && search && BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+            ibSearchContact.setVisibility(show_addresses && (hasFrom || hasTo) ? View.VISIBLE : View.GONE);
             ibNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
             ibAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
 
@@ -1264,22 +1263,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     else {
                         String from = ((InternetAddress) message.from[0]).getAddress();
                         EntityIdentity identity = db.identity().getIdentity(message.identity);
-                        outgoing = MessageHelper.canonicalAddress(identity.email)
-                                .equals(MessageHelper.canonicalAddress(from));
+                        outgoing = MessageHelper.canonicalAddress(identity.email).equals(MessageHelper.canonicalAddress(from));
                     }
 
-                    return (outgoing
-                            ? message.to
-                            : (message.reply == null || message.reply.length == 0 ? message.from : message.reply));
+                    return (outgoing ? message.to : message.from);
                 }
 
                 @Override
                 protected void onExecuted(Bundle args, Address[] addresses) {
-                    if (addresses != null && addresses.length > 0) {
-                        Intent search = new Intent(context, ActivityView.class);
-                        search.putExtra(Intent.EXTRA_PROCESS_TEXT, ((InternetAddress) addresses[0]).getAddress());
-                        context.startActivity(search);
-                    }
+                    String query = ((InternetAddress) addresses[0]).getAddress();
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(
+                            new Intent(ActivityView.ACTION_SEARCH)
+                                    .putExtra("folder", -1L)
+                                    .putExtra("query", query));
                 }
 
                 @Override
@@ -3075,16 +3072,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
-
-        TypedValue tv = new TypedValue();
-        context.getTheme().resolveAttribute(R.attr.themeName, tv, true);
-        this.dark = !"light".equals(tv.string);
+        this.dark = Helper.isDarkTheme(context);
 
         this.hasWebView = Helper.hasWebView(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
-        this.search = (context.getPackageManager().getComponentEnabledSetting(
-                new ComponentName(context, ActivitySearch.class)) ==
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
         this.textSize = Helper.getTextSize(context, zoom);
 
         this.date = prefs.getBoolean("date", true);

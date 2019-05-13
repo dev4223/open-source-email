@@ -188,7 +188,7 @@
     <string name="title_advanced_circular">Show round icons</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_subject_italic">Show subject italic</string>
-    <string name="title_advanced_flags">Show stars (favorites)</string>
+    <string name="title_advanced_flags">Show stars</string>
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_addresses">Show address details by default</string>
     <string name="title_advanced_monospaced">Use monospaced font for message text</string>
@@ -492,6 +492,7 @@
     <string name="title_not_encrypted">Message is not encrypted</string>
 
     <string name="title_search">Search</string>
+    <string name="title_search_in">Search in</string>
     <string name="title_searching">Searching \'%1$s\'</string>
 
     <string name="title_sort_on">Sort on</string>
@@ -503,8 +504,9 @@
     <string name="title_sort_on_size">Size</string>
     <string name="title_sort_on_snoozed">Snoozed</string>
 
-    <string name="title_filter">Filter</string>
+    <string name="title_filter">Filter out</string>
     <string name="title_filter_seen">Read</string>
+    <string name="title_filter_unflagged">Unstarred</string>
     <string name="title_filter_snoozed">Snoozed</string>
     <string name="title_filter_duplicates">Duplicates</string>
 
@@ -550,16 +552,38 @@
     <string name="title_rule_automation">Automation</string>
     <string name="title_rule_automation_hint">This will send the intent \'%1$s\' with the extras \'%2$s\'</string>
 
+    <string name="title_legend_section_synchronize">Synchronize</string>
+    <string name="title_legend_section_folders">Folders</string>
+    <string name="title_legend_section_messages">Messages</string>
+    <string name="title_legend_section_compose">Compose</string>
+
+    <string name="title_legend_primary_connected">Account connected</string>
+    <string name="title_legend_primary_disconnected">Account disconnected</string>
+    <string name="title_legend_download_on">Download message content automatically</string>
+    <string name="title_legend_download_off">Download message content on demand</string>
+    <string name="title_legend_synchronize_on">Synchronize on</string>
+    <string name="title_legend_synchronize_off">Synchronize off</string>
+    <string name="title_legend_disconnected">Disconnected</string>
+    <string name="title_legend_connecting">Connecting</string>
+    <string name="title_legend_connected">Connected</string>
+    <string name="title_legend_executing">Executing operations</string>
+    <string name="title_legend_synchronizing">Synchronizing</string>
+    <string name="title_legend_downloading">Downloading</string>
+    <string name="title_legend_closing">Closing</string>
+    <string name="title_legend_waiting">Waiting for next synchronization</string>
+
+    <string name="title_legend_unified">Unified inbox / primary account</string>
     <string name="title_legend_inbox">Inbox</string>
     <string name="title_legend_archive">Archive</string>
     <string name="title_legend_drafts">Drafts</string>
     <string name="title_legend_trash">Trash</string>
     <string name="title_legend_junk">Spam</string>
+    <string name="title_legend_primary">Primary</string>
     <string name="title_legend_notify">Notify new messages</string>
     <string name="title_legend_subscribed">Subscribed to</string>
-    <string name="title_legend_unified">Unified inbox / primary account</string>
-    <string name="title_legend_primary_disconnected">Account disconnected</string>
-    <string name="title_legend_primary_connected">Account connected</string>
+    <string name="title_legend_sync_keep">Number of days to synchronize / to keep messages</string>
+    <string name="title_legend_download_fetch">Number of message bodies downloaded / headers fetched / on server</string>
+    <string name="title_legend_stop">Stop processing rules</string>
 
     <string name="title_legend_thread">Conversation</string>
     <string name="title_legend_zoom">Change text size</string>
@@ -570,8 +594,9 @@
     <string name="title_legend_plain_only">Is plain text only</string>
     <string name="title_legend_receipt">Receipt was requested</string>
     <string name="title_legend_attachment">Has attachment</string>
-    <string name="title_legend_flagged">Is starred</string>
+    <string name="title_legend_flagged">Is favorite</string>
     <string name="title_legend_contacts">Manage contacts</string>
+    <string name="title_legend_search">Search for sender</string>
     <string name="title_legend_view">View content</string>
     <string name="title_legend_hide">Hide content</string>
     <string name="title_legend_download">Download content</string>
@@ -579,32 +604,18 @@
     <string name="title_legend_embedded_image">Embedded image placeholder</string>
     <string name="title_legend_broken_image">Broken image</string>
 
-    <string name="title_legend_cc">Show CC/BCC</string>
     <string name="title_legend_pick">Pick contact</string>
+    <string name="title_legend_cc">Show CC/BCC</string>
+    <string name="title_legend_link">Insert link</string>
+    <string name="title_legend_file">Attach file</string>
+    <string name="title_legend_picture">Insert picture</string>
+    <string name="title_legend_photo">Take photo</string>
+    <string name="title_legend_audio">Record audio</string>
     <string name="title_legend_bold">Make text bold</string>
     <string name="title_legend_italic">Make text italic</string>
-    <string name="title_legend_link">Insert link</string>
-    <string name="title_legend_picture">Insert picture</string>
-    <string name="title_legend_file">Attach file</string>
-
-    <string name="title_legend_download_off">Download message content on demand</string>
-    <string name="title_legend_download_on">Download message content automatically</string>
-    <string name="title_legend_synchronize_on">Synchronize on</string>
-    <string name="title_legend_synchronize_off">Synchronize off</string>
-    <string name="title_legend_primary">Primary</string>
-    <string name="title_legend_disconnected">Disconnected</string>
-    <string name="title_legend_connecting">Connecting</string>
-    <string name="title_legend_connected">Connected</string>
-    <string name="title_legend_synchronizing">Synchronizing</string>
-    <string name="title_legend_executing">Executing operations</string>
-    <string name="title_legend_downloading">Downloading</string>
-    <string name="title_legend_closing">Closing</string>
-    <string name="title_legend_waiting">Waiting for next synchronization</string>
-
-    <string name="title_legend_stop">Stop processing rules</string>
-
-    <string name="title_legend_sync_keep">Number of days to synchronize / to keep messages</string>
-    <string name="title_legend_download_fetch">Number of message bodies downloaded / headers fetched / on server</string>
+    <string name="title_legend_underline">Underline text</string>
+    <string name="title_legend_text_size">Set text size</string>
+    <string name="title_legend_text_color">Set text color</string>
 
     <string name="title_legend_metered">Connection is metered</string>
     <string name="title_legend_unmetered">Connection is unmetered</string>
