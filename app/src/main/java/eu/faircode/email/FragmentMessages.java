@@ -33,6 +33,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
@@ -52,7 +53,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -83,6 +86,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bugsnag.android.Bugsnag;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -96,6 +100,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -127,14 +132,16 @@ public class FragmentMessages extends FragmentBase {
     private Group grpReady;
     private FloatingActionButton fab;
     private FloatingActionButton fabMore;
+    private FloatingActionButton fabSearch;
     private FloatingActionButton fabError;
 
     private long account;
     private long folder;
+    private boolean server;
     private String thread;
     private long id;
     private boolean found;
-    private String search;
+    private String query;
     private boolean pane;
 
     private boolean date;
@@ -217,15 +224,16 @@ public class FragmentMessages extends FragmentBase {
         Bundle args = getArguments();
         account = args.getLong("account", -1);
         folder = args.getLong("folder", -1);
+        server = args.getBoolean("server", false);
         thread = args.getString("thread");
         id = args.getLong("id", -1);
         found = args.getBoolean("found", false);
-        search = args.getString("search");
+        query = args.getString("query");
         pane = args.getBoolean("pane", false);
         primary = args.getLong("primary", -1);
         connected = args.getBoolean("connected", false);
 
-        if (TextUtils.isEmpty(search))
+        if (TextUtils.isEmpty(query))
             if (thread == null)
                 if (folder < 0)
                     viewType = AdapterMessage.ViewType.UNIFIED;
@@ -282,6 +290,7 @@ public class FragmentMessages extends FragmentBase {
         grpHintSelect = view.findViewById(R.id.grpHintSelect);
         grpReady = view.findViewById(R.id.grpReady);
         fab = view.findViewById(R.id.fab);
+        fabSearch = view.findViewById(R.id.fabSearch);
         fabMore = view.findViewById(R.id.fabMore);
         fabError = view.findViewById(R.id.fabError);
 
@@ -474,8 +483,10 @@ public class FragmentMessages extends FragmentBase {
                             int first = llm.findFirstVisibleItemPosition();
                             View child = rvMessage.getChildAt(pos - (first < 0 ? 0 : first));
                             if (child != null) {
-                                Animation animation = AnimationUtils.loadAnimation(getContext(), R.anim.fade_in_fast);
-                                child.startAnimation(animation);
+                                TranslateAnimation bounce = new TranslateAnimation(
+                                        0, 0, Helper.dp2pixels(getContext(), 12), 0);
+                                bounce.setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                                child.startAnimation(bounce);
                             }
 
                             rvMessage.scrollToPosition(pos);
@@ -563,6 +574,72 @@ public class FragmentMessages extends FragmentBase {
             }
         });
 
+        fabSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (folder < 0) {
+                    Bundle args = new Bundle();
+
+                    new SimpleTask<Map<EntityAccount, List<EntityFolder>>>() {
+                        @Override
+                        protected Map<EntityAccount, List<EntityFolder>> onExecute(Context context, Bundle args) {
+                            Map<EntityAccount, List<EntityFolder>> result = new LinkedHashMap<>();
+
+                            DB db = DB.getInstance(context);
+                            List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
+
+                            for (EntityAccount account : accounts) {
+                                List<EntityFolder> folders = db.folder().getFolders(account.id);
+                                if (folders.size() > 0)
+                                    Collections.sort(folders, folders.get(0).getComparator(context));
+                                result.put(account, folders);
+                            }
+
+                            return result;
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Map<EntityAccount, List<EntityFolder>> result) {
+                            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
+
+                            int order = 1;
+                            for (EntityAccount account : result.keySet()) {
+                                SubMenu smenu = popupMenu.getMenu()
+                                        .addSubMenu(Menu.NONE, 0, order++, account.name);
+                                int sorder = 1;
+                                for (EntityFolder folder : result.get(account)) {
+                                    MenuItem item = smenu.add(Menu.NONE, 1, sorder++, folder.getDisplayName(getContext()));
+                                    item.setIntent(new Intent().putExtra("target", folder.id));
+                                }
+                            }
+
+                            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem target) {
+                                    Intent intent = target.getIntent();
+                                    if (intent == null)
+                                        return false;
+
+                                    long folder = intent.getLongExtra("target", -1);
+                                    search(getContext(), getViewLifecycleOwner(), getFragmentManager(), folder, true, query);
+
+                                    return true;
+                                }
+                            });
+
+                            popupMenu.show();
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        }
+                    }.execute(FragmentMessages.this, args, "messages:search");
+                } else
+                    search(getContext(), getViewLifecycleOwner(), getFragmentManager(), folder, true, query);
+            }
+        });
+
         fabMore.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -591,6 +668,10 @@ public class FragmentMessages extends FragmentBase {
         pbWait.setVisibility(View.VISIBLE);
 
         fab.hide();
+        if (viewType == AdapterMessage.ViewType.SEARCH && !server)
+            fabSearch.show();
+        else
+            fabSearch.hide();
         fabMore.hide();
         fabError.hide();
 
@@ -629,15 +710,23 @@ public class FragmentMessages extends FragmentBase {
                 final SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
                     @Override
                     public boolean onSwipeRight() {
-                        if (previous != null)
+                        if (previous == null) {
+                            Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_right);
+                            view.startAnimation(bounce);
+                        } else
                             navigate(previous, true);
+
                         return (previous != null);
                     }
 
                     @Override
                     public boolean onSwipeLeft() {
-                        if (next != null)
+                        if (next == null) {
+                            Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
+                            view.startAnimation(bounce);
+                        } else
                             navigate(next, false);
+
                         return (next != null);
                     }
                 });
@@ -714,7 +803,7 @@ public class FragmentMessages extends FragmentBase {
             protected Void onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
 
-                if (!Helper.getNetworkState(context).isSuitable())
+                if (!ConnectionHelper.getNetworkState(context).isSuitable())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
                 boolean now = true;
@@ -1935,7 +2024,7 @@ public class FragmentMessages extends FragmentBase {
                 break;
 
             case SEARCH:
-                setSubtitle(getString(R.string.title_searching, search));
+                setSubtitle(getString(R.string.title_searching, query));
                 break;
         }
 
@@ -1946,7 +2035,7 @@ public class FragmentMessages extends FragmentBase {
         else
             fabMore.hide();
 
-        if (viewType != AdapterMessage.ViewType.THREAD) {
+        if (viewType != AdapterMessage.ViewType.THREAD && viewType != AdapterMessage.ViewType.SEARCH) {
             db.identity().liveComposableIdentities(account < 0 ? null : account).observe(getViewLifecycleOwner(),
                     new Observer<List<TupleIdentityEx>>() {
                         @Override
@@ -1958,6 +2047,8 @@ public class FragmentMessages extends FragmentBase {
                         }
                     });
         }
+
+        checkReporting();
     }
 
     @Override
@@ -2021,19 +2112,80 @@ public class FragmentMessages extends FragmentBase {
         }
     };
 
+
+    private void checkReporting() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (prefs.getBoolean("crash_reports", false) ||
+                prefs.getBoolean("crash_reports_asked", false))
+            return;
+
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_help, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction(R.string.title_info, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+                askReporting();
+            }
+        });
+
+        snackbar.show();
+    }
+
+    private void askReporting() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
+        final Button btnInfo = dview.findViewById(R.id.btnInfo);
+        final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+        final Intent info = new Intent(Intent.ACTION_VIEW);
+        info.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq104"));
+        info.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        btnInfo.setVisibility(
+                info.resolveActivity(getContext().getPackageManager()) == null ? View.GONE : View.VISIBLE);
+
+        btnInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(info);
+            }
+        });
+
+        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setView(dview)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        prefs.edit().putBoolean("crash_reports", true).apply();
+                        if (cbNotAgain.isChecked())
+                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
+                        Bugsnag.startSession();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (cbNotAgain.isChecked())
+                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
+                    }
+                })
+                .show();
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_messages, menu);
 
         final MenuItem menuSearch = menu.findItem(R.id.menu_search);
         SearchView searchView = (SearchView) menuSearch.getActionView();
+        searchView.setQueryHint(getString(R.string.title_search));
 
         if (!TextUtils.isEmpty(searching)) {
             menuSearch.expandActionView();
             searchView.setQuery(searching, false);
         }
 
-        searchView.setQueryHint(getString(folder < 0 ? R.string.title_search_device : R.string.title_search_hint));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -2045,7 +2197,9 @@ public class FragmentMessages extends FragmentBase {
             public boolean onQueryTextSubmit(String query) {
                 searching = null;
                 menuSearch.collapseActionView();
-                search(getContext(), getViewLifecycleOwner(), getFragmentManager(), folder, query);
+                search(
+                        getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                        folder, false, query);
                 return true;
             }
         });
@@ -2398,12 +2552,11 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void loadMessagesNext(final boolean top) {
-        ViewModelBrowse modelBrowse = ViewModelProviders.of(getActivity()).get(ViewModelBrowse.class);
-        modelBrowse.set(getContext(), folder, search, REMOTE_PAGE_SIZE);
-
         if (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH)
             if (boundaryCallback == null)
-                boundaryCallback = new BoundaryCallbackMessages(getViewLifecycleOwner(), modelBrowse,
+                boundaryCallback = new BoundaryCallbackMessages(
+                        getContext(), getViewLifecycleOwner(),
+                        folder, server, query, REMOTE_PAGE_SIZE,
                         new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
                             @Override
                             public void onLoading() {
@@ -2567,7 +2720,7 @@ public class FragmentMessages extends FragmentBase {
             if (download == 0)
                 download = Long.MAX_VALUE;
 
-            boolean unmetered = Helper.getNetworkState(getContext()).isUnmetered();
+            boolean unmetered = ConnectionHelper.getNetworkState(getContext()).isUnmetered();
 
             int count = 0;
             int unseen = 0;
@@ -2588,7 +2741,8 @@ public class FragmentMessages extends FragmentBase {
                     }
                 }
 
-                if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
+                if (!(EntityFolder.OUTBOX.equals(message.folderType) && message.ui_snoozed != null) &&
+                        !EntityFolder.ARCHIVE.equals(message.folderType) &&
                         !EntityFolder.SENT.equals(message.folderType) &&
                         !EntityFolder.TRASH.equals(message.folderType) &&
                         !EntityFolder.JUNK.equals(message.folderType))
@@ -2623,7 +2777,8 @@ public class FragmentMessages extends FragmentBase {
                     TupleMessageEx message = messages.get(i);
                     if (message == null)
                         continue;
-                    if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
+                    if (!(EntityFolder.OUTBOX.equals(message.folderType) && message.ui_snoozed != null) &&
+                            !EntityFolder.ARCHIVE.equals(message.folderType) &&
                             !EntityFolder.SENT.equals(message.folderType) &&
                             !EntityFolder.TRASH.equals(message.folderType) &&
                             !EntityFolder.JUNK.equals(message.folderType))
@@ -2760,6 +2915,9 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void navigate(long id, final boolean left) {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            return;
+
         Bundle args = new Bundle();
         args.putLong("id", id);
         new SimpleTask<EntityMessage>() {
@@ -2972,7 +3130,7 @@ public class FragmentMessages extends FragmentBase {
                             db.endTransaction();
                         }
                     }
-                });
+                }, "messages:timeout");
                 thread.setPriority(THREAD_PRIORITY_BACKGROUND);
                 thread.start();
             }
@@ -3042,11 +3200,12 @@ public class FragmentMessages extends FragmentBase {
 
     static void search(
             final Context context, final LifecycleOwner owner, final FragmentManager manager,
-            long folder, String query) {
+            long folder, boolean server, String query) {
         if (Helper.isPro(context)) {
             Bundle args = new Bundle();
             args.putLong("folder", folder);
-            args.putString("search", query);
+            args.putBoolean("server", server);
+            args.putString("query", query);
 
             new SimpleTask<Void>() {
                 @Override
@@ -3057,6 +3216,9 @@ public class FragmentMessages extends FragmentBase {
 
                 @Override
                 protected void onExecuted(Bundle args, Void data) {
+                    if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                        manager.popBackStack("search", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
                     FragmentMessages fragment = new FragmentMessages();
                     fragment.setArguments(args);
 

@@ -51,7 +51,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 80,
+        version = 82,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -97,10 +97,6 @@ public abstract class DB extends RoomDatabase {
         if (sInstance == null) {
             Context context = ctx.getApplicationContext();
             sInstance = migrate(context, getBuilder(context));
-
-            Log.i("SQLite version=" + exec(sInstance, "SELECT sqlite_version() AS sqlite_version"));
-            Log.i("SQLite sync=" + exec(sInstance, "PRAGMA synchronous"));
-            Log.i("SQLite journal=" + exec(sInstance, "PRAGMA journal_mode"));
         }
 
         return sInstance;
@@ -112,15 +108,6 @@ public abstract class DB extends RoomDatabase {
                 .openHelperFactory(new RequerySQLiteOpenHelperFactory())
                 .setQueryExecutor(executor)
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING);
-    }
-
-    private static String exec(DB db, String command) {
-        try (Cursor cursor = db.query(command, new Object[0])) {
-            if (cursor != null && cursor.moveToNext())
-                return cursor.getString(0);
-            else
-                return null;
-        }
     }
 
     private static DB migrate(final Context context, RoomDatabase.Builder<DB> builder) {
@@ -807,6 +794,21 @@ public abstract class DB extends RoomDatabase {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("DROP INDEX index_attachment_message_cid");
                         db.execSQL("CREATE INDEX `index_attachment_message_cid` ON `attachment` (`message`, `cid`)");
+                    }
+                })
+                .addMigrations(new Migration(80, 81) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `operation` ADD COLUMN `state` TEXT");
+                    }
+                })
+                .addMigrations(new Migration(81, 82) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("CREATE INDEX `index_operation_account` ON `operation` (`account`)");
+                        db.execSQL("CREATE INDEX `index_operation_state` ON `operation` (`state`)");
                     }
                 })
                 .build();

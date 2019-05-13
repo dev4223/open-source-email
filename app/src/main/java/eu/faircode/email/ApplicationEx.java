@@ -46,20 +46,25 @@ import com.bugsnag.android.BeforeSend;
 import com.bugsnag.android.Bugsnag;
 import com.bugsnag.android.Error;
 import com.bugsnag.android.Report;
+import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.iap.ProtocolException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeoutException;
 
 import javax.mail.MessagingException;
 
@@ -102,7 +107,8 @@ public class ApplicationEx extends Application {
             }
         });
 
-        setupBugsnag();
+        if ("eu.faircode.email".equals(BuildConfig.APPLICATION_ID))
+            setupBugsnag();
 
         upgrade(this);
 
@@ -114,6 +120,7 @@ public class ApplicationEx extends Application {
         MessageHelper.setSystemProperties();
         ContactInfo.init(this, new Handler());
         Core.init(this);
+        WorkerWatchdog.init(this);
     }
 
     @Override
@@ -157,6 +164,11 @@ public class ApplicationEx extends Application {
 
         ignore.add("com.sun.mail.util.MailConnectException");
         ignore.add("javax.mail.AuthenticationFailedException");
+        ignore.add("java.net.UnknownHostException");
+        ignore.add("java.net.ConnectException");
+        ignore.add("java.net.SocketTimeoutException");
+        ignore.add("java.net.SocketException");
+        // android.accounts.OperationCanceledException
 
         ignore.add("javax.mail.StoreClosedException");
         ignore.add("javax.mail.FolderClosedException");
@@ -176,14 +188,28 @@ public class ApplicationEx extends Application {
                 if (error != null) {
                     Throwable ex = error.getException();
 
-                    if (ex instanceof IllegalStateException &&
-                            ("Not connected".equals(ex.getMessage()) ||
-                                    "This operation is not allowed on a closed folder".equals(ex.getMessage())))
+                    if (ex instanceof MessagingException &&
+                            (ex.getCause() instanceof IOException ||
+                                    ex.getCause() instanceof ConnectionException ||
+                                    ex.getCause() instanceof SocketTimeoutException ||
+                                    ex.getCause() instanceof ProtocolException))
                         return false;
 
                     if (ex instanceof MessagingException &&
                             ("connection failure".equals(ex.getMessage()) ||
                                     "failed to create new store connection".equals(ex.getMessage())))
+                        return false;
+
+                    if (ex instanceof IllegalStateException &&
+                            ("Not connected".equals(ex.getMessage()) ||
+                                    "This operation is not allowed on a closed folder".equals(ex.getMessage())))
+                        return false;
+
+                    if (ex instanceof FileNotFoundException &&
+                            ex.getMessage() != null &&
+                            (ex.getMessage().startsWith("Download image failed") ||
+                                    ex.getMessage().startsWith("https://ipinfo.io/") ||
+                                    ex.getMessage().startsWith("https://autoconfig.thunderbird.net/")))
                         return false;
                 }
 
@@ -362,6 +388,11 @@ public class ApplicationEx extends Application {
             return false;
 
         if (ex instanceof RemoteException)
+            return false;
+
+        if (ex instanceof TimeoutException &&
+                ex.getMessage() != null &&
+                ex.getMessage().startsWith("com.sun.mail.imap.IMAPStore.finalize"))
             return false;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)

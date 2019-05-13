@@ -19,41 +19,26 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
-import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
-import android.os.PowerManager;
-import android.text.TextUtils;
+import android.text.Spannable;
+import android.text.Spanned;
 import android.text.format.DateUtils;
 import android.text.format.Time;
-import android.view.Display;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -69,13 +54,8 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.preference.PreferenceManager;
 
-import com.android.billingclient.api.BillingClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.util.MailConnectException;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -88,11 +68,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -100,36 +77,22 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 
-import javax.mail.Address;
-import javax.mail.AuthenticationFailedException;
 import javax.mail.FolderClosedException;
 import javax.mail.MessageRemovedException;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.net.ssl.HttpsURLConnection;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
 
 public class Helper {
-    private static Map<String, String> hostOrganization = new HashMap<>();
-
     static final int NOTIFICATION_SYNCHRONIZE = 1;
     static final int NOTIFICATION_SEND = 2;
     static final int NOTIFICATION_EXTERNAL = 3;
-
-    static final int AUTH_TYPE_PASSWORD = 1;
-    static final int AUTH_TYPE_GMAIL = 2;
 
     static final float LOW_LIGHT = 0.6f;
 
@@ -144,8 +107,53 @@ public class Helper {
         }
     };
 
+    // Features
+
     static boolean hasPermission(Context context, String name) {
         return (ContextCompat.checkSelfPermission(context, name) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    static boolean hasCustomTabs(Context context, Uri uri) {
+        PackageManager pm = context.getPackageManager();
+        Intent view = new Intent(Intent.ACTION_VIEW, uri);
+
+        for (ResolveInfo info : pm.queryIntentActivities(view, 0)) {
+            Intent intent = new Intent();
+            intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
+            intent.setPackage(info.activityInfo.packageName);
+            if (pm.resolveService(intent, 0) != null)
+                return true;
+        }
+
+        return false;
+    }
+
+    static boolean hasWebView(Context context) {
+        PackageManager pm = context.getPackageManager();
+        if (pm.hasSystemFeature(PackageManager.FEATURE_WEBVIEW))
+            try {
+                new WebView(context);
+                return true;
+            } catch (Throwable ex) {
+                return false;
+            }
+        else
+            return false;
+    }
+
+    static boolean canPrint(Context context) {
+        PackageManager pm = context.getPackageManager();
+        return pm.hasSystemFeature(PackageManager.FEATURE_PRINTING);
+    }
+
+    // View
+
+    static Intent getChooser(Context context, Intent intent) {
+        PackageManager pm = context.getPackageManager();
+        if (pm.queryIntentActivities(intent, 0).size() == 1)
+            return intent;
+        else
+            return Intent.createChooser(intent, context.getString(R.string.title_select_app));
     }
 
     static void view(Context context, LifecycleOwner owner, Intent intent) {
@@ -183,29 +191,6 @@ public class Helper {
         }
     }
 
-    static boolean hasCustomTabs(Context context, Uri uri) {
-        PackageManager pm = context.getPackageManager();
-        Intent view = new Intent(Intent.ACTION_VIEW, uri);
-
-        for (ResolveInfo info : pm.queryIntentActivities(view, 0)) {
-            Intent intent = new Intent();
-            intent.setAction(ACTION_CUSTOM_TABS_CONNECTION);
-            intent.setPackage(info.activityInfo.packageName);
-            if (pm.resolveService(intent, 0) != null)
-                return true;
-        }
-
-        return false;
-    }
-
-    static Intent getChooser(Context context, Intent intent) {
-        PackageManager pm = context.getPackageManager();
-        if (pm.queryIntentActivities(intent, 0).size() == 1)
-            return intent;
-        else
-            return Intent.createChooser(intent, context.getString(R.string.title_select_app));
-    }
-
     static Intent getIntentSetupHelp() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/SETUP.md#setup-help"));
@@ -238,13 +223,15 @@ public class Helper {
         intent.setPackage(BuildConfig.APPLICATION_ID);
         intent.setType("text/plain");
         try {
-            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{Helper.myAddress().getAddress()});
+            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{Log.myAddress().getAddress()});
         } catch (UnsupportedEncodingException ex) {
             Log.w(ex);
         }
         intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.title_issue_subject, version));
         return intent;
     }
+
+    // Graphics
 
     static int dp2pixels(Context context, int dp) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -278,25 +265,6 @@ public class Helper {
         return color;
     }
 
-    static Bitmap decodeImage(File file, int scaleToPixels) {
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-
-        int factor = 1;
-        while (options.outWidth / factor > scaleToPixels)
-            factor *= 2;
-
-        if (factor > 1) {
-            Log.i("Decode image factor=" + factor);
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = factor;
-            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-        }
-
-        return BitmapFactory.decodeFile(file.getAbsolutePath());
-    }
-
     static void setViewsEnabled(ViewGroup view, boolean enabled) {
         for (int i = 0; i < view.getChildCount(); i++) {
             View child = view.getChildAt(i);
@@ -312,6 +280,58 @@ public class Helper {
             } else if (child instanceof ViewGroup)
                 setViewsEnabled((ViewGroup) child, enabled);
         }
+    }
+
+    // Formatting
+
+    static String humanReadableByteCount(long bytes, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+        return new DecimalFormat("@@").format(bytes / Math.pow(unit, exp)) + " " + pre + "B";
+    }
+
+    static DateFormat getTimeInstance(Context context, int style) {
+        // https://issuetracker.google.com/issues/37054851
+        if (context != null &&
+                (style == SimpleDateFormat.SHORT || style == SimpleDateFormat.MEDIUM)) {
+            Locale locale = Locale.getDefault();
+            boolean is24Hour = android.text.format.DateFormat.is24HourFormat(context);
+            String skeleton = (is24Hour ? "Hm" : "hm");
+            if (style == SimpleDateFormat.MEDIUM)
+                skeleton += "s";
+            String pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton);
+            return new SimpleDateFormat(pattern, locale);
+        } else
+            return SimpleDateFormat.getTimeInstance(style);
+    }
+
+    static CharSequence getRelativeTimeSpanString(Context context, long millis) {
+        long now = System.currentTimeMillis();
+        long span = Math.abs(now - millis);
+        Time nowTime = new Time();
+        Time thenTime = new Time();
+        nowTime.set(now);
+        thenTime.set(millis);
+        if (span < DateUtils.DAY_IN_MILLIS && nowTime.weekDay == thenTime.weekDay)
+            return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
+        else
+            return DateUtils.getRelativeTimeSpanString(context, millis);
+    }
+
+    static String ellipsize(String text, int maxLen) {
+        if (text == null || text.length() < maxLen) {
+            return text;
+        }
+        return text.substring(0, maxLen) + "...";
+    }
+
+    static void clearComposingText(Spannable text) {
+        Object[] spans = text.getSpans(0, text.length(), Object.class);
+        for (Object span : spans)
+            if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0)
+                text.removeSpan(span);
     }
 
     static String localizeFolderName(Context context, String name) {
@@ -337,11 +357,10 @@ public class Helper {
                 return null;
             if (ex instanceof FolderClosedException)
                 return null;
-            if (ex instanceof IllegalStateException)
-                // sync when store disconnected
+            if (ex instanceof IllegalStateException &&
+                    ("Not connected".equals(ex.getMessage()) ||
+                            "This operation is not allowed on a closed folder".equals(ex.getMessage())))
                 return null;
-            //if (ex instanceof SSLException || ex.getCause() instanceof SSLException)
-            //    return null;
             if (ex instanceof MailConnectException && ex.getCause() instanceof UnknownHostException)
                 return null;
         }
@@ -376,7 +395,7 @@ public class Helper {
                             new SimpleTask<Long>() {
                                 @Override
                                 protected Long onExecute(Context context, Bundle args) throws Throwable {
-                                    return getDebugInfo(context, R.string.title_crash_info_remark, ex, null).id;
+                                    return Log.getDebugInfo(context, R.string.title_crash_info_remark, ex, null).id;
                                 }
 
                                 @Override
@@ -402,359 +421,19 @@ public class Helper {
             ApplicationEx.writeCrashLog(context, ex);
     }
 
-    static EntityMessage getDebugInfo(Context context, int title, Throwable ex, String log) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        sb.append(context.getString(title)).append("\n\n\n\n");
-        sb.append(getAppInfo(context));
-        if (ex != null)
-            sb.append(ex.toString()).append("\n").append(android.util.Log.getStackTraceString(ex));
-        if (log != null)
-            sb.append(log);
-        String body = "<pre>" + sb.toString().replaceAll("\\r?\\n", "<br />") + "</pre>";
+    // Files
 
-        EntityMessage draft;
-
-        DB db = DB.getInstance(context);
-        try {
-            db.beginTransaction();
-
-            EntityFolder drafts = db.folder().getPrimaryDrafts();
-            if (drafts == null)
-                throw new IllegalArgumentException(context.getString(R.string.title_no_primary_drafts));
-
-            List<EntityIdentity> identities = db.identity().getIdentities(drafts.account);
-            EntityIdentity primary = null;
-            for (EntityIdentity identity : identities) {
-                if (identity.primary) {
-                    primary = identity;
-                    break;
-                } else if (primary == null)
-                    primary = identity;
-            }
-
-            draft = new EntityMessage();
-            draft.account = drafts.account;
-            draft.folder = drafts.id;
-            draft.identity = (primary == null ? null : primary.id);
-            draft.msgid = EntityMessage.generateMessageId();
-            draft.thread = draft.msgid;
-            draft.to = new Address[]{myAddress()};
-            draft.subject = context.getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME + " debug info";
-            draft.received = new Date().getTime();
-            draft.seen = true;
-            draft.ui_seen = true;
-            draft.id = db.message().insertMessage(draft);
-            writeText(draft.getFile(context), body);
-            db.message().setMessageContent(draft.id,
-                    true,
-                    false,
-                    HtmlHelper.getPreview(body),
-                    null);
-
-            attachSettings(context, draft.id, 1);
-            attachAccounts(context, draft.id, 2);
-            attachNetworkInfo(context, draft.id, 3);
-            attachLog(context, draft.id, 4);
-            attachOperations(context, draft.id, 5);
-            attachLogcat(context, draft.id, 6);
-
-            Core.updateMessageSize(context, draft.id);
-
-            EntityOperation.queue(context, db, draft, EntityOperation.ADD);
-
-            db.setTransactionSuccessful();
-        } finally {
-            db.endTransaction();
-        }
-        return draft;
+    static String sanitizeFilename(String name) {
+        return (name == null ? null : name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"));
     }
 
-    private static StringBuilder getAppInfo(Context context) {
-        StringBuilder sb = new StringBuilder();
-
-        // Get version info
-        String installer = context.getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
-        sb.append(String.format("%s: %s/%s %s/%s%s%s%s\r\n",
-                context.getString(R.string.app_name),
-                BuildConfig.APPLICATION_ID,
-                installer,
-                BuildConfig.VERSION_NAME,
-                hasValidFingerprint(context) ? "1" : "3",
-                BuildConfig.PLAY_STORE_RELEASE ? "p" : "",
-                BuildConfig.DEBUG ? "d" : "",
-                isPro(context) ? "+" : ""));
-        sb.append(String.format("Android: %s (SDK %d)\r\n", Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
-        sb.append("\r\n");
-
-        // Get device info
-        sb.append(String.format("Brand: %s\r\n", Build.BRAND));
-        sb.append(String.format("Manufacturer: %s\r\n", Build.MANUFACTURER));
-        sb.append(String.format("Model: %s\r\n", Build.MODEL));
-        sb.append(String.format("Product: %s\r\n", Build.PRODUCT));
-        sb.append(String.format("Device: %s\r\n", Build.DEVICE));
-        sb.append(String.format("Host: %s\r\n", Build.HOST));
-        sb.append(String.format("Display: %s\r\n", Build.DISPLAY));
-        sb.append(String.format("Id: %s\r\n", Build.ID));
-        sb.append("\r\n");
-
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        float density = context.getResources().getDisplayMetrics().density;
-        sb.append(String.format("Resolution: %.2f x %.2f dp %b\r\n",
-                size.x / density, size.y / density,
-                context.getResources().getConfiguration().isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL)));
-
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        boolean ignoring = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            ignoring = pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
-        sb.append(String.format("Battery optimizations: %b\r\n", !ignoring));
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
-            int bucket = usm.getAppStandbyBucket();
-            sb.append(String.format("Standby bucket: %d\r\n", bucket));
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            boolean saving = (cm.getRestrictBackgroundStatus() == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED);
-            sb.append(String.format("Data saving: %b\r\n", saving));
-        }
-
-        sb.append("\r\n");
-
-        sb.append(new Date().toString()).append("\r\n");
-
-        sb.append("\r\n");
-
-        return sb;
-    }
-
-    private static void attachSettings(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "settings.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            long size = 0;
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-            Map<String, ?> settings = prefs.getAll();
-            for (String key : settings.keySet())
-                size += write(os, key + "=" + settings.get(key) + "\r\n");
-
-            db.attachment().setDownloaded(attachment.id, size);
-        }
-    }
-
-    private static void attachAccounts(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "accounts.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            long size = 0;
-
-            List<EntityAccount> accounts = db.account().getAccounts();
-            for (EntityAccount account : accounts)
-                try {
-                    JSONObject jaccount = account.toJSON();
-                    jaccount.remove("user");
-                    jaccount.remove("password");
-                    size += write(os, "==========\r\n");
-                    size += write(os, jaccount.toString(2) + "\r\n");
-
-                    List<EntityIdentity> identities = db.identity().getIdentities(account.id);
-                    for (EntityIdentity identity : identities)
-                        try {
-                            JSONObject jidentity = identity.toJSON();
-                            jidentity.remove("user");
-                            jidentity.remove("password");
-                            size += write(os, "----------\r\n");
-                            size += write(os, jidentity.toString(2) + "\r\n");
-                        } catch (JSONException ex) {
-                            size += write(os, ex.toString() + "\r\n");
-                        }
-                } catch (JSONException ex) {
-                    size += write(os, ex.toString() + "\r\n");
-                }
-
-            db.attachment().setDownloaded(attachment.id, size);
-        }
-    }
-
-    private static void attachNetworkInfo(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "network.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            long size = 0;
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-            Network active = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                active = cm.getActiveNetwork();
-
-            for (Network network : cm.getAllNetworks()) {
-                NetworkCapabilities caps = cm.getNetworkCapabilities(network);
-                size += write(os, (network.equals(active) ? "active=" : "network=") + network + " capabilities=" + caps + "\r\n\r\n");
-            }
-
-            db.attachment().setDownloaded(attachment.id, size);
-        }
-    }
-
-    private static void attachLog(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "log.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            long size = 0;
-            long from = new Date().getTime() - 24 * 3600 * 1000L;
-            DateFormat DF = SimpleDateFormat.getTimeInstance();
-
-            for (EntityLog entry : db.log().getLogs(from))
-                size += write(os, String.format("%s %s\r\n", DF.format(entry.time), entry.data));
-
-            db.attachment().setDownloaded(attachment.id, size);
-        }
-    }
-
-    private static void attachOperations(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "operations.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            long size = 0;
-            DateFormat DF = SimpleDateFormat.getTimeInstance();
-
-            for (EntityOperation op : db.operation().getOperations())
-                size += write(os, String.format("%s %d %s %s %s\r\n",
-                        DF.format(op.created),
-                        op.message == null ? -1 : op.message,
-                        op.name,
-                        op.args,
-                        op.error));
-
-            db.attachment().setDownloaded(attachment.id, size);
-        }
-    }
-
-    private static void attachLogcat(Context context, long id, int sequence) throws IOException {
-        DB db = DB.getInstance(context);
-
-        EntityAttachment attachment = new EntityAttachment();
-        attachment.message = id;
-        attachment.sequence = sequence;
-        attachment.name = "logcat.txt";
-        attachment.type = "text/plain";
-        attachment.size = null;
-        attachment.progress = 0;
-        attachment.id = db.attachment().insertAttachment(attachment);
-
-        Process proc = null;
-        File file = attachment.getFile(context);
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-
-            String[] cmd = new String[]{"logcat",
-                    "-d",
-                    "-v", "threadtime",
-                    //"-t", "1000",
-                    Log.TAG + ":I"};
-            proc = Runtime.getRuntime().exec(cmd);
-
-            long size = 0;
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-                String line;
-                while ((line = br.readLine()) != null)
-                    size += write(os, line + "\r\n");
-            }
-
-
-            db.attachment().setDownloaded(attachment.id, size);
-        } finally {
-            if (proc != null)
-                proc.destroy();
-        }
-    }
-
-    private static int write(OutputStream os, String text) throws IOException {
-        byte[] bytes = text.getBytes();
-        os.write(bytes);
-        return bytes.length;
-    }
-
-    static String humanReadableByteCount(long bytes, boolean si) {
-        int unit = si ? 1000 : 1024;
-        if (bytes < unit) return bytes + " B";
-        int exp = (int) (Math.log(bytes) / Math.log(unit));
-        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-        return new DecimalFormat("@@").format(bytes / Math.pow(unit, exp)) + " " + pre + "B";
-    }
-
-    static InternetAddress myAddress() throws UnsupportedEncodingException {
-        return new InternetAddress("marcel+fairemail@faircode.eu", "FairCode");
-    }
-
-    static String canonicalAddress(String address) {
-        String[] a = address.split("@");
-        if (a.length > 0) {
-            String[] extra = a[0].split("\\+");
-            if (extra.length > 0)
-                a[0] = extra[0];
-        }
-        return TextUtils.join("@", a).toLowerCase();
+    static String getExtension(String filename) {
+        if (filename == null)
+            return null;
+        int index = filename.lastIndexOf(".");
+        if (index < 0)
+            return null;
+        return filename.substring(index + 1);
     }
 
     static void writeText(File file, String content) throws IOException {
@@ -786,224 +465,26 @@ public class Helper {
         }
     }
 
-    static String getExtension(String filename) {
-        if (filename == null)
-            return null;
-        int index = filename.lastIndexOf(".");
-        if (index < 0)
-            return null;
-        return filename.substring(index + 1);
+    static Bitmap decodeImage(File file, int scaleToPixels) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+
+        int factor = 1;
+        while (options.outWidth / factor > scaleToPixels)
+            factor *= 2;
+
+        if (factor > 1) {
+            Log.i("Decode image factor=" + factor);
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = factor;
+            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        }
+
+        return BitmapFactory.decodeFile(file.getAbsolutePath());
     }
 
-    static class NetworkState {
-        private Boolean connected = null;
-        private Boolean suitable = null;
-        private Boolean unmetered = null;
-        private Boolean roaming = null;
-
-        boolean isConnected() {
-            return (connected != null && connected);
-        }
-
-        boolean isSuitable() {
-            return (suitable != null && suitable);
-        }
-
-        boolean isUnmetered() {
-            return (unmetered != null && unmetered);
-        }
-
-        boolean isRoaming() {
-            return (roaming != null && roaming);
-        }
-
-        public void update(NetworkState newState) {
-            connected = newState.connected;
-            unmetered = newState.unmetered;
-            suitable = newState.suitable;
-        }
-    }
-
-    static NetworkState getNetworkState(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean metered = prefs.getBoolean("metered", true);
-        boolean roaming = prefs.getBoolean("roaming", true);
-
-        NetworkState state = new NetworkState();
-        Boolean isMetered = isMetered(context);
-        state.connected = (isMetered != null);
-        state.unmetered = (isMetered != null && !isMetered);
-        state.suitable = (isMetered != null && (metered || !isMetered));
-
-        if (state.connected && !roaming) {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                NetworkInfo ani = cm.getActiveNetworkInfo();
-                if (ani != null)
-                    state.roaming = ani.isRoaming();
-            } else {
-                Network active = cm.getActiveNetwork();
-                if (active != null) {
-                    NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-                    if (caps != null)
-                        state.roaming = !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
-                }
-            }
-        }
-
-        return state;
-    }
-
-    private static Boolean isMetered(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            NetworkInfo ani = cm.getActiveNetworkInfo();
-            if (ani == null || !ani.isConnected())
-                return null;
-            return cm.isActiveNetworkMetered();
-        }
-
-        Network active = cm.getActiveNetwork();
-        if (active == null) {
-            Log.i("isMetered: no active network");
-            return null;
-        }
-
-        NetworkCapabilities caps = cm.getNetworkCapabilities(active);
-        if (caps == null) {
-            Log.i("isMetered: active no caps");
-            return null; // network unknown
-        }
-
-        Log.i("isMetered: active caps=" + caps);
-
-        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
-                !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-            Log.i("isMetered: no internet");
-            return null;
-        }
-
-        if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)) {
-            Log.i("isMetered: active restricted");
-            return null;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-                !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOREGROUND)) {
-            Log.i("isMetered: active background");
-            return null;
-        }
-
-        if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-            boolean unmetered = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
-            Log.i("isMetered: active not VPN unmetered=" + unmetered);
-            return !unmetered;
-        }
-
-        // VPN: evaluate underlying networks
-
-        boolean underlying = false;
-        Network[] networks = cm.getAllNetworks();
-        if (networks != null)
-            for (Network network : networks) {
-                caps = cm.getNetworkCapabilities(network);
-                if (caps == null) {
-                    Log.i("isMetered: no underlying caps");
-                    continue; // network unknown
-                }
-
-                Log.i("isMetered: underlying caps=" + caps);
-
-                if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    Log.i("isMetered: underlying no internet");
-                    continue;
-                }
-
-                if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)) {
-                    Log.i("isMetered: underlying restricted");
-                    continue;
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
-                        !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOREGROUND)) {
-                    Log.i("isMetered: underlying background");
-                    continue;
-                }
-
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)) {
-                    underlying = true;
-                    Log.i("isMetered: underlying is connected");
-
-                    if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
-                        Log.i("isMetered: underlying is unmetered");
-                        return false;
-                    }
-                }
-            }
-
-        if (!underlying) {
-            Log.i("isMetered: no underlying network");
-            return null;
-        }
-
-        // Assume metered
-        Log.i("isMetered: underlying assume metered");
-        return true;
-    }
-
-    static void connect(Context context, IMAPStore istore, EntityAccount account)
-            throws MessagingException, AuthenticatorException, OperationCanceledException, IOException {
-        try {
-            istore.connect(account.host, account.port, account.user, account.password);
-        } catch (AuthenticationFailedException ex) {
-            if (account.auth_type == AUTH_TYPE_GMAIL) {
-                account.password = refreshToken(context, "com.google", account.user, account.password);
-                DB.getInstance(context).account().setAccountPassword(account.id, account.password);
-                istore.connect(account.host, account.port, account.user, account.password);
-            } else
-                throw ex;
-        }
-
-        // https://www.ietf.org/rfc/rfc2971.txt
-        if (istore.hasCapability("ID"))
-            try {
-                Map<String, String> id = new LinkedHashMap<>();
-                id.put("name", context.getString(R.string.app_name));
-                id.put("version", BuildConfig.VERSION_NAME);
-                Map<String, String> sid = istore.id(id);
-                if (sid != null)
-                    for (String key : sid.keySet())
-                        Log.i("Server " + key + "=" + sid.get(key));
-            } catch (MessagingException ex) {
-                Log.w(ex);
-            }
-    }
-
-    static String refreshToken(Context context, String type, String name, String current)
-            throws AuthenticatorException, OperationCanceledException, IOException {
-        AccountManager am = AccountManager.get(context);
-        Account[] accounts = am.getAccountsByType(type);
-        for (Account account : accounts)
-            if (name.equals(account.name)) {
-                Log.i("Refreshing token");
-                am.invalidateAuthToken(type, current);
-                String refreshed = am.blockingGetAuthToken(account, getAuthTokenType(type), true);
-                Log.i("Refreshed token");
-                return refreshed;
-            }
-        return current;
-    }
-
-    static String getAuthTokenType(String type) {
-        if ("com.google".equals(type))
-            return "oauth2:https://mail.google.com/";
-        return null;
-    }
-
-    static boolean isPlayStoreInstall(Context context) {
-        return BuildConfig.PLAY_STORE_RELEASE;
-    }
+    // Cryptography
 
     static String sha256(String data) throws NoSuchAlgorithmException {
         return sha256(data.getBytes());
@@ -1015,75 +496,6 @@ public class Helper {
         for (byte b : bytes)
             sb.append(String.format("%02x", b));
         return sb.toString();
-    }
-
-    static String getBillingResponseText(@BillingClient.BillingResponse int responseCode) {
-        switch (responseCode) {
-            case BillingClient.BillingResponse.BILLING_UNAVAILABLE:
-                // Billing API version is not supported for the type requested
-                return "BILLING_UNAVAILABLE";
-
-            case BillingClient.BillingResponse.DEVELOPER_ERROR:
-                // Invalid arguments provided to the API.
-                return "DEVELOPER_ERROR";
-
-            case BillingClient.BillingResponse.ERROR:
-                // Fatal error during the API action
-                return "ERROR";
-
-            case BillingClient.BillingResponse.FEATURE_NOT_SUPPORTED:
-                // Requested feature is not supported by Play Store on the current device.
-                return "FEATURE_NOT_SUPPORTED";
-
-            case BillingClient.BillingResponse.ITEM_ALREADY_OWNED:
-                // Failure to purchase since item is already owned
-                return "ITEM_ALREADY_OWNED";
-
-            case BillingClient.BillingResponse.ITEM_NOT_OWNED:
-                // Failure to consume since item is not owned
-                return "ITEM_NOT_OWNED";
-
-            case BillingClient.BillingResponse.ITEM_UNAVAILABLE:
-                // Requested product is not available for purchase
-                return "ITEM_UNAVAILABLE";
-
-            case BillingClient.BillingResponse.OK:
-                // Success
-                return "OK";
-
-            case BillingClient.BillingResponse.SERVICE_DISCONNECTED:
-                // Play Store service is not connected now - potentially transient state.
-                return "SERVICE_DISCONNECTED";
-
-            case BillingClient.BillingResponse.SERVICE_UNAVAILABLE:
-                // Network connection is down
-                return "SERVICE_UNAVAILABLE";
-
-            case BillingClient.BillingResponse.USER_CANCELED:
-                // User pressed back or canceled a dialog
-                return "USER_CANCELED";
-
-            default:
-                return Integer.toString(responseCode);
-        }
-    }
-
-    static boolean hasWebView(Context context) {
-        PackageManager pm = context.getPackageManager();
-        if (pm.hasSystemFeature(PackageManager.FEATURE_WEBVIEW))
-            try {
-                new WebView(context);
-                return true;
-            } catch (Throwable ex) {
-                return false;
-            }
-        else
-            return false;
-    }
-
-    static boolean canPrint(Context context) {
-        PackageManager pm = context.getPackageManager();
-        return pm.hasSystemFeature(PackageManager.FEATURE_PRINTING);
     }
 
     public static String getFingerprint(Context context) {
@@ -1108,6 +520,37 @@ public class Helper {
         String signed = getFingerprint(context);
         String expected = context.getString(R.string.fingerprint);
         return Objects.equals(signed, expected);
+    }
+
+    // Miscellaneous
+
+    static String sanitizeKeyword(String keyword) {
+        // https://tools.ietf.org/html/rfc3501
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < keyword.length(); i++) {
+            // flag-keyword    = atom
+            // atom            = 1*ATOM-CHAR
+            // ATOM-CHAR       = <any CHAR except atom-specials>
+            char kar = keyword.charAt(i);
+            // atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards / quoted-specials / resp-specials
+            if (kar == '(' || kar == ')' || kar == '{' || kar == ' ' || Character.isISOControl(kar))
+                continue;
+            // list-wildcards  = "%" / "*"
+            if (kar == '%' || kar == '*')
+                continue;
+            // quoted-specials = DQUOTE / "\"
+            if (kar == '"' || kar == '\\')
+                continue;
+            // resp-specials   = "]"
+            if (kar == ']')
+                continue;
+            sb.append(kar);
+        }
+        return sb.toString();
+    }
+
+    static boolean isPlayStoreInstall(Context context) {
+        return BuildConfig.PLAY_STORE_RELEASE;
     }
 
     static boolean isPro(Context context) {
@@ -1149,96 +592,9 @@ public class Helper {
         return true;
     }
 
-    static String sanitizeKeyword(String keyword) {
-        // https://tools.ietf.org/html/rfc3501
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < keyword.length(); i++) {
-            // flag-keyword    = atom
-            // atom            = 1*ATOM-CHAR
-            // ATOM-CHAR       = <any CHAR except atom-specials>
-            char kar = keyword.charAt(i);
-            // atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards / quoted-specials / resp-specials
-            if (kar == '(' || kar == ')' || kar == '{' || kar == ' ' || Character.isISOControl(kar))
-                continue;
-            // list-wildcards  = "%" / "*"
-            if (kar == '%' || kar == '*')
-                continue;
-            // quoted-specials = DQUOTE / "\"
-            if (kar == '"' || kar == '\\')
-                continue;
-            // resp-specials   = "]"
-            if (kar == ']')
-                continue;
-            sb.append(kar);
-        }
-        return sb.toString();
-    }
-
-    static String sanitizeFilename(String name) {
-        return (name == null ? null : name.replaceAll("[^a-zA-Z0-9\\.\\-]", "_"));
-    }
-
-    static String getOrganization(String host) throws IOException {
-        synchronized (hostOrganization) {
-            if (hostOrganization.containsKey(host))
-                return hostOrganization.get(host);
-        }
-        InetAddress address = InetAddress.getByName(host);
-        URL url = new URL("https://ipinfo.io/" + address.getHostAddress() + "/org");
-        Log.i("GET " + url);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.setReadTimeout(15 * 1000);
-        connection.connect();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-            String organization = reader.readLine();
-            if ("undefined".equals(organization))
-                organization = null;
-            synchronized (hostOrganization) {
-                hostOrganization.put(host, organization);
-            }
-            return organization;
-        }
-    }
-
     static int getSize(Bundle bundle) {
         Parcel p = Parcel.obtain();
         bundle.writeToParcel(p, 0);
         return p.dataSize();
-    }
-
-    static DateFormat getTimeInstance(Context context, int style) {
-        // https://issuetracker.google.com/issues/37054851
-        if (context != null &&
-                (style == SimpleDateFormat.SHORT || style == SimpleDateFormat.MEDIUM)) {
-            Locale locale = Locale.getDefault();
-            boolean is24Hour = android.text.format.DateFormat.is24HourFormat(context);
-            String skeleton = (is24Hour ? "Hm" : "hm");
-            if (style == SimpleDateFormat.MEDIUM)
-                skeleton += "s";
-            String pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton);
-            return new SimpleDateFormat(pattern, locale);
-        } else
-            return SimpleDateFormat.getTimeInstance(style);
-    }
-
-    static CharSequence getRelativeTimeSpanString(Context context, long millis) {
-        long now = System.currentTimeMillis();
-        long span = Math.abs(now - millis);
-        Time nowTime = new Time();
-        Time thenTime = new Time();
-        nowTime.set(now);
-        thenTime.set(millis);
-        if (span < DateUtils.DAY_IN_MILLIS && nowTime.weekDay == thenTime.weekDay)
-            return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
-        else
-            return DateUtils.getRelativeTimeSpanString(context, millis);
-    }
-
-    static String ellipsize(String text, int maxLen) {
-        if (text == null || text.length() < maxLen) {
-            return text;
-        }
-        return text.substring(0, maxLen) + "...";
     }
 }

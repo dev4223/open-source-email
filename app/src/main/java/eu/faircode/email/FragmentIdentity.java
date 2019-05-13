@@ -123,7 +123,7 @@ public class FragmentIdentity extends FragmentBase {
     private long id = -1;
     private long account = -1;
     private boolean saving = false;
-    private int auth_type = Helper.AUTH_TYPE_PASSWORD;
+    private int auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
     private int color = Color.TRANSPARENT;
     private String signature = null;
 
@@ -240,12 +240,12 @@ public class FragmentIdentity extends FragmentBase {
 
                 // Copy account credentials
                 etEmail.setText(account.user);
-                etUser.setTag(auth_type == Helper.AUTH_TYPE_PASSWORD ? null : account.user);
+                etUser.setTag(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD ? null : account.user);
                 etUser.setText(account.user);
                 tilPassword.getEditText().setText(account.password);
                 etRealm.setText(account.realm);
-                tilPassword.setEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
-                etRealm.setEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
+                tilPassword.setEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
+                etRealm.setEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
             }
 
             @Override
@@ -261,8 +261,8 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String user = etUser.getText().toString();
-                if (auth_type != Helper.AUTH_TYPE_PASSWORD && !user.equals(etUser.getTag())) {
-                    auth_type = Helper.AUTH_TYPE_PASSWORD;
+                if (auth_type != ConnectionHelper.AUTH_TYPE_PASSWORD && !user.equals(etUser.getTag())) {
+                    auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
                     tilPassword.getEditText().setText(null);
                     tilPassword.setEnabled(true);
                     etRealm.setEnabled(true);
@@ -315,9 +315,14 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (etSignature.getTag() == null)
-                    signature = HtmlHelper.toHtml(s);
-                else
+                if (etSignature.getTag() == null) {
+                    if (TextUtils.isEmpty(s))
+                        signature = null;
+                    else {
+                        Helper.clearComposingText(s);
+                        signature = HtmlHelper.toHtml(s);
+                    }
+                } else
                     etSignature.setTag(null);
             }
         });
@@ -647,8 +652,8 @@ public class FragmentIdentity extends FragmentBase {
                         try {
                             itransport.connect(host, Integer.parseInt(port), user, password);
                         } catch (AuthenticationFailedException ex) {
-                            if (auth_type == Helper.AUTH_TYPE_GMAIL) {
-                                password = Helper.refreshToken(context, "com.google", user, password);
+                            if (auth_type == ConnectionHelper.AUTH_TYPE_GMAIL) {
+                                password = ConnectionHelper.refreshToken(context, "com.google", user, password);
                                 itransport.connect(host, Integer.parseInt(port), user, password);
                             } else
                                 throw ex;
@@ -764,7 +769,7 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected void onExecuted(Bundle args, final EntityIdentity identity) {
                 if (savedInstanceState == null) {
-                    auth_type = (identity == null ? Helper.AUTH_TYPE_PASSWORD : identity.auth_type);
+                    auth_type = (identity == null ? ConnectionHelper.AUTH_TYPE_PASSWORD : identity.auth_type);
 
                     etName.setText(identity == null ? null : identity.name);
                     etEmail.setText(identity == null ? null : identity.email);
@@ -779,7 +784,7 @@ public class FragmentIdentity extends FragmentBase {
                     rgEncryption.check(identity != null && identity.starttls ? R.id.radio_starttls : R.id.radio_ssl);
                     cbInsecure.setChecked(identity == null ? false : identity.insecure);
                     etPort.setText(identity == null ? null : Long.toString(identity.port));
-                    etUser.setTag(identity == null || auth_type == Helper.AUTH_TYPE_PASSWORD ? null : identity.user);
+                    etUser.setTag(identity == null || auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD ? null : identity.user);
                     etUser.setText(identity == null ? null : identity.user);
                     tilPassword.getEditText().setText(identity == null ? null : identity.password);
                     etRealm.setText(identity == null ? null : identity.realm);
@@ -825,8 +830,8 @@ public class FragmentIdentity extends FragmentBase {
 
                 Helper.setViewsEnabled(view, true);
 
-                tilPassword.setEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
-                etRealm.setEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
+                tilPassword.setEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
+                etRealm.setEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
 
                 setColor(color);
 
@@ -847,7 +852,7 @@ public class FragmentIdentity extends FragmentBase {
 
                         EntityAccount unselected = new EntityAccount();
                         unselected.id = -1L;
-                        unselected.auth_type = Helper.AUTH_TYPE_PASSWORD;
+                        unselected.auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
                         unselected.name = getString(R.string.title_select);
                         unselected.primary = false;
                         accounts.add(0, unselected);
@@ -885,7 +890,7 @@ public class FragmentIdentity extends FragmentBase {
                                     spAccount.setTag(pos);
                                     spAccount.setSelection(pos);
                                     // OAuth token could be updated
-                                    if (pos > 0 && accounts.get(pos).auth_type != Helper.AUTH_TYPE_PASSWORD)
+                                    if (pos > 0 && accounts.get(pos).auth_type != ConnectionHelper.AUTH_TYPE_PASSWORD)
                                         tilPassword.getEditText().setText(accounts.get(pos).password);
                                     break;
                                 }

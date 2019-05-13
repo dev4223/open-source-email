@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FairEmail</string>
     <string name="app_copyright" translatable="false">Copyright &#x24B8; 2018–2019 by M. Bokhorst</string>
+    <string name="app_search">Search email</string>
     <string name="app_changelog">Changelog</string>
     <string name="app_welcome">FairEmail is an open source email app focused on privacy and security. For this reason some features might work differently from what you are used to.</string>
     <string name="app_limitations">For example, messages will always be reformatted to remove unsafe elements and to improve readability and opening links needs to be confirmed for safety.</string>
@@ -106,7 +107,7 @@
     <string name="title_setup_go">Go</string>
     <string name="title_setup_setting_gmail">Enable access for "less secure" apps</string>
     <string name="title_setup_setting_yahoo">Enable access for "less secure" apps</string>
-    <string name="title_setup_no_settings">No settings found for \'%1$s\'</string>
+    <string name="title_setup_no_settings">No settings found for domain \'%1$s\'</string>
     <string name="title_setup_quick_success">An account and an identity have successfully been added</string>
     <string name="title_setup_quick_failed">You can try to configure an account and an identity below too</string>
     <string name="title_setup_manage">Manage</string>
@@ -153,7 +154,7 @@
 
     <string name="title_advanced">Advanced options</string>
 
-    <string name="title_advanced_section_synchronize">Synchronize</string>
+    <string name="title_advanced_section_synchronize">Receive</string>
     <string name="title_advanced_section_send">Send</string>
     <string name="title_advanced_section_connection">Connection</string>
     <string name="title_advanced_section_display">Display</string>
@@ -175,6 +176,7 @@
 
     <string name="title_advanced_metered">Use metered connections</string>
     <string name="title_advanced_download">Automatically download messages and attachments on a metered connection up to</string>
+    <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_roaming">Download messages and attachments while roaming</string>
     <string name="title_advanced_browse">Browse messages on the server</string>
 
@@ -218,19 +220,20 @@
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
-    <string name="title_advanced_search_local">External search on device</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_paranoid">Extra privacy features</string>
+    <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
     <string name="title_advanced_debug">Debug mode</string>
     <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
 
-    <string name="title_advanced_enabled_hint">Globally disable or enable receiving and sending of messages</string>
+    <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
     <string name="title_advanced_metered_hint">Metered connections are generally mobile connections or paid Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Disabling this option will disable receiving and sending messages on mobile internet connections</string>
+    <string name="title_advanced_rlah_hint">Assuming no roaming within the EU</string>
 
     <string name="title_advanced_browse_hint">Fetch more messages when scrolling down</string>
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
@@ -245,7 +248,6 @@
     <string name="title_advanced_sender_hint">Most providers do not allow modified sender addresses</string>
 
     <string name="title_advanced_badge_hint">Only available on supported launchers</string>
-    <string name="title_advanced_search_local_hint">Instead of searching in the primary archive folder on the server</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
     <string name="title_advanced_paranoid_hint">See the FAQ for details</string>
     <string name="title_advanced_debug_hint">Enable extra logging and show debug information at various places</string>
@@ -435,6 +437,7 @@
     <string name="title_ask_show_image">Showing images can leak privacy sensitive information</string>
     <string name="title_ask_edit_ref">Edit reformatted replied/forwarded message text?</string>
     <string name="title_ask_delete_local">Delete local messages which are stored on the remote server too?</string>
+    <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
 
@@ -489,8 +492,6 @@
     <string name="title_not_encrypted">Message is not encrypted</string>
 
     <string name="title_search">Search</string>
-    <string name="title_search_hint">Search on server</string>
-    <string name="title_search_device">Search on device</string>
     <string name="title_searching">Searching \'%1$s\'</string>
 
     <string name="title_sort_on">Sort on</string>
@@ -551,6 +552,7 @@
 
     <string name="title_legend_inbox">Inbox</string>
     <string name="title_legend_archive">Archive</string>
+    <string name="title_legend_drafts">Drafts</string>
     <string name="title_legend_trash">Trash</string>
     <string name="title_legend_junk">Spam</string>
     <string name="title_legend_notify">Notify new messages</string>
@@ -594,6 +596,7 @@
     <string name="title_legend_connecting">Connecting</string>
     <string name="title_legend_connected">Connected</string>
     <string name="title_legend_synchronizing">Synchronizing</string>
+    <string name="title_legend_executing">Executing operations</string>
     <string name="title_legend_downloading">Downloading</string>
     <string name="title_legend_closing">Closing</string>
     <string name="title_legend_waiting">Waiting for next synchronization</string>

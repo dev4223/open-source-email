@@ -47,9 +47,11 @@ import static androidx.room.ForeignKey.CASCADE;
                 @ForeignKey(childColumns = "message", entity = EntityMessage.class, parentColumns = "id", onDelete = CASCADE)
         },
         indices = {
+                @Index(value = {"account"}),
                 @Index(value = {"folder"}),
                 @Index(value = {"message"}),
-                @Index(value = {"name"})
+                @Index(value = {"name"}),
+                @Index(value = {"state"})
         }
 )
 public class EntityOperation {
@@ -67,6 +69,7 @@ public class EntityOperation {
     public String args;
     @NonNull
     public Long created;
+    public String state;
     public String error;
 
     static final String ADD = "add";
@@ -285,6 +288,7 @@ public class EntityOperation {
                     this.name.equals(other.name) &&
                     this.args.equals(other.args) &&
                     this.created.equals(other.created) &&
+                    Objects.equals(this.state, other.state) &&
                     Objects.equals(this.error, other.error));
         } else
             return false;

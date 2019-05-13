@@ -47,12 +47,13 @@ import androidx.preference.PreferenceManager;
 public class FragmentOptionsConnection extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swMetered;
     private Spinner spDownload;
+    private SwitchCompat swRlah;
     private SwitchCompat swRoaming;
     private TextView tvConnectionType;
     private TextView tvConnectionRoaming;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "metered", "download", "roaming"
+            "metered", "download", "rlah", "roaming"
     };
 
     @Override
@@ -67,6 +68,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
 
         swMetered = view.findViewById(R.id.swMetered);
         spDownload = view.findViewById(R.id.spDownload);
+        swRlah = view.findViewById(R.id.swRlah);
         swRoaming = view.findViewById(R.id.swRoaming);
 
         tvConnectionType = view.findViewById(R.id.tvConnectionType);
@@ -96,6 +98,14 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("download").apply();
+            }
+        });
+
+        swRlah.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("rlah", checked).apply();
+                ServiceSynchronize.reload(getContext(), "rlah=" + checked);
             }
         });
 
@@ -182,6 +192,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
                 break;
             }
 
+        swRlah.setChecked(prefs.getBoolean("rlah", true));
         swRoaming.setChecked(prefs.getBoolean("roaming", true));
     }
 
@@ -211,7 +222,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             @Override
             public void run() {
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
-                    Helper.NetworkState networkState = Helper.getNetworkState(getContext());
+                    ConnectionHelper.NetworkState networkState = ConnectionHelper.getNetworkState(getContext());
 
                     tvConnectionType.setText(networkState.isUnmetered() ? R.string.title_legend_unmetered : R.string.title_legend_metered);
                     tvConnectionType.setVisibility(networkState.isConnected() ? View.VISIBLE : View.GONE);

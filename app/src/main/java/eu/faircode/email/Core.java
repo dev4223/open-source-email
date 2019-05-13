@@ -172,6 +172,7 @@ class Core {
 
                         if (message != null && message.uid == null &&
                                 !(EntityOperation.ADD.equals(op.name) ||
+                                        EntityOperation.ANSWERED.equals(op.name) ||
                                         EntityOperation.DELETE.equals(op.name) ||
                                         EntityOperation.SEND.equals(op.name) ||
                                         EntityOperation.SYNC.equals(op.name) ||
@@ -179,6 +180,8 @@ class Core {
                             throw new IllegalArgumentException(op.name + " without uid " + op.args);
 
                         // Operations should use database transaction when needed
+
+                        db.operation().setOperationState(op.id, "executing");
 
                         switch (op.name) {
                             case EntityOperation.SEEN:
@@ -262,8 +265,8 @@ class Core {
                         Log.e(folder.name, ex);
                         reportError(context, account, folder, ex);
 
-                        db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
-                        if (message != null)
+                        db.operation().setOperationError(op.id, Helper.formatThrowable(ex, true));
+                        if (message != null && !(ex instanceof IllegalArgumentException))
                             db.message().setMessageError(message.id, Helper.formatThrowable(ex, true));
 
                         if (ex instanceof OutOfMemoryError ||
@@ -307,6 +310,8 @@ class Core {
                         }
 
                         throw ex;
+                    } finally {
+                        db.operation().setOperationState(op.id, null);
                     }
                 } finally {
                     Log.i(folder.name + " end op=" + op.id + "/" + op.name);
@@ -703,12 +708,12 @@ class Core {
         long id = jargs.getLong(0);
 
         // Get attachment
-        EntityAttachment attachment = db.attachment().getAttachment(id);
-        if (attachment == null)
-            attachment = db.attachment().getAttachment(message.id, (int) id); // legacy
-        if (attachment == null)
+        EntityAttachment local = db.attachment().getAttachment(id);
+        if (local == null)
+            local = db.attachment().getAttachment(message.id, (int) id); // legacy
+        if (local == null)
             throw new IllegalArgumentException("Attachment not found");
-        if (attachment.available)
+        if (local.available)
             return;
 
         // Get message
@@ -716,28 +721,32 @@ class Core {
         if (imessage == null)
             throw new MessageRemovedException();
 
+        // Get message parts
+        MessageHelper helper = new MessageHelper((MimeMessage) imessage);
+        MessageHelper.MessageParts parts = helper.getMessageParts();
+
         // Match attachment by attributes
         // Some servers order attachments randomly
         boolean found = false;
-        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-        for (EntityAttachment a : attachments) {
-            if (Objects.equals(a.name, attachment.name) &&
-                    Objects.equals(a.type, attachment.type) &&
-                    Objects.equals(a.disposition, attachment.disposition) &&
-                    Objects.equals(a.cid, attachment.cid) &&
-                    Objects.equals(a.encryption, attachment.encryption) &&
-                    Objects.equals(a.size, attachment.size)) {
+        List<EntityAttachment> remotes = parts.getAttachments();
+        for (int i = 0; i < remotes.size(); i++) {
+            EntityAttachment remote = remotes.get(i);
+            if (Objects.equals(remote.name, local.name) &&
+                    Objects.equals(remote.type, local.type) &&
+                    Objects.equals(remote.disposition, local.disposition) &&
+                    Objects.equals(remote.cid, local.cid) &&
+                    Objects.equals(remote.encryption, local.encryption) &&
+                    Objects.equals(remote.size, local.size)) {
                 found = true;
-
-                // Download attachment
-                MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-                MessageHelper.MessageParts parts = helper.getMessageParts();
-                parts.downloadAttachment(context, a);
+                parts.downloadAttachment(context, i, local.id, local.name);
             }
         }
 
-        if (!found && !EntityFolder.DRAFTS.equals(folder.type))
-            throw new IllegalArgumentException("Attachment not found");
+        if (!found) {
+            db.attachment().setError(local.id, "Attachment not found");
+            if (!EntityFolder.DRAFTS.equals(folder.type))
+                throw new IllegalArgumentException("Attachment not found");
+        }
 
         updateMessageSize(context, message.id);
     }
@@ -1260,7 +1269,7 @@ class Core {
                     if (!TextUtils.isEmpty(email)) {
                         identity = db.identity().getIdentity(folder.account, email);
                         if (identity == null) {
-                            String canonical = Helper.canonicalAddress(email);
+                            String canonical = MessageHelper.canonicalAddress(email);
                             if (!canonical.equals(email))
                                 identity = db.identity().getIdentity(folder.account, canonical);
                         }
@@ -1488,7 +1497,7 @@ class Core {
             boolean me = true;
             for (Address reply : recipients) {
                 String email = ((InternetAddress) reply).getAddress();
-                String canonical = Helper.canonicalAddress(email);
+                String canonical = MessageHelper.canonicalAddress(email);
                 if (!TextUtils.isEmpty(email) &&
                         db.identity().getIdentity(folder.account, email) == null &&
                         (canonical.equals(email) ||
@@ -1593,11 +1602,22 @@ class Core {
                 }
             }
 
-            for (EntityAttachment attachment : attachments)
-                if (!attachment.available)
-                    if (state.getNetworkState().isUnmetered() || (attachment.size != null && attachment.size < maxSize))
+            List<EntityAttachment> remotes = parts.getAttachments();
+
+            for (EntityAttachment local : attachments)
+                if (!local.available)
+                    if (state.getNetworkState().isUnmetered() || (local.size != null && local.size < maxSize))
                         try {
-                            parts.downloadAttachment(context, attachment);
+                            for (int i = 0; i < remotes.size(); i++) {
+                                EntityAttachment remote = remotes.get(i);
+                                if (Objects.equals(remote.name, local.name) &&
+                                        Objects.equals(remote.type, local.type) &&
+                                        Objects.equals(remote.disposition, local.disposition) &&
+                                        Objects.equals(remote.cid, local.cid) &&
+                                        Objects.equals(remote.encryption, local.encryption) &&
+                                        Objects.equals(remote.size, local.size))
+                                    parts.downloadAttachment(context, i, local.id, local.name);
+                            }
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
@@ -2106,13 +2126,13 @@ class Core {
     }
 
     static class State {
-        private Helper.NetworkState networkState;
+        private ConnectionHelper.NetworkState networkState;
         private Thread thread;
         private Semaphore semaphore = new Semaphore(0);
         private boolean running = true;
         private boolean recoverable = true;
 
-        State(Helper.NetworkState networkState) {
+        State(ConnectionHelper.NetworkState networkState) {
             this.networkState = networkState;
         }
 
@@ -2120,7 +2140,7 @@ class Core {
             this(parent.networkState);
         }
 
-        Helper.NetworkState getNetworkState() {
+        ConnectionHelper.NetworkState getNetworkState() {
             return networkState;
         }
 

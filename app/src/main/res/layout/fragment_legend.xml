@@ -23,7 +23,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:contentDescription="@string/title_legend_inbox"
-                android:src="@drawable/baseline_move_to_inbox_24"
+                android:src="@drawable/baseline_inbox_24"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -62,6 +62,28 @@
                 app:layout_constraintTop_toTopOf="@id/ivArchive" />
 
             <ImageView
+                android:id="@+id/ivDrafts"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="18dp"
+                android:contentDescription="@string/title_legend_drafts"
+                android:src="@drawable/baseline_drafts_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ivArchive" />
+
+            <TextView
+                android:id="@+id/tvDrafts"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:text="@string/title_legend_drafts"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintBottom_toBottomOf="@id/ivDrafts"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivDrafts"
+                app:layout_constraintTop_toTopOf="@id/ivDrafts" />
+
+            <ImageView
                 android:id="@+id/ivTrash"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
@@ -69,7 +91,7 @@
                 android:contentDescription="@string/title_legend_trash"
                 android:src="@drawable/baseline_delete_24"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/ivArchive" />
+                app:layout_constraintTop_toBottomOf="@id/ivDrafts" />
 
             <TextView
                 android:id="@+id/tvTrash"
@@ -947,6 +969,28 @@
                 app:layout_constraintTop_toTopOf="@id/ivConnected" />
 
             <ImageView
+                android:id="@+id/ivExecuting"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="24dp"
+                android:contentDescription="@string/title_legend_executing"
+                android:src="@drawable/baseline_dns_24"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ivConnected" />
+
+            <TextView
+                android:id="@+id/tvExecuting"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:text="@string/title_legend_executing"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                app:layout_constraintBottom_toBottomOf="@id/ivExecuting"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/ivExecuting"
+                app:layout_constraintTop_toTopOf="@id/ivExecuting" />
+
+            <ImageView
                 android:id="@+id/ivSynchronizing"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
@@ -954,7 +998,7 @@
                 android:contentDescription="@string/title_legend_synchronizing"
                 android:src="@drawable/baseline_compare_arrows_24"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/ivConnected" />
+                app:layout_constraintTop_toBottomOf="@id/ivExecuting" />
 
             <TextView
                 android:id="@+id/tvSynchronizing"

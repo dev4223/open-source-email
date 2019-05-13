@@ -47,8 +47,6 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -69,7 +67,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bugsnag.android.Bugsnag;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.json.JSONArray;
@@ -240,7 +237,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         PackageManager pm = getPackageManager();
         final List<NavMenuItem> menus = new ArrayList<>();
 
-        final NavMenuItem navOperations = new NavMenuItem(R.drawable.baseline_list_24, R.string.menu_operations, new Runnable() {
+        final NavMenuItem navOperations = new NavMenuItem(R.drawable.baseline_dns_24, R.string.menu_operations, new Runnable() {
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer);
@@ -306,7 +303,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }));
 
         if (BuildConfig.BETA_RELEASE && Helper.getIntentIssue(this).resolveActivity(pm) != null)
-            extra.add(new NavMenuItem(R.drawable.baseline_warning_24, R.string.menu_issue, new Runnable() {
+            extra.add(new NavMenuItem(R.drawable.baseline_feedback_24, R.string.menu_issue, new Runnable() {
                 @Override
                 public void run() {
                     drawerLayout.closeDrawer(drawerContainer);
@@ -415,7 +412,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         new Handler().post(checkIntent);
 
         checkFirst();
-        checkBugsnag();
         checkCrash();
 
         pgpService = new OpenPgpServiceConnection(this, "org.sufficientlysecure.keychain");
@@ -504,49 +500,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 intent.removeExtra(Intent.EXTRA_PROCESS_TEXT);
                 setIntent(intent);
 
-                if (Helper.isPro(ActivityView.this)) {
-                    Bundle args = new Bundle();
-                    args.putString("search", search);
-
-                    new SimpleTask<Long>() {
-                        @Override
-                        protected Long onExecute(Context context, Bundle args) {
-                            DB db = DB.getInstance(context);
-
-                            db.message().resetSearch();
-
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                            if (prefs.getBoolean("search_local", false))
-                                return null;
-
-                            EntityFolder archive = db.folder().getPrimaryArchive();
-                            return (archive == null ? null : archive.id);
-                        }
-
-                        @Override
-                        protected void onExecuted(Bundle args, Long archive) {
-                            Bundle sargs = new Bundle();
-                            sargs.putLong("folder", archive == null ? -1 : archive);
-                            sargs.putString("search", args.getString("search"));
-
-                            FragmentMessages fragment = new FragmentMessages();
-                            fragment.setArguments(sargs);
-
-                            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                            fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("search");
-                            fragmentTransaction.commit();
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-                        }
-                    }.execute(ActivityView.this, args, "search:account:archive");
-                } else {
-                    FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                    fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
-                    fragmentTransaction.commit();
-                }
+                FragmentMessages.search(
+                        ActivityView.this, ActivityView.this, getSupportFragmentManager(),
+                        -1, false, search);
             }
         }
     };
@@ -674,52 +630,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         }
     }
 
-    private void checkBugsnag() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("first", true) ||
-                prefs.getBoolean("crash_reports", false) ||
-                prefs.getBoolean("crash_reports_confirmed", false))
-            return;
-
-        final View dview = LayoutInflater.from(this).inflate(R.layout.dialog_error_reporting, null);
-        final Button btnInfo = dview.findViewById(R.id.btnInfo);
-        final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-        final Intent info = new Intent(Intent.ACTION_VIEW);
-        info.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq104"));
-        info.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        btnInfo.setVisibility(
-                info.resolveActivity(getPackageManager()) == null ? View.GONE : View.VISIBLE);
-
-        btnInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(info);
-            }
-        });
-
-        new DialogBuilderLifecycle(this, this)
-                .setView(dview)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        prefs.edit().putBoolean("crash_reports", true).apply();
-                        if (cbNotAgain.isChecked())
-                            prefs.edit().putBoolean("crash_reports_confirmed", true).apply();
-                        Bugsnag.startSession();
-                    }
-                })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (cbNotAgain.isChecked())
-                            prefs.edit().putBoolean("crash_reports_confirmed", true).apply();
-                    }
-                })
-                .show();
-    }
-
     private void checkCrash() {
         new SimpleTask<Long>() {
             @Override
@@ -734,7 +644,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                 sb.append(line).append("\r\n");
                         }
 
-                        return Helper.getDebugInfo(context, R.string.title_crash_info_remark, null, sb.toString()).id;
+                        return Log.getDebugInfo(context, R.string.title_crash_info_remark, null, sb.toString()).id;
                     } finally {
                         file.delete();
                     }
@@ -1062,7 +972,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         new SimpleTask<Long>() {
             @Override
             protected Long onExecute(Context context, Bundle args) throws IOException {
-                return Helper.getDebugInfo(context, R.string.title_debug_info_remark, null, null).id;
+                return Log.getDebugInfo(context, R.string.title_debug_info_remark, null, null).id;
             }
 
             @Override
@@ -1425,7 +1335,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
                         } else {
                             // Decode message
-                            Properties props = MessageHelper.getSessionProperties(Helper.AUTH_TYPE_PASSWORD, null, false);
+                            Properties props = MessageHelper.getSessionProperties(
+                                    ConnectionHelper.AUTH_TYPE_PASSWORD, null, false);
                             Session isession = Session.getInstance(props, null);
                             ByteArrayInputStream is = new ByteArrayInputStream(decrypted.toByteArray());
                             MimeMessage imessage = new MimeMessage(isession, is);
@@ -1440,20 +1351,21 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                                 Helper.writeText(m.getFile(context), parts.getHtml(context));
 
                                 // Remove previously decrypted attachments
-                                for (EntityAttachment a : attachments)
-                                    if (a.encryption == null)
-                                        db.attachment().deleteAttachment(a.id);
+                                for (EntityAttachment local : attachments)
+                                    if (local.encryption == null)
+                                        db.attachment().deleteAttachment(local.id);
+
+                                int sequence = db.attachment().getAttachmentSequence(id);
 
                                 // Add decrypted attachments
-                                attachments = parts.getAttachments();
-                                int sequence = db.attachment().getAttachmentSequence(id);
-                                for (int index = 0; index < attachments.size(); index++) {
-                                    EntityAttachment a = attachments.get(index);
-                                    a.message = id;
-                                    a.sequence = ++sequence;
-                                    a.id = db.attachment().insertAttachment(a);
+                                List<EntityAttachment> remotes = parts.getAttachments();
+                                for (int index = 0; index < remotes.size(); index++) {
+                                    EntityAttachment remote = remotes.get(index);
+                                    remote.message = id;
+                                    remote.sequence = ++sequence;
+                                    remote.id = db.attachment().insertAttachment(remote);
                                     try {
-                                        parts.downloadAttachment(context, a);
+                                        parts.downloadAttachment(context, index, remote.id, remote.name);
                                     } catch (Throwable ex) {
                                         Log.e(ex);
                                     }

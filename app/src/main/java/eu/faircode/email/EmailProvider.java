@@ -35,6 +35,9 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.Collator;
@@ -68,6 +71,24 @@ public class EmailProvider {
 
     EmailProvider(String name) {
         this.name = name;
+    }
+
+    private void checkValid() throws UnknownHostException {
+        if (this.imap_host == null || this.imap_port == 0 ||
+                this.smtp_host == null || this.smtp_port == 0)
+            throw new UnknownHostException(this.name + " invalid");
+    }
+
+    private EmailProvider(String name, String domain, String imap_prefix, String smtp_prefix) {
+        this.name = name;
+
+        this.imap_host = imap_prefix + "." + domain;
+        this.imap_port = 993;
+        this.imap_starttls = false;
+
+        this.smtp_host = smtp_prefix + "." + domain;
+        this.smtp_port = 587;
+        this.smtp_starttls = true;
     }
 
     static List<EmailProvider> loadProfiles(Context context) {
@@ -129,17 +150,22 @@ public class EmailProvider {
 
     static EmailProvider fromDomain(Context context, String domain) throws IOException {
         try {
-            Log.i("Provider from ISPDB domain=" + domain);
-            return addSpecials(context, fromISPDB(domain));
-        } catch (Throwable ex) {
+            Log.i("Provider from DNS domain=" + domain);
+            return addSpecials(context, fromDNS(domain));
+        } catch (UnknownHostException ex) {
             Log.w(ex);
             try {
-                Log.i("Provider from DNS domain=" + domain);
-                return addSpecials(context, fromDNS(domain));
-            } catch (UnknownHostException ex1) {
+                Log.i("Provider from ISPDB domain=" + domain);
+                return addSpecials(context, fromISPDB(domain));
+            } catch (Throwable ex1) {
                 Log.w(ex1);
-                Log.i("Provider from template domain=" + domain);
-                return addSpecials(context, fromTemplate(domain));
+                try {
+                    Log.i("Provider from template domain=" + domain);
+                    return addSpecials(context, fromTemplate(domain));
+                } catch (UnknownHostException ex2) {
+                    Log.w(ex2);
+                    throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
+                }
             }
         }
     }
@@ -319,6 +345,8 @@ public class EmailProvider {
         Log.i("imap=" + provider.imap_host + ":" + provider.imap_port + ":" + provider.imap_starttls);
         Log.i("smtp=" + provider.smtp_host + ":" + provider.smtp_port + ":" + provider.smtp_starttls);
 
+        provider.checkValid();
+
         return provider;
     }
 
@@ -339,17 +367,34 @@ public class EmailProvider {
         return provider;
     }
 
-    private static EmailProvider fromTemplate(String domain) {
-        EmailProvider provider = new EmailProvider(domain);
-        provider.imap_host = "imap." + domain;
-        provider.imap_port = 993;
-        provider.imap_starttls = false;
+    private static EmailProvider fromTemplate(String domain) throws UnknownHostException {
+        if (checkTemplate(domain, "imap", 993, "smtp", 587))
+            return new EmailProvider(domain, domain, "imap", "smtp");
 
-        provider.smtp_host = "smtp." + domain;
-        provider.smtp_port = 587;
-        provider.smtp_starttls = true;
+        else if (checkTemplate(domain, "mail", 993, "mail", 587))
+            return new EmailProvider(domain, domain, "mail", "mail");
 
-        return provider;
+        else
+            throw new UnknownHostException(domain + " template");
+    }
+
+    private static boolean checkTemplate(
+            String domain, String imap_prefix, int imap_port, String smtp_prefix, int smtp_port) {
+        return isHostReachable(imap_prefix + "." + domain, imap_port, 5000) &&
+                isHostReachable(smtp_prefix + "." + domain, smtp_port, 5000);
+    }
+
+    static boolean isHostReachable(String host, int port, int timeoutms) {
+        Log.i("Checking " + host + ":" + port);
+        try (Socket socket = new Socket()) {
+            InetAddress iaddr = InetAddress.getByName(host);
+            InetSocketAddress inetSocketAddress = new InetSocketAddress(iaddr, port);
+            socket.connect(inetSocketAddress, timeoutms);
+            return true;
+        } catch (IOException ex) {
+            Log.w(ex);
+            return false;
+        }
     }
 
     private static void addDocumentation(EmailProvider provider, String href, String title) {
@@ -402,8 +447,8 @@ public class EmailProvider {
 
     int getAuthType() {
         if ("com.google".equals(type))
-            return Helper.AUTH_TYPE_GMAIL;
-        return Helper.AUTH_TYPE_PASSWORD;
+            return ConnectionHelper.AUTH_TYPE_GMAIL;
+        return ConnectionHelper.AUTH_TYPE_PASSWORD;
     }
 
     @Override

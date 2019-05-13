@@ -486,8 +486,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Text size
             if (textSize != 0) {
-                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-
+                
+                //tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * (message.unseen > 0 ? 1.1f : 1f));
+                
                 // dev4223: subject size smaller in list view
                 // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 if (zoom == 0)
@@ -854,9 +856,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 try {
                     via = new InternetAddress(message.identityEmail, message.identityName);
                     if (message.to != null) {
-                        String v = Helper.canonicalAddress(via.getAddress());
+                        String v = MessageHelper.canonicalAddress(via.getAddress());
                         for (Address t : message.to) {
-                            if (v.equals(Helper.canonicalAddress(((InternetAddress) t).getAddress()))) {
+                            if (v.equals(MessageHelper.canonicalAddress(((InternetAddress) t).getAddress()))) {
                                 self = true;
                                 break;
                             }
@@ -1262,7 +1264,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     else {
                         String from = ((InternetAddress) message.from[0]).getAddress();
                         EntityIdentity identity = db.identity().getIdentity(message.identity);
-                        outgoing = Helper.canonicalAddress(identity.email).equals(Helper.canonicalAddress(from));
+                        outgoing = MessageHelper.canonicalAddress(identity.email)
+                                .equals(MessageHelper.canonicalAddress(from));
                     }
 
                     return (outgoing
@@ -2032,7 +2035,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         protected String onExecute(Context context, Bundle args) throws Throwable {
                             Uri uri = args.getParcelable("uri");
                             String host = uri.getHost();
-                            return (TextUtils.isEmpty(host) ? null : Helper.getOrganization(host));
+                            return (TextUtils.isEmpty(host) ? null : IPInfo.getOrganization(host));
                         }
 
                         @Override
@@ -3064,7 +3067,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.zoom = zoom;
         this.sort = sort;
         this.filter_duplicates = filter_duplicates;
-        this.suitable = Helper.getNetworkState(context).isSuitable();
+        this.suitable = ConnectionHelper.getNetworkState(context).isSuitable();
         this.properties = properties;
 
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
@@ -3160,7 +3163,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void checkInternet() {
-        boolean suitable = Helper.getNetworkState(context).isSuitable();
+        boolean suitable = ConnectionHelper.getNetworkState(context).isSuitable();
         if (this.suitable != suitable) {
             this.suitable = suitable;
             notifyDataSetChanged();

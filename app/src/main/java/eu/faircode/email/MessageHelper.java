@@ -117,6 +117,8 @@ public class MessageHelper {
         props.put("mail.imaps.connectionpool.debug", "true");
         props.put("mail.imaps.connectionpooltimeout", Integer.toString(POOL_TIMEOUT));
 
+        props.put("mail.imaps.finalizecleanclose", "false");
+
         // https://tools.ietf.org/html/rfc4978
         // https://docs.oracle.com/javase/8/docs/api/java/util/zip/Deflater.html
         props.put("mail.imaps.compress.enable", "true");
@@ -141,6 +143,8 @@ public class MessageHelper {
 
         props.put("mail.imap.connectionpool.debug", "true");
         props.put("mail.imap.connectionpooltimeout", Integer.toString(POOL_TIMEOUT));
+
+        props.put("mail.imap.finalizecleanclose", "false");
 
         props.put("mail.imap.compress.enable", "true");
 
@@ -186,7 +190,7 @@ public class MessageHelper {
 
         // https://javaee.github.io/javamail/OAuth2
         Log.i("Auth type=" + auth_type);
-        if (auth_type == Helper.AUTH_TYPE_GMAIL) {
+        if (auth_type == ConnectionHelper.AUTH_TYPE_GMAIL) {
             props.put("mail.imaps.auth.mechanisms", "XOAUTH2");
             props.put("mail.imap.auth.mechanisms", "XOAUTH2");
             props.put("mail.smtps.auth.mechanisms", "XOAUTH2");
@@ -636,12 +640,12 @@ public class MessageHelper {
             return decodeMime(subject);
         } else {
             // Fix UTF-8 plain header
-            char[] kars = subject.toCharArray();
-            byte[] bytes = new byte[kars.length];
-            for (int i = 0; i < kars.length; i++)
-                bytes[i] = (byte) kars[i];
-
             try {
+                char[] kars = subject.toCharArray();
+                byte[] bytes = new byte[kars.length];
+                for (int i = 0; i < kars.length; i++)
+                    bytes[i] = (byte) kars[i];
+
                 CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();
                 cs.decode(ByteBuffer.wrap(bytes));
                 subject = new String(bytes, StandardCharsets.UTF_8);
@@ -727,6 +731,16 @@ public class MessageHelper {
         return TextUtils.join(", ", formatted);
     }
 
+    static String canonicalAddress(String address) {
+        String[] a = address.split("@");
+        if (a.length > 0) {
+            String[] extra = a[0].split("\\+");
+            if (extra.length > 0)
+                a[0] = extra[0];
+        }
+        return TextUtils.join("@", a).toLowerCase();
+    }
+
     static String decodeMime(String text) {
         if (text == null)
             return null;
@@ -800,23 +814,28 @@ public class MessageHelper {
                 throw new FolderClosedException(ex.getFolder(), "getHtml", ex);
             } catch (Throwable ex) {
                 Log.w(ex);
-                text = true;
-                result = ex + "\n" + android.util.Log.getStackTraceString(ex);
+                warnings.add(Helper.formatThrowable(ex));
+                return null;
             }
 
-            ContentType ct = new ContentType(part.getContentType());
-            String charset = ct.getParameter("charset");
-            if (TextUtils.isEmpty(charset)) {
-                if (BuildConfig.DEBUG)
-                    warnings.add(context.getString(R.string.title_no_charset, ct.toString()));
-                if (part.isMimeType("text/plain")) {
-                    // The first 127 characters are the same as in US-ASCII
-                    result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
+            try {
+                ContentType ct = new ContentType(part.getContentType());
+                String charset = ct.getParameter("charset");
+                if (TextUtils.isEmpty(charset)) {
+                    if (BuildConfig.DEBUG)
+                        warnings.add(context.getString(R.string.title_no_charset, ct.toString()));
+                    if (part.isMimeType("text/plain")) {
+                        // The first 127 characters are the same as in US-ASCII
+                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
+                    }
+                } else {
+                    if ("US-ASCII".equals(Charset.forName(charset).name()) &&
+                            !"US-ASCII".equals(charset.toUpperCase()))
+                        warnings.add(context.getString(R.string.title_no_charset, charset));
                 }
-            } else {
-                if ("US-ASCII".equals(Charset.forName(charset).name()) &&
-                        !"US-ASCII".equals(charset.toUpperCase()))
-                    warnings.add(context.getString(R.string.title_no_charset, charset));
+            } catch (ParseException ex) {
+                Log.w(ex);
+                warnings.add(Helper.formatThrowable(ex));
             }
 
             if (part.isMimeType("text/plain") || text) {
@@ -839,17 +858,17 @@ public class MessageHelper {
             return result;
         }
 
-        void downloadAttachment(Context context, EntityAttachment attachment) throws MessagingException, IOException {
-            Log.i("downloading attachment id=" + attachment.id);
+        void downloadAttachment(Context context, int index, long id, String name) throws MessagingException, IOException {
+            Log.i("downloading attachment id=" + id);
 
             DB db = DB.getInstance(context);
 
             // Get data
-            AttachmentPart apart = attachments.get(attachment.sequence - 1);
+            AttachmentPart apart = attachments.get(index);
 
             // Download attachment
-            File file = attachment.getFile(context);
-            db.attachment().setProgress(attachment.id, null);
+            File file = EntityAttachment.getFile(context, id, name);
+            db.attachment().setProgress(id, null);
             try (InputStream is = apart.part.getInputStream()) {
                 long size = 0;
                 long total = apart.part.getSize();
@@ -862,19 +881,19 @@ public class MessageHelper {
 
                         // Update progress
                         if (total > 0)
-                            db.attachment().setProgress(attachment.id, (int) (size * 100 / total));
+                            db.attachment().setProgress(id, (int) (size * 100 / total));
                     }
                 }
 
                 // Store attachment data
-                db.attachment().setDownloaded(attachment.id, size);
+                db.attachment().setDownloaded(id, size);
 
                 Log.i("Downloaded attachment size=" + size);
             } catch (FolderClosedIOException ex) {
                 throw new FolderClosedException(ex.getFolder(), "downloadAttachment", ex);
             } catch (Throwable ex) {
                 // Reset progress on failure
-                db.attachment().setError(attachment.id, Helper.formatThrowable(ex));
+                db.attachment().setError(id, Helper.formatThrowable(ex));
                 throw ex;
             }
         }
@@ -982,9 +1001,17 @@ public class MessageHelper {
                         ct = new ContentType(apart.part.getContentType());
                     } catch (ParseException ex) {
                         Log.w(ex);
+                        parts.warnings.add(Helper.formatThrowable(ex));
                         ct = new ContentType("application/octet-stream");
                     }
-                    String[] cid = apart.part.getHeader("Content-ID");
+
+                    String[] cid = null;
+                    try {
+                        cid = apart.part.getHeader("Content-ID");
+                    } catch (MessagingException ex) {
+                        Log.w(ex);
+                        parts.warnings.add(Helper.formatThrowable(ex));
+                    }
 
                     apart.attachment = new EntityAttachment();
                     apart.attachment.name = apart.filename;

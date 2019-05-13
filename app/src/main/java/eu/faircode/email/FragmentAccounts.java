@@ -222,13 +222,13 @@ public class FragmentAccounts extends FragmentBase {
 
         final MenuItem menuSearch = menu.findItem(R.id.menu_search);
         SearchView searchView = (SearchView) menuSearch.getActionView();
+        searchView.setQueryHint(getString(R.string.title_search));
 
         if (!TextUtils.isEmpty(searching)) {
             menuSearch.expandActionView();
             searchView.setQuery(searching, false);
         }
 
-        searchView.setQueryHint(getString(R.string.title_search_device));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -240,7 +240,9 @@ public class FragmentAccounts extends FragmentBase {
             public boolean onQueryTextSubmit(String query) {
                 searching = null;
                 menuSearch.collapseActionView();
-                FragmentMessages.search(getContext(), getViewLifecycleOwner(), getFragmentManager(), -1, query);
+                FragmentMessages.search(
+                        getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                        -1, false, query);
                 return true;
             }
         });

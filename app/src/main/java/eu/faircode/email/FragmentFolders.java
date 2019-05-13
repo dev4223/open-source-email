@@ -332,7 +332,7 @@ public class FragmentFolders extends FragmentBase {
             protected Void onExecute(Context context, Bundle args) {
                 long aid = args.getLong("account");
 
-                if (!Helper.getNetworkState(context).isSuitable())
+                if (!ConnectionHelper.getNetworkState(context).isSuitable())
                     throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
 
                 boolean now = true;
@@ -390,13 +390,13 @@ public class FragmentFolders extends FragmentBase {
 
         final MenuItem menuSearch = menu.findItem(R.id.menu_search);
         SearchView searchView = (SearchView) menuSearch.getActionView();
+        searchView.setQueryHint(getString(R.string.title_search));
 
         if (!TextUtils.isEmpty(searching)) {
             menuSearch.expandActionView();
             searchView.setQuery(searching, false);
         }
 
-        searchView.setQueryHint(getString(R.string.title_search_device));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -408,7 +408,9 @@ public class FragmentFolders extends FragmentBase {
             public boolean onQueryTextSubmit(String query) {
                 searching = null;
                 menuSearch.collapseActionView();
-                FragmentMessages.search(getContext(), getViewLifecycleOwner(), getFragmentManager(), -1, query);
+                FragmentMessages.search(
+                        getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                        -1, false, query);
                 return true;
             }
         });

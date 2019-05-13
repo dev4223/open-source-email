@@ -174,6 +174,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(102) How can I enable auto rotation of images?](#user-content-faq102)
 * [(103) How can I record audio?](#user-content-faq103)
 * [(104) What do I need to know about error reporting?](#user-content-faq104)
+* [(105) How does the roam-like-at-home option work?](#user-content-faq105)
 
 [I have another question.](#support)
 
@@ -308,6 +309,10 @@ see [here](https://support.google.com/accounts/answer/6010255) for Google's inst
 or go [directy to the setting](https://www.google.com/settings/security/lesssecureapps).
 You can solve the error *535-5.7.8 Username and Password not accepted* by enabling "less secure" apps.
 
+If you use your account username/password, you might get the alert "*Please log in via your web browser*".
+This security measure can for example be triggered when too many IP addresses were used in a too short time or when you are using a VPN.
+You can prevent this by using an app specific password.
+
 To login to Gmail / G suite you'll sometimes need an app specific password, for example when two factor authentication is enabled.
 See here for instructions: [https://support.google.com/accounts/answer/185833](https://support.google.com/accounts/answer/185833).
 
@@ -417,11 +422,21 @@ about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-si
 **(13) How does search on device/server work?**
 
 You can start searching for messages on sender, recipient, subject, keyword or message text by using the magnify glass in the action bar of a folder.
-First on device messages will be searched and after that the search will be executed on the server,
-except if the unified inbox is a collection of more than one folder.
+You can also search from any app by select *Search email* in the copy/paste popup menu.
+
+Messages will be searched on the device first (all accounts, all folders).
+There will be an action button with a cloud download icon at the bottom to search on the server.
+When the search was started in a specific folder,
+the same folder will be searched in on the server,
+else you can select which folder to search in on the server.
+
+The IMAP protocol doesn't support searching in more than one folder at the same time.
+Searching on the server is an expensive operation, therefore it is not possible to select multiple folders.
+
 Searching local messages is case insensitive and on partial text.
 The message text of local messages will not be searched if the message text was not downloaded yet.
 Searching on the server might be case sensitive or case insensitive and might be on partial text or whole words, depending on the provider.
+
 Searching messages is a pro feature.
 
 <br />
@@ -1696,6 +1711,16 @@ Unfortunately and surprisingly, most recording apps do not seem to support this 
 
 <br />
 
+<a name="faq105"></a>
+**(105) How does the roam-like-at-home option work?**
+
+FairEmail will check if the country code of the SIM card and the country code of the network
+are in the [EU roam-like-at-home countries](https://en.wikipedia.org/wiki/European_Union_roaming_regulations#Territorial_extent)
+and assumes no roaming if the country codes are equal and the advanced roam-like-at-home option is enabled.
+
+So, you don't have to disable this option if you don't have an EU SIM or are not connected to an EU network.
+
+<br />
 
 ## Support
 

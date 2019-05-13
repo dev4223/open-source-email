@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,8 @@ import androidx.room.PrimaryKey;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -54,6 +57,21 @@ public class EntityAttachment {
     static final Integer PGP_MESSAGE = 1;
     static final Integer PGP_SIGNATURE = 2;
 
+    // https://developer.android.com/guide/topics/media/media-formats#image-formats
+    private static final List<String> IMAGE_TYPES = Collections.unmodifiableList(Arrays.asList(
+            "image/bmp",
+            "image/gif",
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp"
+    ));
+
+    private static final List<String> IMAGE_TYPES8 = Collections.unmodifiableList(Arrays.asList(
+            "image/heic",
+            "image/heif"
+    ));
+
     @PrimaryKey(autoGenerate = true)
     public Long id;
     @NonNull
@@ -77,10 +95,18 @@ public class EntityAttachment {
     }
 
     boolean isImage() {
-        return type.startsWith("image/");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (IMAGE_TYPES8.contains(type))
+                return true;
+
+        return IMAGE_TYPES.contains(type);
     }
 
     File getFile(Context context) {
+        return getFile(context, id, name);
+    }
+
+    static File getFile(Context context, long id, String name) {
         File dir = new File(context.getFilesDir(), "attachments");
         if (!dir.exists())
             dir.mkdir();
@@ -129,5 +155,11 @@ public class EntityAttachment {
                     this.available.equals(other.available));
         } else
             return false;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return (this.name + " type=" + this.type + " disposition=" + this.disposition + " cid=" + this.cid + " size=" + this.size);
     }
 }

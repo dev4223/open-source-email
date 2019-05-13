@@ -53,6 +53,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
+import androidx.lifecycle.Lifecycle;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -60,6 +61,7 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -89,7 +91,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private Button btnSave;
     private Group grpSetup;
 
-    private int auth_type = Helper.AUTH_TYPE_PASSWORD;
+    private int auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
 
     @Override
     @Nullable
@@ -136,8 +138,8 @@ public class FragmentQuickSetup extends FragmentBase {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (auth_type != Helper.AUTH_TYPE_PASSWORD) {
-                    auth_type = Helper.AUTH_TYPE_PASSWORD;
+                if (auth_type != ConnectionHelper.AUTH_TYPE_PASSWORD) {
+                    auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
                     tilPassword.getEditText().setText(null);
                     tilPassword.setEnabled(true);
                     tilPassword.setPasswordVisibilityToggleEnabled(true);
@@ -438,7 +440,7 @@ public class FragmentQuickSetup extends FragmentBase {
                     tvInstructions.setVisibility(View.VISIBLE);
                 }
 
-                if (ex instanceof IllegalArgumentException)
+                if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else {
                     tvError.setText(Helper.formatThrowable(ex));
@@ -496,7 +498,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                 am.getAuthToken(
                         account,
-                        Helper.getAuthTokenType(type),
+                        ConnectionHelper.getAuthTokenType(type),
                         new Bundle(),
                         getActivity(),
                         new AccountManagerCallback<Bundle>() {
@@ -509,19 +511,20 @@ public class FragmentQuickSetup extends FragmentBase {
 
                                     etEmail.setText(account.name);
                                     tilPassword.getEditText().setText(token);
-                                    auth_type = Helper.AUTH_TYPE_GMAIL;
+                                    auth_type = ConnectionHelper.AUTH_TYPE_GMAIL;
                                 } catch (Throwable ex) {
                                     Log.e(ex);
                                     if (ex instanceof OperationCanceledException ||
                                             ex instanceof AuthenticatorException ||
-                                            ex instanceof IOException)
-                                        Snackbar.make(view, Helper.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
-                                    else
+                                            ex instanceof IOException) {
+                                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                                            Snackbar.make(view, Helper.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                                    } else
                                         Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                                 } finally {
                                     etEmail.setEnabled(true);
-                                    tilPassword.setEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
-                                    tilPassword.setPasswordVisibilityToggleEnabled(auth_type == Helper.AUTH_TYPE_PASSWORD);
+                                    tilPassword.setEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
+                                    tilPassword.setPasswordVisibilityToggleEnabled(auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD);
                                     btnAuthorize.setEnabled(true);
                                     btnCheck.setEnabled(true);
                                     new Handler().postDelayed(new Runnable() {
