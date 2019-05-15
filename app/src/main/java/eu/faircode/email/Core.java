@@ -753,7 +753,7 @@ class Core {
         if (!found) {
             db.attachment().setError(local.id, "Attachment not found");
             if (!EntityFolder.DRAFTS.equals(folder.type))
-                throw new IllegalArgumentException("Attachment not found");
+                throw new IllegalArgumentException("Attachment not found: " + local);
         }
 
         updateMessageSize(context, message.id);
@@ -1351,6 +1351,13 @@ class Core {
 
                 try {
                     db.beginTransaction();
+
+                    // Check if message was added in the meantime
+                    EntityMessage existing = db.message().getMessageByUid(message.folder, message.uid);
+                    if (existing != null) {
+                        Log.i("Message was already added");
+                        return existing;
+                    }
 
                     message.id = db.message().insertMessage(message);
                     Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);

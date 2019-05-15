@@ -326,6 +326,7 @@
     <string name="title_seen">Marquer comme lu</string>
     <string name="title_unseen">Marquer comme non lu</string>
     <string name="title_flag">Marquer comme suivi</string>
+    <string name="title_flag_color">Couleur de suivi &#8230;</string>
     <string name="title_unflag">Marquer comme non suivi</string>
     <string name="title_forward">Transférer</string>
     <string name="title_create_rule">Créer la règle &#8230;</string>
@@ -442,7 +443,7 @@
     <string name="title_sort_on_subject">Objet</string>
     <string name="title_sort_on_size">Taille</string>
     <string name="title_sort_on_snoozed">Différé</string>
-    <string name="title_filter">Filtrer</string>
+    <string name="title_filter">Filtrer (exclure)</string>
     <string name="title_filter_seen">Lu</string>
     <string name="title_filter_unflagged">Non suivi</string>
     <string name="title_filter_snoozed">Différé</string>

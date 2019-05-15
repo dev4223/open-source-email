@@ -71,10 +71,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.paging.LivePagedListBuilder;
 import androidx.paging.PagedList;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.selection.Selection;
@@ -86,6 +86,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.android.colorpicker.ColorPickerDialog;
+import com.android.colorpicker.ColorPickerSwatch;
 import com.bugsnag.android.Bugsnag;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -104,8 +106,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static android.text.format.DateUtils.DAY_IN_MILLIS;
@@ -182,25 +182,20 @@ public class FragmentMessages extends FragmentBase {
     private LongSparseArray<List<EntityAttachment>> attachments = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
-    private BoundaryCallbackMessages boundaryCallback = null;
-
-    private ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
-
     private final int action_seen = 1;
     private final int action_unseen = 2;
     private final int action_snooze = 3;
     private final int action_flag = 4;
     private final int action_unflag = 5;
-    private final int action_archive = 6;
-    private final int action_trash = 7;
-    private final int action_delete = 8;
-    private final int action_junk = 9;
-    private final int action_move = 10;
+    private final int action_flag_color = 6;
+    private final int action_archive = 7;
+    private final int action_trash = 8;
+    private final int action_delete = 9;
+    private final int action_junk = 10;
+    private final int action_move = 11;
 
     private NumberFormat nf = NumberFormat.getNumberInstance();
 
-    private static final int LOCAL_PAGE_SIZE = 100;
-    private static final int REMOTE_PAGE_SIZE = 10;
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
 
@@ -679,7 +674,7 @@ public class FragmentMessages extends FragmentBase {
 
         if (viewType == AdapterMessage.ViewType.THREAD) {
             ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), id, found, new ViewModelMessages.IPrevNext() {
+            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 @Override
                 public void onPrevious(boolean exists, Long id) {
                     previous = id;
@@ -1376,7 +1371,7 @@ public class FragmentMessages extends FragmentBase {
                     List<EntityFolder> targets = new ArrayList<>();
                     List<EntityFolder> folders = db.folder().getFolders(account.id);
                     for (EntityFolder target : folders)
-                        if (!target.isHidden(getContext()) &&
+                        if (!target.isHidden(context) &&
                                 !EntityFolder.ARCHIVE.equals(target.type) &&
                                 !EntityFolder.TRASH.equals(target.type) &&
                                 !EntityFolder.JUNK.equals(target.type) &&
@@ -1407,18 +1402,20 @@ public class FragmentMessages extends FragmentBase {
                     popupMenu.getMenu().add(Menu.NONE, action_flag, 4, R.string.title_flag);
                 if (result.flagged)
                     popupMenu.getMenu().add(Menu.NONE, action_unflag, 5, R.string.title_unflag);
+                if (result.unflagged || result.flagged)
+                    popupMenu.getMenu().add(Menu.NONE, action_flag_color, 6, R.string.title_flag_color);
 
                 if (result.hasArchive && !result.isArchive) // has archive and not is archive/drafts
-                    popupMenu.getMenu().add(Menu.NONE, action_archive, 6, R.string.title_archive);
+                    popupMenu.getMenu().add(Menu.NONE, action_archive, 7, R.string.title_archive);
 
                 if (result.isTrash) // is trash
-                    popupMenu.getMenu().add(Menu.NONE, action_delete, 7, R.string.title_delete);
+                    popupMenu.getMenu().add(Menu.NONE, action_delete, 8, R.string.title_delete);
 
                 if (!result.isTrash && result.hasTrash) // not trash and has trash
-                    popupMenu.getMenu().add(Menu.NONE, action_trash, 8, R.string.title_trash);
+                    popupMenu.getMenu().add(Menu.NONE, action_trash, 9, R.string.title_trash);
 
                 if (result.hasJunk && !result.isJunk && !result.isDrafts) // has junk and not junk/drafts
-                    popupMenu.getMenu().add(Menu.NONE, action_junk, 9, R.string.title_spam);
+                    popupMenu.getMenu().add(Menu.NONE, action_junk, 10, R.string.title_spam);
 
                 int order = 11;
                 for (EntityAccount account : result.accounts) {
@@ -1445,10 +1442,13 @@ public class FragmentMessages extends FragmentBase {
                                 onActionSnoozeSelection();
                                 return true;
                             case action_flag:
-                                onActionFlagSelection(true);
+                                onActionFlagSelection(true, null);
                                 return true;
                             case action_unflag:
-                                onActionFlagSelection(false);
+                                onActionFlagSelection(false, null);
+                                return true;
+                            case action_flag_color:
+                                onActionFlagColorSelection();
                                 return true;
                             case action_archive:
                                 onActionMoveSelection(EntityFolder.ARCHIVE);
@@ -1597,10 +1597,12 @@ public class FragmentMessages extends FragmentBase {
                 });
     }
 
-    private void onActionFlagSelection(boolean flagged) {
+    private void onActionFlagSelection(boolean flagged, Integer color) {
         Bundle args = new Bundle();
         args.putLongArray("ids", getSelection());
         args.putBoolean("flagged", flagged);
+        if (color != null)
+            args.putInt("color", color);
 
         selectionTracker.clearSelection();
 
@@ -1609,6 +1611,7 @@ public class FragmentMessages extends FragmentBase {
             protected Void onExecute(Context context, Bundle args) {
                 long[] ids = args.getLongArray("ids");
                 boolean flagged = args.getBoolean("flagged");
+                Integer color = (args.containsKey("color") ? args.getInt("color") : null);
 
                 DB db = DB.getInstance(context);
                 try {
@@ -1616,11 +1619,11 @@ public class FragmentMessages extends FragmentBase {
 
                     for (long id : ids) {
                         EntityMessage message = db.message().getMessage(id);
-                        if (message != null && message.ui_flagged != flagged) {
+                        if (message != null) {
                             List<EntityMessage> messages = db.message().getMessageByThread(
                                     message.account, message.thread, threading ? null : id, message.folder);
                             for (EntityMessage threaded : messages)
-                                EntityOperation.queue(context, db, threaded, EntityOperation.FLAG, flagged);
+                                EntityOperation.queue(context, db, threaded, EntityOperation.FLAG, flagged, color);
                         }
                     }
 
@@ -1637,6 +1640,26 @@ public class FragmentMessages extends FragmentBase {
                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
             }
         }.execute(FragmentMessages.this, args, "messages:flag");
+    }
+
+    private void onActionFlagColorSelection() {
+        if (!Helper.isPro(getContext()) && !BuildConfig.BETA_RELEASE) {
+            FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
+            fragmentTransaction.commit();
+            return;
+        }
+
+        int[] colors = getResources().getIntArray(R.array.colorPicker);
+        ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
+        colorPickerDialog.initialize(R.string.title_account_color, colors, Color.TRANSPARENT, 4, colors.length);
+        colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
+            @Override
+            public void onColorSelected(int color) {
+                onActionFlagSelection(true, color);
+            }
+        });
+        colorPickerDialog.show(getFragmentManager(), "colorpicker");
     }
 
     private void onActionDeleteSelection() {
@@ -2540,7 +2563,7 @@ public class FragmentMessages extends FragmentBase {
     private void loadMessages(final boolean top) {
         if (viewType == AdapterMessage.ViewType.THREAD && autonext) {
             ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), id, found, new ViewModelMessages.IPrevNext() {
+            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 boolean once = false;
 
                 @Override
@@ -2564,130 +2587,70 @@ public class FragmentMessages extends FragmentBase {
                     // Do nothing
                 }
             });
+        } else if (viewType == AdapterMessage.ViewType.SEARCH) {
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) {
+                    DB.getInstance(context).message().resetSearch();
+                    return null;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, Void data) {
+                    loadMessagesNext(top);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                }
+            }.execute(getContext(), getViewLifecycleOwner(), new Bundle(), "search:reset");
         } else
             loadMessagesNext(top);
     }
 
+    private boolean loading = false;
+
     private void loadMessagesNext(final boolean top) {
-        if (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH)
-            if (boundaryCallback == null)
-                boundaryCallback = new BoundaryCallbackMessages(
-                        getContext(), getViewLifecycleOwner(),
-                        folder, server || viewType == AdapterMessage.ViewType.FOLDER,
-                        query, REMOTE_PAGE_SIZE,
-                        new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
-                            @Override
-                            public void onLoading() {
-                                pbWait.setVisibility(View.VISIBLE);
-                            }
+        ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
 
-                            @Override
-                            public void onLoaded(int fetched) {
-                                pbWait.setVisibility(View.GONE);
+        LiveData<PagedList<TupleMessageEx>> liveMessages = model.getPagedList(
+                getContext(), getViewLifecycleOwner(),
+                viewType, account, folder, thread, id, query, server,
+                new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
+                    @Override
+                    public void onLoading() {
+                        loading = true;
+                        pbWait.setVisibility(View.VISIBLE);
+                    }
 
-                                Integer submitted = (Integer) rvMessage.getTag();
-                                if (submitted == null)
-                                    submitted = 0;
-                                if (submitted + fetched == 0)
-                                    tvNoEmail.setVisibility(View.VISIBLE);
-                            }
+                    @Override
+                    public void onLoaded(int fetched) {
+                        loading = false;
+                        pbWait.setVisibility(View.GONE);
 
-                            @Override
-                            public void onError(Throwable ex) {
-                                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                                    if (ex instanceof IllegalArgumentException)
-                                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                                    else
-                                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                                .setMessage(Helper.formatThrowable(ex))
-                                                .setPositiveButton(android.R.string.cancel, null)
-                                                .create()
-                                                .show();
-                            }
-                        });
+                        Integer submitted = (Integer) rvMessage.getTag();
+                        if (submitted == null)
+                            submitted = 0;
+                        if (submitted + fetched == 0)
+                            tvNoEmail.setVisibility(View.VISIBLE);
+                    }
 
-        // Observe folder/messages/search
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String sort = prefs.getString("sort", "time");
-        boolean filter_seen = prefs.getBoolean("filter_seen", false);
-        boolean filter_unflagged = prefs.getBoolean("filter_unflagged", false);
-        boolean filter_snoozed = prefs.getBoolean("filter_snoozed", true);
-        boolean debug = prefs.getBoolean("debug", false);
-        Log.i("Load messages type=" + viewType +
-                " sort=" + sort +
-                " filter seen=" + filter_seen + " unflagged=" + filter_unflagged + " snoozed=" + filter_snoozed +
-                " debug=" + debug);
+                    @Override
+                    public void onError(Throwable ex) {
+                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                            if (ex instanceof IllegalArgumentException)
+                                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                            else
+                                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                                        .setMessage(Helper.formatThrowable(ex))
+                                        .setPositiveButton(android.R.string.cancel, null)
+                                        .create()
+                                        .show();
+                    }
+                });
 
-        // Sort changed
-        final ViewModelMessages modelMessages = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
-        modelMessages.removeObservers(viewType, getViewLifecycleOwner());
-
-        DB db = DB.getInstance(getContext());
-        LivePagedListBuilder<Integer, TupleMessageEx> builder = null;
-        switch (viewType) {
-            case UNIFIED:
-                builder = new LivePagedListBuilder<>(
-                        db.message().pagedUnifiedInbox(
-                                threading,
-                                sort,
-                                filter_seen, filter_unflagged, filter_snoozed,
-                                false,
-                                debug),
-                        LOCAL_PAGE_SIZE);
-                break;
-
-            case FOLDER:
-                PagedList.Config configFolder = new PagedList.Config.Builder()
-                        .setPageSize(LOCAL_PAGE_SIZE)
-                        .setPrefetchDistance(REMOTE_PAGE_SIZE)
-                        .build();
-                builder = new LivePagedListBuilder<>(
-                        db.message().pagedFolder(
-                                folder, threading,
-                                sort,
-                                filter_seen, filter_unflagged, filter_snoozed,
-                                false,
-                                debug),
-                        configFolder);
-                builder.setBoundaryCallback(boundaryCallback);
-                break;
-
-            case THREAD:
-                builder = new LivePagedListBuilder<>(
-                        db.message().pagedThread(account, thread, threading ? null : id, debug), LOCAL_PAGE_SIZE);
-                break;
-
-            case SEARCH:
-                PagedList.Config configSearch = new PagedList.Config.Builder()
-                        .setPageSize(LOCAL_PAGE_SIZE)
-                        .setPrefetchDistance(REMOTE_PAGE_SIZE)
-                        .build();
-                if (folder < 0)
-                    builder = new LivePagedListBuilder<>(
-                            db.message().pagedUnifiedInbox(
-                                    threading,
-                                    "time",
-                                    false, false, false,
-                                    true,
-                                    debug),
-                            configSearch);
-                else
-                    builder = new LivePagedListBuilder<>(
-                            db.message().pagedFolder(
-                                    folder, threading,
-                                    "time",
-                                    false, false, false,
-                                    true,
-                                    debug),
-                            configSearch);
-                builder.setBoundaryCallback(boundaryCallback);
-                break;
-        }
-
-        builder.setFetchExecutor(executor);
-
-        modelMessages.setMessages(viewType, getViewLifecycleOwner(), builder.build());
-        modelMessages.observe(viewType, getViewLifecycleOwner(), new Observer<PagedList<TupleMessageEx>>() {
+        liveMessages.observe(getViewLifecycleOwner(), new Observer<PagedList<TupleMessageEx>>() {
             private boolean topped = false;
 
             @Override
@@ -2714,9 +2677,11 @@ public class FragmentMessages extends FragmentBase {
 
                 rvMessage.setTag(messages.size());
 
-                if (boundaryCallback == null || !boundaryCallback.isLoading())
+                boolean hasBoundary = (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH);
+
+                if (!hasBoundary || !loading)
                     pbWait.setVisibility(View.GONE);
-                if (boundaryCallback == null && messages.size() == 0)
+                if (!hasBoundary && messages.size() == 0)
                     tvNoEmail.setVisibility(View.VISIBLE);
                 if (messages.size() > 0) {
                     tvNoEmail.setVisibility(View.GONE);
@@ -3247,37 +3212,24 @@ public class FragmentMessages extends FragmentBase {
             final Context context, final LifecycleOwner owner, final FragmentManager manager,
             long folder, boolean server, String query) {
         if (Helper.isPro(context)) {
+            if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                manager.popBackStack("search", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
             Bundle args = new Bundle();
             args.putLong("folder", folder);
             args.putBoolean("server", server);
             args.putString("query", query);
 
-            new SimpleTask<Void>() {
-                @Override
-                protected Void onExecute(Context context, Bundle args) {
-                    DB.getInstance(context).message().resetSearch();
-                    return null;
-                }
+            FragmentMessages fragment = new FragmentMessages();
+            fragment.setArguments(args);
 
-                @Override
-                protected void onExecuted(Bundle args, Void data) {
-                    if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                        manager.popBackStack("search", FragmentManager.POP_BACK_STACK_INCLUSIVE);
-
-                    FragmentMessages fragment = new FragmentMessages();
-                    fragment.setArguments(args);
-
-                    FragmentTransaction fragmentTransaction = manager.beginTransaction();
-                    fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("search");
-                    fragmentTransaction.commit();
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
-                }
-            }.execute(context, owner, args, "search:reset");
+            FragmentTransaction fragmentTransaction = manager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("search");
+            fragmentTransaction.commit();
         } else {
+            if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                manager.popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
             FragmentTransaction fragmentTransaction = manager.beginTransaction();
             fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
             fragmentTransaction.commit();

@@ -1425,16 +1425,18 @@ public class FragmentAccount extends FragmentBase {
         vwColor.setBackground(border);
     }
 
-    private void setFolders(List<EntityFolder> folders, EntityAccount account) {
+    private void setFolders(List<EntityFolder> _folders, EntityAccount account) {
+        List<EntityFolder> folders = new ArrayList<>();
+        for (EntityFolder folder : _folders)
+            if (!EntityFolder.INBOX.equals(folder.type))
+                folders.add(folder);
+
         EntityFolder none = new EntityFolder();
         none.id = -1L;
         none.name = "-";
         folders.add(0, none);
 
-        adapter.clear();
-        for (EntityFolder folder : folders)
-            if (!EntityFolder.INBOX.equals(folder.type))
-                adapter.add(folder);
+        adapter.addAll(folders);
 
         Long left = (account == null ? null : account.swipe_left);
         Long right = (account == null ? null : account.swipe_right);
