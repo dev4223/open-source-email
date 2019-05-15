@@ -71,7 +71,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -1645,7 +1644,7 @@ public class FragmentMessages extends FragmentBase {
     }
 
     private void onActionFlagColorSelection() {
-        if (!Helper.isPro(getContext()) && !BuildConfig.BETA_RELEASE) {
+        if (!Helper.isPro(getContext())) {
             FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
             fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
             fragmentTransaction.commit();
@@ -1654,7 +1653,7 @@ public class FragmentMessages extends FragmentBase {
 
         int[] colors = getResources().getIntArray(R.array.colorPicker);
         ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
-        colorPickerDialog.initialize(R.string.title_account_color, colors, Color.TRANSPARENT, 4, colors.length);
+        colorPickerDialog.initialize(R.string.title_flag_color, colors, Color.TRANSPARENT, 4, colors.length);
         colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
             @Override
             public void onColorSelected(int color) {
@@ -2620,78 +2619,82 @@ public class FragmentMessages extends FragmentBase {
 
         ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
 
-        LiveData<PagedList<TupleMessageEx>> liveMessages = model.getPagedList(
+        ViewModelMessages.Model vmodel = model.getModel(
                 getContext(), getViewLifecycleOwner(),
-                viewType, account, folder, thread, id, query, server,
-                new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
-                    @Override
-                    public void onLoading() {
-                        loading = true;
-                        pbWait.setVisibility(View.VISIBLE);
-                    }
+                viewType, account, folder, thread, id, query, server);
 
-                    @Override
-                    public void onLoaded(int fetched) {
-                        loading = false;
-                        pbWait.setVisibility(View.GONE);
+        vmodel.setCallback(callback);
+        vmodel.setObserver(getViewLifecycleOwner(), observer);
+    }
 
-                        Integer submitted = (Integer) rvMessage.getTag();
-                        if (submitted == null)
-                            submitted = 0;
-                        if (submitted + fetched == 0)
-                            tvNoEmail.setVisibility(View.VISIBLE);
-                    }
+    private BoundaryCallbackMessages.IBoundaryCallbackMessages callback = new BoundaryCallbackMessages.IBoundaryCallbackMessages() {
+        @Override
+        public void onLoading() {
+            loading = true;
+            pbWait.setVisibility(View.VISIBLE);
+        }
 
-                    @Override
-                    public void onError(Throwable ex) {
-                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                            if (ex instanceof IllegalArgumentException)
-                                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                            else
-                                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                        .setMessage(Helper.formatThrowable(ex))
-                                        .setPositiveButton(android.R.string.cancel, null)
-                                        .create()
-                                        .show();
-                    }
-                });
+        @Override
+        public void onLoaded(int fetched) {
+            loading = false;
+            pbWait.setVisibility(View.GONE);
 
-        liveMessages.observe(getViewLifecycleOwner(), new Observer<PagedList<TupleMessageEx>>() {
-            @Override
-            public void onChanged(@Nullable PagedList<TupleMessageEx> messages) {
-                if (messages == null)
+            Integer submitted = (Integer) rvMessage.getTag();
+            if (submitted == null)
+                submitted = 0;
+            if (submitted + fetched == 0)
+                tvNoEmail.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onError(Throwable ex) {
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                            .setMessage(Helper.formatThrowable(ex))
+                            .setPositiveButton(android.R.string.cancel, null)
+                            .create()
+                            .show();
+        }
+    };
+
+    private Observer<PagedList<TupleMessageEx>> observer = new Observer<PagedList<TupleMessageEx>>() {
+        @Override
+        public void onChanged(@Nullable PagedList<TupleMessageEx> messages) {
+            if (messages == null)
+                return;
+
+            if (viewType == AdapterMessage.ViewType.THREAD)
+                if (handleThreadActions(messages))
                     return;
 
-                if (viewType == AdapterMessage.ViewType.THREAD)
-                    if (handleThreadActions(messages))
-                        return;
+            Log.i("Submit messages=" + messages.size());
+            adapter.submitList(messages);
 
-                Log.i("Submit messages=" + messages.size());
-                adapter.submitList(messages);
-
-                // This is to workaround not drawing when the search is expanded
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        rvMessage.requestLayout();
-                    }
-                });
-
-                rvMessage.setTag(messages.size());
-
-                boolean hasBoundary = (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH);
-
-                if (!hasBoundary || !loading)
-                    pbWait.setVisibility(View.GONE);
-                if (!hasBoundary && messages.size() == 0)
-                    tvNoEmail.setVisibility(View.VISIBLE);
-                if (messages.size() > 0) {
-                    tvNoEmail.setVisibility(View.GONE);
-                    grpReady.setVisibility(View.VISIBLE);
+            // This is to workaround not drawing when the search is expanded
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    rvMessage.requestLayout();
                 }
+            });
+
+            rvMessage.setTag(messages.size());
+
+            boolean hasBoundary = (viewType == AdapterMessage.ViewType.FOLDER || viewType == AdapterMessage.ViewType.SEARCH);
+
+            if (!hasBoundary || !loading)
+                pbWait.setVisibility(View.GONE);
+            if (!hasBoundary && messages.size() == 0)
+                tvNoEmail.setVisibility(View.VISIBLE);
+            if (messages.size() > 0) {
+                tvNoEmail.setVisibility(View.GONE);
+                grpReady.setVisibility(View.VISIBLE);
             }
-        });
-    }
+        }
+    };
 
     private boolean handleThreadActions(@NonNull PagedList<TupleMessageEx> messages) {
         // Auto close / next

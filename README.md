@@ -1,5 +1,10 @@
 # FairEmail (Fork)
 
+![GitHub](https://img.shields.io/github/license/M66B/open-source-email.svg)
+![GitHub release](https://img.shields.io/github/release/M66B/open-source-email.svg)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/M66B/open-source-email/0.1.svg)
+![GitHub stars](https://img.shields.io/github/stars/M66B/open-source-email.svg?style=social)
+
 *Open source, privacy friendly email app for Android*
 
 This open source, privacy friendly email app might be for you if your current email app:
@@ -51,7 +56,7 @@ This app starts a foreground service with a low priority status bar notification
 ## Pro features
 
 * Account/identity colors
-* Colored stars
+* Colored stars ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq107))
 * Notifications per account (requires Android 8 Oreo or later)
 * Notification sound per sender (requires Android 8 Oreo or later)
 * Configurable notification actions
