@@ -150,8 +150,9 @@ class Core {
                     crumb.put("name", op.name);
                     crumb.put("args", op.args);
                     crumb.put("folder", folder.type);
+                    crumb.put("free", Integer.toString(Helper.getFreeMemMb()));
                     crumb.put("UIDPLUS", Boolean.toString(((IMAPStore) istore).hasCapability("UIDPLUS")));
-                    Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.STATE, crumb);
+                    Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.LOG, crumb);
 
                     // Fetch most recent copy of message
                     EntityMessage message = null;
@@ -720,7 +721,7 @@ class Core {
         if (local == null)
             local = db.attachment().getAttachment(message.id, (int) id); // legacy
         if (local == null)
-            throw new IllegalArgumentException("Attachment not found");
+            throw new IllegalArgumentException("Local attachment not found");
         if (local.available)
             return;
 
@@ -752,8 +753,12 @@ class Core {
 
         if (!found) {
             db.attachment().setError(local.id, "Attachment not found");
-            if (!EntityFolder.DRAFTS.equals(folder.type))
-                throw new IllegalArgumentException("Attachment not found: " + local);
+            if (!EntityFolder.DRAFTS.equals(folder.type)) {
+                Log.w("Attachment not found local=" + local);
+                for (EntityAttachment remote : remotes)
+                    Log.w("Attachment remote=" + remote);
+                throw new IllegalArgumentException("Attachment not found");
+            }
         }
 
         updateMessageSize(context, message.id);
@@ -1088,6 +1093,14 @@ class Core {
                             " " + (SystemClock.elapsedRealtime() - headers) + " ms");
                 }
 
+                int free = Helper.getFreeMemMb();
+                Map<String, String> crumb = new HashMap<>();
+                crumb.put("start", Integer.toString(from));
+                crumb.put("end", Integer.toString(i));
+                crumb.put("free", Integer.toString(free));
+                Bugsnag.leaveBreadcrumb("sync", BreadcrumbType.LOG, crumb);
+                Log.i("Sync " + from + ".." + i + " free=" + free);
+
                 for (int j = isub.length - 1; j >= 0 && state.running() && state.recoverable(); j--)
                     try {
                         EntityMessage message = synchronizeMessage(
@@ -1146,6 +1159,14 @@ class Core {
 
                     Message[] isub = Arrays.copyOfRange(imessages, from, i + 1);
                     // Fetch on demand
+
+                    int free = Helper.getFreeMemMb();
+                    Map<String, String> crumb = new HashMap<>();
+                    crumb.put("start", Integer.toString(from));
+                    crumb.put("end", Integer.toString(i));
+                    crumb.put("free", Integer.toString(free));
+                    Bugsnag.leaveBreadcrumb("download", BreadcrumbType.LOG, crumb);
+                    Log.i("Download " + from + ".." + i + " free=" + free);
 
                     for (int j = isub.length - 1; j >= 0 && state.running() && state.recoverable(); j--)
                         try {
@@ -1628,6 +1649,7 @@ class Core {
                 if (!local.available)
                     if (state.getNetworkState().isUnmetered() || (local.size != null && local.size < maxSize))
                         try {
+                            boolean found = false;
                             for (int i = 0; i < remotes.size(); i++) {
                                 EntityAttachment remote = remotes.get(i);
                                 if (Objects.equals(remote.name, local.name) &&
@@ -1635,8 +1657,16 @@ class Core {
                                         Objects.equals(remote.disposition, local.disposition) &&
                                         Objects.equals(remote.cid, local.cid) &&
                                         Objects.equals(remote.encryption, local.encryption) &&
-                                        Objects.equals(remote.size, local.size))
+                                        Objects.equals(remote.size, local.size)) {
+                                    found = true;
                                     parts.downloadAttachment(context, i, local.id, local.name);
+                                }
+                            }
+
+                            if (!found) {
+                                Log.w("Attachment not found local=" + local);
+                                for (EntityAttachment remote : remotes)
+                                    Log.w("Attachment remote=" + remote);
                             }
                         } catch (Throwable ex) {
                             Log.e(ex);
