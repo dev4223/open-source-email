@@ -19,6 +19,9 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.annotation.TargetApi;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -29,7 +32,9 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -109,14 +114,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         private TwoStateOwner cowner = new TwoStateOwner(owner, "FolderChilds");
         private TwoStateOwner powner = new TwoStateOwner(owner, "FolderPopup");
-
-        private final static int action_synchronize_now = 1;
-        private final static int action_synchronize = 2;
-        private final static int action_delete_local = 3;
-        private final static int action_delete_browsed = 4;
-        private final static int action_empty_trash = 5;
-        private final static int action_edit_properties = 6;
-        private final static int action_edit_rules = 7;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -385,55 +382,79 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, vwRipple);
 
-            popupMenu.getMenu().add(Menu.NONE, action_synchronize_now, 1, R.string.title_synchronize_now);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_now, 1, R.string.title_synchronize_now);
 
             if (folder.account != null)
-                popupMenu.getMenu().add(Menu.NONE, action_synchronize, 2, R.string.title_synchronize_enabled)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_enabled, 2, R.string.title_synchronize_enabled)
                         .setCheckable(true).setChecked(folder.synchronize);
 
             if (folder.account != null) { // outbox
-                popupMenu.getMenu().add(Menu.NONE, action_delete_local, 3, R.string.title_delete_local);
-                popupMenu.getMenu().add(Menu.NONE, action_delete_browsed, 4, R.string.title_delete_browsed);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_local, 3, R.string.title_delete_local);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_browsed, 4, R.string.title_delete_browsed);
             }
 
             if (EntityFolder.TRASH.equals(folder.type))
-                popupMenu.getMenu().add(Menu.NONE, action_empty_trash, 5, R.string.title_empty_trash);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_empty_trash, 5, R.string.title_empty_trash);
 
             if (folder.account != null) {
-                popupMenu.getMenu().add(Menu.NONE, action_edit_rules, 6, R.string.title_edit_rules);
-                popupMenu.getMenu().add(Menu.NONE, action_edit_properties, 7, R.string.title_edit_properties);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_rules, 6, R.string.title_edit_rules);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_properties, 7, R.string.title_edit_properties);
+
+                if (folder.notify && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    String channelId = EntityFolder.getNotificationChannelId(folder.id);
+                    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    NotificationChannel channel = nm.getNotificationChannel(channelId);
+                    if (channel == null)
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_create_channel, 8, R.string.title_create_channel);
+                    else {
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_channel, 9, R.string.title_edit_channel);
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_channel, 10, R.string.title_delete_channel);
+                    }
+                }
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
-                        case action_synchronize_now:
+                        case R.string.title_synchronize_now:
                             onActionSynchronizeNow();
                             return true;
 
-                        case action_synchronize:
+                        case R.string.title_synchronize_enabled:
                             onActionSync(!item.isChecked());
                             return true;
 
-                        case action_delete_local:
+                        case R.string.title_delete_local:
                             OnActionDeleteLocal(false);
                             return true;
 
-                        case action_delete_browsed:
+                        case R.string.title_delete_browsed:
                             OnActionDeleteLocal(true);
                             return true;
 
-                        case action_empty_trash:
+                        case R.string.title_empty_trash:
                             onActionEmptyTrash();
                             return true;
 
-                        case action_edit_rules:
+                        case R.string.title_edit_rules:
                             onActionEditRules();
                             return true;
 
-                        case action_edit_properties:
+                        case R.string.title_edit_properties:
                             onActionEditProperties();
+                            return true;
+
+                        case R.string.title_create_channel:
+                            onActionCreateChannel();
+                            return true;
+
+                        case R.string.title_edit_channel:
+                            onActionEditChannel();
+                            return true;
+
+                        case R.string.title_delete_channel:
+                            onActionDeleteChannel();
                             return true;
 
                         default:
@@ -618,6 +639,29 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     lbm.sendBroadcast(
                             new Intent(ActivityView.ACTION_EDIT_FOLDER)
                                     .putExtra("id", folder.id));
+                }
+
+                private void onActionCreateChannel() {
+                    if (!Helper.isPro(context)) {
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                        return;
+                    }
+
+                    folder.createNotificationChannel(context);
+                    onActionEditChannel();
+                }
+
+                @TargetApi(Build.VERSION_CODES.O)
+                private void onActionEditChannel() {
+                    Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName())
+                            .putExtra(Settings.EXTRA_CHANNEL_ID, EntityFolder.getNotificationChannelId(folder.id));
+                    context.startActivity(intent);
+                }
+
+                private void onActionDeleteChannel() {
+                    folder.deleteNotificationChannel(context);
                 }
             });
 

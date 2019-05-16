@@ -91,7 +91,6 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 public class ServiceSynchronize extends LifecycleService {
     private ConnectionHelper.NetworkState networkState = new ConnectionHelper.NetworkState();
     private Core.State state;
-    private boolean oneshot = false;
     private boolean started = false;
     private int queued = 0;
     private long lastLost = 0;
@@ -99,6 +98,7 @@ public class ServiceSynchronize extends LifecycleService {
     private ExecutorService queue = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     private static boolean booted = false;
+    private static boolean oneshot = false;
 
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 64; // seconds (totally 2 minutes)
@@ -314,9 +314,6 @@ public class ServiceSynchronize extends LifecycleService {
                 am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + ONESHOT_DURATION, piOneshot);
             else
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + ONESHOT_DURATION, piOneshot);
-
-            if (!started)
-                onReload(true, "oneshot start");
         } else
             onReload(true, "oneshot end");
     }
@@ -450,11 +447,10 @@ public class ServiceSynchronize extends LifecycleService {
                     // Start monitoring accounts
                     List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
                     for (final EntityAccount account : accounts) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O)
-                            if (account.notify)
-                                account.createNotificationChannel(ServiceSynchronize.this);
-                            else
-                                account.deleteNotificationChannel(ServiceSynchronize.this);
+                        if (account.notify)
+                            account.createNotificationChannel(ServiceSynchronize.this);
+                        else
+                            account.deleteNotificationChannel(ServiceSynchronize.this);
 
                         Log.i(account.host + "/" + account.user + " run");
                         final Core.State astate = new Core.State(state);
@@ -1391,10 +1387,12 @@ public class ServiceSynchronize extends LifecycleService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean enabled = prefs.getBoolean("enabled", true);
         int pollInterval = prefs.getInt("poll_interval", 0);
-        if (!enabled || pollInterval > 0)
+        if (!enabled || pollInterval > 0) {
+            oneshot = true;
             ContextCompat.startForegroundService(context,
                     new Intent(context, ServiceSynchronize.class)
                             .setAction("oneshot_start"));
+        }
     }
 
     static void watchdog(Context context) {
