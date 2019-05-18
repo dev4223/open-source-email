@@ -5,6 +5,27 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <View
+        android:id="@+id/vSeparatorAddress"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?attr/colorSeparator"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/ivExpanderAddress"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:contentDescription="@string/title_legend_expander"
+        android:src="@drawable/expander"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/vSeparatorAddress" />
+
     <ImageButton
         android:id="@+id/ibSearchContact"
         android:layout_width="wrap_content"
@@ -13,7 +34,7 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:src="@drawable/baseline_search_24"
         app:layout_constraintEnd_toStartOf="@+id/ibNotifyContact"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/ivExpanderAddress" />
 
     <ImageButton
         android:id="@+id/ibNotifyContact"
@@ -24,17 +45,18 @@
         android:contentDescription="@string/title_legend_notify"
         android:src="@drawable/baseline_notifications_24"
         app:layout_constraintEnd_toStartOf="@+id/ibAddContact"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/ivExpanderAddress" />
 
     <ImageButton
         android:id="@+id/ibAddContact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/title_legend_contacts"
         android:src="@drawable/baseline_import_contacts_24"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/ivExpanderAddress" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_action"
@@ -181,13 +203,58 @@
         app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
         app:layout_constraintTop_toBottomOf="@id/tvBcc" />
 
+    <View
+        android:id="@+id/paddingAddressBottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvIdentity" />
+
+    <include
+        android:id="@+id/inAddressesMeta"
+        layout="@layout/include_addresses_meta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
+
+    <include
+        android:id="@+id/inAddressesMetaBottom"
+        layout="@layout/include_addresses_meta_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inAddressesMeta" />
+
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_addresses"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="end"
-        app:constraint_referenced_ids="
-            tvFromExTitle,tvToTitle,tvReplyToTitle,
-            tvCcTitle,tvBccTitle,
-            tvIdentityTitle" />
+        app:constraint_referenced_ids="tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grpAddresses"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:constraint_referenced_ids="vSeparatorAddress,ivExpanderAddress" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grpAddressMeta"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:constraint_referenced_ids="paddingAddressBottom,tvTimeEx,tvSizeExTitle,tvSizeEx,tvSubjectEx" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grpAddressMetaBottom"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:constraint_referenced_ids="tvFlags,tvKeywords" />
 </androidx.constraintlayout.widget.ConstraintLayout>
