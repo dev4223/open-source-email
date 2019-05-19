@@ -276,7 +276,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private Group grpDay;
 
         private View paddingAddressBottom;
-        private Group grpAddress;
         private Group grpAddressMeta;
         private Group grpAddressMetaBottom;
 
@@ -405,7 +404,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAddressMetaBottom = itemView.findViewById(R.id.grpAddressMetaBottom);
 
             grpAddresses = itemView.findViewById(R.id.grpAddresses);
-
             grpHeaders = itemView.findViewById(R.id.grpHeaders);
             grpCalendar = itemView.findViewById(R.id.grpCalendar);
             grpCalendarResponse = itemView.findViewById(R.id.grpCalendarResponse);
@@ -513,10 +511,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             clearExpanded();
 
-            grpDay.setVisibility(View.GONE);
-
             paddingAddressBottom.setMinimumHeight(0);
-            grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
@@ -775,12 +770,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             tvSubject.setVisibility(View.VISIBLE);
             paddingAddressBottom.setMinimumHeight(0);
-            grpAddress.setVisibility(View.GONE);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
 
             grpAddresses.setVisibility(View.GONE);
-
             grpHeaders.setVisibility(View.GONE);
             grpCalendar.setVisibility(View.GONE);
             grpCalendarResponse.setVisibility(View.GONE);
