@@ -159,6 +159,7 @@
     <string name="title_advanced_flags">Mostrar estrellas</string>
     <string name="title_advanced_preview">Mostrar vista previa de mensajes</string>
     <string name="title_advanced_addresses">Mostrar detalles de dirección por defecto</string>
+    <string name="title_advanced_attachments_alt">Mostrar adjuntos después del texto del mensaje</string>
     <string name="title_advanced_monospaced">Usar fuente monoespaciada para texto de mensaje</string>
     <string name="title_advanced_html">Mostrar mensaje original automáticamente para contactos conocidos</string>
     <string name="title_advanced_images">Mostrar imágenes automáticamente para contactos conocidos</string>
@@ -188,7 +189,7 @@
     <string name="title_advanced_english">Forzar idioma inglés</string>
     <string name="title_advanced_authentication">Mostrar una advertencia cuando el servidor de recepción no pudo autenticar el mensaje</string>
     <string name="title_advanced_paranoid">Características de privacidad adicionales</string>
-    <string name="title_advanced_cache_lists">Almacenar listas de mensajes en cache</string>
+    <string name="title_advanced_cache_lists">Almacenar listas de mensajes en caché</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Buscar actualizaciones</string>
     <string name="title_advanced_crash_reports">Enviar informes de errores</string>
@@ -469,6 +470,13 @@
     <string name="title_answer_text">Texto de plantilla</string>
     <string name="title_answer_template_name">$name$ será reemplazado por el nombre completo del remitente</string>
     <string name="title_answer_template_email">$email$ será reemplazado por la dirección de correo electrónico del remitente</string>
+    <string name="title_rule_seen">Marcar como leído</string>
+    <string name="title_rule_unseen">Marcar como no leído</string>
+    <string name="title_rule_flag">Destacar</string>
+    <string name="title_rule_move">Mover</string>
+    <string name="title_rule_copy">Copiar (etiqueta)</string>
+    <string name="title_rule_answer">Responder</string>
+    <string name="title_rule_automation">Automatización</string>
     <string name="title_rule_caption">Editar regla</string>
     <string name="title_rule_title">Regla aplicable a</string>
     <string name="title_rule_name">Nombre</string>
@@ -485,11 +493,10 @@
     <string name="title_rule_action_remark">Esta acción se aplicará a los nuevos mensajes que lleguen a la carpeta %1$s</string>
     <string name="title_rule_folder">Carpeta</string>
     <string name="title_rule_identity">Identidad</string>
-    <string name="title_rule_answer">Plantilla de respuesta</string>
+    <string name="title_rule_template">Plantilla de respuesta</string>
     <string name="title_rule_cc">Responder a direcciones en CC</string>
     <string name="title_rule_name_missing">Falta nombre de regla</string>
     <string name="title_rule_condition_missing">Falta condición</string>
-    <string name="title_rule_automation">Automatización</string>
     <string name="title_rule_automation_hint">Esto enviará el intento \'%1$s\' con los extras \'%2$s\'</string>
     <string name="title_legend_section_synchronize">Sincronizar</string>
     <string name="title_legend_section_folders">Carpetas</string>
@@ -597,6 +604,9 @@
     <string name="title_no_body">No se encontró texto en el mensaje</string>
     <string name="title_no_charset">Codificación no soportada: %1$s</string>
     <string name="title_via">Vía: %1$s</string>
+    <string name="title_icalendar_accept">Aceptar</string>
+    <string name="title_icalendar_decline">Rechazar</string>
+    <string name="title_icalendar_maybe">Tal vez</string>
     <string name="title_try">Pruebe FairEmail, un cliente de correo electrónico para Android de código abierto y enfocado en la privacidad</string>
     <string name="title_pro_feature">Esta es una característica Pro</string>
     <string name="title_pro_list">Lista de características Pro</string>

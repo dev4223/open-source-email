@@ -112,6 +112,7 @@ import me.leolin.shortcutbadger.ShortcutBadger;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 class Core {
+    private static final int MAX_NOTIFICATION_COUNT = 10; // per group
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
@@ -182,7 +183,8 @@ class Core {
 
                         // Operations should use database transaction when needed
 
-                        db.operation().setOperationState(op.id, "executing");
+                        if (!EntityOperation.SYNC.equals(op.name))
+                            db.operation().setOperationState(op.id, "executing");
 
                         switch (op.name) {
                             case EntityOperation.SEEN:
@@ -554,12 +556,12 @@ class Core {
                     // Mark source read
                     if (autoread) {
                         Log.i(folder.name + " queuing SEEN id=" + message.id);
-                        EntityOperation.queue(context, db, message, EntityOperation.SEEN, true);
+                        EntityOperation.queue(context, message, EntityOperation.SEEN, true);
                     }
 
                     // Delete source
                     Log.i(folder.name + " queuing DELETE id=" + message.id);
-                    EntityOperation.queue(context, db, message, EntityOperation.DELETE);
+                    EntityOperation.queue(context, message, EntityOperation.DELETE);
 
                     db.setTransactionSuccessful();
                 } finally {
@@ -960,7 +962,7 @@ class Core {
                 for (Long tbd : tbds) {
                     EntityMessage message = db.message().getMessage(tbd);
                     if (message != null)
-                        EntityOperation.queue(context, db, message, EntityOperation.DELETE);
+                        EntityOperation.queue(context, message, EntityOperation.DELETE);
                 }
             } else {
                 int old = db.message().deleteMessagesBefore(folder.id, keep_time, false);
@@ -991,8 +993,8 @@ class Core {
                     " search=" + (SystemClock.elapsedRealtime() - search) + " ms");
 
             FetchProfile fp = new FetchProfile();
-            fp.add(UIDFolder.FetchProfileItem.UID);
-            fp.add(FetchProfile.Item.FLAGS);
+            fp.add(UIDFolder.FetchProfileItem.UID); // To check if message exists
+            fp.add(FetchProfile.Item.FLAGS); // To update existing messages
             ifolder.fetch(imessages, fp);
 
             long fetch = SystemClock.elapsedRealtime();
@@ -1124,7 +1126,7 @@ class Core {
                         Log.e(folder.name, ex);
                         db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                     } finally {
-                        // Reduce memory usage
+                        // Free memory
                         ((IMAPMessage) isub[j]).invalidateHeaders();
                     }
             }
@@ -1140,7 +1142,7 @@ class Core {
                     Log.i(folder.name + " adding orphan id=" + orphan.id + " sent=" + new Date(orphan.sent));
                     orphan.folder = folder.id;
                     db.message().updateMessage(orphan);
-                    EntityOperation.queue(context, db, orphan, EntityOperation.ADD);
+                    EntityOperation.queue(context, orphan, EntityOperation.ADD);
                 }
             }
 
@@ -1149,8 +1151,6 @@ class Core {
 
             if (download) {
                 db.folder().setFolderSyncState(folder.id, "downloading");
-
-                //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
 
                 // Download messages/attachments
                 Log.i(folder.name + " download=" + imessages.length);
@@ -1617,16 +1617,19 @@ class Core {
 
         if (fetch) {
             Log.i(folder.name + " fetching message id=" + message.id);
-            FetchProfile fp = new FetchProfile();
-            fp.add(FetchProfile.Item.ENVELOPE);
-            fp.add(FetchProfile.Item.FLAGS);
-            fp.add(FetchProfile.Item.CONTENT_INFO); // body structure
-            fp.add(UIDFolder.FetchProfileItem.UID);
-            fp.add(IMAPFolder.FetchProfileItem.HEADERS);
-            fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
-            fp.add(FetchProfile.Item.SIZE);
-            fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
-            ifolder.fetch(new Message[]{imessage}, fp);
+
+            // Fetch on demand to prevent OOM
+
+            //FetchProfile fp = new FetchProfile();
+            //fp.add(FetchProfile.Item.ENVELOPE);
+            //fp.add(FetchProfile.Item.FLAGS);
+            //fp.add(FetchProfile.Item.CONTENT_INFO); // body structure
+            //fp.add(UIDFolder.FetchProfileItem.UID);
+            //fp.add(IMAPFolder.FetchProfileItem.HEADERS);
+            //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
+            //fp.add(FetchProfile.Item.SIZE);
+            //fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
+            //ifolder.fetch(new Message[]{imessage}, fp);
 
             MessageHelper.MessageParts parts = helper.getMessageParts();
 
@@ -1703,12 +1706,10 @@ class Core {
         db.message().setMessageSize(message.id, size);
     }
 
-    static void notifyMessages(Context context, List<TupleMessageEx> messages) {
+    static void notifyMessages(Context context, Map<String, List<Long>> groupNotifying, List<TupleMessageEx> messages) {
         Log.i("Notify messages=" + messages.size());
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit();
-
         boolean badge = prefs.getBoolean("badge", true);
 
         Widget.update(context, messages.size());
@@ -1720,22 +1721,7 @@ class Core {
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        Map<String, List<Long>> groupNotifying = new HashMap<>();
         Map<String, List<TupleMessageEx>> groupMessages = new HashMap<>();
-
-        // Previous
-        for (String key : prefs.getAll().keySet())
-            if (key.startsWith("notifying:")) {
-                String group = key.substring(key.indexOf(":") + 1);
-                groupNotifying.put(group, new ArrayList<Long>());
-
-                for (String id : prefs.getString(key, null).split(","))
-                    groupNotifying.get(group).add(Long.parseLong(id));
-
-                Log.i("Notifying " + group + "=" + TextUtils.join(",", groupNotifying.get(group)));
-
-                editor.remove(key);
-            }
 
         // Current
         for (TupleMessageEx message : messages) {
@@ -1755,20 +1741,22 @@ class Core {
                     groupNotifying.put(group, new ArrayList<Long>());
             }
 
-            groupMessages.get(group).add(message);
+            // This assumes the messages are properly ordered
+            if (groupMessages.get(group).size() < MAX_NOTIFICATION_COUNT)
+                groupMessages.get(group).add(message);
         }
 
         // Difference
         for (String group : groupNotifying.keySet()) {
             List<Notification> notifications = getNotificationUnseen(context, group, groupMessages.get(group));
 
-            List<String> all = new ArrayList<>();
+            List<Long> all = new ArrayList<>();
             List<Long> add = new ArrayList<>();
             List<Long> remove = groupNotifying.get(group);
             for (Notification notification : notifications) {
                 Long id = notification.extras.getLong("id", 0);
                 if (id != 0) {
-                    all.add(Long.toString(id));
+                    all.add(id);
                     if (remove.contains(id)) {
                         remove.remove(id);
                         Log.i("Notify existing=" + id);
@@ -1811,11 +1799,8 @@ class Core {
                 }
             }
 
-            if (all.size() > 0)
-                editor.putString("notifying:" + group, TextUtils.join(",", all));
+            groupNotifying.put(group, all);
         }
-
-        editor.apply();
     }
 
     private static List<Notification> getNotificationUnseen(Context context, String group, List<TupleMessageEx> messages) {
