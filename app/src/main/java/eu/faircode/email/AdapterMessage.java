@@ -141,6 +141,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private String sort;
     private boolean filter_duplicates;
     private boolean suitable;
+    private int answers = -1;
     private IProperties properties;
 
     private int colorPrimary;
@@ -557,10 +558,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Selected / disabled
             view.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
-            view.setAlpha(
-                    message.uid == null &&
-                            !(EntityFolder.OUTBOX.equals(message.folderType) && !message.ui_seen)
-                            ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(message.uid == null && !EntityFolder.OUTBOX.equals(message.folderType)
+                    ? Helper.LOW_LIGHT : 1.0f);
 
             // Duplicate
             if (viewType == ViewType.THREAD) {
@@ -1050,23 +1049,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     ActionData data = new ActionData();
                     data.hasJunk = hasJunk;
-                    data.delete = (inTrash || !hasTrash || inOutbox);
+                    data.delete = (inTrash || !hasTrash);
                     data.message = message;
                     bnvActions.setTag(data);
 
                     bnvActions.getMenu().findItem(R.id.action_more).setVisible(!inOutbox);
 
                     bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
-                            (inTrash && message.msgid != null) ||
-                            (!inTrash && hasTrash && message.uid != null) ||
-                            (inOutbox && !TextUtils.isEmpty(message.error)));
-                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(inTrash ? R.string.title_delete : R.string.title_trash);
+                            (inTrash && (message.uid != null || message.msgid != null)) ||
+                            (!inTrash && hasTrash && message.uid != null));
+                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(data.delete ? R.string.title_delete : R.string.title_trash);
 
-                    bnvActions.getMenu().findItem(R.id.action_move).setVisible(
-                            message.uid != null || (inOutbox && (message.ui_snoozed != null || message.error != null)));
-                    bnvActions.getMenu().findItem(R.id.action_move).setTitle(
-                            inOutbox && (message.ui_snoozed != null || message.error != null)
-                                    ? R.string.title_folder_drafts : R.string.title_move);
+                    bnvActions.getMenu().findItem(R.id.action_move).setVisible(message.uid != null || inOutbox);
+                    bnvActions.getMenu().findItem(R.id.action_move).setTitle(inOutbox ? R.string.title_folder_drafts : R.string.title_move);
 
                     bnvActions.getMenu().findItem(R.id.action_archive).setVisible(message.uid != null && !inArchive && hasArchive);
                     bnvActions.getMenu().findItem(R.id.action_reply).setEnabled(message.content);
@@ -1818,7 +1813,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         OriginalMessage original = new OriginalMessage();
                         original.html = Helper.readText(file);
                         original.html = HtmlHelper.getHtmlEmbedded(context, id, original.html);
-                        original.html = HtmlHelper.removeTracking(context, original.html);
 
                         Document doc = Jsoup.parse(original.html);
                         original.has_images = (doc.select("img").size() > 0);
@@ -1897,35 +1891,81 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowFull(TupleMessageEx message) {
-            WebView webView = new WebView(context);
-            setupWebView(webView);
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
 
-            boolean show_images = properties.getValue("images", message.id);
+            new SimpleTask<String>() {
+                @Override
+                protected String onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
 
-            WebSettings settings = webView.getSettings();
-            settings.setDefaultFontSize(Math.round(textSize));
-            settings.setDefaultFixedFontSize(Math.round(textSize));
-            settings.setLoadsImagesAutomatically(show_images);
-            settings.setBuiltInZoomControls(true);
-            settings.setDisplayZoomControls(false);
+                    String html = properties.getHtml(id);
 
-            String html = properties.getHtml(message.id);
-            webView.loadDataWithBaseURL("", html, "text/html", "UTF-8", null);
+                    // Remove viewport limitations
+                    Document doc = Jsoup.parse(html);
+                    for (Element meta : doc.select("meta").select("[name=viewport]")) {
+                        String content = meta.attr("content");
+                        String[] params = content.split(";");
+                        if (params.length > 0) {
+                            List<String> viewport = new ArrayList<>();
+                            for (String param : params)
+                                if (!param.toLowerCase().contains("maximum-scale") &&
+                                        !param.toLowerCase().contains("user-scalable"))
+                                    viewport.add(param.trim());
 
-            final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            dialog.setContentView(webView);
+                            if (viewport.size() == 0)
+                                meta.attr("content", "");
+                            else
+                                meta.attr("content", TextUtils.join(" ;", viewport) + ";");
+                        }
+                    }
 
-            owner.getLifecycle().addObserver(new LifecycleObserver() {
-                @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-                public void onCreate() {
-                    dialog.show();
+                    return doc.html();
                 }
 
-                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                public void onDestroyed() {
-                    dialog.dismiss();
+                @Override
+                protected void onExecuted(Bundle args, String html) {
+                    long id = args.getLong("id");
+
+                    TupleMessageEx amessage = getMessage();
+                    if (amessage == null || !amessage.id.equals(id))
+                        return;
+
+                    WebView webView = new WebView(context);
+                    setupWebView(webView);
+
+                    boolean show_images = properties.getValue("images", id);
+
+                    WebSettings settings = webView.getSettings();
+                    settings.setDefaultFontSize(Math.round(textSize));
+                    settings.setDefaultFixedFontSize(Math.round(textSize));
+                    settings.setLoadsImagesAutomatically(show_images);
+                    settings.setBuiltInZoomControls(true);
+                    settings.setDisplayZoomControls(false);
+
+                    webView.loadDataWithBaseURL("", html, "text/html", "UTF-8", null);
+
+                    final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+                    dialog.setContentView(webView);
+
+                    owner.getLifecycle().addObserver(new LifecycleObserver() {
+                        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+                        public void onCreate() {
+                            dialog.show();
+                        }
+
+                        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                        public void onDestroyed() {
+                            dialog.dismiss();
+                        }
+                    });
                 }
-            });
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args, "message:full");
         }
 
         private void setupWebView(WebView webView) {
@@ -2397,7 +2437,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     onActionDelete(data);
                     return true;
                 case R.id.action_move:
-                    onActionMove(data);
+                    if (EntityFolder.OUTBOX.equals(data.message.folderType))
+                        onnActionMoveOutbox(data);
+                    else
+                        onActionMove(data, false);
                     return true;
                 case R.id.action_archive:
                     onActionArchive(data);
@@ -2464,90 +2507,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(color);
-        }
-
-        private void onMenuCopy(final ActionData data) {
-            Bundle args = new Bundle();
-            args.putLong("id", data.message.id);
-
-            new SimpleTask<List<EntityFolder>>() {
-                @Override
-                protected List<EntityFolder> onExecute(Context context, Bundle args) {
-                    DB db = DB.getInstance(context);
-
-                    EntityMessage message = db.message().getMessage(args.getLong("id"));
-                    if (message == null)
-                        return null;
-
-                    List<EntityFolder> folders = db.folder().getFolders(message.account);
-                    if (folders == null)
-                        return null;
-
-                    if (folders.size() > 0)
-                        Collections.sort(folders, folders.get(0).getComparator(context));
-
-                    return folders;
-                }
-
-                @Override
-                protected void onExecuted(final Bundle args, List<EntityFolder> folders) {
-                    if (folders == null)
-                        return;
-
-                    View anchor = bnvActions.findViewById(R.id.action_more);
-                    PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
-
-                    int order = 0;
-                    for (EntityFolder folder : folders)
-                        popupMenu.getMenu().add(Menu.NONE, folder.id.intValue(), order++, folder.getDisplayName(context));
-
-                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(final MenuItem target) {
-                            args.putLong("target", target.getItemId());
-
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long id = args.getLong("id");
-                                    long target = args.getLong("target");
-
-                                    DB db = DB.getInstance(context);
-                                    try {
-                                        db.beginTransaction();
-
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message == null)
-                                            return null;
-
-                                        EntityOperation.queue(context, message, EntityOperation.COPY, target);
-
-                                        db.setTransactionSuccessful();
-                                    } finally {
-                                        db.endTransaction();
-                                    }
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Helper.unexpectedError(context, owner, ex);
-                                }
-                            }.execute(context, owner, args, "message:copy");
-
-                            return true;
-                        }
-                    });
-
-                    popupMenu.show();
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
-                }
-            }.execute(context, owner, args, "message:copy:list");
         }
 
         private void onMenuDelete(final ActionData data) {
@@ -3028,7 +2987,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             onMenuColoredStar(data);
                             return true;
                         case R.id.menu_copy:
-                            onMenuCopy(data);
+                            onActionMove(data, true);
                             return true;
                         case R.id.menu_delete:
                             // For emergencies
@@ -3127,50 +3086,153 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 properties.move(data.message.id, EntityFolder.TRASH, true);
         }
 
-        private void onActionMove(ActionData data) {
+        private void onnActionMoveOutbox(ActionData data) {
             Bundle args = new Bundle();
             args.putLong("id", data.message.id);
 
-            new SimpleTask<List<EntityFolder>>() {
+            new SimpleTask<Void>() {
                 @Override
-                protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                protected Void onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
                     EntityMessage message;
-                    List<EntityFolder> folders = null;
 
                     DB db = DB.getInstance(context);
                     try {
                         db.beginTransaction();
 
-                        message = db.message().getMessage(args.getLong("id"));
+                        message = db.message().getMessage(id);
                         if (message == null)
                             return null;
 
-                        EntityFolder folder = db.folder().getFolder(message.folder);
-                        if (EntityFolder.OUTBOX.equals(folder.type)) {
-                            long id = message.id;
+                        db.folder().setFolderError(message.folder, null);
 
-                            File source = message.getFile(context);
+                        File source = message.getFile(context);
 
-                            // Insert into drafts
-                            EntityFolder drafts = db.folder().getFolderByType(message.account, EntityFolder.DRAFTS);
-                            message.id = null;
-                            message.folder = drafts.id;
-                            message.ui_snoozed = null;
-                            message.id = db.message().insertMessage(message);
+                        // Insert into drafts
+                        EntityFolder drafts = db.folder().getFolderByType(message.account, EntityFolder.DRAFTS);
+                        message.id = null;
+                        message.folder = drafts.id;
+                        message.ui_snoozed = null;
+                        message.id = db.message().insertMessage(message);
 
-                            File target = message.getFile(context);
-                            source.renameTo(target);
+                        File target = message.getFile(context);
+                        source.renameTo(target);
 
-                            List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                            for (EntityAttachment attachment : attachments)
-                                db.attachment().setMessage(attachment.id, message.id);
+                        List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                        for (EntityAttachment attachment : attachments)
+                            db.attachment().setMessage(attachment.id, message.id);
 
-                            EntityOperation.queue(context, message, EntityOperation.ADD);
+                        EntityOperation.queue(context, message, EntityOperation.ADD);
 
-                            // Delete from outbox
-                            db.message().deleteMessage(id);
-                        } else
-                            folders = db.folder().getFolders(message.account);
+                        // Delete from outbox
+                        db.operation().deleteOperation(id, EntityOperation.SEND);
+                        db.message().deleteMessage(id);
+
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+
+                    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                    nm.cancel("send", message.identity.intValue());
+
+                    return null;
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args, "message:move:draft");
+        }
+
+        private void onActionMove(final ActionData data, final boolean copy) {
+            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_folder_select, null);
+            final RecyclerView rvFolder = dview.findViewById(R.id.rvFolder);
+            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
+
+            final Dialog dialog = new DialogBuilderLifecycle(context, owner)
+                    .setTitle(copy ? R.string.title_copy_to : R.string.title_move_to_folder)
+                    .setView(dview)
+                    .create();
+
+            rvFolder.setHasFixedSize(false);
+            LinearLayoutManager llm = new LinearLayoutManager(context);
+            rvFolder.setLayoutManager(llm);
+
+            final AdapterFolderSelect adapter = new AdapterFolderSelect(context, owner, new AdapterFolderSelect.IFolderSelectedListener() {
+                @Override
+                public void onFolderSelected(EntityFolder folder) {
+                    dialog.dismiss();
+
+                    if (copy) {
+                        Bundle args = new Bundle();
+                        args.putLong("id", data.message.id);
+                        args.putLong("target", folder.id);
+
+                        new SimpleTask<Void>() {
+                            @Override
+                            protected Void onExecute(Context context, Bundle args) {
+                                long id = args.getLong("id");
+                                long target = args.getLong("target");
+
+                                DB db = DB.getInstance(context);
+                                try {
+                                    db.beginTransaction();
+
+                                    EntityMessage message = db.message().getMessage(id);
+                                    if (message == null)
+                                        return null;
+
+                                    EntityOperation.queue(context, message, EntityOperation.COPY, target);
+
+                                    db.setTransactionSuccessful();
+                                } finally {
+                                    db.endTransaction();
+                                }
+
+                                return null;
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Helper.unexpectedError(context, owner, ex);
+                            }
+                        }.execute(context, owner, args, "message:copy");
+                    } else
+                        properties.move(data.message.id, folder.name, false);
+                }
+            });
+
+            rvFolder.setAdapter(adapter);
+
+            rvFolder.setVisibility(View.GONE);
+            pbWait.setVisibility(View.VISIBLE);
+            dialog.show();
+
+            Bundle args = new Bundle();
+            args.putLong("id", data.message.id);
+            args.putBoolean("copy", copy);
+
+            new SimpleTask<List<EntityFolder>>() {
+                @Override
+                protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+                    boolean copy = args.getBoolean("copy");
+
+                    EntityMessage message;
+                    List<EntityFolder> folders;
+
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
+
+                        message = db.message().getMessage(id);
+                        if (message == null)
+                            return null;
+
+                        folders = db.folder().getFolders(message.account);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -3184,9 +3246,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     for (EntityFolder folder : folders)
                         if (!folder.isHidden(context) &&
                                 !folder.id.equals(message.folder) &&
-                                !EntityFolder.ARCHIVE.equals(folder.type) &&
-                                !EntityFolder.TRASH.equals(folder.type) &&
-                                !EntityFolder.JUNK.equals(folder.type))
+                                (copy ||
+                                        (!EntityFolder.ARCHIVE.equals(folder.type) &&
+                                                !EntityFolder.TRASH.equals(folder.type) &&
+                                                !EntityFolder.JUNK.equals(folder.type))))
                             targets.add(folder);
 
                     if (targets.size() > 0)
@@ -3198,44 +3261,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected void onExecuted(final Bundle args, List<EntityFolder> folders) {
                     if (folders == null)
-                        return;
+                        folders = new ArrayList<>();
 
-                    View anchor = bnvActions.findViewById(R.id.action_move);
-                    PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
-
-                    int order = 0;
-                    for (EntityFolder folder : folders)
-                        popupMenu.getMenu().add(Menu.NONE, folder.id.intValue(), order++, folder.getDisplayName(context));
-
-                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                        @Override
-                        public boolean onMenuItemClick(final MenuItem target) {
-                            args.putLong("target", target.getItemId());
-
-                            new SimpleTask<String>() {
-                                @Override
-                                protected String onExecute(Context context, Bundle args) {
-                                    long target = args.getLong("target");
-                                    return DB.getInstance(context).folder().getFolder(target).name;
-                                }
-
-                                @Override
-                                protected void onExecuted(Bundle args, String folderName) {
-                                    long id = args.getLong("id");
-                                    properties.move(id, folderName, false);
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Helper.unexpectedError(context, owner, ex);
-                                }
-                            }.execute(context, owner, args, "message:move");
-
-                            return true;
-                        }
-                    });
-
-                    popupMenu.show();
+                    adapter.set(folders);
+                    pbWait.setVisibility(View.GONE);
+                    rvFolder.setVisibility(View.VISIBLE);
                 }
 
                 @Override
@@ -3250,11 +3280,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionReplyMenu(final ActionData data) {
+            int recipients = 0;
+            if (data.message.from != null)
+                recipients += data.message.from.length;
+            if (data.message.cc != null)
+                recipients += data.message.cc.length;
+
+            if (recipients == 1 &&
+                    data.message.list_post == null &&
+                    data.message.receipt_to == null &&
+                    (answers == 0 && Helper.isPro(context))) {
+                onMenuReply(data, "reply");
+                return;
+            }
+
             View anchor = bnvActions.findViewById(R.id.action_reply);
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
             popupMenu.inflate(R.menu.menu_reply);
+            popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients > 1);
             popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(data.message.list_post != null);
             popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(data.message.receipt_to != null);
+            popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !Helper.isPro(context));
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -3281,7 +3327,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
             popupMenu.show();
-
         }
 
         private void onMenuReply(final ActionData data, String action) {
@@ -3482,6 +3527,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             this.suitable = suitable;
             notifyDataSetChanged();
         }
+    }
+
+    void setAnswerCount(int answers) {
+        this.answers = answers;
+        Log.i("Answer count=" + answers);
     }
 
     @Override

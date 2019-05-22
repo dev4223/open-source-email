@@ -229,7 +229,7 @@ public class ApplicationEx extends Application {
             public boolean run(@NonNull Error error) {
                 error.addToTab("extra", "installer", installer == null ? "-" : installer);
                 error.addToTab("extra", "fingerprint", fingerprint);
-                error.addToTab("extra", "free", Helper.getFreeMemMb());
+                error.addToTab("extra", "free", Log.getFreeMemMb());
                 return true;
             }
         });
@@ -237,8 +237,8 @@ public class ApplicationEx extends Application {
 
     static void upgrade(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        int version = prefs.getInt("version", 468);
-        if (version < BuildConfig.VERSION_CODE) {
+        int version = prefs.getInt("version", BuildConfig.VERSION_CODE);
+        if (version < 468) {
             Log.i("Upgrading from " + version + " to " + BuildConfig.VERSION_CODE);
 
             SharedPreferences.Editor editor = prefs.edit();

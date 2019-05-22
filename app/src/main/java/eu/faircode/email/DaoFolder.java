@@ -28,16 +28,8 @@ import java.util.List;
 
 @Dao
 public interface DaoFolder {
-    @Query("SELECT * FROM folder" +
-            " WHERE account = :account" +
-            " ORDER BY CASE WHEN folder.type = '" + EntityFolder.USER + "' THEN 1 ELSE 0 END")
+    @Query("SELECT * FROM folder WHERE account = :account")
     List<EntityFolder> getFolders(long account);
-
-    @Query("SELECT folder.* FROM folder" +
-            " JOIN account ON account.id = folder.account" +
-            " WHERE folder.synchronize" +
-            " AND account.synchronize")
-    List<EntityFolder> getSynchronizingFolders();
 
     @Query("SELECT folder.* FROM folder" +
             " JOIN account ON account.id = folder.account" +
