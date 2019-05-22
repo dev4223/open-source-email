@@ -576,6 +576,13 @@ public class Helper {
         return PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pro", false);
     }
 
+    public static <T> List<List<T>> chunkList(List<T> list, int size) {
+        List<List<T>> result = new ArrayList<>(list.size() / size);
+        for (int i = 0; i < list.size(); i += size)
+            result.add(list.subList(i, i + size < list.size() ? i + size : list.size()));
+        return result;
+    }
+
     static long[] toLongArray(List<Long> list) {
         long[] result = new long[list.size()];
         for (int i = 0; i < list.size(); i++)
@@ -613,16 +620,5 @@ public class Helper {
         Parcel p = Parcel.obtain();
         bundle.writeToParcel(p, 0);
         return p.dataSize();
-    }
-
-    static long getFreeMem() {
-        Runtime rt = Runtime.getRuntime();
-        long used = (rt.totalMemory() - rt.freeMemory());
-        long max = rt.maxMemory();
-        return (max - used);
-    }
-
-    static int getFreeMemMb() {
-        return (int) (getFreeMem() / 1024L / 1024L);
     }
 }

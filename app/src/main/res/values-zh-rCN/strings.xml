@@ -37,7 +37,7 @@
         <item quantity="other">永久删除 %1$d 邮件？</item>
     </plurals>
     <plurals name="title_ask_spam">
-        <item quantity="other">报告 %1$d 为垃圾邮件？</item>
+        <item quantity="other">把 %1$d 作为垃圾邮件处理？</item>
     </plurals>
     <string name="title_ask_spam_who">将来自%1$s的消息举报为垃圾邮件?</string>
     <string name="title_notification_sending">正发送消息</string>
@@ -188,6 +188,7 @@
     <string name="title_advanced_debug">调试模式</string>
     <string name="title_advanced_last_cleanup">上次清理: %1$s</string>
     <string name="title_advanced_enabled_hint">全球禁用或启用接收消息</string>
+    <string name="title_advanced_manual_hint">如果同步功能已禁用，仍然可以通过下拉邮件列表手动同步。这将在一定时间内同步消息和执行操作。</string>
     <string name="title_advanced_schedule_hint">点击“时间”选项来设置时间</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
@@ -348,7 +349,6 @@
     <string name="title_more">更多</string>
     <string name="title_spam">垃圾邮件</string>
     <string name="title_move">移动</string>
-    <string name="title_move_to">移动到%1$s</string>
     <string name="title_snooze">打盹 &#8230;</string>
     <string name="title_archive">存档</string>
     <string name="title_reply">回复</string>
@@ -462,6 +462,12 @@
     <string name="title_answer_text">模板内容</string>
     <string name="title_answer_template_name">$name$ 将被发件人的全名取代</string>
     <string name="title_answer_template_email">$email$ 将被发件人的邮件地址取代</string>
+    <string name="title_rule_seen">标记为已读</string>
+    <string name="title_rule_unseen">标记为未读</string>
+    <string name="title_rule_flag">添加星标</string>
+    <string name="title_rule_move">移动</string>
+    <string name="title_rule_copy">复制（标签）</string>
+    <string name="title_rule_answer">回复</string>
     <string name="title_rule_automation">自动化</string>
     <string name="title_rule_caption">编辑规则</string>
     <string name="title_rule_title">规则应用于</string>
@@ -479,10 +485,15 @@
     <string name="title_rule_action_remark">此操作将被应用于抵达文件夹 %1$s 的新消息</string>
     <string name="title_rule_folder">文件夹</string>
     <string name="title_rule_identity">身份</string>
+    <string name="title_rule_template">回复模板</string>
     <string name="title_rule_cc">回信给邮件抄送地址</string>
     <string name="title_rule_name_missing">缺少规则名称</string>
     <string name="title_rule_condition_missing">条件缺失</string>
     <string name="title_rule_automation_hint">将使用参数 \'%2$s\' 发送 \'%1$s\' 的 intent</string>
+    <string name="title_rule_check">检查</string>
+    <string name="title_rule_no_headers">无法检查 邮件标头状况</string>
+    <string name="title_rule_matched">正匹配消息</string>
+    <string name="title_rule_no_matches">没有匹配项目</string>
     <string name="title_legend_section_synchronize">同步</string>
     <string name="title_legend_section_folders">文件夹</string>
     <string name="title_legend_section_messages">消息</string>
@@ -503,8 +514,8 @@
     <string name="title_legend_waiting">等待下次同步</string>
     <string name="title_legend_unified">统一收件箱/主账户</string>
     <string name="title_legend_inbox">收件箱</string>
-    <string name="title_legend_archive">存档</string>
     <string name="title_legend_drafts">草稿</string>
+    <string name="title_legend_archive">存档</string>
     <string name="title_legend_trash">垃圾箱</string>
     <string name="title_legend_junk">垃圾邮件</string>
     <string name="title_legend_primary">首选</string>
@@ -589,6 +600,9 @@
     <string name="title_no_body">没有找到消息文本</string>
     <string name="title_no_charset">不支持的编码: %1$s</string>
     <string name="title_via">通过: %1$s</string>
+    <string name="title_icalendar_accept">接受</string>
+    <string name="title_icalendar_decline">拒绝</string>
+    <string name="title_icalendar_maybe">待定</string>
     <string name="title_try">请试下FairEmail吧！一个安卓平台上开源、隐私友好的邮件客户端</string>
     <string name="title_pro_feature">这是专业版功能</string>
     <string name="title_pro_list">专业版功能列表</string>

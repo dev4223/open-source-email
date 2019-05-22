@@ -53,6 +53,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -84,8 +86,6 @@ import javax.mail.event.MessageCountEvent;
 import javax.mail.event.StoreEvent;
 import javax.mail.event.StoreListener;
 
-import me.leolin.shortcutbadger.ShortcutBadger;
-
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public class ServiceSynchronize extends LifecycleService {
@@ -96,6 +96,7 @@ public class ServiceSynchronize extends LifecycleService {
     private long lastLost = 0;
     private TupleAccountStats lastStats = new TupleAccountStats();
     private ExecutorService queue = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+    private ExecutorService initExecutor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     private static boolean booted = false;
     private static boolean oneshot = false;
@@ -168,12 +169,7 @@ public class ServiceSynchronize extends LifecycleService {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
 
-        Widget.update(this, -1);
-        try {
-            ShortcutBadger.applyCount(this, 0);
-        } catch (Throwable ex) {
-            Log.e(ex);
-        }
+        Core.notifyReset(this);
 
         WorkerCleanup.cancel(this);
 
@@ -559,17 +555,19 @@ public class ServiceSynchronize extends LifecycleService {
 
                 final IMAPStore istore = (IMAPStore) isession.getStore(account.getProtocol());
 
-                final Map<EntityFolder, IMAPFolder> folders = new HashMap<>();
+                final Map<EntityFolder, IMAPFolder> mapFolders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
                 try {
                     // Listen for store events
                     istore.addStoreListener(new StoreListener() {
                         @Override
                         public void notification(StoreEvent e) {
-                            try {
-                                wlFolder.acquire();
-                                String message = e.getMessage();
-                                if (e.getMessageType() == StoreEvent.ALERT) {
+                            if (e.getMessageType() == StoreEvent.NOTICE)
+                                Log.i(account.name + " notice: " + e.getMessage());
+                            else
+                                try {
+                                    wlFolder.acquire();
+                                    String message = e.getMessage();
                                     Log.w(account.name + " alert: " + message);
                                     db.account().setAccountError(account.id, message);
                                     if (BuildConfig.DEBUG ||
@@ -577,11 +575,9 @@ public class ServiceSynchronize extends LifecycleService {
                                         Core.reportError(ServiceSynchronize.this, account, null,
                                                 new Core.AlertException(message));
                                     state.error(null);
-                                } else
-                                    Log.i(account.name + " notice: " + message);
-                            } finally {
-                                wlFolder.release();
-                            }
+                                } finally {
+                                    wlFolder.release();
+                                }
                         }
                     });
 
@@ -645,9 +641,23 @@ public class ServiceSynchronize extends LifecycleService {
                         }
                     });
 
+                    List<EntityFolder> folders = db.folder().getFolders(account.id);
+                    Collections.sort(folders, new Comparator<EntityFolder>() {
+                        @Override
+                        public int compare(EntityFolder f1, EntityFolder f2) {
+                            int s1 = EntityFolder.FOLDER_SORT_ORDER.indexOf(f1.type);
+                            int s2 = EntityFolder.FOLDER_SORT_ORDER.indexOf(f2.type);
+                            int s = Integer.compare(s1, s2);
+                            if (s != 0)
+                                return s;
+
+                            return f1.name.compareTo(f2.name);
+                        }
+                    });
+
                     // Initiate connection
                     EntityLog.log(this, account.name + " connecting");
-                    for (EntityFolder folder : db.folder().getFolders(account.id))
+                    for (EntityFolder folder : folders)
                         db.folder().setFolderState(folder.id, null);
                     db.account().setAccountState(account.id, "connecting");
 
@@ -655,7 +665,7 @@ public class ServiceSynchronize extends LifecycleService {
                         ConnectionHelper.connect(this, istore, account);
                     } catch (Throwable ex) {
                         // Report account connection error
-                        if (account.last_connected != null) {
+                        if (account.last_connected != null && !ConnectionHelper.airplaneMode(this)) {
                             EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
                             long now = new Date().getTime();
                             long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
@@ -688,7 +698,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                     // Open synchronizing folders
                     final ExecutorService pollExecutor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
-                    for (final EntityFolder folder : db.folder().getFolders(account.id)) {
+                    for (final EntityFolder folder : folders) {
                         if (folder.synchronize && !folder.poll && capIdle) {
                             Log.i(account.name + " sync folder " + folder.name);
 
@@ -721,7 +731,7 @@ public class ServiceSynchronize extends LifecycleService {
                                 db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
                                 throw ex;
                             }
-                            folders.put(folder, ifolder);
+                            mapFolders.put(folder, ifolder);
 
                             db.folder().setFolderState(folder.id, "connected");
                             db.folder().setFolderError(folder.id, null);
@@ -895,7 +905,7 @@ public class ServiceSynchronize extends LifecycleService {
 
                             EntityOperation.sync(this, folder.id, false);
                         } else
-                            folders.put(folder, null);
+                            mapFolders.put(folder, null);
 
                         handler.post(new Runnable() {
                             @Override
@@ -922,8 +932,18 @@ public class ServiceSynchronize extends LifecycleService {
                                         handling = ops;
 
                                         if (handling.size() > 0 && process) {
-                                            Log.i(folder.name + " operations=" + operations.size());
-                                            (folder.poll ? pollExecutor : folderExecutor).submit(new Runnable() {
+                                            Log.i(folder.name + " operations=" + operations.size() +
+                                                    " init=" + folder.initialize + " poll=" + folder.poll);
+
+                                            ExecutorService executor;
+                                            if (folder.initialize)
+                                                executor = initExecutor;
+                                            else if (folder.poll)
+                                                executor = pollExecutor;
+                                            else
+                                                executor = folderExecutor;
+
+                                            executor.submit(new Runnable() {
                                                 @Override
                                                 public void run() {
                                                     try {
@@ -931,7 +951,7 @@ public class ServiceSynchronize extends LifecycleService {
                                                         Log.i(folder.name + " process");
 
                                                         // Get folder
-                                                        Folder ifolder = folders.get(folder); // null when polling
+                                                        Folder ifolder = mapFolders.get(folder); // null when polling
                                                         final boolean shouldClose = (ifolder == null);
 
                                                         try {
@@ -1014,11 +1034,11 @@ public class ServiceSynchronize extends LifecycleService {
                             if (!istore.isConnected()) // Sends store NOOP
                                 throw new StoreClosedException(istore, "NOOP");
 
-                            for (EntityFolder folder : folders.keySet())
+                            for (EntityFolder folder : mapFolders.keySet())
                                 if (folder.synchronize)
                                     if (!folder.poll && capIdle) {
-                                        if (!folders.get(folder).isOpen()) // Sends folder NOOP
-                                            throw new FolderClosedException(folders.get(folder));
+                                        if (!mapFolders.get(folder).isOpen()) // Sends folder NOOP
+                                            throw new FolderClosedException(mapFolders.get(folder));
                                     } else
                                         EntityOperation.sync(this, folder.id, false);
 
@@ -1082,7 +1102,7 @@ public class ServiceSynchronize extends LifecycleService {
                     // Update state
                     EntityLog.log(this, account.name + " closing");
                     db.account().setAccountState(account.id, "closing");
-                    for (EntityFolder folder : folders.keySet())
+                    for (EntityFolder folder : mapFolders.keySet())
                         if (folder.synchronize && !folder.poll)
                             db.folder().setFolderState(folder.id, "closing");
 
@@ -1104,7 +1124,7 @@ public class ServiceSynchronize extends LifecycleService {
                     idlers.clear();
 
                     // Update state
-                    for (EntityFolder folder : folders.keySet())
+                    for (EntityFolder folder : mapFolders.keySet())
                         if (folder.synchronize && !folder.poll)
                             db.folder().setFolderState(folder.id, null);
                 }

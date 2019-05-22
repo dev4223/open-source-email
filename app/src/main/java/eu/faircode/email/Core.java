@@ -112,6 +112,8 @@ import me.leolin.shortcutbadger.ShortcutBadger;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 class Core {
+    private static int lastUnseen = -1;
+
     private static final int MAX_NOTIFICATION_COUNT = 10; // per group
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
@@ -151,7 +153,7 @@ class Core {
                     crumb.put("name", op.name);
                     crumb.put("args", op.args);
                     crumb.put("folder", folder.type);
-                    crumb.put("free", Integer.toString(Helper.getFreeMemMb()));
+                    crumb.put("free", Integer.toString(Log.getFreeMemMb()));
                     crumb.put("UIDPLUS", Boolean.toString(((IMAPStore) istore).hasCapability("UIDPLUS")));
                     Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.LOG, crumb);
 
@@ -771,19 +773,13 @@ class Core {
 
         Log.i("Start sync folders account=" + account.name);
 
-        // Get remote folders
+        // Get default folder
         Folder defaultFolder = istore.getDefaultFolder();
         char separator = defaultFolder.getSeparator();
         EntityLog.log(context, account.name + " folder separator=" + separator);
 
-        // Get remote folder attributes
+        // Get remote folders
         Folder[] ifolders = defaultFolder.list("*");
-        Map<Folder, String[]> attrs = new HashMap<>();
-        Map<Folder, Boolean> subscribed = new HashMap<>();
-        for (Folder ifolder : ifolders) {
-            subscribed.put(ifolder, ifolder.isSubscribed());
-            attrs.put(ifolder, ((IMAPFolder) ifolder).getAttributes());
-        }
         Log.i("Remote folder count=" + ifolders.length + " separator=" + separator);
 
         // Get folder names
@@ -806,27 +802,30 @@ class Core {
                 names.add(folder.name);
         Log.i("Local folder count=" + names.size());
 
-        try {
-            db.beginTransaction();
 
-            Map<String, EntityFolder> nameFolder = new HashMap<>();
-            Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
-            for (Folder ifolder : ifolders) {
-                String fullName = ifolder.getFullName(); // No I/O
-                String[] attr = attrs.get(ifolder);
-                String type = EntityFolder.getType(attr, fullName);
+        Map<String, EntityFolder> nameFolder = new HashMap<>();
+        Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
+        for (Folder ifolder : ifolders) {
+            String fullName = ifolder.getFullName();
+            boolean subscribed = ifolder.isSubscribed();
+            String[] attr = ((IMAPFolder) ifolder).getAttributes();
+            String type = EntityFolder.getType(attr, fullName);
 
-                EntityLog.log(context, account.name + ":" + fullName +
-                        " attrs=" + TextUtils.join(" ", attr) + " type=" + type);
+            EntityLog.log(context, account.name + ":" + fullName +
+                    " attrs=" + TextUtils.join(" ", attr) + " type=" + type);
 
-                if (type != null) {
-                    names.remove(fullName);
+            if (type != null) {
+                names.remove(fullName);
 
-                    String display = null;
-                    if (account.prefix != null && fullName.startsWith(account.prefix + separator))
-                        display = fullName.substring(account.prefix.length() + 1);
+                String display = null;
+                if (account.prefix != null && fullName.startsWith(account.prefix + separator))
+                    display = fullName.substring(account.prefix.length() + 1);
 
-                    EntityFolder folder = db.folder().getFolderByName(account.id, fullName);
+                EntityFolder folder;
+                try {
+                    db.beginTransaction();
+
+                    folder = db.folder().getFolderByName(account.id, fullName);
                     if (folder == null) {
                         folder = new EntityFolder();
                         folder.account = account.id;
@@ -834,7 +833,7 @@ class Core {
                         folder.display = display;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.synchronize = false;
-                        folder.subscribed = subscribed.get(ifolder);
+                        folder.subscribed = subscribed;
                         folder.poll = ("imap.gmail.com".equals(account.host));
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
@@ -844,7 +843,7 @@ class Core {
                         Log.i(folder.name + " exists type=" + folder.type);
 
                         if (folder.subscribed == null || !folder.subscribed.equals(subscribed))
-                            db.folder().setFolderSubscribed(folder.id, subscribed.get(ifolder));
+                            db.folder().setFolderSubscribed(folder.id, subscribed);
 
                         if (folder.display == null && display != null) {
                             db.folder().setFolderDisplay(folder.id, display);
@@ -864,31 +863,31 @@ class Core {
                                 db.folder().setFolderType(folder.id, type);
                         }
                     }
-
-                    nameFolder.put(folder.name, folder);
-                    String parentName = folder.getParentName(separator);
-                    if (!parentFolders.containsKey(parentName))
-                        parentFolders.put(parentName, new ArrayList<EntityFolder>());
-                    parentFolders.get(parentName).add(folder);
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                    Log.i("End sync folder");
                 }
 
-                for (String parentName : parentFolders.keySet()) {
-                    EntityFolder parent = nameFolder.get(parentName);
-                    for (EntityFolder child : parentFolders.get(parentName))
-                        db.folder().setFolderParent(child.id, parent == null ? null : parent.id);
-                }
+                nameFolder.put(folder.name, folder);
+                String parentName = folder.getParentName(separator);
+                if (!parentFolders.containsKey(parentName))
+                    parentFolders.put(parentName, new ArrayList<EntityFolder>());
+                parentFolders.get(parentName).add(folder);
             }
+        }
 
-            Log.i("Delete local count=" + names.size());
-            for (String name : names) {
-                Log.i(name + " delete");
-                db.folder().deleteFolder(account.id, name);
-            }
+        Log.i("Updating folder parents=" + parentFolders.size());
+        for (String parentName : parentFolders.keySet()) {
+            EntityFolder parent = nameFolder.get(parentName);
+            for (EntityFolder child : parentFolders.get(parentName))
+                db.folder().setFolderParent(child.id, parent == null ? null : parent.id);
+        }
 
-            db.setTransactionSuccessful();
-        } finally {
-            db.endTransaction();
-            Log.i("End sync folder");
+        Log.i("Delete local count=" + names.size());
+        for (String name : names) {
+            Log.i(name + " delete");
+            db.folder().deleteFolder(account.id, name);
         }
     }
 
@@ -1027,25 +1026,29 @@ class Core {
                 MessagingException ex = (MessagingException) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                     @Override
                     public Object doCommand(IMAPProtocol protocol) {
-                        Log.i("Executing uid fetch count=" + uids.size());
-                        Response[] responses = protocol.command(
-                                "UID FETCH " + TextUtils.join(",", uids) + " (UID)", null);
+                        Log.i(folder.name + " executing uid fetch count=" + uids.size());
+                        List<List<Long>> chunked = Helper.chunkList(new ArrayList<>(uids), 25);
+                        for (int c = 0; c < chunked.size(); c++) {
+                            Log.i(folder.name + " chunk #" + c + " size=" + chunked.get(c).size());
+                            Response[] responses = protocol.command(
+                                    "UID FETCH " + TextUtils.join(",", chunked.get(c)) + " (UID)", null);
 
-                        if (responses.length > 0 && responses[responses.length - 1].isOK()) {
-                            for (Response response : responses)
-                                if (response instanceof FetchResponse) {
-                                    FetchResponse fr = (FetchResponse) response;
-                                    UID uid = fr.getItem(UID.class);
-                                    if (uid != null)
-                                        uids.remove(uid.uid);
-                                }
-                            return null;
-                        } else {
-                            for (Response response : responses)
-                                if (response.isNO() || response.isBAD() || response.isBYE())
-                                    return new MessagingException(response.toString());
-                            return new MessagingException("UID FETCH failed");
+                            if (responses.length > 0 && responses[responses.length - 1].isOK()) {
+                                for (Response response : responses)
+                                    if (response instanceof FetchResponse) {
+                                        FetchResponse fr = (FetchResponse) response;
+                                        UID uid = fr.getItem(UID.class);
+                                        if (uid != null)
+                                            uids.remove(uid.uid);
+                                    }
+                            } else {
+                                for (Response response : responses)
+                                    if (response.isNO() || response.isBAD() || response.isBYE())
+                                        return new MessagingException(response.toString());
+                                return new MessagingException("UID FETCH failed");
+                            }
                         }
+                        return null;
                     }
                 });
                 if (ex != null)
@@ -1095,7 +1098,7 @@ class Core {
                             " " + (SystemClock.elapsedRealtime() - headers) + " ms");
                 }
 
-                int free = Helper.getFreeMemMb();
+                int free = Log.getFreeMemMb();
                 Map<String, String> crumb = new HashMap<>();
                 crumb.put("start", Integer.toString(from));
                 crumb.put("end", Integer.toString(i));
@@ -1160,7 +1163,7 @@ class Core {
                     Message[] isub = Arrays.copyOfRange(imessages, from, i + 1);
                     // Fetch on demand
 
-                    int free = Helper.getFreeMemMb();
+                    int free = Log.getFreeMemMb();
                     Map<String, String> crumb = new HashMap<>();
                     crumb.put("start", Integer.toString(from));
                     crumb.put("end", Integer.toString(i));
@@ -1186,8 +1189,10 @@ class Core {
                 }
             }
 
-            if (state.running)
+            if (state.running) {
+                folder.initialize = false;
                 db.folder().setFolderInitialized(folder.id);
+            }
 
             db.folder().setFolderSync(folder.id, new Date().getTime());
             db.folder().setFolderError(folder.id, null);
@@ -1706,6 +1711,16 @@ class Core {
         db.message().setMessageSize(message.id, size);
     }
 
+    static void notifyReset(Context context) {
+        lastUnseen = -1;
+        Widget.update(context, -1);
+        try {
+            ShortcutBadger.removeCount(context);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
     static void notifyMessages(Context context, Map<String, List<Long>> groupNotifying, List<TupleMessageEx> messages) {
         Log.i("Notify messages=" + messages.size());
 
@@ -1715,10 +1730,8 @@ class Core {
         boolean badge = prefs.getBoolean("badge", true);
 
         // Update widget/badge count
-        int lastUnseen = 0;
-        for (String group : groupNotifying.keySet())
-            lastUnseen += groupNotifying.get(group).size();
-        if (messages.size() != lastUnseen) {
+        if (lastUnseen < 0 || messages.size() != lastUnseen) {
+            lastUnseen = messages.size();
             Widget.update(context, messages.size());
             try {
                 ShortcutBadger.applyCount(context, badge ? messages.size() : 0);
@@ -1954,7 +1967,9 @@ class Core {
                 mbuilder.setGroup(group).setGroupSummary(false);
 
             if (notify_trash) {
-                Intent trash = new Intent(context, ServiceUI.class).setAction("trash:" + message.id);
+                Intent trash = new Intent(context, ServiceUI.class)
+                        .setAction("trash:" + message.id)
+                        .putExtra("group", group);
                 PendingIntent piTrash = PendingIntent.getService(context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
                         R.drawable.baseline_delete_24,
@@ -1964,7 +1979,9 @@ class Core {
             }
 
             if (notify_archive) {
-                Intent archive = new Intent(context, ServiceUI.class).setAction("archive:" + message.id);
+                Intent archive = new Intent(context, ServiceUI.class)
+                        .setAction("archive:" + message.id)
+                        .putExtra("group", group);
                 PendingIntent piArchive = PendingIntent.getService(context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
                         R.drawable.baseline_archive_24,
@@ -1987,7 +2004,9 @@ class Core {
             }
 
             if (notify_flag && flags) {
-                Intent flag = new Intent(context, ServiceUI.class).setAction("flag:" + message.id);
+                Intent flag = new Intent(context, ServiceUI.class)
+                        .setAction("flag:" + message.id)
+                        .putExtra("group", group);
                 PendingIntent piFlag = PendingIntent.getService(context, ServiceUI.PI_FLAG, flag, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionFlag = new NotificationCompat.Action.Builder(
                         R.drawable.baseline_star_24,
@@ -1997,7 +2016,9 @@ class Core {
             }
 
             if (notify_seen) {
-                Intent seen = new Intent(context, ServiceUI.class).setAction("seen:" + message.id);
+                Intent seen = new Intent(context, ServiceUI.class)
+                        .setAction("seen:" + message.id)
+                        .putExtra("group", group);
                 PendingIntent piSeen = PendingIntent.getService(context, ServiceUI.PI_SEEN, seen, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionSeen = new NotificationCompat.Action.Builder(
                         R.drawable.baseline_visibility_24,

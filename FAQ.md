@@ -39,6 +39,7 @@ For authorizing:
 * ~~Colored stars~~
 * ~~Notification settings per folder~~
 * ~~Select local images for signatures~~ (this will not be added because it requires image file management and because images are not shown by default in most email clients anyway)
+* ~~Show messages matched by a rule~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -1300,6 +1301,8 @@ You can disable a rule and you can stop processing other rules after a rule has 
 
 All the conditions of a rule need to be true for a filter rule to be executed.
 Conditions are optional, but there needs to be at least one condition.
+You can use multiple rules, possibly with a *stop processing*, for an *or* condition.
+
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression).
 
 In the *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
@@ -1308,7 +1311,9 @@ You can select one of these actions to apply to matching messages:
 
 * Mark as read
 * Mark as unread
+* Add star
 * Move
+* Copy
 * Reply template
 * Automation
 
@@ -1438,7 +1443,7 @@ If you don't want this, for example to not be disturbed or to save on battery us
 just disable synchronization in the advanced option (accessible via the button at the bottom of the setup screen).
 This will stop the background service which takes care of automatic synchronization and will remove the associated status bar notification.
 You can use pull-down-to-refresh in a folder or use the folder menu *Synchronize now* to manually synchronize messages.
-This will start the synchronization service for 90 seconds for all configured accounts.
+This will start the synchronization service for 60 seconds for all configured accounts.
 
 The synchronization process will also be started to execute [operations](#user-content-faq3),
 for example to mark a message read, move a message or store a draft.
@@ -1726,7 +1731,7 @@ Unfortunately and surprisingly, most recording apps do not seem to support this 
 * Error reports will help improve FairEmail
 * Error reporting is optional and opt-in
 * Error reporting can be enabled/disabled in the advanced options, section miscellaneous
-* Error reports will be sent anonymously to [Bugsnag](https://www.bugsnag.com/)
+* Error reports will automatically be sent anonymously to [Bugsnag](https://www.bugsnag.com/)
 * Bugsnag for Android is [open source](https://github.com/bugsnag/bugsnag-android)
 * See [here](https://docs.bugsnag.com/platforms/android/automatically-captured-data/) about what data will be sent in case of errors
 * See [here](https://docs.bugsnag.com/legal/privacy-policy/) for the privacy policy of Bugsnag

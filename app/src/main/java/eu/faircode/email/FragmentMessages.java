@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -121,6 +122,7 @@ public class FragmentMessages extends FragmentBase {
     private TextView tvNoEmail;
     private FixedRecyclerView rvMessage;
     private SeekBar seekBar;
+    private ImageButton ibDown;
     private ImageButton ibUp;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
@@ -265,6 +267,7 @@ public class FragmentMessages extends FragmentBase {
         tvNoEmail = view.findViewById(R.id.tvNoEmail);
         rvMessage = view.findViewById(R.id.rvMessage);
         seekBar = view.findViewById(R.id.seekBar);
+        ibDown = view.findViewById(R.id.ibDown);
         ibUp = view.findViewById(R.id.ibUp);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
         pbWait = view.findViewById(R.id.pbWait);
@@ -456,28 +459,17 @@ public class FragmentMessages extends FragmentBase {
             }
         });
 
+        ibDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                scrollToVisibleItem(llm, true);
+            }
+        });
+
         ibUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int pos = llm.findLastVisibleItemPosition();
-                if (pos != RecyclerView.NO_POSITION)
-                    do {
-                        Long key = adapter.getKeyAtPosition(pos);
-                        if (key != null && isExpanded(key)) {
-                            int first = llm.findFirstVisibleItemPosition();
-                            View child = rvMessage.getChildAt(pos - (first < 0 ? 0 : first));
-                            if (child != null) {
-                                TranslateAnimation bounce = new TranslateAnimation(
-                                        0, 0, Helper.dp2pixels(getContext(), 12), 0);
-                                bounce.setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
-                                child.startAnimation(bounce);
-                            }
-
-                            rvMessage.scrollToPosition(pos);
-                            break;
-                        }
-                        pos--;
-                    } while (pos >= 0);
+                scrollToVisibleItem(llm, false);
             }
         });
 
@@ -646,7 +638,8 @@ public class FragmentMessages extends FragmentBase {
         swipeRefresh.setEnabled(pull);
         tvNoEmail.setVisibility(View.GONE);
         seekBar.setVisibility(View.GONE);
-        ibUp.setVisibility(viewType == AdapterMessage.ViewType.THREAD ? View.VISIBLE : View.GONE);
+        ibDown.setVisibility(View.GONE);
+        ibUp.setVisibility(View.GONE);
         bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(false);
         bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(false);
         bottom_navigation.setVisibility(View.GONE);
@@ -775,6 +768,35 @@ public class FragmentMessages extends FragmentBase {
         super.onDestroy();
     }
 
+    private void scrollToVisibleItem(LinearLayoutManager llm, boolean bottom) {
+        int pos = llm.findLastVisibleItemPosition();
+        if (pos == RecyclerView.NO_POSITION)
+            return;
+
+        do {
+            Long key = adapter.getKeyAtPosition(pos);
+            if (key != null && isExpanded(key)) {
+                int first = llm.findFirstVisibleItemPosition();
+                View child = rvMessage.getChildAt(pos - (first < 0 ? 0 : first));
+
+                if (child != null) {
+                    TranslateAnimation bounce = new TranslateAnimation(
+                            0, 0, Helper.dp2pixels(getContext(), bottom ? -12 : 12), 0);
+                    bounce.setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+                    child.startAnimation(bounce);
+                }
+
+                if (bottom && child != null)
+                    llm.scrollToPositionWithOffset(pos, rvMessage.getHeight() - llm.getDecoratedMeasuredHeight(child));
+                else
+                    rvMessage.scrollToPosition(pos);
+
+                break;
+            }
+            pos--;
+        } while (pos >= 0);
+    }
+
     private void onSwipeRefresh() {
         Bundle args = new Bundle();
         args.putLong("folder", folder);
@@ -848,10 +870,15 @@ public class FragmentMessages extends FragmentBase {
             if (enabled) {
                 if (!values.get(name).contains(id))
                     values.get(name).add(id);
-                if ("expanded".equals(name))
-                    handleExpand(id);
             } else
                 values.get(name).remove(id);
+
+            if ("expanded".equals(name)) {
+                if (enabled)
+                    handleExpand(id);
+                ibDown.setVisibility(values.get(name).size() > 0 ? View.VISIBLE : View.GONE);
+                ibUp.setVisibility(values.get(name).size() > 0 ? View.VISIBLE : View.GONE);
+            }
         }
 
         @Override
@@ -1370,7 +1397,7 @@ public class FragmentMessages extends FragmentBase {
                     if (targets.size() > 0)
                         Collections.sort(targets, targets.get(0).getComparator(context));
 
-                    result.targets.put(account, targets);
+                    result.targets.put(account.id, targets);
                 }
 
                 return result;
@@ -1397,25 +1424,22 @@ public class FragmentMessages extends FragmentBase {
                 if (result.hasArchive && !result.isArchive) // has archive and not is archive/drafts
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_archive, 7, R.string.title_archive);
 
+                int order = 8;
+                for (EntityAccount account : result.accounts) {
+                    MenuItem item = popupMenu.getMenu()
+                            .add(Menu.NONE, R.string.title_move_to_account, order++,
+                                    getString(R.string.title_move_to_account, account.name));
+                    item.setIntent(new Intent().putExtra("account", account.id));
+                }
+
                 if (result.isTrash) // is trash
-                    popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, 8, R.string.title_delete);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, order++, R.string.title_delete);
 
                 if (!result.isTrash && result.hasTrash) // not trash and has trash
-                    popupMenu.getMenu().add(Menu.NONE, R.string.title_trash, 9, R.string.title_trash);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_trash, order++, R.string.title_trash);
 
                 if (result.hasJunk && !result.isJunk && !result.isDrafts) // has junk and not junk/drafts
-                    popupMenu.getMenu().add(Menu.NONE, R.string.title_spam, 10, R.string.title_spam);
-
-                int order = 11;
-                for (EntityAccount account : result.accounts) {
-                    SubMenu smenu = popupMenu.getMenu()
-                            .addSubMenu(Menu.NONE, 0, order++, getString(R.string.title_move_to, account.name));
-                    int sorder = 1;
-                    for (EntityFolder target : result.targets.get(account)) {
-                        MenuItem item = smenu.add(Menu.NONE, R.string.title_move_to, sorder++, target.getDisplayName(getContext()));
-                        item.setIntent(new Intent().putExtra("target", target.id));
-                    }
-                }
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_spam, order++, R.string.title_spam);
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
@@ -1451,8 +1475,9 @@ public class FragmentMessages extends FragmentBase {
                             case R.string.title_spam:
                                 onActionJunkSelection();
                                 return true;
-                            case R.string.title_move_to:
-                                onActionMoveSelection(target.getIntent().getLongExtra("target", -1));
+                            case R.string.title_move_to_account:
+                                long account = target.getIntent().getLongExtra("account", -1);
+                                onActionMoveSelectionAccount(result.targets.get(account));
                                 return true;
                             default:
                                 return false;
@@ -1803,6 +1828,37 @@ public class FragmentMessages extends FragmentBase {
         }.execute(FragmentMessages.this, args, "messages:move");
     }
 
+    private void onActionMoveSelectionAccount(List<EntityFolder> folders) {
+        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_folder_select, null);
+        final RecyclerView rvFolder = dview.findViewById(R.id.rvFolder);
+        final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
+
+        final Dialog dialog = new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
+                .setTitle(R.string.title_move_to_folder)
+                .setView(dview)
+                .create();
+
+        rvFolder.setHasFixedSize(false);
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        rvFolder.setLayoutManager(llm);
+
+        final AdapterFolderSelect adapter = new AdapterFolderSelect(getContext(), getViewLifecycleOwner(),
+                new AdapterFolderSelect.IFolderSelectedListener() {
+                    @Override
+                    public void onFolderSelected(EntityFolder folder) {
+                        dialog.dismiss();
+                        onActionMoveSelection(folder.id);
+                    }
+                });
+        adapter.set(folders);
+
+        rvFolder.setAdapter(adapter);
+
+        rvFolder.setVisibility(View.VISIBLE);
+        pbWait.setVisibility(View.GONE);
+        dialog.show();
+    }
+
     private void onActionMoveSelection(long target) {
         Bundle args = new Bundle();
         args.putLongArray("ids", getSelection());
@@ -1952,6 +2008,13 @@ public class FragmentMessages extends FragmentBase {
                 accountSwipes.clear();
                 for (TupleAccountSwipes swipe : swipes)
                     accountSwipes.put(swipe.id, swipe);
+            }
+        });
+
+        db.answer().liveAnswerCount().observe(getViewLifecycleOwner(), new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer count) {
+                adapter.setAnswerCount(count == null ? -1 : count);
             }
         });
 
@@ -2512,7 +2575,7 @@ public class FragmentMessages extends FragmentBase {
         boolean refreshing = false;
         for (TupleFolderEx folder : folders) {
             unseen += folder.unseen;
-            if (folder.error != null)
+            if (folder.error != null && folder.account != null /* outbox */)
                 errors = true;
             if (folder.sync_state != null &&
                     (folder.account == null || "connected".equals(folder.accountState))) {
@@ -2766,12 +2829,8 @@ public class FragmentMessages extends FragmentBase {
                     expand = messages.get(0);
 
                 if (expand != null &&
-                        (expand.content || unmetered || (expand.size != null && expand.size < download))) {
-                    if (!values.containsKey("expanded"))
-                        values.put("expanded", new ArrayList<Long>());
-                    values.get("expanded").add(expand.id);
-                    handleExpand(expand.id);
-                }
+                        (expand.content || unmetered || (expand.size != null && expand.size < download)))
+                    iProperties.setValue("expanded", expand.id, true);
             }
         } else {
             if (autoCloseCount > 0 && (autoclose || autonext)) {
@@ -3174,6 +3233,8 @@ public class FragmentMessages extends FragmentBase {
             boolean collapse = prefs.getBoolean("collapse", false);
             if ((count == 1 && collapse) || count > 1) {
                 values.get("expanded").clear();
+                ibDown.setVisibility(View.GONE);
+                ibUp.setVisibility(View.GONE);
                 adapter.notifyDataSetChanged();
                 return true;
             }
@@ -3242,7 +3303,7 @@ public class FragmentMessages extends FragmentBase {
         Boolean isJunk;
         Boolean isDrafts;
         List<EntityAccount> accounts;
-        Map<EntityAccount, List<EntityFolder>> targets = new HashMap<>();
+        Map<Long, List<EntityFolder>> targets = new HashMap<>();
     }
 
     private static class MessageTarget implements Parcelable {
