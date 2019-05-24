@@ -194,7 +194,6 @@
     <string name="title_advanced_threading_hint">Gruppér meddelelser relateret til hinanden</string>
     <string name="title_advanced_name_email_hint">Hvis deaktiveret, vil navne kun blive vist, når de er tilgængelige</string>
     <string name="title_advanced_flags_hint">Bemærk, at stjernemarkerede meddelelser altid vil blive gemt lokalt på enheden</string>
-    <string name="title_advanced_subscriptions_hint">Mapper, du ikke abonnerer på, vil skjules</string>
     <string name="title_advanced_preview_hint">Kun tilgængelig, når meddelelsestekst er hentet</string>
     <string name="title_advanced_autoexpand_hint">Åbn automatisk meddelelse, når der kun er én meddelelse eller kun én ulæst meddelelse i en samtale</string>
     <string name="title_advanced_autocollapse_hint">Alle udvidede meddelelser vil altid lukkes, når du trykker på tilbage-knappen</string>
@@ -263,7 +262,6 @@
     <string name="title_no_sync">Synkroniseringsfejl siden %1$s</string>
     <string name="title_identity_required">Identitet påkrævet for at kunne sende meddelelser</string>
     <string name="title_drafts_required">Kladde-mappe påkrævet for at kunne sende meddelelser</string>
-    <string name="title_account_setup_identity">Tilføj en identitet efter denne opsætning</string>
     <string name="title_account_delete">Slet denne konto permanent?</string>
     <string name="title_identity_delete">Slet denne identitet permanent?</string>
     <string name="title_edit_html">Redigér som HTML</string>

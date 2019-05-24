@@ -202,10 +202,10 @@
     <string name="title_advanced_sound">Выбрать звук уведомления</string>
     <string name="title_advanced_badge">Показать значок запуска с числом новых сообщений</string>
     <string name="title_advanced_subscriptions">Управление подпиской на папки</string>
+    <string name="title_advanced_sync_subscribed">Синхронизировать только папки с подпиской</string>
     <string name="title_advanced_english">Принудительно использовать английский язык</string>
     <string name="title_advanced_authentication">Показывать предупреждение, когда сервер не может аутентифицировать сообщение</string>
     <string name="title_advanced_paranoid">Дополнительные возможности конфиденциальности</string>
-    <string name="title_advanced_cache_lists">Кэшировать списки сообщений</string>
     <string name="title_advanced_watchdog">Регулярно проверять, активен ли FairEmail</string>
     <string name="title_advanced_updates">Проверить наличие обновлений</string>
     <string name="title_advanced_crash_reports">Отправлять отчёты об ошибках</string>
@@ -221,7 +221,6 @@
     <string name="title_advanced_threading_hint">Группировать сообщения, связанные друг с другом</string>
     <string name="title_advanced_name_email_hint">Если отключено, будут показаны только имена (при наличии)</string>
     <string name="title_advanced_flags_hint">Обратите внимание, что избранные сообщения всегда будут сохранены локально</string>
-    <string name="title_advanced_subscriptions_hint">Папки без подписки будут скрыты</string>
     <string name="title_advanced_preview_hint">Доступно только когда был загружен текст сообщения</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
     <string name="title_advanced_autocollapse_hint">Несколько развёрнутых сообщений всегда будут закрыты по кнопке \'назад\'</string>
@@ -230,7 +229,6 @@
     <string name="title_advanced_badge_hint">Доступно только на поддерживаемых лаунчерах</string>
     <string name="title_advanced_english_hint">Это перезапустит приложение</string>
     <string name="title_advanced_paranoid_hint">Подробнее смотрите FAQ</string>
-    <string name="title_advanced_cache_list_hint">Доступная память: %1$s</string>
     <string name="title_advanced_debug_hint">Включить дополнительное журналирование и показывать отладочную информацию в различных местах</string>
     <string name="title_select">Выбор &#8230;</string>
     <string name="title_identity_name">Ваше имя</string>
@@ -292,7 +290,6 @@
     <string name="title_no_sync">Ошибки синхронизации после %1$s</string>
     <string name="title_identity_required">Для отправки сообщений требуется идентификатор</string>
     <string name="title_drafts_required">Для отправки сообщений требуется папка черновиков</string>
-    <string name="title_account_setup_identity">Добавить идентификатор после сохранения этой учетной записи</string>
     <string name="title_account_delete">Удалить эту учетную запись навсегда?</string>
     <string name="title_identity_delete">Удалить эту учетную запись навсегда?</string>
     <string name="title_edit_html">Редактировать как HTML</string>
@@ -368,11 +365,14 @@
     <string name="title_show_formatted">Показать форматированный</string>
     <string name="title_trash">Корзина</string>
     <string name="title_copy">Копировать &#8230;</string>
+    <string name="title_copy_to">Копировать в &#8230;</string>
     <string name="title_subscribe">Подписаться</string>
     <string name="title_delete">Удалить</string>
     <string name="title_more">Еще</string>
     <string name="title_spam">Спам</string>
     <string name="title_move">Переместить</string>
+    <string name="title_move_to_folder">Переместить в &#8230;</string>
+    <string name="title_move_to_account">Переместить в %1$s &#8230;</string>
     <string name="title_snooze">Отложить &#8230;</string>
     <string name="title_archive">Архив</string>
     <string name="title_reply">Ответить</string>
@@ -421,7 +421,7 @@
     <string name="title_size">Размер:</string>
     <string name="title_subject">Тема:</string>
     <string name="title_body_hint">Ваше сообщение</string>
-    <string name="title_discard">Отменить</string>
+    <string name="title_discard">Отклонить</string>
     <string name="title_save">Сохранить</string>
     <string name="title_send">Отправить</string>
     <string name="title_send_at">Отправить в &#8230;</string>
@@ -545,7 +545,7 @@
     <string name="title_legend_junk">Спам</string>
     <string name="title_legend_primary">Основной</string>
     <string name="title_legend_notify">Уведомлять о новых сообщениях</string>
-    <string name="title_legend_subscribed">Подписка на</string>
+    <string name="title_legend_subscribed">Подписан на</string>
     <string name="title_legend_sync_keep">Количество дней для синхронизации / хранения сообщений</string>
     <string name="title_legend_download_fetch">Количество загруженных сообщений / полученных заголовков / на сервере</string>
     <string name="title_legend_stop">Остановить обработку правил</string>

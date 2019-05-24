@@ -710,8 +710,6 @@ class Core {
                 parts.isPlainOnly(),
                 HtmlHelper.getPreview(body),
                 parts.getWarnings(message.warning));
-
-        updateMessageSize(context, message.id);
     }
 
     private static void onAttachment(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
@@ -764,12 +762,13 @@ class Core {
                 throw new IllegalArgumentException("Attachment not found");
             }
         }
-
-        updateMessageSize(context, message.id);
     }
 
     static void onSynchronizeFolders(Context context, EntityAccount account, Store istore, State state) throws MessagingException {
         DB db = DB.getInstance(context);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean subscribed_only = prefs.getBoolean("subscribed_only", false);
 
         Log.i("Start sync folders account=" + account.name);
 
@@ -779,7 +778,14 @@ class Core {
         EntityLog.log(context, account.name + " folder separator=" + separator);
 
         // Get remote folders
-        Folder[] ifolders = defaultFolder.list("*");
+        Folder[] ifolders = (subscribed_only
+                ? defaultFolder.listSubscribed("*")
+                : defaultFolder.list("*"));
+        if (subscribed_only && ifolders.length == 0) {
+            Log.i("No subscribed folders");
+            ifolders = defaultFolder.list("*");
+        }
+
         Log.i("Remote folder count=" + ifolders.length + " separator=" + separator);
 
         // Get folder names
@@ -802,7 +808,6 @@ class Core {
                 names.add(folder.name);
         Log.i("Local folder count=" + names.size());
 
-
         Map<String, EntityFolder> nameFolder = new HashMap<>();
         Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
         for (Folder ifolder : ifolders) {
@@ -811,8 +816,8 @@ class Core {
             String[] attr = ((IMAPFolder) ifolder).getAttributes();
             String type = EntityFolder.getType(attr, fullName);
 
-            EntityLog.log(context, account.name + ":" + fullName +
-                    " attrs=" + TextUtils.join(" ", attr) + " type=" + type);
+            Log.i(account.name + ":" + fullName + " subscribed=" + subscribed +
+                    " type=" + type + " attrs=" + TextUtils.join(" ", attr));
 
             if (type != null) {
                 names.remove(fullName);
@@ -914,7 +919,7 @@ class Core {
 
             int sync_days = jargs.getInt(0);
             int keep_days = jargs.getInt(1);
-            boolean download = jargs.getBoolean(2);
+            boolean download = (jargs.length() > 2 && jargs.getBoolean(2));
             boolean auto_delete = (jargs.length() > 3 && jargs.getBoolean(3));
 
             if (keep_days == sync_days)
@@ -1679,36 +1684,7 @@ class Core {
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
-
-            updateMessageSize(context, message.id);
         }
-    }
-
-    static void updateMessageSize(Context context, long id) {
-        DB db = DB.getInstance(context);
-
-        EntityMessage message = db.message().getMessage(id);
-        if (message == null || !message.content)
-            return;
-
-        long size = message.getFile(context).length();
-        if (size == 0)
-            return;
-
-        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-        for (EntityAttachment attachment : attachments) {
-            if (!attachment.available)
-                return;
-
-            long asize = attachment.getFile(context).length();
-            if (asize == 0)
-                return;
-
-            size += asize;
-        }
-
-        Log.i("Setting message=" + id + " size=" + message.size + "/" + size);
-        db.message().setMessageSize(message.id, size);
     }
 
     static void notifyReset(Context context) {

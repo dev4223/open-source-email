@@ -202,10 +202,10 @@
     <string name="title_advanced_sound">Vybrat zvuk oznámení</string>
     <string name="title_advanced_badge">Zobrazit počet nových zpráv na ikoně aplikace</string>
     <string name="title_advanced_subscriptions">Spravovat odběry složek</string>
+    <string name="title_advanced_sync_subscribed">Synchronizovat pouze odebírané složky</string>
     <string name="title_advanced_english">Vynutit anglický jazyk</string>
     <string name="title_advanced_authentication">Zobrazit upozornění, pokud přijímající server nemůže zprávu ověřit</string>
     <string name="title_advanced_paranoid">Doplňující funkce ochrany soukromí</string>
-    <string name="title_advanced_cache_lists">Ukládat seznamy zpráv do mezipaměti</string>
     <string name="title_advanced_watchdog">Pravidelně kontrolovat zda je FairEmail stále aktivní</string>
     <string name="title_advanced_updates">Kontrolovat aktualizace</string>
     <string name="title_advanced_crash_reports">Odesílat zprávy o chybách</string>
@@ -221,7 +221,6 @@
     <string name="title_advanced_threading_hint">Seskupit zprávy které spolu souvisí</string>
     <string name="title_advanced_name_email_hint">Při deaktivaci se zobrazí pouze jména, pokud budou k dispozici</string>
     <string name="title_advanced_flags_hint">Mějte na paměti, že zprávy s hvězdičkou budou vždy uchovávány lokálně</string>
-    <string name="title_advanced_subscriptions_hint">Složky bez přihlášeného odběru budou skryty</string>
     <string name="title_advanced_preview_hint">K dispozici pouze pokud byl stažen text zprávy</string>
     <string name="title_advanced_autoexpand_hint">Automaticky otevřít zprávu pokud je v konverzaci pouze jediná zpráva nebo jediná nepřečtená</string>
     <string name="title_advanced_autocollapse_hint">Vícero rozbalených zpráv bude vždy sbaleno při pohybu zpět</string>
@@ -230,7 +229,6 @@
     <string name="title_advanced_badge_hint">K dispozici pouze v podporovaných spouštěčích aplikací</string>
     <string name="title_advanced_english_hint">Restartuje aplikaci</string>
     <string name="title_advanced_paranoid_hint">Pro více informací si přečtěte časté dotazy</string>
-    <string name="title_advanced_cache_list_hint">Dostupná paměť: %1$s</string>
     <string name="title_advanced_debug_hint">Zapnout rozšířený záznam a zobrazit ladící informace na různých místech</string>
     <string name="title_select">Vybrat &#8230;</string>
     <string name="title_identity_name">Vaše jméno</string>
@@ -292,7 +290,6 @@
     <string name="title_no_sync">Chyby synchronizace od %1$s</string>
     <string name="title_identity_required">Identita je vyžadována pro odesílání zpráv</string>
     <string name="title_drafts_required">Složka konceptů je vyžadována pro odesílání zpráv</string>
-    <string name="title_account_setup_identity">Přidat identitu po uložení tohoto účtu</string>
     <string name="title_account_delete">Trvale smazat tento účet?</string>
     <string name="title_identity_delete">Trvale smazat tuto identitu?</string>
     <string name="title_edit_html">Upravit jako HTML</string>
@@ -368,11 +365,14 @@
     <string name="title_show_formatted">Zobrazit formátované</string>
     <string name="title_trash">Koš</string>
     <string name="title_copy">Kopírovat &#8230;</string>
+    <string name="title_copy_to">Kopírovat do &#8230;</string>
     <string name="title_subscribe">Přihlásit odběr</string>
     <string name="title_delete">Smazat</string>
     <string name="title_more">Více</string>
     <string name="title_spam">Nevyžádané</string>
     <string name="title_move">Přesunout</string>
+    <string name="title_move_to_folder">Přesunout do &#8230;</string>
+    <string name="title_move_to_account">Přesunout do %1$s &#8230;</string>
     <string name="title_snooze">Odložit &#8230;</string>
     <string name="title_archive">Archiv</string>
     <string name="title_reply">Odpovědět</string>

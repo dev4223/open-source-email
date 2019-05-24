@@ -194,10 +194,10 @@
     <string name="title_advanced_sound">Selectare sunet de notificare</string>
     <string name="title_advanced_badge">Afișează iconița lansatorului cu numărul de mesaje noi</string>
     <string name="title_advanced_subscriptions">Gestionați abonările la dosare</string>
+    <string name="title_advanced_sync_subscribed">Sincronizează doar dosarele abonate</string>
     <string name="title_advanced_english">Forțează folosirea limbii Engleze</string>
     <string name="title_advanced_authentication">Arată o avertizare atunci când serverul destinatar nu a putut autentifica mesajul</string>
     <string name="title_advanced_paranoid">Caracteristici de confidențialitate suplimentare</string>
-    <string name="title_advanced_cache_lists">Încarcă lista de mesaje</string>
     <string name="title_advanced_watchdog">Verifică periodic dacă FairEmail este încă activ</string>
     <string name="title_advanced_updates">Verificare actualizări aplicație</string>
     <string name="title_advanced_crash_reports">Trimite rapoarte de eroare</string>
@@ -213,7 +213,6 @@
     <string name="title_advanced_threading_hint">Grupează mesajele asociate</string>
     <string name="title_advanced_name_email_hint">Dacă este dezactivată, doar numele va fi afișat atunci când este disponibil</string>
     <string name="title_advanced_flags_hint">Rețineți că mesajele marcate cu stea vor fi păstrate întotdeauna la nivel local</string>
-    <string name="title_advanced_subscriptions_hint">Dosarele fără abonări vor fi ascunse</string>
     <string name="title_advanced_preview_hint">Disponibil doar atunci când a fost descarcat textul mesajului</string>
     <string name="title_advanced_autoexpand_hint">Atunci când este doar un mesaj sau doar un mesaj necitit într-o conversație</string>
     <string name="title_advanced_autocollapse_hint">Mesajele multiple vor fi mereu plate când se apasă \'înapoi\'</string>
@@ -222,7 +221,6 @@
     <string name="title_advanced_badge_hint">Disponibil doar pe lansatoarele suportate</string>
     <string name="title_advanced_english_hint">Aplicația se va restarta</string>
     <string name="title_advanced_paranoid_hint">Vedeți secțiunea de întrebări și răspunsuri pentru detalii</string>
-    <string name="title_advanced_cache_list_hint">Memorie disponibilă: %1$s</string>
     <string name="title_advanced_debug_hint">Activați înregistrări suplimentare în jurnalul aplicației și afișați informații de depanare în diferite locuri</string>
     <string name="title_select">Selectaţi &#8230;</string>
     <string name="title_identity_name">Numele dumneavoastră</string>
@@ -284,7 +282,6 @@
     <string name="title_no_sync">Erori de sincronizare începând cu %1$s</string>
     <string name="title_identity_required">O identitate este necesară pentru a trimite mesaje</string>
     <string name="title_drafts_required">Un dosar de ciorne este necesar pentru a trimite mesaje</string>
-    <string name="title_account_setup_identity">Adaugă o identitate după salvarea acestui cont</string>
     <string name="title_account_delete">Ștergeți definitiv acest cont?</string>
     <string name="title_identity_delete">Ștergeți definitiv această identitate?</string>
     <string name="title_edit_html">Editează ca HTML</string>
@@ -360,11 +357,14 @@
     <string name="title_show_formatted">Arată formatat</string>
     <string name="title_trash">Gunoi</string>
     <string name="title_copy">Copiere &#8230;</string>
+    <string name="title_copy_to">Copiază în &#8230;</string>
     <string name="title_subscribe">Abonare</string>
     <string name="title_delete">Şterge</string>
     <string name="title_more">Mai mult</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Mută</string>
+    <string name="title_move_to_folder">Mută în &#8230;</string>
+    <string name="title_move_to_account">Mută în %1$s &#8230;</string>
     <string name="title_snooze">Amână &#8230;</string>
     <string name="title_archive">Arhivă</string>
     <string name="title_reply">Răspunde</string>
@@ -531,6 +531,7 @@
     <string name="title_legend_unified">Inbox unificat / cont primar</string>
     <string name="title_legend_inbox">Primite</string>
     <string name="title_legend_drafts">Ciorne</string>
+    <string name="title_legend_sent">Trimis</string>
     <string name="title_legend_archive">Arhivă</string>
     <string name="title_legend_trash">Gunoi</string>
     <string name="title_legend_junk">Spam</string>
@@ -587,6 +588,7 @@
     <string name="title_legend_save">Salvează</string>
     <string name="title_legend_delete">Șterge</string>
     <string name="title_legend_count">Contor</string>
+    <string name="title_legend_folder_tye">Tip de dosar</string>
     <string name="title_hint_folder_actions">Atingeți lung pentru opțiuni</string>
     <string name="title_hint_folder_sync">Pentru a limita utilizarea bateriei şi a conexiunii, nu vor fi sincronizate în mod implicit toate dosarele si mesajele</string>
     <string name="title_hint_support">Dacă aveți o întrebare sau o problemă, vă rugăm să utilizați meniul de suport tehnic pentru a obține ajutor</string>
