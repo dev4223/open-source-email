@@ -186,10 +186,10 @@
     <string name="title_advanced_sound">Sélectionner le son pour les notifications</string>
     <string name="title_advanced_badge">Afficher l\'icône de lancement avec le nombre de nouveaux messages</string>
     <string name="title_advanced_subscriptions">Gérer les abonnements de dossier</string>
+    <string name="title_advanced_sync_subscribed">Synchroniser les dossiers abonnés uniquement</string>
     <string name="title_advanced_english">Forcer la langue anglaise</string>
     <string name="title_advanced_authentication">Afficher un avertissement lorsque le serveur de réception n\'a pas pu authentifier le message</string>
     <string name="title_advanced_paranoid">Fonctions de confidentialité supplémentaires</string>
-    <string name="title_advanced_cache_lists">Mettre les listes de messages en mémoire</string>
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
     <string name="title_advanced_crash_reports">Envoyer des rapports d\'erreur</string>
@@ -205,7 +205,6 @@
     <string name="title_advanced_threading_hint">Groupe de messages liés les uns aux autres</string>
     <string name="title_advanced_name_email_hint">Si désactivé, seuls les noms seront affichés si disponibles</string>
     <string name="title_advanced_flags_hint">Notez que les messages suivis seront toujours conservés localement</string>
-    <string name="title_advanced_subscriptions_hint">Les dossiers non abonnés seront cachés</string>
     <string name="title_advanced_preview_hint">Disponible uniquement lorsque le texte du message a été téléchargé</string>
     <string name="title_advanced_autoexpand_hint">Ouvrir automatiquement le message lorsqu’il n’y a qu’un seul message ou seulement un message non lu dans une conversation</string>
     <string name="title_advanced_autocollapse_hint">Les messages étendus multiples seront toujours fermés par \'retour\'</string>
@@ -214,7 +213,6 @@
     <string name="title_advanced_badge_hint">Uniquement disponible sur les lanceurs pris en charge</string>
     <string name="title_advanced_english_hint">Ceci va redémarrer l’application</string>
     <string name="title_advanced_paranoid_hint">Voir la FAQ pour les détails</string>
-    <string name="title_advanced_cache_list_hint">Mémoire disponible : %1$s</string>
     <string name="title_advanced_debug_hint">Activer la journalisation supplémentaire et afficher les informations de débogage à différents endroits</string>
     <string name="title_select">Sélectionner &#8230;</string>
     <string name="title_identity_name">Votre nom</string>
@@ -276,7 +274,6 @@
     <string name="title_no_sync">Erreurs de synchronisation depuis %1$s</string>
     <string name="title_identity_required">Une identité est nécessaire pour envoyer des messages</string>
     <string name="title_drafts_required">Un dossier brouillon est nécessaire pour envoyer des messages</string>
-    <string name="title_account_setup_identity">Ajouter une identité après avoir enregistré ce compte</string>
     <string name="title_account_delete">Supprimer définitivement ce compte ?</string>
     <string name="title_identity_delete">Supprimer définitivement cette identité ?</string>
     <string name="title_edit_html">Modifier en HTML</string>
@@ -352,11 +349,14 @@
     <string name="title_show_formatted">Afficher avec la mise en forme</string>
     <string name="title_trash">Supprimer</string>
     <string name="title_copy">Copie de &#8230;</string>
+    <string name="title_copy_to">Copier vers &#8230;</string>
     <string name="title_subscribe">S\'abonner</string>
     <string name="title_delete">Supprimer</string>
     <string name="title_more">Plus</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Déplacer</string>
+    <string name="title_move_to_folder">Déplacer vers &#8230;</string>
+    <string name="title_move_to_account">Déplacer vers %1$s &#8230;</string>
     <string name="title_snooze">Différer &#8230;</string>
     <string name="title_archive">Archiver</string>
     <string name="title_reply">Répondre</string>

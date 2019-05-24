@@ -78,7 +78,7 @@ public class MessageHelper {
     private final static int CONNECT_TIMEOUT = 20 * 1000; // milliseconds
     private final static int WRITE_TIMEOUT = 40 * 1000; // milliseconds
     private final static int READ_TIMEOUT = 40 * 1000; // milliseconds
-    private final static int FETCH_SIZE = 1024 * 1024; // bytes, default 16K
+    private final static int FETCH_SIZE = 256 * 1024; // bytes, default 16K
     private final static int POOL_TIMEOUT = 45 * 1000; // milliseconds, default 45 sec
 
     static final int ATTACHMENT_BUFFER_SIZE = 8192; // bytes
@@ -119,6 +119,7 @@ public class MessageHelper {
         props.put("mail.imaps.timeout", Integer.toString(READ_TIMEOUT));
 
         props.put("mail.imaps.connectionpool.debug", "true");
+        props.put("mail.imaps.connectionpoolsize", "2");
         props.put("mail.imaps.connectionpooltimeout", Integer.toString(POOL_TIMEOUT));
 
         props.put("mail.imaps.finalizecleanclose", "false");
@@ -146,6 +147,7 @@ public class MessageHelper {
         props.put("mail.imap.timeout", Integer.toString(READ_TIMEOUT));
 
         props.put("mail.imap.connectionpool.debug", "true");
+        props.put("mail.imap.connectionpoolsize", "2");
         props.put("mail.imap.connectionpooltimeout", Integer.toString(POOL_TIMEOUT));
 
         props.put("mail.imap.finalizecleanclose", "false");
@@ -1061,6 +1063,14 @@ public class MessageHelper {
 
                     if (apart.attachment.size < 0)
                         apart.attachment.size = null;
+
+                    // https://tools.ietf.org/html/rfc2392
+                    if (apart.attachment.cid != null) {
+                        if (!apart.attachment.cid.startsWith("<"))
+                            apart.attachment.cid = "<" + apart.attachment.cid;
+                        if (!apart.attachment.cid.endsWith(">"))
+                            apart.attachment.cid += ">";
+                    }
 
                     parts.attachments.add(apart);
                 }

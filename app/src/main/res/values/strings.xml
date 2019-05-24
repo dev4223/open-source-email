@@ -221,14 +221,15 @@
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
+    <string name="title_advanced_sync_subscribed">Synchronize subscribed folders only</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_paranoid">Extra privacy features</string>
-    <string name="title_advanced_cache_lists">Cache message lists</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
     <string name="title_advanced_debug">Debug mode</string>
+    <string name="title_advanced_memory_class">Memory class: %1$s</string>
     <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
@@ -242,7 +243,6 @@
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
     <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
     <string name="title_advanced_flags_hint">Note that starred messages will always be kept locally</string>
-    <string name="title_advanced_subscriptions_hint">Folders not subscribed to will be hidden</string>
     <string name="title_advanced_preview_hint">Only available when message text was downloaded</string>
 
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
@@ -253,7 +253,6 @@
     <string name="title_advanced_badge_hint">Only available on supported launchers</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
     <string name="title_advanced_paranoid_hint">See the FAQ for details</string>
-    <string name="title_advanced_cache_list_hint">Memory available: %1$s</string>
     <string name="title_advanced_debug_hint">Enable extra logging and show debug information at various places</string>
 
     <string name="title_select">Select &#8230;</string>
@@ -321,7 +320,6 @@
     <string name="title_no_sync">Synchronization errors since %1$s</string>
     <string name="title_identity_required">An identity is required to send messages</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
-    <string name="title_account_setup_identity">Add an identity after saving this account</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>

@@ -192,7 +192,6 @@
     <string name="title_advanced_threading_hint">Gruppera meddelanden relaterade till varandra</string>
     <string name="title_advanced_name_email_hint">När inaktiverad visas endast namn när det är tillgängligt</string>
     <string name="title_advanced_flags_hint">Observera att stjärnmärkta meddelanden alltid kommer att lagras lokalt</string>
-    <string name="title_advanced_subscriptions_hint">Mappar som inte prenumereras på kommer att döljas</string>
     <string name="title_advanced_preview_hint">Endast tillgängligt när meddelandetexten hämtades</string>
     <string name="title_advanced_autoexpand_hint">Öppna automatiskt meddelandet när det bara finns ett meddelande eller bara ett oläst meddelande i en konversation</string>
     <string name="title_advanced_autocollapse_hint">Flera utökade meddelanden kommer alltid att stängas på \"Tillbaka\"</string>
@@ -257,7 +256,6 @@
     <string name="title_no_sync">Synkroniseringsfel sedan %1$s</string>
     <string name="title_identity_required">En identitet krävs för att skicka meddelanden</string>
     <string name="title_drafts_required">En mapp för utkast krävs för att skicka meddelanden</string>
-    <string name="title_account_setup_identity">Lägg till en identitet efter att ha sparat det här kontot</string>
     <string name="title_account_delete">Ta bort detta konto permanent?</string>
     <string name="title_identity_delete">Ta bort denna identitet permanent?</string>
     <string name="title_edit_html">Redigera som HTML</string>

@@ -186,10 +186,10 @@
     <string name="title_advanced_sound">Seleccionar sonido de notificación</string>
     <string name="title_advanced_badge">Mostrar icono del lanzador con el número de mensajes nuevos</string>
     <string name="title_advanced_subscriptions">Administrar suscripciones de carpeta</string>
+    <string name="title_advanced_sync_subscribed">Sincronizar solo carpetas suscritas</string>
     <string name="title_advanced_english">Forzar idioma inglés</string>
     <string name="title_advanced_authentication">Mostrar una advertencia cuando el servidor de recepción no pudo autenticar el mensaje</string>
     <string name="title_advanced_paranoid">Características de privacidad adicionales</string>
-    <string name="title_advanced_cache_lists">Almacenar listas de mensajes en caché</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Buscar actualizaciones</string>
     <string name="title_advanced_crash_reports">Enviar informes de errores</string>
@@ -205,7 +205,6 @@
     <string name="title_advanced_threading_hint">Agrupar mensajes relacionados entre sí</string>
     <string name="title_advanced_name_email_hint">Si está desactivado, solo se mostrarán los nombres cuando estén disponibles</string>
     <string name="title_advanced_flags_hint">Tenga en cuenta que los mensajes destacados siempre se almacenarán localmente</string>
-    <string name="title_advanced_subscriptions_hint">Las carpetas no suscritas se ocultarán</string>
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
     <string name="title_advanced_autocollapse_hint">Múltiples mensajes expandidos siempre se cerrarán con \'atrás\'</string>
@@ -214,7 +213,6 @@
     <string name="title_advanced_badge_hint">Sólo disponible en lanzadores soportados</string>
     <string name="title_advanced_english_hint">Esto reiniciará la app</string>
     <string name="title_advanced_paranoid_hint">Vea las preguntas frecuentes para más detalles</string>
-    <string name="title_advanced_cache_list_hint">Memoria disponible: %1$s</string>
     <string name="title_advanced_debug_hint">Habilitar registro adicional y mostrar información de depuración en varios lugares</string>
     <string name="title_select">Seleccione &#8230;</string>
     <string name="title_identity_name">Su nombre</string>
@@ -276,7 +274,6 @@
     <string name="title_no_sync">Errores de sincronización desde %1$s</string>
     <string name="title_identity_required">Se requiere una identidad para enviar mensajes</string>
     <string name="title_drafts_required">Una carpeta de borradores es necesaria para enviar mensajes</string>
-    <string name="title_account_setup_identity">Añadir una identidad después de guardar esta cuenta</string>
     <string name="title_account_delete">¿Eliminar esta cuenta permanentemente?</string>
     <string name="title_identity_delete">¿Eliminar esta identidad permanentemente?</string>
     <string name="title_edit_html">Editar como HTML</string>
@@ -352,11 +349,14 @@
     <string name="title_show_formatted">Mostrar con formato</string>
     <string name="title_trash">Papelera</string>
     <string name="title_copy">Copiar &#8230;</string>
+    <string name="title_copy_to">Copiar a &#8230;</string>
     <string name="title_subscribe">Subscribir</string>
     <string name="title_delete">Eliminar</string>
     <string name="title_more">Más</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Mover</string>
+    <string name="title_move_to_folder">Mover a &#8230;</string>
+    <string name="title_move_to_account">Mover a %1$s &#8230;</string>
     <string name="title_snooze">Posponer &#8230;</string>
     <string name="title_archive">Archivar</string>
     <string name="title_reply">Responder</string>
@@ -523,6 +523,7 @@
     <string name="title_legend_unified">Bandeja de entrada unificada / Cuenta principal</string>
     <string name="title_legend_inbox">Bandeja de entrada</string>
     <string name="title_legend_drafts">Borradores</string>
+    <string name="title_legend_sent">Enviado</string>
     <string name="title_legend_archive">Archivo</string>
     <string name="title_legend_trash">Papelera</string>
     <string name="title_legend_junk">Spam</string>
@@ -579,6 +580,7 @@
     <string name="title_legend_save">Guardar</string>
     <string name="title_legend_delete">Eliminar</string>
     <string name="title_legend_count">Cuenta</string>
+    <string name="title_legend_folder_tye">Tipo de carpetas</string>
     <string name="title_hint_folder_actions">Mantenga pulsado para opciones</string>
     <string name="title_hint_folder_sync">Para limitar el uso de batería y redes, no todas las carpetas y mensajes serán sincronizados por defecto</string>
     <string name="title_hint_support">Si tiene una pregunta o problema, por favor use el menú de soporte para obtener ayuda</string>
