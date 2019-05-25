@@ -69,6 +69,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private boolean show_hidden;
 
     private long account;
+    private IFolderSelectedListener listener;
 
     private boolean subscriptions;
     private boolean debug;
@@ -165,37 +166,39 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (textSize != 0)
                 tvName.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
-            vwColor.setBackgroundColor(folder.accountColor == null ? Color.TRANSPARENT : folder.accountColor);
-            vwColor.setVisibility(account < 0 ? View.VISIBLE : View.GONE);
+            if (listener == null) {
+                vwColor.setBackgroundColor(folder.accountColor == null ? Color.TRANSPARENT : folder.accountColor);
+                vwColor.setVisibility(account < 0 ? View.VISIBLE : View.GONE);
 
-            if (folder.sync_state == null || "requested".equals(folder.sync_state)) {
-                if (folder.executing > 0)
-                    ivState.setImageResource(R.drawable.baseline_dns_24);
-                else if ("waiting".equals(folder.state))
-                    ivState.setImageResource(R.drawable.baseline_hourglass_empty_24);
-                else if ("connected".equals(folder.state))
-                    ivState.setImageResource(R.drawable.baseline_cloud_24);
-                else if ("connecting".equals(folder.state))
-                    ivState.setImageResource(R.drawable.baseline_cloud_queue_24);
-                else if ("closing".equals(folder.state))
-                    ivState.setImageResource(R.drawable.baseline_close_24);
-                else if (folder.state == null)
-                    ivState.setImageResource(R.drawable.baseline_cloud_off_24);
-                else
-                    ivState.setImageResource(R.drawable.baseline_warning_24);
-            } else {
-                if ("syncing".equals(folder.sync_state))
-                    ivState.setImageResource(R.drawable.baseline_compare_arrows_24);
-                else if ("downloading".equals(folder.sync_state))
-                    ivState.setImageResource(R.drawable.baseline_cloud_download_24);
-                else
-                    ivState.setImageResource(R.drawable.baseline_warning_24);
+                if (folder.sync_state == null || "requested".equals(folder.sync_state)) {
+                    if (folder.executing > 0)
+                        ivState.setImageResource(R.drawable.baseline_dns_24);
+                    else if ("waiting".equals(folder.state))
+                        ivState.setImageResource(R.drawable.baseline_hourglass_empty_24);
+                    else if ("connected".equals(folder.state))
+                        ivState.setImageResource(R.drawable.baseline_cloud_24);
+                    else if ("connecting".equals(folder.state))
+                        ivState.setImageResource(R.drawable.baseline_cloud_queue_24);
+                    else if ("closing".equals(folder.state))
+                        ivState.setImageResource(R.drawable.baseline_close_24);
+                    else if (folder.state == null)
+                        ivState.setImageResource(R.drawable.baseline_cloud_off_24);
+                    else
+                        ivState.setImageResource(R.drawable.baseline_warning_24);
+                } else {
+                    if ("syncing".equals(folder.sync_state))
+                        ivState.setImageResource(R.drawable.baseline_compare_arrows_24);
+                    else if ("downloading".equals(folder.sync_state))
+                        ivState.setImageResource(R.drawable.baseline_cloud_download_24);
+                    else
+                        ivState.setImageResource(R.drawable.baseline_warning_24);
+                }
+                ivState.setVisibility(
+                        folder.synchronize || folder.state != null || folder.sync_state != null
+                                ? View.VISIBLE : View.INVISIBLE);
+
+                ivReadOnly.setVisibility(folder.read_only ? View.VISIBLE : View.GONE);
             }
-            ivState.setVisibility(
-                    folder.synchronize || folder.state != null || folder.sync_state != null
-                            ? View.VISIBLE : View.INVISIBLE);
-
-            ivReadOnly.setVisibility(folder.read_only ? View.VISIBLE : View.GONE);
 
             ViewGroup.LayoutParams lp = vwLevel.getLayoutParams();
             lp.width = (account < 0 ? 1 : level) * dp12;
@@ -206,8 +209,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     ? View.GONE
                     : childs_visible ? View.VISIBLE : View.INVISIBLE);
 
-            ivNotify.setVisibility(folder.notify ? View.VISIBLE : View.GONE);
-            ivSubscribed.setVisibility(subscriptions && folder.subscribed != null && folder.subscribed ? View.VISIBLE : View.GONE);
+            if (listener == null) {
+                ivNotify.setVisibility(folder.notify ? View.VISIBLE : View.GONE);
+                ivSubscribed.setVisibility(subscriptions && folder.subscribed != null && folder.subscribed ? View.VISIBLE : View.GONE);
+            }
 
             if (folder.unseen > 0)
                 tvName.setText(context.getString(R.string.title_name_count,
@@ -219,60 +224,65 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             tvName.setTypeface(null, folder.unseen > 0 ? Typeface.BOLD : Typeface.NORMAL);
             tvName.setTextColor(folder.unseen > 0 ? colorUnread : textColorSecondary);
 
-            StringBuilder sb = new StringBuilder();
-            if (folder.account == null)
-                sb.append(nf.format(folder.messages));
-            else {
-                sb.append(nf.format(folder.content));
-                sb.append('/');
-                sb.append(nf.format(folder.messages));
-                sb.append('/');
-                if (folder.total == null)
-                    sb.append('?');
-                else
-                    sb.append(nf.format(folder.total));
-            }
-            tvMessages.setText(sb.toString());
+            if (listener == null) {
+                StringBuilder sb = new StringBuilder();
+                if (folder.account == null)
+                    sb.append(nf.format(folder.messages));
+                else {
+                    sb.append(nf.format(folder.content));
+                    sb.append('/');
+                    sb.append(nf.format(folder.messages));
+                    sb.append('/');
+                    if (folder.total == null)
+                        sb.append('?');
+                    else
+                        sb.append(nf.format(folder.total));
+                }
+                tvMessages.setText(sb.toString());
 
-            ivMessages.setImageResource(folder.download || EntityFolder.OUTBOX.equals(folder.type)
-                    ? R.drawable.baseline_mail_24 : R.drawable.baseline_mail_outline_24);
+                ivMessages.setImageResource(folder.download || EntityFolder.OUTBOX.equals(folder.type)
+                        ? R.drawable.baseline_mail_24 : R.drawable.baseline_mail_outline_24);
+            }
 
             ivType.setImageResource(EntityFolder.getIcon(folder.type));
-            ivUnified.setVisibility(account > 0 && folder.unified ? View.VISIBLE : View.GONE);
 
-            if (account < 0)
-                tvType.setText(folder.accountName);
-            else {
-                int resid = context.getResources().getIdentifier(
-                        "title_folder_" + folder.type.toLowerCase(),
-                        "string",
-                        context.getPackageName());
-                tvType.setText(resid > 0 ? context.getString(resid) : folder.type);
+            if (listener == null) {
+                ivUnified.setVisibility(account > 0 && folder.unified ? View.VISIBLE : View.GONE);
+
+                if (account < 0)
+                    tvType.setText(folder.accountName);
+                else {
+                    int resid = context.getResources().getIdentifier(
+                            "title_folder_" + folder.type.toLowerCase(),
+                            "string",
+                            context.getPackageName());
+                    tvType.setText(resid > 0 ? context.getString(resid) : folder.type);
+                }
+
+                if (folder.account == null) {
+                    tvAfter.setText(null);
+                    ivSync.setImageResource(R.drawable.baseline_sync_24);
+                } else {
+                    StringBuilder a = new StringBuilder();
+                    a.append(nf.format(folder.sync_days));
+                    a.append('/');
+                    if (folder.keep_days == Integer.MAX_VALUE)
+                        a.append('∞');
+                    else
+                        a.append(nf.format(folder.keep_days));
+                    tvAfter.setText(a.toString());
+                    ivSync.setImageResource(folder.synchronize ? R.drawable.baseline_sync_24 : R.drawable.baseline_sync_disabled_24);
+                }
+                ivSync.setImageTintList(ColorStateList.valueOf(
+                        folder.synchronize && folder.initialize && !EntityFolder.OUTBOX.equals(folder.type)
+                                ? colorUnread : textColorSecondary));
+
+                tvKeywords.setText(TextUtils.join(" ", folder.keywords));
+                tvKeywords.setVisibility(debug && folder.keywords.length > 0 ? View.VISIBLE : View.GONE);
+
+                tvError.setText(folder.error);
+                tvError.setVisibility(folder.error != null ? View.VISIBLE : View.GONE);
             }
-
-            if (folder.account == null) {
-                tvAfter.setText(null);
-                ivSync.setImageResource(R.drawable.baseline_sync_24);
-            } else {
-                StringBuilder a = new StringBuilder();
-                a.append(nf.format(folder.sync_days));
-                a.append('/');
-                if (folder.keep_days == Integer.MAX_VALUE)
-                    a.append('∞');
-                else
-                    a.append(nf.format(folder.keep_days));
-                tvAfter.setText(a.toString());
-                ivSync.setImageResource(folder.synchronize ? R.drawable.baseline_sync_24 : R.drawable.baseline_sync_disabled_24);
-            }
-            ivSync.setImageTintList(ColorStateList.valueOf(
-                    folder.synchronize && folder.initialize && !EntityFolder.OUTBOX.equals(folder.type)
-                            ? colorUnread : textColorSecondary));
-
-            tvKeywords.setText(TextUtils.join(" ", folder.keywords));
-            tvKeywords.setVisibility(debug && folder.keywords.length > 0 ? View.VISIBLE : View.GONE);
-
-            tvError.setText(folder.error);
-            tvError.setVisibility(folder.error != null ? View.VISIBLE : View.GONE);
         }
 
         @Override
@@ -288,11 +298,14 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (view.getId() == R.id.ivExpander)
                 onCollapse(folder);
             else {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                lbm.sendBroadcast(
-                        new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                .putExtra("account", folder.account)
-                                .putExtra("folder", folder.id));
+                if (listener == null) {
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(
+                            new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                    .putExtra("account", folder.account)
+                                    .putExtra("folder", folder.id));
+                } else
+                    listener.onFolderSelected(folder);
             }
         }
 
@@ -318,6 +331,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     Helper.unexpectedError(context, owner, ex);
                 }
             }.execute(context, owner, args, "folder:collapse");
+
+            if (listener != null) {
+                folder.collapsed = !folder.collapsed;
+                notifyDataSetChanged();
+            }
         }
 
         @Override
@@ -648,12 +666,13 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         }
     }
 
-    AdapterFolder(Context context, LifecycleOwner owner, long account, boolean show_hidden) {
+    AdapterFolder(Context context, LifecycleOwner owner, long account, boolean show_hidden, IFolderSelectedListener listener) {
         this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.owner = owner;
         this.account = account;
         this.show_hidden = show_hidden;
+        this.listener = listener;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean compact = prefs.getBoolean("compact", false);
@@ -698,9 +717,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         for (long pid : parentChilds.keySet()) {
             TupleFolderEx parent = idFolder.get(pid);
-            parent.child_refs = parentChilds.get(pid);
-            for (TupleFolderEx child : parent.child_refs)
-                child.parent_ref = parent;
+            if (parent != null) {
+                parent.child_refs = parentChilds.get(pid);
+                for (TupleFolderEx child : parent.child_refs)
+                    child.parent_ref = parent;
+            }
         }
 
         List<TupleFolderEx> hierarchical = getHierchical(parents);
@@ -802,7 +823,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(R.layout.item_folder, parent, false));
+        return new ViewHolder(inflater.inflate(
+                listener == null ? R.layout.item_folder : R.layout.item_folder_select,
+                parent, false));
     }
 
     @Override
@@ -818,5 +841,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         holder.bindTo(folder);
 
         holder.wire();
+    }
+
+    interface IFolderSelectedListener {
+        void onFolderSelected(TupleFolderEx folder);
     }
 }
