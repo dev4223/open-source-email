@@ -67,6 +67,7 @@ import java.util.concurrent.RejectedExecutionException;
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.FolderClosedException;
+import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
@@ -586,8 +587,11 @@ public class ServiceSynchronize extends LifecycleService {
                         public void folderCreated(FolderEvent e) {
                             try {
                                 wlFolder.acquire();
-                                Log.i("Folder created=" + e.getFolder().getFullName());
-                                reload(ServiceSynchronize.this, "folder created");
+
+                                String name = e.getFolder().getFullName();
+                                Log.i("Folder created=" + name);
+                                if (db.folder().getFolderByName(account.id, name) == null)
+                                    reload(ServiceSynchronize.this, "folder created");
                             } finally {
                                 wlFolder.release();
                             }
@@ -597,14 +601,15 @@ public class ServiceSynchronize extends LifecycleService {
                         public void folderRenamed(FolderEvent e) {
                             try {
                                 wlFolder.acquire();
-                                Log.i("Folder renamed=" + e.getFolder().getFullName());
 
                                 String old = e.getFolder().getFullName();
                                 String name = e.getNewFolder().getFullName();
+                                Log.i("Folder renamed from=" + old + " to=" + name);
+
                                 int count = db.folder().renameFolder(account.id, old, name);
                                 Log.i("Renamed to " + name + " count=" + count);
-
-                                reload(ServiceSynchronize.this, "folder renamed");
+                                if (count == 0)
+                                    reload(ServiceSynchronize.this, "folder renamed");
                             } finally {
                                 wlFolder.release();
                             }
@@ -614,8 +619,11 @@ public class ServiceSynchronize extends LifecycleService {
                         public void folderDeleted(FolderEvent e) {
                             try {
                                 wlFolder.acquire();
-                                Log.i("Folder deleted=" + e.getFolder().getFullName());
-                                reload(ServiceSynchronize.this, "folder deleted");
+
+                                String name = e.getFolder().getFullName();
+                                Log.i("Folder deleted=" + name);
+                                if (db.folder().getFolderByName(account.id, name) != null)
+                                    reload(ServiceSynchronize.this, "folder deleted");
                             } finally {
                                 wlFolder.release();
                             }
@@ -721,6 +729,10 @@ public class ServiceSynchronize extends LifecycleService {
                                     db.folder().setFolderError(folder.id, Helper.formatThrowable(ex1, true));
                                     continue;
                                 }
+                            } catch (FolderNotFoundException ex) {
+                                Log.w(ex);
+                                db.folder().deleteFolder(folder.id);
+                                continue;
                             } catch (MessagingException ex) {
                                 Log.w(ex);
                                 db.folder().setFolderState(folder.id, null);
