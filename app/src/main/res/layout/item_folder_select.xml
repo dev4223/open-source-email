@@ -21,17 +21,15 @@
 
         <ImageView
             android:id="@+id/ivExpander"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
+            android:layout_width="36dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/title_legend_expander"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
+            android:padding="6dp"
             android:src="@drawable/expander"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/tvName"
             app:layout_constraintStart_toEndOf="@+id/vwLevel"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@+id/tvName" />
 
         <ImageView
             android:id="@+id/ivType"

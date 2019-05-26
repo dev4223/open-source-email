@@ -210,8 +210,6 @@
     <string name="title_advanced_updates">Kontrolovat aktualizace</string>
     <string name="title_advanced_crash_reports">Odesílat zprávy o chybách</string>
     <string name="title_advanced_debug">Režim ladění</string>
-    <string name="title_advanced_memory_class">Třída paměti: %1$s</string>
-    <string name="title_advanced_last_cleanup">Poslední čištění: %1$s</string>
     <string name="title_advanced_enabled_hint">Globálně zakáže nebo povolí přijímání zpráv</string>
     <string name="title_advanced_manual_hint">Je-li synchronizace zakázána, stále je možné synchronizovat ručně tažením dolů v přehledu zpráv. Po omezený čas se tak budou synchronizovat zprávy a provádět operace.</string>
     <string name="title_advanced_schedule_hint">Dotkněte se času pro jeho změnu</string>
@@ -228,6 +226,7 @@
     <string name="title_advanced_autoclose_hint">Automaticky zavřít konverzace když jsou všechny zprávy archivovány, odeslány nebo v koši</string>
     <string name="title_advanced_sender_hint">Většina poskytovatelů nepovoluje pozměněné adresy odesílatele</string>
     <string name="title_advanced_badge_hint">K dispozici pouze v podporovaných spouštěčích aplikací</string>
+    <string name="title_advanced_subscribed_only_hint">Povolení této volby vymaže všechny místní složky bez přihlášeného odběru</string>
     <string name="title_advanced_english_hint">Restartuje aplikaci</string>
     <string name="title_advanced_paranoid_hint">Pro více informací si přečtěte časté dotazy</string>
     <string name="title_advanced_debug_hint">Zapnout rozšířený záznam a zobrazit ladící informace na různých místech</string>
@@ -548,7 +547,7 @@
     <string name="title_legend_notify">Oznamovat nové zprávy</string>
     <string name="title_legend_subscribed">Přihlášen k odběru</string>
     <string name="title_legend_sync_keep">Počet dní k synchronizaci / ponechání zpráv</string>
-    <string name="title_legend_download_fetch">Počet stažených zpráv / načtených hlaviček / na serveru</string>
+    <string name="title_legend_download_fetch">Počet stažených zpráv / načtených hlaviček</string>
     <string name="title_legend_stop">Zastavit zpracování pravidel</string>
     <string name="title_legend_thread">Konverzace</string>
     <string name="title_legend_zoom">Změna velikosti textu</string>

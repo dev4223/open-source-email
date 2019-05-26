@@ -194,8 +194,6 @@
     <string name="title_advanced_updates">Controlla aggiornamenti</string>
     <string name="title_advanced_crash_reports">Invia rapporti di errore</string>
     <string name="title_advanced_debug">Debug</string>
-    <string name="title_advanced_memory_class">Classe di memoria: %1$s</string>
-    <string name="title_advanced_last_cleanup">Ultima pulizia: %1$s</string>
     <string name="title_advanced_enabled_hint">Attiva o disattiva a livello globale la ricezione dei messaggi</string>
     <string name="title_advanced_manual_hint">Se la sincronizzazione è disabilitata, è ancora possibile sincronizzare manualmente tirando giù l\'elenco dei messaggi. Questo sincronizzerà i messaggi ed eseguirà le operazioni per un tempo limitato.</string>
     <string name="title_advanced_schedule_hint">Tocca un orario per impostare un orario</string>
@@ -533,7 +531,7 @@
     <string name="title_legend_notify">Notifica nuovi messaggi</string>
     <string name="title_legend_subscribed">Iscritto a</string>
     <string name="title_legend_sync_keep">Numero di giorni da sincronizzare / di cui mantenere i messaggi</string>
-    <string name="title_legend_download_fetch">Numero di corpi messaggio scaricati / intestazioni recuperate / sul server</string>
+    <string name="title_legend_download_fetch">Numero di messaggi scaricati / intestazioni recuperate</string>
     <string name="title_legend_stop">Interrompi le regole di elaborazione</string>
     <string name="title_legend_thread">Conversazione</string>
     <string name="title_legend_zoom">Cambia dimensione testo</string>

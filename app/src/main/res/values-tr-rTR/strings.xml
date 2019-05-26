@@ -185,7 +185,6 @@
     <string name="title_advanced_updates">Güncellemelere bak</string>
     <string name="title_advanced_crash_reports">Hata raporları gönder</string>
     <string name="title_advanced_debug">Hata ayıklama</string>
-    <string name="title_advanced_last_cleanup">Son temizleme: %1$s</string>
     <string name="title_advanced_enabled_hint">İleti alımını tamamen aç ya da kapat</string>
     <string name="title_advanced_manual_hint">Eşitleme kapalıysa, mesaj listesini aşağı çekerek elle eşitleme hala yapılabilir. Bu eylem iletileri eşitleyecek ve işlemleri kısıtlı bir süre için uygulayacaktır.</string>
     <string name="title_advanced_schedule_hint">Bir zaman ayarlamak için bir saate dokunun</string>
@@ -500,7 +499,6 @@
     <string name="title_legend_notify">Yeni iletileri bildir</string>
     <string name="title_legend_subscribed">Abone olundu</string>
     <string name="title_legend_sync_keep">İletilerin eşzamanlanacağı / saklanacağı gün sayısı</string>
-    <string name="title_legend_download_fetch">Sunucudaki / getirilmiş başlıklar / indirilmiş ileti gövdeleri sayısı</string>
     <string name="title_legend_stop">İşlem kurallarının durdur</string>
     <string name="title_legend_thread">Söyleşi</string>
     <string name="title_legend_zoom">Metin boyutunu değiştir</string>
