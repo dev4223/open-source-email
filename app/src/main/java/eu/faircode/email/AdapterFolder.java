@@ -78,6 +78,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private int colorUnread;
     private int textColorSecondary;
 
+    private List<Long> disabledIds = new ArrayList<>();
     private List<TupleFolderEx> items = new ArrayList<>();
 
     private NumberFormat nf = NumberFormat.getNumberInstance();
@@ -97,6 +98,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private ImageView ivType;
         private ImageView ivUnified;
         private TextView tvType;
+        private TextView tvTotal;
         private TextView tvAfter;
         private ImageView ivSync;
         private TextView tvKeywords;
@@ -121,6 +123,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             ivType = itemView.findViewById(R.id.ivType);
             ivUnified = itemView.findViewById(R.id.ivUnified);
             tvType = itemView.findViewById(R.id.tvType);
+            tvTotal = itemView.findViewById(R.id.tvTotal);
             tvAfter = itemView.findViewById(R.id.tvAfter);
             ivSync = itemView.findViewById(R.id.ivSync);
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
@@ -142,7 +145,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private void bindTo(final TupleFolderEx folder) {
             boolean hidden = (folder.hide && !show_hidden);
 
-            int level = 1;
+            int level = 0;
             TupleFolderEx parent = folder.parent_ref;
             while (parent != null) {
                 level++;
@@ -150,6 +153,20 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     hidden = true;
                 parent = parent.parent_ref;
             }
+
+            boolean root_childs_visible = false;
+            if (folder.parent_ref != null &&
+                    folder.parent_ref.parent_ref == null &&
+                    folder.parent_ref.child_refs != null) {
+                for (TupleFolderEx root : folder.parent_ref.child_refs)
+                    if ((!root.hide || show_hidden) && root.child_refs != null)
+                        for (TupleFolderEx child : root.child_refs)
+                            if (!child.hide || show_hidden) {
+                                root_childs_visible = true;
+                                break;
+                            }
+            } else
+                root_childs_visible = true;
 
             boolean childs_visible = false;
             if (folder.child_refs != null)
@@ -161,7 +178,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             view.setVisibility(hidden ? View.GONE : View.VISIBLE);
             view.setActivated(folder.tbc != null || folder.tbd != null);
-            view.setAlpha(folder.hide ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(folder.hide || disabledIds.contains(folder.id) ? Helper.LOW_LIGHT : 1.0f);
 
             if (textSize != 0)
                 tvName.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
@@ -205,7 +222,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             vwLevel.setLayoutParams(lp);
 
             ivExpander.setImageLevel(folder.collapsed ? 1 /* more */ : 0 /* less */);
-            ivExpander.setVisibility(account < 0
+            ivExpander.setVisibility(account < 0 || !root_childs_visible
                     ? View.GONE
                     : childs_visible ? View.VISIBLE : View.INVISIBLE);
 
@@ -232,11 +249,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     sb.append(nf.format(folder.content));
                     sb.append('/');
                     sb.append(nf.format(folder.messages));
-                    sb.append('/');
-                    if (folder.total == null)
-                        sb.append('?');
-                    else
-                        sb.append(nf.format(folder.total));
                 }
                 tvMessages.setText(sb.toString());
 
@@ -258,6 +270,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             context.getPackageName());
                     tvType.setText(resid > 0 ? context.getString(resid) : folder.type);
                 }
+
+                tvTotal.setText(folder.total == null ? "" : nf.format(folder.total));
 
                 if (folder.account == null) {
                     tvAfter.setText(null);
@@ -304,12 +318,21 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             new Intent(ActivityView.ACTION_VIEW_MESSAGES)
                                     .putExtra("account", folder.account)
                                     .putExtra("folder", folder.id));
-                } else
+                } else {
+                    if (disabledIds.contains(folder.id))
+                        return;
                     listener.onFolderSelected(folder);
+                }
             }
         }
 
         private void onCollapse(TupleFolderEx folder) {
+            if (listener != null) {
+                folder.collapsed = !folder.collapsed;
+                notifyDataSetChanged();
+                return;
+            }
+
             Bundle args = new Bundle();
             args.putLong("id", folder.id);
             args.putBoolean("collapsed", !folder.collapsed);
@@ -691,6 +714,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         setHasStableIds(true);
     }
 
+    void setDisabled(List<Long> ids) {
+        disabledIds = ids;
+    }
+
     public void set(@NonNull List<TupleFolderEx> folders) {
         Log.i("Set folders=" + folders.size());
 
@@ -714,6 +741,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 parentChilds.get(folder.parent).add(folder);
             }
         }
+
+        TupleFolderEx root = new TupleFolderEx();
+        root.child_refs = parents;
+        for (TupleFolderEx parent : parents)
+            parent.parent_ref = root;
 
         for (long pid : parentChilds.keySet()) {
             TupleFolderEx parent = idFolder.get(pid);
@@ -804,7 +836,9 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             TupleFolderEx f1 = prev.get(oldItemPosition);
             TupleFolderEx f2 = next.get(newItemPosition);
             boolean e = f1.equals(f2);
-            if (!e || f1.parent_ref == null || f2.parent_ref == null)
+            if (!e ||
+                    f1.parent_ref == null || f1.parent_ref.id == null ||
+                    f2.parent_ref == null || f2.parent_ref.id == null)
                 return e;
             return f1.parent_ref.equals(f2.parent_ref);
         }

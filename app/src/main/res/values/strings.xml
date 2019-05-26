@@ -229,8 +229,9 @@
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
     <string name="title_advanced_debug">Debug mode</string>
-    <string name="title_advanced_memory_class">Memory class: %1$s</string>
-    <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
+    <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
+    <string name="title_advanced_last_cleanup" translatable="false">Last cleanup: %1$s</string>
+    <string name="title_advanced_uuid" translatable="false">UUID: %1$s</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
     <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list. This will synchronize messages and execute operations for a limited time.</string>
@@ -605,7 +606,7 @@
     <string name="title_legend_notify">Notify new messages</string>
     <string name="title_legend_subscribed">Subscribed to</string>
     <string name="title_legend_sync_keep">Number of days to synchronize / to keep messages</string>
-    <string name="title_legend_download_fetch">Number of message bodies downloaded / headers fetched / on server</string>
+    <string name="title_legend_download_fetch">Number of message downloaded / headers fetched</string>
     <string name="title_legend_stop">Stop processing rules</string>
 
     <string name="title_legend_thread">Conversation</string>

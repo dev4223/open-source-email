@@ -193,7 +193,6 @@
     <string name="title_advanced_updates">Procurar por atualizações</string>
     <string name="title_advanced_crash_reports">Enviar relatórios de erro</string>
     <string name="title_advanced_debug">Modo de depuração</string>
-    <string name="title_advanced_last_cleanup">Última limpeza: %1$s</string>
     <string name="title_advanced_enabled_hint">Globalmente desabilitar ou habilitar o recebimento de mensagens</string>
     <string name="title_advanced_manual_hint">Se a sincronização estiver desativada, ainda é possível sincronizar manualmente, puxando a lista de mensagens. Isso irá sincronizar mensagens e executar operações por um tempo limitado.</string>
     <string name="title_advanced_schedule_hint">Toque uma vez para definir um tempo</string>
@@ -527,7 +526,6 @@
     <string name="title_legend_notify">Notificar novas mensagens</string>
     <string name="title_legend_subscribed">Inscrito em</string>
     <string name="title_legend_sync_keep">Número de dias para sincronizar / manter mensagens</string>
-    <string name="title_legend_download_fetch">Número de corpo de mensagens baixadas/cabeçalhos buscados no servidor</string>
     <string name="title_legend_stop">Parar o processamento de regras</string>
     <string name="title_legend_thread">Conversação</string>
     <string name="title_legend_zoom">Alterar tamanho do texto</string>

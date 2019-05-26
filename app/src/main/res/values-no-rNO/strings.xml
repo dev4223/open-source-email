@@ -194,8 +194,6 @@
     <string name="title_advanced_updates">Se etter oppdateringer</string>
     <string name="title_advanced_crash_reports">Send feilrapporter</string>
     <string name="title_advanced_debug">Feilsøkingsmodus</string>
-    <string name="title_advanced_memory_class">Minne klasse: %1$s</string>
-    <string name="title_advanced_last_cleanup">Siste opprydding: %1$s</string>
     <string name="title_advanced_enabled_hint">Globalt deaktivere eller aktivere mottak av meldinger</string>
     <string name="title_advanced_manual_hint">Hvis synkronisering er deaktivert, er det fortsatt mulig å synkronisere manuelt ved å trekke ned meldingslisten. Dette vil synkronisere meldinger og utføre operasjoner i en begrenset periode.</string>
     <string name="title_advanced_schedule_hint">Trykk på en tid for å angi en tid</string>
@@ -212,6 +210,7 @@
     <string name="title_advanced_autoclose_hint">Lukk samtaler automatisk når alle meldinger arkiveres, sendes eller kastet</string>
     <string name="title_advanced_sender_hint">De fleste leverandører tillater ikke endret avsender adresser</string>
     <string name="title_advanced_badge_hint">Kun tilgjengelig på støttede launchere</string>
+    <string name="title_advanced_subscribed_only_hint">Aktivering av dette vil slette alle lokale mapper uten abonnement</string>
     <string name="title_advanced_english_hint">Dette vil starte appen på nytt</string>
     <string name="title_advanced_paranoid_hint">Se FAQ for detaljer</string>
     <string name="title_advanced_debug_hint">Aktivere ekstra logging og vis feilsøkingsinformasjon på forskjellige steder</string>
@@ -532,7 +531,7 @@
     <string name="title_legend_notify">Gi beskjed om nye meldinger</string>
     <string name="title_legend_subscribed">Abonnerer på</string>
     <string name="title_legend_sync_keep">Antall dager for å synkronisere / for å beholde meldinger</string>
-    <string name="title_legend_download_fetch">Antall nedlastede meldingstekster / overskrifter hentet / på server</string>
+    <string name="title_legend_download_fetch">Antall nedlastede meldinger / overskrifter hentet</string>
     <string name="title_legend_stop">Stopp behandlingen av regler</string>
     <string name="title_legend_thread">Samtale</string>
     <string name="title_legend_zoom">Endre tekststørrelse</string>
