@@ -670,6 +670,8 @@ public class FragmentCompose extends FragmentBase {
                 args.putParcelableArrayList("attachments", getArguments().getParcelableArrayList("attachments"));
                 draftLoader.execute(this, args, "compose:new");
             } else {
+                state = State.NONE;
+
                 Bundle args = new Bundle();
                 args.putString("action", "edit");
                 args.putLong("id", working);
