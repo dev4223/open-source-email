@@ -780,6 +780,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
 
+            if (compact) {
+                tvFrom.setSingleLine(true);
+                tvSubject.setSingleLine(true);
+            }
+            
             grpAddresses.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpCalendar.setVisibility(View.GONE);
@@ -860,6 +865,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean show_addresses = !properties.getValue("addresses", message.id);
             boolean show_headers = properties.getValue("headers", message.id);
             boolean show_html = properties.getValue("html", message.id);
+
+            if (compact) {
+                tvFrom.setSingleLine(false);
+                tvSubject.setSingleLine(false);
+            }
 
             grpAddresses.setVisibility(View.VISIBLE);
 

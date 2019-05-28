@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
 
@@ -86,7 +87,7 @@ public class EntityAccount extends EntityOrder implements Serializable {
     public Long swipe_right;
     @NonNull
     public Integer poll_interval; // keep-alive interval
-    public String prefix; // namespace
+    public String prefix; // namespace, obsolete
 
     public Long created;
     public Boolean tbd;
@@ -106,9 +107,14 @@ public class EntityAccount extends EntityOrder implements Serializable {
     void createNotificationChannel(Context context) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+            NotificationChannelGroup group = new NotificationChannelGroup(name, name);
+            nm.createNotificationChannelGroup(group);
+
             NotificationChannel channel = new NotificationChannel(
                     getNotificationChannelId(id), name,
                     NotificationManager.IMPORTANCE_HIGH);
+            channel.setGroup(name);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             nm.createNotificationChannel(channel);
         }
@@ -156,7 +162,6 @@ public class EntityAccount extends EntityOrder implements Serializable {
         json.put("swipe_right", swipe_right);
 
         json.put("poll_interval", poll_interval);
-        json.put("prefix", prefix);
         // not created
         // not state
         // not error
@@ -197,8 +202,6 @@ public class EntityAccount extends EntityOrder implements Serializable {
             account.swipe_right = json.getLong("swipe_right");
 
         account.poll_interval = json.getInt("poll_interval");
-        if (json.has("prefix") && !json.isNull("prefix"))
-            account.prefix = json.getString("prefix");
 
         return account;
     }
@@ -225,7 +228,6 @@ public class EntityAccount extends EntityOrder implements Serializable {
                     Objects.equals(this.swipe_left, other.swipe_left) &&
                     Objects.equals(this.swipe_right, other.swipe_right) &&
                     this.poll_interval.equals(other.poll_interval) &&
-                    Objects.equals(this.prefix, other.prefix) &&
                     Objects.equals(this.created, other.created) &&
                     Objects.equals(this.tbd, other.tbd) &&
                     Objects.equals(this.state, other.state) &&
