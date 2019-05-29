@@ -74,6 +74,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openintents.openpgp.OpenPgpError;
+import org.openintents.openpgp.OpenPgpSignatureResult;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
@@ -99,6 +100,9 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.net.ssl.HttpsURLConnection;
+
+import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_NO_SIGNATURE;
+import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_VALID_KEY_CONFIRMED;
 
 public class ActivityView extends ActivityBilling implements FragmentManager.OnBackStackChangedListener {
     private String startup;
@@ -1445,6 +1449,18 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                             }
                         }
 
+                        // Check signature status
+                        OpenPgpSignatureResult sigResult = result.getParcelableExtra(OpenPgpApi.RESULT_SIGNATURE);
+                        int sresult = (sigResult == null ? RESULT_NO_SIGNATURE : sigResult.getResult());
+                        int resid;
+                        if (sresult == RESULT_NO_SIGNATURE)
+                            resid = R.string.title_signature_none;
+                        else if (sresult == RESULT_VALID_KEY_CONFIRMED)
+                            resid = R.string.title_signature_valid;
+                        else
+                            resid = R.string.title_signature_invalid;
+                        Snackbar.make(getVisibleView(), resid, Snackbar.LENGTH_LONG).show();
+
                         break;
 
                     case OpenPgpApi.RESULT_CODE_USER_INTERACTION_REQUIRED:
@@ -1669,10 +1685,12 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 for (EntityAttachment attachment : attachments) {
                     File file = attachment.getFile(context);
 
-                    String name = attachment.name;
+                    String name = Helper.sanitizeFilename(attachment.name);
                     if (TextUtils.isEmpty(name))
                         name = Long.toString(attachment.id);
                     DocumentFile document = tree.createFile(attachment.type, name);
+                    if (document == null)
+                        throw new FileNotFoundException(uri + ":" + name);
 
                     ParcelFileDescriptor pfd = null;
                     OutputStream os = null;

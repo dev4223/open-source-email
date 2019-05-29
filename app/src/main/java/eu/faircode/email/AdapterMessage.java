@@ -202,7 +202,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvFrom;
         private TextView tvSize;
         private TextView tvTime;
-        private ImageView ivDraft;
+        private ImageView ivType;
         private ImageView ivSnoozed;
         private ImageView ivBrowsed;
         private ImageView ivAnswered;
@@ -308,7 +308,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom = itemView.findViewById(R.id.tvFrom);
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
-            ivDraft = itemView.findViewById(R.id.ivDraft);
+            ivType = itemView.findViewById(R.id.ivType);
             ivSnoozed = itemView.findViewById(R.id.ivSnoozed);
             ivBrowsed = itemView.findViewById(R.id.ivBrowsed);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
@@ -503,7 +503,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setText(null);
             tvSize.setText(null);
             tvTime.setText(null);
-            ivDraft.setVisibility(View.GONE);
+            ivType.setVisibility(View.GONE);
             ivSnoozed.setVisibility(View.GONE);
             ivBrowsed.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
@@ -577,7 +577,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFrom.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
-                ivDraft.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivType.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivSnoozed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivBrowsed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -639,7 +639,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubject.setText(message.subject);
 
             // Line 3
-            ivDraft.setVisibility(message.drafts > 0 ? View.VISIBLE : View.GONE);
+            ivType.setImageResource(message.drafts > 0
+                    ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
+            ivType.setVisibility(message.drafts > 0 ||
+                    (viewType == ViewType.UNIFIED && !EntityFolder.INBOX.equals(message.folderType))
+                    ? View.VISIBLE : View.GONE);
             ivSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
@@ -3289,53 +3293,79 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionReplyMenu(final ActionData data) {
-            int recipients = 0;
-            if (data.message.from != null)
-                recipients += data.message.from.length;
-            if (data.message.cc != null)
-                recipients += data.message.cc.length;
+            Bundle args = new Bundle();
+            args.putSerializable("message", data.message);
 
-            if (recipients == 1 &&
-                    data.message.list_post == null &&
-                    data.message.receipt_to == null &&
-                    (answers == 0 && Helper.isPro(context))) {
-                onMenuReply(data, "reply");
-                return;
-            }
-
-            View anchor = bnvActions.findViewById(R.id.action_reply);
-            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
-            popupMenu.inflate(R.menu.menu_reply);
-            popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients > 1);
-            popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(data.message.list_post != null);
-            popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(data.message.receipt_to != null);
-            popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !Helper.isPro(context));
-
-            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            new SimpleTask<EntityIdentity>() {
                 @Override
-                public boolean onMenuItemClick(MenuItem target) {
-                    switch (target.getItemId()) {
-                        case R.id.menu_reply_to_sender:
-                            onMenuReply(data, "reply");
-                            return true;
-                        case R.id.menu_reply_to_all:
-                            onMenuReply(data, "reply_all");
-                            return true;
-                        case R.id.menu_reply_list:
-                            onMenuReply(data, "list");
-                            return true;
-                        case R.id.menu_reply_receipt:
-                            onMenuReply(data, "receipt");
-                            return true;
-                        case R.id.menu_reply_answer:
-                            onMenuAnswer(data);
-                            return true;
-                        default:
-                            return false;
-                    }
+                protected EntityIdentity onExecute(Context context, Bundle args) {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                    if (message.identity == null)
+                        return null;
+
+                    DB db = DB.getInstance(context);
+                    return db.identity().getIdentity(message.identity);
                 }
-            });
-            popupMenu.show();
+
+                @Override
+                protected void onExecuted(Bundle args, EntityIdentity identity) {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+
+                    TupleMessageEx amessage = getMessage();
+                    if (amessage == null || !amessage.id.equals(message.id))
+                        return;
+
+                    String via = (identity == null ? null : MessageHelper.canonicalAddress(identity.email));
+                    Address[] recipients = data.message.getAllRecipients(via);
+
+                    if (recipients.length == 0 &&
+                            data.message.list_post == null &&
+                            data.message.receipt_to == null &&
+                            (answers == 0 && Helper.isPro(context))) {
+                        onMenuReply(data, "reply");
+                        return;
+                    }
+
+                    View anchor = bnvActions.findViewById(R.id.action_reply);
+                    PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
+                    popupMenu.inflate(R.menu.menu_reply);
+                    popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients.length > 0);
+                    popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(data.message.list_post != null);
+                    popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(data.message.receipt_to != null);
+                    popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !Helper.isPro(context));
+
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem target) {
+                            switch (target.getItemId()) {
+                                case R.id.menu_reply_to_sender:
+                                    onMenuReply(data, "reply");
+                                    return true;
+                                case R.id.menu_reply_to_all:
+                                    onMenuReply(data, "reply_all");
+                                    return true;
+                                case R.id.menu_reply_list:
+                                    onMenuReply(data, "list");
+                                    return true;
+                                case R.id.menu_reply_receipt:
+                                    onMenuReply(data, "receipt");
+                                    return true;
+                                case R.id.menu_reply_answer:
+                                    onMenuAnswer(data);
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        }
+                    });
+                    popupMenu.show();
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(context, owner, ex);
+                }
+            }.execute(context, owner, args, "message:reply");
         }
 
         private void onMenuReply(final ActionData data, String action) {
