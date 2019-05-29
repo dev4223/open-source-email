@@ -437,6 +437,9 @@
     <string name="title_resync">Risincronizza</string>
     <string name="title_no_openpgp">OpenKeychain non trovato</string>
     <string name="title_not_encrypted">Il messaggio non è cifrato</string>
+    <string name="title_signature_none">Messaggio non firmato</string>
+    <string name="title_signature_valid">Firma messaggio valida</string>
+    <string name="title_signature_invalid">Firma messaggio non valida</string>
     <string name="title_search">Cerca</string>
     <string name="title_search_in">Cerca in</string>
     <string name="title_searching">Ricerca di \'%1$s\'</string>
@@ -578,7 +581,6 @@
     <string name="title_legend_save">Salva</string>
     <string name="title_legend_delete">Elimina</string>
     <string name="title_legend_count">Quantità</string>
-    <string name="title_legend_folder_tye">Tipo di cartelle</string>
     <string name="title_hint_folder_actions">Tieni premuto per le opzioni</string>
     <string name="title_hint_folder_sync">Per limitare l\'utilizzo della batteria e della rete, non tutte le cartelle e non tutti i messaggi verranno sincronizzati per impostazione predefinita</string>
     <string name="title_hint_support">Se hai una domanda o un problema, usa il menu di supporto per ottenere aiuto</string>

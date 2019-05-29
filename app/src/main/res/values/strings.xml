@@ -500,6 +500,10 @@
     <string name="title_no_openpgp">OpenKeychain not found</string>
     <string name="title_not_encrypted">Message is not encrypted</string>
 
+    <string name="title_signature_none">Message not signed</string>
+    <string name="title_signature_valid">Message signature valid</string>
+    <string name="title_signature_invalid">Message signature invalid</string>
+
     <string name="title_search">Search</string>
     <string name="title_search_in">Search in</string>
     <string name="title_searching">Searching \'%1$s\'</string>
@@ -657,7 +661,7 @@
     <string name="title_legend_save">Save</string>
     <string name="title_legend_delete">Delete</string>
     <string name="title_legend_count">Count</string>
-    <string name="title_legend_folder_tye">Folders type</string>
+    <string name="title_legend_folder_type">Folder type</string>
 
     <string name="title_hint_folder_actions">Long press for options</string>
     <string name="title_hint_folder_sync">To limit battery and network usage not all folders and not all messages will be synchronized by default</string>

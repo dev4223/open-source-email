@@ -32,11 +32,15 @@ import androidx.room.PrimaryKey;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
 import javax.mail.Address;
+import javax.mail.internet.InternetAddress;
 
 import static androidx.room.ForeignKey.CASCADE;
 import static androidx.room.ForeignKey.SET_NULL;
@@ -154,6 +158,25 @@ public class EntityMessage implements Serializable {
                 .append(BuildConfig.APPLICATION_ID).append("@localhost")
                 .append('>');
         return sb.toString();
+    }
+
+    Address[] getAllRecipients(String via) {
+        List<Address> addresses = new ArrayList<>();
+
+        if (to != null)
+            addresses.addAll(Arrays.asList(to));
+
+        if (cc != null)
+            addresses.addAll(Arrays.asList(cc));
+
+        // Filter self
+        for (Address address : new ArrayList<>(addresses)) {
+            String recipient = MessageHelper.canonicalAddress(((InternetAddress) address).getAddress());
+            if (recipient.equals(via))
+                addresses.remove(address);
+        }
+
+        return addresses.toArray(new Address[0]);
     }
 
     File getFile(Context context) {

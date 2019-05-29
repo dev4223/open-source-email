@@ -35,6 +35,7 @@ import android.os.Build;
 import android.os.DeadSystemException;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.view.OrientationEventListener;
 import android.webkit.CookieManager;
 
@@ -375,6 +376,12 @@ public class ApplicationEx extends Application {
         for (int c = 0; c < jchannels.length(); c++) {
             JSONObject jchannel = (JSONObject) jchannels.get(c);
 
+            // Legacy
+            if (!jchannel.has("group") ||
+                    jchannel.isNull("group") ||
+                    TextUtils.isEmpty(jchannel.getString("group")))
+                continue;
+
             String id = jchannel.getString("id");
             if (nm.getNotificationChannel(id) == null) {
                 NotificationChannel channel = new NotificationChannel(
@@ -382,12 +389,10 @@ public class ApplicationEx extends Application {
                         jchannel.getString("name"),
                         jchannel.getInt("importance"));
 
-                if (jchannel.has("group") && !jchannel.isNull("group")) {
-                    String groupName = jchannel.getString("group");
-                    NotificationChannelGroup group = new NotificationChannelGroup(groupName, groupName);
-                    nm.createNotificationChannelGroup(group);
-                    channel.setGroup(groupName);
-                }
+                String groupName = jchannel.getString("group");
+                NotificationChannelGroup group = new NotificationChannelGroup(groupName, groupName);
+                nm.createNotificationChannelGroup(group);
+                channel.setGroup(groupName);
 
                 if (jchannel.has("description") && !jchannel.isNull("description"))
                     channel.setDescription(jchannel.getString("description"));
@@ -407,7 +412,6 @@ public class ApplicationEx extends Application {
                 channel.enableVibration(jchannel.getBoolean("vibrate"));
 
                 Log.i("Creating channel=" + channel);
-                nm.deleteNotificationChannel(id);
                 nm.createNotificationChannel(channel);
             }
         }
@@ -418,6 +422,17 @@ public class ApplicationEx extends Application {
             return false;
 
         if (ex instanceof RemoteException)
+            return false;
+
+        /*
+            java.lang.NoSuchMethodError: No direct method ()V in class Landroid/security/IKeyChainService$Stub; or its super classes (declaration of 'android.security.IKeyChainService$Stub' appears in /system/framework/framework.jar!classes2.dex)
+            java.lang.NoSuchMethodError: No direct method ()V in class Landroid/security/IKeyChainService$Stub; or its super classes (declaration of 'android.security.IKeyChainService$Stub' appears in /system/framework/framework.jar!classes2.dex)
+            at com.android.keychain.KeyChainService$1.(KeyChainService.java:95)
+            at com.android.keychain.KeyChainService.(KeyChainService.java:95)
+            at java.lang.Class.newInstance(Native Method)
+            at android.app.AppComponentFactory.instantiateService(AppComponentFactory.java:103)
+         */
+        if (ex instanceof NoSuchMethodError)
             return false;
 
         if (ex instanceof TimeoutException &&

@@ -445,6 +445,9 @@
     <string name="title_resync">Resincronizare</string>
     <string name="title_no_openpgp">OpenKeychain nu a fost găsit</string>
     <string name="title_not_encrypted">Mesajul nu este criptat</string>
+    <string name="title_signature_none">Mesaj nesemnat</string>
+    <string name="title_signature_valid">Semnătura mesaj validă</string>
+    <string name="title_signature_invalid">Semnătura mesaj invalidă</string>
     <string name="title_search">Caută</string>
     <string name="title_search_in">Căutare în</string>
     <string name="title_searching">Se caută \'%1$s\'</string>
@@ -586,7 +589,6 @@
     <string name="title_legend_save">Salvează</string>
     <string name="title_legend_delete">Șterge</string>
     <string name="title_legend_count">Contor</string>
-    <string name="title_legend_folder_tye">Tip de dosar</string>
     <string name="title_hint_folder_actions">Atingeți lung pentru opțiuni</string>
     <string name="title_hint_folder_sync">Pentru a limita utilizarea bateriei şi a conexiunii, nu vor fi sincronizate în mod implicit toate dosarele si mesajele</string>
     <string name="title_hint_support">Dacă aveți o întrebare sau o problemă, vă rugăm să utilizați meniul de suport tehnic pentru a obține ajutor</string>

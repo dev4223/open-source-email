@@ -429,6 +429,9 @@
     <string name="title_resync">重新同步</string>
     <string name="title_no_openpgp">OpenKeychain 未找到</string>
     <string name="title_not_encrypted">邮件未加密</string>
+    <string name="title_signature_none">消息未签名</string>
+    <string name="title_signature_valid">消息签名有效</string>
+    <string name="title_signature_invalid">消息签名无效</string>
     <string name="title_search">搜索</string>
     <string name="title_search_in">搜索范围</string>
     <string name="title_searching">搜索 “%1$s”</string>
@@ -570,7 +573,6 @@
     <string name="title_legend_save">保存</string>
     <string name="title_legend_delete">删除</string>
     <string name="title_legend_count">总数</string>
-    <string name="title_legend_folder_tye">文件夹类型</string>
     <string name="title_hint_folder_actions">长按以显示更多选项</string>
     <string name="title_hint_folder_sync">为了减少电池和网络的使用量, 默认情况下, 并非所有文件夹和邮件都将同步</string>
     <string name="title_hint_support">如果您要提问或有问题，请使用支持选项获取帮助</string>
