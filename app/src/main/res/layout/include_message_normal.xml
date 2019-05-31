@@ -43,6 +43,7 @@
         android:id="@+id/paddingStart"
         android:layout_width="6dp"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/paddingBottom"
         app:layout_constraintStart_toEndOf="@+id/ivExpander"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -280,6 +281,7 @@
         android:id="@+id/paddingEnd"
         android:layout_width="6dp"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/paddingBottom"
         app:layout_constraintEnd_toStartOf="@+id/vwStatus"
         app:layout_constraintTop_toTopOf="parent" />
 

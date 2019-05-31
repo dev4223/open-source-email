@@ -354,11 +354,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     Helper.unexpectedError(context, owner, ex);
                 }
             }.execute(context, owner, args, "folder:collapse");
-
-            if (listener != null) {
-                folder.collapsed = !folder.collapsed;
-                notifyDataSetChanged();
-            }
         }
 
         @Override

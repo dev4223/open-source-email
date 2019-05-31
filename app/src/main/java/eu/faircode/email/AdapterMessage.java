@@ -280,8 +280,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private RecyclerView rvImage;
 
-        private Group grpDay;
-
         private View paddingAddressBottom;
         private Group grpAddressMeta;
         private Group grpAddressMetaBottom;
@@ -550,19 +548,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Text size
             if (textSize != 0) {
-                
-                //tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * (message.unseen > 0 ? 1.1f : 1f));
-                
+
                 // dev4223: subject size smaller in list view
                 // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 if (zoom == 0)
-                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 1.0f);
                 else
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
-				
-				tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
-                tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
                 int px = Math.round(TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_PX, textSize * (compact ? 1.5f : 3.0f),
