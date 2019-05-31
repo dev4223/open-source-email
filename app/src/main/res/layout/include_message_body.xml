@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/clItem"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -104,6 +105,30 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvNoInternetBody" />
 
+    <include
+        android:id="@+id/InCalendar"
+        layout="@layout/include_message_calendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvBody" />
+
+    <include
+        android:id="@+id/inAttachmentsAlt"
+        layout="@layout/include_message_attachments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/InCalendar" />
+
+    <include
+        android:id="@+id/inImages"
+        layout="@layout/include_message_images"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inAttachmentsAlt" />
+
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddressMeta"
         android:layout_width="0dp"
@@ -115,5 +140,4 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:constraint_referenced_ids="tvFlags,tvKeywords" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

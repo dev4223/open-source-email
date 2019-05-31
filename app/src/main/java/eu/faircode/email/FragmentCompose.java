@@ -2041,30 +2041,22 @@ public class FragmentCompose extends FragmentBase {
 
                             String via = null;
                             if (ref.identity != null) {
-                                EntityIdentity v = db.identity().getIdentity(ref.identity);
-                                via = MessageHelper.canonicalAddress(v.email);
+                                EntityIdentity identity = db.identity().getIdentity(ref.identity);
+                                draft.from = new Address[]{new InternetAddress(identity.email, identity.name)};
+                                via = MessageHelper.canonicalAddress(identity.email);
                             }
 
-                            if ("list".equals(action) && ref.list_post != null) {
+                            if ("list".equals(action) && ref.list_post != null)
                                 draft.to = ref.list_post;
-                                draft.from = ref.to;
-                            } else if ("receipt".equals(action) && ref.receipt_to != null) {
+                            else if ("receipt".equals(action) && ref.receipt_to != null)
                                 draft.to = ref.receipt_to;
-                                draft.from = ref.to;
-                            } else {
+                            else {
                                 // Prevent replying to self
-                                String to = null;
-                                Address[] replying = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
-                                if (replying != null && replying.length == 1)
-                                    to = MessageHelper.canonicalAddress(((InternetAddress) replying[0]).getAddress());
-
-                                if (to != null && to.equals(via)) {
+                                if (ref.replySelf(via)) {
                                     draft.to = ref.to;
                                     draft.from = ref.from;
-                                } else {
-                                    draft.to = replying;
-                                    draft.from = ref.to;
-                                }
+                                } else
+                                    draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
                             }
 
                             if ("reply_all".equals(action))
@@ -2072,10 +2064,8 @@ public class FragmentCompose extends FragmentBase {
                             else if ("receipt".equals(action))
                                 draft.receipt_request = true;
 
-                        } else if ("forward".equals(action)) {
+                        } else if ("forward".equals(action))
                             draft.thread = draft.msgid; // new thread
-                            draft.from = ref.to;
-                        }
 
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action) ||

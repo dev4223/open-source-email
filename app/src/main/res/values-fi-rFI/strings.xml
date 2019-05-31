@@ -161,7 +161,6 @@
     <string name="title_advanced_addresses">Näytä viestin osoitetiedot oletuksena</string>
     <string name="title_advanced_attachments_alt">Näytä liitteet viestin tekstin jälkeen</string>
     <string name="title_advanced_monospaced">Käytä kiinteävälistä kirjaisinta viestien tekstille</string>
-    <string name="title_advanced_html">Näytä tunnettujen yhteystietojen alkuperäinen viesti automaattisesti</string>
     <string name="title_advanced_images">Näytä tunnettujen yhteystietojen viestien kuvat automaattisesti</string>
     <string name="title_advanced_actionbar">Keskustelujen toimintopalkki</string>
     <string name="title_advanced_pull_refresh">Vedä alas päivittääksesi</string>
@@ -203,7 +202,6 @@
     <string name="title_advanced_browse_hint">Hae lisää viestejä alaspäin vieritettäessä</string>
     <string name="title_advanced_threading_hint">Ryhmittele toisiinsa liittyvät viestit</string>
     <string name="title_advanced_name_email_hint">Vain saatavilla olevat nimet näytetään, kun pois käytöstä</string>
-    <string name="title_advanced_flags_hint">Tähdelliset viestit säilytetään aina paikallisesti</string>
     <string name="title_advanced_preview_hint">Saatavilla vain, kun viestin teksti on ladattu</string>
     <string name="title_advanced_autoexpand_hint">Avaa viesti automaattisesti, kun keskustelussa on vain yksi viesti tai vain yksi on lukematon</string>
     <string name="title_advanced_autocollapse_hint">Monta laajennettua viestiä suljetaan aina takaisin-painikkeella</string>
@@ -343,8 +341,6 @@
     <string name="title_show_inline">Näytä tekstiin upotetut liitteet</string>
     <string name="title_download_all">Lataa kaikki</string>
     <string name="title_save_all">Tallenna kaikki</string>
-    <string name="title_show_html">Näytä alkuperäinen</string>
-    <string name="title_show_formatted">Näytä muotoiltu</string>
     <string name="title_trash">Roskakoriin</string>
     <string name="title_copy">Kopioi &#8230;</string>
     <string name="title_copy_to">Kopioi kansioon &#8230;</string>
@@ -437,6 +433,9 @@
     <string name="title_resync">Synkronoi uudelleen</string>
     <string name="title_no_openpgp">OpenKeychain ei löytynyt</string>
     <string name="title_not_encrypted">Viestiä ei ole salattu</string>
+    <string name="title_signature_none">Viestiä ei allekirjoitettu</string>
+    <string name="title_signature_valid">Viestin allekirjoitus vahvistettu</string>
+    <string name="title_signature_invalid">Viestin allekirjoitus ei vahvistettu</string>
     <string name="title_search">Hae</string>
     <string name="title_search_in">Hae kohteesta</string>
     <string name="title_searching">Haetaan \'%1$s\'</string>
@@ -578,6 +577,7 @@
     <string name="title_legend_save">Tallenna</string>
     <string name="title_legend_delete">Poista</string>
     <string name="title_legend_count">Lukumäärä</string>
+    <string name="title_legend_folder_type">Kansion tyyppi</string>
     <string name="title_hint_folder_actions">Pitkä painallus avaa asetukset</string>
     <string name="title_hint_folder_sync">Akun ja verkon käytön rajoittamiseksi kaikkia kansioita ja viestejä ei oletusarvoisesti synkronoida</string>
     <string name="title_hint_support">Jos sinulla on kysyttävää tai ongelma, ole hyvä ja käytä tukivalikkoa saadaksesi apua</string>

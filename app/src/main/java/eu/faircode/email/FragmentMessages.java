@@ -112,7 +112,7 @@ import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
 import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
 
-public class FragmentMessages extends FragmentBase {
+public class FragmentMessages extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ViewGroup view;
     private SwipeRefreshLayout swipeRefresh;
     private TextView tvSupport;
@@ -182,7 +182,6 @@ public class FragmentMessages extends FragmentBase {
     private boolean autoExpanded = true;
     private Map<String, List<Long>> values = new HashMap<>();
     private LongSparseArray<Spanned> bodies = new LongSparseArray<>();
-    private LongSparseArray<String> html = new LongSparseArray<>();
     private LongSparseArray<List<EntityAttachment>> attachments = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
@@ -877,10 +876,9 @@ public class FragmentMessages extends FragmentBase {
                 values.get(name).remove(id);
 
             if ("expanded".equals(name)) {
+                updateExpanded();
                 if (enabled)
                     handleExpand(id);
-                ibDown.setVisibility(values.get(name).size() > 0 ? View.VISIBLE : View.GONE);
-                ibUp.setVisibility(values.get(name).size() > 0 ? View.VISIBLE : View.GONE);
             }
         }
 
@@ -904,19 +902,6 @@ public class FragmentMessages extends FragmentBase {
         @Override
         public Spanned getBody(long id) {
             return bodies.get(id);
-        }
-
-        @Override
-        public void setHtml(long id, String value) {
-            if (value == null)
-                html.remove(id);
-            else
-                html.put(id, value);
-        }
-
-        @Override
-        public String getHtml(long id) {
-            return html.get(id);
         }
 
         @Override
@@ -2090,7 +2075,6 @@ public class FragmentMessages extends FragmentBase {
                                 for (String key : values.keySet())
                                     values.get(key).remove(id);
                                 bodies.remove(id);
-                                html.remove(id);
                                 attachments.remove(id);
                             }
                     }
@@ -2103,6 +2087,8 @@ public class FragmentMessages extends FragmentBase {
         }
 
         loadMessages(false);
+
+        updateExpanded();
 
         if (selectionTracker != null && selectionTracker.hasSelection())
             fabMore.show();
@@ -2128,8 +2114,6 @@ public class FragmentMessages extends FragmentBase {
     @Override
     public void onResume() {
         super.onResume();
-        grpSupport.setVisibility(viewType == AdapterMessage.ViewType.THREAD ||
-                Helper.isPro(getContext()) ? View.GONE : View.VISIBLE);
 
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
@@ -2147,14 +2131,30 @@ public class FragmentMessages extends FragmentBase {
             swipeRefresh.setRefreshing(false);
             swipeRefresh.setRefreshing(true);
         }
+
+        prefs.registerOnSharedPreferenceChangeListener(this);
+        onSharedPreferenceChanged(prefs, "pro");
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.unregisterOnSharedPreferenceChangeListener(this);
+
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+        if ("pro".equals(key)) {
+            boolean pro = prefs.getBoolean(key, false);
+            grpSupport.setVisibility(
+                    viewType == AdapterMessage.ViewType.THREAD || pro
+                            ? View.GONE : View.VISIBLE);
+        }
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
@@ -2185,7 +2185,6 @@ public class FragmentMessages extends FragmentBase {
                 });
         }
     };
-
 
     private void checkReporting() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -2919,6 +2918,12 @@ public class FragmentMessages extends FragmentBase {
         return false;
     }
 
+    private void updateExpanded() {
+        boolean expanded = (values.containsKey("expanded") && values.get("expanded").size() > 0);
+        ibDown.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        ibUp.setVisibility(expanded ? View.VISIBLE : View.GONE);
+    }
+
     private void handleExpand(long id) {
         Bundle args = new Bundle();
         args.putLong("id", id);
@@ -3228,8 +3233,7 @@ public class FragmentMessages extends FragmentBase {
             boolean collapse = prefs.getBoolean("collapse", false);
             if ((count == 1 && collapse) || count > 1) {
                 values.get("expanded").clear();
-                ibDown.setVisibility(View.GONE);
-                ibUp.setVisibility(View.GONE);
+                updateExpanded();
                 adapter.notifyDataSetChanged();
                 return true;
             }

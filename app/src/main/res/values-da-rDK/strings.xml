@@ -161,7 +161,6 @@
     <string name="title_advanced_addresses">Vis adresseinformationer som standard</string>
     <string name="title_advanced_attachments_alt">Vis vedhæftninger efter meddelelsesteksten</string>
     <string name="title_advanced_monospaced">Brug monospatieret skrifttype til meddelelser</string>
-    <string name="title_advanced_html">Vis automatisk oprindelig meddelelse for kendte kontakter</string>
     <string name="title_advanced_images">Vis automatisk billeder for kendte kontakter</string>
     <string name="title_advanced_actionbar">Samtale action-bar</string>
     <string name="title_advanced_pull_refresh">Træk ned for at opdatere</string>
@@ -203,7 +202,6 @@
     <string name="title_advanced_browse_hint">Hent flere meddelelser, når du scroller ned</string>
     <string name="title_advanced_threading_hint">Gruppér meddelelser relateret til hinanden</string>
     <string name="title_advanced_name_email_hint">Hvis deaktiveret, vil navne kun blive vist, når de er tilgængelige</string>
-    <string name="title_advanced_flags_hint">Bemærk, at stjernemarkerede meddelelser altid vil blive gemt lokalt på enheden</string>
     <string name="title_advanced_preview_hint">Kun tilgængelig, når meddelelsestekst er hentet</string>
     <string name="title_advanced_autoexpand_hint">Åbn automatisk meddelelse, når der kun er én meddelelse eller kun én ulæst meddelelse i en samtale</string>
     <string name="title_advanced_autocollapse_hint">Alle udvidede meddelelser vil altid lukkes, når du trykker på tilbage-knappen</string>
@@ -341,8 +339,6 @@
     <string name="title_show_inline">Vis inline vedhæftninger</string>
     <string name="title_download_all">Hent alle</string>
     <string name="title_save_all">Gem alle</string>
-    <string name="title_show_html">Vis original</string>
-    <string name="title_show_formatted">Vis som formateret</string>
     <string name="title_trash">Papirkurv</string>
     <string name="title_copy">Kopiér &#8230;</string>
     <string name="title_subscribe">Abonnér</string>

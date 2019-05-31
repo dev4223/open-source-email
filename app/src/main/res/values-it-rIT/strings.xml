@@ -161,7 +161,6 @@
     <string name="title_advanced_addresses">Mostra i dettagli dell\'indirizzo per impostazione predefinita</string>
     <string name="title_advanced_attachments_alt">Mostra allegati dopo il testo del messaggio</string>
     <string name="title_advanced_monospaced">Usa il carattere monospaziale per il testo del messaggio</string>
-    <string name="title_advanced_html">Mostra automaticamente il messaggio originale per i contatti conosciuti</string>
     <string name="title_advanced_images">Mostra automaticamente le immagini per i contatti conosciuti</string>
     <string name="title_advanced_actionbar">Barra di azione di conversazione</string>
     <string name="title_advanced_pull_refresh">Trascina in basso per aggiornare</string>
@@ -203,7 +202,6 @@
     <string name="title_advanced_browse_hint">Scarica più messaggi quando scorri verso il basso</string>
     <string name="title_advanced_threading_hint">Messaggi di gruppo relazionati a vicenda</string>
     <string name="title_advanced_name_email_hint">Quando disabilitati saranno mostrati solo i nomi quando disponibili</string>
-    <string name="title_advanced_flags_hint">Nota che i messaggi preferiti saranno sempre conservati localmente</string>
     <string name="title_advanced_preview_hint">Disponibile solo quando è stato scaricato il testo del messaggio</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando c\'è un solo messaggio o solo un messaggio da leggere in una conversazione</string>
     <string name="title_advanced_autocollapse_hint">Più messaggi estesi verranno sempre chiusi con \'indietro\'</string>
@@ -343,8 +341,6 @@
     <string name="title_show_inline">Mostra gli allegati inline</string>
     <string name="title_download_all">Scarica tutti</string>
     <string name="title_save_all">Salva tutto</string>
-    <string name="title_show_html">Visualizza originale</string>
-    <string name="title_show_formatted">Mostra formattato</string>
     <string name="title_trash">Cestino</string>
     <string name="title_copy">Copia &#8230;</string>
     <string name="title_copy_to">Copia in &#8230;</string>
@@ -581,6 +577,7 @@
     <string name="title_legend_save">Salva</string>
     <string name="title_legend_delete">Elimina</string>
     <string name="title_legend_count">Quantità</string>
+    <string name="title_legend_folder_type">Tipo di cartella</string>
     <string name="title_hint_folder_actions">Tieni premuto per le opzioni</string>
     <string name="title_hint_folder_sync">Per limitare l\'utilizzo della batteria e della rete, non tutte le cartelle e non tutti i messaggi verranno sincronizzati per impostazione predefinita</string>
     <string name="title_hint_support">Se hai una domanda o un problema, usa il menu di supporto per ottenere aiuto</string>
@@ -619,6 +616,7 @@
     <string name="title_pro_purchase">Acquista</string>
     <string name="title_pro_hint">L\'acquisto di funzionalità a pagamento ti permetterà di utilizzare tutte le attuali e future funzioni, aiuterà il mantenimento e il supporto dell\'app</string>
     <string name="title_pro_price">Consulta <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">queste FAQ</a> riguardo il prezzo delle funzioni a pagamento</string>
+    <string name="title_pro_pending">Acquisto in sospeso</string>
     <string name="title_pro_activated">Tutte le funzionalità sono attivate</string>
     <string name="title_pro_valid">Tutte le funzionalità attivate</string>
     <string name="title_pro_invalid">Risposta non valida</string>
