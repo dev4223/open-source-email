@@ -152,7 +152,6 @@
     <string name="title_advanced_addresses">Öntanımlı olarak adres ayrıntılarını göster</string>
     <string name="title_advanced_attachments_alt">İleti metninden sonra ekleri göster</string>
     <string name="title_advanced_monospaced">İleti metni için tek aralıklı yazı tipi kullan</string>
-    <string name="title_advanced_html">Bilinen kişilerden gelen özgün iletileri otomatik olarak göster</string>
     <string name="title_advanced_images">Bilinen kişiler için görselleri otomatik olarak göster</string>
     <string name="title_advanced_actionbar">İletişim etkinlik çubuğu</string>
     <string name="title_advanced_pull_refresh">Yenilemek için aşağıya çekin</string>
@@ -193,7 +192,6 @@
     <string name="title_advanced_browse_hint">Aşağı doğru kaydırdığında daha çok ileti getirir</string>
     <string name="title_advanced_threading_hint">Birbirlerine bağlı grup iletileri</string>
     <string name="title_advanced_name_email_hint">Devre dışı bırakıldığında, yalnızca adlar mevcut olduğunda gösterilecektir</string>
-    <string name="title_advanced_flags_hint">Not yıldızlı iletileri her zaman yerel olarak tutulacaktır</string>
     <string name="title_advanced_preview_hint">Yalnızca ileti metni indirildiğinde kullanılabilir</string>
     <string name="title_advanced_autoexpand_hint">Bir sohbette yalnızca bir ileti veya yalnızca bir okunmamış ileti olduğunda iletiyi otomatik olarak aç</string>
     <string name="title_advanced_autocollapse_hint">Çoklu genişletilmiş mesajlar her zaman \'geri\' komutuyla kapatılacak</string>
@@ -326,8 +324,6 @@
     <string name="title_show_inline">Ekleri göster</string>
     <string name="title_download_all">Tümünü indir</string>
     <string name="title_save_all">Tümünü kaydet</string>
-    <string name="title_show_html">Orjinali göster</string>
-    <string name="title_show_formatted">Biçimli göster</string>
     <string name="title_trash">Çöp Kutusu</string>
     <string name="title_copy">Kopyala &#8230;</string>
     <string name="title_subscribe">Abonelik</string>
