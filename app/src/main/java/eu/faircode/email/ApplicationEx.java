@@ -110,8 +110,7 @@ public class ApplicationEx extends Application {
             }
         });
 
-        if ("eu.faircode.email".equals(BuildConfig.APPLICATION_ID))
-            setupBugsnag();
+        setupBugsnag();
 
         upgrade(this);
 
@@ -152,7 +151,7 @@ public class ApplicationEx extends Application {
         com.bugsnag.android.Configuration config =
                 new com.bugsnag.android.Configuration("9d2d57476a0614974449a3ec33f2604a");
 
-        if (BuildConfig.DEBUG)
+        if (BuildConfig.DEBUG || !Helper.hasValidFingerprint(this))
             config.setReleaseStage("development");
         else if (BuildConfig.BETA_RELEASE)
             config.setReleaseStage(BuildConfig.PLAY_STORE_RELEASE ? "beta/play" : "beta");
@@ -171,7 +170,7 @@ public class ApplicationEx extends Application {
         ignore.add("java.net.ConnectException");
         ignore.add("java.net.SocketTimeoutException");
         ignore.add("java.net.SocketException");
-        // android.accounts.OperationCanceledException
+        ignore.add("android.accounts.OperationCanceledException");
 
         ignore.add("javax.mail.StoreClosedException");
         ignore.add("javax.mail.FolderClosedException");
@@ -180,7 +179,7 @@ public class ApplicationEx extends Application {
         ignore.add("javax.mail.MessageRemovedException");
         ignore.add("javax.mail.internet.AddressException");
 
-        ignore.add("android.accounts.OperationCanceledException");
+        ignore.add("java.nio.charset.MalformedInputException");
 
         config.setIgnoreClasses(ignore.toArray(new String[0]));
 

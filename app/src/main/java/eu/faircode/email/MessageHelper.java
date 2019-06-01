@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
@@ -601,11 +602,15 @@ public class MessageHelper {
                 return null;
 
             // https://www.ietf.org/rfc/rfc2368.txt
-            MailTo to = MailTo.parse(list.substring(1, list.length() - 1));
-            if (to.getTo() == null)
-                return null;
+            try {
+                MailTo to = MailTo.parse(list.substring(1, list.length() - 1));
+                if (to.getTo() == null)
+                    return null;
 
-            return new Address[]{new InternetAddress(to.getTo().split(",")[0])};
+                return new Address[]{new InternetAddress(to.getTo().split(",")[0])};
+            } catch (android.net.ParseException ex) {
+                throw new IllegalArgumentException(list, ex);
+            }
         } catch (android.net.ParseException ex) {
             Log.w(ex);
             return null;
@@ -657,7 +662,6 @@ public class MessageHelper {
             } catch (UnsupportedEncodingException ex) {
                 Log.w(ex);
             }
-            return decodeMime(subject);
         } else {
             // Fix UTF-8 plain header
             try {
@@ -667,14 +671,15 @@ public class MessageHelper {
                     bytes[i] = (byte) kars[i];
 
                 CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();
-                cs.decode(ByteBuffer.wrap(bytes));
-                subject = new String(bytes, StandardCharsets.UTF_8);
+                CharBuffer out = cs.decode(ByteBuffer.wrap(bytes));
+                if (out.length() > 0)
+                    subject = new String(bytes, StandardCharsets.UTF_8);
             } catch (CharacterCodingException ex) {
                 Log.w(ex);
             }
-
-            return decodeMime(subject);
         }
+
+        return decodeMime(subject);
     }
 
     Long getSize() throws MessagingException {
@@ -967,7 +972,16 @@ public class MessageHelper {
     private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException, FolderClosedException {
         try {
             if (part.isMimeType("multipart/*")) {
-                Multipart multipart = (Multipart) part.getContent();
+                Multipart multipart;
+                final Object content = part.getContent();
+                if (content instanceof Multipart)
+                    multipart = (Multipart) part.getContent();
+                else {
+                    String text = (String) content;
+                    String sample = text.substring(0, Math.min(80, text.length()));
+                    throw new ParseException(content.getClass().getName() + ": " + sample);
+                }
+
                 for (int i = 0; i < multipart.getCount(); i++)
                     try {
                         Part cpart = multipart.getBodyPart(i);

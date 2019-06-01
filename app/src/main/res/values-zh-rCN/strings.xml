@@ -187,6 +187,7 @@
     <string name="title_advanced_debug">调试模式</string>
     <string name="title_advanced_enabled_hint">全球禁用或启用接收消息</string>
     <string name="title_advanced_manual_hint">如果同步功能已禁用，仍然可以通过下拉邮件列表手动同步。这将在一定时间内同步消息和执行操作。</string>
+    <string name="title_advanced_poll_hint">定期同步将每次都比较本地和远程消息，这是一个昂贵的操作，可能导致额外的电池使用，特别是在有很多消息要同步的时候。始终同步将通过持续比较变化以避免发生上述情形。</string>
     <string name="title_advanced_schedule_hint">点击“时间”选项来设置时间</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
@@ -461,6 +462,7 @@
     <string name="title_answer_template_email">$email$ 将被发件人的邮件地址取代</string>
     <string name="title_rule_seen">标记为已读</string>
     <string name="title_rule_unseen">标记为未读</string>
+    <string name="title_rule_snooze">延后</string>
     <string name="title_rule_flag">添加星标</string>
     <string name="title_rule_move">移动</string>
     <string name="title_rule_copy">复制（标签）</string>
@@ -480,6 +482,7 @@
     <string name="title_rule_and">AND</string>
     <string name="title_rule_action">操作</string>
     <string name="title_rule_action_remark">此操作将被应用于抵达文件夹 %1$s 的新消息</string>
+    <string name="title_rule_hours">小时</string>
     <string name="title_rule_folder">文件夹</string>
     <string name="title_rule_identity">身份</string>
     <string name="title_rule_template">回复模板</string>
@@ -621,7 +624,6 @@
     <string name="title_crash_info_remark">请描述应用崩溃时您的操作</string>
     <string-array name="pollIntervalNames">
         <item>总是</item>
-        <item>每半小时</item>
         <item>每小时</item>
         <item>每 2 小时</item>
         <item>每 4 小时</item>

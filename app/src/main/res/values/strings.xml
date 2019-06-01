@@ -234,6 +234,7 @@
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
     <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list. This will synchronize messages and execute operations for a limited time.</string>
+    <string name="title_advanced_poll_hint">Synchronizing periodically will compare local and remote messages each and every time, which is an expensive operation possibly resulting in extra battery usage, especially when there are a lot of messages to synchronize. Always synchronizing will avoid this by continuous listening for changes only.</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
     <string name="title_advanced_metered_hint">Metered connections are generally mobile connections or paid Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Disabling this option will disable receiving and sending messages on mobile internet connections</string>
@@ -540,6 +541,7 @@
 
     <string name="title_rule_seen">Mark read</string>
     <string name="title_rule_unseen">Mark unread</string>
+    <string name="title_rule_snooze">Snooze</string>
     <string name="title_rule_flag">Add star</string>
     <string name="title_rule_move">Move</string>
     <string name="title_rule_copy">Copy (label)</string>
@@ -560,6 +562,7 @@
     <string name="title_rule_and">AND</string>
     <string name="title_rule_action">Action</string>
     <string name="title_rule_action_remark">This action will be applied to new messages arriving in the folder %1$s</string>
+    <string name="title_rule_hours">Hours</string>
     <string name="title_rule_folder">Folder</string>
     <string name="title_rule_identity">Identity</string>
     <string name="title_rule_template">Reply template</string>
@@ -717,7 +720,6 @@
 
     <string-array name="pollIntervalNames">
         <item>Always</item>
-        <item>Every half hour</item>
         <item>Every hour</item>
         <item>Every 2 hours</item>
         <item>Every 4 hours</item>
@@ -725,7 +727,6 @@
 
     <integer-array name="pollIntervalValues" translatable="false">
         <item>0</item>
-        <item>30</item>
         <item>60</item>
         <item>120</item>
         <item>240</item>

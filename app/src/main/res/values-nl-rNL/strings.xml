@@ -195,6 +195,7 @@
     <string name="title_advanced_debug">Foutopsporing modus</string>
     <string name="title_advanced_enabled_hint">Globaal in- of uitschakelen van het ontvangen van berichten</string>
     <string name="title_advanced_manual_hint">Als synchronisatie uitgeschakeld is, is het nog steeds mogelijk om handmatig te synchroniseren door de berichtenlijst naar beneden te trekken. Dit zal berichten synchroniseren en bewerkingen uitvoeren gedurende een beperkte tijd.</string>
+    <string name="title_advanced_poll_hint">Periodiek synchroniseren zal elke keer lokale en externe berichten vergelijken, wat een dure operatie is en kan resulteren in extra batterijgebruik, vooral wanneer er veel berichten zijn om te synchroniseren. Altijd synchroniseren vermijdt dit door voortdurend te luisteren naar veranderingen.</string>
     <string name="title_advanced_schedule_hint">Tik op een tijd om een tijd in te stellen</string>
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Uitschakelen van deze optie zal het ontvangen en verzenden van berichten op mobiele internetverbindingen uitschakelen</string>
@@ -469,6 +470,7 @@
     <string name="title_answer_template_email">$email$ zal worden vervangen door het e-mail adres van de afzender</string>
     <string name="title_rule_seen">Markeer als gelezen</string>
     <string name="title_rule_unseen">Markeren als ongelezen</string>
+    <string name="title_rule_snooze">Sluimeren</string>
     <string name="title_rule_flag">Ster toevoegen</string>
     <string name="title_rule_move">Verplaatsen</string>
     <string name="title_rule_copy">Kopiëren (label)</string>
@@ -488,6 +490,7 @@
     <string name="title_rule_and">EN</string>
     <string name="title_rule_action">Actie</string>
     <string name="title_rule_action_remark">Deze actie zal worden toegepast op nieuwe berichten die aankomen in de map %1$s</string>
+    <string name="title_rule_hours">Uren</string>
     <string name="title_rule_folder">Map</string>
     <string name="title_rule_identity">Identiteit</string>
     <string name="title_rule_template">Antwoord sjabloon</string>
@@ -629,7 +632,6 @@
     <string name="title_crash_info_remark">Beschrijf alstublieft wat u aan het doen was toen de app crashte:</string>
     <string-array name="pollIntervalNames">
         <item>Altijd</item>
-        <item>Elk half uur</item>
         <item>Elk uur</item>
         <item>Elke 2 uur</item>
         <item>Elke 4 uur</item>

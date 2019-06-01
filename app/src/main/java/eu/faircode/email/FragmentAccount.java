@@ -324,18 +324,18 @@ public class FragmentAccount extends FragmentBase {
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!Helper.isPro(getContext())) {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                    lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_SHOW_PRO));
-                    return;
-                }
-
                 int[] colors = getContext().getResources().getIntArray(R.array.colorPicker);
                 ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
                 colorPickerDialog.initialize(R.string.title_account_color, colors, color, 4, colors.length);
                 colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
                     @Override
                     public void onColorSelected(int color) {
+                        if (!Helper.isPro(getContext())) {
+                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                            lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_SHOW_PRO));
+                            return;
+                        }
+
                         setColor(color);
                     }
                 });
@@ -1128,7 +1128,7 @@ public class FragmentAccount extends FragmentBase {
                     etRealm.setText(account == null ? null : account.realm);
 
                     etName.setText(account == null ? null : account.name);
-                    cbNotify.setChecked(account == null ? false : account.notify);
+                    cbNotify.setChecked(account != null && account.notify && Helper.isPro(getContext()));
 
                     cbSynchronize.setChecked(account == null ? true : account.synchronize);
                     cbPrimary.setChecked(account == null ? false : account.primary);

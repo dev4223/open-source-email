@@ -155,7 +155,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int colorWarning;
     private int textColorSecondary;
     private int colorUnread;
-    private boolean dark;
 
     private boolean hasWebView;
     private boolean contacts;
@@ -623,7 +622,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Account color
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
-            vwColor.setVisibility(View.VISIBLE);
+            vwColor.setVisibility(Helper.isPro(context) ? View.VISIBLE : View.INVISIBLE);
 
             vwStatus.setBackgroundColor(
                     Boolean.FALSE.equals(message.dkim) ||
@@ -2515,12 +2514,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuManageKeywords(ActionData data) {
-            if (!Helper.isPro(context)) {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                return;
-            }
-
             Bundle args = new Bundle();
             args.putSerializable("message", data.message);
 
@@ -2562,6 +2555,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+                                    if (!Helper.isPro(context)) {
+                                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                                        return;
+                                    }
+
                                     args.putStringArray("keywords", items.toArray(new String[0]));
                                     args.putBooleanArray("selected", selected);
                                     args.putBooleanArray("dirty", dirty);
@@ -2608,6 +2607,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
+                                                    if (!Helper.isPro(context)) {
+                                                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                                                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                                                        return;
+                                                    }
+
                                                     String keyword = Helper.sanitizeKeyword(etKeyword.getText().toString());
                                                     if (!TextUtils.isEmpty(keyword)) {
                                                         args.putString("keyword", keyword);
@@ -3247,15 +3252,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                             @Override
                             public boolean onMenuItemClick(MenuItem target) {
-                                if (Helper.isPro(context))
-                                    context.startActivity(new Intent(context, ActivityCompose.class)
-                                            .putExtra("action", "reply")
-                                            .putExtra("reference", data.message.id)
-                                            .putExtra("answer", (long) target.getItemId()));
-                                else {
+                                if (!Helper.isPro(context)) {
                                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                                     lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                                    return true;
                                 }
+
+                                context.startActivity(new Intent(context, ActivityCompose.class)
+                                        .putExtra("action", "reply")
+                                        .putExtra("reference", data.message.id)
+                                        .putExtra("answer", (long) target.getItemId()));
                                 return true;
                             }
                         });
@@ -3314,7 +3320,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
-        this.dark = Helper.isDarkTheme(context);
 
         this.hasWebView = Helper.hasWebView(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);

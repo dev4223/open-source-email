@@ -211,6 +211,7 @@
     <string name="title_advanced_debug">Режим отладки</string>
     <string name="title_advanced_enabled_hint">Глобальное включение/отключение получения сообщений</string>
     <string name="title_advanced_manual_hint">Если синхронизация отключена, можно синхронизировать вручную, потянув вниз список сообщений. Это вызовет синхронизацию сообщений и выполнение операций в течение ограниченного времени.</string>
+    <string name="title_advanced_poll_hint">Периодическая проверка будет сравнивать все локальные и удаленные сообщения каждый раз, что является дорогой операцией, которая может привести к высокому потреблению аккумулятора, особенно когда сообщений для синхронизации много. Непрерывная синхронизация избегает этого, непрерывно получая только изменения.</string>
     <string name="title_advanced_schedule_hint">Нажмите на время, чтобы установить его</string>
     <string name="title_advanced_metered_hint">Лимитированные подключения - это обычно мобильные сети или платные Wi-Fi</string>
     <string name="title_advanced_metered_warning">Отключение этой опции отключит получение и отправку сообщений при мобильном подключении к интернету</string>
@@ -485,6 +486,7 @@
     <string name="title_answer_template_email">$email$ будет заменен на адрес электронной почты отправителя</string>
     <string name="title_rule_seen">Отметить прочитанным</string>
     <string name="title_rule_unseen">Отметить непрочитанным</string>
+    <string name="title_rule_snooze">Отложить</string>
     <string name="title_rule_flag">В избранное</string>
     <string name="title_rule_move">Переместить</string>
     <string name="title_rule_copy">Копировать (пометить)</string>
@@ -504,6 +506,7 @@
     <string name="title_rule_and">И</string>
     <string name="title_rule_action">Действие</string>
     <string name="title_rule_action_remark">Это действие будет применяться к новым сообщениям в папке %1$s</string>
+    <string name="title_rule_hours">Часов</string>
     <string name="title_rule_folder">Папка</string>
     <string name="title_rule_identity">Идентификатор</string>
     <string name="title_rule_template">Шаблон ответа</string>
@@ -645,7 +648,6 @@
     <string name="title_crash_info_remark">Пожалуйста, опишите, что Вы делали, когда приложение падало:</string>
     <string-array name="pollIntervalNames">
         <item>Всегда</item>
-        <item>Каждые полчаса</item>
         <item>Каждый час</item>
         <item>Каждые 2 часа</item>
         <item>Каждые 4 часа</item>
