@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import com.sun.mail.util.FolderClosedIOException;
+import com.sun.mail.util.MessageRemovedIOException;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -920,6 +921,8 @@ public class MessageHelper {
                 Log.i("Downloaded attachment size=" + size);
             } catch (FolderClosedIOException ex) {
                 throw new FolderClosedException(ex.getFolder(), "downloadAttachment", ex);
+            } catch (MessageRemovedIOException ex) {
+                throw new MessagingException("downloadAttachment", ex);
             } catch (Throwable ex) {
                 // Reset progress on failure
                 db.attachment().setError(id, Helper.formatThrowable(ex));
@@ -973,14 +976,15 @@ public class MessageHelper {
         try {
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart;
-                final Object content = part.getContent();
+                Object content = part.getContent();
                 if (content instanceof Multipart)
                     multipart = (Multipart) part.getContent();
-                else {
+                else if (content instanceof String) {
                     String text = (String) content;
                     String sample = text.substring(0, Math.min(80, text.length()));
                     throw new ParseException(content.getClass().getName() + ": " + sample);
-                }
+                } else
+                    throw new ParseException(content.getClass().getName());
 
                 for (int i = 0; i < multipart.getCount(); i++)
                     try {
