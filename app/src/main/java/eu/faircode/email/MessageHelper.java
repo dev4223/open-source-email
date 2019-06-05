@@ -599,19 +599,19 @@ public class MessageHelper {
                 return null;
 
             list = MimeUtility.unfold(list);
-            if ("NO".equals(list) || !list.startsWith("<") || !list.endsWith(">"))
+            if ("NO".equals(list))
+                return null;
+
+            String[] to = list.split(",");
+            if (to.length < 1 || !to[0].startsWith("<") || !to[0].endsWith(">"))
                 return null;
 
             // https://www.ietf.org/rfc/rfc2368.txt
-            try {
-                MailTo to = MailTo.parse(list.substring(1, list.length() - 1));
-                if (to.getTo() == null)
-                    return null;
+            MailTo mailto = MailTo.parse(to[0].substring(1, to[0].length() - 1));
+            if (mailto.getTo() == null)
+                return null;
 
-                return new Address[]{new InternetAddress(to.getTo().split(",")[0])};
-            } catch (android.net.ParseException ex) {
-                throw new IllegalArgumentException(list, ex);
-            }
+            return new Address[]{new InternetAddress(mailto.getTo().split(",")[0])};
         } catch (android.net.ParseException ex) {
             Log.w(ex);
             return null;
@@ -663,22 +663,8 @@ public class MessageHelper {
             } catch (UnsupportedEncodingException ex) {
                 Log.w(ex);
             }
-        } else {
-            // Fix UTF-8 plain header
-            try {
-                char[] kars = subject.toCharArray();
-                byte[] bytes = new byte[kars.length];
-                for (int i = 0; i < kars.length; i++)
-                    bytes[i] = (byte) kars[i];
-
-                CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();
-                CharBuffer out = cs.decode(ByteBuffer.wrap(bytes));
-                if (out.length() > 0)
-                    subject = new String(bytes, StandardCharsets.UTF_8);
-            } catch (CharacterCodingException ex) {
-                Log.w(ex);
-            }
-        }
+        } else
+            subject = fixUTF8(subject);
 
         return decodeMime(subject);
     }
@@ -798,6 +784,24 @@ public class MessageHelper {
         return text;
     }
 
+    static String fixUTF8(String text) {
+        try {
+            char[] kars = text.toCharArray();
+            byte[] bytes = new byte[kars.length];
+            for (int i = 0; i < kars.length; i++)
+                bytes[i] = (byte) kars[i];
+
+            CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();
+            CharBuffer out = cs.decode(ByteBuffer.wrap(bytes));
+            if (out.length() > 0)
+                return new String(bytes, StandardCharsets.UTF_8);
+        } catch (CharacterCodingException ex) {
+            Log.w(ex);
+        }
+
+        return text;
+    }
+
     static String getSortKey(Address[] addresses) {
         if (addresses == null || addresses.length == 0)
             return null;
@@ -862,6 +866,8 @@ public class MessageHelper {
                     if ("US-ASCII".equals(Charset.forName(charset).name()) &&
                             !"US-ASCII".equals(charset.toUpperCase()))
                         warnings.add(context.getString(R.string.title_no_charset, charset));
+                    if (part.isMimeType("text/plain") && "US-ASCII".equals(charset.toUpperCase()))
+                        result = fixUTF8(result);
                 }
             } catch (ParseException ex) {
                 Log.w(ex);

@@ -529,7 +529,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvError.setVisibility(View.GONE);
             pbLoading.setVisibility(View.VISIBLE);
 
-            clearExpanded();
+            clearExpanded(null);
 
             paddingAddressBottom.setMinimumHeight(0);
             grpAddressMeta.setVisibility(View.GONE);
@@ -777,13 +777,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (show_expanded)
                     bindExpanded(message);
                 else {
-                    clearExpanded();
+                    clearExpanded(message);
                     properties.setBody(message.id, null);
                 }
             }
         }
 
-        private void clearExpanded() {
+        private void clearExpanded(TupleMessageEx message) {
+            if (compact) {
+                tvFrom.setSingleLine(true);
+                tvSubject.setSingleLine(true);
+            }
+
+            tvPreview.setVisibility(
+                    preview && message != null && !TextUtils.isEmpty(message.preview)
+                            ? View.VISIBLE : View.GONE);
+
             if (vsBody == null)
                 return;
 
@@ -794,11 +803,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
 
-            if (compact) {
-                tvFrom.setSingleLine(true);
-                tvSubject.setSingleLine(true);
-            }
-            
             grpAddresses.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpCalendar.setVisibility(View.GONE);
@@ -881,6 +885,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFrom.setSingleLine(false);
                 tvSubject.setSingleLine(false);
             }
+
+            tvPreview.setVisibility(View.GONE);
 
             ensureExpanded();
 
@@ -1682,7 +1688,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bindExpanded(message);
                     properties.scrollTo(getAdapterPosition());
                 } else
-                    clearExpanded();
+                    clearExpanded(message);
             }
         }
 
@@ -2243,8 +2249,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         protected String onExecute(Context context, Bundle args) throws Throwable {
                             Uri uri = args.getParcelable("uri");
-                            String host = uri.getHost();
-                            return (TextUtils.isEmpty(host) ? null : IPInfo.getOrganization(host));
+                            return IPInfo.getOrganization(uri);
                         }
 
                         @Override
@@ -2987,7 +2992,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             LinearLayoutManager llm = new LinearLayoutManager(context);
             rvFolder.setLayoutManager(llm);
 
-            final AdapterFolder adapter = new AdapterFolder(context, owner, data.message.account, false,
+            final AdapterFolder adapter = new AdapterFolder(context, owner, data.message.account,
                     new AdapterFolder.IFolderSelectedListener() {
                         @Override
                         public void onFolderSelected(TupleFolderEx folder) {
