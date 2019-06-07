@@ -78,6 +78,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private int textColorSecondary;
 
     private List<Long> disabledIds = new ArrayList<>();
+    private List<TupleFolderEx> all = new ArrayList<>();
     private List<TupleFolderEx> items = new ArrayList<>();
 
     private NumberFormat nf = NumberFormat.getNumberInstance();
@@ -187,7 +188,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             vwLevel.setLayoutParams(lp);
 
             ivExpander.setImageLevel(folder.collapsed ? 1 /* more */ : 0 /* less */);
-            ivExpander.setVisibility(account < 0
+            ivExpander.setVisibility(account < 0 || !folder.expander
                     ? View.GONE
                     : folder.child_refs != null && folder.child_refs.size() > 0
                     ? View.VISIBLE : View.INVISIBLE);
@@ -295,7 +296,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private void onCollapse(TupleFolderEx folder) {
             if (listener != null) {
                 folder.collapsed = !folder.collapsed;
-                notifyDataSetChanged();
+                set(all);
                 return;
             }
 
@@ -681,6 +682,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     public void set(@NonNull List<TupleFolderEx> folders) {
         Log.i("Set folders=" + folders.size());
+        all = folders;
 
         final Collator collator = Collator.getInstance(Locale.getDefault());
         collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
@@ -688,37 +690,51 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         if (folders.size() > 0)
             Collections.sort(folders, folders.get(0).getComparator(context));
 
-        List<TupleFolderEx> parents = new ArrayList<>();
-        Map<Long, TupleFolderEx> idFolder = new HashMap<>();
-        Map<Long, List<TupleFolderEx>> parentChilds = new HashMap<>();
+        List<TupleFolderEx> hierarchical;
+        if (account < 0)
+            hierarchical = folders;
+        else {
+            List<TupleFolderEx> parents = new ArrayList<>();
+            Map<Long, TupleFolderEx> idFolder = new HashMap<>();
+            Map<Long, List<TupleFolderEx>> parentChilds = new HashMap<>();
 
-        for (TupleFolderEx folder : folders) {
-            idFolder.put(folder.id, folder);
-            if (folder.parent == null)
-                parents.add(folder);
-            else {
-                if (!parentChilds.containsKey(folder.parent))
-                    parentChilds.put(folder.parent, new ArrayList<TupleFolderEx>());
-                parentChilds.get(folder.parent).add(folder);
+            for (TupleFolderEx folder : folders) {
+                idFolder.put(folder.id, folder);
+                if (folder.parent == null)
+                    parents.add(folder);
+                else {
+                    if (!parentChilds.containsKey(folder.parent))
+                        parentChilds.put(folder.parent, new ArrayList<TupleFolderEx>());
+                    parentChilds.get(folder.parent).add(folder);
+                }
             }
-        }
 
-        TupleFolderEx root = new TupleFolderEx();
-        root.name = "[root]";
-        root.child_refs = parents;
-        for (TupleFolderEx parent : parents)
-            parent.parent_ref = root;
+            TupleFolderEx root = new TupleFolderEx();
+            root.name = "[root]";
+            root.child_refs = parents;
+            for (TupleFolderEx parent : parents)
+                parent.parent_ref = root;
 
-        for (long pid : parentChilds.keySet()) {
-            TupleFolderEx parent = idFolder.get(pid);
-            if (parent != null) {
-                parent.child_refs = parentChilds.get(pid);
-                for (TupleFolderEx child : parent.child_refs)
-                    child.parent_ref = parent;
+            for (long pid : parentChilds.keySet()) {
+                TupleFolderEx parent = idFolder.get(pid);
+                if (parent != null) {
+                    parent.child_refs = parentChilds.get(pid);
+                    for (TupleFolderEx child : parent.child_refs)
+                        child.parent_ref = parent;
+                }
             }
-        }
 
-        List<TupleFolderEx> hierarchical = getHierchical(parents, 0);
+            boolean anyChild = false;
+            for (TupleFolderEx parent : parents)
+                if (parent.child_refs != null && parent.child_refs.size() > 0) {
+                    anyChild = true;
+                    break;
+                }
+            for (TupleFolderEx parent : parents)
+                parent.expander = anyChild;
+
+            hierarchical = getHierarchical(parents, anyChild ? 0 : 1);
+        }
 
         DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new DiffCallback(items, hierarchical), false);
 
@@ -748,14 +764,14 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         diff.dispatchUpdatesTo(this);
     }
 
-    List<TupleFolderEx> getHierchical(List<TupleFolderEx> parents, int indentation) {
+    List<TupleFolderEx> getHierarchical(List<TupleFolderEx> parents, int indentation) {
         List<TupleFolderEx> result = new ArrayList<>();
 
         for (TupleFolderEx parent : parents) {
             parent.indentation = indentation;
             result.add(parent);
             if (!parent.collapsed && parent.child_refs != null)
-                result.addAll(getHierchical(parent.child_refs, indentation + 1));
+                result.addAll(getHierarchical(parent.child_refs, indentation + 1));
         }
 
         return result;

@@ -54,7 +54,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 85,
+        version = 87,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -66,6 +66,8 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
                 EntityAnswer.class,
                 EntityRule.class,
                 EntityLog.class
+        },
+        views = {
         }
 )
 
@@ -92,7 +94,8 @@ public abstract class DB extends RoomDatabase {
     public abstract DaoLog log();
 
     private static DB sInstance;
-    private static ExecutorService executor = Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
+    private static ExecutorService executor = Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors(), Helper.foregroundThreadFactory);
 
     private static final String DB_NAME = "fairemail";
 
@@ -850,6 +853,20 @@ public abstract class DB extends RoomDatabase {
                     public void migrate(SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("UPDATE attachment SET size = NULL WHERE size = 0");
+                    }
+                })
+                .addMigrations(new Migration(85, 86) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("CREATE VIEW `folderview` AS SELECT id, account, name, type, display, unified FROM folder");
+                    }
+                })
+                .addMigrations(new Migration(86, 87) {
+                    @Override
+                    public void migrate(SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("DROP VIEW `folderview`");
                     }
                 })
                 .build();

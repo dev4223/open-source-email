@@ -112,6 +112,7 @@ import org.jsoup.nodes.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -120,8 +121,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -182,8 +181,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private NumberFormat NF = NumberFormat.getNumberInstance();
     private DateFormat TF;
     private DateFormat DTF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
-
-    private static ExecutorService executor = Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
 
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             "utm_source",
@@ -654,7 +651,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivType.setImageResource(message.drafts > 0
                     ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
             ivType.setVisibility(message.drafts > 0 ||
-                    (viewType == ViewType.UNIFIED && !EntityFolder.INBOX.equals(message.folderType))
+                    (viewType == ViewType.UNIFIED && !EntityFolder.INBOX.equals(message.folderType)) ||
+                    (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
                     ? View.VISIBLE : View.GONE);
             ivSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
@@ -1606,6 +1604,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     channel.setGroup("contacts");
                     channel.setDescription(from.getPersonal());
                     channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+                    channel.enableLights(true);
                     nm.createNotificationChannel(channel);
                     onActionEditChannel();
                 }
@@ -2227,14 +2226,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 final EditText etLink = view.findViewById(R.id.etLink);
                 TextView tvInsecure = view.findViewById(R.id.tvInsecure);
                 final TextView tvOwner = view.findViewById(R.id.tvOwner);
-                Group grpOwner = view.findViewById(R.id.grpOwner);
+                final Group grpOwner = view.findViewById(R.id.grpOwner);
 
                 tvTitle.setText(title);
                 tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
 
                 etLink.setText(_uri.toString());
                 tvInsecure.setVisibility("http".equals(_uri.getScheme()) ? View.VISIBLE : View.GONE);
-                grpOwner.setVisibility(paranoid ? View.VISIBLE : View.GONE);
+                grpOwner.setVisibility(View.GONE);
 
                 if (paranoid) {
                     Bundle args = new Bundle();
@@ -2244,6 +2243,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         protected void onPreExecute(Bundle args) {
                             tvOwner.setText("…");
+                            grpOwner.setVisibility(View.VISIBLE);
                         }
 
                         @Override
@@ -2259,11 +2259,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            tvOwner.setText(ex.getMessage());
+                            if (ex instanceof UnknownHostException)
+                                grpOwner.setVisibility(View.GONE);
+                            else
+                                tvOwner.setText(ex.getMessage());
                         }
                     }.execute(context, owner, args, "link:domain");
                 }
-
 
                 new DialogBuilderLifecycle(context, owner)
                         .setView(view)
@@ -3345,7 +3347,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.debug = prefs.getBoolean("debug", false);
 
         AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(DIFF_CALLBACK)
-                .setBackgroundThreadExecutor(executor)
                 .build();
         this.differ = new AsyncPagedListDiffer<>(new AdapterListUpdateCallback(this), config);
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {

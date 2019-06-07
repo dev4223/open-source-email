@@ -93,6 +93,7 @@ public class ViewModelMessages extends ViewModel {
 
                 case FOLDER:
                     PagedList.Config configFolder = new PagedList.Config.Builder()
+                            .setInitialLoadSizeHint(LOCAL_PAGE_SIZE)
                             .setPageSize(LOCAL_PAGE_SIZE)
                             .setPrefetchDistance(REMOTE_PAGE_SIZE)
                             .build();
@@ -146,14 +147,6 @@ public class ViewModelMessages extends ViewModel {
 
             model = new Model(args, builder.build(), boundary);
             models.put(viewType, model);
-
-            if (viewType != AdapterMessage.ViewType.THREAD)
-                // Keep list up-to-date for previous/next navigation
-                model.list.observeForever(new Observer<PagedList<TupleMessageEx>>() {
-                    @Override
-                    public void onChanged(PagedList<TupleMessageEx> messages) {
-                    }
-                });
         }
 
         owner.getLifecycle().addObserver(new LifecycleObserver() {
