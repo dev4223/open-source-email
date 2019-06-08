@@ -24,7 +24,9 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
 
+import androidx.annotation.RequiresApi;
 import androidx.room.Ignore;
 
 import java.io.Serializable;
@@ -35,6 +37,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class TupleFolderEx extends EntityFolder implements Serializable {
+    public Long accountId;
     public Integer accountOrder;
     public String accountName;
     public Integer accountColor;
@@ -61,6 +64,7 @@ public class TupleFolderEx extends EntityFolder implements Serializable {
         if (obj instanceof TupleFolderEx) {
             TupleFolderEx other = (TupleFolderEx) obj;
             return (super.equals(obj) &&
+                    Objects.equals(this.accountId, other.accountId) &&
                     Objects.equals(this.accountName, other.accountName) &&
                     Objects.equals(this.accountColor, other.accountColor) &&
                     Objects.equals(this.accountState, other.accountState) &&
@@ -72,28 +76,26 @@ public class TupleFolderEx extends EntityFolder implements Serializable {
             return false;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void createNotificationChannel(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-            NotificationChannelGroup group = new NotificationChannelGroup(accountName, accountName);
-            nm.createNotificationChannelGroup(group);
+        NotificationChannelGroup group = new NotificationChannelGroup("group." + accountId, accountName);
+        nm.createNotificationChannelGroup(group);
 
-            NotificationChannel channel = new NotificationChannel(
-                    getNotificationChannelId(id), getDisplayName(context),
-                    NotificationManager.IMPORTANCE_HIGH);
-            channel.setGroup(accountName);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            channel.enableLights(true);
-            nm.createNotificationChannel(channel);
-        }
+        NotificationChannel channel = new NotificationChannel(
+                getNotificationChannelId(id), getDisplayName(context),
+                NotificationManager.IMPORTANCE_HIGH);
+        channel.setGroup(group.getId());
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        channel.enableLights(true);
+        nm.createNotificationChannel(channel);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void deleteNotificationChannel(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            nm.deleteNotificationChannel(getNotificationChannelId(id));
-        }
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.deleteNotificationChannel(getNotificationChannelId(id));
     }
 
     @Override

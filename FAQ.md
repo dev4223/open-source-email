@@ -30,6 +30,7 @@ For authorizing:
 * A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail.
 * Encryption with [YubiKey](https://www.yubico.com/) results into an infinite loop. FairEmail follows the latest version of the [OpenKeychain API](https://github.com/open-keychain/openpgp-api), so this is likely being caused by an external bug.
+* A bug in the Nova Launcher lets FairEmail crash with a *java.lang.StackOverflowError* when the Nova Launcher has access to the accessibility service.
 
 ## Planned features
 
@@ -80,7 +81,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
 * [(7) Why are sent messages not appearing sent folder?](#user-content-faq7)
 * [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
-* [(9) What are identities?](#user-content-faq9)
+* [(9) What are identities / how do I add an alias?](#user-content-faq9)
 * [(11) Why is POP not supported?](#user-content-faq11)
 * [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
 * [(12) How does encryption/decryption work?](#user-content-faq12)
@@ -372,7 +373,7 @@ Please see [here](#frequently-requested-features) about ActiveSync support.
 <br />
 
 <a name="faq9"></a>
-**(9) What are identities?**
+**(9) What are identities / how do I add an alias?**
 
 Identities represent email addresses you are sending *from*.
 
