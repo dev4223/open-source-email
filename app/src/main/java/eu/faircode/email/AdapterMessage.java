@@ -1089,7 +1089,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     ActionData data = new ActionData();
                     data.hasJunk = hasJunk;
-                    data.delete = (inTrash || !hasTrash);
+                    data.delete = (inTrash || !hasTrash || inOutbox);
                     data.message = message;
                     bnvActions.setTag(data);
 
@@ -1098,13 +1098,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
                             (inTrash && (message.uid != null || message.msgid != null)) ||
                             (!inTrash && hasTrash && message.uid != null));
-                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(data.delete ? R.string.title_delete : R.string.title_trash);
+                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(
+                            data.delete ? R.string.title_delete : R.string.title_trash);
 
-                    bnvActions.getMenu().findItem(R.id.action_move).setVisible(message.uid != null || inOutbox);
-                    bnvActions.getMenu().findItem(R.id.action_move).setTitle(inOutbox ? R.string.title_folder_drafts : R.string.title_move);
+                    bnvActions.getMenu().findItem(R.id.action_move).setVisible(
+                            message.uid != null || inOutbox);
+                    bnvActions.getMenu().findItem(R.id.action_move).setTitle(
+                            inOutbox ? R.string.title_folder_drafts : R.string.title_move);
+                    bnvActions.getMenu().findItem(R.id.action_move).setIcon(
+                            inOutbox ? R.drawable.baseline_drafts_24 : R.drawable.baseline_folder_24);
 
-                    bnvActions.getMenu().findItem(R.id.action_archive).setVisible(message.uid != null && (inJunk || (!inArchive && hasArchive)));
-                    bnvActions.getMenu().findItem(R.id.action_archive).setTitle(inJunk ? R.string.title_folder_inbox : R.string.title_archive);
+                    bnvActions.getMenu().findItem(R.id.action_archive).setVisible(
+                            message.uid != null && (inJunk || (!inArchive && hasArchive)));
+                    bnvActions.getMenu().findItem(R.id.action_archive).setTitle(
+                            inJunk ? R.string.title_folder_inbox : R.string.title_archive);
 
                     bnvActions.getMenu().findItem(R.id.action_reply).setEnabled(message.content);
                     bnvActions.getMenu().findItem(R.id.action_reply).setVisible(!inOutbox);
@@ -1873,7 +1880,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 public void onDownloadStart(
                         String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
                     Log.i("Download url=" + url + " mime type=" + mimetype);
+
                     Uri uri = Uri.parse(url);
+                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                        return;
+
                     Helper.view(context, owner, uri, true);
                 }
             });
@@ -1887,6 +1898,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Log.i("Long press url=" + result.getExtra());
 
                         Uri uri = Uri.parse(result.getExtra());
+                        if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                            return false;
+
                         Helper.view(context, owner, uri, true);
 
                         return true;
@@ -2947,6 +2961,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                 return null;
 
                                             EntityFolder folder = db.folder().getFolder(message.folder);
+                                            if (folder == null)
+                                                return null;
 
                                             if (EntityFolder.OUTBOX.equals(folder.type)) {
                                                 db.message().deleteMessage(id);
