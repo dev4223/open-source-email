@@ -13,7 +13,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 537
-        versionName "1.537.1"
+        versionName "1.537.2"
         archivesBaseName = "FairEmail-v$versionName"
 
         javaCompileOptions {
