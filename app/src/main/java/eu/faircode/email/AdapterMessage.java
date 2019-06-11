@@ -150,6 +150,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private int dp36;
     private int colorPrimary;
+    private int colorPrimaryDark;
     private int colorAccent;
     private int colorWarning;
     private int textColorSecondary;
@@ -616,7 +617,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setTextColor(colorUnseen);
             tvSize.setTextColor(colorUnseen);
             tvTime.setTextColor(colorUnseen);
-            tvCount.setTextColor(colorPrimary);
+            tvCount.setTextColor(colorPrimaryDark);
 
             // Account color
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
@@ -3340,6 +3341,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         this.dp36 = Helper.dp2pixels(context, 36);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+        this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
