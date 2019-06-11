@@ -617,7 +617,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFrom.setTextColor(colorUnseen);
             tvSize.setTextColor(colorUnseen);
             tvTime.setTextColor(colorUnseen);
-            tvCount.setTextColor(colorPrimaryDark);
+            tvCount.setTextColor(colorAccent);
 
             // Account color
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
