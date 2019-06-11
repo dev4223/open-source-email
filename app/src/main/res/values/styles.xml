@@ -24,6 +24,7 @@
         <item name="colorDrawerScrim">@color/lightColorDrawerScrim</item>
         <item name="colorDrawerText">@color/lightColorDrawerText</item>
         <item name="colorDrawerBackground">@color/lightColorDrawerBackground</item>
+        <item name="dateColorDrawerBackground">@color/lightColorDrawerBackground</item>
 
         <item name="activatableItemBackground">@drawable/activatable_item_background_light</item>
 
@@ -50,6 +51,7 @@
         <item name="colorDrawerScrim">@color/darkColorDrawerScrim</item>
         <item name="colorDrawerText">@color/darkColorDrawerText</item>
         <item name="colorDrawerBackground">@color/darkColorDrawerBackground</item>
+        <item name="dateColorDrawerBackground">@color/darkColorDrawerBackground</item>
 
         <item name="activatableItemBackground">@drawable/activatable_item_background_dark</item>
 
