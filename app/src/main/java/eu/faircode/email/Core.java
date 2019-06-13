@@ -546,17 +546,23 @@ class Core {
 
             Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
 
-            if (folder.id.equals(message.folder)) {
-                Log.i(folder.name + " Setting id=" + message.id + " uid=" + uid);
-                db.message().setMessageUid(message.id, uid);
-            } else
-                try {
-                    db.beginTransaction();
+            try {
+                db.beginTransaction();
 
+                List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
+
+                if (folder.id.equals(message.folder)) {
+                    Log.i(folder.name + " Setting id=" + message.id + " uid=" + uid);
+                    db.message().setMessageUid(message.id, uid);
+
+                    runRules(context, imessage, message, rules);
+                } else {
                     // Cross account move
                     if (tmpid != null) {
                         Log.i(folder.name + " Setting id=" + tmpid + " (tmp) appended uid=" + uid);
                         db.message().setMessageUid(tmpid, uid);
+
+                        runRules(context, imessage, db.message().getMessage(tmpid), rules);
                     }
 
                     // Mark source read
@@ -568,11 +574,12 @@ class Core {
                     // Delete source
                     Log.i(folder.name + " queuing DELETE id=" + message.id);
                     EntityOperation.queue(context, message, EntityOperation.DELETE);
-
-                    db.setTransactionSuccessful();
-                } finally {
-                    db.endTransaction();
                 }
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
         } catch (Throwable ex) {
             if (folder.id.equals(message.folder))
                 db.message().setMessageUid(message.id, message.uid);
@@ -684,6 +691,7 @@ class Core {
             Log.i(folder.name + " queuing ADD id=" + message.id + ":" + target);
 
             EntityOperation operation = new EntityOperation();
+            operation.account = message.account;
             operation.folder = target;
             operation.message = message.id;
             operation.name = EntityOperation.ADD;
@@ -1540,7 +1548,7 @@ class Core {
         }
     }
 
-    private static void runRules(Context context, IMAPMessage imessage, EntityMessage message, List<EntityRule> rules) {
+    private static void runRules(Context context, Message imessage, EntityMessage message, List<EntityRule> rules) {
         if (!Helper.isPro(context))
             return;
 
@@ -2238,7 +2246,8 @@ class Core {
 
         void error(Throwable ex) {
             if (ex instanceof MessagingException &&
-                    (ex.getCause() instanceof SocketException ||
+                    ("connection failure".equals(ex.getMessage()) ||
+                            ex.getCause() instanceof SocketException ||
                             ex.getCause() instanceof ConnectionException))
                 recoverable = false;
 

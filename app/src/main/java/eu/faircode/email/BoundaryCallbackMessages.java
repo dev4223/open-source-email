@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 
+import androidx.annotation.NonNull;
 import androidx.paging.PagedList;
 import androidx.preference.PreferenceManager;
 
@@ -89,7 +90,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
         void onLoaded(int fetched);
 
-        void onError(Throwable ex);
+        void onException(@NonNull Throwable ex);
     }
 
     BoundaryCallbackMessages(Context context, long folder, boolean server, String query, int pageSize) {
@@ -113,16 +114,16 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     @Override
     public void onZeroItemsLoaded() {
         Log.i("Boundary zero loaded");
-        queue_load();
+        queue_load(true);
     }
 
     @Override
     public void onItemAtEndLoaded(final TupleMessageEx itemAtEnd) {
         Log.i("Boundary at end");
-        queue_load();
+        queue_load(false);
     }
 
-    private void queue_load() {
+    private void queue_load(final boolean zero) {
         executor.submit(new Runnable() {
             private int fetched;
 
@@ -150,7 +151,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                intf.onError(ex);
+                                intf.onException(ex);
                             }
                         });
                 } finally {
@@ -158,7 +159,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                intf.onLoaded(fetched);
+                                intf.onLoaded(zero ? fetched : Integer.MAX_VALUE);
                             }
                         });
                 }
@@ -169,19 +170,21 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     private int load_device() {
         DB db = DB.getInstance(context);
 
+        if (messages == null) {
+            messages = db.message().getMessageIdsByFolder(folder);
+            Log.i("Boundary device folder=" + folder + " query=" + query + " messages=" + messages.size());
+        }
+
         int found = 0;
         try {
             db.beginTransaction();
-
-            if (messages == null) {
-                messages = db.message().getMessageIdsByFolder(folder);
-                Log.i("Boundary device folder=" + folder + " query=" + query + " messages=" + messages.size());
-            }
 
             for (int i = index; i < messages.size() && found < pageSize && !destroyed; i++) {
                 index = i + 1;
 
                 EntityMessage message = db.message().getMessage(messages.get(i));
+                if (message == null)
+                    continue;
 
                 boolean match = false;
                 if (query == null)
@@ -244,7 +247,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             try {
                 // Check connectivity
                 if (!ConnectionHelper.getNetworkState(context).isSuitable())
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
+                    throw new IllegalStateException(context.getString(R.string.title_no_internet));
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
@@ -381,6 +384,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 }
             }
 
+        List<EntityRule> rules = db.rule().getEnabledRules(browsable.id);
+
         int found = 0;
         while (index >= 0 && found < pageSize && !destroyed) {
             Log.i("Boundary server index=" + index);
@@ -411,7 +416,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                     account, browsable,
                                     ifolder, (IMAPMessage) isub[j],
                                     true,
-                                    new ArrayList<EntityRule>());
+                                    rules);
                             found++;
                         }
                         db.message().setMessageFound(message.account, message.thread);

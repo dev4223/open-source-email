@@ -61,7 +61,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -123,7 +122,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private ImageButton ibHintSwipe;
     private ImageButton ibHintSelect;
     private TextView tvNoEmail;
-    private ImageView ivBusy;
     private FixedRecyclerView rvMessage;
     private SeekBar seekBar;
     private ImageButton ibDown;
@@ -168,6 +166,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private boolean connected;
     private boolean reset = false;
     private String searching = null;
+    private boolean initialized = false;
     private boolean loading = false;
     private boolean manual = false;
     private Integer lastUnseen = null;
@@ -270,7 +269,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         ibHintSwipe = view.findViewById(R.id.ibHintSwipe);
         ibHintSelect = view.findViewById(R.id.ibHintSelect);
         tvNoEmail = view.findViewById(R.id.tvNoEmail);
-        ivBusy = view.findViewById(R.id.ivBusy);
         rvMessage = view.findViewById(R.id.rvMessage);
         seekBar = view.findViewById(R.id.seekBar);
         ibDown = view.findViewById(R.id.ibDown);
@@ -336,7 +334,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         rvMessage.setHasFixedSize(false);
         //rvMessage.setItemViewCacheSize(10);
         //rvMessage.getRecycledViewPool().setMaxRecycledViews(0, 10);
-        final LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        final LinearLayoutManager llm = new LinearLayoutManager(getContext()) {
+            Rect parentRect = new Rect();
+            Rect childRect = new Rect();
+
+            @Override
+            public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child, @NonNull Rect rect, boolean immediate) {
+                return requestChildRectangleOnScreen(parent, child, rect, immediate, false);
+            }
+
+            @Override
+            public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child, @NonNull Rect rect, boolean immediate, boolean focusedChildVisible) {
+                parent.getHitRect(parentRect);
+                child.getHitRect(childRect);
+                if (Rect.intersects(parentRect, childRect))
+                    return false;
+                return super.requestChildRectangleOnScreen(parent, child, rect, immediate, focusedChildVisible);
+            }
+        };
         rvMessage.setLayoutManager(llm);
 
         DividerItemDecoration itemDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
@@ -755,7 +770,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         updateSwipeRefresh();
 
-        ivBusy.setVisibility(View.GONE);
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
         IntentFilter iff = new IntentFilter();
         iff.addAction(SimpleTask.ACTION_TASK_COUNT);
@@ -776,16 +790,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public void onReceive(Context context, Intent intent) {
             busy = intent.getIntExtra("count", 0);
-            if (busy == 0)
-                ivBusy.setVisibility(View.GONE);
-            else
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (busy > 0)
-                            ivBusy.setVisibility(View.VISIBLE);
-                    }
-                }, 1500);
+            if (busy == 0) {
+                if (initialized && !loading)
+                    pbWait.setVisibility(View.GONE);
+            } else
+                pbWait.setVisibility(View.VISIBLE);
         }
     };
 
@@ -842,7 +851,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 long fid = args.getLong("folder");
 
                 if (!ConnectionHelper.getNetworkState(context).isSuitable())
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_internet));
+                    throw new IllegalStateException(context.getString(R.string.title_no_internet));
 
                 boolean now = true;
 
@@ -884,7 +893,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 manual = false;
                 swipeRefresh.setRefreshing(false);
-                if (ex instanceof IllegalArgumentException)
+
+                if (ex instanceof IllegalStateException) {
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    final Intent intent = ConnectionHelper.getSettingsIntent(getContext());
+                    if (intent != null)
+                        snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                getContext().startActivity(intent);
+                            }
+                        });
+                    snackbar.show();
+                } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
                     Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
@@ -2691,26 +2712,33 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public void onLoading() {
             loading = true;
             pbWait.setVisibility(View.VISIBLE);
-            tvNoEmail.setVisibility(View.GONE);
         }
 
         @Override
         public void onLoaded(int fetched) {
             loading = false;
 
-            Integer submitted = (Integer) rvMessage.getTag();
-            if (submitted == null)
-                return;
+            if (initialized && busy == 0)
+                pbWait.setVisibility(View.GONE);
 
-            pbWait.setVisibility(View.GONE);
-            if (submitted + fetched == 0)
-                tvNoEmail.setVisibility(View.VISIBLE);
+            tvNoEmail.setVisibility(fetched == 0 ? View.VISIBLE : View.GONE);
         }
 
         @Override
-        public void onError(Throwable ex) {
+        public void onException(@NonNull Throwable ex) {
             if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                if (ex instanceof IllegalArgumentException)
+                if (ex instanceof IllegalStateException) {
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    final Intent intent = ConnectionHelper.getSettingsIntent(getContext());
+                    if (intent != null)
+                        snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                getContext().startActivity(intent);
+                            }
+                        });
+                    snackbar.show();
+                } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
                     new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
@@ -2742,17 +2770,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
             });
 
-            rvMessage.setTag(messages.size());
-
-            if (!loading) {
+            initialized = true;
+            if (!loading && busy == 0)
                 pbWait.setVisibility(View.GONE);
-                if (messages.size() == 0)
-                    tvNoEmail.setVisibility(View.VISIBLE);
-            }
-            if (messages.size() > 0) {
-                tvNoEmail.setVisibility(View.GONE);
-                grpReady.setVisibility(View.VISIBLE);
-            }
+
+            if (viewType != AdapterMessage.ViewType.SEARCH)
+                tvNoEmail.setVisibility(messages.size() == 0 && !loading ? View.VISIBLE : View.GONE);
+            grpReady.setVisibility(View.VISIBLE);
         }
     };
 

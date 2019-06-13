@@ -571,8 +571,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Selected / disabled
             view.setActivated(selectionTracker != null && selectionTracker.isSelected(message.id));
-            view.setAlpha(message.uid == null && !EntityFolder.OUTBOX.equals(message.folderType)
-                    ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(
+                    (EntityFolder.OUTBOX.equals(message.folderType)
+                            ? message.identitySynchronize == null || !message.identitySynchronize
+                            : message.uid == null)
+                            ? Helper.LOW_LIGHT : 1.0f);
 
             // Duplicate
             if (viewType == ViewType.THREAD) {
@@ -1999,7 +2002,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 args.putBoolean("show_images", show_images);
                 args.putBoolean("show_quotes", show_quotes);
                 args.putInt("zoom", zoom);
-                bodyTask.execute(context, owner, args, "message:body");
+                bodyTask.setCount(false).execute(context, owner, args, "message:body");
             }
         }
 
@@ -3308,11 +3311,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         Long getKey() {
             return getKeyAtPosition(getAdapterPosition());
-        }
-
-        private class OriginalMessage {
-            String html;
-            boolean has_images;
         }
 
         private class ActionData {
