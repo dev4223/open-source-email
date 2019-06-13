@@ -273,7 +273,7 @@ public class FragmentIdentity extends FragmentBase {
             }
         });
 
-        vwColor.setBackgroundColor(color);
+        setColor(color);
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -624,7 +624,6 @@ public class FragmentIdentity extends FragmentBase {
                         !user.equals(identity.user) || !password.equals(identity.password) ||
                         !Objects.equals(realm, identityRealm) ||
                         use_ip != identity.use_ip));
-                boolean reload = (identity == null || identity.synchronize != synchronize || check);
 
                 Long last_connected = null;
                 if (identity != null && synchronize == identity.synchronize)
@@ -718,9 +717,6 @@ public class FragmentIdentity extends FragmentBase {
                 } finally {
                     db.endTransaction();
                 }
-
-                if (reload)
-                    ServiceSynchronize.reload(context, "save identity");
 
                 return null;
             }
@@ -995,7 +991,7 @@ public class FragmentIdentity extends FragmentBase {
     }
 
     private void setColor(int color) {
-        FragmentIdentity.this.color = color;
+        this.color = color;
 
         GradientDrawable border = new GradientDrawable();
         border.setColor(color);
