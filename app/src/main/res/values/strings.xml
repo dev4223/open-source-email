@@ -172,6 +172,7 @@
     <string name="title_advanced_sync_folders">Synchronize folder list</string>
 
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
+    <string name="title_advanced_plain_only">Send plain text only by default</string>
     <string name="title_advanced_autoresize">Automatically resize attached and embedded images</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_autosend">Confirm sending messages</string>
@@ -179,8 +180,10 @@
 
     <string name="title_advanced_metered">Use metered connections</string>
     <string name="title_advanced_download">Automatically download messages and attachments on a metered connection up to</string>
-    <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_roaming">Download messages and attachments while roaming</string>
+    <string name="title_advanced_rlah">Roam like at home</string>
+    <string name="title_advanced_manage_connectivity">Manage connectivity</string>
+
     <string name="title_advanced_browse">Browse messages on the server</string>
 
     <string name="title_advanced_startup">Show on start screen</string>
@@ -280,6 +283,7 @@
     <string name="title_account_name">Account name</string>
     <string name="title_account_name_hint">Used to differentiate folders</string>
     <string name="title_account_interval_hint">Frequency of refreshing the connection for push messages or frequency of checking for new messages</string>
+    <string name="title_account_partial_fetch_hint">Disable this only in case of empty messages or corrupt attachments</string>
     <string name="title_account_signature">Signature text</string>
     <string name="title_account_color">Color</string>
     <string name="title_account_notify">Separate notifications</string>
@@ -308,6 +312,7 @@
     <string name="title_primary_account">Primary (default account)</string>
     <string name="title_primary_identity">Primary (default identity)</string>
     <string name="title_keep_alive_interval">Keep-alive/poll interval (minutes)</string>
+    <string name="title_partial_fetch" translatable="false">Partial fetch</string>
     <string name="title_check">Check</string>
     <string name="title_no_name">Name missing</string>
     <string name="title_no_email">Email address missing</string>

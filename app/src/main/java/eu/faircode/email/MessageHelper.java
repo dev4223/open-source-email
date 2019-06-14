@@ -48,6 +48,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.TimeZone;
 
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
@@ -66,6 +67,7 @@ import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -95,6 +97,7 @@ public class MessageHelper {
         System.setProperty("mail.mime.decodefilename", "true");
         System.setProperty("mail.mime.encodefilename", "true");
         System.setProperty("mail.mime.allowutf8", "false"); // InternetAddress, MimeBodyPart, MimeUtility
+        System.setProperty("mail.mime.cachemultipart", "false");
 
         // https://docs.oracle.com/javaee/6/api/javax/mail/internet/MimeMultipart.html
         System.setProperty("mail.mime.multipart.ignoremissingboundaryparameter", "true"); // javax.mail.internet.ParseException: In parameter list
@@ -249,7 +252,10 @@ public class MessageHelper {
         if (message.subject != null)
             imessage.setSubject(message.subject);
 
-        imessage.setSentDate(new Date());
+        MailDateFormat mdf = new MailDateFormat();
+        mdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        imessage.setHeader("Date", mdf.format(new Date()));
+        //imessage.setSentDate(new Date());
 
         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
 
@@ -831,6 +837,7 @@ public class MessageHelper {
 
         String getHtml(Context context) throws MessagingException, IOException {
             if (plain == null && html == null) {
+                Log.i("No body part");
                 warnings.add(context.getString(R.string.title_no_body));
                 return null;
             }
@@ -841,6 +848,7 @@ public class MessageHelper {
 
             try {
                 Object content = part.getContent();
+                Log.i("Content class=" + (content == null ? null : content.getClass().getName()));
                 if (content instanceof String)
                     result = (String) content;
                 else if (content instanceof InputStream)

@@ -20,12 +20,15 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,6 +36,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -49,6 +53,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
     private Spinner spDownload;
     private SwitchCompat swRoaming;
     private SwitchCompat swRlah;
+    private Button btnManage;
     private TextView tvConnectionType;
     private TextView tvConnectionRoaming;
 
@@ -70,6 +75,7 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         spDownload = view.findViewById(R.id.spDownload);
         swRoaming = view.findViewById(R.id.swRoaming);
         swRlah = view.findViewById(R.id.swRlah);
+        btnManage = view.findViewById(R.id.btnManage);
 
         tvConnectionType = view.findViewById(R.id.tvConnectionType);
         tvConnectionRoaming = view.findViewById(R.id.tvConnectionRoaming);
@@ -114,6 +120,18 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("rlah", checked).apply();
                 ServiceSynchronize.reload(getContext(), "rlah=" + checked);
+            }
+        });
+
+        final Intent manage = getIntentConnectivity();
+        btnManage.setVisibility(
+                manage.resolveActivity(getContext().getPackageManager()) == null
+                        ? View.GONE : View.VISIBLE);
+
+        btnManage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(manage);
             }
         });
 
@@ -200,6 +218,13 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
 
         swRoaming.setChecked(prefs.getBoolean("roaming", true));
         swRlah.setChecked(prefs.getBoolean("rlah", true));
+    }
+
+    private static Intent getIntentConnectivity() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+            return new Intent(Settings.ACTION_WIRELESS_SETTINGS);
+        else
+            return new Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY);
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
