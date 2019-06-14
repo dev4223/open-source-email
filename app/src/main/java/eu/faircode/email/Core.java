@@ -43,7 +43,6 @@ import com.bugsnag.android.Bugsnag;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
-import com.sun.mail.imap.AppendUID;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
@@ -146,7 +145,6 @@ class Core {
                     crumb.put("args", op.args);
                     crumb.put("folder", folder.type);
                     crumb.put("free", Integer.toString(Log.getFreeMemMb()));
-                    crumb.put("UIDPLUS", Boolean.toString(((IMAPStore) istore).hasCapability("UIDPLUS")));
                     Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.LOG, crumb);
 
                     // Fetch most recent copy of message
@@ -157,28 +155,21 @@ class Core {
                     JSONArray jargs = new JSONArray(op.args);
 
                     try {
-                        if (message == null &&
-                                !EntityOperation.SYNC.equals(op.name) &&
-                                !EntityOperation.SUBSCRIBE.equals(op.name))
-                            throw new MessageRemovedException();
-
                         db.operation().setOperationError(op.id, null);
-                        if (message != null)
-                            db.message().setMessageError(message.id, null);
-
-                        if (message != null && message.uid == null &&
-                                !(EntityOperation.ADD.equals(op.name) ||
-                                        EntityOperation.ANSWERED.equals(op.name) ||
-                                        EntityOperation.DELETE.equals(op.name) ||
-                                        EntityOperation.SEND.equals(op.name) ||
-                                        EntityOperation.SYNC.equals(op.name) ||
-                                        EntityOperation.SUBSCRIBE.equals(op.name)))
-                            throw new IllegalArgumentException(op.name + " without uid " + op.args);
-
-                        // Operations should use database transaction when needed
-
                         if (!EntityOperation.SYNC.equals(op.name))
                             db.operation().setOperationState(op.id, "executing");
+
+                        if (message == null) {
+                            if (!EntityOperation.SYNC.equals(op.name) &&
+                                    !EntityOperation.SUBSCRIBE.equals(op.name))
+                                throw new MessageRemovedException();
+                        } else {
+                            db.message().setMessageError(message.id, null);
+                            if (!EntityOperation.ADD.equals(op.name))
+                                ensureUid(context, folder, message, (IMAPFolder) ifolder);
+                        }
+
+                        // Operations should use database transaction when needed
 
                         switch (op.name) {
                             case EntityOperation.SEEN:
@@ -319,6 +310,34 @@ class Core {
         }
     }
 
+    private static void ensureUid(Context context, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException {
+        DB db = DB.getInstance(context);
+
+        // Get uid when needed
+        if (message.uid == null) {
+            Log.i(folder.name + " ensure uid msgid=" + message.msgid);
+
+            if (TextUtils.isEmpty(message.msgid))
+                throw new IllegalArgumentException("Message without ID");
+
+            Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
+            if (imessages == null || imessages.length == 0)
+                throw new IllegalArgumentException("Message not found");
+
+            long uid = -1;
+            for (Message iexisting : imessages) {
+                long muid = ifolder.getUID(iexisting);
+                Log.i(folder.name + " found uid=" + muid);
+                // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
+                if (muid > uid)
+                    uid = muid;
+            }
+
+            message.uid = uid;
+            db.message().setMessageUid(message.id, uid);
+        }
+    }
+
     private static void onSeen(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, JSONException {
         // Mark message (un)seen
         DB db = DB.getInstance(context);
@@ -436,154 +455,119 @@ class Core {
         DB db = DB.getInstance(context);
 
         // Get arguments
-        Long tmpid = (jargs.length() > 0 && !jargs.isNull(0) ? jargs.getLong(0) : null);
+        long target = (jargs.length() > 0 ? jargs.getLong(0) : folder.id);
         boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
-        boolean across = (jargs.length() > 2 && jargs.getBoolean(2));
 
-        try {
-            if (EntityFolder.DRAFTS.equals(folder.type) &&
-                    !folder.id.equals(message.folder) &&
-                    !across) {
-                Log.i("Drafts moved folder=" + message.folder);
-                return;
+        if (target != folder.id)
+            throw new IllegalArgumentException("Invalid folder");
+
+        // Prevent async deletion
+        if (folder.id.equals(message.folder)) {
+            if (message.uid != null)
+                db.message().setMessageUid(message.id, null);
+        }
+
+        // External draft might have a uid only
+        if (TextUtils.isEmpty(message.msgid)) {
+            message.msgid = EntityMessage.generateMessageId();
+            db.message().setMessageMsgId(message.id, message.msgid);
+        }
+
+        // Get raw message
+        MimeMessage imessage;
+        if (folder.id.equals(message.folder)) {
+            // Pre flight checks
+            if (!message.content)
+                throw new IllegalArgumentException("Message body missing");
+
+            EntityIdentity identity =
+                    (message.identity == null ? null : db.identity().getIdentity(message.identity));
+
+            imessage = MessageHelper.from(context, message, identity, isession);
+        } else {
+            // Cross account move
+            File file = message.getRawFile(context);
+            if (!file.exists())
+                throw new IllegalArgumentException("raw message file not found");
+
+            Log.i(folder.name + " reading " + file);
+            try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                imessage = new MimeMessage(isession, is);
             }
+        }
 
-            // Delete previous message(s) with same ID
-            if (folder.id.equals(message.folder)) {
-                // Prevent adding/deleting message
-                db.message().setMessageUid(message.id, message.uid == null ? -1L : -message.uid);
-
-                if (TextUtils.isEmpty(message.msgid)) {
-                    // Draft might be created somewhere else
-                    if (message.uid == null)
-                        throw new IllegalArgumentException("Add without ID");
-                    else {
-                        Message idelete = ifolder.getMessageByUID(message.uid);
-                        Log.i(folder.name + " deleting previous uid=" + message.uid + " msgid=" + message.msgid);
-                        try {
-                            idelete.setFlag(Flags.Flag.DELETED, true);
-                        } catch (MessageRemovedException ignored) {
-                        }
-                    }
-                    message.msgid = EntityMessage.generateMessageId();
-                } else {
-                    Message[] ideletes = ifolder.search(new MessageIDTerm(message.msgid));
-                    for (Message idelete : ideletes) {
-                        long uid = ifolder.getUID(idelete);
-                        Log.i(folder.name + " deleting previous uid=" + uid + " msgid=" + message.msgid);
-                        try {
-                            idelete.setFlag(Flags.Flag.DELETED, true);
-                        } catch (MessageRemovedException ignored) {
-                        }
-                    }
-                }
-                ifolder.expunge();
+        // Handle auto read
+        if (ifolder.getPermanentFlags().contains(Flags.Flag.SEEN)) {
+            if (autoread && !imessage.isSet(Flags.Flag.SEEN)) {
+                Log.i(folder.name + " autoread");
+                imessage.setFlag(Flags.Flag.SEEN, true);
             }
+        }
 
-            // Get message
-            MimeMessage imessage;
-            if (folder.id.equals(message.folder)) {
-                // Pre flight checks
-                if (!message.content)
-                    throw new IllegalArgumentException("Message body missing");
+        // Handle draft
+        if (EntityFolder.DRAFTS.equals(folder.type))
+            if (ifolder.getPermanentFlags().contains(Flags.Flag.DRAFT))
+                imessage.setFlag(Flags.Flag.DRAFT, true);
 
-                EntityIdentity identity =
-                        (message.identity == null ? null : db.identity().getIdentity(message.identity));
+        // Add message
+        ifolder.appendMessages(new Message[]{imessage});
 
-                imessage = MessageHelper.from(context, message, identity, isession);
-            } else {
-                // Cross account move
-                File file = message.getRawFile(context);
-                if (!file.exists())
-                    throw new IllegalArgumentException("raw message file not found");
-
-                Log.i(folder.name + " reading " + file);
-                try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                    imessage = new MimeMessage(isession, is);
-                }
-            }
-
-            // Handle auto read
-            if (ifolder.getPermanentFlags().contains(Flags.Flag.SEEN)) {
-                if (autoread && !imessage.isSet(Flags.Flag.SEEN)) {
-                    Log.i(folder.name + " autoread");
-                    imessage.setFlag(Flags.Flag.SEEN, true);
-                }
-            }
-
-            // Handle draft
-            if (EntityFolder.DRAFTS.equals(folder.type))
-                if (ifolder.getPermanentFlags().contains(Flags.Flag.DRAFT))
-                    imessage.setFlag(Flags.Flag.DRAFT, true);
-
-            // Add message
-            long uid = -1;
-            if (istore.hasCapability("UIDPLUS")) {
-                AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
-                if (uids != null && uids.length > 0) {
-                    Log.i("Appended uid=" + uids[0].uid);
-                    uid = uids[0].uid;
-                }
-            } else
-                ifolder.appendMessages(new Message[]{imessage});
-
-            // Lookup uid
-            if (uid <= 0) {
-                Log.i("Searching for appended msgid=" + message.msgid);
-                Message[] messages = ifolder.search(new MessageIDTerm(message.msgid));
-                if (messages != null)
-                    for (Message iappended : messages) {
-                        long muid = ifolder.getUID(iappended);
-                        Log.i("Found appended uid=" + muid);
-                        // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
-                        if (muid > uid)
-                            uid = muid;
+        if (folder.id.equals(message.folder)) {
+            // External draft might have a uid only
+            if (message.uid != null) {
+                Message iexisting = ifolder.getMessageByUID(message.uid);
+                if (iexisting == null)
+                    Log.w(folder.name + " existing not found uid=" + message.uid);
+                else
+                    try {
+                        Log.i(folder.name + " deleting uid=" + message.uid);
+                        iexisting.setFlag(Flags.Flag.DELETED, true);
+                    } catch (MessageRemovedException ignored) {
+                        Log.w(folder.name + " existing gone uid=" + message.uid);
                     }
             }
 
-            if (uid <= 0)
-                throw new IllegalArgumentException("uid not found");
+            Log.i(folder.name + " searching for msgid=" + message.msgid);
+            Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
+            if (imessages == null)
+                Log.w(folder.name + " search for msgid=" + message.msgid + " returned null");
+            else {
+                long uid = -1;
 
-            Log.i(folder.name + " appended id=" + message.id + " uid=" + uid);
-
-            try {
-                db.beginTransaction();
-
-                List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
-
-                if (folder.id.equals(message.folder)) {
-                    Log.i(folder.name + " Setting id=" + message.id + " uid=" + uid);
-                    db.message().setMessageUid(message.id, uid);
-
-                    runRules(context, imessage, message, rules);
-                } else {
-                    // Cross account move
-                    if (tmpid != null) {
-                        Log.i(folder.name + " Setting id=" + tmpid + " (tmp) appended uid=" + uid);
-                        db.message().setMessageUid(tmpid, uid);
-
-                        runRules(context, imessage, db.message().getMessage(tmpid), rules);
-                    }
-
-                    // Mark source read
-                    if (autoread) {
-                        Log.i(folder.name + " queuing SEEN id=" + message.id);
-                        EntityOperation.queue(context, message, EntityOperation.SEEN, true);
-                    }
-
-                    // Delete source
-                    Log.i(folder.name + " queuing DELETE id=" + message.id);
-                    EntityOperation.queue(context, message, EntityOperation.DELETE);
+                for (Message iexisting : imessages) {
+                    long muid = ifolder.getUID(iexisting);
+                    Log.i(folder.name + " found uid=" + muid);
+                    // RFC3501: Unique identifiers are assigned in a strictly ascending fashion
+                    if (muid > uid)
+                        uid = muid;
                 }
 
-                db.setTransactionSuccessful();
-            } finally {
-                db.endTransaction();
+                if (uid < 0)
+                    Log.w(folder.name + " appended msgid=" + message.msgid + " not found");
+                else {
+                    Log.i(folder.name + " appended uid=" + uid);
+
+                    for (Message iexisting : imessages) {
+                        long muid = ifolder.getUID(iexisting);
+                        if (muid != uid)
+                            try {
+                                Log.i(folder.name + " deleting uid=" + muid);
+                                iexisting.setFlag(Flags.Flag.DELETED, true);
+                            } catch (MessageRemovedException ignored) {
+                                Log.w(folder.name + " existing gone uid=" + muid);
+                            }
+                    }
+                }
             }
-        } catch (Throwable ex) {
-            if (folder.id.equals(message.folder))
-                db.message().setMessageUid(message.id, message.uid);
-            throw ex;
+
+            ifolder.expunge();
+        } else {
+            // Mark source read
+            if (autoread)
+                EntityOperation.queue(context, message, EntityOperation.SEEN, true);
+
+            // Delete source
+            EntityOperation.queue(context, message, EntityOperation.DELETE);
         }
     }
 
@@ -626,25 +610,33 @@ class Core {
         // Delete message
         DB db = DB.getInstance(context);
 
-        Message[] imessages;
-        if (TextUtils.isEmpty(message.msgid))
-            if (message.uid == null)
-                throw new IllegalArgumentException("Delete without ID");
-            else {
-                Message imessage = ifolder.getMessageByUID(message.uid);
-                if (imessage == null)
-                    throw new MessageRemovedException();
-                imessages = new Message[]{imessage};
-            }
-        else
-            imessages = ifolder.search(new MessageIDTerm(message.msgid));
+        if (message.uid != null) {
+            Message iexisting = ifolder.getMessageByUID(message.uid);
+            if (iexisting == null)
+                Log.w(folder.name + " existing not found uid=" + message.uid);
+            else
+                try {
+                    Log.i(folder.name + " deleting uid=" + message.uid);
+                    iexisting.setFlag(Flags.Flag.DELETED, true);
+                } catch (MessageRemovedException ignored) {
+                    Log.w(folder.name + " existing gone uid=" + message.uid);
+                }
+        }
 
-        for (Message imessage : imessages) {
-            Log.i(folder.name + " deleting uid=" + message.uid + " msgid=" + message.msgid);
-            try {
-                imessage.setFlag(Flags.Flag.DELETED, true);
-            } catch (MessageRemovedException ignored) {
-            }
+        if (!TextUtils.isEmpty(message.msgid)) {
+            Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
+            if (imessages == null)
+                Log.w(folder.name + " search for msgid=" + message.msgid + " returned null");
+            else
+                for (Message iexisting : imessages) {
+                    long muid = ifolder.getUID(iexisting);
+                    Log.i(folder.name + " deleting uid=" + muid);
+                    try {
+                        iexisting.setFlag(Flags.Flag.DELETED, true);
+                    } catch (MessageRemovedException ignored) {
+                        Log.w(folder.name + " existing gone uid=" + muid);
+                    }
+                }
         }
 
         ifolder.expunge();
@@ -685,9 +677,7 @@ class Core {
 
         if (jargs.length() > 0) {
             // Cross account move
-            long target = jargs.getLong(2);
-            jargs.remove(2);
-            jargs.put(2, true); // cross account
+            long target = jargs.getLong(0);
             Log.i(folder.name + " queuing ADD id=" + message.id + ":" + target);
 
             EntityOperation operation = new EntityOperation();
@@ -1250,159 +1240,121 @@ class Core {
             IMAPFolder ifolder, IMAPMessage imessage,
             boolean browsed,
             List<EntityRule> rules) throws MessagingException, IOException {
-        synchronized (folder) {
-            long uid = ifolder.getUID(imessage);
+        long uid = ifolder.getUID(imessage);
 
-            if (imessage.isExpunged()) {
-                Log.i(folder.name + " expunged uid=" + uid);
-                throw new MessageRemovedException();
-            }
-            if (imessage.isSet(Flags.Flag.DELETED)) {
-                Log.i(folder.name + " deleted uid=" + uid);
-                throw new MessageRemovedException();
-            }
+        if (imessage.isExpunged()) {
+            Log.i(folder.name + " expunged uid=" + uid);
+            throw new MessageRemovedException();
+        }
+        if (imessage.isSet(Flags.Flag.DELETED)) {
+            Log.i(folder.name + " deleted uid=" + uid);
+            throw new MessageRemovedException();
+        }
 
-            MessageHelper helper = new MessageHelper(imessage);
-            boolean seen = helper.getSeen();
-            boolean answered = helper.getAnsered();
-            boolean flagged = helper.getFlagged();
-            String flags = helper.getFlags();
-            String[] keywords = helper.getKeywords();
-            boolean update = false;
-            boolean filter = false;
+        MessageHelper helper = new MessageHelper(imessage);
+        boolean seen = helper.getSeen();
+        boolean answered = helper.getAnsered();
+        boolean flagged = helper.getFlagged();
+        String flags = helper.getFlags();
+        String[] keywords = helper.getKeywords();
+        boolean update = false;
+        boolean process = false;
 
-            DB db = DB.getInstance(context);
+        DB db = DB.getInstance(context);
 
-            // Find message by uid (fast, no headers required)
-            EntityMessage message = db.message().getMessageByUid(folder.id, uid);
+        // Find message by uid (fast, no headers required)
+        EntityMessage message = db.message().getMessageByUid(folder.id, uid);
 
-            // Find message by Message-ID (slow, headers required)
-            // - messages in inbox have same id as message sent to self
-            // - messages in archive have same id as original
-            if (message == null) {
-                String msgid = helper.getMessageID();
-                Log.i(folder.name + " searching for " + msgid);
-                for (EntityMessage dup : db.message().getMessageByMsgId(folder.account, msgid)) {
-                    EntityFolder dfolder = db.folder().getFolder(dup.folder);
-                    Log.i(folder.name + " found as id=" + dup.id + "/" + dup.uid +
-                            " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
-                            " msgid=" + dup.msgid + " thread=" + dup.thread);
+        // Find message by Message-ID (slow, headers required)
+        // - messages in inbox have same id as message sent to self
+        // - messages in archive have same id as original
+        if (message == null) {
+            String msgid = helper.getMessageID();
+            Log.i(folder.name + " searching for " + msgid);
+            for (EntityMessage dup : db.message().getMessageByMsgId(folder.account, msgid)) {
+                EntityFolder dfolder = db.folder().getFolder(dup.folder);
+                Log.i(folder.name + " found as id=" + dup.id + "/" + dup.uid +
+                        " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
+                        " msgid=" + dup.msgid + " thread=" + dup.thread);
 
-                    if (dup.folder.equals(folder.id) ||
-                            (EntityFolder.OUTBOX.equals(dfolder.type) && EntityFolder.SENT.equals(folder.type))) {
-                        String thread = helper.getThreadId(context, account.id, uid);
-                        Log.i(folder.name + " found as id=" + dup.id +
-                                " uid=" + dup.uid + "/" + uid +
-                                " msgid=" + msgid + " thread=" + thread);
+                if (dup.folder.equals(folder.id) ||
+                        (EntityFolder.OUTBOX.equals(dfolder.type) && EntityFolder.SENT.equals(folder.type))) {
+                    String thread = helper.getThreadId(context, account.id, uid);
+                    Log.i(folder.name + " found as id=" + dup.id +
+                            " uid=" + dup.uid + "/" + uid +
+                            " msgid=" + msgid + " thread=" + thread);
 
-                        if (dup.uid == null) {
-                            Log.i(folder.name + " set uid=" + uid);
-                            dup.folder = folder.id; // outbox to sent
-                            dup.uid = uid;
-                            dup.msgid = msgid;
-                            dup.thread = thread;
-                            if (dup.size == null)
-                                dup.size = helper.getSize();
-                            dup.error = null;
-                            message = dup;
-                            update = true;
-                            filter = true;
-                        } else if (dup.uid < 0)
-                            throw new MessageRemovedException();
-                    }
+                    if (dup.uid == null) {
+                        Log.i(folder.name + " set uid=" + uid);
+                        dup.folder = folder.id; // outbox to sent
+                        dup.uid = uid;
+                        dup.msgid = msgid;
+                        dup.thread = thread;
+                        if (dup.size == null)
+                            dup.size = helper.getSize();
+                        dup.error = null;
+
+                        message = dup;
+                        process = true;
+                    } else if (dup.uid < 0)
+                        throw new MessageRemovedException();
                 }
-
-                if (message == null)
-                    filter = true;
             }
+        }
 
-            if (message == null) {
-                Address[] froms = helper.getFrom();
-                Address[] tos = helper.getTo();
-                Address[] ccs = helper.getCc();
+        if (message == null) {
+            String authentication = helper.getAuthentication();
+            MessageHelper.MessageParts parts = helper.getMessageParts();
 
-                // Build ordered list of addresses
-                List<Address> addresses = new ArrayList<>();
-                if (folder.isOutgoing()) {
-                    if (froms != null)
-                        addresses.addAll(Arrays.asList(froms));
-                } else {
-                    if (tos != null)
-                        addresses.addAll(Arrays.asList(tos));
-                    if (ccs != null)
-                        addresses.addAll(Arrays.asList(ccs));
-                    if (EntityFolder.ARCHIVE.equals(folder.type) || BuildConfig.DEBUG) {
-                        if (froms != null)
-                            addresses.addAll(Arrays.asList(froms));
-                    }
-                }
+            message = new EntityMessage();
+            message.account = folder.account;
+            message.folder = folder.id;
+            message.uid = uid;
 
-                // Search for matching identity
-                EntityIdentity identity = null;
-                for (Address address : addresses) {
-                    String email = ((InternetAddress) address).getAddress();
-                    if (!TextUtils.isEmpty(email)) {
-                        identity = db.identity().getIdentity(folder.account, email);
-                        if (identity == null) {
-                            String canonical = MessageHelper.canonicalAddress(email);
-                            if (!canonical.equals(email))
-                                identity = db.identity().getIdentity(folder.account, canonical);
-                        }
-                        if (identity != null)
-                            break;
-                    }
-                }
+            message.msgid = helper.getMessageID();
+            if (TextUtils.isEmpty(message.msgid))
+                Log.w("No Message-ID id=" + message.id + " uid=" + message.uid);
 
-                String authentication = helper.getAuthentication();
-                MessageHelper.MessageParts parts = helper.getMessageParts();
+            message.references = TextUtils.join(" ", helper.getReferences());
+            message.inreplyto = helper.getInReplyTo();
+            // Local address contains control or whitespace in string ``mailing list someone@example.org''
+            message.deliveredto = helper.getDeliveredTo();
+            message.thread = helper.getThreadId(context, account.id, uid);
+            message.receipt_request = helper.getReceiptRequested();
+            message.receipt_to = helper.getReceiptTo();
+            message.dkim = MessageHelper.getAuthentication("dkim", authentication);
+            message.spf = MessageHelper.getAuthentication("spf", authentication);
+            message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+            message.from = helper.getFrom();
+            message.to = helper.getTo();
+            message.cc = helper.getCc();
+            message.bcc = helper.getBcc();
+            message.reply = helper.getReply();
+            message.list_post = helper.getListPost();
+            message.subject = helper.getSubject();
+            message.size = helper.getSize();
+            message.content = false;
+            message.received = helper.getReceived();
+            message.sent = helper.getSent();
+            message.seen = seen;
+            message.answered = answered;
+            message.flagged = flagged;
+            message.flags = flags;
+            message.keywords = keywords;
+            message.ui_seen = seen;
+            message.ui_answered = answered;
+            message.ui_flagged = flagged;
+            message.ui_hide = false;
+            message.ui_found = false;
+            message.ui_ignored = seen;
+            message.ui_browsed = browsed;
 
-                message = new EntityMessage();
-                message.account = folder.account;
-                message.folder = folder.id;
-                message.identity = (identity == null ? null : identity.id);
-                message.uid = uid;
+            EntityIdentity identity = matchIdentity(context, folder, message);
+            message.identity = (identity == null ? null : identity.id);
 
-                message.msgid = helper.getMessageID();
-                if (TextUtils.isEmpty(message.msgid))
-                    Log.w("No Message-ID id=" + message.id + " uid=" + message.uid);
-
-                message.references = TextUtils.join(" ", helper.getReferences());
-                message.inreplyto = helper.getInReplyTo();
-                // Local address contains control or whitespace in string ``mailing list someone@example.org''
-                message.deliveredto = helper.getDeliveredTo();
-                message.thread = helper.getThreadId(context, account.id, uid);
-                message.receipt_request = helper.getReceiptRequested();
-                message.receipt_to = helper.getReceiptTo();
-                message.dkim = MessageHelper.getAuthentication("dkim", authentication);
-                message.spf = MessageHelper.getAuthentication("spf", authentication);
-                message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
-                message.from = froms;
-                message.to = tos;
-                message.cc = ccs;
-                message.bcc = helper.getBcc();
-                message.reply = helper.getReply();
-                message.list_post = helper.getListPost();
-                message.subject = helper.getSubject();
-                message.size = helper.getSize();
-                message.content = false;
-                message.received = helper.getReceived();
-                message.sent = helper.getSent();
-                message.seen = seen;
-                message.answered = answered;
-                message.flagged = flagged;
-                message.flags = flags;
-                message.keywords = keywords;
-                message.ui_seen = seen;
-                message.ui_answered = answered;
-                message.ui_flagged = flagged;
-                message.ui_hide = false;
-                message.ui_found = false;
-                message.ui_ignored = seen;
-                message.ui_browsed = browsed;
-
-                message.sender = MessageHelper.getSortKey(message.from);
-                Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
-                message.avatar = (lookupUri == null ? null : lookupUri.toString());
+            message.sender = MessageHelper.getSortKey(message.from);
+            Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
+            message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                 /*
                 // Authentication is more reliable
@@ -1416,136 +1368,182 @@ class Core {
                 }
                 */
 
+            try {
+                db.beginTransaction();
+
+                // Check if message was added in the meantime
+                EntityMessage existing = db.message().getMessageByUid(message.folder, message.uid);
+                if (existing != null) {
+                    Log.i("Message was already added");
+                    return existing;
+                }
+
+                message.id = db.message().insertMessage(message);
+                Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);
+
+                int sequence = 1;
+                for (EntityAttachment attachment : parts.getAttachments()) {
+                    Log.i(folder.name + " attachment seq=" + sequence +
+                            " name=" + attachment.name + " type=" + attachment.type +
+                            " cid=" + attachment.cid + " pgp=" + attachment.encryption);
+                    attachment.message = message.id;
+                    attachment.sequence = sequence++;
+                    attachment.id = db.attachment().insertAttachment(attachment);
+                }
+
+                runRules(context, imessage, message, rules);
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+
+            if (message.received > account.created)
+                updateContactInfo(context, folder, message);
+        } else {
+            if (process) {
+                EntityIdentity identity = matchIdentity(context, folder, message);
+                if (identity != null) {
+                    message.identity = identity.id;
+                    Log.i(folder.name + " updated id=" + message.id + " identity=" + identity.id);
+                }
+            }
+
+            if (!message.seen.equals(seen) || !message.seen.equals(message.ui_seen)) {
+                update = true;
+                message.seen = seen;
+                message.ui_seen = seen;
+                if (seen)
+                    message.ui_ignored = true;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " seen=" + seen);
+            }
+
+            if (!message.answered.equals(answered) || !message.answered.equals(message.ui_answered)) {
+                if (!answered && message.ui_answered && ifolder.getPermanentFlags().contains(Flags.Flag.ANSWERED)) {
+                    // This can happen when the answered operation was skipped because the message was moving
+                    answered = true;
+                    imessage.setFlag(Flags.Flag.ANSWERED, answered);
+                }
+                update = true;
+                message.answered = answered;
+                message.ui_answered = answered;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " answered=" + answered);
+            }
+
+            if (!message.flagged.equals(flagged) || !message.flagged.equals(message.ui_flagged)) {
+                update = true;
+                message.flagged = flagged;
+                message.ui_flagged = flagged;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flagged=" + flagged);
+            }
+
+            if (!Objects.equals(flags, message.flags)) {
+                update = true;
+                message.flags = flags;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flags=" + flags);
+            }
+
+            if (!Helper.equal(message.keywords, keywords)) {
+                update = true;
+                message.keywords = keywords;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid +
+                        " keywords=" + TextUtils.join(" ", keywords));
+            }
+
+            if (message.ui_hide && db.operation().getOperationCount(folder.id, message.id) == 0) {
+                update = true;
+                message.ui_hide = false;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unhide");
+            }
+
+            if (message.ui_browsed) {
+                update = true;
+                message.ui_browsed = false;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unbrowse");
+            }
+
+            Uri uri = ContactInfo.getLookupUri(context, message.from);
+            String avatar = (uri == null ? null : uri.toString());
+            if (!Objects.equals(message.avatar, avatar)) {
+                update = true;
+                message.avatar = avatar;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " avatar=" + avatar);
+            }
+
+            if (update || process)
                 try {
                     db.beginTransaction();
 
-                    // Check if message was added in the meantime
-                    EntityMessage existing = db.message().getMessageByUid(message.folder, message.uid);
-                    if (existing != null) {
-                        Log.i("Message was already added");
-                        return existing;
-                    }
+                    db.message().updateMessage(message);
 
-                    message.id = db.message().insertMessage(message);
-                    Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);
-
-                    int sequence = 1;
-                    for (EntityAttachment attachment : parts.getAttachments()) {
-                        Log.i(folder.name + " attachment seq=" + sequence +
-                                " name=" + attachment.name + " type=" + attachment.type +
-                                " cid=" + attachment.cid + " pgp=" + attachment.encryption);
-                        attachment.message = message.id;
-                        attachment.sequence = sequence++;
-                        attachment.id = db.attachment().insertAttachment(attachment);
-                    }
-
-                    runRules(context, imessage, message, rules);
+                    if (process)
+                        runRules(context, imessage, message, rules);
 
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }
 
-                if (message.received > account.created &&
-                        !EntityFolder.ARCHIVE.equals(folder.type) &&
-                        !EntityFolder.TRASH.equals(folder.type) &&
-                        !EntityFolder.JUNK.equals(folder.type))
-                    updateContactInfo(context, folder, message);
-            } else {
-                if (!message.seen.equals(seen) || !message.seen.equals(message.ui_seen)) {
-                    update = true;
-                    message.seen = seen;
-                    message.ui_seen = seen;
-                    if (seen)
-                        message.ui_ignored = true;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " seen=" + seen);
-                }
+            if (process)
+                updateContactInfo(context, folder, message);
 
-                if (!message.answered.equals(answered) || !message.answered.equals(message.ui_answered)) {
-                    if (!answered && message.ui_answered && ifolder.getPermanentFlags().contains(Flags.Flag.ANSWERED)) {
-                        // This can happen when the answered operation was skipped because the message was moving
-                        answered = true;
-                        imessage.setFlag(Flags.Flag.ANSWERED, answered);
-                    }
-                    update = true;
-                    message.answered = answered;
-                    message.ui_answered = answered;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " answered=" + answered);
-                }
-
-                if (!message.flagged.equals(flagged) || !message.flagged.equals(message.ui_flagged)) {
-                    update = true;
-                    message.flagged = flagged;
-                    message.ui_flagged = flagged;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flagged=" + flagged);
-                }
-
-                if (!Objects.equals(flags, message.flags)) {
-                    update = true;
-                    message.flags = flags;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flags=" + flags);
-                }
-
-                if (!Helper.equal(message.keywords, keywords)) {
-                    update = true;
-                    message.keywords = keywords;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid +
-                            " keywords=" + TextUtils.join(" ", keywords));
-                }
-
-                if (message.ui_hide && db.operation().getOperationCount(folder.id, message.id) == 0) {
-                    update = true;
-                    message.ui_hide = false;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unhide");
-                }
-
-                if (message.ui_browsed) {
-                    update = true;
-                    message.ui_browsed = false;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unbrowse");
-                }
-
-                Uri uri = ContactInfo.getLookupUri(context, message.from);
-                String avatar = (uri == null ? null : uri.toString());
-                if (!Objects.equals(message.avatar, avatar)) {
-                    update = true;
-                    message.avatar = avatar;
-                    Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " avatar=" + avatar);
-                }
-
-                if (update)
-                    try {
-                        db.beginTransaction();
-
-                        db.message().updateMessage(message);
-
-                        if (filter)
-                            runRules(context, imessage, message, rules);
-
-                        db.setTransactionSuccessful();
-                    } finally {
-                        db.endTransaction();
-                    }
-
-                else if (BuildConfig.DEBUG)
-                    Log.i(folder.name + " unchanged uid=" + uid);
-            }
-
-            List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));
-
-            for (String keyword : keywords)
-                if (!fkeywords.contains(keyword)) {
-                    Log.i(folder.name + " adding keyword=" + keyword);
-                    fkeywords.add(keyword);
-                }
-
-            if (folder.keywords.length != fkeywords.size()) {
-                Collections.sort(fkeywords);
-                db.folder().setFolderKeywords(folder.id, DB.Converters.fromStringArray(fkeywords.toArray(new String[0])));
-            }
-
-            return message;
+            else if (BuildConfig.DEBUG)
+                Log.i(folder.name + " unchanged uid=" + uid);
         }
+
+        List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));
+
+        for (String keyword : keywords)
+            if (!fkeywords.contains(keyword)) {
+                Log.i(folder.name + " adding keyword=" + keyword);
+                fkeywords.add(keyword);
+            }
+
+        if (folder.keywords.length != fkeywords.size()) {
+            Collections.sort(fkeywords);
+            db.folder().setFolderKeywords(folder.id, DB.Converters.fromStringArray(fkeywords.toArray(new String[0])));
+        }
+
+        return message;
+    }
+
+    private static EntityIdentity matchIdentity(Context context, EntityFolder folder, EntityMessage message) {
+        DB db = DB.getInstance(context);
+
+        List<Address> addresses = new ArrayList<>();
+        if (folder.isOutgoing()) {
+            if (message.from != null)
+                addresses.addAll(Arrays.asList(message.from));
+        } else {
+            if (message.to != null)
+                addresses.addAll(Arrays.asList(message.to));
+            if (message.cc != null)
+                addresses.addAll(Arrays.asList(message.cc));
+            if (EntityFolder.ARCHIVE.equals(folder.type) || BuildConfig.DEBUG) {
+                if (message.from != null)
+                    addresses.addAll(Arrays.asList(message.from));
+            }
+        }
+
+        // Search for matching identity
+        for (Address address : addresses) {
+            String email = ((InternetAddress) address).getAddress();
+            if (!TextUtils.isEmpty(email)) {
+                EntityIdentity ident = db.identity().getIdentity(folder.account, email);
+                if (ident != null)
+                    return ident;
+
+                String canonical = MessageHelper.canonicalAddress(email);
+                if (canonical.equals(email))
+                    continue;
+
+                ident = db.identity().getIdentity(folder.account, canonical);
+                if (ident != null)
+                    return ident;
+            }
+        }
+
+        return null;
     }
 
     private static void runRules(Context context, Message imessage, EntityMessage message, List<EntityRule> rules) {
@@ -1568,6 +1566,11 @@ class Core {
 
     private static void updateContactInfo(Context context, final EntityFolder folder, final EntityMessage message) {
         final DB db = DB.getInstance(context);
+
+        if (EntityFolder.ARCHIVE.equals(folder.type) ||
+                EntityFolder.TRASH.equals(folder.type) ||
+                EntityFolder.JUNK.equals(folder.type))
+            return;
 
         final int type = (folder.isOutgoing() ? EntityContact.TYPE_TO : EntityContact.TYPE_FROM);
         Address[] recipients = (type == EntityContact.TYPE_TO
@@ -1688,7 +1691,8 @@ class Core {
                             parts.isPlainOnly(),
                             HtmlHelper.getPreview(body),
                             parts.getWarnings(message.warning));
-                    Log.i(folder.name + " downloaded message id=" + message.id + " size=" + message.size);
+                    Log.i(folder.name + " downloaded message id=" + message.id +
+                            " size=" + message.size + "/" + (body == null ? null : body.length()));
                 }
             }
 
@@ -1737,6 +1741,8 @@ class Core {
         Log.i("Notify messages=" + messages.size());
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null)
+            return;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean badge = prefs.getBoolean("badge", true);
@@ -1838,7 +1844,8 @@ class Core {
         List<Notification> notifications = new ArrayList<>();
         // https://developer.android.com/training/notify-user/group
 
-        if (messages == null || messages.size() == 0)
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (messages == null || messages.size() == 0 || nm == null)
             return notifications;
 
         boolean pro = Helper.isPro(context);
@@ -1853,8 +1860,6 @@ class Core {
         boolean notify_reply = prefs.getBoolean("notify_reply", false) && pro;
         boolean notify_flag = prefs.getBoolean("notify_flag", false) && pro;
         boolean notify_seen = prefs.getBoolean("notify_seen", true);
-
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
@@ -2132,12 +2137,14 @@ class Core {
 
         EntityLog.log(context, title + " " + Helper.formatThrowable(ex));
 
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null)
+            return;
+
         if (ex instanceof AuthenticationFailedException || // Also: Too many simultaneous connections
                 ex instanceof AlertException ||
-                ex instanceof SendFailedException) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                ex instanceof SendFailedException)
             nm.notify(tag, 1, getNotificationError(context, title, ex).build());
-        }
 
         // connection failure: Too many simultaneous connections
 
@@ -2154,10 +2161,8 @@ class Core {
                 !(ex instanceof MessagingException && ex.getCause() instanceof SocketException) &&
                 !(ex instanceof MessagingException && ex.getCause() instanceof SocketTimeoutException) &&
                 !(ex instanceof MessagingException && ex.getCause() instanceof SSLException) &&
-                !(ex instanceof MessagingException && "connection failure".equals(ex.getMessage()))) {
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                !(ex instanceof MessagingException && "connection failure".equals(ex.getMessage())))
             nm.notify(tag, 1, getNotificationError(context, title, ex).build());
-        }
     }
 
     static NotificationCompat.Builder getNotificationError(Context context, String title, Throwable ex) {

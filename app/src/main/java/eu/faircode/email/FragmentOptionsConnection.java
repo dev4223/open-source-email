@@ -47,13 +47,13 @@ import androidx.preference.PreferenceManager;
 public class FragmentOptionsConnection extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swMetered;
     private Spinner spDownload;
-    private SwitchCompat swRlah;
     private SwitchCompat swRoaming;
+    private SwitchCompat swRlah;
     private TextView tvConnectionType;
     private TextView tvConnectionRoaming;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "metered", "download", "rlah", "roaming"
+            "metered", "download", "roaming", "rlah"
     };
 
     @Override
@@ -68,8 +68,8 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
 
         swMetered = view.findViewById(R.id.swMetered);
         spDownload = view.findViewById(R.id.spDownload);
-        swRlah = view.findViewById(R.id.swRlah);
         swRoaming = view.findViewById(R.id.swRoaming);
+        swRlah = view.findViewById(R.id.swRlah);
 
         tvConnectionType = view.findViewById(R.id.tvConnectionType);
         tvConnectionRoaming = view.findViewById(R.id.tvConnectionRoaming);
@@ -101,19 +101,19 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
             }
         });
 
-        swRlah.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("rlah", checked).apply();
-                ServiceSynchronize.reload(getContext(), "rlah=" + checked);
-            }
-        });
-
         swRoaming.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("roaming", checked).apply();
                 ServiceSynchronize.reload(getContext(), "roaming=" + checked);
+            }
+        });
+
+        swRlah.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("rlah", checked).apply();
+                ServiceSynchronize.reload(getContext(), "rlah=" + checked);
             }
         });
 
@@ -141,6 +141,9 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
         super.onResume();
 
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null)
+            return;
+
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
         cm.registerNetworkCallback(builder.build(), networkCallback);
@@ -149,19 +152,22 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
     @Override
     public void onPause() {
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null)
+            return;
+
         cm.unregisterNetworkCallback(networkCallback);
 
         super.onPause();
     }
 
     @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.menu_options, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_default:
                 onMenuDefault();
@@ -192,23 +198,23 @@ public class FragmentOptionsConnection extends FragmentBase implements SharedPre
                 break;
             }
 
-        swRlah.setChecked(prefs.getBoolean("rlah", true));
         swRoaming.setChecked(prefs.getBoolean("roaming", true));
+        swRlah.setChecked(prefs.getBoolean("rlah", true));
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
         @Override
-        public void onAvailable(Network network) {
+        public void onAvailable(@NonNull Network network) {
             showConnectionType();
         }
 
         @Override
-        public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities) {
+        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
             showConnectionType();
         }
 
         @Override
-        public void onLost(Network network) {
+        public void onLost(@NonNull Network network) {
             showConnectionType();
         }
     };

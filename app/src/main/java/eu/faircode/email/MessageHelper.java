@@ -58,6 +58,7 @@ import javax.mail.Flags;
 import javax.mail.FolderClosedException;
 import javax.mail.Header;
 import javax.mail.Message;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
@@ -600,7 +601,9 @@ public class MessageHelper {
                 return null;
 
             list = MimeUtility.unfold(list);
-            if ("NO".equals(list))
+
+            // List-Post: NO (posting not allowed on this list)
+            if (list != null && list.startsWith("NO"))
                 return null;
 
             // https://www.ietf.org/rfc/rfc2368.txt
@@ -826,7 +829,7 @@ public class MessageHelper {
             return (html == null);
         }
 
-        String getHtml(Context context) throws MessagingException {
+        String getHtml(Context context) throws MessagingException, IOException {
             if (plain == null && html == null) {
                 warnings.add(context.getString(R.string.title_no_body));
                 return null;
@@ -845,10 +848,8 @@ public class MessageHelper {
                     result = readStream((InputStream) content, "UTF-8");
                 else
                     result = content.toString();
-            } catch (FolderClosedException ex) {
+            } catch (IOException | FolderClosedException | MessageRemovedException ex) {
                 throw ex;
-            } catch (FolderClosedIOException ex) {
-                throw new FolderClosedException(ex.getFolder(), "getHtml", ex);
             } catch (Throwable ex) {
                 Log.w(ex);
                 warnings.add(Helper.formatThrowable(ex));
