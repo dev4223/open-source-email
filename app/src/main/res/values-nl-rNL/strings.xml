@@ -142,6 +142,7 @@
     <string name="title_advanced_flagged">Alle berichten met een ster</string>
     <string name="title_advanced_kept_removed">Controleer of oude berichten van de server werden verwijderd</string>
     <string name="title_advanced_sync_folders">Lijst met mappen synchroniseren</string>
+    <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
     <string name="title_advanced_prefix_once">Prefix onderwerp slechts één keer bij beantwoorden of doorsturen</string>
     <string name="title_advanced_plain_only">Verstuur standaard alleen tekst</string>
     <string name="title_advanced_autoresize">Automatisch bijgevoegde en ingesloten afbeeldingen verkleinen</string>
@@ -150,8 +151,9 @@
     <string name="title_advanced_send_delayed">Verzenden van berichten uitstellen</string>
     <string name="title_advanced_metered">Gemeten verbindingen gebruiken</string>
     <string name="title_advanced_download">Automatisch downloaden van berichten en bijlagen op een gemeten verbinding tot</string>
-    <string name="title_advanced_rlah">Roam zoals thuis</string>
     <string name="title_advanced_roaming">Download berichten en bijlagen tijdens roaming</string>
+    <string name="title_advanced_rlah">Roam zoals thuis</string>
+    <string name="title_advanced_manage_connectivity">Beheer connectiviteit</string>
     <string name="title_advanced_browse">Blader door berichten op de server</string>
     <string name="title_advanced_startup">Toon op het startscherm</string>
     <string name="title_advanced_date_header">Op datum groeperen</string>
@@ -186,6 +188,7 @@
     <string name="title_advanced_notify_action_flag">Ster</string>
     <string name="title_advanced_notify_action_seen">Gelezen</string>
     <string name="title_advanced_notify_action_hint">Er worden maximaal drie acties getoond</string>
+    <string name="title_advanced_notify_manage_hint">Tik op de naam van het kanaal \'Meldingen\' om het standaard meldingsgeluid in te stellen, etc</string>
     <string name="title_advanced_light">Gebruik meldingslicht</string>
     <string name="title_advanced_sound">Selecteer meldingsgeluid</string>
     <string name="title_advanced_badge">Toon opstartpictogram met aantal nieuwe berichten</string>
@@ -302,6 +305,8 @@
     <string name="title_no_operations">Geen openstaande bewerkingen</string>
     <string name="title_folder_name">Mapnaam</string>
     <string name="title_display_name">Weergavenaam</string>
+    <string name="title_show_folders">Toon verborgen mappen</string>
+    <string name="title_hide_folder">Verberg map</string>
     <string name="title_unified_folder">Toon in het gecombineerde postvak in</string>
     <string name="title_navigation_folder">Toon in navigatiemenu</string>
     <string name="title_synchronize_folder">Synchroniseren (ontvang berichten)</string>

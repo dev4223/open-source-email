@@ -171,6 +171,7 @@
     <string name="title_advanced_kept_removed">Check if old messages were removed from the server</string>
     <string name="title_advanced_sync_folders">Synchronize folder list</string>
 
+    <string name="title_advanced_keyboard">Show keyboard by default</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_plain_only">Send plain text only by default</string>
     <string name="title_advanced_autoresize">Automatically resize attached and embedded images</string>
@@ -221,6 +222,7 @@
     <string name="title_advanced_notify_action_flag">Star</string>
     <string name="title_advanced_notify_action_seen">Read</string>
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
+    <string name="title_advanced_notify_manage_hint">Tap on the channel name \'Notifications\' to set the default notification sound, etc</string>
     <string name="title_advanced_light">Use notification light</string>
     <string name="title_advanced_sound">Select notification sound</string>
 
@@ -355,6 +357,8 @@
 
     <string name="title_folder_name">Folder name</string>
     <string name="title_display_name">Display name</string>
+    <string name="title_show_folders">Show hidden folders</string>
+    <string name="title_hide_folder">Hide folder</string>
     <string name="title_unified_folder">Show in unified inbox</string>
     <string name="title_navigation_folder">Show in navigation menu</string>
     <string name="title_synchronize_folder">Synchronize (receive messages)</string>
