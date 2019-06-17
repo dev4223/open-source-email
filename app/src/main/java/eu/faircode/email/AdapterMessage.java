@@ -612,7 +612,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvSubject.setTypeface(null, Typeface.ITALIC);
             else
                 tvSubject.setTypeface(typeface);
-            tvCount.setTypeface(typeface);
+            //tvCount.setTypeface(typeface);
+            tvCount.setTypeface(Typeface.DEFAULT_BOLD);
 
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
             // dev4223: subject in unseen-color
