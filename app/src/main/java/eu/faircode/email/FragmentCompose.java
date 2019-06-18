@@ -1754,7 +1754,7 @@ public class FragmentCompose extends FragmentBase {
         if ("file".equals(uri.getScheme()) &&
                 !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             Log.w("Add attachment uri=" + uri);
-            throw new SecurityException();
+            throw new SecurityException("Add attachment with file scheme");
         }
 
         EntityAttachment attachment = new EntityAttachment();
@@ -2942,6 +2942,8 @@ public class FragmentCompose extends FragmentBase {
                 ibReferenceEdit.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 ibReferenceImages.setVisibility(ref_has_images && !show_images ? View.VISIBLE : View.GONE);
 
+                final Context context = getContext();
+
                 new Handler().post(new Runnable() {
                     @Override
                     public void run() {
@@ -2955,12 +2957,13 @@ public class FragmentCompose extends FragmentBase {
 
                         target.requestFocus();
 
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         boolean keyboard = prefs.getBoolean("keyboard", true);
                         if (keyboard) {
                             InputMethodManager imm =
-                                    (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.showSoftInput(target, InputMethodManager.SHOW_IMPLICIT);
+                                    (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            if (imm != null)
+                                imm.showSoftInput(target, InputMethodManager.SHOW_IMPLICIT);
                         }
                     }
                 });

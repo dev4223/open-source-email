@@ -94,7 +94,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(19) Why are the pro features so expensive?](#user-content-faq19)
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer' and 'Read timed out' mean?](#user-content-faq22)
+* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer', 'Read timed out' and 'Broken pipe' mean?](#user-content-faq22)
 * [(23) Why do I get 'Too many simultaneous connections' ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
@@ -181,6 +181,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(106) Which launchers can show the number of new messages?](#user-content-faq106)
 * [(107) How do I used colored stars?](#user-content-faq107)
 * [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
+* [(109) Why is 'select account' available in official versions only?](#user-content-faq109)
 
 [I have another question.](#support)
 
@@ -578,7 +579,7 @@ Note that apps cannot change notification settings, including the notification l
 <br />
 
 <a name="faq22"></a>
-**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer' and 'Read timed out' mean?**
+**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer', 'Read timed out' and 'Broken pipe' mean?**
 
 The messages *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
 mean that FairEmail was not able to connect to the email server.
@@ -587,7 +588,7 @@ The message *... Software caused connection abort ...*
 means that the email server or something between FairEmail and the email server actively terminated an existing connection.
 This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
-The message *... Connection reset by peer ...* means that the email server actively terminated an existing connection.
+The message *... Connection reset by peer ...* or *... Broken pipe ...* means that the email server actively terminated an existing connection.
 
 The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connction is bad.
 
@@ -599,6 +600,7 @@ Possible causes are:
 * The host name or port number is invalid
 * The are problems with the internet connection
 * The email server is refusing to accept connections
+* The email server is refusing to accept a message, for example because it is too large or contains unacceptable links
 * There are too many connections to the server, see also the next question
 
 If you are using a VPN, the VPN provider might block the connection because it is too aggressively trying to prevent spam.
@@ -1788,6 +1790,25 @@ However, not all servers support IMAP keywords and besides that there are no sta
 When you delete messages from a folder the messages will be moved to the trash folder, so you have a chance to restore the messages.
 You can permanently delete messages from the trash folder.
 Permanently delete messages from other folders would defeat the purpose of the trash folder, so this will not be added.
+
+<br />
+
+<a name="faq109"></a>
+**(109) Why is 'select account' available in official versions only?**
+
+Using *select account* to select and authorize Google accounts require special permission from Google for security and privacy reasons.
+This special permission can only be acquired for apps a developer manages and is responsible for.
+Third party builds, like the F-Droid builds, are managed by third parties and are the responsibility of these third parties.
+So, only these third parties can acquire the required permission from Google.
+Since these third parties do not actually support FairEmail, they are most likely not going to request the required permission.
+
+You can solve this in two ways:
+
+* Switch to the official version of FairEmail, see [here](https://github.com/M66B/open-source-email/blob/master/README.md#downloads) for the options
+* Use app specific passwords, see [this FAQ](#user-content-faq6)
+
+Using *select account* in third party builds is not possible in recent versions anymore.
+In older versions this was possible, but it will now result in the error *UNREGISTERED_ON_API_CONSOLE*.
 
 <br />
 
