@@ -181,7 +181,8 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(106) Which launchers can show the number of new messages?](#user-content-faq106)
 * [(107) How do I used colored stars?](#user-content-faq107)
 * [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
-* [(109) Why is 'select account' available in official versions only?](#user-content-faq109)
+* [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
+* [(110) Why are (some) messages empty and/or attachments corrupted?](#user-content-faq110)
 
 [I have another question.](#support)
 
@@ -197,9 +198,7 @@ The following Android permissions are needed:
 * *foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
 * *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while synchronizing messages
 * Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
-* Optional: *find accounts on the device* (GET_ACCOUNTS): to use [OAuth](https://en.wikipedia.org/wiki/OAuth) instead of passwords
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
-* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): needed to select accounts (not used/needed on later Android versions)
 
 The following permissions are needed to show the count of unread messages as a badge (see also [this FAQ](#user-content-faq106)):
 
@@ -332,14 +331,12 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 <a name="faq6"></a>
 **(6) How can I login to Gmail / G suite?**
 
-Preferably select Gmail as provider and select an account on your device.
-
-If you want/need to use a username/password instead of selecting an account, you'll need to enable access for "less secure" apps,
+To use a Gmail/G suite account, you'll need to enable access for "less secure" apps,
 see [here](https://support.google.com/accounts/answer/6010255) for Google's instructions
 or go [directy to the setting](https://www.google.com/settings/security/lesssecureapps).
 You can solve the error *535-5.7.8 Username and Password not accepted* by enabling "less secure" apps.
 
-If you use your account username/password, you might get the alert "*Please log in via your web browser*".
+You might get the alert "*Please log in via your web browser*".
 This security measure can for example be triggered when too many IP addresses were used in a too short time or when you are using a VPN.
 You can prevent this by using an app specific password.
 
@@ -1561,6 +1558,7 @@ For the correct settings, see [here](https://help.yahoo.com/kb/SLN4075.html).
 
 You might need to enable "*less secure sign in*" for "*outdated*" apps,
 see [here](https://help.yahoo.com/kb/grant-temporary-access-outdated-apps-account-settings-sln27791.html).
+You can directly access this setting [here](https://login.yahoo.com/account/security#less-secure-apps).
 
 Note that FairEmail is using the standard [IMAP protocol](https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol), which is really not outdated.
 
@@ -1794,23 +1792,36 @@ Permanently delete messages from other folders would defeat the purpose of the t
 <br />
 
 <a name="faq109"></a>
-**(109) Why is 'select account' available in official versions only?**
+**~~(109) Why is 'select account' available in official versions only?~~**
 
-Using *select account* to select and authorize Google accounts require special permission from Google for security and privacy reasons.
-This special permission can only be acquired for apps a developer manages and is responsible for.
-Third party builds, like the F-Droid builds, are managed by third parties and are the responsibility of these third parties.
-So, only these third parties can acquire the required permission from Google.
-Since these third parties do not actually support FairEmail, they are most likely not going to request the required permission.
+~~Using *select account* to select and authorize Google accounts require special permission from Google for security and privacy reasons.~~
+~~This special permission can only be acquired for apps a developer manages and is responsible for.~~
+~~Third party builds, like the F-Droid builds, are managed by third parties and are the responsibility of these third parties.~~
+~~So, only these third parties can acquire the required permission from Google.~~
+~~Since these third parties do not actually support FairEmail, they are most likely not going to request the required permission.~~
 
-You can solve this in two ways:
+~~You can solve this in two ways:~~
 
-* Switch to the official version of FairEmail, see [here](https://github.com/M66B/open-source-email/blob/master/README.md#downloads) for the options
-* Use app specific passwords, see [this FAQ](#user-content-faq6)
+* ~~Switch to the official version of FairEmail, see [here](https://github.com/M66B/open-source-email/blob/master/README.md#downloads) for the options~~
+* ~~Use app specific passwords, see [this FAQ](#user-content-faq6)~~
 
-Using *select account* in third party builds is not possible in recent versions anymore.
-In older versions this was possible, but it will now result in the error *UNREGISTERED_ON_API_CONSOLE*.
+~~Using *select account* in third party builds is not possible in recent versions anymore.~~
+~~In older versions this was possible, but it will now result in the error *UNREGISTERED_ON_API_CONSOLE*.~~
 
 <br />
+
+<a name="faq110"></a>
+**(110) Why are (some) messages empty and/or attachments corrupt?**
+
+Empty messages and/or corrupt attachments are probably being caused by a bug in the server software.
+Older Microsoft Exchange software is known to cause this problem.
+Mostly you can workaround this by disabling *Partial fetch* in the advanced account settings.
+
+After disabling this setting, you can use the message 'more' (three dots) menu to 'resync' empty messages.
+Alternatively, you can *Delete local messages* by long pressing the folder(s) in the folder list and synchronize all messages again.
+
+<br />
+
 
 ## Support
 

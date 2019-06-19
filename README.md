@@ -1,3 +1,5 @@
+<img align="right" src="https://raw.githubusercontent.com/M66B/open-source-email/master/app/src/main/res/mipmap-hdpi/ic_launcher.png">
+
 # FairEmail (Fork)
 
 ![GitHub](https://img.shields.io/github/license/M66B/open-source-email.svg)
@@ -114,6 +116,15 @@ SHA256: E0:20:67:24:9F:5A:35:0E:0E:C7:03:FE:9D:F4:DD:68:2E:02:91:A0:9F:0C:2E:04:
 One line command to display certificate fingerprints:
 
 ```unzip -p fairemail.apk META-INF/CERT.RSA | keytool -printcert```
+
+* [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/) ([last build status](https://f-droid.org/wiki/page/eu.faircode.email/lastbuild))
+
+Note that F-Droid builds new versions irregularly and you'll need the F-Droid client to get update notifications.
+To get updates in a timely fashion you are advised to use the GitHub release.
+The GitHub release will automatically check for updates on GitHub.
+You can turn this off in the advanced options.
+
+Because F-Droid builds and GitHub releases are signed differently, an F-Droid build needs to be uninstalled first to be able to update to a GitHub release.
 
 ## Privacy
 
