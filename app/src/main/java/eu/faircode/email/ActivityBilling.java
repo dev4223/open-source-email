@@ -29,10 +29,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.util.Base64;
-import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -53,7 +52,6 @@ import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.SkuDetails;
 import com.android.billingclient.api.SkuDetailsParams;
 import com.android.billingclient.api.SkuDetailsResponseListener;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -149,10 +147,12 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (ACTION_PURCHASE.equals(intent.getAction()))
-                onPurchase(intent);
-            else if (ACTION_ACTIVATE_PRO.equals(intent.getAction()))
-                onActivatePro(intent);
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+                if (ACTION_PURCHASE.equals(intent.getAction()))
+                    onPurchase(intent);
+                else if (ACTION_ACTIVATE_PRO.equals(intent.getAction()))
+                    onActivatePro(intent);
+            }
         }
     };
 
@@ -168,7 +168,7 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
             String text = getBillingResponseText(result);
             Log.i("IAB launch billing flow response=" + text);
             if (result.getResponseCode() != BillingClient.BillingResponseCode.OK)
-                Snackbar.make(getVisibleView(), text, Snackbar.LENGTH_LONG).show();
+                Toast.makeText(this, text, Toast.LENGTH_LONG).show();
         } else
             Helper.view(this, this, getIntentPro());
     }
@@ -188,19 +188,10 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
                         .putBoolean("play_store", false)
                         .apply();
                 Log.i("Response valid");
-                Snackbar snackbar = Snackbar.make(getVisibleView(), R.string.title_pro_valid, Snackbar.LENGTH_LONG);
-                snackbar.setAction(R.string.title_check, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-                        fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
-                        fragmentTransaction.commit();
-                    }
-                });
-                snackbar.show();
+                Toast.makeText(this, R.string.title_pro_valid, Toast.LENGTH_LONG).show();
             } else {
                 Log.i("Response invalid");
-                Snackbar.make(getVisibleView(), R.string.title_pro_invalid, Snackbar.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.title_pro_invalid, Toast.LENGTH_LONG).show();
             }
         } catch (NoSuchAlgorithmException ex) {
             Log.e(ex);
@@ -223,7 +214,7 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
                 backoff = 4;
                 queryPurchases();
             } else
-                Snackbar.make(getVisibleView(), text, Snackbar.LENGTH_LONG).show();
+                Toast.makeText(ActivityBilling.this, text, Toast.LENGTH_LONG).show();
         }
 
         @Override
@@ -251,7 +242,7 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
         if (result.getResponseCode() == BillingClient.BillingResponseCode.OK)
             checkPurchases(purchases);
         else
-            Snackbar.make(getVisibleView(), text, Snackbar.LENGTH_LONG).show();
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
     }
 
     private void queryPurchases() {
@@ -262,7 +253,7 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
         if (result.getResponseCode() == BillingClient.BillingResponseCode.OK)
             checkPurchases(result.getPurchasesList());
         else
-            Snackbar.make(getVisibleView(), text, Snackbar.LENGTH_LONG).show();
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show();
     }
 
     interface IBillingListener {
@@ -337,11 +328,11 @@ abstract class ActivityBilling extends ActivityBase implements PurchasesUpdatedL
 
                     } else {
                         Log.w("Invalid signature");
-                        Snackbar.make(getVisibleView(), R.string.title_pro_invalid, Snackbar.LENGTH_LONG).show();
+                        Toast.makeText(this, R.string.title_pro_invalid, Toast.LENGTH_LONG).show();
                     }
                 } catch (Throwable ex) {
                     Log.e(ex);
-                    Snackbar.make(getVisibleView(), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(this, Helper.formatThrowable(ex), Toast.LENGTH_LONG).show();
                 }
 
             editor.apply();

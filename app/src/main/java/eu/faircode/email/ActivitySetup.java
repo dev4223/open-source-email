@@ -108,12 +108,9 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     private static final int KEY_LENGTH = 256;
 
     static final int REQUEST_PERMISSION = 1;
-    static final int REQUEST_CHOOSE_ACCOUNT = 2;
-
-    static final int REQUEST_SOUND = 3;
-
-    static final int REQUEST_EXPORT = 4;
-    static final int REQUEST_IMPORT = 5;
+    static final int REQUEST_SOUND = 2;
+    static final int REQUEST_EXPORT = 3;
+    static final int REQUEST_IMPORT = 4;
 
     static final String ACTION_QUICK_SETUP = BuildConfig.APPLICATION_ID + ".ACTION_QUICK_SETUP";
     static final String ACTION_VIEW_ACCOUNTS = BuildConfig.APPLICATION_ID + ".ACTION_VIEW_ACCOUNTS";
@@ -1044,19 +1041,21 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (ACTION_QUICK_SETUP.equals(action))
-                onViewQuickSetup(intent);
-            else if (ACTION_VIEW_ACCOUNTS.equals(action))
-                onViewAccounts(intent);
-            else if (ACTION_VIEW_IDENTITIES.equals(action))
-                onViewIdentities(intent);
-            else if (ACTION_EDIT_ACCOUNT.equals(action))
-                onEditAccount(intent);
-            else if (ACTION_EDIT_IDENTITY.equals(action))
-                onEditIdentity(intent);
-            else if (ACTION_SHOW_PRO.equals(action))
-                onShowPro(intent);
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+                String action = intent.getAction();
+                if (ACTION_QUICK_SETUP.equals(action))
+                    onViewQuickSetup(intent);
+                else if (ACTION_VIEW_ACCOUNTS.equals(action))
+                    onViewAccounts(intent);
+                else if (ACTION_VIEW_IDENTITIES.equals(action))
+                    onViewIdentities(intent);
+                else if (ACTION_EDIT_ACCOUNT.equals(action))
+                    onEditAccount(intent);
+                else if (ACTION_EDIT_IDENTITY.equals(action))
+                    onEditIdentity(intent);
+                else if (ACTION_SHOW_PRO.equals(action))
+                    onShowPro(intent);
+            }
         }
     };
 }
