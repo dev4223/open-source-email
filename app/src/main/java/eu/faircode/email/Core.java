@@ -193,7 +193,8 @@ class Core {
                                     EntityOperation next = ops.get(j);
                                     if (next.message != null &&
                                             next.message.equals(op.message) &&
-                                            EntityOperation.ADD.equals(next.name)) {
+                                            (EntityOperation.ADD.equals(next.name) ||
+                                                    EntityOperation.DELETE.equals(next.name))) {
                                         squash = true;
                                         break;
                                     }
@@ -314,6 +315,8 @@ class Core {
         if (message.uid != null)
             return;
         if (EntityOperation.ADD.equals(op.name))
+            return;
+        if (EntityOperation.DELETE.equals(op.name) && !TextUtils.isEmpty(message.msgid))
             return;
 
         Log.i(folder.name + " ensure uid op=" + op.name + " msgid=" + message.msgid);
@@ -2129,11 +2132,11 @@ class Core {
 
         String title;
         if (account == null)
-            title = folder.name;
+            title = Helper.localizeFolderName(context, folder.name);
         else if (folder == null)
             title = account.name;
         else
-            title = account.name + "/" + folder.name;
+            title = account.name + "/" + Helper.localizeFolderName(context, folder.name);
 
         String tag = "error:" + (account == null ? 0 : account.id) + ":" + (folder == null ? 0 : folder.id);
 
@@ -2146,7 +2149,7 @@ class Core {
         if (ex instanceof AuthenticationFailedException || // Also: Too many simultaneous connections
                 ex instanceof AlertException ||
                 ex instanceof SendFailedException)
-            nm.notify(tag, 1, getNotificationError(context, title, ex).build());
+            nm.notify(tag, 1, getNotificationError(context, "error", title, ex).build());
 
         // connection failure: Too many simultaneous connections
 
@@ -2164,18 +2167,12 @@ class Core {
                 !(ex instanceof MessagingException && ex.getCause() instanceof SocketTimeoutException) &&
                 !(ex instanceof MessagingException && ex.getCause() instanceof SSLException) &&
                 !(ex instanceof MessagingException && "connection failure".equals(ex.getMessage())))
-            nm.notify(tag, 1, getNotificationError(context, title, ex).build());
+            nm.notify(tag, 1, getNotificationError(context, "error", title, ex).build());
     }
 
-    static NotificationCompat.Builder getNotificationError(Context context, String title, Throwable ex) {
-        return getNotificationError(context, "error", title, ex, true);
-    }
-
-    static NotificationCompat.Builder getNotificationError(Context context, String channel, String title, Throwable ex, boolean debug) {
+    static NotificationCompat.Builder getNotificationError(Context context, String channel, String title, Throwable ex) {
         // Build pending intent
         Intent intent = new Intent(context, ActivityView.class);
-        if (debug)
-            intent.setAction("error");
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pi = PendingIntent.getActivity(
                 context, ActivityView.REQUEST_ERROR, intent, PendingIntent.FLAG_UPDATE_CURRENT);

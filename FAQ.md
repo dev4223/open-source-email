@@ -48,8 +48,8 @@ Anything on this list is in random order and *might* be added in the near future
 
 ## Frequently requested features
 
-* *Widget to read messages*: widgets can have limited user interaction only, so a widget to read conversations would not be very convenient. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too. See below for the design goals.
+* *Widget to read messages*: widgets can have limited user interaction only, so a widget to read conversations would not be very convenient. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *ActiveSync*: using the Exchange ActiveSync protocol requires [a license](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing), so this cannot be added.
 
 The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
@@ -59,7 +59,7 @@ Fonts, sizes, colors, etc should be material design wherever possible.
 Since FairEmail is meant to be privacy friendly, the following will not be added:
 
 * Open links without confirmation
-* Show original messages from unknown senders without confirmation, see also [this FAQ](#user-content-faq35)
+* Show images and original messages without confirmation, see also [this FAQ](#user-content-faq35)
 * Direct file/folder access: for security/privacy reasons (other) apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider), see also [this FAQ](#user-content-faq49)
 
 Confirmation is just one tap, which is just a small price for better privacy.
@@ -183,6 +183,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
 * [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
 * [(110) Why are (some) messages empty and/or attachments corrupted?](#user-content-faq110)
+* [(111) Can you add OAuth authentication?](#user-content-faq111)
 
 [I have another question.](#support)
 
@@ -194,9 +195,9 @@ The following Android permissions are needed:
 * *have full network access* (INTERNET): to send and receive email
 * *view network connections* (ACCESS_NETWORK_STATE): to monitor internet connectivity changes
 * *run at startup* (RECEIVE_BOOT_COMPLETED): to start monitoring on device start
-* *in-app billing* (BILLING): to allow in-app purchases
 * *foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
 * *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while synchronizing messages
+* *in-app billing* (BILLING): to allow in-app purchases
 * Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 
@@ -334,7 +335,13 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 To use a Gmail/G suite account, you'll need to enable access for "less secure" apps,
 see [here](https://support.google.com/accounts/answer/6010255) for Google's instructions
 or go [directy to the setting](https://www.google.com/settings/security/lesssecureapps).
-You can solve the error *535-5.7.8 Username and Password not accepted* by enabling "less secure" apps.
+When "less secure" apps is not enabled,
+you'll get the error *Authentication failed - invalid credentials* for accounts (IMAP)
+and *Username and Password not accepted* for identities (SMTP).
+
+If you use multiple Gmail accounts, make sure you change the "less secure" setting of the right account(s).
+
+Be aware that you need to leave the "less secure" settings screen by using the back arrow to apply the setting.
 
 You might get the alert "*Please log in via your web browser*".
 This security measure can for example be triggered when too many IP addresses were used in a too short time or when you are using a VPN.
@@ -473,11 +480,6 @@ Searching messages is a pro feature.
 
 To use Outlook or Hotmail with two factor authentication enabled, you need to create an app password.
 See [here](https://support.microsoft.com/en-us/help/12409/microsoft-account-app-passwords-two-step-verification) for the details.
-
-Unfortunately, Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections, so there is no other way.
-
-Technical background: [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only
-and OAuth requires embedding a client secret in the app.
 
 <br />
 
@@ -1182,7 +1184,6 @@ The following authentication methods are supported and used in this order:
 * LOGIN
 * PLAIN
 * NTLM (untested)
-* XOAUTH2 (used when a Google account is selected)
 
 SASL authentication methods, like CRAM-MD5, are not supported
 because [JavaMail for Android](https://javaee.github.io/javamail/Android) does not support SASL authentication.
@@ -1822,6 +1823,23 @@ Alternatively, you can *Delete local messages* by long pressing the folder(s) in
 
 <br />
 
+<a name="faq111"></a>
+**(111) Can you add OAuth authentication?**
+
+(X)OAuth authentication, formerly available as *Select account* for Google accounts, requires creating an online (Google, Microsoft, etc) app,
+which would make authentication for many people dependent on one (developer) account, which is a bad idea.
+
+Google requires requesting special permission for the online app and has appeared to be unreliable in granting this permission.
+When requested permission for FairEmail, the request was denied with the remark that send permission would be enough, ... right.
+An appeal was completely ignored, which is unfortunately typical for Google.
+Also, Google requires a yearly security assessment which will cost between $15,000 and $75,000.
+This is how you exclude independent developers ...
+
+Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections.
+[MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only
+and requires embedding a client secret in the app, which is not a good idea for an open source app.
+
+<br />
 
 ## Support
 
