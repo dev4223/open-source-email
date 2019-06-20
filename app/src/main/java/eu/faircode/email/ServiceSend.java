@@ -333,6 +333,8 @@ public class ServiceSend extends LifecycleService {
             // Append replied/forwarded text
             StringBuilder sb = new StringBuilder();
             sb.append(Helper.readText(message.getFile(this)));
+            if (!TextUtils.isEmpty(ident.signature))
+                sb.append(ident.signature);
             File refFile = message.getRefFile(this);
             if (refFile.exists())
                 sb.append(Helper.readText(refFile));
@@ -414,7 +416,7 @@ public class ServiceSend extends LifecycleService {
                 Log.i("Reporting send error after=" + delayed);
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.notify("send", message.identity.intValue(),
-                        Core.getNotificationError(this, ident.name, ex).build());
+                        Core.getNotificationError(this, "error", ident.name, ex).build());
             }
 
             throw ex;
