@@ -29,6 +29,7 @@ import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -52,6 +53,7 @@ import androidx.annotation.NonNull;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.preference.PreferenceManager;
@@ -93,6 +95,7 @@ public class Helper {
     static final int NOTIFICATION_SYNCHRONIZE = 1;
     static final int NOTIFICATION_SEND = 2;
     static final int NOTIFICATION_EXTERNAL = 3;
+    static final int NOTIFICATION_UPDATE = 4;
 
     static final float LOW_LIGHT = 0.6f;
 
@@ -513,14 +516,66 @@ public class Helper {
         while (options.outWidth / factor > scaleToPixels)
             factor *= 2;
 
-        if (factor > 1) {
+        Matrix rotation = null;
+        try {
+            rotation = Helper.getImageRotation(file);
+        } catch (IOException ex) {
+            Log.w(ex);
+        }
+
+        if (factor > 1 || rotation != null) {
             Log.i("Decode image factor=" + factor);
             options.inJustDecodeBounds = false;
             options.inSampleSize = factor;
-            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            Bitmap scaled = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+
+            if (rotation != null) {
+                Bitmap rotated = Bitmap.createBitmap(scaled, 0, 0, scaled.getWidth(), scaled.getHeight(), rotation, true);
+                scaled.recycle();
+                scaled = rotated;
+            }
+
+            return scaled;
         }
 
         return BitmapFactory.decodeFile(file.getAbsolutePath());
+    }
+
+    static Matrix getImageRotation(File file) throws IOException {
+        ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+        int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED);
+
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return null;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                return matrix;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                return matrix;
+            default:
+                return null;
+        }
     }
 
     // Cryptography
