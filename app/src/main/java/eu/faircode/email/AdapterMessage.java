@@ -390,10 +390,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvNoInternetAttachments = attachments.findViewById(R.id.tvNoInternetAttachments);
 
             bnvActions = vsBody.findViewById(R.id.bnvActions);
-
-            for (int i = 0; i < bnvActions.getMenu().size(); i++)
-                bnvActions.getMenu().getItem(i).getIcon().mutate();
-
             if (compact) {
                 bnvActions.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED);
                 ViewGroup.LayoutParams lparam = bnvActions.getLayoutParams();
@@ -1159,8 +1155,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean calendar = false;
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
-                boolean inline = (TextUtils.isEmpty(attachment.name) ||
-                        (attachment.isInline() && attachment.isImage()));
+                boolean inline = (attachment.isInline() || TextUtils.isEmpty(attachment.name));
                 if (inline)
                     has_inline = true;
                 if (attachment.progress == null && !attachment.available)

@@ -37,11 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
@@ -511,30 +507,7 @@ public class MessageHelper {
     }
 
     Address[] getReceiptTo() throws MessagingException {
-        try {
-            String to = imessage.getHeader("Disposition-Notification-To", null);
-            if (to == null)
-                return null;
-
-            to = MimeUtility.unfold(to);
-
-            InternetAddress[] address = null;
-            try {
-                address = InternetAddress.parse(to);
-            } catch (AddressException ex) {
-                Log.w(ex);
-            }
-
-            if (address == null || address.length == 0)
-                return null;
-
-            fix(address[0]);
-
-            return new Address[]{address[0]};
-        } catch (AddressException ex) {
-            Log.w(ex);
-            return null;
-        }
+        return getAddressHeader("Disposition-Notification-To");
     }
 
     String getAuthentication() throws MessagingException {
@@ -567,33 +540,43 @@ public class MessageHelper {
         return result;
     }
 
+    private Address[] getAddressHeader(String name) throws MessagingException {
+        String header = imessage.getHeader(name, ",");
+        if (header == null)
+            return null;
+
+        header = MimeUtility.unfold(header);
+        header = new String(header.getBytes(StandardCharsets.ISO_8859_1));
+        header = decodeMime(header);
+
+        return InternetAddress.parseHeader(header, false);
+    }
+
     Address[] getFrom() throws MessagingException {
-        return fix(imessage.getFrom());
+        Address[] address = getAddressHeader("From");
+        if (address == null)
+            address = getAddressHeader("Sender");
+        return address;
     }
 
     Address[] getTo() throws MessagingException {
-        return fix(imessage.getRecipients(Message.RecipientType.TO));
+        return getAddressHeader("To");
     }
 
     Address[] getCc() throws MessagingException {
-        return fix(imessage.getRecipients(Message.RecipientType.CC));
+        return getAddressHeader("Cc");
     }
 
     Address[] getBcc() throws MessagingException {
-        return fix(imessage.getRecipients(Message.RecipientType.BCC));
+        return getAddressHeader("Bcc");
     }
 
     Address[] getReply() throws MessagingException {
-        // Prevent getting To header
-        String[] headers = imessage.getHeader("Reply-To");
-        if (headers != null && headers.length > 0)
-            return fix(imessage.getReplyTo());
-        else
-            return null;
+        return getAddressHeader("Reply-To");
     }
 
     Address[] getListPost() throws MessagingException {
-        String list = null;
+        String list;
         try {
             // https://www.ietf.org/rfc/rfc2369.txt
             list = imessage.getHeader("List-Post", null);
@@ -629,52 +612,24 @@ public class MessageHelper {
         }
     }
 
-    private static Address[] fix(Address[] addresses) {
-        if (addresses != null)
-            for (int i = 0; i < addresses.length; i++)
-                fix((InternetAddress) addresses[i]);
-        return addresses;
-    }
-
-    private static void fix(InternetAddress address) {
-        try {
-            String email = decodeMime(address.getAddress());
-            String personal = decodeMime(address.getPersonal());
-            try {
-                InternetAddress[] a = InternetAddress.parse(email);
-                if (a.length < 1)
-                    throw new AddressException("empty");
-                String p = a[0].getPersonal();
-                address.setAddress(a[0].getAddress());
-                address.setPersonal(TextUtils.isEmpty(personal) ? p : personal + (p == null ? "" : " " + p));
-            } catch (AddressException ex) {
-                Log.w(ex);
-                address.setAddress(email);
-                address.setPersonal(personal);
-            }
-        } catch (UnsupportedEncodingException ex) {
-            Log.w(ex);
-        }
-    }
-
     String getSubject() throws MessagingException {
         String subject = imessage.getHeader("Subject", null);
         if (subject == null)
             return null;
 
         subject = MimeUtility.unfold(subject);
+        subject = new String(subject.getBytes(StandardCharsets.ISO_8859_1));
 
-        if (subject.contains("=?")) {
-            // Decode header
+        if (subject.startsWith("=?"))
             try {
                 subject = MimeUtility.decodeText(subject);
             } catch (UnsupportedEncodingException ex) {
                 Log.w(ex);
             }
-        } else
-            subject = fixUTF8(subject);
 
-        return decodeMime(subject);
+        subject = decodeMime(subject);
+
+        return subject;
     }
 
     Long getSize() throws MessagingException {
@@ -792,24 +747,6 @@ public class MessageHelper {
         return text;
     }
 
-    static String fixUTF8(String text) {
-        try {
-            char[] kars = text.toCharArray();
-            byte[] bytes = new byte[kars.length];
-            for (int i = 0; i < kars.length; i++)
-                bytes[i] = (byte) kars[i];
-
-            CharsetDecoder cs = StandardCharsets.UTF_8.newDecoder();
-            CharBuffer out = cs.decode(ByteBuffer.wrap(bytes));
-            if (out.length() > 0)
-                return new String(bytes, StandardCharsets.UTF_8);
-        } catch (CharacterCodingException ex) {
-            Log.w(ex);
-        }
-
-        return text;
-    }
-
     static String getSortKey(Address[] addresses) {
         if (addresses == null || addresses.length == 0)
             return null;
@@ -839,12 +776,17 @@ public class MessageHelper {
             }
 
             String result;
-            boolean text = false;
             Part part = (html == null ? plain : html);
 
             try {
                 Object content = part.getContent();
                 Log.i("Content class=" + (content == null ? null : content.getClass().getName()));
+
+                if (content == null) {
+                    warnings.add(context.getString(R.string.title_no_body));
+                    return null;
+                }
+
                 if (content instanceof String)
                     result = (String) content;
                 else if (content instanceof InputStream)
@@ -866,23 +808,24 @@ public class MessageHelper {
                 if (TextUtils.isEmpty(charset)) {
                     if (BuildConfig.DEBUG)
                         warnings.add(context.getString(R.string.title_no_charset, ct.toString()));
-                    if (part.isMimeType("text/plain")) {
-                        // The first 127 characters are the same as in US-ASCII
-                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
-                    }
+                    // The first 127 characters are the same as in US-ASCII
+                    result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
                 } else {
-                    if ("US-ASCII".equals(Charset.forName(charset).name()) &&
-                            !"US-ASCII".equals(charset.toUpperCase()))
-                        warnings.add(context.getString(R.string.title_no_charset, charset));
-                    if (part.isMimeType("text/plain") && "US-ASCII".equals(charset.toUpperCase()))
-                        result = fixUTF8(result);
+                    if ("US-ASCII".equals(charset.toUpperCase()))
+                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
+                    else {
+                        if ("US-ASCII".equals(Charset.forName(charset).name()))
+                            warnings.add(context.getString(R.string.title_no_charset, charset));
+                    }
                 }
             } catch (ParseException ex) {
                 Log.w(ex);
                 warnings.add(Helper.formatThrowable(ex));
             }
 
-            if (part.isMimeType("text/plain") || text) {
+            result = result.replace("\0", "");
+
+            if (part.isMimeType("text/plain")) {
                 result = TextUtils.htmlEncode(result);
                 result = result.replaceAll("\\r?\\n", "<br />");
                 result = "<span>" + result + "</span>";
