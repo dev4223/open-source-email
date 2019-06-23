@@ -713,7 +713,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (debug) {
                 String text = "error=" + error +
                         "\nuid=" + message.uid + " id=" + message.id + " " + DTF.format(new Date(message.received)) +
-                        "\n" + (message.ui_hide ? "HIDDEN " : "") +
+                        "\n" + (message.ui_hide == 0 ? "" : "HIDDEN ") +
                         "seen=" + message.seen + "/" + message.ui_seen +
                         " unseen=" + message.unseen +
                         " ignored=" + message.ui_ignored +
@@ -2341,7 +2341,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return true;
                 case R.id.action_move:
                     if (EntityFolder.OUTBOX.equals(data.message.folderType))
-                        onnActionMoveOutbox(data);
+                        onActionMoveOutbox(data);
                     else
                         onActionMove(data, false);
                     return true;
@@ -2972,10 +2972,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                 db.message().deleteMessage(id);
 
                                                 db.folder().setFolderError(message.folder, null);
-                                                db.identity().setIdentityError(message.identity, null);
+                                                if (message.identity != null) {
+                                                    db.identity().setIdentityError(message.identity, null);
 
-                                                NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                                                nm.cancel("send", message.identity.intValue());
+                                                    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                                    nm.cancel("send:" + message.identity, 1);
+                                                }
                                             } else
                                                 EntityOperation.queue(context, message, EntityOperation.DELETE);
 
@@ -3095,7 +3097,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.execute(context, owner, args, "message:move:list");
         }
 
-        private void onnActionMoveOutbox(ActionData data) {
+        private void onActionMoveOutbox(ActionData data) {
             Bundle args = new Bundle();
             args.putLong("id", data.message.id);
 
@@ -3143,8 +3145,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         db.endTransaction();
                     }
 
-                    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                    nm.cancel("send", message.identity.intValue());
+                    if (message.identity != null) {
+                        // Identity can be deleted
+                        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                        nm.cancel("send:" + message.identity, 1);
+                    }
 
                     return null;
                 }

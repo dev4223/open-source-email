@@ -222,10 +222,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
 
-    static final int REQUEST_RAW = 1;
-    static final int REQUEST_ATTACHMENT = 2;
-    static final int REQUEST_ATTACHMENTS = 3;
-    static final int REQUEST_DECRYPT = 4;
+    private static final int REQUEST_RAW = 1;
+    private static final int REQUEST_ATTACHMENT = 2;
+    private static final int REQUEST_ATTACHMENTS = 3;
+    private static final int REQUEST_DECRYPT = 4;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_STORE_ATTACHMENT = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENT";
@@ -1075,7 +1075,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                    moveAsk(result);
+                    if (args.getBoolean("type"))
+                        moveAsk(result);
+                    else
+                        moveAskConfirmed(result);
                 }
 
                 @Override
@@ -1193,12 +1196,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             TupleMessageEx message = getMessage(viewHolder);
-            if (message == null)
+            if (message == null) {
+                super.clearView(rvMessage, viewHolder);
                 return;
+            }
 
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
-            if (swipes == null)
+            if (swipes == null) {
+                super.clearView(rvMessage, viewHolder);
                 return;
+            }
 
             Log.i("Swiped dir=" + direction + " message=" + message.id);
 
@@ -1232,7 +1239,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     message.account, message.thread, threading && thread ? null : id, message.folder);
                             for (EntityMessage threaded : messages) {
                                 result.add(new MessageTarget(threaded, account, target));
-                                db.message().setMessageUiHide(threaded.id, true);
+                                db.message().setMessageUiHide(threaded.id, new Date().getTime());
                                 // Prevent new message notification on undo
                                 db.message().setMessageUiIgnored(threaded.id, true);
                             }
@@ -3238,6 +3245,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onClick(View v) {
                 snackbar.dismiss();
+                snackbar.getView().setTag(true);
 
                 Bundle args = new Bundle();
                 args.putParcelableArrayList("result", result);
@@ -3250,7 +3258,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         ArrayList<MessageTarget> result = args.getParcelableArrayList("result");
                         for (MessageTarget target : result) {
                             Log.i("Move undo id=" + target.id);
-                            db.message().setMessageUiHide(target.id, false);
+                            db.message().setMessageUiHide(target.id, 0L);
                         }
                         return null;
                     }
@@ -3272,6 +3280,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             public void run() {
                 Log.i("Move timeout");
 
+                if (snackbar.getView().getTag() != null)
+                    return;
+
                 // Remove snackbar
                 if (snackbar.isShown())
                     snackbar.dismiss();
@@ -3285,13 +3296,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                             for (MessageTarget target : result) {
                                 EntityMessage message = db.message().getMessage(target.id);
-                                if (message != null && message.ui_hide) {
+                                if (message != null && message.ui_hide != 0) {
                                     Log.i("Move id=" + id + " target=" + target.folder.name);
                                     EntityOperation.queue(context, message, EntityOperation.MOVE, target.folder.id);
                                 }
                             }
 
                             db.setTransactionSuccessful();
+                        } catch (Throwable ex) {
+                            Log.e(ex);
                         } finally {
                             db.endTransaction();
                         }

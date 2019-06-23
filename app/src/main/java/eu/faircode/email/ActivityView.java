@@ -539,7 +539,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             int count = getSupportFragmentManager().getBackStackEntryCount();
             if (exit || count > 1)
                 super.onBackPressed();
-            else {
+            else if (!backHandled()) {
                 exit = true;
                 Toast.makeText(this, R.string.app_exit, Toast.LENGTH_SHORT).show();
                 new Handler().postDelayed(new Runnable() {
@@ -737,7 +737,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
 
                 NotificationCompat.Builder builder =
-                        new NotificationCompat.Builder(ActivityView.this, "notification")
+                        new NotificationCompat.Builder(ActivityView.this, "update")
                                 .setSmallIcon(R.drawable.baseline_system_update_24)
                                 .setContentTitle(getString(R.string.title_updated, info.tag_name))
                                 .setAutoCancel(true)
