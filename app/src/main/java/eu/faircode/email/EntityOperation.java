@@ -98,9 +98,10 @@ public class EntityOperation {
         long folder = message.folder;
         try {
             if (SEEN.equals(name)) {
+                boolean ignore = jargs.optBoolean(1, true);
                 for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid)) {
                     db.message().setMessageUiSeen(similar.id, jargs.getBoolean(0));
-                    db.message().setMessageUiIgnored(similar.id, true);
+                    db.message().setMessageUiIgnored(similar.id, ignore);
                 }
 
             } else if (FLAG.equals(name)) {
@@ -122,8 +123,7 @@ public class EntityOperation {
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean autoread = prefs.getBoolean("autoread", false);
-                if (jargs.length() > 1)
-                    autoread = (autoread && jargs.getBoolean(1));
+                autoread = (autoread && jargs.optBoolean(1, true));
                 jargs.put(1, autoread);
 
                 EntityFolder source = db.folder().getFolder(message.folder);
@@ -132,7 +132,7 @@ public class EntityOperation {
                     return;
 
                 if (!EntityFolder.ARCHIVE.equals(source.type) || EntityFolder.TRASH.equals(target.type))
-                    db.message().setMessageUiHide(message.id, true);
+                    db.message().setMessageUiHide(message.id, new Date().getTime());
 
                 Calendar cal_keep = Calendar.getInstance();
                 cal_keep.add(Calendar.DAY_OF_MONTH, -target.keep_days);
@@ -204,7 +204,7 @@ public class EntityOperation {
                         name = RAW;
 
             } else if (DELETE.equals(name))
-                db.message().setMessageUiHide(message.id, true);
+                db.message().setMessageUiHide(message.id, new Date().getTime());
 
         } catch (JSONException ex) {
             Log.e(ex);

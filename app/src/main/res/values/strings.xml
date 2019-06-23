@@ -12,6 +12,7 @@
     <string name="channel_service">Service</string>
     <string name="channel_send">Send</string>
     <string name="channel_notification">Notifications</string>
+    <string name="channel_update">Updates</string>
     <string name="channel_warning">Warnings</string>
     <string name="channel_error">Errors</string>
     <string name="channel_group_contacts">Contacts</string>
@@ -64,6 +65,7 @@
     </plurals>
     <string name="title_ask_spam_who">Report message from %1$s as spam?</string>
 
+    <string name="title_notification_waiting">Waiting for suitable connection</string>
     <string name="title_notification_sending">Sending messages</string>
     <string name="title_notification_failed">\'%1$s\' failed</string>
 
@@ -455,7 +457,7 @@
     <string name="title_ask_show_html">Showing the original message can leak privacy sensitive information</string>
     <string name="title_ask_show_image">Showing images can leak privacy sensitive information</string>
     <string name="title_ask_edit_ref">Edit reformatted replied/forwarded message text?</string>
-    <string name="title_ask_delete_local">Delete local messages which are stored on the remote server too?</string>
+    <string name="title_ask_delete_local">Delete only local messages which are stored on the remote server too?</string>
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
@@ -536,10 +538,6 @@
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
     <string name="title_select_all">Select all</string>
-
-    <string name="title_address_sent">Sent:</string>
-    <string name="title_address_unsent">Unsent:</string>
-    <string name="title_address_invalid">Invalid:</string>
 
     <string name="title_previous">Previous</string>
     <string name="title_next">Next</string>

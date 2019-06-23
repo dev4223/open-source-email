@@ -49,7 +49,6 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
-import com.sun.mail.util.MailConnectException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -64,8 +63,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -82,7 +79,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.Address;
-import javax.mail.AuthenticationFailedException;
 import javax.mail.FetchProfile;
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -91,10 +87,8 @@ import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
-import javax.mail.SendFailedException;
 import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.StoreClosedException;
 import javax.mail.UIDFolder;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -104,7 +98,6 @@ import javax.mail.search.MessageIDTerm;
 import javax.mail.search.OrTerm;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
-import javax.net.ssl.SSLException;
 
 import me.leolin.shortcutbadger.ShortcutBadger;
 
@@ -118,6 +111,7 @@ class Core {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
+    private static final long MIN_HIDE = 60 * 1000L; // milliseconds
 
     static void processOperations(
             Context context,
@@ -252,11 +246,10 @@ class Core {
                         db.operation().deleteOperation(op.id);
                     } catch (Throwable ex) {
                         Log.e(folder.name, ex);
-                        reportError(context, account, folder, ex);
 
                         db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
                         if (message != null && !(ex instanceof IllegalArgumentException))
-                            db.message().setMessageError(message.id, Helper.formatThrowable(ex, true));
+                            db.message().setMessageError(message.id, Helper.formatThrowable(ex));
 
                         if (ex instanceof OutOfMemoryError ||
                                 ex instanceof MessageRemovedException ||
@@ -291,7 +284,7 @@ class Core {
                                 // Delete temporary copy in target folder
                                 if (newid != null) {
                                     db.message().deleteMessage(newid);
-                                    db.message().setMessageUiHide(message.id, false);
+                                    db.message().setMessageUiHide(message.id, 0L);
                                 }
                             }
 
@@ -460,8 +453,8 @@ class Core {
         DB db = DB.getInstance(context);
 
         // Get arguments
-        long target = (jargs.length() > 0 ? jargs.getLong(0) : folder.id);
-        boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
+        long target = jargs.optLong(0, folder.id);
+        boolean autoread = jargs.optBoolean(1, false);
 
         if (target != folder.id)
             throw new IllegalArgumentException("Invalid folder");
@@ -582,7 +575,7 @@ class Core {
 
         // Get arguments
         long id = jargs.getLong(0);
-        boolean autoread = (jargs.length() > 1 && jargs.getBoolean(1));
+        boolean autoread = jargs.optBoolean(1, false);
 
         // Get source message
         Message imessage = ifolder.getMessageByUID(message.uid);
@@ -947,8 +940,8 @@ class Core {
 
             int sync_days = jargs.getInt(0);
             int keep_days = jargs.getInt(1);
-            boolean download = (jargs.length() > 2 && jargs.getBoolean(2));
-            boolean auto_delete = (jargs.length() > 3 && jargs.getBoolean(3));
+            boolean download = jargs.optBoolean(2, false);
+            boolean auto_delete = jargs.optBoolean(3, false);
 
             if (keep_days == sync_days)
                 keep_days++;
@@ -1052,8 +1045,7 @@ class Core {
                     Log.w(folder.name, ex);
                 } catch (Throwable ex) {
                     Log.e(folder.name, ex);
-                    reportError(context, account, folder, ex);
-                    db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
+                    db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                 }
 
             if (uids.size() > 0) {
@@ -1158,12 +1150,12 @@ class Core {
                     } catch (IOException ex) {
                         if (ex.getCause() instanceof MessagingException) {
                             Log.w(folder.name, ex);
-                            db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
+                            db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                         } else
                             throw ex;
                     } catch (Throwable ex) {
                         Log.e(folder.name, ex);
-                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex, true));
+                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                     } finally {
                         // Free memory
                         ((IMAPMessage) isub[j]).invalidateHeaders();
@@ -1349,7 +1341,7 @@ class Core {
             message.ui_seen = seen;
             message.ui_answered = answered;
             message.ui_flagged = flagged;
-            message.ui_hide = false;
+            message.ui_hide = 0L;
             message.ui_found = false;
             message.ui_ignored = seen;
             message.ui_browsed = browsed;
@@ -1455,16 +1447,17 @@ class Core {
                         " keywords=" + TextUtils.join(" ", keywords));
             }
 
-            if (message.ui_hide && db.operation().getOperationCount(folder.id, message.id) == 0) {
+            if (message.ui_hide != 0 && message.ui_hide + MIN_HIDE < new Date().getTime() &&
+                    db.operation().getOperationCount(folder.id, message.id) == 0) {
                 update = true;
-                message.ui_hide = false;
+                message.ui_hide = 0L;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unhide");
             }
 
-            if (message.ui_browsed) {
+            if (message.ui_browsed != browsed) {
                 update = true;
-                message.ui_browsed = false;
-                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unbrowse");
+                message.ui_browsed = browsed;
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " browsed=" + browsed);
             }
 
             Uri uri = ContactInfo.getLookupUri(context, message.from);
@@ -1884,19 +1877,19 @@ class Core {
                     R.plurals.title_notification_unseen, messages.size(), messages.size());
 
             // Build notification
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notification");
-            builder
-                    .setSmallIcon(R.drawable.baseline_email_white_24)
-                    .setContentTitle(title)
-                    .setContentIntent(piSummary)
-                    .setNumber(messages.size())
-                    .setShowWhen(false)
-                    .setDeleteIntent(piClear)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setCategory(NotificationCompat.CATEGORY_STATUS)
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .setGroup(group)
-                    .setGroupSummary(true);
+            NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(context, "notification")
+                            .setSmallIcon(R.drawable.baseline_email_white_24)
+                            .setContentTitle(title)
+                            .setContentIntent(piSummary)
+                            .setNumber(messages.size())
+                            .setShowWhen(false)
+                            .setDeleteIntent(piClear)
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setCategory(NotificationCompat.CATEGORY_STATUS)
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                            .setGroup(group)
+                            .setGroupSummary(true);
 
             Notification pub = builder.build();
             builder
@@ -1971,21 +1964,19 @@ class Core {
                     ? Helper.localizeFolderName(context, message.folderName)
                     : message.folderDisplay;
 
-            NotificationCompat.Builder mbuilder;
-            mbuilder = new NotificationCompat.Builder(context, channelName);
-
-            mbuilder
-                    .addExtras(args)
-                    .setSmallIcon(R.drawable.baseline_email_white_24)
-                    .setContentTitle(info.getDisplayName(true))
-                    .setSubText(message.accountName + " · " + folderName)
-                    .setContentIntent(piContent)
-                    .setWhen(message.received)
-                    .setDeleteIntent(piIgnore)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                    .setOnlyAlertOnce(true);
+            NotificationCompat.Builder mbuilder =
+                    new NotificationCompat.Builder(context, channelName)
+                            .addExtras(args)
+                            .setSmallIcon(R.drawable.baseline_email_white_24)
+                            .setContentTitle(info.getDisplayName(true))
+                            .setSubText(message.accountName + " · " + folderName)
+                            .setContentIntent(piContent)
+                            .setWhen(message.received)
+                            .setDeleteIntent(piIgnore)
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                            .setOnlyAlertOnce(true);
 
             if (notify_group)
                 mbuilder.setGroup(group).setGroupSummary(false);
@@ -2117,58 +2108,17 @@ class Core {
         builder.setSound(uri);
     }
 
-    static void reportError(Context context, EntityAccount account, EntityFolder folder, Throwable ex) {
-        // FolderClosedException: can happen when no connectivity
+    // FolderClosedException: can happen when no connectivity
 
-        // IllegalStateException:
-        // - "This operation is not allowed on a closed folder"
-        // - can happen when syncing message
+    // IllegalStateException:
+    // - "This operation is not allowed on a closed folder"
+    // - can happen when syncing message
 
-        // ConnectionException
-        // - failed to create new store connection (connectivity)
+    // ConnectionException
+    // - failed to create new store connection (connectivity)
 
-        // MailConnectException
-        // - on connectivity problems when connecting to store
-
-        String title;
-        if (account == null)
-            title = Helper.localizeFolderName(context, folder.name);
-        else if (folder == null)
-            title = account.name;
-        else
-            title = account.name + "/" + Helper.localizeFolderName(context, folder.name);
-
-        String tag = "error:" + (account == null ? 0 : account.id) + ":" + (folder == null ? 0 : folder.id);
-
-        EntityLog.log(context, title + " " + Helper.formatThrowable(ex));
-
-        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm == null)
-            return;
-
-        if (ex instanceof AuthenticationFailedException || // Also: Too many simultaneous connections
-                ex instanceof AlertException ||
-                ex instanceof SendFailedException)
-            nm.notify(tag, 1, getNotificationError(context, "error", title, ex).build());
-
-        // connection failure: Too many simultaneous connections
-
-        if (BuildConfig.DEBUG &&
-                !(ex instanceof SendFailedException) &&
-                !(ex instanceof MailConnectException) &&
-                !(ex instanceof FolderClosedException) &&
-                !(ex instanceof IllegalStateException) &&
-                !(ex instanceof StoreClosedException) &&
-                !(ex instanceof UnknownHostException) &&
-                !(ex instanceof MessageRemovedException) &&
-                !(ex instanceof MessagingException && ex.getCause() instanceof UnknownHostException) &&
-                !(ex instanceof MessagingException && ex.getCause() instanceof ConnectionException) &&
-                !(ex instanceof MessagingException && ex.getCause() instanceof SocketException) &&
-                !(ex instanceof MessagingException && ex.getCause() instanceof SocketTimeoutException) &&
-                !(ex instanceof MessagingException && ex.getCause() instanceof SSLException) &&
-                !(ex instanceof MessagingException && "connection failure".equals(ex.getMessage())))
-            nm.notify(tag, 1, getNotificationError(context, "error", title, ex).build());
-    }
+    // MailConnectException
+    // - on connectivity problems when connecting to store
 
     static NotificationCompat.Builder getNotificationError(Context context, String channel, String title, Throwable ex) {
         // Build pending intent
@@ -2178,22 +2128,21 @@ class Core {
                 context, ActivityView.REQUEST_ERROR, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Build notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channel);
-
-        builder
-                .setSmallIcon(R.drawable.baseline_warning_white_24)
-                .setContentTitle(context.getString(R.string.title_notification_failed, title))
-                .setContentText(Helper.formatThrowable(ex))
-                .setContentIntent(pi)
-                .setAutoCancel(false)
-                .setShowWhen(true)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setOnlyAlertOnce(true)
-                .setCategory(NotificationCompat.CATEGORY_ERROR)
-                .setVisibility(NotificationCompat.VISIBILITY_SECRET);
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(context, channel)
+                        .setSmallIcon(R.drawable.baseline_warning_white_24)
+                        .setContentTitle(context.getString(R.string.title_notification_failed, title))
+                        .setContentText(Helper.formatThrowable(ex))
+                        .setContentIntent(pi)
+                        .setAutoCancel(false)
+                        .setShowWhen(true)
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .setOnlyAlertOnce(true)
+                        .setCategory(NotificationCompat.CATEGORY_ERROR)
+                        .setVisibility(NotificationCompat.VISIBILITY_SECRET);
 
         builder.setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(Helper.formatThrowable(ex, false, "\n")));
+                .bigText(Helper.formatThrowable(ex, "\n")));
 
         return builder;
     }
