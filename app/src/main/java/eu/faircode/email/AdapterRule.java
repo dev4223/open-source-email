@@ -54,6 +54,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
+    private View parentView;
 
     private List<TupleRuleEx> items = new ArrayList<>();
 
@@ -258,7 +259,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                         @Override
                         protected void onExecuted(Bundle args, Integer applied) {
-                            Snackbar.make(view, context.getString(R.string.title_rule_applied, applied), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(
+                                    parentView,
+                                    context.getString(R.string.title_rule_applied, applied),
+                                    Snackbar.LENGTH_LONG).show();
                         }
 
                         @Override
@@ -275,10 +279,11 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
         }
     }
 
-    AdapterRule(Context context, LifecycleOwner owner) {
+    AdapterRule(Context context, LifecycleOwner owner, View parentView) {
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
+        this.parentView = parentView;
         setHasStableIds(true);
     }
 

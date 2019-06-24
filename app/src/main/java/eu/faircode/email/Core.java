@@ -503,9 +503,8 @@ class Core {
         }
 
         // Handle draft
-        if (EntityFolder.DRAFTS.equals(folder.type))
-            if (ifolder.getPermanentFlags().contains(Flags.Flag.DRAFT))
-                imessage.setFlag(Flags.Flag.DRAFT, true);
+        if (ifolder.getPermanentFlags().contains(Flags.Flag.DRAFT))
+            imessage.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(folder.type));
 
         // Add message
         ifolder.appendMessages(new Message[]{imessage});
@@ -582,17 +581,42 @@ class Core {
         if (imessage == null)
             throw new MessageRemovedException();
 
-        // Auto read
-        if (autoread && ifolder.getPermanentFlags().contains(Flags.Flag.SEEN))
-            imessage.setFlag(Flags.Flag.SEEN, true);
-
         // Get target folder
         EntityFolder target = db.folder().getFolder(id);
         if (target == null)
             throw new FolderNotFoundException();
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
-        ifolder.copyMessages(new Message[]{imessage}, itarget);
+        if (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type)) {
+            Log.i(folder.name + " move from " + folder.type + " to " + target.type);
+
+            File file = message.getRawFile(context);
+            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                imessage.writeTo(os);
+            }
+
+            Message icopy;
+            try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                icopy = new MimeMessage(isession, is);
+            }
+
+            file.delete();
+
+            // Auto read
+            if (autoread)
+                icopy.setFlag(Flags.Flag.SEEN, true);
+
+            // Set drafts flag
+            icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
+
+            itarget.appendMessages(new Message[]{icopy});
+        } else {
+            // Auto read
+            if (autoread && ifolder.getPermanentFlags().contains(Flags.Flag.SEEN))
+                imessage.setFlag(Flags.Flag.SEEN, true);
+
+            ifolder.copyMessages(new Message[]{imessage}, itarget);
+        }
 
         // Delete source
         if (!copy) {
@@ -791,7 +815,7 @@ class Core {
                 sync_folders = true;
             } else {
                 names.add(folder.name);
-                if (folder.initialize)
+                if (folder.initialize != 0)
                     sync_folders = true;
             }
         Log.i("Local folder count=" + names.size());
@@ -943,7 +967,7 @@ class Core {
             boolean download = jargs.optBoolean(2, false);
             boolean auto_delete = jargs.optBoolean(3, false);
 
-            if (keep_days == sync_days)
+            if (keep_days == sync_days && keep_days != Integer.MAX_VALUE)
                 keep_days++;
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -1218,8 +1242,8 @@ class Core {
             }
 
             if (state.running) {
-                folder.initialize = false;
-                db.folder().setFolderInitialized(folder.id);
+                folder.initialize = 0;
+                db.folder().setFolderInitialize(folder.id, 0);
             }
 
             db.folder().setFolderSync(folder.id, new Date().getTime());
@@ -2007,7 +2031,7 @@ class Core {
 
             if (notify_reply && message.content) {
                 Intent reply = new Intent(context, ActivityCompose.class)
-                        .putExtra("action", args.getString("action"))
+                        .putExtra("action", "reply")
                         .putExtra("reference", message.id);
                 reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 PendingIntent piReply = PendingIntent.getActivity(context, ActivityCompose.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -2204,7 +2228,8 @@ class Core {
                             ex.getCause() instanceof ConnectionException))
                 recoverable = false;
 
-            if (ex instanceof FolderClosedException)
+            if (ex instanceof FolderClosedException ||
+                    ex instanceof FolderNotFoundException)
                 recoverable = false;
 
             if (ex instanceof IllegalStateException && (
