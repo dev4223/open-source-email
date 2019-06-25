@@ -151,6 +151,9 @@ public class ServiceSend extends LifecycleService {
                                             db.operation().deleteOperation(op.id);
                                         } catch (Throwable ex) {
                                             Log.e(outbox.name, ex);
+                                            EntityLog.log(
+                                                    ServiceSend.this,
+                                                    outbox.name + " " + Helper.formatThrowable(ex));
 
                                             db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
                                             if (message != null)
@@ -296,9 +299,12 @@ public class ServiceSend extends LifecycleService {
         boolean debug = prefs.getBoolean("debug", false);
 
         if (message.identity == null)
-            throw new IllegalArgumentException("Identity removed");
+            throw new IllegalArgumentException("Send without identity");
 
         EntityIdentity ident = db.identity().getIdentity(message.identity);
+        if (ident == null)
+            throw new IllegalArgumentException("Identity not found");
+
         String protocol = ident.getProtocol();
 
         // Get properties
@@ -363,8 +369,9 @@ public class ServiceSend extends LifecycleService {
             Address[] to = imessage.getAllRecipients();
             itransport.sendMessage(imessage, to);
             long time = new Date().getTime();
-            EntityLog.log(this, "Sent via " + ident.host + "/" + ident.user +
-                    " to " + TextUtils.join(", ", to));
+            EntityLog.log(this,
+                    "Sent via " + ident.host + "/" + ident.user +
+                            " to " + TextUtils.join(", ", to));
 
             // Append replied/forwarded text
             StringBuilder sb = new StringBuilder();
@@ -428,6 +435,8 @@ public class ServiceSend extends LifecycleService {
                                 .build());
                 throw ex;
             }
+
+            EntityLog.log(this, ident.name + " last attempt: " + new Date(message.last_attempt));
 
             long now = new Date().getTime();
             long delayed = now - message.last_attempt;

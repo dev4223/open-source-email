@@ -595,8 +595,12 @@ public class ServiceSynchronize extends LifecycleService {
                             else
                                 try {
                                     wlFolder.acquire();
+
                                     String message = e.getMessage();
                                     Log.w(account.name + " alert: " + message);
+                                    EntityLog.log(
+                                            ServiceSynchronize.this, account.name + " " +
+                                                    Helper.formatThrowable(new Core.AlertException(message)));
                                     db.account().setAccountError(account.id, message);
 
                                     if (message != null && !message.startsWith("Too many simultaneous connections")) {
@@ -702,6 +706,7 @@ public class ServiceSynchronize extends LifecycleService {
                         // Report account connection error
                         if (account.last_connected != null && !ConnectionHelper.airplaneMode(this)) {
                             EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
+
                             long now = new Date().getTime();
                             long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
                             if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L && backoff > BACKOFF_ERROR_AFTER) {
@@ -840,12 +845,17 @@ public class ServiceSynchronize extends LifecycleService {
                                             } catch (Throwable ex) {
                                                 Log.e(folder.name, ex);
                                                 db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                                            } finally {
+                                                ((IMAPMessage) imessage).invalidateHeaders();
                                             }
 
                                         int count = ifolder.getMessageCount();
                                         db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
+                                        EntityLog.log(
+                                                ServiceSynchronize.this,
+                                                folder.name + " " + Helper.formatThrowable(ex));
                                         state.error(ex);
                                     } finally {
                                         wlMessage.release();
@@ -868,12 +878,17 @@ public class ServiceSynchronize extends LifecycleService {
                                                 Log.i(folder.name + " deleted uid=" + uid + " count=" + count);
                                             } catch (MessageRemovedException ex) {
                                                 Log.w(folder.name, ex);
+                                            } finally {
+                                                ((IMAPMessage) imessage).invalidateHeaders();
                                             }
 
                                         int count = ifolder.getMessageCount();
                                         db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
+                                        EntityLog.log(
+                                                ServiceSynchronize.this,
+                                                folder.name + " " + Helper.formatThrowable(ex));
                                         db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                                         state.error(ex);
                                     } finally {
@@ -922,9 +937,14 @@ public class ServiceSynchronize extends LifecycleService {
                                         } catch (Throwable ex) {
                                             Log.e(folder.name, ex);
                                             db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
+                                        } finally {
+                                            ((IMAPMessage) e.getMessage()).invalidateHeaders();
                                         }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
+                                        EntityLog.log(
+                                                ServiceSynchronize.this,
+                                                folder.name + " " + Helper.formatThrowable(ex));
                                         state.error(ex);
                                     } finally {
                                         wlMessage.release();
@@ -944,6 +964,9 @@ public class ServiceSynchronize extends LifecycleService {
                                         }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
+                                        EntityLog.log(
+                                                ServiceSynchronize.this,
+                                                folder.name + " " + Helper.formatThrowable(ex));
                                         state.error(new FolderClosedException(ifolder, "IDLE"));
                                     } finally {
                                         Log.i(folder.name + " end idle");
@@ -1022,6 +1045,9 @@ public class ServiceSynchronize extends LifecycleService {
 
                                                         } catch (Throwable ex) {
                                                             Log.e(folder.name, ex);
+                                                            EntityLog.log(
+                                                                    ServiceSynchronize.this,
+                                                                    folder.name + " " + Helper.formatThrowable(ex));
                                                             db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                                                             state.error(ex);
                                                         } finally {
@@ -1134,6 +1160,9 @@ public class ServiceSynchronize extends LifecycleService {
                     Log.w(ex);
                 } catch (Throwable ex) {
                     Log.e(account.name, ex);
+                    EntityLog.log(
+                            ServiceSynchronize.this,
+                            account.name + " " + Helper.formatThrowable(ex));
                     db.account().setAccountError(account.id, Helper.formatThrowable(ex));
                 } finally {
                     // Stop watching for operations
