@@ -631,7 +631,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         protected void onExecuted(Bundle args, Map<EntityAccount, List<EntityFolder>> result) {
                             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
-                            popupMenu.getMenu().add(R.string.title_search_in).setEnabled(false);
+                            popupMenu.getMenu().add(Menu.NONE, 0, 0, R.string.title_search_in).setEnabled(false);
 
                             int order = 1;
                             for (EntityAccount account : result.keySet()) {
@@ -862,7 +862,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         do {
             Long key = adapter.getKeyAtPosition(pos);
-            if (key != null && isExpanded(key)) {
+            if (key != null && iProperties.getValue("expanded", key)) {
                 int first = llm.findFirstVisibleItemPosition();
                 View child = rvMessage.getChildAt(pos - (first < 0 ? 0 : first));
 
@@ -1281,7 +1281,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (message == null || message.uid == null)
                 return null;
 
-            if (isExpanded(message.id))
+            if (iProperties.getValue("expanded", message.id))
                 return null;
 
             if (EntityFolder.OUTBOX.equals(message.folderType))
@@ -1290,10 +1290,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             return message;
         }
     };
-
-    private boolean isExpanded(long id) {
-        return (values.containsKey("expanded") && values.get("expanded").contains(id));
-    }
 
     private void onActionMove(String folderType) {
         Bundle args = new Bundle();
@@ -2934,8 +2930,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     expand = messages.get(0);
 
                 if (expand != null &&
-                        (expand.content || unmetered || (expand.size != null && expand.size < download)))
+                        (expand.content || unmetered || (expand.size != null && expand.size < download))) {
                     iProperties.setValue("expanded", expand.id, true);
+                    if (!expand.ui_seen)
+                        return true;
+                }
             }
         } else {
             if (autoCloseCount > 0 && (autoclose || autonext)) {
