@@ -350,9 +350,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             popupMenu.getMenu().add(Menu.NONE, 0, 0, folder.getDisplayName(context)).setEnabled(false);
 
             popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_now, 1, R.string.title_synchronize_now);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_all, 2, R.string.title_synchronize_all);
 
             if (folder.account != null) {
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_all, 2, R.string.title_synchronize_all);
+
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 String startup = prefs.getString("startup", "unified");
                 if (!"accounts".equals(startup))
@@ -390,6 +391,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_channel, 14, R.string.title_delete_channel);
                     }
                 }
+
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_create_sub_folder, 15, R.string.title_create_sub_folder);
             }
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -444,6 +447,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         case R.string.title_delete_channel:
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                                 onActionDeleteChannel();
+                            return true;
+
+                        case R.string.title_create_sub_folder:
+                            onActionCreateFolder();
                             return true;
 
                         default:
@@ -706,6 +713,14 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 @RequiresApi(api = Build.VERSION_CODES.O)
                 private void onActionDeleteChannel() {
                     folder.deleteNotificationChannel(context);
+                }
+
+                private void onActionCreateFolder() {
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(
+                            new Intent(ActivityView.ACTION_EDIT_FOLDER)
+                                    .putExtra("account", folder.account)
+                                    .putExtra("parent", folder.name));
                 }
             });
 

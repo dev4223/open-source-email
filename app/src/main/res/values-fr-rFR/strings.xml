@@ -174,6 +174,7 @@
     <string name="title_advanced_pull_refresh">Tirer vers le bas pour actualiser</string>
     <string name="title_advanced_autoscroll">Faire défiler vers le haut lors de la réception de nouveaux messages</string>
     <string name="title_advanced_swipenav">Balayez vers la gauche/droite pour passer à la conversation suivante/précédente</string>
+    <string name="title_advanced_double_tap">Appuyez deux fois pour marquer le message lu/non lu</string>
     <string name="title_advanced_autoexpand">Développer automatiquement les messages</string>
     <string name="title_advanced_collapse">Replier les messages dans les conversations en appuyant sur « Retour »</string>
     <string name="title_advanced_autoclose">Fermer automatiquement les conversations</string>
@@ -300,6 +301,7 @@
     <string name="title_create_channel">Créer un canal de notification</string>
     <string name="title_edit_channel">Modifier un canal de notification</string>
     <string name="title_delete_channel">Supprimer un canal de notification</string>
+    <string name="title_create_sub_folder">Créer un sous-dossier</string>
     <string name="title_empty_trash_ask">Supprimer définitivement tous les messages de la corbeille ?</string>
     <string name="title_delete_operation">Supprimer les opérations avec un message d\'erreur ?</string>
     <string name="title_delete_contacts">Supprimer tous les contacts locaux ?</string>
