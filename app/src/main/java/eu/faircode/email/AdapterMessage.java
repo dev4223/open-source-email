@@ -41,6 +41,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.text.Html;
@@ -62,6 +63,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.TouchDelegate;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.webkit.DownloadListener;
@@ -1118,6 +1120,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             message.uid != null && (inJunk || (!inArchive && hasArchive)));
                     bnvActions.getMenu().findItem(R.id.action_archive).setTitle(
                             inJunk ? R.string.title_folder_inbox : R.string.title_archive);
+                    bnvActions.getMenu().findItem(R.id.action_archive).setIcon(
+                            inJunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_archive_24);
 
                     bnvActions.getMenu().findItem(R.id.action_reply).setEnabled(message.content);
                     bnvActions.getMenu().findItem(R.id.action_reply).setVisible(!inOutbox);
@@ -1401,9 +1405,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             return differ.getItem(pos);
         }
 
+        private boolean firstClick = false;
+
         @Override
         public void onClick(View view) {
-            TupleMessageEx message = getMessage();
+            final TupleMessageEx message = getMessage();
             if (message == null)
                 return;
 
@@ -1452,13 +1458,65 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     .putExtra("action", "edit")
                                     .putExtra("id", message.id));
                 else {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                    lbm.sendBroadcast(
-                            new Intent(ActivityView.ACTION_VIEW_THREAD)
-                                    .putExtra("account", message.account)
-                                    .putExtra("thread", message.thread)
-                                    .putExtra("id", message.id)
-                                    .putExtra("found", viewType == ViewType.SEARCH));
+                    final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    final Intent viewThread = new Intent(ActivityView.ACTION_VIEW_THREAD)
+                            .putExtra("account", message.account)
+                            .putExtra("thread", message.thread)
+                            .putExtra("id", message.id)
+                            .putExtra("found", viewType == ViewType.SEARCH);
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean doubletap = prefs.getBoolean("doubletap", false);
+
+                    if (!doubletap || EntityFolder.OUTBOX.equals(message.folderType)) {
+                        lbm.sendBroadcast(viewThread);
+                        return;
+                    }
+
+                    firstClick = !firstClick;
+                    if (firstClick) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (firstClick) {
+                                    firstClick = false;
+                                    lbm.sendBroadcast(viewThread);
+                                }
+                            }
+                        }, ViewConfiguration.getDoubleTapTimeout());
+                    } else {
+                        Bundle args = new Bundle();
+                        args.putLong("id", message.id);
+
+                        new SimpleTask<Void>() {
+                            @Override
+                            protected Void onExecute(Context context, Bundle args) {
+                                long id = args.getLong("id");
+
+                                DB db = DB.getInstance(context);
+                                try {
+                                    db.beginTransaction();
+
+                                    EntityMessage message = db.message().getMessage(id);
+                                    if (message == null)
+                                        return null;
+
+                                    EntityOperation.queue(context, message, EntityOperation.SEEN, !message.ui_seen);
+
+                                    db.setTransactionSuccessful();
+                                } finally {
+                                    db.endTransaction();
+                                }
+
+                                return null;
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Helper.unexpectedError(context, owner, ex);
+                            }
+                        }.execute(context, owner, args, "message:seen");
+                    }
                 }
             }
         }
@@ -1618,6 +1676,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     channel.setDescription(from.getPersonal());
                     channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
                     channel.enableLights(true);
+                    channel.setLightColor(Color.BLUE);
                     nm.createNotificationChannel(channel);
                     onActionEditChannel();
                 }

@@ -246,7 +246,7 @@ class Core {
                         db.operation().deleteOperation(op.id);
                     } catch (Throwable ex) {
                         Log.e(folder.name, ex);
-                        EntityLog.log(context, folder.name + " " + Helper.formatThrowable(ex));
+                        EntityLog.log(context, folder.name + " " + Helper.formatThrowable(ex, false));
 
                         db.operation().setOperationError(op.id, Helper.formatThrowable(ex));
                         if (message != null && !(ex instanceof IllegalArgumentException))
@@ -797,7 +797,7 @@ class Core {
         boolean sync_folders = prefs.getBoolean("sync_folders", true);
 
         // Get folder names
-        List<String> names = new ArrayList<>();
+        Map<String, EntityFolder> local = new HashMap<>();
         for (EntityFolder folder : db.folder().getFolders(account.id))
             if (folder.tbc != null) {
                 Log.i(folder.name + " creating");
@@ -805,7 +805,7 @@ class Core {
                 if (!ifolder.exists())
                     ifolder.create(Folder.HOLDS_MESSAGES);
                 db.folder().resetFolderTbc(folder.id);
-                names.add(folder.name);
+                local.put(folder.name, folder);
                 sync_folders = true;
             } else if (folder.tbd != null && folder.tbd) {
                 Log.i(folder.name + " deleting");
@@ -815,11 +815,11 @@ class Core {
                 db.folder().deleteFolder(folder.id);
                 sync_folders = true;
             } else {
-                names.add(folder.name);
+                local.put(folder.name, folder);
                 if (folder.initialize != 0)
                     sync_folders = true;
             }
-        Log.i("Local folder count=" + names.size());
+        Log.i("Local folder count=" + local.size());
 
         if (!sync_folders)
             return;
@@ -830,6 +830,7 @@ class Core {
         Folder defaultFolder = istore.getDefaultFolder();
         char separator = defaultFolder.getSeparator();
         EntityLog.log(context, account.name + " folder separator=" + separator);
+        db.account().setFolderSeparator(account.id, separator);
 
         // Get remote folders
         long start = new Date().getTime();
@@ -875,7 +876,7 @@ class Core {
                     " type=" + type + " attrs=" + TextUtils.join(" ", attr));
 
             if (type != null) {
-                names.remove(fullName);
+                local.remove(fullName);
 
                 EntityFolder folder;
                 try {
@@ -935,10 +936,14 @@ class Core {
                 db.folder().setFolderParent(child.id, parent == null ? null : parent.id);
         }
 
-        Log.i("Delete local count=" + names.size());
-        for (String name : names) {
-            Log.i(name + " delete");
-            db.folder().deleteFolder(account.id, name);
+        Log.i("Delete local count=" + local.size());
+        for (String name : local.keySet()) {
+            EntityFolder folder = local.get(name);
+            if (EntityFolder.USER.equals(folder.type)) {
+                Log.i(name + " delete");
+                db.folder().deleteFolder(account.id, name);
+            } else
+                Log.i(name + " keep type=" + folder.type);
         }
     }
 
@@ -1070,7 +1075,7 @@ class Core {
                     Log.w(folder.name, ex);
                 } catch (Throwable ex) {
                     Log.e(folder.name, ex);
-                    EntityLog.log(context, folder.name + " " + Helper.formatThrowable(ex));
+                    EntityLog.log(context, folder.name + " " + Helper.formatThrowable(ex, false));
                     db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                 }
 
@@ -1267,11 +1272,11 @@ class Core {
 
         if (imessage.isExpunged()) {
             Log.i(folder.name + " expunged uid=" + uid);
-            throw new MessageRemovedException();
+            throw new MessageRemovedException("Expunged");
         }
         if (imessage.isSet(Flags.Flag.DELETED)) {
             Log.i(folder.name + " deleted uid=" + uid);
-            throw new MessageRemovedException();
+            throw new MessageRemovedException("Flagged deleted");
         }
 
         MessageHelper helper = new MessageHelper(imessage);
@@ -2158,7 +2163,7 @@ class Core {
                 new NotificationCompat.Builder(context, channel)
                         .setSmallIcon(R.drawable.baseline_warning_white_24)
                         .setContentTitle(context.getString(R.string.title_notification_failed, title))
-                        .setContentText(Helper.formatThrowable(ex))
+                        .setContentText(Helper.formatThrowable(ex, false))
                         .setContentIntent(pi)
                         .setAutoCancel(false)
                         .setShowWhen(true)
@@ -2168,7 +2173,7 @@ class Core {
                         .setVisibility(NotificationCompat.VISIBILITY_SECRET);
 
         builder.setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(Helper.formatThrowable(ex, "\n")));
+                .bigText(Helper.formatThrowable(ex, "\n", false)));
 
         return builder;
     }

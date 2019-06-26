@@ -174,6 +174,7 @@
     <string name="title_advanced_pull_refresh">Dra ned for å oppdatere</string>
     <string name="title_advanced_autoscroll">Rull til toppen når du mottar nye meldinger</string>
     <string name="title_advanced_swipenav">Sveip til venstre/høyre for å gå til neste/forrige samtale</string>
+    <string name="title_advanced_double_tap">Dobbeltklikk for å markere meldingen lest/ulest</string>
     <string name="title_advanced_autoexpand">Utvid automatisk meldinger</string>
     <string name="title_advanced_collapse">Skjul meldinger i samtaler på \'tilbake\'</string>
     <string name="title_advanced_autoclose">Lukk samtaler automatisk</string>
@@ -290,6 +291,7 @@
     <string name="title_pop3_hint">POP3 har betydelige begrensninger, så bruk IMAP når det er mulig</string>
     <string name="title_pop3_support">POP3 støttes ikke, se også vanlige spørsmål</string>
     <string name="title_synchronize_now">Synkroniser nå</string>
+    <string name="title_synchronize_all">Synkroniser alle meldinger</string>
     <string name="title_synchronize_enabled">Synkroniser</string>
     <string name="title_delete_local">Slett lokale meldinger</string>
     <string name="title_delete_browsed">Slett bladde/søkte meldinger</string>
@@ -299,6 +301,7 @@
     <string name="title_create_channel">Opprett varselkanal</string>
     <string name="title_edit_channel">Rediger varselkanal</string>
     <string name="title_delete_channel">Slett varselkanal</string>
+    <string name="title_create_sub_folder">Lag undermappe</string>
     <string name="title_empty_trash_ask">Slett alle slettede meldinger permanent?</string>
     <string name="title_delete_operation">Slett operasjoner med en feilmelding?</string>
     <string name="title_delete_contacts">Slette alle lokale kontakter?</string>
