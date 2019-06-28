@@ -215,7 +215,6 @@
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
 
-    <string name="title_advanced_notify_group">Group new message notifications</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_notify_actions">Notification actions</string>
     <string name="title_advanced_notify_action_trash">Trash</string>
@@ -693,8 +692,11 @@
     <string name="title_hint_ignore_contact">Long press a contact to never consider it as a favorite</string>
 
     <string name="title_open_link">Open link</string>
-    <string name="title_ip_owner">Owner IP address</string>
+    <string name="title_secure_link">Make link secure</string>
+    <string name="title_link_secured">Link is secure</string>
+    <string name="title_sanitize_link">Remove tracking parameters</string>
     <string name="title_insecure_link">This link is insecure</string>
+    <string name="title_ip_owner">Owner IP address</string>
     <string name="title_select_app">Select app</string>
     <string name="title_updated">There is an update to version %1$s available</string>
     <string name="title_issue">Do you have a question or problem?</string>
@@ -708,6 +710,7 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
+    <string name="title_ask_what">Ask what to do</string>
     <string name="title_no_ask_again">Do not ask this again</string>
     <string name="title_no_body">No message text found</string>
     <string name="title_no_charset">Unsupported encoding: %1$s</string>

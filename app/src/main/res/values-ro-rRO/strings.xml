@@ -182,13 +182,13 @@
     <string name="title_advanced_pull_refresh">Trageți în jos pentru a actualiza</string>
     <string name="title_advanced_autoscroll">Derulează sus când se primește un mesaj nou</string>
     <string name="title_advanced_swipenav">Glisați stânga/dreapta pentru a merge la conversația următoare/anterioară</string>
+    <string name="title_advanced_double_tap">Atingeți de două ori pentru a marca mesajul ca ne/citit</string>
     <string name="title_advanced_autoexpand">Extinde mesajele automat</string>
     <string name="title_advanced_collapse">Pliază mesajele din discuție când se apasă \'înapoi\'</string>
     <string name="title_advanced_autoclose">Închide automat conversațiile</string>
     <string name="title_advanced_autonext">Se trece la următoarea conversație când este închisă cea curentă</string>
     <string name="title_advanced_autoread">Marchează automat mesajele mutate ca citite</string>
     <string name="title_advanced_automove">Confirmă mutarea mesajelor</string>
-    <string name="title_advanced_notify_group">Grupează notificări mesaje noi</string>
     <string name="title_advanced_notify_preview">Arată previzualizare mesaj în notificare</string>
     <string name="title_advanced_notify_actions">Acțiuni la notificare</string>
     <string name="title_advanced_notify_action_trash">Gunoi</string>
@@ -308,6 +308,7 @@
     <string name="title_create_channel">Creare canal de notificare</string>
     <string name="title_edit_channel">Editare canal de notificare</string>
     <string name="title_delete_channel">Șterge canal de notificare</string>
+    <string name="title_create_sub_folder">Creează sub-dosar</string>
     <string name="title_empty_trash_ask">Şterge permanent toate mesajele din coșul de gunoi?</string>
     <string name="title_delete_operation">Se șterg operațiunile cu mesaj de eroare?</string>
     <string name="title_delete_contacts">Ștergeți toate contactele locale?</string>
@@ -615,8 +616,8 @@
     <string name="title_hint_tracking_image">Imagine de urmărire %1$sx%2$s</string>
     <string name="title_hint_ignore_contact">Apăsați lung pe un contact pentru a nu-l lua niciodată în considerare ca favorit</string>
     <string name="title_open_link">Deschide legătura</string>
-    <string name="title_ip_owner">Adresă IP proprietar</string>
     <string name="title_insecure_link">Această legătură este nesigură</string>
+    <string name="title_ip_owner">Adresă IP proprietar</string>
     <string name="title_select_app">Selectează aplicația</string>
     <string name="title_updated">Este disponibilă o actualizare la versiunea %1$s</string>
     <string name="title_issue">Aveți o întrebare sau problemă?</string>
@@ -630,6 +631,7 @@
     <string name="title_report">Raportează</string>
     <string name="title_fix">Remediere</string>
     <string name="title_enable">Activează</string>
+    <string name="title_ask_what">Întreabă ce să faci</string>
     <string name="title_no_ask_again">Nu mai întreba din nou</string>
     <string name="title_no_body">Nu a fost găsit textul mesajului</string>
     <string name="title_no_charset">Codare nesuportată: %1$s</string>

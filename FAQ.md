@@ -43,6 +43,7 @@ For authorizing:
 * ~~Show messages matched by a rule~~
 * [ManageSieve](https://tools.ietf.org/html/rfc5804)
 * ~~Search for messages with/without attachments~~ (this cannot be added because IMAP doesn't support searching for attachments)
+* Search for a folder
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -346,6 +347,8 @@ and *Username and Password not accepted* for identities (SMTP).
 If you use multiple Gmail accounts, make sure you change the "less secure" setting of the right account(s).
 
 Be aware that you need to leave the "less secure" settings screen by using the back arrow to apply the setting.
+
+See [this FAQ](#user-content-faq111) for more information.
 
 You might get the alert "*Please log in via your web browser*".
 This security measure can for example be triggered when too many IP addresses were used in a too short time or when you are using a VPN.
@@ -1539,7 +1542,6 @@ The advanced option *extra privacy features* enables:
 
 * Looking up the owner of the IP address of a link
 * Detection and removal of [tracking images](#user-content-faq82)
-* Removal of [Urchin Tracking Module (UTM) parameters](https://en.wikipedia.org/wiki/UTM_parameters) from links
 
 <br />
 
@@ -1840,6 +1842,8 @@ This is how you exclude independent developers ...
 Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections.
 [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only
 and requires embedding a client secret in the app, which is not a good idea for an open source app.
+
+See also [this FAQ](#user-content-faq6).
 
 <br />
 

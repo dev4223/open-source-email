@@ -119,6 +119,8 @@ public class FragmentAccount extends FragmentBase {
     private Spinner spArchive;
     private Spinner spTrash;
     private Spinner spJunk;
+
+    private ArrayAdapter<EntityFolder> adapterSwipe;
     private Spinner spLeft;
     private Spinner spRight;
 
@@ -332,18 +334,6 @@ public class FragmentAccount extends FragmentBase {
             }
         });
 
-        cbNotify.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked && !Helper.isPro(getContext())) {
-                    cbNotify.setChecked(false);
-
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                    lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_SHOW_PRO));
-                }
-            }
-        });
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             Helper.hide(cbNotify);
             Helper.hide(view.findViewById(R.id.tvNotifyPro));
@@ -371,8 +361,12 @@ public class FragmentAccount extends FragmentBase {
         spArchive.setAdapter(adapter);
         spTrash.setAdapter(adapter);
         spJunk.setAdapter(adapter);
-        spLeft.setAdapter(adapter);
-        spRight.setAdapter(adapter);
+
+        adapterSwipe = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<EntityFolder>());
+        adapterSwipe.setDropDownViewResource(R.layout.spinner_item1_dropdown);
+
+        spLeft.setAdapter(adapterSwipe);
+        spRight.setAdapter(adapterSwipe);
 
         addBackPressedListener(new ActivityBase.IBackPressedListener() {
             @Override
@@ -611,7 +605,7 @@ public class FragmentAccount extends FragmentBase {
                         altJunk.type = EntityFolder.JUNK;
 
                     if (result.folders.size() > 0)
-                        Collections.sort(result.folders, result.folders.get(0).getComparator(context));
+                        Collections.sort(result.folders, result.folders.get(0).getComparator(null));
                 }
 
                 return result;
@@ -654,19 +648,20 @@ public class FragmentAccount extends FragmentBase {
         EntityFolder left = (EntityFolder) spLeft.getSelectedItem();
         EntityFolder right = (EntityFolder) spRight.getSelectedItem();
 
-        if (drafts != null && drafts.type == null)
+        if (drafts != null && drafts.id == 0L)
             drafts = null;
-        if (sent != null && sent.type == null)
+        if (sent != null && sent.id == 0L)
             sent = null;
-        if (archive != null && archive.type == null)
+        if (archive != null && archive.id == 0L)
             archive = null;
-        if (trash != null && trash.type == null)
+        if (trash != null && trash.id == 0L)
             trash = null;
-        if (junk != null && junk.type == null)
+        if (junk != null && junk.id == 0L)
             junk = null;
-        if (left != null && left.type == null)
+
+        if (left != null && left.id == 0L)
             left = null;
-        if (right != null && right.type == null)
+        if (right != null && right.id == 0L)
             right = null;
 
         Bundle args = new Bundle();
@@ -748,6 +743,7 @@ public class FragmentAccount extends FragmentBase {
                 EntityFolder left = (EntityFolder) args.getSerializable("left");
                 EntityFolder right = (EntityFolder) args.getSerializable("right");
 
+                boolean pro = Helper.isPro(context);
                 boolean should = args.getBoolean("should");
 
                 if (!should && TextUtils.isEmpty(host))
@@ -765,8 +761,10 @@ public class FragmentAccount extends FragmentBase {
                     realm = null;
                 if (TextUtils.isEmpty(name))
                     name = user;
-                if (Color.TRANSPARENT == color)
+                if (color == Color.TRANSPARENT || !pro)
                     color = null;
+                if (!pro)
+                    notify = false;
 
                 long now = new Date().getTime();
 
@@ -828,9 +826,9 @@ public class FragmentAccount extends FragmentBase {
                     if (!Objects.equals(ejunk == null ? null : ejunk.id, junk == null ? null : junk.id))
                         return true;
 
-                    if (!Objects.equals(account.swipe_left, left == null ? null : left.id == null ? -1L : left.id))
+                    if (!Objects.equals(account.swipe_left, left == null ? null : left.id))
                         return true;
-                    if (!Objects.equals(account.swipe_right, right == null ? null : right.id == null ? -1L : right.id))
+                    if (!Objects.equals(account.swipe_right, right == null ? null : right.id))
                         return true;
 
                     if (account.error != null)
@@ -925,11 +923,6 @@ public class FragmentAccount extends FragmentBase {
                     if (account.primary)
                         db.account().resetPrimary();
 
-                    if (!Helper.isPro(context)) {
-                        account.color = null;
-                        account.notify = false;
-                    }
-
                     if (update)
                         db.account().updateAccount(account);
                     else
@@ -973,7 +966,7 @@ public class FragmentAccount extends FragmentBase {
                         folders.add(junk);
                     }
 
-                    if (left != null) {
+                    if (left != null && left.id > 0) {
                         boolean found = false;
                         for (EntityFolder folder : folders)
                             if (left.name.equals(folder.name)) {
@@ -986,7 +979,7 @@ public class FragmentAccount extends FragmentBase {
                         }
                     }
 
-                    if (right != null) {
+                    if (right != null && right.id > 0) {
                         boolean found = false;
                         for (EntityFolder folder : folders)
                             if (right.name.equals(folder.name)) {
@@ -1158,7 +1151,10 @@ public class FragmentAccount extends FragmentBase {
                     etRealm.setText(account == null ? null : account.realm);
 
                     etName.setText(account == null ? null : account.name);
-                    cbNotify.setChecked(account != null && account.notify && Helper.isPro(getContext()));
+
+                    boolean pro = Helper.isPro(getContext());
+                    cbNotify.setChecked(account != null && account.notify && pro);
+                    cbNotify.setEnabled(pro);
 
                     cbSynchronize.setChecked(account == null ? true : account.synchronize);
                     cbPrimary.setChecked(account == null ? false : account.primary);
@@ -1214,7 +1210,7 @@ public class FragmentAccount extends FragmentBase {
                         List<EntityFolder> folders = db.folder().getFolders(account);
 
                         if (folders != null && folders.size() > 0)
-                            Collections.sort(folders, folders.get(0).getComparator(context));
+                            Collections.sort(folders, folders.get(0).getComparator(null));
 
                         return folders;
                     }
@@ -1323,23 +1319,12 @@ public class FragmentAccount extends FragmentBase {
                 folders.add(folder);
 
         EntityFolder none = new EntityFolder();
-        none.id = -1L;
+        none.id = 0L;
         none.name = "-";
         folders.add(0, none);
 
         adapter.clear();
         adapter.addAll(folders);
-
-        Long left = (account == null ? null : account.swipe_left);
-        Long right = (account == null ? null : account.swipe_right);
-
-        String leftDefault = EntityFolder.TRASH;
-        String rightDefault = EntityFolder.TRASH;
-        for (EntityFolder folder : folders)
-            if (EntityFolder.ARCHIVE.equals(folder.type)) {
-                rightDefault = folder.type;
-                break;
-            }
 
         for (int pos = 0; pos < folders.size(); pos++) {
             EntityFolder folder = folders.get(pos);
@@ -1354,6 +1339,29 @@ public class FragmentAccount extends FragmentBase {
                 spTrash.setSelection(pos);
             else if (EntityFolder.JUNK.equals(folder.type))
                 spJunk.setSelection(pos);
+        }
+
+        EntityFolder ask = new EntityFolder();
+        ask.id = -1L;
+        ask.name = getString(R.string.title_ask_what);
+        folders.add(1, ask);
+
+        adapterSwipe.clear();
+        adapterSwipe.addAll(folders);
+
+        Long left = (account == null ? null : account.swipe_left);
+        Long right = (account == null ? null : account.swipe_right);
+
+        String leftDefault = EntityFolder.TRASH;
+        String rightDefault = EntityFolder.TRASH;
+        for (EntityFolder folder : folders)
+            if (EntityFolder.ARCHIVE.equals(folder.type)) {
+                rightDefault = folder.type;
+                break;
+            }
+
+        for (int pos = 0; pos < folders.size(); pos++) {
+            EntityFolder folder = folders.get(pos);
 
             if (left == null ? (account == null && leftDefault.equals(folder.type)) : left.equals(folder.id))
                 spLeft.setSelection(pos);

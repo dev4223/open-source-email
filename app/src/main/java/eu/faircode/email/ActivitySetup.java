@@ -33,7 +33,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.media.Ringtone;
@@ -587,13 +586,12 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                 // Settings
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 JSONArray jsettings = new JSONArray();
-                for (String key : prefs.getAll().keySet())
-                    if (!"pro".equals(key)) {
-                        JSONObject jsetting = new JSONObject();
-                        jsetting.put("key", key);
-                        jsetting.put("value", prefs.getAll().get(key));
-                        jsettings.put(jsetting);
-                    }
+                for (String key : prefs.getAll().keySet()) {
+                    JSONObject jsetting = new JSONObject();
+                    jsetting.put("key", key);
+                    jsetting.put("value", prefs.getAll().get(key));
+                    jsettings.put(jsetting);
+                }
 
                 JSONObject jexport = new JSONObject();
                 jexport.put("accounts", jaccounts);
@@ -744,8 +742,10 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                         // Forward referenced
                         Long swipe_left = account.swipe_left;
                         Long swipe_right = account.swipe_right;
-                        account.swipe_left = null;
-                        account.swipe_right = null;
+                        if (account.swipe_left != null && account.swipe_left > 0)
+                            account.swipe_left = null;
+                        if (account.swipe_right != null && account.swipe_right > 0)
+                            account.swipe_right = null;
 
                         account.created = new Date().getTime();
                         account.id = db.account().insertAccount(account);
@@ -881,7 +881,7 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                     for (int s = 0; s < jsettings.length(); s++) {
                         JSONObject jsetting = (JSONObject) jsettings.get(s);
                         String key = jsetting.getString("key");
-                        if (!"pro".equals(key)) {
+                        if (!"pro".equals(key) || BuildConfig.DEBUG) {
                             Object value = jsetting.get("value");
                             if (value instanceof Boolean)
                                 editor.putBoolean(key, (Boolean) value);
@@ -990,11 +990,7 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                 channel.setSound(uri, Notification.AUDIO_ATTRIBUTES_DEFAULT);
         }
 
-        boolean light = jchannel.getBoolean("light");
-        channel.enableLights(light);
-        if (light)
-            channel.setLightColor(Color.BLUE);
-
+        channel.enableLights(jchannel.getBoolean("light"));
         channel.enableVibration(jchannel.getBoolean("vibrate"));
 
         return channel;
