@@ -43,13 +43,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import static android.app.Activity.RESULT_OK;
 
 public class FragmentOptionsNotifications extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
-    private SwitchCompat swNotifyGroup;
     private SwitchCompat swNotifyPreview;
     private CheckBox cbNotifyActionTrash;
     private CheckBox cbNotifyActionArchive;
@@ -64,7 +62,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private Group grpNotification;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "notify_group", "notify_preview", "notify_trash", "notify_archive", "notify_reply", "notify_flag", "notify_seen", "light", "sound"
+            "notify_preview", "notify_trash", "notify_archive", "notify_reply", "notify_flag", "notify_seen", "light", "sound"
     };
 
     @Override
@@ -77,7 +75,6 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
         // Get controls
 
-        swNotifyGroup = view.findViewById(R.id.swNotifyGroup);
         swNotifyPreview = view.findViewById(R.id.swNotifyPreview);
         cbNotifyActionTrash = view.findViewById(R.id.cbNotifyActionTrash);
         cbNotifyActionArchive = view.findViewById(R.id.cbNotifyActionArchive);
@@ -98,13 +95,6 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         PackageManager pm = getContext().getPackageManager();
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        swNotifyGroup.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("notify_group", checked).apply();
-            }
-        });
-
         swNotifyPreview.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -115,35 +105,35 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         cbNotifyActionTrash.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
-                setAction(buttonView, "notify_trash", checked);
+                prefs.edit().putBoolean("notify_trash", checked).apply();
             }
         });
 
         cbNotifyActionArchive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
-                setAction(buttonView, "notify_archive", checked);
+                prefs.edit().putBoolean("notify_archive", checked).apply();
             }
         });
 
         cbNotifyActionReply.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
-                setAction(buttonView, "notify_reply", checked);
+                prefs.edit().putBoolean("notify_reply", checked).apply();
             }
         });
 
         cbNotifyActionFlag.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
-                setAction(buttonView, "notify_flag", checked);
+                prefs.edit().putBoolean("notify_flag", checked).apply();
             }
         });
 
         cbNotifyActionSeen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
-                setAction(buttonView, "notify_seen", checked);
+                prefs.edit().putBoolean("notify_seen", checked).apply();
             }
         });
 
@@ -233,30 +223,23 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         boolean pro = Helper.isPro(getContext());
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        swNotifyGroup.setChecked(prefs.getBoolean("notify_group", true));
-        swNotifyGroup.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? View.VISIBLE : View.GONE);
         swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
 
-        cbNotifyActionTrash.setChecked(prefs.getBoolean("notify_trash", true));
-        cbNotifyActionArchive.setChecked(prefs.getBoolean("notify_archive", true));
+        cbNotifyActionTrash.setChecked(prefs.getBoolean("notify_trash", true) || !pro);
+        cbNotifyActionArchive.setChecked(prefs.getBoolean("notify_archive", true) || !pro);
         cbNotifyActionReply.setChecked(prefs.getBoolean("notify_reply", false) && pro);
         cbNotifyActionFlag.setChecked(prefs.getBoolean("notify_flag", false) && pro);
-        cbNotifyActionSeen.setChecked(prefs.getBoolean("notify_seen", true));
+        cbNotifyActionSeen.setChecked(prefs.getBoolean("notify_seen", true) || !pro);
+
+        cbNotifyActionTrash.setEnabled(pro);
+        cbNotifyActionArchive.setEnabled(pro);
+        cbNotifyActionReply.setEnabled(pro);
+        cbNotifyActionFlag.setEnabled(pro);
+        cbNotifyActionSeen.setEnabled(pro);
 
         swLight.setChecked(prefs.getBoolean("light", false));
 
         grpNotification.setVisibility(Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O ? View.VISIBLE : View.GONE);
-    }
-
-    private void setAction(CompoundButton cb, String key, boolean checked) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (Helper.isPro(getContext()))
-            prefs.edit().putBoolean(key, checked).apply();
-        else {
-            cb.setChecked(!checked);
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-        }
     }
 
     @Override

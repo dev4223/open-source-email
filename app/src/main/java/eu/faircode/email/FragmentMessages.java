@@ -20,7 +20,6 @@ package eu.faircode.email;
 */
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -55,7 +54,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -610,40 +608,25 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (folder < 0) {
                     Bundle args = new Bundle();
 
-                    new SimpleTask<Map<EntityAccount, List<EntityFolder>>>() {
+                    new SimpleTask<List<EntityAccount>>() {
                         @Override
-                        protected Map<EntityAccount, List<EntityFolder>> onExecute(Context context, Bundle args) {
+                        protected List<EntityAccount> onExecute(Context context, Bundle args) {
                             Map<EntityAccount, List<EntityFolder>> result = new LinkedHashMap<>();
 
                             DB db = DB.getInstance(context);
-                            List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
-
-                            for (EntityAccount account : accounts) {
-                                List<EntityFolder> folders = db.folder().getFolders(account.id);
-                                if (folders.size() > 0)
-                                    Collections.sort(folders, folders.get(0).getComparator(context));
-                                result.put(account, folders);
-                            }
-
-                            return result;
+                            return db.account().getSynchronizingAccounts();
                         }
 
                         @Override
-                        protected void onExecuted(Bundle args, Map<EntityAccount, List<EntityFolder>> result) {
+                        protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
                             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
                             popupMenu.getMenu().add(Menu.NONE, 0, 0, R.string.title_search_in).setEnabled(false);
 
                             int order = 1;
-                            for (EntityAccount account : result.keySet()) {
-                                SubMenu smenu = popupMenu.getMenu()
-                                        .addSubMenu(Menu.NONE, 0, order++, account.name);
-                                int sorder = 1;
-                                for (EntityFolder folder : result.get(account)) {
-                                    MenuItem item = smenu.add(Menu.NONE, 1, sorder++, folder.getDisplayName(getContext()));
-                                    item.setIntent(new Intent().putExtra("target", folder.id));
-                                }
-                            }
+                            for (EntityAccount account : accounts)
+                                popupMenu.getMenu().add(Menu.NONE, 0, order++, account.name)
+                                        .setIntent(new Intent().putExtra("account", account.id));
 
                             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                                 @Override
@@ -652,8 +635,21 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     if (intent == null)
                                         return false;
 
-                                    long folder = intent.getLongExtra("target", -1);
-                                    search(getContext(), getViewLifecycleOwner(), getFragmentManager(), folder, true, query);
+                                    long account = intent.getLongExtra("account", -1);
+                                    DialogFolder.show(
+                                            getContext(), getViewLifecycleOwner(), view,
+                                            R.string.title_search_in,
+                                            account,
+                                            new ArrayList<Long>(),
+                                            new DialogFolder.IDialogFolder() {
+                                                @Override
+                                                public void onFolderSelected(TupleFolderEx folder) {
+                                                    search(
+                                                            getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                                                            folder.id, true, query);
+                                                }
+                                            }
+                                    );
 
                                     return true;
                                 }
@@ -1120,9 +1116,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return 0;
 
             int flags = 0;
-            if (swipes.swipe_left == null || !swipes.swipe_left.equals(message.folder))
+            if (swipes.swipe_left != null &&
+                    (swipes.swipe_left < 0 || !swipes.swipe_left.equals(message.folder)))
                 flags |= ItemTouchHelper.LEFT;
-            if (swipes.swipe_right == null || !swipes.swipe_right.equals(message.folder))
+            if (swipes.swipe_right != null &&
+                    (swipes.swipe_right < 0 || !swipes.swipe_right.equals(message.folder)))
                 flags |= ItemTouchHelper.RIGHT;
 
             return makeMovementFlags(0, flags);
@@ -1213,7 +1211,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             Log.i("Swiped dir=" + direction + " message=" + message.id);
 
-            if (direction == ItemTouchHelper.LEFT ? swipes.swipe_left == null : swipes.swipe_right == null) {
+            if (direction == ItemTouchHelper.LEFT ? swipes.swipe_left < 0 : swipes.swipe_right < 0) {
                 adapter.notifyItemChanged(viewHolder.getAdapterPosition());
 
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
@@ -1484,10 +1482,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
                             }
                         }.execute(getContext(), getViewLifecycleOwner(), args, "message:snooze");
-                    }
-
-                    @Override
-                    public void onDismiss() {
                     }
                 });
     }
@@ -1762,10 +1756,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             }
                         }.execute(FragmentMessages.this, args, "messages:snooze");
                     }
-
-                    @Override
-                    public void onDismiss() {
-                    }
                 });
     }
 
@@ -1986,36 +1976,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onActionMoveSelectionAccount(long account, List<TupleFolderEx> folders, List<Long> disabled, final Long id) {
-        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_folder_select, null);
-        final RecyclerView rvFolder = dview.findViewById(R.id.rvFolder);
-        final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
-
-        final Dialog dialog = new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setTitle(R.string.title_move_to_folder)
-                .setView(dview)
-                .create();
-
-        rvFolder.setHasFixedSize(false);
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
-        rvFolder.setLayoutManager(llm);
-
-        final AdapterFolder adapter = new AdapterFolder(getContext(), getViewLifecycleOwner(), view, account, false,
-                new AdapterFolder.IFolderSelectedListener() {
+        DialogFolder.show(
+                getContext(), getViewLifecycleOwner(), view,
+                R.string.title_move_to_folder,
+                account, disabled,
+                new DialogFolder.IDialogFolder() {
                     @Override
                     public void onFolderSelected(TupleFolderEx folder) {
-                        dialog.dismiss();
                         onActionMoveSelection(folder.id, id);
                     }
                 });
-
-        adapter.setDisabled(disabled);
-        adapter.set(folders);
-
-        rvFolder.setAdapter(adapter);
-
-        rvFolder.setVisibility(View.VISIBLE);
-        pbWait.setVisibility(View.GONE);
-        dialog.show();
     }
 
     private void onActionMoveSelection(long target, Long id) {
@@ -3638,7 +3608,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     remote.sequence = ++sequence;
                                     remote.id = db.attachment().insertAttachment(remote);
                                     try {
-                                        parts.downloadAttachment(context, index, remote.id, remote.name);
+                                        parts.downloadAttachment(context, index, remote);
                                     } catch (Throwable ex) {
                                         Log.e(ex);
                                     }

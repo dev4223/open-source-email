@@ -744,12 +744,12 @@ class Core {
         long id = jargs.getLong(0);
 
         // Get attachment
-        EntityAttachment local = db.attachment().getAttachment(id);
-        if (local == null)
-            local = db.attachment().getAttachment(message.id, (int) id); // legacy
-        if (local == null)
+        EntityAttachment attachment = db.attachment().getAttachment(id);
+        if (attachment == null)
+            attachment = db.attachment().getAttachment(message.id, (int) id); // legacy
+        if (attachment == null)
             throw new IllegalArgumentException("Local attachment not found");
-        if (local.available)
+        if (attachment.available)
             return;
 
         // Get message
@@ -761,32 +761,8 @@ class Core {
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
         MessageHelper.MessageParts parts = helper.getMessageParts();
 
-        // Match attachment by attributes
-        // Some servers order attachments randomly
-        boolean found = false;
-        List<EntityAttachment> remotes = parts.getAttachments();
-        for (int i = 0; i < remotes.size(); i++) {
-            EntityAttachment remote = remotes.get(i);
-            if (Objects.equals(remote.name, local.name) &&
-                    Objects.equals(remote.type, local.type) &&
-                    Objects.equals(remote.disposition, local.disposition) &&
-                    Objects.equals(remote.cid, local.cid) &&
-                    Objects.equals(remote.encryption, local.encryption) &&
-                    Objects.equals(remote.size, local.size)) {
-                found = true;
-                parts.downloadAttachment(context, i, local.id, local.name);
-            }
-        }
-
-        if (!found) {
-            db.attachment().setError(local.id, "Attachment not found");
-            if (!EntityFolder.DRAFTS.equals(folder.type)) {
-                Log.w("Attachment not found local=" + local);
-                for (EntityAttachment remote : remotes)
-                    Log.w("Attachment remote=" + remote);
-                throw new IllegalArgumentException("Attachment not found");
-            }
-        }
+        // Download attachment
+        parts.downloadAttachment(context, attachment);
     }
 
     static void onSynchronizeFolders(Context context, EntityAccount account, Store istore, State state) throws MessagingException {
@@ -1725,31 +1701,11 @@ class Core {
                 }
             }
 
-            List<EntityAttachment> remotes = parts.getAttachments();
-
-            for (EntityAttachment local : attachments)
-                if (!local.available)
-                    if (state.getNetworkState().isUnmetered() || (local.size != null && local.size < maxSize))
+            for (EntityAttachment attachment : attachments)
+                if (!attachment.available)
+                    if (state.getNetworkState().isUnmetered() || (attachment.size != null && attachment.size < maxSize))
                         try {
-                            boolean found = false;
-                            for (int i = 0; i < remotes.size(); i++) {
-                                EntityAttachment remote = remotes.get(i);
-                                if (Objects.equals(remote.name, local.name) &&
-                                        Objects.equals(remote.type, local.type) &&
-                                        Objects.equals(remote.disposition, local.disposition) &&
-                                        Objects.equals(remote.cid, local.cid) &&
-                                        Objects.equals(remote.encryption, local.encryption) &&
-                                        Objects.equals(remote.size, local.size)) {
-                                    found = true;
-                                    parts.downloadAttachment(context, i, local.id, local.name);
-                                }
-                            }
-
-                            if (!found) {
-                                Log.w("Attachment not found local=" + local);
-                                for (EntityAttachment remote : remotes)
-                                    Log.w("Attachment remote=" + remote);
-                            }
+                            parts.downloadAttachment(context, attachment);
                         } catch (Throwable ex) {
                             Log.e(ex);
                         }
@@ -1878,77 +1834,73 @@ class Core {
             return notifications;
 
         boolean pro = Helper.isPro(context);
-        boolean canGroup = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean flags = prefs.getBoolean("flags", true);
-        boolean notify_group = (prefs.getBoolean("notify_group", true) && canGroup);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
-        boolean notify_trash = prefs.getBoolean("notify_trash", true);
-        boolean notify_archive = prefs.getBoolean("notify_archive", true);
-        boolean notify_reply = prefs.getBoolean("notify_reply", false) && pro;
-        boolean notify_flag = prefs.getBoolean("notify_flag", false) && pro;
-        boolean notify_seen = prefs.getBoolean("notify_seen", true);
+        boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
+        boolean notify_archive = (prefs.getBoolean("notify_archive", true) || !pro);
+        boolean notify_reply = (prefs.getBoolean("notify_reply", false) && pro);
+        boolean notify_flag = (prefs.getBoolean("notify_flag", false) && pro);
+        boolean notify_seen = (prefs.getBoolean("notify_seen", true) || !pro);
 
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
         for (TupleMessageEx message : messages)
             messageContact.put(message, ContactInfo.get(context, message.from, false));
 
-        if (notify_group) {
-            // Build pending intents
-            Intent summary = new Intent(context, ActivityView.class).setAction("unified");
-            PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
+        // Build pending intents
+        Intent summary = new Intent(context, ActivityView.class).setAction("unified");
+        PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            Intent clear = new Intent(context, ServiceUI.class).setAction("clear");
-            PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent clear = new Intent(context, ServiceUI.class).setAction("clear");
+        PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            // Build title
-            String title = context.getResources().getQuantityString(
-                    R.plurals.title_notification_unseen, messages.size(), messages.size());
+        // Build title
+        String title = context.getResources().getQuantityString(
+                R.plurals.title_notification_unseen, messages.size(), messages.size());
 
-            // Build notification
-            NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(context, "notification")
-                            .setSmallIcon(R.drawable.baseline_email_white_24)
-                            .setContentTitle(title)
-                            .setContentIntent(piSummary)
-                            .setNumber(messages.size())
-                            .setShowWhen(false)
-                            .setDeleteIntent(piClear)
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setCategory(NotificationCompat.CATEGORY_STATUS)
-                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                            .setGroup(group)
-                            .setGroupSummary(true);
+        // Build notification
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(context, "notification")
+                        .setSmallIcon(R.drawable.baseline_email_white_24)
+                        .setContentTitle(title)
+                        .setContentIntent(piSummary)
+                        .setNumber(messages.size())
+                        .setShowWhen(false)
+                        .setDeleteIntent(piClear)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setCategory(NotificationCompat.CATEGORY_STATUS)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .setGroup(group)
+                        .setGroupSummary(true);
 
-            Notification pub = builder.build();
-            builder
-                    .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                    .setPublicVersion(pub);
+        Notification pub = builder.build();
+        builder
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPublicVersion(pub);
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                setNotificationSoundAndLight(context, builder);
-                builder.setOnlyAlertOnce(true);
-            } else
-                builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            setNotificationSoundAndLight(context, builder);
+            builder.setOnlyAlertOnce(true);
+        } else
+            builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
-            DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
-            StringBuilder sb = new StringBuilder();
-            for (EntityMessage message : messages) {
-                sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
-                if (!TextUtils.isEmpty(message.subject))
-                    sb.append(": ").append(message.subject);
-                sb.append(" ").append(df.format(message.received));
-                sb.append("<br>");
-            }
-
-            builder.setStyle(new NotificationCompat.BigTextStyle()
-                    .bigText(HtmlHelper.fromHtml(sb.toString()))
-                    .setSummaryText(title));
-
-            notifications.add(builder.build());
+        DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+        StringBuilder sb = new StringBuilder();
+        for (EntityMessage message : messages) {
+            sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
+            if (!TextUtils.isEmpty(message.subject))
+                sb.append(": ").append(message.subject);
+            sb.append(" ").append(df.format(message.received));
+            sb.append("<br>");
         }
+
+        builder.setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(HtmlHelper.fromHtml(sb.toString()))
+                .setSummaryText(title));
+
+        notifications.add(builder.build());
 
         // Message notifications
         for (TupleMessageEx message : messages) {
@@ -2009,8 +1961,7 @@ class Core {
                             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                             .setOnlyAlertOnce(true);
 
-            if (notify_group)
-                mbuilder.setGroup(group).setGroupSummary(false);
+            mbuilder.setGroup(group).setGroupSummary(false);
 
             if (notify_trash) {
                 Intent trash = new Intent(context, ServiceUI.class)
@@ -2109,15 +2060,10 @@ class Core {
                 mbuilder.setColorized(true);
             }
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                if (notify_group)
-                    mbuilder.setSound(null);
-                else
-                    setNotificationSoundAndLight(context, mbuilder);
-            } else {
-                if (notify_group)
-                    mbuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
-            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                mbuilder.setSound(null);
+            else
+                mbuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
             notifications.add(mbuilder.build());
         }
@@ -2233,6 +2179,11 @@ class Core {
                     ("connection failure".equals(ex.getMessage()) ||
                             ex.getCause() instanceof SocketException ||
                             ex.getCause() instanceof ConnectionException))
+                recoverable = false;
+
+            if (ex instanceof ConnectionException)
+                // failed to create new store connection
+                // BYE, Socket is closed
                 recoverable = false;
 
             if (ex instanceof FolderClosedException ||
