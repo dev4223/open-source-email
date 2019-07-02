@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -50,14 +51,13 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.android.colorpicker.ColorPickerDialog;
-import com.android.colorpicker.ColorPickerSwatch;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -73,6 +73,7 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.Transport;
 
+import static android.app.Activity.RESULT_OK;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 
@@ -131,6 +132,11 @@ public class FragmentIdentity extends FragmentBase {
     private long id = -1;
     private boolean saving = false;
     private int color = Color.TRANSPARENT;
+
+    private static final int REQUEST_COLOR = 1;
+    private static final int REQUEST_SAVE = 2;
+    private static final int REQUEST_DELETE = 3;
+    private static final int REQUEST_HTML = 4;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -261,22 +267,10 @@ public class FragmentIdentity extends FragmentBase {
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int[] colors = getContext().getResources().getIntArray(R.array.colorPicker);
-                ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
-                colorPickerDialog.initialize(R.string.title_account_color, colors, color, 4, colors.length);
-                colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
-                    @Override
-                    public void onColorSelected(int color) {
-                        if (!Helper.isPro(getContext())) {
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                            lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_SHOW_PRO));
-                            return;
-                        }
-
-                        setColor(color);
-                    }
-                });
-                colorPickerDialog.show(getFragmentManager(), "colorpicker");
+                FragmentDialogColor fragment = new FragmentDialogColor();
+                fragment.initialize(R.string.title_flag_color, color, new Bundle(), getContext());
+                fragment.setTargetFragment(FragmentIdentity.this, REQUEST_COLOR);
+                fragment.show(getFragmentManager(), "identity:color");
             }
         });
 
@@ -309,29 +303,13 @@ public class FragmentIdentity extends FragmentBase {
         btnHtml.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_signature, null);
-                final EditText etHtml = dview.findViewById(R.id.etHtml);
-                etHtml.setText((String) etSignature.getTag());
+                Bundle args = new Bundle();
+                args.putString("html", (String) etSignature.getTag());
 
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setTitle(R.string.title_edit_html)
-                        .setView(dview)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                String html = etHtml.getText().toString();
-                                etSignature.setText(HtmlHelper.fromHtml(html));
-                                etSignature.setTag(html);
-                            }
-                        })
-                        .show();
-
-                new Handler().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        etHtml.requestFocus();
-                    }
-                });
+                FragmentDialogHtml fragment = new FragmentDialogHtml();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentIdentity.this, REQUEST_HTML);
+                fragment.show(getFragmentManager(), "identity:html");
             }
         });
 
@@ -479,7 +457,7 @@ public class FragmentIdentity extends FragmentBase {
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(FragmentIdentity.this, args, "identity:config");
     }
@@ -770,29 +748,15 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Boolean dirty) {
-                if (dirty)
-                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                            .setMessage(R.string.title_ask_save)
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    new Handler().post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            scroll.smoothScrollTo(0, btnSave.getBottom());
-                                        }
-                                    });
-                                    onSave(false);
-                                }
-                            })
-                            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    getFragmentManager().popBackStack();
-                                }
-                            })
-                            .show();
-                else
+                if (dirty) {
+                    Bundle aargs = new Bundle();
+                    aargs.putString("question", getString(R.string.title_ask_save));
+
+                    FragmentDialogAsk fragment = new FragmentDialogAsk();
+                    fragment.setArguments(aargs);
+                    fragment.setTargetFragment(FragmentIdentity.this, REQUEST_SAVE);
+                    fragment.show(getFragmentManager(), "identity:save");
+                } else
                     getFragmentManager().popBackStack();
             }
 
@@ -835,6 +799,7 @@ public class FragmentIdentity extends FragmentBase {
         outState.putString("fair:password", tilPassword.getEditText().getText().toString());
         outState.putInt("fair:advanced", grpAdvanced.getVisibility());
         outState.putInt("fair:color", color);
+        outState.putString("fair:html", (String) etSignature.getTag());
         super.onSaveInstanceState(outState);
     }
 
@@ -885,8 +850,6 @@ public class FragmentIdentity extends FragmentBase {
 
                     color = (identity == null || identity.color == null ? Color.TRANSPARENT : identity.color);
 
-                    etName.requestFocus();
-
                     if (identity == null)
                         new SimpleTask<Integer>() {
                             @Override
@@ -901,13 +864,14 @@ public class FragmentIdentity extends FragmentBase {
 
                             @Override
                             protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                                Helper.unexpectedError(getFragmentManager(), ex);
                             }
                         }.execute(FragmentIdentity.this, new Bundle(), "identity:count");
                 } else {
                     tilPassword.getEditText().setText(savedInstanceState.getString("fair:password"));
                     grpAdvanced.setVisibility(savedInstanceState.getInt("fair:advanced"));
                     color = savedInstanceState.getInt("fair:color");
+                    etSignature.setTag(savedInstanceState.getString("fair:html"));
                 }
 
                 Helper.setViewsEnabled(view, true);
@@ -984,14 +948,14 @@ public class FragmentIdentity extends FragmentBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
                 }.execute(FragmentIdentity.this, args, "identity:accounts:get");
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "identity:get");
     }
@@ -1020,47 +984,50 @@ public class FragmentIdentity extends FragmentBase {
     }
 
     private void onMenuDelete() {
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setMessage(R.string.title_identity_delete)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Bundle args = new Bundle();
-                        args.putLong("id", id);
+        Bundle aargs = new Bundle();
+        aargs.putString("question", getString(R.string.title_identity_delete));
 
-                        new SimpleTask<Void>() {
-                            @Override
-                            protected void onPostExecute(Bundle args) {
-                                Helper.setViewsEnabled(view, false);
-                                pbWait.setVisibility(View.VISIBLE);
-                            }
+        FragmentDialogAsk fragment = new FragmentDialogAsk();
+        fragment.setArguments(aargs);
+        fragment.setTargetFragment(FragmentIdentity.this, REQUEST_DELETE);
+        fragment.show(getFragmentManager(), "identity:delete");
+    }
 
-                            @Override
-                            protected Void onExecute(Context context, Bundle args) {
-                                long id = args.getLong("id");
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-                                DB db = DB.getInstance(context);
-                                db.identity().setIdentityTbd(id);
-
-                                ServiceSynchronize.reload(context, "delete identity");
-
-                                return null;
-                            }
-
-                            @Override
-                            protected void onExecuted(Bundle args, Void data) {
-                                getFragmentManager().popBackStack();
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(FragmentIdentity.this, args, "identity:delete");
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        switch (requestCode) {
+            case REQUEST_COLOR:
+                if (resultCode == RESULT_OK && data != null) {
+                    if (Helper.isPro(getContext())) {
+                        Bundle args = data.getBundleExtra("args");
+                        setColor(args.getInt("color"));
+                    } else
+                        Toast.makeText(getContext(), R.string.title_pro_feature, Toast.LENGTH_LONG).show();
+                }
+                break;
+            case REQUEST_SAVE:
+                if (resultCode == RESULT_OK) {
+                    new Handler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            scroll.smoothScrollTo(0, btnSave.getBottom());
+                        }
+                    });
+                    onSave(false);
+                } else
+                    getFragmentManager().popBackStack();
+                break;
+            case REQUEST_DELETE:
+                if (resultCode == RESULT_OK)
+                    onDelete();
+                break;
+            case REQUEST_HTML:
+                if (resultCode == RESULT_OK && data != null)
+                    onHtml(data.getBundleExtra("args"));
+                break;
+        }
     }
 
     private void setColor(int color) {
@@ -1070,5 +1037,83 @@ public class FragmentIdentity extends FragmentBase {
         border.setColor(color);
         border.setStroke(1, Helper.resolveColor(getContext(), R.attr.colorSeparator));
         vwColor.setBackground(border);
+    }
+
+    private void onDelete() {
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected void onPostExecute(Bundle args) {
+                Helper.setViewsEnabled(view, false);
+                pbWait.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+
+                DB db = DB.getInstance(context);
+                db.identity().setIdentityTbd(id);
+
+                ServiceSynchronize.reload(context, "delete identity");
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                getFragmentManager().popBackStack();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(FragmentIdentity.this, args, "identity:delete");
+    }
+
+    private void onHtml(Bundle args) {
+        String html = args.getString("html");
+        etSignature.setText(HtmlHelper.fromHtml(html));
+        etSignature.setTag(html);
+    }
+
+    public static class FragmentDialogHtml extends DialogFragmentEx {
+        private EditText etHtml;
+
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            outState.putString("fair:html", etHtml.getText().toString());
+            super.onSaveInstanceState(outState);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            String html;
+            if (savedInstanceState == null)
+                html = getArguments().getString("html");
+            else
+                html = savedInstanceState.getString("fair:html");
+
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_signature, null);
+            etHtml = dview.findViewById(R.id.etHtml);
+            etHtml.setText(html);
+
+            return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.title_edit_html)
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String html = etHtml.getText().toString();
+                            getArguments().putString("html", html);
+                            sendResult(RESULT_OK);
+                        }
+                    })
+                    .create();
+        }
     }
 }

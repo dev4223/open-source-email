@@ -78,7 +78,7 @@ public class FragmentOrder extends FragmentBase {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvOrder.setLayoutManager(llm);
 
-        adapter = new AdapterOrder(getContext(), getViewLifecycleOwner());
+        adapter = new AdapterOrder(this);
         rvOrder.setAdapter(adapter);
         new ItemTouchHelper(touchHelper).attachToRecyclerView(rvOrder);
 
@@ -116,7 +116,7 @@ public class FragmentOrder extends FragmentBase {
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "order:accounts");
         else if (TupleFolderSort.class.getName().equals(clazz))
@@ -142,7 +142,7 @@ public class FragmentOrder extends FragmentBase {
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-
+                    Helper.unexpectedError(getFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "order:folders");
         else
@@ -218,8 +218,7 @@ public class FragmentOrder extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(getContext(), getViewLifecycleOwner(), args, "order:set");
 

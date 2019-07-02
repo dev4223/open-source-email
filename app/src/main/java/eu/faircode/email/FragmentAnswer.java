@@ -19,8 +19,9 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Spanned;
 import android.view.LayoutInflater;
@@ -34,9 +35,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import static android.app.Activity.RESULT_OK;
 
 public class FragmentAnswer extends FragmentBase {
     private ViewGroup view;
@@ -49,6 +53,8 @@ public class FragmentAnswer extends FragmentBase {
     private Group grpReady;
 
     private long id = -1;
+
+    private final static int REQUEST_DELETE = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,20 +86,7 @@ public class FragmentAnswer extends FragmentBase {
         ibInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Spanned spanned = HtmlHelper.fromHtml("<p>" +
-                        getString(R.string.title_answer_template_name) +
-                        "<br>" +
-                        getString(R.string.title_answer_template_email) +
-                        "</p>");
-
-                View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_message, null);
-                TextView tvMessage = dview.findViewById(R.id.tvMessage);
-
-                tvMessage.setText(spanned);
-
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setView(dview)
-                        .show();
+                new FragmentInfo().show(getFragmentManager(), "rule:info");
             }
         });
 
@@ -147,52 +140,19 @@ public class FragmentAnswer extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "answer:get");
     }
 
     private void onActionDelete() {
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setMessage(R.string.title_ask_delete_answer)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Bundle args = new Bundle();
-                        args.putLong("id", id);
+        Bundle args = new Bundle();
+        args.putString("question", getString(R.string.title_ask_delete_answer));
 
-                        new SimpleTask<Void>() {
-                            @Override
-                            protected void onPreExecute(Bundle args) {
-                                Helper.setViewsEnabled(view, false);
-                            }
-
-                            @Override
-                            protected void onPostExecute(Bundle args) {
-                                Helper.setViewsEnabled(view, true);
-                            }
-
-                            @Override
-                            protected Void onExecute(Context context, Bundle args) {
-                                long id = args.getLong("id");
-                                DB.getInstance(context).answer().deleteAnswer(id);
-                                return null;
-                            }
-
-                            @Override
-                            protected void onExecuted(Bundle args, Void data) {
-                                finish();
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(FragmentAnswer.this, args, "answer:delete");
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        FragmentDialogAsk fragment = new FragmentDialogAsk();
+        fragment.setArguments(args);
+        fragment.setTargetFragment(FragmentAnswer.this, REQUEST_DELETE);
+        fragment.show(getFragmentManager(), "answer:delete");
     }
 
     private void onActionSave() {
@@ -245,8 +205,77 @@ public class FragmentAnswer extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "answer:save");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case REQUEST_DELETE:
+                if (resultCode == RESULT_OK)
+                    onDelete();
+                break;
+        }
+    }
+
+    private void onDelete() {
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                Helper.setViewsEnabled(view, false);
+            }
+
+            @Override
+            protected void onPostExecute(Bundle args) {
+                Helper.setViewsEnabled(view, true);
+            }
+
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+                DB.getInstance(context).answer().deleteAnswer(id);
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                finish();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(FragmentAnswer.this, args, "answer:delete");
+    }
+
+    public static class FragmentInfo extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            Spanned spanned = HtmlHelper.fromHtml("<p>" +
+                    getString(R.string.title_answer_template_name) +
+                    "<br>" +
+                    getString(R.string.title_answer_template_email) +
+                    "</p>");
+
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
+            TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(spanned);
+            cbNotAgain.setVisibility(View.GONE);
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .create();
+        }
     }
 }

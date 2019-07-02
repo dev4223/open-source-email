@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -51,13 +52,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.exifinterface.media.ExifInterface;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -177,15 +178,15 @@ public class Helper {
             return Intent.createChooser(intent, context.getString(R.string.title_select_app));
     }
 
-    static void view(Context context, LifecycleOwner owner, Intent intent) {
+    static void view(Context context, Intent intent) {
         Uri uri = intent.getData();
         if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-            view(context, owner, intent.getData(), false);
+            view(context, intent.getData(), false);
         else
             context.startActivity(intent);
     }
 
-    static void view(Context context, LifecycleOwner owner, Uri uri, boolean browse) {
+    static void view(Context context, Uri uri, boolean browse) {
         Log.i("View=" + uri);
 
         if (!hasCustomTabs(context, uri))
@@ -207,7 +208,7 @@ public class Helper {
                 Toast.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
             } catch (Throwable ex) {
                 Log.e(ex);
-                unexpectedError(context, owner, ex);
+                Toast.makeText(context, Helper.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -434,15 +435,31 @@ public class Helper {
         return sb.toString();
     }
 
-    static void unexpectedError(final Context context, final LifecycleOwner owner, final Throwable ex) {
-        if (owner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-            new DialogBuilderLifecycle(context, owner)
+    static void unexpectedError(FragmentManager manager, final Throwable ex) {
+        Bundle args = new Bundle();
+        args.putSerializable("ex", ex);
+
+        FragmentDialogUnexpected fragment = new FragmentDialogUnexpected();
+        fragment.setArguments(args);
+        fragment.show(manager, "error:unexpected");
+    }
+
+    public static class FragmentDialogUnexpected extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final Throwable ex = (Throwable) getArguments().getSerializable("ex");
+
+            return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.title_unexpected_error)
-                    .setMessage(ex.toString())
+                    .setMessage(Helper.formatThrowable(ex, false))
                     .setPositiveButton(android.R.string.cancel, null)
                     .setNeutralButton(R.string.title_report, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            // Dialog will be dismissed
+                            final Context context = getContext();
+
                             new SimpleTask<Long>() {
                                 @Override
                                 protected Long onExecute(Context context, Bundle args) throws Throwable {
@@ -451,10 +468,9 @@ public class Helper {
 
                                 @Override
                                 protected void onExecuted(Bundle args, Long id) {
-                                    context.startActivity(
-                                            new Intent(context, ActivityCompose.class)
-                                                    .putExtra("action", "edit")
-                                                    .putExtra("id", id));
+                                    context.startActivity(new Intent(context, ActivityCompose.class)
+                                            .putExtra("action", "edit")
+                                            .putExtra("id", id));
                                 }
 
                                 @Override
@@ -464,12 +480,11 @@ public class Helper {
                                     else
                                         Toast.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                                 }
-                            }.execute(context, owner, new Bundle(), "error:unexpected");
+                            }.execute(context, getActivity(), new Bundle(), "error:unexpected");
                         }
                     })
-                    .show();
-        else
-            ApplicationEx.writeCrashLog(context, ex);
+                    .create();
+        }
     }
 
     // Files
@@ -661,15 +676,18 @@ public class Helper {
         return PreferenceManager.getDefaultSharedPreferences(context).getBoolean("pro", false);
     }
 
-    static void linkPro(TextView tv) {
-        tv.getPaint().setUnderlineText(true);
-        tv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(view.getContext());
-                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_SHOW_PRO));
-            }
-        });
+    static void linkPro(final TextView tv) {
+        final Intent pro = new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRO_FEATURES_URI));
+        PackageManager pm = tv.getContext().getPackageManager();
+        if (pro.resolveActivity(pm) != null) {
+            tv.getPaint().setUnderlineText(true);
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    tv.getContext().startActivity(pro);
+                }
+            });
+        }
     }
 
     public static <T> List<List<T>> chunkList(List<T> list, int size) {

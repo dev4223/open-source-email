@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -32,10 +33,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Observer;
@@ -72,7 +75,7 @@ public class FragmentContacts extends FragmentBase {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvContacts.setLayoutManager(llm);
 
-        adapter = new AdapterContact(getContext(), getViewLifecycleOwner());
+        adapter = new AdapterContact(this);
         rvContacts.setAdapter(adapter);
 
         // Initialize
@@ -160,7 +163,7 @@ public class FragmentContacts extends FragmentBase {
                 onMenuHelp();
                 return true;
             case R.id.menu_delete:
-                onMenuDelete();
+                new FragmentDelete().show(getFragmentManager(), "contacts:delete");
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -171,39 +174,46 @@ public class FragmentContacts extends FragmentBase {
         startActivity(getIntentHelp());
     }
 
-    private void onMenuDelete() {
-        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_message, null);
-        final TextView tvMessage = dview.findViewById(R.id.tvMessage);
-
-        tvMessage.setText(getText(R.string.title_delete_contacts));
-
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setView(dview)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        new SimpleTask<Void>() {
-                            @Override
-                            protected Void onExecute(Context context, Bundle args) {
-                                int count = DB.getInstance(context).contact().clearContacts();
-                                Log.i("Cleared contacts=" + count);
-                                return null;
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(getContext(), getViewLifecycleOwner(), new Bundle(), "setup:privacy");
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
-    }
-
     private static Intent getIntentHelp() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq84"));
         return intent;
+    }
+
+    public static class FragmentDelete extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
+            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(getText(R.string.title_delete_contacts));
+            cbNotAgain.setVisibility(View.GONE);
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    DB db = DB.getInstance(context);
+                                    int count = db.contact().clearContacts();
+                                    Log.i("Cleared contacts=" + count);
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Helper.unexpectedError(getFragmentManager(), ex);
+                                }
+                            }.execute(getContext(), getActivity(), new Bundle(), "contacts:delete");
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+        }
     }
 }

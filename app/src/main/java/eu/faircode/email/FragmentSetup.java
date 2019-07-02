@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,10 +39,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -51,6 +55,8 @@ import java.util.List;
 
 public class FragmentSetup extends FragmentBase {
     private ViewGroup view;
+
+    private ImageButton ibWelcome;
 
     private Button btnHelp;
     private Button btnQuick;
@@ -73,6 +79,8 @@ public class FragmentSetup extends FragmentBase {
 
     private Button btnInbox;
 
+    private Group grpWelcome;
+
     private int textColorPrimary;
     private int colorWarning;
     private Drawable check;
@@ -93,6 +101,8 @@ public class FragmentSetup extends FragmentBase {
         view = (ViewGroup) inflater.inflate(R.layout.fragment_setup, container, false);
 
         // Get controls
+        ibWelcome = view.findViewById(R.id.ibWelcome);
+
         btnHelp = view.findViewById(R.id.btnHelp);
         btnQuick = view.findViewById(R.id.btnQuick);
 
@@ -114,7 +124,19 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox = view.findViewById(R.id.btnInbox);
 
+        grpWelcome = view.findViewById(R.id.grpWelcome);
+
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
         // Wire controls
+
+        ibWelcome.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                prefs.edit().putBoolean("welcome", false).apply();
+                grpWelcome.setVisibility(View.GONE);
+            }
+        });
 
         btnHelp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -161,20 +183,7 @@ public class FragmentSetup extends FragmentBase {
         btnDoze.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setMessage(R.string.title_setup_doze_instructions)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
-                                }
-                            }
-                        })
-                        .create()
-                        .show();
+                new FragmentDialogDoze().show(getFragmentManager(), "setup:doze");
             }
         });
 
@@ -219,6 +228,9 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox.setEnabled(false);
 
+        boolean welcome = prefs.getBoolean("welcome", true);
+        grpWelcome.setVisibility(welcome || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+
         int[] grantResults = new int[permissions.length];
         for (int i = 0; i < permissions.length; i++)
             grantResults[i] = ContextCompat.checkSelfPermission(getActivity(), permissions[i]);
@@ -254,7 +266,7 @@ public class FragmentSetup extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, new Bundle(), "outbox:create");
 
@@ -356,5 +368,25 @@ public class FragmentSetup extends FragmentBase {
         tvPermissionsDone.setTextColor(has ? textColorPrimary : colorWarning);
         tvPermissionsDone.setCompoundDrawablesWithIntrinsicBounds(has ? check : null, null, null, null);
         btnPermissions.setEnabled(!has);
+    }
+
+    public static class FragmentDialogDoze extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.title_setup_doze_instructions)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            try {
+                                startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+                    })
+                    .create();
+        }
     }
 }

@@ -92,7 +92,7 @@ public class FragmentAccounts extends FragmentBase {
         itemDecorator.setDrawable(getContext().getDrawable(R.drawable.divider));
         rvAccount.addItemDecoration(itemDecorator);
 
-        adapter = new AdapterAccount(getContext(), getViewLifecycleOwner(), settings);
+        adapter = new AdapterAccount(this, settings);
         rvAccount.setAdapter(adapter);
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -138,7 +138,7 @@ public class FragmentAccounts extends FragmentBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
                 }.execute(FragmentAccounts.this, args, "account:drafts");
 

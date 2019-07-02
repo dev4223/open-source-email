@@ -138,7 +138,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(61) Why are some messages shown dimmed?](#user-content-faq61)
 * [(62) Which authentication methods are supported?](#user-content-faq62)
 * [(63) How are images resized for displaying on screens?](#user-content-faq63)
-* [(64) Can you add custom actions for swipe left/right?](#user-content-faq64)
+* [~~(64) Can you add custom actions for swipe left/right?~~](#user-content-faq64)
 * [(65) Why are some attachments shown dimmed?](#user-content-faq65)
 * [(66) Is FairEmail available in the Google Play Family Library?](#user-content-faq66)
 * [(67) How can I snooze conversations?](#user-content-faq67)
@@ -696,8 +696,10 @@ for example to set a specific notification sound or to show notifications on the
 
 FairEmail has the following notification channels:
 
-* Service: used for the foreground service notification, see also [this FAQ](#user-content-faq2)
+* Service: used for the notification of the synchronize service, see also [this FAQ](#user-content-faq2)
+* Send: used for the notification of the send service
 * Notifications: used for new message notifications
+* Warning: used for warning notifications
 * Error: used for error notifications
 
 See [here](https://developer.android.com/guide/topics/ui/notifiers/notifications#ManageChannels) for details on notification channels.
@@ -1164,6 +1166,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can swipe a conversation left or right to go to the next or previous conversation?
 * Did you know that you can tap on an image to see where it will be downloaded from?
 * Did you know that you can long press the folder icon in the action bar to select an account?
+* Did you know that you can long press the star icon in a conversation thread to set a colored star?
 
 <br />
 
@@ -1212,21 +1215,21 @@ There is an advanced option to disable automatically resizing and to set the tar
 <br />
 
 <a name="faq64"></a>
-**(64) Can you add custom actions for swipe left/right?**
+**~~(64) Can you add custom actions for swipe left/right?~~**
 
-The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.
-The most natural action in the context of an email app is moving the message out of the folder to another folder.
-You can select the folder to move to in the account settings.
+~~The most natural thing to do when swiping a list entry left or right is to remove the entry from the list.~~
+~~The most natural action in the context of an email app is moving the message out of the folder to another folder.~~
+~~You can select the folder to move to in the account settings.~~
 
-Other actions, like marking messages read and snoozing messages are available via multiple selection.
-You can long press a message to start multiple selection. See also [this question](#user-content-faq55).
+~~Other actions, like marking messages read and snoozing messages are available via multiple selection.~~
+~~You can long press a message to start multiple selection. See also [this question](#user-content-faq55).~~
 
-Swiping left or right to mark a message read or unread is unnatural because the message first goes away and later comes back in a different shape.
-Note that there is an advanced option to mark messages automatically read on moving,
-which is in most cases a perfect replacement for the sequence mark read and move to some folder.
-You can also mark messages read from new message notifications.
+~~Swiping left or right to mark a message read or unread is unnatural because the message first goes away and later comes back in a different shape.~~
+~~Note that there is an advanced option to mark messages automatically read on moving,~~
+~~which is in most cases a perfect replacement for the sequence mark read and move to some folder.~~
+~~You can also mark messages read from new message notifications.~~
 
-If you want to read a message later, you can hide it until a specific time by using the *snooze* menu.
+~~If you want to read a message later, you can hide it until a specific time by using the *snooze* menu.~~
 
 <br />
 
@@ -1833,11 +1836,7 @@ Alternatively, you can *Delete local messages* by long pressing the folder(s) in
 (X)OAuth authentication, formerly available as *Select account* for Google accounts, requires creating an online (Google, Microsoft, etc) app,
 which would make authentication for many people dependent on one (developer) account, which is a bad idea.
 
-Google requires requesting special permission for the online app and has appeared to be unreliable in granting this permission.
-When requested permission for FairEmail, the request was denied with the remark that send permission would be enough, ... right.
-An appeal was completely ignored, which is unfortunately typical for Google.
-Also, Google requires a yearly security assessment which will cost between $15,000 and $75,000.
-This is how you exclude independent developers ...
+See also [this related article](https://arstechnica.com/gadgets/2019/06/gmails-api-lockdown-will-kill-some-third-party-app-access-starting-july-15/).
 
 Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections.
 [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only

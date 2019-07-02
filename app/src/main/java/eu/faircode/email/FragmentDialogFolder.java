@@ -25,48 +25,36 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import androidx.lifecycle.LifecycleOwner;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DialogFolder {
-    static void show(
-            final Context context, final LifecycleOwner owner, View parentView, int title,
-            long account, final List<Long> disabled,
-            final IDialogFolder intf) {
-        final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_folder_select, null);
+import static android.app.Activity.RESULT_OK;
+
+public class FragmentDialogFolder extends DialogFragmentEx {
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        String title = getArguments().getString("title");
+
+        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_folder_select, null);
         final RecyclerView rvFolder = dview.findViewById(R.id.rvFolder);
         final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
 
-        final Dialog dialog = new DialogBuilderLifecycle(context, owner)
-                .setTitle(title)
-                .setView(dview)
-                .create();
-
         rvFolder.setHasFixedSize(false);
-        LinearLayoutManager llm = new LinearLayoutManager(context);
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvFolder.setLayoutManager(llm);
-
-        final AdapterFolder adapter = new AdapterFolder(context, owner, parentView, account, false,
-                new AdapterFolder.IFolderSelectedListener() {
-                    @Override
-                    public void onFolderSelected(TupleFolderEx folder) {
-                        dialog.dismiss();
-                        intf.onFolderSelected(folder);
-                    }
-                });
-
-        rvFolder.setAdapter(adapter);
 
         rvFolder.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
-        dialog.show();
 
         Bundle args = new Bundle();
-        args.putLong("account", account);
+        args.putLong("account", getArguments().getLong("account"));
 
         new SimpleTask<List<TupleFolderEx>>() {
             @Override
@@ -82,20 +70,37 @@ public class DialogFolder {
                 if (folders == null)
                     folders = new ArrayList<>();
 
-                adapter.setDisabled(disabled);
+                long account = args.getLong("account");
+                AdapterFolder adapter = new AdapterFolder(getContext(), getActivity(),
+                        account, false, new AdapterFolder.IFolderSelectedListener() {
+                    @Override
+                    public void onFolderSelected(TupleFolderEx folder) {
+                        Bundle args = getArguments();
+                        args.putLong("folder", folder.id);
+
+                        sendResult(RESULT_OK);
+                        dismiss();
+                    }
+                });
+
+                rvFolder.setAdapter(adapter);
+
+                adapter.setDisabled(Helper.fromLongArray(getArguments().getLongArray("disabled")));
                 adapter.set(folders);
+
                 pbWait.setVisibility(View.GONE);
                 rvFolder.setVisibility(View.VISIBLE);
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(context, owner, ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(context, owner, args, "folder:select");
-    }
+        }.execute(getContext(), getActivity(), args, "folder:select");
 
-    interface IDialogFolder {
-        void onFolderSelected(TupleFolderEx folder);
+        return new AlertDialog.Builder(getContext())
+                .setTitle(title)
+                .setView(dview)
+                .create();
     }
 }

@@ -84,7 +84,7 @@ public class HtmlHelper {
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
-    static String sanitize(Context context, String html) {
+    static String sanitize(Context context, String html, boolean show_images) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean paranoid = prefs.getBoolean("paranoid", true);
 
@@ -171,19 +171,34 @@ public class HtmlHelper {
         // Abbreviations
         document.select("abbr").tagName("u");
 
-        // Remove link tracking pixels
-        if (paranoid)
-            for (Element img : document.select("img"))
-                if (isTrackingPixel(img)) {
-                    String src = img.attr("src");
-                    img.removeAttr("src");
-                    img.tagName("a");
-                    img.attr("href", src);
-                    img.appendText(context.getString(R.string.title_hint_tracking_image,
-                            img.attr("width"), img.attr("height")));
-                }
+        // Subscript/Superscript
+        for (Element subp : document.select("sub,sup")) {
+            Element small = document.createElement("small");
+            small.html(subp.html());
+            subp.html(small.outerHtml());
+        }
+
+        // Lists
+        for (Element li : document.select("li")) {
+            li.tagName("span");
+            li.prependText("* ");
+            li.appendElement("br"); // line break after list item
+        }
+        document.select("ol").tagName("div");
+        document.select("ul").tagName("div");
 
         // Tables
+        for (Element div : document.select("div")) {
+            Element parent = div.parent();
+            while (parent != null) {
+                if ("td".equals(parent.tagName())) {
+                    div.tagName("span"); // Prevent white space
+                    break;
+                }
+                parent = parent.parent();
+            }
+        }
+
         for (Element col : document.select("th,td")) {
             // separate columns by a space
             if (col.nextElementSibling() == null) {
@@ -205,31 +220,35 @@ public class HtmlHelper {
 
         for (Element table : document.select("table"))
             if (table.parent() != null && "a".equals(table.parent().tagName()))
-                table.tagName("span"); // // Links cannot contain tables
+                table.tagName("span"); // Links cannot contain tables
             else
                 table.tagName("div");
 
-        // Lists
-        for (Element li : document.select("li")) {
-            li.tagName("span");
-            li.prependText("* ");
-            li.appendElement("br"); // line break after list item
-        }
-        document.select("ol").tagName("div");
-        document.select("ul").tagName("div");
+        // Images
+        for (Element img : document.select("img")) {
+            // Remove link tracking pixels
+            if (paranoid && isTrackingPixel(img)) {
+                String src = img.attr("src");
+                img.removeAttr("src");
+                img.tagName("a");
+                img.attr("href", src);
+                img.appendText(context.getString(R.string.title_hint_tracking_image,
+                        img.attr("width"), img.attr("height")));
+            }
 
+            if (!show_images) {
+                String alt = img.attr("alt");
+                if (!TextUtils.isEmpty(alt)) {
+                    img.appendText(alt);
+                }
+            }
+        }
+
+        // Autolink
         final Pattern pattern = Pattern.compile(
                 PatternsCompat.AUTOLINK_EMAIL_ADDRESS.pattern() + "|" +
                         PatternsCompat.AUTOLINK_WEB_URL.pattern());
 
-        // Subscript/Superscript
-        for (Element subp : document.select("sub,sup")) {
-            Element small = document.createElement("small");
-            small.html(subp.html());
-            subp.html(small.outerHtml());
-        }
-
-        // Autolink
         NodeTraversor.traverse(new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {

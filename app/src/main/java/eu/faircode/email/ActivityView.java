@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -34,22 +35,17 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.print.PrintAttributes;
-import android.print.PrintDocumentAdapter;
-import android.print.PrintManager;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.app.NotificationCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -64,14 +60,8 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.colorpicker.ColorPickerDialog;
-import com.android.colorpicker.ColorPickerSwatch;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -80,8 +70,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -103,8 +91,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private RecyclerView rvMenuExtra;
 
     private boolean exit = false;
-
-    private WebView printWebView = null;
+    private boolean searching = false;
 
     static final int REQUEST_UNIFIED = 1;
     static final int REQUEST_WHY = 2;
@@ -112,9 +99,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     static final int REQUEST_OUTBOX = 4;
     static final int REQUEST_ERROR = 5;
     static final int REQUEST_UPDATE = 6;
-
-    static final int REQUEST_SENDER = 1;
-    static final int REQUEST_RECIPIENT = 2;
 
     static final String ACTION_VIEW_FOLDERS = BuildConfig.APPLICATION_ID + ".VIEW_FOLDERS";
     static final String ACTION_VIEW_MESSAGES = BuildConfig.APPLICATION_ID + ".VIEW_MESSAGES";
@@ -125,15 +109,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     static final String ACTION_EDIT_ANSWER = BuildConfig.APPLICATION_ID + ".EDIT_ANSWER";
     static final String ACTION_EDIT_RULES = BuildConfig.APPLICATION_ID + ".EDIT_RULES";
     static final String ACTION_EDIT_RULE = BuildConfig.APPLICATION_ID + ".EDIT_RULE";
-    static final String ACTION_COLOR = BuildConfig.APPLICATION_ID + ".COLOR";
-    static final String ACTION_PRINT = BuildConfig.APPLICATION_ID + ".PRINT";
     static final String ACTION_SHOW_PRO = BuildConfig.APPLICATION_ID + ".SHOW_PRO";
 
+    private static final long EXIT_DELAY = 2500L; // milliseconds
     static final long UPDATE_INTERVAL = (BuildConfig.BETA_RELEASE ? 4 : 12) * 3600 * 1000L; // milliseconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null)
+            searching = savedInstanceState.getBoolean("fair:searching");
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         startup = prefs.getString("startup", "unified");
@@ -324,7 +310,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if ((getIntentInvite().resolveActivity(pm) != null))
+        if ((getIntentInvite(this).resolveActivity(pm) != null))
             extra.add(new NavMenuItem(R.drawable.baseline_people_24, R.string.menu_invite, new Runnable() {
                 @Override
                 public void run() {
@@ -333,7 +319,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }));
 
-        if (getIntentRate().resolveActivity(pm) != null)
+        if (getIntentRate(this).resolveActivity(pm) != null)
             extra.add(new NavMenuItem(R.drawable.baseline_star_24, R.string.menu_rate, new Runnable() {
                 @Override
                 public void run() {
@@ -464,6 +450,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
 
             if (intent.hasExtra(Intent.EXTRA_PROCESS_TEXT)) {
+                searching = true;
                 String search = getIntent().getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT).toString();
 
                 intent.removeExtra(Intent.EXTRA_PROCESS_TEXT);
@@ -479,6 +466,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putBoolean("fair:toggle", drawerToggle.isDrawerIndicatorEnabled());
+        outState.putBoolean("fair:searching", searching);
         super.onSaveInstanceState(outState);
     }
 
@@ -510,8 +498,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         iff.addAction(ACTION_EDIT_ANSWER);
         iff.addAction(ACTION_EDIT_RULES);
         iff.addAction(ACTION_EDIT_RULE);
-        iff.addAction(ACTION_COLOR);
-        iff.addAction(ACTION_PRINT);
         iff.addAction(ACTION_SHOW_PRO);
         lbm.registerReceiver(receiver, iff);
 
@@ -540,14 +526,18 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             if (exit || count > 1)
                 super.onBackPressed();
             else if (!backHandled()) {
-                exit = true;
-                Toast.makeText(this, R.string.app_exit, Toast.LENGTH_SHORT).show();
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        exit = false;
-                    }
-                }, 2500);
+                if (searching)
+                    super.onBackPressed();
+                else {
+                    exit = true;
+                    Toast.makeText(this, R.string.app_exit, Toast.LENGTH_SHORT).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            exit = false;
+                        }
+                    }, EXIT_DELAY);
+                }
             }
         }
     }
@@ -585,18 +575,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void checkFirst() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (prefs.getBoolean("first", true)) {
-            new DialogBuilderLifecycle(this, this)
-                    .setMessage(getString(R.string.title_hint_sync))
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            prefs.edit().putBoolean("first", false).apply();
-                        }
-                    })
-                    .show();
-        }
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getBoolean("first", true))
+            new FragmentDialogFirst().show(getSupportFragmentManager(), "first");
     }
 
     private void checkCrash() {
@@ -633,14 +614,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Toast.makeText(ActivityView.this, Helper.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
+                Toast.makeText(ActivityView.this,
+                        Helper.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
             }
         }.execute(this, new Bundle(), "crash:log");
-    }
-
-    private class UpdateInfo {
-        String tag_name; // version
-        String html_url;
     }
 
     private void checkUpdate(boolean always) {
@@ -763,28 +740,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     if (ex instanceof IllegalArgumentException || ex instanceof IOException)
                         Toast.makeText(ActivityView.this, ex.getMessage(), Toast.LENGTH_LONG).show();
                     else
-                        Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
+                        Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, args, "update:check");
-    }
-
-    private Intent getIntentInvite() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getString(R.string.title_try)).append("\n\n");
-        sb.append(BuildConfig.INVITE_URI).append("\n\n");
-
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
-        intent.putExtra(Intent.EXTRA_TEXT, sb.toString());
-        return intent;
-    }
-
-    private Intent getIntentRate() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID));
-        if (intent.resolveActivity(getPackageManager()) == null)
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID));
-        return intent;
     }
 
     private Intent getIntentOtherApps() {
@@ -833,9 +791,9 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
+                Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
-        }.execute(this, args, "menu:inbox");
+        }.execute(this, args, "menu:outbox");
     }
 
     private void onMenuOperations() {
@@ -870,7 +828,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuFAQ() {
-        Helper.view(this, this, Helper.getIntentFAQ());
+        Helper.view(this, Helper.getIntentFAQ());
     }
 
     private void onMenuIssue() {
@@ -878,7 +836,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuPrivacy() {
-        Helper.view(this, this, Helper.getIntentPrivacy());
+        Helper.view(this, Helper.getIntentPrivacy());
     }
 
     private void onMenuAbout() {
@@ -891,34 +849,19 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuInvite() {
-        startActivity(getIntentInvite());
+        startActivity(getIntentInvite(this));
     }
 
     private void onMenuRate() {
         Intent faq = Helper.getIntentFAQ();
         if (faq.resolveActivity(getPackageManager()) == null)
-            Helper.view(this, this, getIntentRate());
-        else {
-            new DialogBuilderLifecycle(this, this)
-                    .setMessage(R.string.title_issue)
-                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Helper.view(ActivityView.this, ActivityView.this, Helper.getIntentFAQ());
-                        }
-                    })
-                    .setNegativeButton(R.string.title_no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Helper.view(ActivityView.this, ActivityView.this, getIntentRate());
-                        }
-                    })
-                    .show();
-        }
+            Helper.view(this, getIntentRate(this));
+        else
+            new FragmentDialogRate().show(getSupportFragmentManager(), "rate");
     }
 
     private void onMenuOtherApps() {
-        Helper.view(this, this, getIntentOtherApps());
+        Helper.view(this, getIntentOtherApps());
     }
 
     private void onReset() {
@@ -983,10 +926,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     onEditRules(intent);
                 else if (ACTION_EDIT_RULE.equals(action))
                     onEditRule(intent);
-                else if (ACTION_COLOR.equals(action))
-                    onColor(intent);
-                else if (ACTION_PRINT.equals(action))
-                    onPrint(intent);
                 else if (ACTION_SHOW_PRO.equals(action))
                     onShowPro(intent);
             }
@@ -1089,163 +1028,6 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         fragmentTransaction.commit();
     }
 
-    private void onColor(final Intent intent) {
-        int color = intent.getIntExtra("color", -1);
-        int[] colors = getResources().getIntArray(R.array.colorPicker);
-        ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
-        colorPickerDialog.initialize(R.string.title_flag_color, colors, color, 4, colors.length);
-        colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
-            @Override
-            public void onColorSelected(int color) {
-                if (!Helper.isPro(ActivityView.this)) {
-                    onShowPro(null);
-                    return;
-                }
-
-                Bundle args = new Bundle();
-                args.putLong("id", intent.getLongExtra("id", -1));
-                args.putInt("color", color);
-
-                new SimpleTask<Void>() {
-                    @Override
-                    protected Void onExecute(final Context context, Bundle args) {
-                        final long id = args.getLong("id");
-                        final int color = args.getInt("color");
-
-                        final DB db = DB.getInstance(context);
-                        db.runInTransaction(new Runnable() {
-                            @Override
-                            public void run() {
-                                EntityMessage message = db.message().getMessage(id);
-                                if (message == null)
-                                    return;
-
-                                EntityOperation.queue(context, message, EntityOperation.FLAG, true, color);
-                            }
-                        });
-                        return null;
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-                    }
-                }.execute(ActivityView.this, ActivityView.this, args, "message:color");
-            }
-        });
-        colorPickerDialog.show(getSupportFragmentManager(), "colorpicker");
-    }
-
-    private void onPrint(Intent intent) {
-        long id = intent.getLongExtra("id", -1);
-
-        Bundle args = new Bundle();
-        args.putLong("id", id);
-
-        new SimpleTask<String[]>() {
-            @Override
-            protected String[] onExecute(Context context, Bundle args) throws IOException {
-                long id = args.getLong("id");
-
-                DB db = DB.getInstance(context);
-                EntityMessage message = db.message().getMessage(id);
-                if (message == null || !message.content)
-                    return null;
-
-                File file = message.getFile(context);
-                if (!file.exists())
-                    return null;
-
-                String html = Helper.readText(file);
-                html = HtmlHelper.getHtmlEmbedded(context, id, html);
-
-                Document document = Jsoup.parse(html);
-                Element body = document.body();
-                if (body != null) {
-                    Element p = document.createElement("p");
-
-                    if (message.from != null && message.from.length > 0) {
-                        Element span = document.createElement("span");
-                        span.text(getString(R.string.title_from) + " " + MessageHelper.formatAddresses(message.from));
-                        p.append(span.html() + "<br>");
-                    }
-
-                    if (message.to != null && message.to.length > 0) {
-                        Element span = document.createElement("span");
-                        span.text(getString(R.string.title_to) + " " + MessageHelper.formatAddresses(message.to));
-                        p.append(span.html() + "<br>");
-                    }
-
-                    if (message.cc != null && message.cc.length > 0) {
-                        Element span = document.createElement("span");
-                        span.text(getString(R.string.title_cc) + " " + MessageHelper.formatAddresses(message.cc));
-                        p.append(span.html() + "<br>");
-                    }
-
-                    {
-                        Element span = document.createElement("span");
-                        DateFormat DTF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
-                        span.text(getString(R.string.title_received) + " " + DTF.format(message.received));
-                        p.append(span.html() + "<br>");
-                    }
-
-                    if (!TextUtils.isEmpty(message.subject)) {
-                        Element span = document.createElement("span");
-                        span.text(message.subject);
-                        p.append(span.html() + "<br>");
-                    }
-
-                    p.append("<hr><br>");
-
-                    body.prepend(p.html());
-                }
-
-                return new String[]{message.subject, document.html()};
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, final String[] data) {
-                if (data == null)
-                    return;
-
-                // https://developer.android.com/training/printing/html-docs.html
-                printWebView = new WebView(ActivityView.this);
-                WebSettings settings = printWebView.getSettings();
-                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                settings.setAllowFileAccess(false);
-
-                printWebView.setWebViewClient(new WebViewClient() {
-                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                        return false;
-                    }
-
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        try {
-                            PrintManager printManager = (PrintManager) getOriginalContext().getSystemService(Context.PRINT_SERVICE);
-                            String jobName = getString(R.string.app_name);
-                            if (!TextUtils.isEmpty(data[0]))
-                                jobName += " - " + data[0];
-                            PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
-                            printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                        } finally {
-                            printWebView = null;
-                        }
-                    }
-                });
-
-                printWebView.loadDataWithBaseURL("about:blank", data[1], "text/html", "UTF-8", null);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivityView.this, ActivityView.this, ex);
-            }
-        }.execute(ActivityView.this, args, "message:print");
-    }
-
     private void onShowPro(Intent intent) {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
             getSupportFragmentManager().popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
@@ -1253,5 +1035,68 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
         fragmentTransaction.commit();
+    }
+
+    private class UpdateInfo {
+        String tag_name; // version
+        String html_url;
+    }
+
+    private static Intent getIntentInvite(Context context) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(context.getString(R.string.title_try)).append("\n\n");
+        sb.append(BuildConfig.INVITE_URI).append("\n\n");
+
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.app_name));
+        intent.putExtra(Intent.EXTRA_TEXT, sb.toString());
+        return intent;
+    }
+
+    private static Intent getIntentRate(Context context) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID));
+        if (intent.resolveActivity(context.getPackageManager()) == null)
+            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID));
+        return intent;
+    }
+
+    public static class FragmentDialogFirst extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getContext())
+                    .setMessage(getString(R.string.title_hint_sync))
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("first", false).apply();
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogRate extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.title_issue)
+                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Helper.view(getContext(), Helper.getIntentFAQ());
+                        }
+                    })
+                    .setNegativeButton(R.string.title_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Helper.view(getContext(), getIntentRate(getContext()));
+                        }
+                    })
+                    .create();
+        }
     }
 }
