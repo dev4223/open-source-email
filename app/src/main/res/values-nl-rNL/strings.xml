@@ -80,6 +80,7 @@
     <string name="title_edit_folder">Bewerk map</string>
     <string name="title_setup">Instellingen</string>
     <string name="title_setup_help">Help</string>
+    <string name="title_setup_welcome">Ontvangen en verzenden van berichten vereist het instellen van een account en een identiteit zoals in elke andere e-mail app.</string>
     <string name="title_setup_quick">Snel instellen</string>
     <string name="title_setup_quick_remark">Voor het snel instellen van een account en een identiteit voor de meeste providers</string>
     <string name="title_setup_quick_hint">De snelle instelling zal configuratie informatie ophalen van autoconfig.thunderbird.net</string>
@@ -169,6 +170,7 @@
     <string name="title_advanced_addresses">Adresgegevens standaard weergeven</string>
     <string name="title_advanced_attachments_alt">Bijlagen weergeven na de berichttekst</string>
     <string name="title_advanced_monospaced">Gebruik vaste breedte lettertype voor berichttekst</string>
+    <string name="title_advanced_images_inline">Automatisch inline afbeeldingen weergeven</string>
     <string name="title_advanced_images">Automatisch afbeeldingen weergeven voor bekende contacten</string>
     <string name="title_advanced_actionbar">Actiebalk gesprek</string>
     <string name="title_advanced_pull_refresh">Omlaag schuiven om te verversen</string>
@@ -216,6 +218,7 @@
     <string name="title_advanced_threading_hint">Groepeer gerelateerde berichten</string>
     <string name="title_advanced_name_email_hint">Indien uitgeschakeld, worden alleen namen weergegeven als deze beschikbaar zijn</string>
     <string name="title_advanced_preview_hint">Alleen beschikbaar wanneer de berichttekst werd gedownload</string>
+    <string name="title_advanced_inline_hint">Inline afbeeldingen zijn afbeeldingen opgenomen in het bericht</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
     <string name="title_advanced_autocollapse_hint">Meerdere uitgeklapte berichten worden altijd gesloten bij \'terug\'</string>
     <string name="title_advanced_autoclose_hint">Gesprekken automatisch sluiten wanneer alle berichten zijn gearchiveerd, verzonden of weggegooid</string>

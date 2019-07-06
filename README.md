@@ -56,6 +56,13 @@ This app starts a foreground service with a low priority status bar notification
 * Material design (including dark theme)
 * Maintained and supported
 
+## Privacy features
+
+* Reformat messages to always safely view messages
+* Confirm showing images to prevent tracking
+* Confirm opening links to prevent tracking and phishing
+* Automatically recognize and disable tracking images
+
 ## Pro features
 
 All pro features are convenience or advanced features.
@@ -189,7 +196,7 @@ FairEmail uses:
 * [ShortcutBadger](https://github.com/leolin310148/ShortcutBadger). Copyright 2014 Leo Lin. [Apache license](https://github.com/leolin310148/ShortcutBadger/blob/master/LICENSE).
 * [Bugsnag exception reporter for Android](https://github.com/bugsnag/bugsnag-android). Copyright (c) 2012 Bugsnag. [MIT License](https://github.com/bugsnag/bugsnag-android/blob/master/LICENSE.txt).
 * [biweekly](https://github.com/mangstadt/biweekly). Copyright (c) 2013-2018, Michael Angstadt. [BSD 2-Clause](https://github.com/mangstadt/biweekly/blob/master/LICENSE).
-* Source code snippets from Stack Overflow. [MIT License](https://meta.stackexchange.com/questions/271080/the-mit-license-clarity-on-using-code-on-stack-overflow-and-stack-exchange).
+* [PhotoView](https://github.com/chrisbanes/PhotoView). Copyright 2018 Chris Banes. [Apache License](https://github.com/chrisbanes/PhotoView/blob/master/LICENSE).
 
 Error reporting is sponsored by:
 

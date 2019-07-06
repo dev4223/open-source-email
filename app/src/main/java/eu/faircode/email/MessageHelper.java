@@ -29,7 +29,6 @@ import com.sun.mail.util.MessageRemovedIOException;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -801,7 +800,7 @@ public class MessageHelper {
                     result = (String) content;
                 else if (content instanceof InputStream)
                     // Typically com.sun.mail.util.QPDecoderStream
-                    result = readStream((InputStream) content, "UTF-8");
+                    result = Helper.readStream((InputStream) content, "UTF-8");
                 else
                     result = content.toString();
             } catch (IOException | FolderClosedException | MessageRemovedException ex) {
@@ -815,13 +814,23 @@ public class MessageHelper {
             try {
                 ContentType ct = new ContentType(part.getContentType());
                 String charset = ct.getParameter("charset");
+                String encoding = null;
+                try {
+                    String[] enc = part.getHeader("Content-Transfer-Encoding");
+                    if (enc != null && enc.length > 0)
+                        encoding = enc[0];
+                } catch (MessagingException ex) {
+                    Log.w(ex);
+                }
                 if (TextUtils.isEmpty(charset)) {
                     if (BuildConfig.DEBUG)
                         warnings.add(context.getString(R.string.title_no_charset, ct));
                     // The first 127 characters are the same as in US-ASCII
                     result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
                 } else {
-                    if ("US-ASCII".equals(charset.toUpperCase()) || "ISO-8859-1".equals(charset.toUpperCase()))
+                    if ("US-ASCII".equals(charset.toUpperCase()) ||
+                            (encoding != null && "8bit".equals(encoding.toLowerCase()) &&
+                                    "ISO-8859-1".equals(charset.toUpperCase())))
                         result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
                     else {
                         if ("US-ASCII".equals(Charset.forName(charset).name()))
@@ -1100,14 +1109,6 @@ public class MessageHelper {
             Log.w(ex);
             parts.warnings.add(Helper.formatThrowable(ex, false));
         }
-    }
-
-    private static String readStream(InputStream is, String charset) throws IOException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        for (int len = is.read(buffer); len != -1; len = is.read(buffer))
-            os.write(buffer, 0, len);
-        return new String(os.toByteArray(), charset);
     }
 
     static boolean equal(Address[] a1, Address[] a2) {
