@@ -53,6 +53,7 @@ import com.sun.mail.imap.protocol.UID;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -89,6 +90,7 @@ import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
@@ -739,6 +741,9 @@ class Core {
                 parts.isPlainOnly(),
                 HtmlHelper.getPreview(body),
                 parts.getWarnings(message.warning));
+
+        if (!TextUtils.isEmpty(body))
+            fixAttachments(context, message.id, body);
     }
 
     private static void onAttachment(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
@@ -960,9 +965,11 @@ class Core {
             boolean sync_unseen = prefs.getBoolean("sync_unseen", false);
             boolean sync_flagged = prefs.getBoolean("sync_flagged", true);
             boolean sync_kept = prefs.getBoolean("sync_kept", true);
+            boolean delete_unseen = prefs.getBoolean("delete_unseen", false);
 
             Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days +
-                    " sync unseen=" + sync_unseen + " flagged=" + sync_flagged + " kept=" + sync_kept);
+                    " sync unseen=" + sync_unseen + " flagged=" + sync_flagged +
+                    " delete unseen=" + delete_unseen + " kept=" + sync_kept);
 
             db.folder().setFolderSyncState(folder.id, "syncing");
 
@@ -993,7 +1000,7 @@ class Core {
 
             // Delete old local messages
             if (auto_delete && EntityFolder.TRASH.equals(folder.type)) {
-                List<Long> tbds = db.message().getMessagesBefore(folder.id, keep_time, false);
+                List<Long> tbds = db.message().getMessagesBefore(folder.id, keep_time, delete_unseen);
                 Log.i(folder.name + " local tbd=" + tbds.size());
                 for (Long tbd : tbds) {
                     EntityMessage message = db.message().getMessage(tbd);
@@ -1001,7 +1008,7 @@ class Core {
                         EntityOperation.queue(context, message, EntityOperation.DELETE);
                 }
             } else {
-                int old = db.message().deleteMessagesBefore(folder.id, keep_time, false);
+                int old = db.message().deleteMessagesBefore(folder.id, keep_time, delete_unseen);
                 Log.i(folder.name + " local old=" + old);
             }
 
@@ -1702,6 +1709,9 @@ class Core {
                             parts.getWarnings(message.warning));
                     Log.i(folder.name + " downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
+
+                    if (!TextUtils.isEmpty(body))
+                        fixAttachments(context, message.id, body);
                 }
             }
 
@@ -1715,6 +1725,20 @@ class Core {
                             Log.e(ex);
                             db.attachment().setError(attachment.id, Helper.formatThrowable(ex, false));
                         }
+        }
+    }
+
+    private static void fixAttachments(Context context, long id, String body) {
+        DB db = DB.getInstance(context);
+        for (Element element : Jsoup.parse(body).select("img")) {
+            String src = element.attr("src");
+            if (src.startsWith("cid:")) {
+                EntityAttachment attachment = db.attachment().getAttachment(id, "<" + src.substring(4) + ">");
+                if (attachment != null && !attachment.isInline()) {
+                    Log.i("Setting attachment type to inline id=" + attachment.id);
+                    db.attachment().setDisposition(attachment.id, Part.INLINE);
+                }
+            }
         }
     }
 
