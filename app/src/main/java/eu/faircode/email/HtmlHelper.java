@@ -84,7 +84,7 @@ public class HtmlHelper {
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
-    static String sanitize(Context context, String html) {
+    static String sanitize(Context context, String html, boolean show_images) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean paranoid = prefs.getBoolean("paranoid", true);
 
@@ -171,19 +171,34 @@ public class HtmlHelper {
         // Abbreviations
         document.select("abbr").tagName("u");
 
-        // Remove link tracking pixels
-        if (paranoid)
-            for (Element img : document.select("img"))
-                if (isTrackingPixel(img)) {
-                    String src = img.attr("src");
-                    img.removeAttr("src");
-                    img.tagName("a");
-                    img.attr("href", src);
-                    img.appendText(context.getString(R.string.title_hint_tracking_image,
-                            img.attr("width"), img.attr("height")));
-                }
+        // Subscript/Superscript
+        for (Element subp : document.select("sub,sup")) {
+            Element small = document.createElement("small");
+            small.html(subp.html());
+            subp.html(small.outerHtml());
+        }
+
+        // Lists
+        for (Element li : document.select("li")) {
+            li.tagName("span");
+            li.prependText("* ");
+            li.appendElement("br"); // line break after list item
+        }
+        document.select("ol").tagName("div");
+        document.select("ul").tagName("div");
 
         // Tables
+        for (Element div : document.select("div")) {
+            Element parent = div.parent();
+            while (parent != null) {
+                if ("td".equals(parent.tagName())) {
+                    div.tagName("span"); // Prevent white space
+                    break;
+                }
+                parent = parent.parent();
+            }
+        }
+
         for (Element col : document.select("th,td")) {
             // separate columns by a space
             if (col.nextElementSibling() == null) {
@@ -205,31 +220,35 @@ public class HtmlHelper {
 
         for (Element table : document.select("table"))
             if (table.parent() != null && "a".equals(table.parent().tagName()))
-                table.tagName("span"); // // Links cannot contain tables
+                table.tagName("span"); // Links cannot contain tables
             else
                 table.tagName("div");
 
-        // Lists
-        for (Element li : document.select("li")) {
-            li.tagName("span");
-            li.prependText("* ");
-            li.appendElement("br"); // line break after list item
-        }
-        document.select("ol").tagName("div");
-        document.select("ul").tagName("div");
+        // Images
+        for (Element img : document.select("img")) {
+            // Remove link tracking pixels
+            if (paranoid && isTrackingPixel(img)) {
+                String src = img.attr("src");
+                img.removeAttr("src");
+                img.tagName("a");
+                img.attr("href", src);
+                img.appendText(context.getString(R.string.title_hint_tracking_image,
+                        img.attr("width"), img.attr("height")));
+            }
 
+            if (!show_images) {
+                String alt = img.attr("alt");
+                if (!TextUtils.isEmpty(alt)) {
+                    img.appendText(alt);
+                }
+            }
+        }
+
+        // Autolink
         final Pattern pattern = Pattern.compile(
                 PatternsCompat.AUTOLINK_EMAIL_ADDRESS.pattern() + "|" +
                         PatternsCompat.AUTOLINK_WEB_URL.pattern());
 
-        // Subscript/Superscript
-        for (Element subp : document.select("sub,sup")) {
-            Element small = document.createElement("small");
-            small.html(subp.html());
-            subp.html(small.outerHtml());
-        }
-
-        // Autolink
         NodeTraversor.traverse(new NodeVisitor() {
             @Override
             public void head(Node node, int depth) {
@@ -295,15 +314,16 @@ public class HtmlHelper {
         return (body == null ? "" : body.html());
     }
 
-    static Drawable decodeImage(final String source, final long id, boolean show, final TextView view) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(view.getContext());
+    static Drawable decodeImage(final Context context, final long id, final String source, boolean show, final TextView view) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
+        boolean inline = prefs.getBoolean("inline_images", false);
 
-        final int px = Helper.dp2pixels(view.getContext(), (zoom + 1) * 24);
+        final int px = Helper.dp2pixels(context, (zoom + 1) * 24);
 
-        final Resources.Theme theme = view.getContext().getTheme();
-        final Resources res = view.getContext().getResources();
+        final Resources.Theme theme = context.getTheme();
+        final Resources res = context.getResources();
 
         if (TextUtils.isEmpty(source)) {
             Drawable d = res.getDrawable(R.drawable.baseline_broken_image_24, theme);
@@ -315,9 +335,10 @@ public class HtmlHelper {
         boolean data = source.startsWith("data:");
 
         if (BuildConfig.DEBUG)
-            Log.i("Image show=" + show + " embedded=" + embedded + " data=" + data + " source=" + source);
+            Log.i("Image show=" + show + " inline=" + inline +
+                    " embedded=" + embedded + " data=" + data + " source=" + source);
 
-        if (!show) {
+        if (!(show || (inline && (embedded || data)))) {
             // Show placeholder icon
             int resid = (embedded || data ? R.drawable.baseline_photo_library_24 : R.drawable.baseline_image_24);
             Drawable d = res.getDrawable(resid, theme);
@@ -327,7 +348,7 @@ public class HtmlHelper {
 
         // Embedded images
         if (embedded) {
-            DB db = DB.getInstance(view.getContext());
+            DB db = DB.getInstance(context);
             String cid = "<" + source.substring(4) + ">";
             EntityAttachment attachment = db.attachment().getAttachment(id, cid);
             if (attachment == null) {
@@ -341,7 +362,7 @@ public class HtmlHelper {
                 d.setBounds(0, 0, px, px);
                 return d;
             } else {
-                Bitmap bm = Helper.decodeImage(attachment.getFile(view.getContext()),
+                Bitmap bm = Helper.decodeImage(attachment.getFile(context),
                         res.getDisplayMetrics().widthPixels);
                 if (bm == null) {
                     Log.i("Image not decodable CID=" + cid);
@@ -359,21 +380,7 @@ public class HtmlHelper {
         // Data URI
         if (data)
             try {
-                // "<img src=\"data:image/png;base64,iVBORw0KGgoAAA" +
-                // "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
-                // "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
-                // "5ErkJggg==\" alt=\"Red dot\" />";
-
-                String base64 = source.substring(source.indexOf(',') + 1);
-                byte[] bytes = Base64.decode(base64.getBytes(), 0);
-
-                Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                if (bm == null)
-                    throw new IllegalArgumentException("decode byte array failed");
-
-                Drawable d = new BitmapDrawable(res, bm);
-                d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
-                return d;
+                return getDataDrawable(res, source);
             } catch (IllegalArgumentException ex) {
                 Log.w(ex);
                 Drawable d = res.getDrawable(R.drawable.baseline_broken_image_24, theme);
@@ -382,21 +389,21 @@ public class HtmlHelper {
             }
 
         // Get cache file name
-        File dir = new File(view.getContext().getCacheDir(), "images");
+        File dir = new File(context.getCacheDir(), "images");
         if (!dir.exists())
             dir.mkdir();
         final File file = new File(dir, id + "_" + Math.abs(source.hashCode()) + ".png");
 
-        Drawable cached = getCachedImage(view.getContext(), file);
-        if (cached != null)
+        Drawable cached = getCachedImage(context, file);
+        if (cached != null || view == null)
             return cached;
 
         final LevelListDrawable lld = new LevelListDrawable();
         Drawable wait = res.getDrawable(R.drawable.baseline_hourglass_empty_24, theme);
-        lld.addLevel(0, 0, wait);
+        lld.addLevel(1, 1, wait);
         lld.setBounds(0, 0, px, px);
+        lld.setLevel(1);
 
-        final Context context = view.getContext().getApplicationContext();
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -445,7 +452,7 @@ public class HtmlHelper {
                     d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
                     post(d, source);
                 } catch (Throwable ex) {
-                    // Show warning icon
+                    // Show broken icon
                     Log.w(ex);
                     int resid = (ex instanceof IOException && !(ex instanceof FileNotFoundException)
                             ? R.drawable.baseline_cloud_off_24
@@ -472,9 +479,9 @@ public class HtmlHelper {
                             d.setBounds(0, 0, w, h);
                         }
 
-                        lld.addLevel(1, 1, d);
+                        lld.addLevel(0, 0, d);
                         lld.setBounds(0, 0, w, h);
-                        lld.setLevel(1);
+                        lld.setLevel(0);
 
                         view.setText(view.getText());
                     }
@@ -483,6 +490,24 @@ public class HtmlHelper {
         });
 
         return lld;
+    }
+
+    private static Drawable getDataDrawable(Resources res, String source) {
+        // "<img src=\"data:image/png;base64,iVBORw0KGgoAAA" +
+        // "ANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4" +
+        // "//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU" +
+        // "5ErkJggg==\" alt=\"Red dot\" />";
+
+        String base64 = source.substring(source.indexOf(',') + 1);
+        byte[] bytes = Base64.decode(base64.getBytes(), 0);
+
+        Bitmap bm = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        if (bm == null)
+            throw new IllegalArgumentException("decode byte array failed");
+
+        Drawable d = new BitmapDrawable(res, bm);
+        d.setBounds(0, 0, bm.getWidth(), bm.getHeight());
+        return d;
     }
 
     static private Drawable getCachedImage(Context context, File file) {

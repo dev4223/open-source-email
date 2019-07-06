@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -35,6 +36,7 @@ import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.preference.PreferenceManager;
 
@@ -53,12 +55,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swAddresses;
     private SwitchCompat swAttachmentsAlt;
     private SwitchCompat swMonospaced;
+    private SwitchCompat swInline;
     private SwitchCompat swImages;
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
             "theme", "startup", "date", "threading", "avatars", "identicons", "circular", "name_email", "subject_italic",
-            "flags", "preview", "addresses", "attachments_alt", "monospaced", "autoimages", "actionbar",
+            "flags", "preview", "addresses", "attachments_alt", "monospaced", "inline_images", "autoimages", "actionbar",
     };
 
     @Override
@@ -85,6 +88,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swAddresses = view.findViewById(R.id.swAddresses);
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
         swMonospaced = view.findViewById(R.id.swMonospaced);
+        swInline = view.findViewById(R.id.swInline);
         swImages = view.findViewById(R.id.swImages);
         swActionbar = view.findViewById(R.id.swActionbar);
 
@@ -97,7 +101,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         btnTheme.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onSelectTheme();
+                new FragmentDialogTheme().show(getFragmentManager(), "setup:theme");
             }
         });
 
@@ -201,6 +205,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        swInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("inline_images", checked).apply();
+            }
+        });
+
         swImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -256,54 +267,6 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         editor.apply();
     }
 
-    private void onSelectTheme() {
-        View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_theme, null);
-        final RadioGroup rgTheme = dview.findViewById(R.id.rgTheme);
-
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        String theme = prefs.getString("theme", "light");
-
-        switch (theme) {
-            case "dark":
-                rgTheme.check(R.id.rbThemeDark);
-                break;
-            case "black":
-                rgTheme.check(R.id.rbThemeBlack);
-                break;
-            case "system":
-                rgTheme.check(R.id.rbThemeSystem);
-                break;
-            default:
-                rgTheme.check(R.id.rbThemeLight);
-        }
-
-        rgTheme.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                getActivity().getIntent().putExtra("tab", "display");
-
-                switch (checkedId) {
-                    case R.id.rbThemeLight:
-                        prefs.edit().putString("theme", "light").apply();
-                        break;
-                    case R.id.rbThemeDark:
-                        prefs.edit().putString("theme", "dark").apply();
-                        break;
-                    case R.id.rbThemeBlack:
-                        prefs.edit().putString("theme", "black").apply();
-                        break;
-                    case R.id.rbThemeSystem:
-                        prefs.edit().putString("theme", "system").apply();
-                        break;
-                }
-            }
-        });
-
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setView(dview)
-                .show();
-    }
-
     private void setOptions() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -329,7 +292,60 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swAddresses.setChecked(prefs.getBoolean("addresses", false));
         swAttachmentsAlt.setChecked(prefs.getBoolean("attachments_alt", false));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
+        swInline.setChecked(prefs.getBoolean("inline_images", false));
         swImages.setChecked(prefs.getBoolean("autoimages", false));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));
+    }
+
+    public static class FragmentDialogTheme extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_theme, null);
+            final RadioGroup rgTheme = dview.findViewById(R.id.rgTheme);
+
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            String theme = prefs.getString("theme", "light");
+
+            switch (theme) {
+                case "dark":
+                    rgTheme.check(R.id.rbThemeDark);
+                    break;
+                case "black":
+                    rgTheme.check(R.id.rbThemeBlack);
+                    break;
+                case "system":
+                    rgTheme.check(R.id.rbThemeSystem);
+                    break;
+                default:
+                    rgTheme.check(R.id.rbThemeLight);
+            }
+
+            rgTheme.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    getActivity().getIntent().putExtra("tab", "display");
+
+                    switch (checkedId) {
+                        case R.id.rbThemeLight:
+                            prefs.edit().putString("theme", "light").apply();
+                            break;
+                        case R.id.rbThemeDark:
+                            prefs.edit().putString("theme", "dark").apply();
+                            break;
+                        case R.id.rbThemeBlack:
+                            prefs.edit().putString("theme", "black").apply();
+                            break;
+                        case R.id.rbThemeSystem:
+                            prefs.edit().putString("theme", "system").apply();
+                            break;
+                    }
+                }
+            });
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .create();
+        }
     }
 }

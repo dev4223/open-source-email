@@ -20,6 +20,8 @@ package eu.faircode.email;
 */
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -43,6 +45,9 @@ import android.os.Handler;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -59,6 +64,9 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -68,6 +76,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.Group;
@@ -91,13 +100,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.android.colorpicker.ColorPickerDialog;
-import com.android.colorpicker.ColorPickerSwatch;
 import com.bugsnag.android.Bugsnag;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.OpenPgpSignatureResult;
 import org.openintents.openpgp.util.OpenPgpApi;
@@ -110,10 +120,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.Collator;
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -130,6 +143,7 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import static android.app.Activity.RESULT_OK;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
@@ -225,6 +239,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private static final int REQUEST_ATTACHMENT = 2;
     private static final int REQUEST_ATTACHMENTS = 3;
     private static final int REQUEST_DECRYPT = 4;
+    static final int REQUEST_MESSAGE_DELETE = 5;
+    private static final int REQUEST_MESSAGES_DELETE = 6;
+    static final int REQUEST_MESSAGE_JUNK = 7;
+    private static final int REQUEST_MESSAGES_JUNK = 8;
+    private static final int REQUEST_ASKED_MOVE = 9;
+    private static final int REQUEST_ASKED_MOVE_ACROSS = 10;
+    static final int REQUEST_MESSAGE_COLOR = 11;
+    private static final int REQUEST_MESSAGES_COLOR = 12;
+    private static final int REQUEST_MESSAGE_SNOOZE = 13;
+    private static final int REQUEST_MESSAGES_SNOOZE = 14;
+    static final int REQUEST_MESSAGE_MOVE = 15;
+    private static final int REQUEST_MESSAGES_MOVE = 16;
+    static final int REQUEST_PRINT = 17;
+    private static final int REQUEST_SEARCH = 18;
+    private static final int REQUEST_ACCOUNT = 19;
+    static final int REQUEST_MESSAGE_PROPERTY = 20;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_STORE_ATTACHMENT = BuildConfig.APPLICATION_ID + ".STORE_ATTACHMENT";
@@ -233,6 +263,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     private static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
+
 
     private static final List<String> DUPLICATE_ORDER = Collections.unmodifiableList(Arrays.asList(
             EntityFolder.INBOX,
@@ -499,9 +530,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         String sort = prefs.getString("sort", "time");
         boolean filter_duplicates = prefs.getBoolean("filter_duplicates", false);
 
-        adapter = new AdapterMessage(
-                getContext(), getViewLifecycleOwner(), view,
-                viewType, compact, zoom, sort, filter_duplicates, iProperties);
+        adapter = new AdapterMessage(this, viewType, compact, zoom, sort, filter_duplicates, iProperties);
         rvMessage.setAdapter(adapter);
 
         seekBar.setOnTouchListener(new View.OnTouchListener() {
@@ -553,6 +582,78 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         return false;
                 }
             }
+
+            private void onActionMove(String folderType) {
+                Bundle args = new Bundle();
+                args.putLong("account", account);
+                args.putString("thread", thread);
+                args.putLong("id", id);
+                args.putString("type", folderType);
+
+                new SimpleTask<ArrayList<MessageTarget>>() {
+                    @Override
+                    protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
+                        long aid = args.getLong("account");
+                        String thread = args.getString("thread");
+                        long id = args.getLong("id");
+                        String type = args.getString("type");
+
+                        ArrayList<MessageTarget> result = new ArrayList<>();
+
+                        DB db = DB.getInstance(context);
+                        try {
+                            db.beginTransaction();
+
+                            EntityFolder target = db.folder().getFolderByType(aid, type);
+                            if (target != null) {
+                                EntityAccount account = db.account().getAccount(target.account);
+                                List<EntityMessage> messages = db.message().getMessageByThread(
+                                        aid, thread, threading ? null : id, null);
+                                for (EntityMessage threaded : messages) {
+                                    EntityFolder folder = db.folder().getFolder(threaded.folder);
+                                    if (!target.id.equals(threaded.folder) &&
+                                            !EntityFolder.DRAFTS.equals(folder.type) &&
+                                            !EntityFolder.OUTBOX.equals(folder.type) &&
+                                            (!EntityFolder.SENT.equals(folder.type) || EntityFolder.TRASH.equals(target.type)) &&
+                                            !EntityFolder.TRASH.equals(folder.type) &&
+                                            !EntityFolder.JUNK.equals(folder.type))
+                                        result.add(new MessageTarget(threaded, account, target));
+                                }
+                            }
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+
+                        return result;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
+                        moveAsk(result);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Helper.unexpectedError(getFragmentManager(), ex);
+                    }
+                }.execute(FragmentMessages.this, args, "messages:move");
+            }
+
+            private void onActionSnooze() {
+                Bundle args = new Bundle();
+                args.putString("title", getString(R.string.title_snooze));
+                args.putLong("account", account);
+                args.putString("thread", thread);
+                args.putLong("id", id);
+                args.putBoolean("finish", true);
+
+                FragmentDialogDuration fragment = new FragmentDialogDuration();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
+                fragment.show(getFragmentManager(), "message:snooze");
+            }
         });
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -594,7 +695,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:drafts");
 
@@ -635,21 +736,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     if (intent == null)
                                         return false;
 
-                                    long account = intent.getLongExtra("account", -1);
-                                    DialogFolder.show(
-                                            getContext(), getViewLifecycleOwner(), view,
-                                            R.string.title_search_in,
-                                            account,
-                                            new ArrayList<Long>(),
-                                            new DialogFolder.IDialogFolder() {
-                                                @Override
-                                                public void onFolderSelected(TupleFolderEx folder) {
-                                                    search(
-                                                            getContext(), getViewLifecycleOwner(), getFragmentManager(),
-                                                            folder.id, true, query);
-                                                }
-                                            }
-                                    );
+                                    Bundle args = new Bundle();
+                                    args.putString("title", getString(R.string.title_move_to_folder));
+                                    args.putLong("account", intent.getLongExtra("account", -1));
+                                    args.putLongArray("disabled", new long[]{});
+                                    args.putString("query", query);
+
+                                    FragmentDialogFolder fragment = new FragmentDialogFolder();
+                                    fragment.setArguments(args);
+                                    fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_SEARCH);
+                                    fragment.show(getFragmentManager(), "messages:search");
 
                                     return true;
                                 }
@@ -660,7 +756,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                            Helper.unexpectedError(getFragmentManager(), ex);
                         }
                     }.execute(FragmentMessages.this, args, "messages:search");
                 } else
@@ -953,9 +1049,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:refresh");
+        }.execute(this, args, "messages:refresh");
     }
 
     private AdapterMessage.IProperties iProperties = new AdapterMessage.IProperties() {
@@ -1029,18 +1125,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         @Override
-        public void move(long id, String name, boolean type) {
+        public void move(long id, String type) {
             Bundle args = new Bundle();
             args.putLong("id", id);
-            args.putString("name", name);
-            args.putBoolean("type", type);
+            args.putString("type", type);
 
             new SimpleTask<ArrayList<MessageTarget>>() {
                 @Override
                 protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
                     long id = args.getLong("id");
-                    String name = args.getString("name");
-                    boolean type = args.getBoolean("type");
+                    String type = args.getString("type");
 
                     ArrayList<MessageTarget> result = new ArrayList<>();
 
@@ -1052,10 +1146,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         EntityFolder target = null;
                         if (message != null)
-                            if (type)
-                                target = db.folder().getFolderByType(message.account, name);
-                            else
-                                target = db.folder().getFolderByName(message.account, name);
+                            target = db.folder().getFolderByType(message.account, type);
 
                         if (target != null) {
                             EntityAccount account = db.account().getAccount(target.account);
@@ -1072,15 +1163,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                    if (args.getBoolean("type"))
-                        moveAsk(result);
-                    else
-                        moveAskConfirmed(result);
+                    moveAsk(result);
                 }
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "messages:move");
         }
@@ -1237,10 +1325,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 onActionSeenSelection(false, message.id);
                                 return true;
                             case R.string.title_snooze:
-                                onActionSnoozeSelection(message.id);
+                                onMenuSnooze();
                                 return true;
                             case R.string.title_flag_color:
-                                onActionFlagColorSelection(message.color == null ? Color.TRANSPARENT : message.color, message.id);
+                                onMenuColor();
                                 return true;
                             case R.string.title_move:
                                 onMenuMove();
@@ -1250,33 +1338,45 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         }
                     }
 
+                    private void onMenuSnooze() {
+                        Bundle args = new Bundle();
+                        args.putString("title", getString(R.string.title_snooze));
+                        args.putLong("account", message.account);
+                        args.putString("thread", message.thread);
+                        args.putLong("id", message.id);
+                        args.putBoolean("finish", false);
+
+                        FragmentDialogDuration fragment = new FragmentDialogDuration();
+                        fragment.setArguments(args);
+                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
+                        fragment.show(getFragmentManager(), "message:snooze");
+                    }
+
+                    private void onMenuColor() {
+                        int color = (message.color == null ? Color.TRANSPARENT : message.color);
+
+                        Bundle args = new Bundle();
+                        args.putLong("id", message.id);
+
+                        FragmentDialogColor fragment = new FragmentDialogColor();
+                        fragment.initialize(R.string.title_flag_color, color, args, getContext());
+                        fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGE_COLOR);
+                        fragment.show(getFragmentManager(), "message:color");
+                    }
+
                     private void onMenuMove() {
                         Bundle args = new Bundle();
+                        args.putString("title", getString(R.string.title_move_to_folder));
                         args.putLong("account", message.account);
+                        args.putLongArray("disabled", new long[]{message.folder});
+                        args.putLong("message", message.id);
+                        args.putBoolean("copy", false);
+                        args.putBoolean("similar", true);
 
-                        new SimpleTask<List<TupleFolderEx>>() {
-                            @Override
-                            protected List<TupleFolderEx> onExecute(Context context, Bundle args) {
-                                long account = args.getLong("account");
-
-                                DB db = DB.getInstance(context);
-                                return db.folder().getFoldersEx(account);
-                            }
-
-                            @Override
-                            protected void onExecuted(Bundle args, List<TupleFolderEx> folders) {
-                                onActionMoveSelectionAccount(
-                                        message.account,
-                                        folders,
-                                        Arrays.asList(new Long[]{message.folder}),
-                                        message.id);
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(getContext(), getViewLifecycleOwner(), args, "message:move");
+                        FragmentDialogFolder fragment = new FragmentDialogFolder();
+                        fragment.setArguments(args);
+                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_MOVE);
+                        fragment.show(getFragmentManager(), "message:move");
                     }
                 });
 
@@ -1334,7 +1434,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:swipe");
             }
@@ -1365,126 +1465,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             return message;
         }
     };
-
-    private void onActionMove(String folderType) {
-        Bundle args = new Bundle();
-        args.putLong("account", account);
-        args.putString("thread", thread);
-        args.putLong("id", id);
-        args.putString("type", folderType);
-
-        new SimpleTask<ArrayList<MessageTarget>>() {
-            @Override
-            protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
-                long aid = args.getLong("account");
-                String thread = args.getString("thread");
-                long id = args.getLong("id");
-                String type = args.getString("type");
-
-                ArrayList<MessageTarget> result = new ArrayList<>();
-
-                DB db = DB.getInstance(context);
-                try {
-                    db.beginTransaction();
-
-                    EntityFolder target = db.folder().getFolderByType(aid, type);
-                    if (target != null) {
-                        EntityAccount account = db.account().getAccount(target.account);
-                        List<EntityMessage> messages = db.message().getMessageByThread(
-                                aid, thread, threading ? null : id, null);
-                        for (EntityMessage threaded : messages) {
-                            EntityFolder folder = db.folder().getFolder(threaded.folder);
-                            if (!target.id.equals(threaded.folder) &&
-                                    !EntityFolder.DRAFTS.equals(folder.type) &&
-                                    !EntityFolder.OUTBOX.equals(folder.type) &&
-                                    (!EntityFolder.SENT.equals(folder.type) || EntityFolder.TRASH.equals(target.type)) &&
-                                    !EntityFolder.TRASH.equals(folder.type) &&
-                                    !EntityFolder.JUNK.equals(folder.type))
-                                result.add(new MessageTarget(threaded, account, target));
-                        }
-                    }
-
-                    db.setTransactionSuccessful();
-                } finally {
-                    db.endTransaction();
-                }
-
-                return result;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-            }
-        }.execute(FragmentMessages.this, args, "messages:move");
-    }
-
-    private void onActionSnooze() {
-        DialogDuration.show(getContext(), getViewLifecycleOwner(), R.string.title_snooze,
-                new DialogDuration.IDialogDuration() {
-                    @Override
-                    public void onDurationSelected(long duration, long time) {
-                        if (!Helper.isPro(getContext())) {
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                            return;
-                        }
-
-                        Bundle args = new Bundle();
-                        args.putLong("account", account);
-                        args.putString("thread", thread);
-                        args.putLong("id", id);
-                        args.putLong("wakeup", duration == 0 ? -1 : time);
-
-                        new SimpleTask<Long>() {
-                            @Override
-                            protected Long onExecute(Context context, Bundle args) {
-                                long account = args.getLong("account");
-                                String thread = args.getString("thread");
-                                long id = args.getLong("id");
-                                Long wakeup = args.getLong("wakeup");
-                                if (wakeup < 0)
-                                    wakeup = null;
-
-                                DB db = DB.getInstance(context);
-                                try {
-                                    db.beginTransaction();
-
-                                    List<EntityMessage> messages = db.message().getMessageByThread(
-                                            account, thread, threading ? null : id, null);
-                                    for (EntityMessage threaded : messages) {
-                                        db.message().setMessageSnoozed(threaded.id, wakeup);
-                                        EntityMessage.snooze(context, threaded.id, wakeup);
-                                        EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
-                                    }
-
-                                    db.setTransactionSuccessful();
-                                } finally {
-                                    db.endTransaction();
-                                }
-
-                                return wakeup;
-                            }
-
-                            @Override
-                            protected void onExecuted(Bundle args, Long wakeup) {
-                                if (wakeup != null)
-                                    finish();
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(getContext(), getViewLifecycleOwner(), args, "message:snooze");
-                    }
-                });
-    }
 
     private void onMore() {
         Bundle args = new Bundle();
@@ -1549,9 +1529,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 result.accounts = db.account().getSynchronizingAccounts();
 
-                for (EntityAccount account : result.accounts)
-                    result.targets.put(account.id, db.folder().getFoldersEx(account.id));
-
                 return result;
             }
 
@@ -1604,16 +1581,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 onActionSeenSelection(false, null);
                                 return true;
                             case R.string.title_snooze:
-                                onActionSnoozeSelection(null);
+                                onActionSnoozeSelection();
                                 return true;
                             case R.string.title_flag:
-                                onActionFlagSelection(true, null, null);
+                                onActionFlagSelection(true, null);
                                 return true;
                             case R.string.title_unflag:
-                                onActionFlagSelection(false, null, null);
+                                onActionFlagSelection(false, null);
                                 return true;
                             case R.string.title_flag_color:
-                                onActionFlagColorSelection(Color.TRANSPARENT, null);
+                                onActionFlagColorSelection();
                                 return true;
                             case R.string.title_archive:
                                 onActionMoveSelection(EntityFolder.ARCHIVE);
@@ -1629,7 +1606,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 return true;
                             case R.string.title_move_to_account:
                                 long account = target.getIntent().getLongExtra("account", -1);
-                                onActionMoveSelectionAccount(account, result.targets.get(account), result.folders, null);
+                                onActionMoveSelectionAccount(account, result.folders);
                                 return true;
                             default:
                                 return false;
@@ -1642,9 +1619,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:more");
+        }.execute(this, args, "messages:more");
     }
 
     private long[] getSelection() {
@@ -1695,73 +1672,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:seen");
+        }.execute(this, args, "messages:seen");
     }
 
-    private void onActionSnoozeSelection(final Long id) {
-        DialogDuration.show(getContext(), getViewLifecycleOwner(), R.string.title_snooze,
-                new DialogDuration.IDialogDuration() {
-                    @Override
-                    public void onDurationSelected(long duration, long time) {
-                        if (!Helper.isPro(getContext())) {
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                            return;
-                        }
-
-                        Bundle args = new Bundle();
-                        args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
-                        args.putLong("wakeup", duration == 0 ? -1 : time);
-
-                        selectionTracker.clearSelection();
-
-                        new SimpleTask<Void>() {
-                            @Override
-                            protected Void onExecute(Context context, Bundle args) {
-                                long[] ids = args.getLongArray("ids");
-                                Long wakeup = args.getLong("wakeup");
-                                if (wakeup < 0)
-                                    wakeup = null;
-
-                                DB db = DB.getInstance(context);
-                                try {
-                                    db.beginTransaction();
-
-                                    for (long id : ids) {
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message != null) {
-                                            List<EntityMessage> messages = db.message().getMessageByThread(
-                                                    message.account, message.thread, threading ? null : id, message.folder);
-                                            for (EntityMessage threaded : messages) {
-                                                db.message().setMessageSnoozed(threaded.id, wakeup);
-                                                EntityMessage.snooze(context, threaded.id, wakeup);
-                                                EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
-                                            }
-                                        }
-                                    }
-
-                                    db.setTransactionSuccessful();
-                                } finally {
-                                    db.endTransaction();
-                                }
-
-                                return null;
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(FragmentMessages.this, args, "messages:snooze");
-                    }
-                });
-    }
-
-    private void onActionFlagSelection(boolean flagged, Integer color, Long id) {
+    private void onActionSnoozeSelection() {
         Bundle args = new Bundle();
-        args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
+        args.putString("title", getString(R.string.title_snooze));
+
+        FragmentDialogDuration fragment = new FragmentDialogDuration();
+        fragment.setArguments(args);
+        fragment.setTargetFragment(this, REQUEST_MESSAGES_SNOOZE);
+        fragment.show(getFragmentManager(), "messages:snooze");
+    }
+
+    private void onActionFlagSelection(boolean flagged, Integer color) {
+        Bundle args = new Bundle();
+        args.putLongArray("ids", getSelection());
         args.putBoolean("flagged", flagged);
         if (color != null)
             args.putInt("color", color);
@@ -1799,28 +1727,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:flag");
+        }.execute(this, args, "messages:flag");
     }
 
-    private void onActionFlagColorSelection(int color, final Long id) {
-        int[] colors = getResources().getIntArray(R.array.colorPicker);
-        ColorPickerDialog colorPickerDialog = new ColorPickerDialog();
-        colorPickerDialog.initialize(R.string.title_flag_color, colors, color, 4, colors.length);
-        colorPickerDialog.setOnColorSelectedListener(new ColorPickerSwatch.OnColorSelectedListener() {
-            @Override
-            public void onColorSelected(int color) {
-                if (!Helper.isPro(getContext())) {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                    lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                    return;
-                }
-
-                onActionFlagSelection(true, color, id);
-            }
-        });
-        colorPickerDialog.show(getFragmentManager(), "colorpicker");
+    private void onActionFlagColorSelection() {
+        FragmentDialogColor fragment = new FragmentDialogColor();
+        fragment.initialize(R.string.title_flag_color, Color.TRANSPARENT, new Bundle(), getContext());
+        fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_COLOR);
+        fragment.show(getFragmentManager(), "messages:color");
     }
 
     private void onActionDeleteSelection() {
@@ -1857,69 +1773,35 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, final List<Long> ids) {
-                new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                        .setMessage(getResources().getQuantityString(R.plurals.title_deleting_messages, ids.size(), ids.size()))
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Bundle args = new Bundle();
-                                args.putLongArray("ids", Helper.toLongArray(ids));
+                Bundle aargs = new Bundle();
+                aargs.putString("question", getResources()
+                        .getQuantityString(R.plurals.title_deleting_messages, ids.size(), ids.size()));
+                aargs.putLongArray("ids", Helper.toLongArray(ids));
 
-                                selectionTracker.clearSelection();
-
-                                new SimpleTask<Void>() {
-                                    @Override
-                                    protected Void onExecute(Context context, Bundle args) {
-                                        long[] ids = args.getLongArray("ids");
-
-                                        DB db = DB.getInstance(context);
-                                        try {
-                                            db.beginTransaction();
-
-                                            for (long id : ids) {
-                                                EntityMessage message = db.message().getMessage(id);
-                                                if (message != null)
-                                                    EntityOperation.queue(context, message, EntityOperation.DELETE);
-                                            }
-
-                                            db.setTransactionSuccessful();
-                                        } finally {
-                                            db.endTransaction();
-                                        }
-
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onException(Bundle args, Throwable ex) {
-                                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                                    }
-                                }.execute(FragmentMessages.this, args, "messages:delete:execute");
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show();
+                FragmentDialogAsk ask = new FragmentDialogAsk();
+                ask.setArguments(aargs);
+                ask.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_DELETE);
+                ask.show(getFragmentManager(), "messages:delete");
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:delete:ask");
+        }.execute(this, args, "messages:delete:ask");
     }
 
     private void onActionJunkSelection() {
         int count = selectionTracker.getSelection().size();
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setMessage(getResources().getQuantityString(R.plurals.title_ask_spam, count, count))
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        onActionMoveSelection(EntityFolder.JUNK);
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+
+        Bundle aargs = new Bundle();
+        aargs.putString("question", getResources()
+                .getQuantityString(R.plurals.title_ask_spam, count, count));
+
+        FragmentDialogAsk ask = new FragmentDialogAsk();
+        ask.setArguments(aargs);
+        ask.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_JUNK);
+        ask.show(getFragmentManager(), "messages:junk");
     }
 
     private void onActionMoveSelection(final String type) {
@@ -1970,27 +1852,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:move");
+        }.execute(this, args, "messages:move");
     }
 
-    private void onActionMoveSelectionAccount(long account, List<TupleFolderEx> folders, List<Long> disabled, final Long id) {
-        DialogFolder.show(
-                getContext(), getViewLifecycleOwner(), view,
-                R.string.title_move_to_folder,
-                account, disabled,
-                new DialogFolder.IDialogFolder() {
-                    @Override
-                    public void onFolderSelected(TupleFolderEx folder) {
-                        onActionMoveSelection(folder.id, id);
-                    }
-                });
-    }
-
-    private void onActionMoveSelection(long target, Long id) {
+    private void onActionMoveSelectionAccount(long account, List<Long> disabled) {
         Bundle args = new Bundle();
-        args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
+        args.putString("title", getString(R.string.title_move_to_folder));
+        args.putLong("account", account);
+        args.putLongArray("disabled", Helper.toLongArray(disabled));
+
+        FragmentDialogFolder fragment = new FragmentDialogFolder();
+        fragment.setArguments(args);
+        fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGES_MOVE);
+        fragment.show(getFragmentManager(), "messages:move");
+    }
+
+    private void onActionMoveSelection(long target) {
+        Bundle args = new Bundle();
+        args.putLongArray("ids", getSelection());
         args.putLong("target", target);
 
         new SimpleTask<ArrayList<MessageTarget>>() {
@@ -2034,9 +1915,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:move");
+        }.execute(this, args, "messages:move");
     }
 
     @Override
@@ -2346,53 +2227,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onClick(View v) {
                 snackbar.dismiss();
-                askReporting();
+                new FragmentDialogReporting().show(getFragmentManager(), "first");
             }
         });
 
         snackbar.show();
-    }
-
-    private void askReporting() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
-        final Button btnInfo = dview.findViewById(R.id.btnInfo);
-        final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-        final Intent info = new Intent(Intent.ACTION_VIEW);
-        info.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq104"));
-        info.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        btnInfo.setVisibility(
-                info.resolveActivity(getContext().getPackageManager()) == null ? View.GONE : View.VISIBLE);
-
-        btnInfo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(info);
-            }
-        });
-
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setView(dview)
-                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        prefs.edit().putBoolean("crash_reports", true).apply();
-                        if (cbNotAgain.isChecked())
-                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
-                        Bugsnag.startSession();
-                    }
-                })
-                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (cbNotAgain.isChecked())
-                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
-                    }
-                })
-                .show();
     }
 
     @Override
@@ -2437,37 +2276,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         ib.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Bundle args = new Bundle();
-
-                new SimpleTask<List<EntityAccount>>() {
-                    @Override
-                    protected List<EntityAccount> onExecute(Context context, Bundle args) {
-                        DB db = DB.getInstance(context);
-                        return db.account().getSynchronizingAccounts();
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
-                        final ArrayAdapter<EntityAccount> adapter =
-                                new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, accounts);
-
-                        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                                .setAdapter(adapter, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                        EntityAccount account = adapter.getItem(which);
-                                        onMenuFolders(account.id);
-                                    }
-                                })
-                                .show();
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                    }
-                }.execute(getContext(), getViewLifecycleOwner(), args, "messages:accounts");
+                FragmentDialogAccount fragment = new FragmentDialogAccount();
+                fragment.setArguments(new Bundle());
+                fragment.setTargetFragment(FragmentMessages.this, REQUEST_ACCOUNT);
+                fragment.show(getFragmentManager(), "messages:accounts");
                 return true;
             }
         });
@@ -2704,7 +2516,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "messages:all");
     }
@@ -2800,9 +2612,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(getContext(), getViewLifecycleOwner(), new Bundle(), "search:reset");
+            }.execute(this, new Bundle(), "search:reset");
         } else
             loadMessagesNext(top);
     }
@@ -2855,12 +2667,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     snackbar.show();
                 } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
-                    new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                            .setMessage(Helper.formatThrowable(ex, false))
-                            .setPositiveButton(android.R.string.cancel, null)
-                            .create()
-                            .show();
+                else {
+                    Bundle args = new Bundle();
+                    args.putString("error", Helper.formatThrowable(ex, false));
+
+                    FragmentDialogError fragment = new FragmentDialogError();
+                    fragment.setArguments(args);
+                    fragment.show(getFragmentManager(), "boundary:error");
+                }
         }
     };
 
@@ -3068,9 +2882,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(FragmentMessages.this, args, "messages:navigation");
+            }.execute(this, args, "messages:navigation");
         }
         return false;
     }
@@ -3115,7 +2929,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "messages:expand");
     }
@@ -3180,7 +2994,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
         }.execute(this, args, "messages:navigate");
     }
@@ -3189,54 +3003,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (result.size() == 0)
             return;
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         if (prefs.getBoolean("automove", false)) {
-            moveAskAcross(result);
+            moveAskConfirmed(result);
             return;
         }
 
-        final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
-        final TextView tvMessage = dview.findViewById(R.id.tvMessage);
-        final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+        Bundle aargs = new Bundle();
+        aargs.putString("question", getResources()
+                .getQuantityString(R.plurals.title_moving_messages,
+                        result.size(), result.size(), getDisplay(result)));
+        aargs.putString("notagain", "automove");
+        aargs.putParcelableArrayList("result", result);
 
-        tvMessage.setText(getResources().getQuantityString(R.plurals.title_moving_messages,
-                result.size(), result.size(), getDisplay(result)));
-
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setView(dview)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (cbNotAgain.isChecked())
-                            prefs.edit().putBoolean("automove", true).apply();
-                        moveAskAcross(result);
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
-    }
-
-    private void moveAskAcross(final ArrayList<MessageTarget> result) {
-        boolean across = false;
-        for (MessageTarget target : result)
-            if (target.across) {
-                across = true;
-                break;
-            }
-
-        if (across)
-            new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                    .setMessage(R.string.title_accross_remark)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            moveAskConfirmed(result);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
-        else
-            moveAskConfirmed(result);
+        FragmentDialogAsk ask = new FragmentDialogAsk();
+        ask.setArguments(aargs);
+        ask.setTargetFragment(FragmentMessages.this, REQUEST_ASKED_MOVE);
+        ask.show(getFragmentManager(), "messages:move");
     }
 
     private void moveAskConfirmed(ArrayList<MessageTarget> result) {
@@ -3276,9 +3059,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "messages:move");
+        }.execute(this, args, "messages:move");
     }
 
     private void moveUndo(final ArrayList<MessageTarget> result) {
@@ -3311,7 +3094,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:undo");
             }
@@ -3487,12 +3270,338 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             Intent data = new Intent();
             data.setAction(OpenPgpApi.ACTION_DECRYPT_VERIFY);
 
-            decrypt(data, intent.getLongExtra("id", -1));
+            onDecrypt(data, intent.getLongExtra("id", -1));
         } else
             Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG).show();
     }
 
-    private void decrypt(Intent data, long id) {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case REQUEST_RAW:
+                if (resultCode == RESULT_OK && data != null)
+                    onSaveRaw(data);
+                break;
+            case REQUEST_ATTACHMENT:
+                if (resultCode == RESULT_OK && data != null)
+                    onSaveAttachment(data);
+                break;
+            case REQUEST_ATTACHMENTS:
+                if (resultCode == RESULT_OK && data != null)
+                    onSaveAttachments(data);
+                break;
+            case REQUEST_DECRYPT:
+                if (resultCode == RESULT_OK && data != null)
+                    onDecrypt(data, message);
+                break;
+            case REQUEST_MESSAGE_DELETE:
+                if (resultCode == RESULT_OK && data != null)
+                    onDelete(data.getBundleExtra("args").getLong("id"));
+                break;
+            case REQUEST_MESSAGES_DELETE:
+                if (resultCode == RESULT_OK && data != null)
+                    onDelete(data.getBundleExtra("args").getLongArray("ids"));
+                break;
+            case REQUEST_MESSAGE_JUNK:
+                if (resultCode == RESULT_OK && data != null)
+                    onJunk(data.getBundleExtra("args").getLong("id"));
+                break;
+            case REQUEST_MESSAGES_JUNK:
+                if (resultCode == RESULT_OK)
+                    onActionMoveSelection(EntityFolder.JUNK);
+                break;
+            case REQUEST_ASKED_MOVE:
+                if (resultCode == RESULT_OK && data != null)
+                    onMoveAskAcross(data.getBundleExtra("args").<MessageTarget>getParcelableArrayList("result"));
+                break;
+            case REQUEST_ASKED_MOVE_ACROSS:
+                if (resultCode == RESULT_OK && data != null)
+                    moveAskConfirmed(data.getBundleExtra("args").<MessageTarget>getParcelableArrayList("result"));
+                break;
+            case REQUEST_MESSAGE_COLOR:
+                if (resultCode == RESULT_OK && data != null) {
+                    Bundle args = data.getBundleExtra("args");
+                    onColor(args.getLong("id"), args.getInt("color"));
+                }
+                break;
+            case REQUEST_MESSAGES_COLOR:
+                if (resultCode == RESULT_OK && data != null) {
+                    if (!Helper.isPro(getContext())) {
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                        return;
+                    }
+
+                    Bundle args = data.getBundleExtra("args");
+                    onActionFlagSelection(true, args.getInt("color"));
+                }
+                break;
+            case REQUEST_MESSAGE_SNOOZE:
+                if (resultCode == RESULT_OK && data != null)
+                    onSnooze(data.getBundleExtra("args"));
+                break;
+            case REQUEST_MESSAGES_SNOOZE:
+                if (resultCode == RESULT_OK && data != null)
+                    onSnoozeSelection(data.getBundleExtra("args"));
+                break;
+            case REQUEST_MESSAGE_MOVE:
+                if (resultCode == RESULT_OK && data != null)
+                    onMove(data.getBundleExtra("args"));
+                break;
+            case REQUEST_MESSAGES_MOVE:
+                if (resultCode == RESULT_OK && data != null) {
+                    Bundle args = data.getBundleExtra("args");
+                    onActionMoveSelection(args.getLong("folder"));
+                }
+                break;
+            case REQUEST_PRINT:
+                if (resultCode == RESULT_OK && data != null)
+                    onPrint(data.getBundleExtra("args"));
+                break;
+            case REQUEST_SEARCH:
+                if (resultCode == RESULT_OK && data != null) {
+                    Bundle args = data.getBundleExtra("args");
+                    search(
+                            getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                            args.getLong("folder"), true, args.getString("query"));
+                }
+                break;
+            case REQUEST_ACCOUNT:
+                if (resultCode == RESULT_OK && data != null) {
+                    Bundle args = data.getBundleExtra("args");
+                    onMenuFolders(args.getLong("account"));
+                }
+                break;
+            case REQUEST_MESSAGE_PROPERTY:
+                if (resultCode == RESULT_OK)
+                    onPropertySet(data.getBundleExtra("args"));
+                break;
+        }
+    }
+
+    private void onSaveRaw(Intent data) {
+        Bundle args = new Bundle();
+        args.putLong("id", message);
+        args.putParcelable("uri", data.getData());
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                Uri uri = args.getParcelable("uri");
+
+                if ("file".equals(uri.getScheme())) {
+                    Log.w("Save raw uri=" + uri);
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
+                }
+
+                DB db = DB.getInstance(context);
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    throw new FileNotFoundException();
+                File file = message.getRawFile(context);
+                Log.i("Raw file=" + file);
+
+                ParcelFileDescriptor pfd = null;
+                OutputStream os = null;
+                InputStream is = null;
+                try {
+                    pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+                    os = new FileOutputStream(pfd.getFileDescriptor());
+                    is = new BufferedInputStream(new FileInputStream(file));
+
+                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
+                    int read;
+                    while ((read = is.read(buffer)) != -1)
+                        os.write(buffer, 0, read);
+                } finally {
+                    try {
+                        if (pfd != null)
+                            pfd.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (os != null)
+                            os.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (is != null)
+                            is.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                Snackbar.make(view, R.string.title_raw_saved, Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "raw:save");
+    }
+
+    private void onSaveAttachment(Intent data) {
+        Bundle args = new Bundle();
+        args.putLong("id", attachment);
+        args.putParcelable("uri", data.getData());
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                Uri uri = args.getParcelable("uri");
+
+                if ("file".equals(uri.getScheme())) {
+                    Log.w("Save attachment uri=" + uri);
+                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
+                }
+
+                DB db = DB.getInstance(context);
+                EntityAttachment attachment = db.attachment().getAttachment(id);
+                if (attachment == null)
+                    return null;
+                File file = attachment.getFile(context);
+
+                ParcelFileDescriptor pfd = null;
+                OutputStream os = null;
+                InputStream is = null;
+                try {
+                    pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+                    os = new FileOutputStream(pfd.getFileDescriptor());
+                    is = new BufferedInputStream(new FileInputStream(file));
+
+                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
+                    int read;
+                    while ((read = is.read(buffer)) != -1)
+                        os.write(buffer, 0, read);
+                } finally {
+                    try {
+                        if (pfd != null)
+                            pfd.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (os != null)
+                            os.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                    try {
+                        if (is != null)
+                            is.close();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                Snackbar.make(view, R.string.title_attachment_saved, Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "attachment:save");
+    }
+
+    private void onSaveAttachments(Intent data) {
+        Bundle args = new Bundle();
+        args.putLong("id", message);
+        args.putParcelable("uri", data.getData());
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                Uri uri = args.getParcelable("uri");
+
+                DB db = DB.getInstance(context);
+                DocumentFile tree = DocumentFile.fromTreeUri(context, uri);
+                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                for (EntityAttachment attachment : attachments) {
+                    File file = attachment.getFile(context);
+
+                    String name = Helper.sanitizeFilename(attachment.name);
+                    if (TextUtils.isEmpty(name))
+                        name = Long.toString(attachment.id);
+                    DocumentFile document = tree.createFile(attachment.type, name);
+                    if (document == null)
+                        throw new FileNotFoundException(uri + ":" + name);
+
+                    ParcelFileDescriptor pfd = null;
+                    OutputStream os = null;
+                    InputStream is = null;
+                    try {
+                        pfd = context.getContentResolver().openFileDescriptor(document.getUri(), "w");
+                        os = new FileOutputStream(pfd.getFileDescriptor());
+                        is = new BufferedInputStream(new FileInputStream(file));
+
+                        byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
+                        int read;
+                        while ((read = is.read(buffer)) != -1)
+                            os.write(buffer, 0, read);
+                    } finally {
+                        try {
+                            if (pfd != null)
+                                pfd.close();
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
+                        try {
+                            if (os != null)
+                                os.close();
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
+                        try {
+                            if (is != null)
+                                is.close();
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void data) {
+                Snackbar.make(view, R.string.title_attachments_saved, Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "attachments:save");
+    }
+
+    private void onDecrypt(Intent data, long id) {
         Bundle args = new Bundle();
         args.putLong("id", id);
         args.putParcelable("data", data);
@@ -3659,7 +3768,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
                         Log.e(ex);
-                        Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                        Helper.unexpectedError(getFragmentManager(), ex);
                     }
             }
 
@@ -3668,250 +3777,463 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                    Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentMessages.this, args, "decrypt");
+        }.execute(this, args, "decrypt");
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == Activity.RESULT_OK)
-            if (requestCode == REQUEST_RAW) {
-                if (data != null)
-                    saveRaw(data);
-            } else if (requestCode == REQUEST_ATTACHMENT) {
-                if (data != null)
-                    saveAttachment(data);
-            } else if (requestCode == REQUEST_ATTACHMENTS) {
-                if (data != null)
-                    saveAttachments(data);
-
-            } else if (requestCode == REQUEST_DECRYPT) {
-                if (data != null)
-                    decrypt(data, message);
-            }
-
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void saveRaw(Intent data) {
+    private void onDelete(long id) {
         Bundle args = new Bundle();
-        args.putLong("id", message);
-        args.putParcelable("uri", data.getData());
+        args.putLong("id", id);
 
         new SimpleTask<Void>() {
             @Override
-            protected Void onExecute(Context context, Bundle args) throws Throwable {
+            protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
-                Uri uri = args.getParcelable("uri");
 
-                if ("file".equals(uri.getScheme())) {
-                    Log.w("Save raw uri=" + uri);
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    EntityFolder folder = db.folder().getFolder(message.folder);
+                    if (folder == null)
+                        return null;
+
+                    if (EntityFolder.OUTBOX.equals(folder.type)) {
+                        db.message().deleteMessage(id);
+
+                        db.folder().setFolderError(message.folder, null);
+                        if (message.identity != null) {
+                            db.identity().setIdentityError(message.identity, null);
+
+                            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                            nm.cancel("send:" + message.identity, 1);
+                        }
+                    } else
+                        EntityOperation.queue(context, message, EntityOperation.DELETE);
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
                 }
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "message:delete");
+    }
+
+    private void onDelete(long[] ids) {
+        Bundle args = new Bundle();
+        args.putLongArray("ids", ids);
+
+        selectionTracker.clearSelection();
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long[] ids = args.getLongArray("ids");
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    for (long id : ids) {
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message != null)
+                            EntityOperation.queue(context, message, EntityOperation.DELETE);
+                    }
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "messages:delete:execute");
+    }
+
+    private void onJunk(long id) {
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("id");
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
+                    EntityOperation.queue(context, message, EntityOperation.MOVE, junk.id);
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "message:junk");
+    }
+
+    private void onMoveAskAcross(final ArrayList<MessageTarget> result) {
+        boolean across = false;
+        for (MessageTarget target : result)
+            if (target.across) {
+                across = true;
+                break;
+            }
+
+        if (across) {
+            Bundle aargs = new Bundle();
+            aargs.putString("question", getString(R.string.title_accross_remark));
+            aargs.putParcelableArrayList("result", result);
+
+            FragmentDialogAsk ask = new FragmentDialogAsk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(FragmentMessages.this, REQUEST_ASKED_MOVE_ACROSS);
+            ask.show(getFragmentManager(), "messages:move:across");
+        } else
+            moveAskConfirmed(result);
+    }
+
+    private void onColor(long id, int color) {
+        if (!Helper.isPro(getContext())) {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+            return;
+        }
+
+        Bundle args = new Bundle();
+        args.putLong("id", id);
+        args.putInt("color", color);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(final Context context, Bundle args) {
+                final long id = args.getLong("id");
+                final int color = args.getInt("color");
+
+                final DB db = DB.getInstance(context);
+                db.runInTransaction(new Runnable() {
+                    @Override
+                    public void run() {
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message == null)
+                            return;
+
+                        EntityOperation.queue(context, message, EntityOperation.FLAG, true, color);
+                    }
+                });
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "message:color");
+    }
+
+    private void onSnooze(Bundle args) {
+        if (!Helper.isPro(getContext())) {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+            return;
+        }
+
+        long duration = args.getLong("duration");
+        long time = args.getLong("time");
+        args.putLong("wakeup", duration == 0 ? -1 : time);
+
+        new SimpleTask<Long>() {
+            @Override
+            protected Long onExecute(Context context, Bundle args) {
+                long account = args.getLong("account");
+                String thread = args.getString("thread");
+                long id = args.getLong("id");
+                Long wakeup = args.getLong("wakeup");
+                if (wakeup < 0)
+                    wakeup = null;
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    List<EntityMessage> messages = db.message().getMessageByThread(
+                            account, thread, threading ? null : id, null);
+                    for (EntityMessage threaded : messages) {
+                        db.message().setMessageSnoozed(threaded.id, wakeup);
+                        EntityMessage.snooze(context, threaded.id, wakeup);
+                        EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
+                    }
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return wakeup;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Long wakeup) {
+                if (wakeup != null && args.getBoolean("finish"))
+                    finish();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "message:snooze");
+    }
+
+    private void onSnoozeSelection(Bundle args) {
+        if (!Helper.isPro(getContext())) {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+            return;
+        }
+
+        long duration = args.getLong("duration");
+        long time = args.getLong("time");
+        args.putLong("wakeup", duration == 0 ? -1 : time);
+        args.putLongArray("ids", getSelection());
+
+        selectionTracker.clearSelection();
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long[] ids = args.getLongArray("ids");
+                Long wakeup = args.getLong("wakeup");
+                if (wakeup < 0)
+                    wakeup = null;
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    for (long id : ids) {
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message != null) {
+                            List<EntityMessage> messages = db.message().getMessageByThread(
+                                    message.account, message.thread, threading ? null : id, message.folder);
+                            for (EntityMessage threaded : messages) {
+                                db.message().setMessageSnoozed(threaded.id, wakeup);
+                                EntityMessage.snooze(context, threaded.id, wakeup);
+                                EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
+                            }
+                        }
+                    }
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "messages:snooze");
+    }
+
+    private void onMove(Bundle args) {
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) {
+                long id = args.getLong("message");
+                long target = args.getLong("folder");
+                boolean copy = args.getBoolean("copy");
+                boolean similar = args.getBoolean("similar");
+
+                DB db = DB.getInstance(context);
+                try {
+                    db.beginTransaction();
+
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    if (similar) {
+                        if (copy)
+                            throw new IllegalArgumentException();
+                        else {
+                            List<EntityMessage> messages = db.message().getMessageByThread(
+                                    message.account, message.thread, threading ? null : id, message.folder);
+                            for (EntityMessage threaded : messages)
+                                EntityOperation.queue(context, threaded, EntityOperation.MOVE, target);
+                        }
+                    } else {
+                        if (copy)
+                            EntityOperation.queue(context, message, EntityOperation.COPY, target);
+                        else
+                            EntityOperation.queue(context, message, EntityOperation.MOVE, target);
+                    }
+
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getFragmentManager(), ex);
+            }
+        }.execute(this, args, "message:copy");
+    }
+
+    private WebView printWebView = null;
+
+    private void onPrint(Bundle args) {
+        Bundle pargs = new Bundle();
+        pargs.putLong("id", args.getLong("id"));
+
+        new SimpleTask<String[]>() {
+            @Override
+            protected String[] onExecute(Context context, Bundle args) throws IOException {
+                long id = args.getLong("id");
 
                 DB db = DB.getInstance(context);
                 EntityMessage message = db.message().getMessage(id);
-                if (message == null)
-                    throw new FileNotFoundException();
-                File file = message.getRawFile(context);
-                Log.i("Raw file=" + file);
-
-                ParcelFileDescriptor pfd = null;
-                OutputStream os = null;
-                InputStream is = null;
-                try {
-                    pfd = context.getContentResolver().openFileDescriptor(uri, "w");
-                    os = new FileOutputStream(pfd.getFileDescriptor());
-                    is = new BufferedInputStream(new FileInputStream(file));
-
-                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
-                    int read;
-                    while ((read = is.read(buffer)) != -1)
-                        os.write(buffer, 0, read);
-                } finally {
-                    try {
-                        if (pfd != null)
-                            pfd.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-                    try {
-                        if (os != null)
-                            os.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-                    try {
-                        if (is != null)
-                            is.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_raw_saved, Snackbar.LENGTH_LONG).show();
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-            }
-        }.execute(this, args, "raw:save");
-    }
-
-    private void saveAttachment(Intent data) {
-        Bundle args = new Bundle();
-        args.putLong("id", attachment);
-        args.putParcelable("uri", data.getData());
-
-        new SimpleTask<Void>() {
-            @Override
-            protected Void onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
-                Uri uri = args.getParcelable("uri");
-
-                if ("file".equals(uri.getScheme())) {
-                    Log.w("Save attachment uri=" + uri);
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
-                }
-
-                DB db = DB.getInstance(context);
-                EntityAttachment attachment = db.attachment().getAttachment(id);
-                if (attachment == null)
+                if (message == null || !message.content)
                     return null;
-                File file = attachment.getFile(context);
 
-                ParcelFileDescriptor pfd = null;
-                OutputStream os = null;
-                InputStream is = null;
-                try {
-                    pfd = context.getContentResolver().openFileDescriptor(uri, "w");
-                    os = new FileOutputStream(pfd.getFileDescriptor());
-                    is = new BufferedInputStream(new FileInputStream(file));
+                File file = message.getFile(context);
+                if (!file.exists())
+                    return null;
 
-                    byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
-                    int read;
-                    while ((read = is.read(buffer)) != -1)
-                        os.write(buffer, 0, read);
-                } finally {
-                    try {
-                        if (pfd != null)
-                            pfd.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
+                String html = Helper.readText(file);
+                html = HtmlHelper.getHtmlEmbedded(context, id, html);
+
+                Document document = Jsoup.parse(html);
+                Element body = document.body();
+                if (body != null) {
+                    Element p = document.createElement("p");
+
+                    if (message.from != null && message.from.length > 0) {
+                        Element span = document.createElement("span");
+                        span.text(getString(R.string.title_from) + " " + MessageHelper.formatAddresses(message.from));
+                        p.append(span.html() + "<br>");
                     }
-                    try {
-                        if (os != null)
-                            os.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
+
+                    if (message.to != null && message.to.length > 0) {
+                        Element span = document.createElement("span");
+                        span.text(getString(R.string.title_to) + " " + MessageHelper.formatAddresses(message.to));
+                        p.append(span.html() + "<br>");
                     }
-                    try {
-                        if (is != null)
-                            is.close();
-                    } catch (Throwable ex) {
-                        Log.w(ex);
+
+                    if (message.cc != null && message.cc.length > 0) {
+                        Element span = document.createElement("span");
+                        span.text(getString(R.string.title_cc) + " " + MessageHelper.formatAddresses(message.cc));
+                        p.append(span.html() + "<br>");
                     }
+
+                    {
+                        Element span = document.createElement("span");
+                        DateFormat DTF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+                        span.text(getString(R.string.title_received) + " " + DTF.format(message.received));
+                        p.append(span.html() + "<br>");
+                    }
+
+                    if (!TextUtils.isEmpty(message.subject)) {
+                        Element span = document.createElement("span");
+                        span.text(message.subject);
+                        p.append(span.html() + "<br>");
+                    }
+
+                    p.append("<hr><br>");
+
+                    body.prepend(p.html());
                 }
 
-                return null;
+                return new String[]{message.subject, document.html()};
             }
 
             @Override
-            protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_attachment_saved, Snackbar.LENGTH_LONG).show();
+            protected void onExecuted(Bundle args, final String[] data) {
+                if (data == null)
+                    return;
+
+                // https://developer.android.com/training/printing/html-docs.html
+                printWebView = new WebView(getContext());
+                WebSettings settings = printWebView.getSettings();
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                settings.setAllowFileAccess(false);
+
+                printWebView.setWebViewClient(new WebViewClient() {
+                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                        return false;
+                    }
+
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        try {
+                            ActivityBase activity = (ActivityBase) getActivity();
+                            PrintManager printManager = (PrintManager) activity.getOriginalContext().getSystemService(Context.PRINT_SERVICE);
+                            String jobName = getString(R.string.app_name);
+                            if (!TextUtils.isEmpty(data[0]))
+                                jobName += " - " + data[0];
+                            PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
+                            printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        } finally {
+                            printWebView = null;
+                        }
+                    }
+                });
+
+                printWebView.loadDataWithBaseURL("about:blank", data[1], "text/html", "UTF-8", null);
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
-                    Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
+                Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(this, args, "attachment:save");
+        }.execute(this, pargs, "message:print");
     }
 
-    private void saveAttachments(Intent data) {
-        Bundle args = new Bundle();
-        args.putLong("id", message);
-        args.putParcelable("uri", data.getData());
-
-        new SimpleTask<Void>() {
-            @Override
-            protected Void onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
-                Uri uri = args.getParcelable("uri");
-
-                DB db = DB.getInstance(context);
-                DocumentFile tree = DocumentFile.fromTreeUri(context, uri);
-                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                for (EntityAttachment attachment : attachments) {
-                    File file = attachment.getFile(context);
-
-                    String name = Helper.sanitizeFilename(attachment.name);
-                    if (TextUtils.isEmpty(name))
-                        name = Long.toString(attachment.id);
-                    DocumentFile document = tree.createFile(attachment.type, name);
-                    if (document == null)
-                        throw new FileNotFoundException(uri + ":" + name);
-
-                    ParcelFileDescriptor pfd = null;
-                    OutputStream os = null;
-                    InputStream is = null;
-                    try {
-                        pfd = context.getContentResolver().openFileDescriptor(document.getUri(), "w");
-                        os = new FileOutputStream(pfd.getFileDescriptor());
-                        is = new BufferedInputStream(new FileInputStream(file));
-
-                        byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
-                        int read;
-                        while ((read = is.read(buffer)) != -1)
-                            os.write(buffer, 0, read);
-                    } finally {
-                        try {
-                            if (pfd != null)
-                                pfd.close();
-                        } catch (Throwable ex) {
-                            Log.w(ex);
-                        }
-                        try {
-                            if (os != null)
-                                os.close();
-                        } catch (Throwable ex) {
-                            Log.w(ex);
-                        }
-                        try {
-                            if (is != null)
-                                is.close();
-                        } catch (Throwable ex) {
-                            Log.w(ex);
-                        }
-                    }
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_attachments_saved, Snackbar.LENGTH_LONG).show();
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-            }
-        }.execute(this, args, "attachments:save");
+    private void onPropertySet(Bundle args) {
+        long id = args.getLong("id");
+        String name = args.getString("name");
+        boolean value = args.getBoolean("value");
+        Log.i("Set property " + name + "=" + value + " id=" + id);
+        iProperties.setValue(name, id, value);
     }
 
     static void search(
@@ -3953,7 +4275,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Boolean isDrafts;
         List<Long> folders;
         List<EntityAccount> accounts;
-        Map<Long, List<TupleFolderEx>> targets = new HashMap<>();
     }
 
     private static class MessageTarget implements Parcelable {
@@ -4000,5 +4321,103 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return new MessageTarget[size];
             }
         };
+    }
+
+    public static class FragmentDialogReporting extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
+            final Button btnInfo = dview.findViewById(R.id.btnInfo);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            final Intent info = new Intent(Intent.ACTION_VIEW);
+            info.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq104"));
+            info.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            btnInfo.setVisibility(
+                    info.resolveActivity(getContext().getPackageManager()) == null ? View.GONE : View.VISIBLE);
+
+            btnInfo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(info);
+                }
+            });
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("crash_reports", true).apply();
+                            if (cbNotAgain.isChecked())
+                                prefs.edit().putBoolean("crash_reports_asked", true).apply();
+                            Bugsnag.startSession();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (cbNotAgain.isChecked()) {
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                                prefs.edit().putBoolean("crash_reports_asked", true).apply();
+                            }
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogAccount extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final ArrayAdapter<EntityAccount> adapter = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1);
+
+            // TODO: spinner
+            new SimpleTask<List<EntityAccount>>() {
+                @Override
+                protected List<EntityAccount> onExecute(Context context, Bundle args) {
+                    DB db = DB.getInstance(context);
+                    return db.account().getSynchronizingAccounts();
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
+                    adapter.addAll(accounts);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(getFragmentManager(), ex);
+                }
+            }.execute(getContext(), getActivity(), new Bundle(), "messages:accounts");
+
+            return new AlertDialog.Builder(getContext())
+                    .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EntityAccount account = adapter.getItem(which);
+                            getArguments().putLong("account", account.id);
+                            sendResult(RESULT_OK);
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogError extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            String error = getArguments().getString("error");
+
+            return new AlertDialog.Builder(getContext())
+                    .setMessage(error)
+                    .setPositiveButton(android.R.string.cancel, null)
+                    .create();
+        }
     }
 }

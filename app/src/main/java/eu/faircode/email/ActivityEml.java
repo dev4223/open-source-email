@@ -127,7 +127,7 @@ public class ActivityEml extends ActivityBase {
 
                     result.html = parts.getHtml(context);
                     if (result.html != null)
-                        result.body = HtmlHelper.fromHtml(HtmlHelper.sanitize(context, result.html));
+                        result.body = HtmlHelper.fromHtml(HtmlHelper.sanitize(context, result.html, false));
 
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     mmessage.writeTo(bos);
@@ -157,7 +157,7 @@ public class ActivityEml extends ActivityBase {
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(findViewById(android.R.id.content), ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(ActivityEml.this, ActivityEml.this, ex);
+                    Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, args, "eml:decode");
     }

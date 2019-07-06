@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -45,9 +46,13 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -61,7 +66,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.json.JSONArray;
@@ -94,7 +98,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 
-public class ActivitySetup extends ActivityBilling implements FragmentManager.OnBackStackChangedListener {
+public class ActivitySetup extends ActivityBase implements FragmentManager.OnBackStackChangedListener {
     private View view;
     private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle drawerToggle;
@@ -117,7 +121,6 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     static final String ACTION_VIEW_IDENTITIES = BuildConfig.APPLICATION_ID + ".ACTION_VIEW_IDENTITIES";
     static final String ACTION_EDIT_ACCOUNT = BuildConfig.APPLICATION_ID + ".EDIT_ACCOUNT";
     static final String ACTION_EDIT_IDENTITY = BuildConfig.APPLICATION_ID + ".EDIT_IDENTITY";
-    static final String ACTION_SHOW_PRO = BuildConfig.APPLICATION_ID + ".SHOW_PRO";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -300,7 +303,6 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
         iff.addAction(ACTION_VIEW_IDENTITIES);
         iff.addAction(ACTION_EDIT_ACCOUNT);
         iff.addAction(ACTION_EDIT_IDENTITY);
-        iff.addAction(ACTION_SHOW_PRO);
         lbm.registerReceiver(receiver, iff);
     }
 
@@ -364,59 +366,33 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     }
 
     private void onMenuExport() {
-        if (!Helper.isPro(this)) {
-            onShowPro(null);
-            return;
-        }
-
-        try {
-            askPassword(true);
-        } catch (Throwable ex) {
-            Helper.unexpectedError(this, this, ex);
-        }
+        if (Helper.isPro(this)) {
+            try {
+                askPassword(true);
+            } catch (Throwable ex) {
+                Log.e(ex);
+                Helper.unexpectedError(getSupportFragmentManager(), ex);
+            }
+        } else
+            Toast.makeText(this, R.string.title_pro_feature, Toast.LENGTH_LONG).show();
     }
 
     private void onMenuImport() {
         try {
             askPassword(false);
         } catch (Throwable ex) {
-            Helper.unexpectedError(this, this, ex);
+            Log.e(ex);
+            Helper.unexpectedError(getSupportFragmentManager(), ex);
         }
     }
 
     private void askPassword(final boolean export) {
-        View dview = LayoutInflater.from(this).inflate(R.layout.dialog_password, null);
-        final TextInputLayout etPassword1 = dview.findViewById(R.id.tilPassword1);
-        final TextInputLayout etPassword2 = dview.findViewById(R.id.tilPassword2);
-        TextView tvImportHint = dview.findViewById(R.id.tvImporthint);
+        Bundle args = new Bundle();
+        args.putBoolean("export", export);
 
-        etPassword2.setVisibility(export ? View.VISIBLE : View.GONE);
-        tvImportHint.setVisibility(export ? View.GONE : View.VISIBLE);
-
-        new DialogBuilderLifecycle(this, this)
-                .setView(dview)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String password1 = etPassword1.getEditText().getText().toString();
-                        String password2 = etPassword2.getEditText().getText().toString();
-
-                        if (!BuildConfig.DEBUG && TextUtils.isEmpty(password1))
-                            Snackbar.make(view, R.string.title_setup_password_missing, Snackbar.LENGTH_LONG).show();
-                        else {
-                            if (!export || password1.equals(password2)) {
-                                ActivitySetup.this.password = password1;
-                                startActivityForResult(
-                                        Helper.getChooser(
-                                                ActivitySetup.this,
-                                                export ? getIntentExport() : getIntentImport()),
-                                        export ? REQUEST_EXPORT : REQUEST_IMPORT);
-                            } else
-                                Snackbar.make(view, R.string.title_setup_password_different, Snackbar.LENGTH_LONG).show();
-                        }
-                    }
-                })
-                .show();
+        FragmentDialogPassword fragment = new FragmentDialogPassword();
+        fragment.setArguments(args);
+        fragment.show(getSupportFragmentManager(), "password");
     }
 
     private void onMenuOrder(int title, Class clazz) {
@@ -454,11 +430,11 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
     }
 
     private void onMenuFAQ() {
-        Helper.view(this, this, Helper.getIntentFAQ());
+        Helper.view(this, Helper.getIntentFAQ());
     }
 
     private void onMenuPrivacy() {
-        Helper.view(this, this, Helper.getIntentPrivacy());
+        Helper.view(this, Helper.getIntentPrivacy());
     }
 
     private void onCleanup() {
@@ -471,7 +447,7 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(ActivitySetup.this, ActivitySetup.this, ex);
+                Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, new Bundle(), "cleanup:run");
     }
@@ -483,22 +459,6 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentAbout()).addToBackStack("about");
         fragmentTransaction.commit();
-    }
-
-    private static Intent getIntentExport() {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_TITLE, "fairemail_" +
-                new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".backup");
-        return intent;
-    }
-
-    private static Intent getIntentImport() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        return intent;
     }
 
     private void handleExport(Intent data, String password) {
@@ -648,15 +608,15 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_setup_exported, Snackbar.LENGTH_LONG).show();
+                Toast.makeText(ActivitySetup.this, R.string.title_setup_exported, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(ActivitySetup.this, ex.getMessage(), Toast.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(ActivitySetup.this, ActivitySetup.this, ex);
+                    Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, args, "setup:export");
     }
@@ -924,17 +884,17 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_setup_imported, Snackbar.LENGTH_LONG).show();
+                Toast.makeText(ActivitySetup.this, R.string.title_setup_imported, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex.getCause() instanceof BadPaddingException)
-                    Snackbar.make(view, R.string.title_setup_password_invalid, Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(ActivitySetup.this, R.string.title_setup_password_invalid, Toast.LENGTH_LONG).show();
                 else if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Toast.makeText(ActivitySetup.this, ex.getMessage(), Toast.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(ActivitySetup.this, ActivitySetup.this, ex);
+                    Helper.unexpectedError(getSupportFragmentManager(), ex);
             }
         }.execute(this, args, "setup:import");
     }
@@ -1030,13 +990,75 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
         fragmentTransaction.commit();
     }
 
-    private void onShowPro(Intent intent) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-            getSupportFragmentManager().popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    private static Intent getIntentExport() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_TITLE, "fairemail_" +
+                new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".backup");
+        return intent;
+    }
 
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame, new FragmentPro()).addToBackStack("pro");
-        fragmentTransaction.commit();
+    private static Intent getIntentImport() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        return intent;
+    }
+
+    public static class FragmentDialogPassword extends DialogFragmentEx {
+        private TextInputLayout etPassword1;
+        private TextInputLayout etPassword2;
+
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            outState.putString("fair:password1", etPassword1.getEditText().getText().toString());
+            outState.putString("fair:password2", etPassword2.getEditText().getText().toString());
+            super.onSaveInstanceState(outState);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final boolean export = getArguments().getBoolean("export");
+
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_password, null);
+            etPassword1 = dview.findViewById(R.id.tilPassword1);
+            etPassword2 = dview.findViewById(R.id.tilPassword2);
+            TextView tvImportHint = dview.findViewById(R.id.tvImporthint);
+
+            if (savedInstanceState != null) {
+                etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
+                etPassword2.getEditText().setText(savedInstanceState.getString("fair:password2"));
+            }
+
+            etPassword2.setVisibility(export ? View.VISIBLE : View.GONE);
+            tvImportHint.setVisibility(export ? View.GONE : View.VISIBLE);
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String password1 = etPassword1.getEditText().getText().toString();
+                            String password2 = etPassword2.getEditText().getText().toString();
+
+                            if (!BuildConfig.DEBUG && TextUtils.isEmpty(password1))
+                                Toast.makeText(getContext(), R.string.title_setup_password_missing, Toast.LENGTH_LONG).show();
+                            else {
+                                if (!export || password1.equals(password2)) {
+                                    ((ActivitySetup) getActivity()).password = password1;
+                                    getActivity().startActivityForResult(
+                                            Helper.getChooser(getContext(),
+                                                    export ? getIntentExport() : getIntentImport()),
+                                            export ? REQUEST_EXPORT : REQUEST_IMPORT);
+                                } else
+                                    Toast.makeText(getContext(), R.string.title_setup_password_different, Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    })
+                    .create();
+        }
     }
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -1054,8 +1076,6 @@ public class ActivitySetup extends ActivityBilling implements FragmentManager.On
                     onEditAccount(intent);
                 else if (ACTION_EDIT_IDENTITY.equals(action))
                     onEditIdentity(intent);
-                else if (ACTION_SHOW_PRO.equals(action))
-                    onShowPro(intent);
             }
         }
     };

@@ -143,12 +143,17 @@ public class ApplicationEx extends Application {
         com.bugsnag.android.Configuration config =
                 new com.bugsnag.android.Configuration("9d2d57476a0614974449a3ec33f2604a");
 
-        if (BuildConfig.DEBUG || !Helper.hasValidFingerprint(this))
-            config.setReleaseStage("development");
-        else if (BuildConfig.BETA_RELEASE)
-            config.setReleaseStage(BuildConfig.PLAY_STORE_RELEASE ? "beta/play" : "beta");
-        else
-            config.setReleaseStage(BuildConfig.PLAY_STORE_RELEASE ? "stable/play" : "stable");
+        if (BuildConfig.DEBUG)
+            config.setReleaseStage("debug");
+        else {
+            String type = "other";
+            if (Helper.hasValidFingerprint(this))
+                if (BuildConfig.PLAY_STORE_RELEASE)
+                    type = "play";
+                else
+                    type = "full";
+            config.setReleaseStage(type + (BuildConfig.BETA_RELEASE ? "/beta" : ""));
+        }
 
         config.setAutoCaptureSessions(false);
 
@@ -270,6 +275,17 @@ public class ApplicationEx extends Application {
             editor.putInt("version", BuildConfig.VERSION_CODE);
             editor.apply();
         }
+
+        if (BuildConfig.DEBUG && false) {
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.remove("app_support");
+            editor.remove("notify_archive");
+            editor.remove("message_swipe");
+            editor.remove("message_select");
+            editor.remove("folder_actions");
+            editor.remove("folder_sync");
+            editor.apply();
+        }
     }
 
     static Context getLocalizedContext(Context context) {
@@ -354,6 +370,9 @@ public class ApplicationEx extends Application {
             at android.app.AppComponentFactory.instantiateService(AppComponentFactory.java:103)
          */
         if (ex instanceof NoSuchMethodError)
+            return false;
+
+        if (ex.getMessage() != null && ex.getMessage().startsWith("Bad notification posted"))
             return false;
 
         if (ex instanceof TimeoutException &&

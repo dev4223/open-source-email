@@ -94,6 +94,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("enabled", checked).apply();
                 spPollInterval.setEnabled(checked);
+                if (!checked)
+                    swSchedule.setChecked(false);
                 ServiceSynchronize.reload(getContext(), true, "enabled=" + checked);
             }
         });
@@ -125,6 +127,8 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("schedule", checked).apply();
+                if (checked)
+                    swEnabled.setChecked(true);
             }
         });
 
@@ -260,7 +264,7 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
         return Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(cal.getTime());
     }
 
-    public static class TimePickerFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener {
+    public static class TimePickerFragment extends DialogFragmentEx implements TimePickerDialog.OnTimeSetListener {
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -276,10 +280,10 @@ public class FragmentOptionsSynchronize extends FragmentBase implements SharedPr
             cal.set(Calendar.SECOND, 0);
             cal.set(Calendar.MILLISECOND, 0);
 
-            return new TimePickerDialog(getActivity(), this,
+            return new TimePickerDialog(getContext(), this,
                     cal.get(Calendar.HOUR_OF_DAY),
                     cal.get(Calendar.MINUTE),
-                    DateFormat.is24HourFormat(getActivity()));
+                    DateFormat.is24HourFormat(getContext()));
         }
 
         public void onTimeSet(TimePicker view, int hour, int minute) {

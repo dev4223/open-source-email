@@ -82,9 +82,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -139,19 +141,21 @@ import biweekly.property.Organizer;
 import biweekly.property.Summary;
 import biweekly.util.ICalDate;
 
+import static android.app.Activity.RESULT_OK;
+
 public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHolder> {
-    private Context context;
-    private LayoutInflater inflater;
-    private LifecycleOwner owner;
-    private View parentView;
+    private Fragment parentFragment;
     private ViewType viewType;
     private boolean compact;
     private int zoom;
     private String sort;
     private boolean filter_duplicates;
-    private boolean suitable;
-    private int answers = -1;
     private IProperties properties;
+
+    private Context context;
+    private LifecycleOwner owner;
+    private LayoutInflater inflater;
+    private boolean suitable;
 
     private int dp36;
     private int colorPrimary;
@@ -178,6 +182,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean authentication;
     private static boolean debug;
 
+    private int answers = -1;
     private boolean gotoTop = false;
     private AsyncPagedListDiffer<TupleMessageEx> differ;
     private SelectionTracker<Long> selectionTracker = null;
@@ -387,7 +392,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             rvAttachment.setLayoutManager(llm);
             rvAttachment.setItemAnimator(null);
 
-            adapterAttachment = new AdapterAttachment(context, owner, true);
+            adapterAttachment = new AdapterAttachment(parentFragment, true);
             rvAttachment.setAdapter(adapterAttachment);
 
             cbInline = attachments.findViewById(R.id.cbInline);
@@ -414,7 +419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             StaggeredGridLayoutManager sglm =
                     new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
             rvImage.setLayoutManager(sglm);
-            adapterImage = new AdapterImage(context, owner, parentView);
+            adapterImage = new AdapterImage(parentFragment);
             rvImage.setAdapter(adapterImage);
 
             paddingAddressBottom = itemView.findViewById(R.id.paddingAddressBottom);
@@ -774,7 +779,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(context, owner, ex);
+                        Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                     }
                 }.execute(context, owner, aargs, "message:avatar");
             } else
@@ -1135,7 +1140,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, sargs, "message:actions");
 
@@ -1271,7 +1276,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(context, owner, ex);
+                            Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "message:calendar");
                 }
@@ -1398,7 +1403,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:participation");
         }
@@ -1519,9 +1524,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             @Override
                             protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(context, owner, ex);
+                                Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                             }
                         }.execute(context, owner, args, "message:seen");
+
+
                     }
                 }
             }
@@ -1546,7 +1553,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
                 DateFormat day = new SimpleDateFormat("E");
                 Snackbar.make(
-                        parentView,
+                        parentFragment.getView(),
                         day.format(message.ui_snoozed) + " " + df.format(message.ui_snoozed),
                         Snackbar.LENGTH_LONG).show();
             }
@@ -1595,7 +1602,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:flag");
         }
@@ -1640,7 +1647,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:search");
         }
@@ -1756,7 +1763,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 PackageManager pm = context.getPackageManager();
                 if (edit.resolveActivity(pm) == null)
-                    Snackbar.make(parentView, R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(parentFragment.getView(),
+                            R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
                 else
                     context.startActivity(edit);
             }
@@ -1819,7 +1827,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:attachment:download");
         }
@@ -1832,176 +1840,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowFull(final TupleMessageEx message) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            if (properties.getValue("confirmed", message.id) ||
-                    prefs.getBoolean("show_html_confirmed", false)) {
-                onShowFullConfirmed(message);
-                return;
-            }
+            boolean show_images = properties.getValue("images", message.id);
 
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_again, null);
-            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
-            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-            tvMessage.setText(context.getText(R.string.title_ask_show_html));
-
-            new DialogBuilderLifecycle(context, owner)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            properties.setValue("confirmed", message.id, true);
-                            if (cbNotAgain.isChecked())
-                                prefs.edit().putBoolean("show_html_confirmed", true).apply();
-                            onShowFullConfirmed(message);
-                        }
-                    })
-                    .show();
-        }
-
-        private void onShowFullConfirmed(TupleMessageEx message) {
             Bundle args = new Bundle();
             args.putLong("id", message.id);
+            args.putBoolean("show_images", show_images);
+            args.putFloat("text_size", textSize);
 
-            new SimpleTask<String>() {
-                @Override
-                protected String onExecute(Context context, Bundle args) throws Throwable {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    EntityMessage message = db.message().getMessage(id);
-                    if (message == null || !message.content)
-                        return null;
-
-                    File file = message.getFile(context);
-                    if (!file.exists())
-                        return null;
-
-                    String html = HtmlHelper.getHtmlEmbedded(context, id, Helper.readText(file));
-
-                    // Remove viewport limitations
-                    Document doc = Jsoup.parse(html);
-                    for (Element meta : doc.select("meta").select("[name=viewport]")) {
-                        String content = meta.attr("content");
-                        String[] params = content.split(";");
-                        if (params.length > 0) {
-                            List<String> viewport = new ArrayList<>();
-                            for (String param : params)
-                                if (!param.toLowerCase().contains("maximum-scale") &&
-                                        !param.toLowerCase().contains("user-scalable"))
-                                    viewport.add(param.trim());
-
-                            if (viewport.size() == 0)
-                                meta.attr("content", "");
-                            else
-                                meta.attr("content", TextUtils.join(" ;", viewport) + ";");
-                        }
-                    }
-
-                    return doc.html();
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, String html) {
-                    long id = args.getLong("id");
-
-                    TupleMessageEx amessage = getMessage();
-                    if (amessage == null || !amessage.id.equals(id))
-                        return;
-
-                    WebView webView = new WebView(context);
-                    setupWebView(webView);
-
-                    boolean show_images = properties.getValue("images", id);
-
-                    WebSettings settings = webView.getSettings();
-                    settings.setDefaultFontSize(Math.round(textSize));
-                    settings.setDefaultFixedFontSize(Math.round(textSize));
-                    settings.setLoadsImagesAutomatically(show_images);
-                    settings.setBuiltInZoomControls(true);
-                    settings.setDisplayZoomControls(false);
-
-                    webView.loadDataWithBaseURL("", html, "text/html", "UTF-8", null);
-
-                    final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-                    dialog.setContentView(webView);
-
-                    owner.getLifecycle().addObserver(new LifecycleObserver() {
-                        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-                        public void onCreate() {
-                            dialog.show();
-                        }
-
-                        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                        public void onDestroyed() {
-                            dialog.dismiss();
-                        }
-                    });
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
-                }
-            }.execute(context, owner, args, "message:full");
-        }
-
-        private void setupWebView(WebView webView) {
-            webView.setWebViewClient(new WebViewClient() {
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    Log.i("Open url=" + url);
-
-                    Uri uri = Uri.parse(url);
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                        return false;
-
-                    onOpenLink(uri, null);
-                    return true;
-                }
-            });
-
-            webView.setDownloadListener(new DownloadListener() {
-                public void onDownloadStart(
-                        String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                    Log.i("Download url=" + url + " mime type=" + mimetype);
-
-                    Uri uri = Uri.parse(url);
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                        return;
-
-                    Helper.view(context, owner, uri, true);
-                }
-            });
-
-            webView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    WebView.HitTestResult result = ((WebView) view).getHitTestResult();
-                    if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                            result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                        Log.i("Long press url=" + result.getExtra());
-
-                        Uri uri = Uri.parse(result.getExtra());
-                        if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                            return false;
-
-                        Helper.view(context, owner, uri, true);
-
-                        return true;
-                    }
-                    return false;
-                }
-            });
-
-            WebSettings settings = webView.getSettings();
-            settings.setUseWideViewPort(true);
-            settings.setLoadWithOverviewMode(true);
-            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-            settings.setAllowFileAccess(false);
-
-            if (monospaced)
-                settings.setStandardFontFamily("monospace");
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            if (properties.getValue("confirmed", message.id) ||
+                    prefs.getBoolean("show_html_confirmed", false)) {
+                FragmentDialogWebView fragment = new FragmentDialogWebView();
+                fragment.setArguments(args);
+                fragment.show(parentFragment.getFragmentManager(), "message:full");
+            } else {
+                FragmentDialogFull fragment = new FragmentDialogFull();
+                fragment.setArguments(args);
+                fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_PROPERTY);
+                fragment.show(parentFragment.getFragmentManager(), "message:full:confirm");
+            }
         }
 
         private void onShowImages(final TupleMessageEx message) {
@@ -2017,7 +1874,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             tvMessage.setText(context.getText(R.string.title_ask_show_image));
 
-            new DialogBuilderLifecycle(context, owner)
+            // TODO: dialog fragment
+            final Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -2028,7 +1886,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
-                    .show();
+                    .create();
+
+            owner.getLifecycle().addObserver(new LifecycleObserver() {
+                @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+                public void onCreate() {
+                    dialog.show();
+                }
+
+                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                public void onDestroyed() {
+                    dialog.dismiss();
+                }
+            });
         }
 
         private void onShowImagesConfirmed(final TupleMessageEx message) {
@@ -2066,7 +1936,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "show:images");
         }
@@ -2109,14 +1979,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     body = document.html();
                 }
 
-                String html = HtmlHelper.sanitize(context, body);
+                String html = HtmlHelper.sanitize(context, body, show_images);
                 if (debug)
                     html += "<pre>" + Html.escapeHtml(html) + "</pre>";
 
                 Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        Drawable image = HtmlHelper.decodeImage(source, message.id, show_images, tvBody);
+                        Drawable image = HtmlHelper.decodeImage(context, message.id, source, show_images, tvBody);
 
                         ConstraintLayout.LayoutParams params =
                                 (ConstraintLayout.LayoutParams) tvBody.getLayoutParams();
@@ -2197,7 +2067,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(context, owner, ex);
+                Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
             }
         };
 
@@ -2255,9 +2125,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
 
                     ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
-                    if (image.length > 0 && image[0].getSource() != null) {
-                        onOpenImage(image[0].getDrawable());
-                        return true;
+                    if (image.length > 0) {
+                        String source = image[0].getSource();
+                        if (source != null) {
+                            onOpenImage(message.id, source);
+                            return true;
+                        }
                     }
 
                     DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
@@ -2283,176 +2156,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if ("cid".equals(uri.getScheme()))
                     return;
 
-                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean paranoid = prefs.getBoolean("paranoid", true);
+                Bundle args = new Bundle();
+                args.putParcelable("uri", uri);
+                args.putString("title", title);
 
-                final Uri sanitized;
-                if (uri.isOpaque())
-                    sanitized = uri;
-                else {
-                    // https://en.wikipedia.org/wiki/UTM_parameters
-                    Uri.Builder builder = uri.buildUpon();
-
-                    builder.clearQuery();
-                    for (String key : uri.getQueryParameterNames())
-                        if (!PARANOID_QUERY.contains(key.toLowerCase()))
-                            for (String value : uri.getQueryParameters(key))
-                                if (!TextUtils.isEmpty(key)) {
-                                    Log.i("Query " + key + "=" + value);
-                                    builder.appendQueryParameter(key, value);
-                                }
-
-                    sanitized = builder.build();
-                }
-
-                View view = LayoutInflater.from(context).inflate(R.layout.dialog_open_link, null);
-                TextView tvTitle = view.findViewById(R.id.tvTitle);
-                final EditText etLink = view.findViewById(R.id.etLink);
-                final CheckBox cbSecure = view.findViewById(R.id.cbSecure);
-                CheckBox cbSanitize = view.findViewById(R.id.cbSanitize);
-                final TextView tvOwner = view.findViewById(R.id.tvOwner);
-                final Group grpOwner = view.findViewById(R.id.grpOwner);
-
-                tvTitle.setText(title);
-                tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
-
-                cbSecure.setVisibility(View.GONE);
-                etLink.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence text, int i, int i1, int i2) {
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable text) {
-                        Uri uri = Uri.parse(text.toString());
-                        cbSecure.setVisibility(!uri.isOpaque() &&
-                                ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                                ? View.VISIBLE : View.GONE);
-                    }
-                });
-                etLink.setText(uri.toString());
-
-                boolean secure = "https".equals(uri.getScheme());
-                cbSecure.setChecked(secure);
-                cbSecure.setText(
-                        secure ? R.string.title_link_secured : R.string.title_secure_link);
-                cbSecure.setTextColor(Helper.resolveColor(context,
-                        secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
-                cbSecure.setTypeface(
-                        secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
-                cbSecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                        Uri uri = Uri.parse(etLink.getText().toString());
-                        Uri.Builder builder = uri.buildUpon();
-
-                        builder.scheme(checked ? "https" : "http");
-
-                        String authority = uri.getEncodedAuthority();
-                        if (authority != null) {
-                            authority = authority.replace(checked ? ":80" : ":443", checked ? ":443" : ":80");
-                            builder.encodedAuthority(authority);
-                        }
-
-                        etLink.setText(builder.build().toString());
-
-                        cbSecure.setText(
-                                checked ? R.string.title_link_secured : R.string.title_secure_link);
-                        cbSecure.setTextColor(Helper.resolveColor(context,
-                                checked ? android.R.attr.textColorSecondary : R.attr.colorWarning));
-                        cbSecure.setTypeface(
-                                checked ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
-                    }
-                });
-
-                cbSanitize.setVisibility(uri.equals(sanitized) ? View.GONE : View.VISIBLE);
-                cbSanitize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                        if (checked)
-                            etLink.setText(sanitized.toString());
-                        else
-                            etLink.setText(uri.toString());
-                    }
-                });
-
-                grpOwner.setVisibility(View.GONE);
-
-                if (paranoid) {
-                    Bundle args = new Bundle();
-                    args.putParcelable("uri", uri);
-
-                    new SimpleTask<String>() {
-                        @Override
-                        protected void onPreExecute(Bundle args) {
-                            tvOwner.setText("…");
-                            grpOwner.setVisibility(View.VISIBLE);
-                        }
-
-                        @Override
-                        protected String onExecute(Context context, Bundle args) throws Throwable {
-                            Uri uri = args.getParcelable("uri");
-                            return IPInfo.getOrganization(uri);
-                        }
-
-                        @Override
-                        protected void onExecuted(Bundle args, String organization) {
-                            tvOwner.setText(organization == null ? "?" : organization);
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            if (ex instanceof UnknownHostException)
-                                grpOwner.setVisibility(View.GONE);
-                            else
-                                tvOwner.setText(ex.getMessage());
-                        }
-                    }.execute(context, owner, args, "link:domain");
-                }
-
-                new DialogBuilderLifecycle(context, owner)
-                        .setView(view)
-                        .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Uri uri = Uri.parse(etLink.getText().toString());
-                                Helper.view(context, owner, uri, false);
-                            }
-                        })
-                        .setNeutralButton(R.string.title_browse, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Uri uri = Uri.parse(etLink.getText().toString());
-                                Helper.view(context, owner, uri, true);
-                            }
-                        })
-                        .setNegativeButton(R.string.title_no, null)
-                        .show();
+                FragmentDialogLink fragment = new FragmentDialogLink();
+                fragment.setArguments(args);
+                fragment.show(parentFragment.getFragmentManager(), "open:link");
             }
         }
 
-        private void onOpenImage(Drawable drawable) {
-            PhotoView pv = new PhotoView(context);
-            pv.setImageDrawable(drawable);
+        private void onOpenImage(long id, String source) {
+            Log.i("Viewing image source=" + source);
 
-            final Dialog dialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            dialog.setContentView(pv);
+            Bundle args = new Bundle();
+            args.putLong("id", id);
+            args.putString("source", source);
 
-            owner.getLifecycle().addObserver(new LifecycleObserver() {
-                @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-                public void onCreate() {
-                    dialog.show();
-                }
-
-                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                public void onDestroyed() {
-                    dialog.dismiss();
-                }
-            });
+            FragmentDialogImage fragment = new FragmentDialogImage();
+            fragment.setArguments(args);
+            fragment.show(parentFragment.getFragmentManager(), "view:image");
         }
 
         @Override
@@ -2530,18 +2253,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:unseen");
         }
 
         private void onMenuColoredStar(final TupleMessageEx message) {
-            Intent color = new Intent(ActivityView.ACTION_COLOR);
-            color.putExtra("id", message.id);
-            color.putExtra("color", message.color == null ? Color.TRANSPARENT : message.color);
+            int color = (message.color == null ? Color.TRANSPARENT : message.color);
 
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(color);
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+
+            FragmentDialogColor fragment = new FragmentDialogColor();
+            fragment.initialize(R.string.title_flag_color, color, args, context);
+            fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_COLOR);
+            fragment.show(parentFragment.getFragmentManager(), "message:color");
         }
 
         private void onMenuDelete(final TupleMessageEx message) {
@@ -2560,54 +2286,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:delete");
         }
 
         private void onMenuJunk(final TupleMessageEx message) {
             String who = MessageHelper.formatAddresses(message.from);
-            new DialogBuilderLifecycle(context, owner)
-                    .setMessage(context.getString(R.string.title_ask_spam_who, who))
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Bundle args = new Bundle();
-                            args.putLong("id", message.id);
 
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long id = args.getLong("id");
+            Bundle aargs = new Bundle();
+            aargs.putString("question", context.getString(R.string.title_ask_spam_who, who));
+            aargs.putLong("id", message.id);
 
-                                    DB db = DB.getInstance(context);
-                                    try {
-                                        db.beginTransaction();
-
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message == null)
-                                            return null;
-
-                                        EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
-                                        EntityOperation.queue(context, message, EntityOperation.MOVE, junk.id);
-
-                                        db.setTransactionSuccessful();
-                                    } finally {
-                                        db.endTransaction();
-                                    }
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Helper.unexpectedError(context, owner, ex);
-                                }
-                            }.execute(context, owner, args, "message:spam");
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
+            FragmentDialogAsk ask = new FragmentDialogAsk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
+            ask.show(parentFragment.getFragmentManager(), "message:junk");
         }
 
         private void onMenuDecrypt(TupleMessageEx message) {
@@ -2647,7 +2341,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:share");
         }
@@ -2669,134 +2363,37 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onMenuManageKeywords(TupleMessageEx message) {
             Bundle args = new Bundle();
-            args.putSerializable("message", message);
+            args.putLong("id", message.id);
+            args.putStringArray("keywords", message.keywords);
 
             new SimpleTask<EntityFolder>() {
                 @Override
                 protected EntityFolder onExecute(Context context, Bundle args) {
-                    EntityMessage message = (EntityMessage) args.getSerializable("message");
-                    return DB.getInstance(context).folder().getFolder(message.folder);
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
+                    return db.folder().getFolder(message.folder);
                 }
 
                 @Override
                 protected void onExecuted(final Bundle args, EntityFolder folder) {
-                    EntityMessage message = (EntityMessage) args.getSerializable("message");
+                    if (folder == null)
+                        return;
 
-                    List<String> keywords = Arrays.asList(message.keywords);
+                    args.putStringArray("fkeywords", folder.keywords);
 
-                    final List<String> items = new ArrayList<>(keywords);
-                    for (String keyword : folder.keywords)
-                        if (!items.contains(keyword))
-                            items.add(keyword);
-
-                    Collections.sort(items);
-
-                    final boolean selected[] = new boolean[items.size()];
-                    final boolean dirty[] = new boolean[items.size()];
-                    for (int i = 0; i < selected.length; i++) {
-                        selected[i] = keywords.contains(items.get(i));
-                        dirty[i] = false;
-                    }
-
-                    new DialogBuilderLifecycle(context, owner)
-                            .setTitle(R.string.title_manage_keywords)
-                            .setMultiChoiceItems(items.toArray(new String[0]), selected, new DialogInterface.OnMultiChoiceClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                                    dirty[which] = true;
-                                }
-                            })
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    if (!Helper.isPro(context)) {
-                                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                                        return;
-                                    }
-
-                                    args.putStringArray("keywords", items.toArray(new String[0]));
-                                    args.putBooleanArray("selected", selected);
-                                    args.putBooleanArray("dirty", dirty);
-
-                                    new SimpleTask<Void>() {
-                                        @Override
-                                        protected Void onExecute(Context context, Bundle args) {
-                                            EntityMessage message = (EntityMessage) args.getSerializable("message");
-                                            String[] keywords = args.getStringArray("keywords");
-                                            boolean[] selected = args.getBooleanArray("selected");
-                                            boolean[] dirty = args.getBooleanArray("dirty");
-
-                                            DB db = DB.getInstance(context);
-                                            try {
-                                                db.beginTransaction();
-
-                                                for (int i = 0; i < selected.length; i++)
-                                                    if (dirty[i])
-                                                        EntityOperation.queue(context, message, EntityOperation.KEYWORD, keywords[i], selected[i]);
-
-                                                db.setTransactionSuccessful();
-                                            } finally {
-                                                db.endTransaction();
-                                            }
-
-                                            return null;
-                                        }
-
-                                        @Override
-                                        protected void onException(Bundle args, Throwable ex) {
-                                            Helper.unexpectedError(context, owner, ex);
-                                        }
-                                    }.execute(context, owner, args, "message:keywords:managa");
-                                }
-                            })
-                            .setNeutralButton(R.string.title_add, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    View view = LayoutInflater.from(context).inflate(R.layout.dialog_keyword, null);
-                                    final EditText etKeyword = view.findViewById(R.id.etKeyword);
-                                    etKeyword.setText(null);
-                                    new DialogBuilderLifecycle(context, owner)
-                                            .setView(view)
-                                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    if (!Helper.isPro(context)) {
-                                                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                                                        lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
-                                                        return;
-                                                    }
-
-                                                    String keyword = Helper.sanitizeKeyword(etKeyword.getText().toString());
-                                                    if (!TextUtils.isEmpty(keyword)) {
-                                                        args.putString("keyword", keyword);
-
-                                                        new SimpleTask<Void>() {
-                                                            @Override
-                                                            protected Void onExecute(Context context, Bundle args) {
-                                                                EntityMessage message = (EntityMessage) args.getSerializable("message");
-                                                                String keyword = args.getString("keyword");
-
-                                                                EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, true);
-                                                                return null;
-                                                            }
-
-                                                            @Override
-                                                            protected void onException(Bundle args, Throwable ex) {
-                                                                Helper.unexpectedError(context, owner, ex);
-                                                            }
-                                                        }.execute(context, owner, args, "message:keyword:add");
-                                                    }
-                                                }
-                                            }).show();
-                                }
-                            })
-                            .show();
+                    FragmentKeywordManage fragment = new FragmentKeywordManage();
+                    fragment.setArguments(args);
+                    fragment.show(parentFragment.getFragmentManager(), "keyword:manage");
                 }
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:keywords");
         }
@@ -2845,49 +2442,39 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     PackageManager pm = context.getPackageManager();
                     if (share.resolveActivity(pm) == null)
-                        Snackbar.make(parentView, R.string.title_no_viewer, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(parentFragment.getView(),
+                                R.string.title_no_viewer, Snackbar.LENGTH_LONG).show();
                     else
                         context.startActivity(share);
                 }
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:share");
         }
 
-        private void onMenuPrint(final TupleMessageEx message) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        private void onMenuPrint(TupleMessageEx message) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             if (prefs.getBoolean("print_html_confirmed", false)) {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                lbm.sendBroadcast(
-                        new Intent(ActivityView.ACTION_PRINT)
-                                .putExtra("id", message.id));
+                Bundle args = new Bundle();
+                args.putLong("id", message.id);
+                Intent data = new Intent();
+                data.putExtra("args", args);
+                parentFragment.onActivityResult(FragmentMessages.REQUEST_PRINT, RESULT_OK, data);
                 return;
             }
 
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_again, null);
-            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
-            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+            Bundle aargs = new Bundle();
+            aargs.putString("question", context.getString(R.string.title_ask_show_html));
+            aargs.putString("notagain", "print_html_confirmed");
+            aargs.putLong("id", message.id);
 
-            tvMessage.setText(context.getText(R.string.title_ask_show_html));
-
-            new DialogBuilderLifecycle(context, owner)
-                    .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (cbNotAgain.isChecked())
-                                prefs.edit().putBoolean("print_html_confirmed", true).apply();
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                            lbm.sendBroadcast(
-                                    new Intent(ActivityView.ACTION_PRINT)
-                                            .putExtra("id", message.id));
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
+            FragmentDialogAsk ask = new FragmentDialogAsk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_PRINT);
+            ask.show(parentFragment.getFragmentManager(), "message:print");
         }
 
         private void onMenuShowHeaders(TupleMessageEx message) {
@@ -2927,7 +2514,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(context, owner, ex);
+                        Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                     }
                 }.execute(context, owner, args, "message:headers");
             } else
@@ -2965,7 +2552,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(context, owner, ex);
+                        Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                     }
                 }.execute(context, owner, args, "message:raw");
             } else {
@@ -3071,112 +2658,31 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onActionDelete(final ActionData data) {
             if (data.delete) {
-                // No trash or is trash
-                new DialogBuilderLifecycle(context, owner)
-                        .setMessage(R.string.title_ask_delete)
-                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Bundle args = new Bundle();
-                                args.putLong("id", data.message.id);
+                Bundle aargs = new Bundle();
+                aargs.putString("question", context.getString(R.string.title_ask_delete));
+                aargs.putLong("id", data.message.id);
 
-                                new SimpleTask<Void>() {
-                                    @Override
-                                    protected Void onExecute(Context context, Bundle args) {
-                                        long id = args.getLong("id");
-
-                                        DB db = DB.getInstance(context);
-                                        try {
-                                            db.beginTransaction();
-
-                                            EntityMessage message = db.message().getMessage(id);
-                                            if (message == null)
-                                                return null;
-
-                                            EntityFolder folder = db.folder().getFolder(message.folder);
-                                            if (folder == null)
-                                                return null;
-
-                                            if (EntityFolder.OUTBOX.equals(folder.type)) {
-                                                db.message().deleteMessage(id);
-
-                                                db.folder().setFolderError(message.folder, null);
-                                                if (message.identity != null) {
-                                                    db.identity().setIdentityError(message.identity, null);
-
-                                                    NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                                                    nm.cancel("send:" + message.identity, 1);
-                                                }
-                                            } else
-                                                EntityOperation.queue(context, message, EntityOperation.DELETE);
-
-                                            db.setTransactionSuccessful();
-                                        } finally {
-                                            db.endTransaction();
-                                        }
-
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onException(Bundle args, Throwable ex) {
-                                        Helper.unexpectedError(context, owner, ex);
-                                    }
-                                }.execute(context, owner, args, "message:delete");
-                            }
-                        })
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show();
+                FragmentDialogAsk ask = new FragmentDialogAsk();
+                ask.setArguments(aargs);
+                ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_DELETE);
+                ask.show(parentFragment.getFragmentManager(), "message:delete");
             } else
-                properties.move(data.message.id, EntityFolder.TRASH, true);
+                properties.move(data.message.id, EntityFolder.TRASH);
         }
 
         private void onActionMove(final TupleMessageEx message, final boolean copy) {
-            DialogFolder.show(
-                    context, owner, parentView,
-                    copy ? R.string.title_copy_to : R.string.title_move_to_folder,
-                    message.account, Arrays.asList(message.folder),
-                    new DialogFolder.IDialogFolder() {
-                        @Override
-                        public void onFolderSelected(TupleFolderEx folder) {
-                            if (copy) {
-                                Bundle args = new Bundle();
-                                args.putLong("id", message.id);
-                                args.putLong("target", folder.id);
+            Bundle args = new Bundle();
+            args.putString("title", context.getString(copy ? R.string.title_copy_to : R.string.title_move_to_folder));
+            args.putLong("account", message.account);
+            args.putLongArray("disabled", new long[]{message.folder});
+            args.putLong("message", message.id);
+            args.putBoolean("copy", copy);
+            args.putBoolean("similar", false);
 
-                                new SimpleTask<Void>() {
-                                    @Override
-                                    protected Void onExecute(Context context, Bundle args) {
-                                        long id = args.getLong("id");
-                                        long target = args.getLong("target");
-
-                                        DB db = DB.getInstance(context);
-                                        try {
-                                            db.beginTransaction();
-
-                                            EntityMessage message = db.message().getMessage(id);
-                                            if (message == null)
-                                                return null;
-
-                                            EntityOperation.queue(context, message, EntityOperation.COPY, target);
-
-                                            db.setTransactionSuccessful();
-                                        } finally {
-                                            db.endTransaction();
-                                        }
-
-                                        return null;
-                                    }
-
-                                    @Override
-                                    protected void onException(Bundle args, Throwable ex) {
-                                        Helper.unexpectedError(context, owner, ex);
-                                    }
-                                }.execute(context, owner, args, "message:copy");
-                            } else
-                                properties.move(message.id, folder.name, false);
-                        }
-                    });
+            FragmentDialogFolder fragment = new FragmentDialogFolder();
+            fragment.setArguments(args);
+            fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_MOVE);
+            fragment.show(parentFragment.getFragmentManager(), "message:move");
         }
 
         private void onActionMoveOutbox(ActionData data) {
@@ -3238,17 +2744,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:move:draft");
         }
 
         private void onActionArchive(ActionData data) {
-            properties.move(data.message.id, EntityFolder.ARCHIVE, true);
+            properties.move(data.message.id, EntityFolder.ARCHIVE);
         }
 
         private void onActionMoveJunk(ActionData data) {
-            properties.move(data.message.id, EntityFolder.INBOX, true);
+            properties.move(data.message.id, EntityFolder.INBOX);
         }
 
         private void onActionReplyMenu(final ActionData data) {
@@ -3322,7 +2828,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:reply");
         }
@@ -3345,7 +2851,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onExecuted(Bundle args, List<EntityAnswer> answers) {
                     if (answers == null || answers.size() == 0) {
                         Snackbar snackbar = Snackbar.make(
-                                parentView,
+                                parentFragment.getView(),
                                 context.getString(R.string.title_no_answers),
                                 Snackbar.LENGTH_LONG);
                         snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
@@ -3387,7 +2893,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(context, owner, ex);
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, new Bundle(), "message:answer");
         }
@@ -3407,23 +2913,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    AdapterMessage(Context context, LifecycleOwner owner, View parentView,
-                   ViewType viewType, boolean compact, int zoom, String sort, boolean filter_duplicates, final IProperties properties) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
-
-        this.context = context;
-        this.owner = owner;
-        this.inflater = LayoutInflater.from(context);
-        this.parentView = parentView;
+    AdapterMessage(Fragment parentFragment,
+                   ViewType viewType, boolean compact, int zoom, String sort, boolean filter_duplicates,
+                   final IProperties properties) {
+        this.parentFragment = parentFragment;
         this.viewType = viewType;
         this.compact = compact;
         this.zoom = zoom;
         this.sort = sort;
         this.filter_duplicates = filter_duplicates;
-        this.suitable = ConnectionHelper.getNetworkState(context).isSuitable();
         this.properties = properties;
+
+        this.context = parentFragment.getContext();
+        this.owner = parentFragment.getViewLifecycleOwner();
+        this.suitable = ConnectionHelper.getNetworkState(context).isSuitable();
+        this.inflater = LayoutInflater.from(context);
+        this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
 
         this.dp36 = Helper.dp2pixels(context, 36);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
@@ -3437,6 +2942,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
         this.avatars = (prefs.getBoolean("avatars", true) ||
@@ -3461,6 +2967,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     gotoTop = false;
                     properties.scrollTo(0);
                 }
+            }
+        });
+
+        owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            public void onDestroyed() {
+                Log.i(AdapterMessage.this + " parent destroyed");
+                AdapterMessage.this.parentFragment = null;
+                AdapterMessage.this.context = null;
+                AdapterMessage.this.owner = null;
             }
         });
     }
@@ -3887,8 +3403,542 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         void scrollBy(int dx, int dy);
 
-        void move(long id, String target, boolean type);
+        void move(long id, String type);
 
         void finish();
+    }
+
+    public static class FragmentDialogLink extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean paranoid = prefs.getBoolean("paranoid", true);
+
+            final Uri uri = getArguments().getParcelable("uri");
+            String title = getArguments().getString("title");
+
+            final Uri sanitized;
+            if (uri.isOpaque())
+                sanitized = uri;
+            else {
+                // https://en.wikipedia.org/wiki/UTM_parameters
+                Uri.Builder builder = uri.buildUpon();
+
+                builder.clearQuery();
+                for (String key : uri.getQueryParameterNames())
+                    if (!PARANOID_QUERY.contains(key.toLowerCase()))
+                        for (String value : uri.getQueryParameters(key))
+                            if (!TextUtils.isEmpty(key)) {
+                                Log.i("Query " + key + "=" + value);
+                                builder.appendQueryParameter(key, value);
+                            }
+
+                sanitized = builder.build();
+            }
+
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_open_link, null);
+            TextView tvTitle = view.findViewById(R.id.tvTitle);
+            final EditText etLink = view.findViewById(R.id.etLink);
+            final CheckBox cbSecure = view.findViewById(R.id.cbSecure);
+            CheckBox cbSanitize = view.findViewById(R.id.cbSanitize);
+            final TextView tvOwner = view.findViewById(R.id.tvOwner);
+            final TextView tvHost = view.findViewById(R.id.tvHost);
+            final Group grpOwner = view.findViewById(R.id.grpOwner);
+
+            tvTitle.setText(title);
+            tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
+
+            cbSecure.setVisibility(View.GONE);
+            etLink.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence text, int i, int i1, int i2) {
+                }
+
+                @Override
+                public void afterTextChanged(Editable text) {
+                    Uri uri = Uri.parse(text.toString());
+                    cbSecure.setVisibility(!uri.isOpaque() &&
+                            ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                            ? View.VISIBLE : View.GONE);
+                }
+            });
+            etLink.setText(uri.toString());
+
+            boolean secure = "https".equals(uri.getScheme());
+            cbSecure.setChecked(secure);
+            cbSecure.setText(
+                    secure ? R.string.title_link_secured : R.string.title_secure_link);
+            cbSecure.setTextColor(Helper.resolveColor(getContext(),
+                    secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
+            cbSecure.setTypeface(
+                    secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+            cbSecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                    Uri uri = Uri.parse(etLink.getText().toString());
+                    Uri.Builder builder = uri.buildUpon();
+
+                    builder.scheme(checked ? "https" : "http");
+
+                    String authority = uri.getEncodedAuthority();
+                    if (authority != null) {
+                        authority = authority.replace(checked ? ":80" : ":443", checked ? ":443" : ":80");
+                        builder.encodedAuthority(authority);
+                    }
+
+                    etLink.setText(builder.build().toString());
+
+                    cbSecure.setText(
+                            checked ? R.string.title_link_secured : R.string.title_secure_link);
+                    cbSecure.setTextColor(Helper.resolveColor(getContext(),
+                            checked ? android.R.attr.textColorSecondary : R.attr.colorWarning));
+                    cbSecure.setTypeface(
+                            checked ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+                }
+            });
+
+            cbSanitize.setVisibility(uri.equals(sanitized) ? View.GONE : View.VISIBLE);
+            cbSanitize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                    if (checked)
+                        etLink.setText(sanitized.toString());
+                    else
+                        etLink.setText(uri.toString());
+                }
+            });
+
+            grpOwner.setVisibility(View.GONE);
+
+            if (paranoid) {
+                // TODO: spinner
+                Bundle args = new Bundle();
+                args.putParcelable("uri", uri);
+
+                new SimpleTask<String[]>() {
+                    @Override
+                    protected void onPreExecute(Bundle args) {
+                        tvOwner.setText("…");
+                        grpOwner.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    protected String[] onExecute(Context context, Bundle args) throws Throwable {
+                        Uri uri = args.getParcelable("uri");
+                        return IPInfo.getOrganization(uri);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, String[] data) {
+                        String host = data[0];
+                        String organization = data[1];
+                        tvHost.setText(host);
+                        tvOwner.setText(organization == null ? "?" : organization);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        if (ex instanceof UnknownHostException)
+                            grpOwner.setVisibility(View.GONE);
+                        else
+                            tvOwner.setText(ex.getMessage());
+                    }
+                }.execute(getContext(), getActivity(), args, "link:domain");
+            }
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(view)
+                    .setPositiveButton(R.string.title_yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Uri uri = Uri.parse(etLink.getText().toString());
+                            Helper.view(getContext(), uri, false);
+                        }
+                    })
+                    .setNeutralButton(R.string.title_browse, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Uri uri = Uri.parse(etLink.getText().toString());
+                            Helper.view(getContext(), uri, true);
+                        }
+                    })
+                    .setNegativeButton(R.string.title_no, null)
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogImage extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final PhotoView pv = new PhotoView(getContext());
+
+            new SimpleTask<Drawable>() {
+                @Override
+                protected Drawable onExecute(Context context, Bundle args) throws Throwable {
+                    long id = args.getLong("id");
+                    String source = args.getString("source");
+                    return HtmlHelper.decodeImage(context, id, source, true, null);
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, Drawable drawable) {
+                    pv.setImageDrawable(drawable);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(getFragmentManager(), ex);
+                }
+            }.execute(getContext(), getActivity(), getArguments(), "view:image");
+
+            // TODO: dialog fragment
+            final Dialog dialog = new Dialog(getContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            dialog.setContentView(pv);
+
+            return dialog;
+        }
+    }
+
+    public static class FragmentDialogFull extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_ask_again, null);
+            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            tvMessage.setText(getText(R.string.title_ask_show_html));
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getArguments().putString("name", "confirmed");
+                            getArguments().putBoolean("value", true);
+
+                            if (cbNotAgain.isChecked()) {
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                                prefs.edit().putBoolean("show_html_confirmed", true).apply();
+                            }
+
+                            FragmentDialogWebView fragment = new FragmentDialogWebView();
+                            fragment.setArguments(getArguments());
+                            fragment.show(getFragmentManager(), "message:full");
+
+                            sendResult(RESULT_OK);
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogWebView extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            boolean show_images = getArguments().getBoolean("show_images");
+            float textSize = getArguments().getFloat("text_size");
+
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_webview, null);
+            final WebView webView = dview.findViewById(R.id.webView);
+            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
+
+            setupWebView(webView);
+
+            WebSettings settings = webView.getSettings();
+            settings.setDefaultFontSize(Math.round(textSize));
+            settings.setDefaultFixedFontSize(Math.round(textSize));
+            settings.setLoadsImagesAutomatically(show_images);
+            settings.setBuiltInZoomControls(true);
+            settings.setDisplayZoomControls(false);
+
+            Dialog dialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
+            dialog.setContentView(dview);
+
+            new SimpleTask<String>() {
+                @Override
+                protected void onPreExecute(Bundle args) {
+                    webView.setVisibility(View.GONE);
+                    pbWait.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                protected void onPostExecute(Bundle args) {
+                    pbWait.setVisibility(View.GONE);
+                }
+
+                @Override
+                protected String onExecute(Context context, Bundle args) throws Throwable {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null || !message.content)
+                        return null;
+
+                    File file = message.getFile(context);
+                    if (!file.exists())
+                        return null;
+
+                    String html = HtmlHelper.getHtmlEmbedded(context, id, Helper.readText(file));
+
+                    // Remove viewport limitations
+                    Document doc = Jsoup.parse(html);
+                    for (Element meta : doc.select("meta").select("[name=viewport]")) {
+                        String content = meta.attr("content");
+                        String[] params = content.split(";");
+                        if (params.length > 0) {
+                            List<String> viewport = new ArrayList<>();
+                            for (String param : params)
+                                if (!param.toLowerCase().contains("maximum-scale") &&
+                                        !param.toLowerCase().contains("user-scalable"))
+                                    viewport.add(param.trim());
+
+                            if (viewport.size() == 0)
+                                meta.attr("content", "");
+                            else
+                                meta.attr("content", TextUtils.join(" ;", viewport) + ";");
+                        }
+                    }
+
+                    return doc.html();
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, String html) {
+                    webView.loadDataWithBaseURL("", html, "text/html", "UTF-8", null);
+                    webView.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(getFragmentManager(), ex);
+                }
+            }.execute(getContext(), getActivity(), getArguments(), "message:full");
+
+            return dialog;
+        }
+
+        private void setupWebView(WebView webView) {
+            webView.setWebViewClient(new WebViewClient() {
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    Log.i("Open url=" + url);
+
+                    Uri uri = Uri.parse(url);
+                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                        return false;
+
+                    Bundle args = new Bundle();
+                    args.putParcelable("uri", uri);
+                    args.putString("title", null);
+
+                    FragmentDialogLink fragment = new FragmentDialogLink();
+                    fragment.setArguments(args);
+                    fragment.show(getFragmentManager(), "open:link");
+
+                    return true;
+                }
+            });
+
+            webView.setDownloadListener(new DownloadListener() {
+                public void onDownloadStart(
+                        String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                    Log.i("Download url=" + url + " mime type=" + mimetype);
+
+                    Uri uri = Uri.parse(url);
+                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                        return;
+
+                    Helper.view(getContext(), uri, true);
+                }
+            });
+
+            webView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    WebView.HitTestResult result = ((WebView) view).getHitTestResult();
+                    if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
+                            result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                        Log.i("Long press url=" + result.getExtra());
+
+                        Uri uri = Uri.parse(result.getExtra());
+                        if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                            return false;
+
+                        Helper.view(getContext(), uri, true);
+
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            WebSettings settings = webView.getSettings();
+            settings.setUseWideViewPort(true);
+            settings.setLoadWithOverviewMode(true);
+            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            settings.setAllowFileAccess(false);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean monospaced = prefs.getBoolean("monospaced", false);
+            if (monospaced)
+                settings.setStandardFontFamily("monospace");
+        }
+    }
+
+    public static class FragmentKeywordManage extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final long id = getArguments().getLong("id");
+            List<String> keywords = Arrays.asList(getArguments().getStringArray("keywords"));
+            List<String> fkeywords = Arrays.asList(getArguments().getStringArray("fkeywords"));
+
+            final List<String> items = new ArrayList<>(keywords);
+            for (String keyword : fkeywords)
+                if (!items.contains(keyword))
+                    items.add(keyword);
+
+            Collections.sort(items);
+
+            final boolean[] selected = new boolean[items.size()];
+            final boolean[] dirty = new boolean[items.size()];
+            for (int i = 0; i < selected.length; i++) {
+                selected[i] = keywords.contains(items.get(i));
+                dirty[i] = false;
+            }
+
+            return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.title_manage_keywords)
+                    .setMultiChoiceItems(items.toArray(new String[0]), selected, new DialogInterface.OnMultiChoiceClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                            dirty[which] = true;
+                        }
+                    })
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (!Helper.isPro(getContext())) {
+                                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                                lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                                return;
+                            }
+
+                            Bundle args = new Bundle();
+                            args.putLong("id", id);
+                            args.putStringArray("keywords", items.toArray(new String[0]));
+                            args.putBooleanArray("selected", selected);
+                            args.putBooleanArray("dirty", dirty);
+
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    long id = args.getLong("id");
+                                    String[] keywords = args.getStringArray("keywords");
+                                    boolean[] selected = args.getBooleanArray("selected");
+                                    boolean[] dirty = args.getBooleanArray("dirty");
+
+                                    DB db = DB.getInstance(context);
+                                    try {
+                                        db.beginTransaction();
+
+                                        EntityMessage message = db.message().getMessage(id);
+                                        if (message == null)
+                                            return null;
+
+                                        for (int i = 0; i < selected.length; i++)
+                                            if (dirty[i])
+                                                EntityOperation.queue(context, message, EntityOperation.KEYWORD, keywords[i], selected[i]);
+
+                                        db.setTransactionSuccessful();
+                                    } finally {
+                                        db.endTransaction();
+                                    }
+
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Helper.unexpectedError(getFragmentManager(), ex);
+                                }
+                            }.execute(getContext(), getActivity(), args, "message:keywords:manage");
+                        }
+                    })
+                    .setNeutralButton(R.string.title_add, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Bundle args = new Bundle();
+                            args.putLong("id", id);
+
+                            FragmentKeywordAdd fragment = new FragmentKeywordAdd();
+                            fragment.setArguments(args);
+                            fragment.show(getFragmentManager(), "keyword:add");
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentKeywordAdd extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final long id = getArguments().getLong("id");
+
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_keyword, null);
+            final EditText etKeyword = view.findViewById(R.id.etKeyword);
+            etKeyword.setText(null);
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (!Helper.isPro(getContext())) {
+                                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                                lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                                return;
+                            }
+
+                            String keyword = Helper.sanitizeKeyword(etKeyword.getText().toString());
+                            if (!TextUtils.isEmpty(keyword)) {
+                                Bundle args = new Bundle();
+                                args.putLong("id", id);
+                                args.putString("keyword", keyword);
+
+                                new SimpleTask<Void>() {
+                                    @Override
+                                    protected Void onExecute(Context context, Bundle args) {
+                                        long id = args.getLong("id");
+                                        String keyword = args.getString("keyword");
+
+                                        DB db = DB.getInstance(context);
+                                        EntityMessage message = db.message().getMessage(id);
+                                        if (message == null)
+                                            return null;
+
+                                        EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, true);
+                                        return null;
+                                    }
+
+                                    @Override
+                                    protected void onException(Bundle args, Throwable ex) {
+                                        Helper.unexpectedError(getFragmentManager(), ex);
+                                    }
+                                }.execute(getContext(), getActivity(), args, "message:keyword:add");
+                            }
+                        }
+                    }).create();
+        }
     }
 }

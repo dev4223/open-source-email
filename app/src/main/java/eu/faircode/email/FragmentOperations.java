@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -71,7 +73,7 @@ public class FragmentOperations extends FragmentBase {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvOperation.setLayoutManager(llm);
 
-        adapter = new AdapterOperation(getContext(), getViewLifecycleOwner());
+        adapter = new AdapterOperation(this);
         rvOperation.setAdapter(adapter);
 
         // Initialize
@@ -122,7 +124,7 @@ public class FragmentOperations extends FragmentBase {
                 onMenuHelp();
                 return true;
             case R.id.menu_delete:
-                onMenuDelete();
+                new DialogDelete().show(getFragmentManager(), "operations:delete");
                 return true;
 
             default:
@@ -134,41 +136,45 @@ public class FragmentOperations extends FragmentBase {
         startActivity(getFAQIntent());
     }
 
-    private void onMenuDelete() {
-        new DialogBuilderLifecycle(getContext(), getViewLifecycleOwner())
-                .setMessage(R.string.title_delete_operation)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        new SimpleTask<Void>() {
-                            @Override
-                            protected Void onExecute(Context context, Bundle args) {
-                                DB db = DB.getInstance(context);
-                                List<EntityOperation> ops = db.operation().getOperationsError();
-                                Log.i("Operations with error count=" + ops.size());
-                                for (EntityOperation op : ops) {
-                                    Log.w("Deleting operation=" + op.id + " error=" + op.error);
-                                    if (op.message != null)
-                                        db.message().setMessageUiHide(op.message, 0L);
-                                    db.operation().deleteOperation(op.id);
-                                }
-                                return null;
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getContext(), getViewLifecycleOwner(), ex);
-                            }
-                        }.execute(FragmentOperations.this, new Bundle(), "operation:delete");
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
-    }
-
     private Intent getFAQIntent() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq3"));
         return intent;
+    }
+
+    public static class DialogDelete extends DialogFragmentEx {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            return new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.title_delete_operation)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    DB db = DB.getInstance(context);
+                                    List<EntityOperation> ops = db.operation().getOperationsError();
+                                    Log.i("Operations with error count=" + ops.size());
+                                    for (EntityOperation op : ops) {
+                                        Log.w("Deleting operation=" + op.id + " error=" + op.error);
+                                        if (op.message != null)
+                                            db.message().setMessageUiHide(op.message, 0L);
+                                        db.operation().deleteOperation(op.id);
+                                    }
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Helper.unexpectedError(getFragmentManager(), ex);
+                                }
+                            }.execute(getContext(), getActivity(), new Bundle(), "operations:delete");
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+        }
     }
 }

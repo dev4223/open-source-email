@@ -26,7 +26,10 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.OnLifecycleEvent;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
@@ -74,7 +77,17 @@ public class AdapterRuleMatch extends RecyclerView.Adapter<AdapterRuleMatch.View
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
+
         setHasStableIds(true);
+
+        owner.getLifecycle().addObserver(new LifecycleObserver() {
+            @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+            public void onDestroyed() {
+                Log.i(AdapterRuleMatch.this + " parent destroyed");
+                AdapterRuleMatch.this.context = null;
+                AdapterRuleMatch.this.owner = null;
+            }
+        });
     }
 
     public void set(@NonNull List<EntityMessage> messages) {
