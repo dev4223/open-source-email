@@ -158,8 +158,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         }
 
         private void bindTo(final TupleFolderEx folder) {
+            view.setEnabled(folder.selectable);
             view.setActivated(folder.tbc != null || folder.tbd != null);
-            view.setAlpha(folder.hide || disabledIds.contains(folder.id) ? Helper.LOW_LIGHT : 1.0f);
+            view.setAlpha(folder.hide || !folder.selectable || disabledIds.contains(folder.id)
+                    ? Helper.LOW_LIGHT : 1.0f);
 
             if (textSize != 0)
                 tvName.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
@@ -293,7 +295,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             if (view.getId() == R.id.ivExpander)
                 onCollapse(folder);
-            else {
+            else if (folder.selectable) {
                 if (listener == null) {
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     lbm.sendBroadcast(
@@ -345,7 +347,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 return false;
 
             final TupleFolderEx folder = items.get(pos);
-            if (folder.tbd != null)
+            if (!folder.selectable || folder.tbd != null)
                 return false;
 
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, view);
@@ -378,7 +380,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_enabled, 9, R.string.title_synchronize_enabled)
                         .setCheckable(true).setChecked(folder.synchronize);
 
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_rules, 10, R.string.title_edit_rules);
+                if (!folder.read_only)
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_rules, 10, R.string.title_edit_rules);
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_properties, 11, R.string.title_edit_properties);
 
                 if (folder.notify && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
