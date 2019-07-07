@@ -53,6 +53,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.ArrowKeyMovementMethod;
+import android.text.method.LinkMovementMethod;
 import android.text.style.DynamicDrawableSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
@@ -117,7 +118,6 @@ import org.jsoup.nodes.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -885,7 +885,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0
                     ? message.color == null || !Helper.isPro(context)
                     ? colorAccent : message.color : textColorSecondary));
-            ivFlagged.setVisibility(flags ? (message.uid == null ? View.INVISIBLE : View.VISIBLE) : View.GONE);
+            ivFlagged.setVisibility(flags && !message.folderReadOnly
+                    ? message.uid == null ? View.INVISIBLE : View.VISIBLE
+                    : View.GONE);
         }
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
@@ -1119,25 +1121,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     bnvActions.getMenu().findItem(R.id.action_more).setVisible(!inOutbox);
 
-                    bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
-                            (inTrash && (message.uid != null || message.msgid != null)) ||
-                            (!inTrash && hasTrash && message.uid != null));
-                    bnvActions.getMenu().findItem(R.id.action_delete).setTitle(
-                            data.delete ? R.string.title_delete : R.string.title_trash);
+                    if (!message.folderReadOnly) {
+                        bnvActions.getMenu().findItem(R.id.action_delete).setVisible(debug ||
+                                (inTrash && (message.uid != null || message.msgid != null)) ||
+                                (!inTrash && hasTrash && message.uid != null));
+                        bnvActions.getMenu().findItem(R.id.action_delete).setTitle(
+                                data.delete ? R.string.title_delete : R.string.title_trash);
 
-                    bnvActions.getMenu().findItem(R.id.action_move).setVisible(
-                            message.uid != null || inOutbox);
-                    bnvActions.getMenu().findItem(R.id.action_move).setTitle(
-                            inOutbox ? R.string.title_folder_drafts : R.string.title_move);
-                    bnvActions.getMenu().findItem(R.id.action_move).setIcon(
-                            inOutbox ? R.drawable.baseline_drafts_24 : R.drawable.baseline_folder_24);
+                        bnvActions.getMenu().findItem(R.id.action_move).setVisible(
+                                message.uid != null || inOutbox);
+                        bnvActions.getMenu().findItem(R.id.action_move).setTitle(
+                                inOutbox ? R.string.title_folder_drafts : R.string.title_move);
+                        bnvActions.getMenu().findItem(R.id.action_move).setIcon(
+                                inOutbox ? R.drawable.baseline_drafts_24 : R.drawable.baseline_folder_24);
 
-                    bnvActions.getMenu().findItem(R.id.action_archive).setVisible(
-                            message.uid != null && (inJunk || (!inArchive && hasArchive)));
-                    bnvActions.getMenu().findItem(R.id.action_archive).setTitle(
-                            inJunk ? R.string.title_folder_inbox : R.string.title_archive);
-                    bnvActions.getMenu().findItem(R.id.action_archive).setIcon(
-                            inJunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_archive_24);
+                        bnvActions.getMenu().findItem(R.id.action_archive).setVisible(
+                                message.uid != null && (inJunk || (!inArchive && hasArchive)));
+                        bnvActions.getMenu().findItem(R.id.action_archive).setTitle(
+                                inJunk ? R.string.title_folder_inbox : R.string.title_archive);
+                        bnvActions.getMenu().findItem(R.id.action_archive).setIcon(
+                                inJunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_archive_24);
+                    }
 
                     bnvActions.getMenu().findItem(R.id.action_reply).setEnabled(message.content);
                     bnvActions.getMenu().findItem(R.id.action_reply).setVisible(!inOutbox);
@@ -1490,7 +1494,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean doubletap = prefs.getBoolean("doubletap", false);
 
-                    if (!doubletap || EntityFolder.OUTBOX.equals(message.folderType)) {
+                    if (!doubletap || message.folderReadOnly || EntityFolder.OUTBOX.equals(message.folderType)) {
                         lbm.sendBroadcast(viewThread);
                         return;
                     }
@@ -1548,7 +1552,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         @Override
         public boolean onLongClick(View view) {
             final TupleMessageEx message = getMessage();
-            if (message == null)
+            if (message == null || message.folderReadOnly)
                 return false;
 
             if (view.getId() == R.id.ivFlagged) {
@@ -2583,13 +2587,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(data.message.content);
 
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null);
-            popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(data.message.uid != null && !data.message.folderReadOnly);
+            popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(data.message.uid != null && !data.message.folderReadOnly);
 
-            popupMenu.getMenu().findItem(R.id.menu_copy).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_copy).setEnabled(data.message.uid != null && !data.message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(debug);
 
-            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(data.message.uid != null && !data.message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(
                     data.hasJunk && !EntityFolder.JUNK.equals(data.message.folderType));
 
@@ -2605,7 +2609,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_raw).setTitle(
                     data.message.raw == null || !data.message.raw ? R.string.title_raw_download : R.string.title_raw_save);
 
-            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(data.message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(data.message.uid != null && !data.message.folderReadOnly);
 
             popupMenu.getMenu().findItem(R.id.menu_decrypt).setEnabled(
                     data.message.content && data.message.to != null && data.message.to.length > 0);
@@ -3423,9 +3427,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            boolean paranoid = prefs.getBoolean("paranoid", true);
-
             final Uri uri = getArguments().getParcelable("uri");
             String title = getArguments().getString("title");
 
@@ -3453,6 +3454,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final EditText etLink = view.findViewById(R.id.etLink);
             final CheckBox cbSecure = view.findViewById(R.id.cbSecure);
             CheckBox cbSanitize = view.findViewById(R.id.cbSanitize);
+            final Button btnOwner = view.findViewById(R.id.btnOwner);
+            TextView tvOwnerRemark = view.findViewById(R.id.tvOwnerRemark);
+            final ContentLoadingProgressBar pbWait = view.findViewById(R.id.pbWait);
             final TextView tvOwner = view.findViewById(R.id.tvOwner);
             final TextView tvHost = view.findViewById(R.id.tvHost);
             final Group grpOwner = view.findViewById(R.id.grpOwner);
@@ -3488,6 +3492,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
             cbSecure.setTypeface(
                     secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+
             cbSecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -3514,6 +3519,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             });
 
             cbSanitize.setVisibility(uri.equals(sanitized) ? View.GONE : View.VISIBLE);
+
             cbSanitize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -3524,43 +3530,52 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
 
+            tvOwnerRemark.setMovementMethod(LinkMovementMethod.getInstance());
+            pbWait.setVisibility(View.GONE);
             grpOwner.setVisibility(View.GONE);
 
-            if (paranoid) {
-                // TODO: spinner
-                Bundle args = new Bundle();
-                args.putParcelable("uri", uri);
+            btnOwner.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Bundle args = new Bundle();
+                    args.putParcelable("uri", uri);
 
-                new SimpleTask<String[]>() {
-                    @Override
-                    protected void onPreExecute(Bundle args) {
-                        tvOwner.setText("…");
-                        grpOwner.setVisibility(View.VISIBLE);
-                    }
-
-                    @Override
-                    protected String[] onExecute(Context context, Bundle args) throws Throwable {
-                        Uri uri = args.getParcelable("uri");
-                        return IPInfo.getOrganization(uri);
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, String[] data) {
-                        String host = data[0];
-                        String organization = data[1];
-                        tvHost.setText(host);
-                        tvOwner.setText(organization == null ? "?" : organization);
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        if (ex instanceof UnknownHostException)
+                    new SimpleTask<String[]>() {
+                        @Override
+                        protected void onPreExecute(Bundle args) {
+                            btnOwner.setEnabled(false);
+                            pbWait.setVisibility(View.VISIBLE);
                             grpOwner.setVisibility(View.GONE);
-                        else
+                        }
+
+                        @Override
+                        protected void onPostExecute(Bundle args) {
+                            btnOwner.setEnabled(true);
+                            pbWait.setVisibility(View.GONE);
+                            grpOwner.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        protected String[] onExecute(Context context, Bundle args) throws Throwable {
+                            Uri uri = args.getParcelable("uri");
+                            return IPInfo.getOrganization(uri);
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, String[] data) {
+                            String host = data[0];
+                            String organization = data[1];
+                            tvHost.setText(host);
+                            tvOwner.setText(organization == null ? "?" : organization);
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
                             tvOwner.setText(ex.getMessage());
-                    }
-                }.execute(getContext(), getActivity(), args, "link:domain");
-            }
+                        }
+                    }.execute(getContext(), getActivity(), args, "link:owner");
+                }
+            });
 
             return new AlertDialog.Builder(getContext())
                     .setView(view)
@@ -3661,12 +3676,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final WebView webView = dview.findViewById(R.id.webView);
             final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
 
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean inline = prefs.getBoolean("inline_images", false);
+
             setupWebView(webView);
 
             WebSettings settings = webView.getSettings();
             settings.setDefaultFontSize(Math.round(textSize));
             settings.setDefaultFixedFontSize(Math.round(textSize));
-            settings.setLoadsImagesAutomatically(show_images);
+            settings.setLoadsImagesAutomatically(show_images || inline);
+            settings.setBlockNetworkImage(!show_images);
             settings.setBuiltInZoomControls(true);
             settings.setDisplayZoomControls(false);
 
