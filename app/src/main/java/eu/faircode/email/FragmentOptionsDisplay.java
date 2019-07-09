@@ -54,14 +54,16 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swPreview;
     private SwitchCompat swAddresses;
     private SwitchCompat swAttachmentsAlt;
+    private SwitchCompat swContrast;
     private SwitchCompat swMonospaced;
     private SwitchCompat swInline;
     private SwitchCompat swImages;
+    private SwitchCompat swRemoteContent;
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
             "theme", "startup", "date", "threading", "avatars", "identicons", "circular", "name_email", "subject_italic",
-            "flags", "preview", "addresses", "attachments_alt", "monospaced", "inline_images", "autoimages", "actionbar",
+            "flags", "preview", "addresses", "attachments_alt", "contrast", "monospaced", "inline_images", "autoimages", "autocontent", "actionbar",
     };
 
     @Override
@@ -87,9 +89,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swPreview = view.findViewById(R.id.swPreview);
         swAddresses = view.findViewById(R.id.swAddresses);
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
+        swContrast = view.findViewById(R.id.swContrast);
         swMonospaced = view.findViewById(R.id.swMonospaced);
         swInline = view.findViewById(R.id.swInline);
         swImages = view.findViewById(R.id.swImages);
+        swRemoteContent = view.findViewById(R.id.swRemoteContent);
         swActionbar = view.findViewById(R.id.swActionbar);
 
         setOptions();
@@ -198,6 +202,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        swContrast.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("contrast", checked).apply();
+            }
+        });
+
         swMonospaced.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -216,6 +227,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("autoimages", checked).apply();
+            }
+        });
+
+        swRemoteContent.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("autocontent", checked).apply();
             }
         });
 
@@ -291,9 +309,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swPreview.setChecked(prefs.getBoolean("preview", false));
         swAddresses.setChecked(prefs.getBoolean("addresses", false));
         swAttachmentsAlt.setChecked(prefs.getBoolean("attachments_alt", false));
+        swContrast.setChecked(prefs.getBoolean("contrast", false));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
         swInline.setChecked(prefs.getBoolean("inline_images", false));
         swImages.setChecked(prefs.getBoolean("autoimages", false));
+        swRemoteContent.setChecked(prefs.getBoolean("autocontent", false));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));
     }
 

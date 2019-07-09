@@ -80,6 +80,9 @@
     <string name="title_edit_folder">Ordner bearbeiten</string>
     <string name="title_setup">Einstellungen</string>
     <string name="title_setup_help">Hilfe</string>
+    <string name="title_setup_welcome">Das Empfangen und Senden von Nachrichten erfordert die Einrichtung eines Kontos und einer Identität wie in jeder anderen E-Mail-Anwendung..
+Die Schnelleinrichtung erstellt sowohl ein Konto als auch eine Identität, indem sie lediglich nach Ihrem Namen, Ihrer E-Mail-Adresse und Ihrem Passwort fragt.
+Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet werden.    </string>
     <string name="title_setup_quick">Schnelleinrichtung</string>
     <string name="title_setup_quick_remark">Um schnell ein Konto und eine Identität für die meisten Anbieter einzurichten</string>
     <string name="title_setup_quick_hint">Die Schnelleinrichtung wird Konfigurationsinformationen von autoconfig.thunderbird.net laden</string>
@@ -101,6 +104,7 @@
     <string name="title_setup_doze">Akku-Optimierung einrichten</string>
     <string name="title_setup_doze_remark">Um kontinuierlich E-Mails zu empfangen (optional)</string>
     <string name="title_setup_doze_instructions">Rufen Sie im folgendem Auswahldialog (oben) \"Alle Apps\" auf; wählen Sie anschließend FairEmail aus und bestätigen Sie die Option \"Nicht optimieren\" mit Fertig.</string>
+    <string name="title_setup_doze_battery">Hoher Akkuverbrauch?</string>
     <string name="title_setup_data">Deaktiviere Datenreduzierung</string>
     <string name="title_setup_inbox">Zu Nachrichten wechseln</string>
     <string name="title_setup_to_do">Nicht erledigt</string>
@@ -169,9 +173,11 @@
     <string name="title_advanced_preview">Nachrichtenvorschau anzeigen</string>
     <string name="title_advanced_addresses">Adressdetails standardmäßig anzeigen</string>
     <string name="title_advanced_attachments_alt">Anhänge nach dem Nachrichtentext anzeigen</string>
+    <string name="title_advanced_contrast">Hohen Kontrast für den Nachrichtentext verwenden</string>
     <string name="title_advanced_monospaced">Unproportionale Schriftart für Nachrichtentext verwenden</string>
     <string name="title_advanced_images_inline">Eingebettete Grafiken automatisch anzeigen</string>
     <string name="title_advanced_images">Für bekannte Kontakte Bilder automatisch anzeigen</string>
+    <string name="title_advanced_remote_content">Zeige Remote-Inhalte automatisch beim Betrachten von Originalnachrichten</string>
     <string name="title_advanced_actionbar">Navigationsleiste in Konversationen</string>
     <string name="title_advanced_pull_refresh">Zum Aktualisieren nach unten ziehen</string>
     <string name="title_advanced_autoscroll">Nach oben blättern, um neue Nachrichten abzurufen</string>
@@ -183,6 +189,7 @@
     <string name="title_advanced_autonext">Automatisch beim Schließen einer Konversation zur nächsten Konversation wechseln</string>
     <string name="title_advanced_autoread">Nachrichten beim Verschieben automatisch als gelesen kennzeichnen</string>
     <string name="title_advanced_automove">Verschieben von Nachrichten bestätigen</string>
+    <string name="title_advanced_tracking">Tracking-Bilder automatisch erkennen und deaktivieren</string>
     <string name="title_advanced_notify_preview">Zeige die Nachrichten-Vorschau in den Benachrichtigungen</string>
     <string name="title_advanced_notify_actions">Benachrichtigungsaktionen</string>
     <string name="title_advanced_notify_action_trash">Löschen</string>
@@ -199,7 +206,6 @@
     <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
     <string name="title_advanced_english">Englische Sprache erzwingen</string>
     <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
-    <string name="title_advanced_paranoid">Zusätzliche Datenschutzfunktionen</string>
     <string name="title_advanced_watchdog">Regelmäßig überprüfen, ob FairEmail noch aktiv ist</string>
     <string name="title_advanced_updates">Nach Aktualisierungen suchen</string>
     <string name="title_advanced_crash_reports">Fehlerbericht senden</string>
@@ -226,7 +232,6 @@
     <string name="title_advanced_badge_hint">Nur verfügbar auf unterstützten Launchern</string>
     <string name="title_advanced_subscribed_only_hint">Wenn aktiviert, werden alle lokalen Ordner ohne Abonnement gelöscht</string>
     <string name="title_advanced_english_hint">Dadurch wird die App neu gestartet</string>
-    <string name="title_advanced_paranoid_hint">Details finden Sie in der FAQ</string>
     <string name="title_advanced_debug_hint">Aktiviert zusätzliche Protokollierung und zeigt Fehlerbehebungsinformationen an verschiedenen Stellen an</string>
     <string name="title_select">Auswählen &#8230;</string>
     <string name="title_identity_name">Ihr Name</string>
@@ -322,7 +327,8 @@
     <string name="title_sync_days_remark">Eine Erhöhung dieses Werts erhöht den Akkuverbrauch und die Datennutzung</string>
     <string name="title_keep_days">E-Mails aufbewahren (Tage)</string>
     <string name="title_keep_all">Alle E-Mails aufbewahren</string>
-    <string name="title_auto_delete">Ältere Nachrichten automatisch löschen</string>
+    <string name="title_auto_trash">Alte Nachrichten automatisch in den Papierkorb verschieben</string>
+    <string name="title_auto_delete">Alte Nachrichten automatisch dauerhaft löschen</string>
     <string name="title_folder_name_missing">Ordnername fehlt</string>
     <string name="title_folder_exists">Ordner %1$s bereits vorhanden</string>
     <string name="title_folder_delete">Diesen Ordner und alle darin enthaltenen E-Mails unwiderruflich löschen?</string>
@@ -556,6 +562,7 @@
     <string name="title_legend_thread">Konversation</string>
     <string name="title_legend_zoom">Textgröße ändern</string>
     <string name="title_legend_draft">Entwurf vorhanden</string>
+    <string name="title_legend_auth">Authentifizierung fehlgeschlagen</string>
     <string name="title_legend_snoozed">Wurde zurückgestellt</string>
     <string name="title_legend_browsed">Gesehen oder gesucht</string>
     <string name="title_legend_answered">Wurde beantwortet</string>
@@ -615,6 +622,8 @@
     <string name="title_link_secured">Dieser Link ist sicher</string>
     <string name="title_sanitize_link">Tracking-Parameter entfernen</string>
     <string name="title_insecure_link">Dieser Link ist unsicher</string>
+    <string name="title_check_owner">Eigentümer prüfen</string>
+    <string name="title_remark_owner">Informationen werden abgerufen von <a href="https://ipinfo.io/">ipinfo.io</a></string>
     <string name="title_ip_owner">IP-Adresse des Eigentümers</string>
     <string name="title_select_app">App auswählen</string>
     <string name="title_updated">Es ist ein Update auf Version %1$s verfügbar</string>

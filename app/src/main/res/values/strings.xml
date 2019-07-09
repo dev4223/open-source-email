@@ -129,6 +129,7 @@
     <string name="title_setup_doze">Setup battery optimizations</string>
     <string name="title_setup_doze_remark">To continuously receive email (optional)</string>
     <string name="title_setup_doze_instructions">In the next dialog, select \"All apps\" at the top, select this app and select and confirm \"Don\'t optimize\"</string>
+    <string name="title_setup_doze_battery">High battery usage?</string>
     <string name="title_setup_data">Disable data saving</string>
     <string name="title_setup_inbox">Go to messages</string>
     <string name="title_setup_to_do">To do</string>
@@ -206,9 +207,11 @@
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_addresses">Show address details by default</string>
     <string name="title_advanced_attachments_alt">Show attachments after the message text</string>
+    <string name="title_advanced_contrast">Use high contrast for message text</string>
     <string name="title_advanced_monospaced">Use monospaced font for message text</string>
     <string name="title_advanced_images_inline">Automatically show inline images</string>
     <string name="title_advanced_images">Automatically show images for known contacts</string>
+    <string name="title_advanced_remote_content">Automatically show remote content when viewing original messages</string>
     <string name="title_advanced_actionbar">Conversation action bar</string>
 
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
@@ -221,6 +224,7 @@
     <string name="title_advanced_autonext">Automatically go to next conversation on close conversation</string>
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
+    <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
 
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
@@ -239,7 +243,6 @@
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
     <string name="title_advanced_sync_subscribed">Synchronize subscribed folders only</string>
     <string name="title_advanced_english">Force English language</string>
-    <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
@@ -379,7 +382,8 @@
     <string name="title_sync_days_remark">Increasing this value will increase battery and data usage</string>
     <string name="title_keep_days">Keep messages (days)</string>
     <string name="title_keep_all">Keep all messages</string>
-    <string name="title_auto_delete">Automatically delete old messages</string>
+    <string name="title_auto_trash">Automatically move old messages to trash</string>
+    <string name="title_auto_delete">Automatically permanently delete old messages</string>
     <string name="title_folder_name_missing">Folder name missing</string>
     <string name="title_folder_exists">Folder %1$s exists</string>
     <string name="title_folder_delete">Permanently delete this folder and any messages it contains?</string>
@@ -639,6 +643,7 @@
     <string name="title_legend_thread">Conversation</string>
     <string name="title_legend_zoom">Change text size</string>
     <string name="title_legend_draft">Has draft</string>
+    <string name="title_legend_auth">Authentication failed</string>
     <string name="title_legend_snoozed">Is snoozed</string>
     <string name="title_legend_browsed">Is browsed or searched</string>
     <string name="title_legend_answered">Has been answered</string>
