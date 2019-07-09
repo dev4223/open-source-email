@@ -80,6 +80,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.FetchProfile;
@@ -848,7 +849,7 @@ class Core {
         Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
         for (Folder ifolder : ifolders) {
             String fullName = ifolder.getFullName();
-            String[] name = fullName.split("[" + separator + "]");
+            String[] name = fullName.split(Pattern.quote(Character.toString(separator)));
             String childName = name[name.length - 1];
             boolean subscribed = subscription.contains(fullName);
             String[] attr = ((IMAPFolder) ifolder).getAttributes();
@@ -1001,13 +1002,17 @@ class Core {
             Log.i(folder.name + " sync=" + new Date(sync_time) + " keep=" + new Date(keep_time));
 
             // Delete old local messages
-            if (auto_delete && EntityFolder.TRASH.equals(folder.type)) {
+            if (auto_delete) {
                 List<Long> tbds = db.message().getMessagesBefore(folder.id, keep_time, delete_unseen);
                 Log.i(folder.name + " local tbd=" + tbds.size());
+                EntityFolder trash = db.folder().getFolderByType(folder.account, EntityFolder.TRASH);
                 for (Long tbd : tbds) {
                     EntityMessage message = db.message().getMessage(tbd);
-                    if (message != null)
-                        EntityOperation.queue(context, message, EntityOperation.DELETE);
+                    if (message != null && trash != null)
+                        if (EntityFolder.TRASH.equals(folder.type))
+                            EntityOperation.queue(context, message, EntityOperation.DELETE);
+                        else
+                            EntityOperation.queue(context, message, EntityOperation.MOVE, trash.id);
                 }
             } else {
                 int old = db.message().deleteMessagesBefore(folder.id, keep_time, delete_unseen);

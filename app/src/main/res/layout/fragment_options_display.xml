@@ -203,13 +203,23 @@
                 app:switchPadding="12dp" />
 
             <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swContrast"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/title_advanced_contrast"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/swAttachmentsAlt"
+                app:switchPadding="12dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swMonospaced"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/title_advanced_monospaced"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/swAttachmentsAlt"
+                app:layout_constraintTop_toBottomOf="@id/swContrast"
                 app:switchPadding="12dp" />
 
             <androidx.appcompat.widget.SwitchCompat
@@ -257,6 +267,28 @@
                 app:layout_constraintTop_toBottomOf="@id/swImages" />
 
             <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swRemoteContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/title_advanced_remote_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvImagesHint"
+                app:switchPadding="12dp" />
+
+            <TextView
+                android:id="@+id/tvRemoteContentHint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="48dp"
+                android:text="@string/title_ask_show_html"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/swRemoteContent" />
+
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swActionbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -264,7 +296,7 @@
                 android:checked="true"
                 android:text="@string/title_advanced_actionbar"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvImagesHint"
+                app:layout_constraintTop_toBottomOf="@id/tvRemoteContentHint"
                 app:switchPadding="12dp" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

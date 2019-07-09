@@ -36,6 +36,7 @@ import android.os.Handler;
 import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.AlarmManagerCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleService;
@@ -591,7 +592,7 @@ public class ServiceSynchronize extends LifecycleService {
                         @Override
                         public void notification(StoreEvent e) {
                             if (e.getMessageType() == StoreEvent.NOTICE)
-                                Log.i(account.name + " notice: " + e.getMessage());
+                                EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + e.getMessage());
                             else
                                 try {
                                     wlFolder.acquire();
@@ -1098,14 +1099,17 @@ public class ServiceSynchronize extends LifecycleService {
                         while (state.running()) {
                             if (!state.recoverable())
                                 throw new StoreClosedException(istore, "Unrecoverable");
-                            if (!istore.isConnected()) // Sends store NOOP
+
+                            // Sends store NOOP
+                            if (!istore.isConnected())
                                 throw new StoreClosedException(istore, "NOOP");
 
                             for (EntityFolder folder : mapFolders.keySet())
                                 if (folder.synchronize)
                                     if (!folder.poll && capIdle) {
-                                        if (!mapFolders.get(folder).isOpen()) // Sends folder NOOP
-                                            throw new FolderClosedException(mapFolders.get(folder));
+                                        // Sends folder NOOP
+                                        if (!mapFolders.get(folder).isOpen())
+                                            throw new StoreClosedException(istore, folder.name);
                                     } else
                                         EntityOperation.sync(this, folder.id, false);
 
@@ -1123,16 +1127,10 @@ public class ServiceSynchronize extends LifecycleService {
 
                             // Schedule keep alive alarm
                             EntityLog.log(this, account.name + " wait=" + account.poll_interval);
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                                am.set(
-                                        AlarmManager.RTC_WAKEUP,
-                                        System.currentTimeMillis() + account.poll_interval * 60 * 1000L,
-                                        pi);
-                            else
-                                am.setAndAllowWhileIdle(
-                                        AlarmManager.RTC_WAKEUP,
-                                        System.currentTimeMillis() + account.poll_interval * 60 * 1000L,
-                                        pi);
+                            AlarmManagerCompat.setAndAllowWhileIdle(am,
+                                    AlarmManager.RTC_WAKEUP,
+                                    System.currentTimeMillis() + account.poll_interval * 60 * 1000L,
+                                    pi);
 
                             try {
                                 wlAccount.release();

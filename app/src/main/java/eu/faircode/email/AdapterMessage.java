@@ -162,6 +162,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int colorPrimaryDark;
     private int colorAccent;
     private int colorWarning;
+    private int textColorPrimary;
     private int textColorSecondary;
     private int colorUnread;
 
@@ -177,6 +178,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean flags;
     private boolean preview;
     private boolean attachments_alt;
+    private boolean contrast;
     private boolean monospaced;
     private boolean autoimages;
     private boolean authentication;
@@ -206,7 +208,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             BottomNavigationView.OnNavigationItemSelectedListener, View.OnLongClickListener {
         private View view;
         private View vwColor;
-        private View vwStatus;
         private ImageView ivExpander;
         private ImageView ivFlagged;
         private ImageView ivAvatar;
@@ -214,6 +215,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvSize;
         private TextView tvTime;
         private ImageView ivType;
+        private ImageView ivAuth;
         private ImageView ivSnoozed;
         private ImageView ivBrowsed;
         private ImageView ivAnswered;
@@ -311,7 +313,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             view = itemView.findViewById(R.id.clItem);
 
             vwColor = itemView.findViewById(R.id.vwColor);
-            vwStatus = itemView.findViewById(R.id.vwStatus);
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivFlagged = itemView.findViewById(R.id.ivFlagged);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
@@ -319,6 +320,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
             ivType = itemView.findViewById(R.id.ivType);
+            ivAuth = itemView.findViewById(R.id.ivAuth);
             ivSnoozed = itemView.findViewById(R.id.ivSnoozed);
             ivBrowsed = itemView.findViewById(R.id.ivBrowsed);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
@@ -523,7 +525,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void clear() {
             vwColor.setVisibility(View.GONE);
-            vwStatus.setVisibility(View.GONE);
             ivExpander.setVisibility(View.GONE);
             ivFlagged.setVisibility(View.GONE);
             ivAvatar.setVisibility(View.GONE);
@@ -531,6 +532,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setText(null);
             tvTime.setText(null);
             ivType.setVisibility(View.GONE);
+            ivAuth.setVisibility(View.GONE);
             ivSnoozed.setVisibility(View.GONE);
             ivBrowsed.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
@@ -604,6 +606,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivType.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivSnoozed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivBrowsed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -645,13 +648,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
             vwColor.setVisibility(Helper.isPro(context) ? View.VISIBLE : View.INVISIBLE);
 
-            vwStatus.setBackgroundColor(
-                    Boolean.FALSE.equals(message.dkim) ||
-                            Boolean.FALSE.equals(message.spf) ||
-                            Boolean.FALSE.equals(message.dmarc)
-                            ? colorAccent : Color.TRANSPARENT);
-            vwStatus.setVisibility(authentication ? View.VISIBLE : View.GONE);
-
             // Expander
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
             ivExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
@@ -671,6 +667,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Line 2
             tvSubject.setText(message.subject);
 
+            boolean authenticated =
+                    !(Boolean.FALSE.equals(message.dkim) ||
+                            Boolean.FALSE.equals(message.spf) ||
+                            Boolean.FALSE.equals(message.dmarc));
+
             // Line 3
             ivType.setImageResource(message.drafts > 0
                     ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
@@ -678,6 +679,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     (viewType == ViewType.UNIFIED && !EntityFolder.INBOX.equals(message.folderType)) ||
                     (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
                     ? View.VISIBLE : View.GONE);
+            ivAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
             ivSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
@@ -952,6 +954,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (textSize != 0)
                 tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
+            tvBody.setTextColor(contrast ? textColorPrimary : textColorSecondary);
             tvBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
             tvBody.setVisibility(View.INVISIBLE);
 
@@ -1181,7 +1184,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean calendar = false;
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
-                boolean inline = (attachment.isInline() || TextUtils.isEmpty(attachment.name));
+                boolean inline = (attachment.isInline() && attachment.isImage());
                 if (inline)
                     has_inline = true;
                 if (Objects.equals(attachment.encryption, EntityAttachment.PGP_MESSAGE))
@@ -2950,6 +2953,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
+        this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
 
@@ -2967,9 +2971,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
+        this.contrast = prefs.getBoolean("contrast", false);
         this.monospaced = prefs.getBoolean("monospaced", false);
         this.autoimages = (this.contacts && prefs.getBoolean("autoimages", false));
-        this.authentication = prefs.getBoolean("authentication", false);
+        this.authentication = prefs.getBoolean("authentication", true);
         this.debug = prefs.getBoolean("debug", false);
 
         AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(DIFF_CALLBACK)
@@ -3678,6 +3683,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             boolean inline = prefs.getBoolean("inline_images", false);
+            boolean autocontent = prefs.getBoolean("autocontent", false);
 
             setupWebView(webView);
 
@@ -3685,7 +3691,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             settings.setDefaultFontSize(Math.round(textSize));
             settings.setDefaultFixedFontSize(Math.round(textSize));
             settings.setLoadsImagesAutomatically(show_images || inline);
-            settings.setBlockNetworkImage(!show_images);
+            settings.setBlockNetworkLoads(!show_images && !autocontent);
+            settings.setBlockNetworkImage(!show_images && !autocontent);
             settings.setBuiltInZoomControls(true);
             settings.setDisplayZoomControls(false);
 
