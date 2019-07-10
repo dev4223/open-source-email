@@ -559,6 +559,7 @@ The right question is "*why are there so many taxes and fees?*":
 * VAT: 25 % (depending on your country)
 * Google fee: 30 %
 * Income tax: 50 %
+* <sub>Paypal fee: 5-10 % depending on the country/amount</sub>
 
 So, what is left for the developer is just a fraction of what you pay.
 
@@ -566,6 +567,9 @@ Note that only some convenience and advanced features need to be purchased which
 
 Also note that most free apps will appear not to be sustainable in the end, whereas FairEmail is properly maintained and supported,
 and that free apps may have a catch, like sending privacy sensitive information to the internet.
+
+I have been working on FairEmail almost every day for about a year, so I think the price is more than reasonable.
+For this reason there won't be discounts either.
 
 <br />
 
@@ -883,7 +887,7 @@ Note that you can set the number of days to *keep* messages for to a higher numb
 You could for example initially synchronize messages for a large number of days and after this has been completed
 reduce the number of days to synchronize messages for, but leave the number of days to keep messages for.
 
-Starred messages will by default always be synchronized (this can be turned off in the sync settings),
+Starred messages will by default always be synchronized (this can be turned off in the receive settings),
 which will allow you to keep older messages around while synchronizing messages for a limited number of days.
 
 Disabling the folder option *Automatically download message texts and attachments*
@@ -893,11 +897,22 @@ You could disable this option for example for the sent folder and the archive.
 Synchronizing messages at night is mostly not useful, so you can save on battery usage by not synchronizing at night.
 In the settings you can select a schedule for message synchronization (this is a pro feature). See also [this FAQ](#user-content-faq78).
 
-Some providers don't follow the IMAP standard and don't keep connections open long enough, forcing FairEmail to reconnect often.
+FairEmail will by default synchronize the folder list on each connection.
+Since folders are mostly not created, renamed and deleted very often, you can save some network and battery usage by disabling this in the receive settings.
+
+FairEmail will by default check if old messages were deleted from the server on each connection.
+If you don't mind that old messages that were delete from the server are still visible in FairEmail, you can save some network and battery usage by disabling this in the receive settings.
+
+Some providers don't follow the IMAP standard and don't keep connections open long enough, forcing FairEmail to reconnect often, causing extra battery usage.
+You can inspect the *Log* via the main navigation menu to check if there are frequent reconnects.
 You can workaround this by lowering the keep-alive interval in the advanced account settings to for example 9 minutes.
 
-Some providers send every two minutes something like *Still there* causing network traffic and FairEmail to wake up and thus extra battery usage.
-You can long press *Operations* in the main navigation menu to check if your provider is doing this.
+Some providers send every two minutes something like '*Still there*' resulting in network traffic and your device to wake up and causing unnecessary extra battery usage.
+You can inspect the *Log* via the main navigation menu to check if your provider is doing this.
+If your provider is using [Dovecot](https://www.dovecot.org/) as IMAP server,
+you could ask your provider to change the [imap_idle_notify_interval](https://wiki.dovecot.org/Timeouts) setting to a higher value or better yet, to disable this.
+If your provider is not able or willing to change/disable this, you should consider to switch to periodically instead of continuous synchronization.
+You can change this in the receive settings.
 
 If you got the message *This provider does not support push messages* while configuring an account,
 consider switching to a modern provider which supports push messages (IMAP IDLE) to reduce battery usage.
@@ -914,8 +929,7 @@ Finally, make sure you are using [the latest version](https://github.com/M66B/op
 
 You can reduce the network usage basically in the same way as reducing battery usage, see the previous question for suggestions.
 
-Additionally, you can let FairEmail download small messages and attachments on a metered (mobile, paid) connection only
-or let FairEmail connect via unmetered connections only in the settings.
+Additionally, you can let FairEmail download small messages and attachments only on a metered (mobile, paid) connection only.
 
 <br />
 
