@@ -33,6 +33,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -112,7 +113,7 @@ class Core {
     private static int lastUnseen = -1;
 
     private static final int MAX_NOTIFICATION_COUNT = 10; // per group
-    private static final int SYNC_CHUNCK_SIZE = 500;
+    private static final int SYNC_CHUNCK_SIZE = 200;
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
@@ -1074,15 +1075,45 @@ class Core {
                 }
 
             if (uids.size() > 0) {
+                // This is done outside of JavaMail to prevent changed notifications
                 MessagingException ex = (MessagingException) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                     @Override
                     public Object doCommand(IMAPProtocol protocol) {
-                        Log.i(folder.name + " executing uid fetch count=" + uids.size());
-                        List<List<Long>> chunked = Helper.chunkList(new ArrayList<>(uids), SYNC_CHUNCK_SIZE);
-                        for (int c = 0; c < chunked.size(); c++) {
-                            Log.i(folder.name + " chunk #" + c + " size=" + chunked.get(c).size());
-                            Response[] responses = protocol.command(
-                                    "UID FETCH " + TextUtils.join(",", chunked.get(c)) + " (UID)", null);
+                        // Build ranges
+                        List<Pair<Long, Long>> ranges = new ArrayList<>();
+                        long first = -1;
+                        long last = -1;
+                        for (long uid : uids)
+                            if (first < 0)
+                                first = uid;
+                            else if ((last < 0 ? first : last) + 1 == uid)
+                                last = uid;
+                            else {
+                                ranges.add(new Pair<>(first, last < 0 ? first : last));
+                                first = uid;
+                                last = -1;
+                            }
+                        if (first > 0)
+                            ranges.add(new Pair<>(first, last < 0 ? first : last));
+
+                        List<List<Pair<Long, Long>>> chunks = Helper.chunkList(ranges, SYNC_CHUNCK_SIZE);
+
+                        Log.i(folder.name + " executing uid fetch count=" + uids.size() +
+                                " ranges=" + ranges.size() + " chunks=" + chunks.size());
+                        for (int c = 0; c < chunks.size(); c++) {
+                            List<Pair<Long, Long>> chunk = chunks.get(c);
+                            Log.i(folder.name + " chunk #" + c + " size=" + chunk.size());
+
+                            StringBuilder sb = new StringBuilder();
+                            for (Pair<Long, Long> range : chunk) {
+                                if (sb.length() > 0)
+                                    sb.append(',');
+                                if (range.first.equals(range.second))
+                                    sb.append(range.first);
+                                else
+                                    sb.append(range.first).append(':').append(range.second);
+                            }
+                            Response[] responses = protocol.command("UID FETCH " + sb + " (UID)", null);
 
                             if (responses.length > 0 && responses[responses.length - 1].isOK()) {
                                 for (Response response : responses)
@@ -1101,6 +1132,7 @@ class Core {
                                 return new MessagingException("UID FETCH failed");
                             }
                         }
+
                         return null;
                     }
                 });
@@ -1834,16 +1866,10 @@ class Core {
                     }
             }
 
-            int headers = 0;
-            for (Long id : add)
-                if (id < 0)
-                    headers++;
-
             Log.i("Notify group=" + group + " count=" + notifications.size() +
-                    " added=" + add.size() + " removed=" + remove.size() + " headers=" + headers);
+                    " added=" + add.size() + " removed=" + remove.size());
 
-            if (notifications.size() == 0 ||
-                    (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && headers > 0)) {
+            if (notifications.size() == 0) {
                 String tag = "unseen.0";
                 Log.i("Notify cancel tag=" + tag);
                 nm.cancel(tag, 1);
@@ -1909,6 +1935,8 @@ class Core {
         boolean notify_reply = (prefs.getBoolean("notify_reply", false) && pro);
         boolean notify_flag = (prefs.getBoolean("notify_flag", false) && pro);
         boolean notify_seen = (prefs.getBoolean("notify_seen", true) || !pro);
+        boolean light = prefs.getBoolean("light", false);
+        String sound = prefs.getString("sound", null);
 
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
@@ -1939,18 +1967,13 @@ class Core {
                         .setCategory(NotificationCompat.CATEGORY_STATUS)
                         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setGroup(group)
-                        .setGroupSummary(true);
+                        .setGroupSummary(true)
+                        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
         Notification pub = builder.build();
         builder
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setPublicVersion(pub);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            setNotificationSoundAndLight(context, builder);
-            builder.setOnlyAlertOnce(true);
-        } else
-            builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
         DateFormat df = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
         StringBuilder sb = new StringBuilder();
@@ -2025,9 +2048,10 @@ class Core {
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                            .setGroup(group)
+                            .setGroupSummary(false)
+                            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
                             .setOnlyAlertOnce(true);
-
-            mbuilder.setGroup(group).setGroupSummary(false);
 
             if (notify_trash) {
                 Intent trash = new Intent(context, ServiceUI.class)
@@ -2126,29 +2150,20 @@ class Core {
                 mbuilder.setColorized(true);
             }
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-                mbuilder.setSound(null);
-            else
-                mbuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                if (light)
+                    mbuilder.setLights(Color.WHITE, 1000, 1000);
+
+                Uri uri = (sound == null ? null : Uri.parse(sound));
+                if (uri == null || "file".equals(uri.getScheme()))
+                    uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                mbuilder.setSound(uri);
+            }
 
             notifications.add(mbuilder.build());
         }
 
         return notifications;
-    }
-
-    private static void setNotificationSoundAndLight(Context context, NotificationCompat.Builder builder) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean light = prefs.getBoolean("light", false);
-        String sound = prefs.getString("sound", null);
-
-        if (light)
-            builder.setLights(Color.GREEN, 1000, 1000);
-
-        Uri uri = (sound == null ? null : Uri.parse(sound));
-        if (uri == null || "file".equals(uri.getScheme()))
-            uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        builder.setSound(uri);
     }
 
     // FolderClosedException: can happen when no connectivity
