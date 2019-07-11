@@ -88,6 +88,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
@@ -274,7 +275,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private BottomNavigationView bnvActions;
 
         private ImageButton ibDecrypt;
-        private ImageButton ibQuotes;
         private ImageButton ibImages;
         private ImageButton ibFull;
         private TextView tvBody;
@@ -414,7 +414,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             ibDecrypt = vsBody.findViewById(R.id.ibDecrypt);
-            ibQuotes = vsBody.findViewById(R.id.ibQuotes);
             ibImages = vsBody.findViewById(R.id.ibImages);
             ibFull = vsBody.findViewById(R.id.ibFull);
             tvBody = vsBody.findViewById(R.id.tvBody);
@@ -479,7 +478,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibAddContact.setOnClickListener(this);
 
                 ibDecrypt.setOnClickListener(this);
-                ibQuotes.setOnClickListener(this);
                 btnDownloadAttachments.setOnClickListener(this);
                 btnSaveAttachments.setOnClickListener(this);
 
@@ -513,7 +511,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibAddContact.setOnClickListener(null);
 
                 ibDecrypt.setOnClickListener(null);
-                ibQuotes.setOnClickListener(null);
                 btnDownloadAttachments.setOnClickListener(null);
                 btnSaveAttachments.setOnClickListener(null);
 
@@ -880,7 +877,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             bnvActions.setVisibility(View.GONE);
 
             ibDecrypt.setVisibility(View.GONE);
-            ibQuotes.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
             ibFull.setVisibility(View.GONE);
             tvBody.setVisibility(View.GONE);
@@ -1471,9 +1467,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.ibDecrypt:
                         onMenuDecrypt(message);
                         break;
-                    case R.id.ibQuotes:
-                        onShowQuotes(message);
-                        break;
                     case R.id.ibImages:
                         onShowImages(message);
                         break;
@@ -1890,11 +1883,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onShowQuotes(TupleMessageEx message) {
-            properties.setValue("quotes", message.id, true);
-            loadText(message);
-        }
-
         private void onShowImages(final TupleMessageEx message) {
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             if (prefs.getBoolean("show_images_confirmed", false)) {
@@ -2067,7 +2055,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 builder.getSpanFlags(squote));
                 }
 
-                args.putBoolean("has_quotes", quoteSpans.length > 0);
                 args.putBoolean("has_images", builder.getSpans(0, body.length(), ImageSpan.class).length > 0);
 
                 return builder;
@@ -2086,13 +2073,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!show_expanded)
                     return;
 
-                boolean has_quotes = args.getBoolean("has_quotes");
                 boolean has_images = args.getBoolean("has_images");
-                boolean show_quotes = (properties.getValue("quotes", message.id) || !collapse_quotes);
                 boolean show_images = properties.getValue("images", message.id);
 
                 ibFull.setVisibility(hasWebView ? View.VISIBLE : View.GONE);
-                ibQuotes.setVisibility(has_quotes && !show_quotes ? View.VISIBLE : View.GONE);
                 ibImages.setVisibility(has_images && !show_images ? View.VISIBLE : View.GONE);
 
                 tvBody.setText(body);
@@ -3793,13 +3777,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
                         return false;
 
+                    FragmentManager manager = getFragmentManager();
+                    if (manager == null)
+                        return false;
+
                     Bundle args = new Bundle();
                     args.putParcelable("uri", uri);
                     args.putString("title", null);
 
                     FragmentDialogLink fragment = new FragmentDialogLink();
                     fragment.setArguments(args);
-                    fragment.show(getFragmentManager(), "open:link");
+                    fragment.show(manager, "open:link");
 
                     return true;
                 }

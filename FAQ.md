@@ -186,6 +186,8 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
 * [(110) Why are (some) messages empty and/or attachments corrupted?](#user-content-faq110)
 * [(111) Can you add OAuth authentication?](#user-content-faq111)
+* [(112) Which email provider do you recommend?](#user-content-faq112)
+* [(113) How does biometric authentication work?](#user-content-faq113)
 
 [I have another question.](#support)
 
@@ -202,6 +204,7 @@ The following Android permissions are needed:
 * *in-app billing* (BILLING): to allow in-app purchases
 * Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
+* Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
 
 The following permissions are needed to show the count of unread messages as a badge (see also [this FAQ](#user-content-faq106)):
 
@@ -1877,6 +1880,30 @@ Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections.
 and requires embedding a client secret in the app, which is not a good idea for an open source app.
 
 See also [this FAQ](#user-content-faq6).
+
+<br />
+
+<a name="faq112"></a>
+**(112) Which email provider do you recommend?**
+
+Which email provider is best for you depends on your wishes/requirements.
+Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/)
+for a list of privacy friendly email providers with advantages and disadvantages.
+
+<br />
+
+<a name="faq113"></a>
+**(113) How does biometric authentication work?**
+
+If your device has a biometric sensor, for example a fingerprint sensor, you can enable/disable biometric authentication in the navigation (hamburger) menu of the setup screen.
+When enabled FairEmail will require biometric authentication after a period of inactivity or after the screen has been turned off.
+Activity is navigation within FairEmail, for example opening a conversation thread.
+When biometric authentication is enabled only a summary notification with the number of new messages will be shown, so all message content is hidden.
+
+Biometric authentication is meant to prevent others from seeing your messages only.
+FairEmail relies on device encryption for data encryption, see also [this FAQ](#user-content-faq37).
+
+Biometric authentication is a pro feature.
 
 <br />
 

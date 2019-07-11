@@ -124,6 +124,8 @@
     <string name="title_setup_reorder_accounts">Tilien järjestäminen</string>
     <string name="title_setup_reorder_folders">Kansioiden järjestäminen</string>
     <string name="title_reset_order">Palauta alkuperäinen järjestys</string>
+    <string name="title_setup_biometrics_enable">Ota käyttöön</string>
+    <string name="title_setup_biometrics_disable">Poista käytöstä</string>
     <string name="title_setup_theme">Valitse teema</string>
     <string name="title_setup_light_theme">Vaalea teema</string>
     <string name="title_setup_dark_theme">Tumma teema</string>
@@ -178,6 +180,7 @@
     <string name="title_advanced_monospaced">Käytä kiinteävälistä kirjaisinta viestien tekstille</string>
     <string name="title_advanced_images_inline">Näytä tekstiin upotetut kuvat oletuksena</string>
     <string name="title_advanced_images">Näytä tunnettujen yhteystietojen kuvat automaattisesti</string>
+    <string name="title_advanced_collapse_quotes">Tiivistä lainattu teksti</string>
     <string name="title_advanced_remote_content">Näytä ulkoinen sisältö automaattisesti alkuperäisissä viesteissä</string>
     <string name="title_advanced_actionbar">Keskustelujen toimintopalkki</string>
     <string name="title_advanced_pull_refresh">Vedä alas päivittääksesi</string>
