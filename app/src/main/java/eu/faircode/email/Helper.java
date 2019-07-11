@@ -138,7 +138,7 @@ public class Helper {
         }
     };
 
-    final static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
 
     // Features
 
@@ -631,7 +631,7 @@ public class Helper {
         return sb.toString();
     }
 
-    public static String getFingerprint(Context context) {
+    static String getFingerprint(Context context) {
         try {
             PackageManager pm = context.getPackageManager();
             String pkg = context.getPackageName();
@@ -649,10 +649,15 @@ public class Helper {
         }
     }
 
-    public static boolean hasValidFingerprint(Context context) {
+    static boolean hasValidFingerprint(Context context) {
         String signed = getFingerprint(context);
         String expected = context.getString(R.string.fingerprint);
         return Objects.equals(signed, expected);
+    }
+
+    static boolean hasAuthentication(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean("biometrics", false);
     }
 
     static boolean shouldAuthenticate(Context context) {
@@ -686,10 +691,10 @@ public class Helper {
                 .setTitle(activity.getString(enabled == null ? R.string.app_name : R.string.title_setup_biometrics))
                 .setNegativeButtonText(activity.getString(android.R.string.cancel));
 
-        if (enabled != null)
-            info.setSubtitle(activity.getString(enabled
-                    ? R.string.title_setup_biometrics_disable
-                    : R.string.title_setup_biometrics_enable));
+        info.setSubtitle(activity.getString(enabled == null ? R.string.title_setup_biometrics_unlock
+                : enabled
+                ? R.string.title_setup_biometrics_disable
+                : R.string.title_setup_biometrics_enable));
 
         BiometricPrompt prompt = new BiometricPrompt(activity, executor,
                 new BiometricPrompt.AuthenticationCallback() {
@@ -746,6 +751,11 @@ public class Helper {
         prompt.authenticate(info.build());
     }
 
+    static void clearAuthentication(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit().remove("last_authentication").apply();
+    }
+
     // Miscellaneous
 
     static String sanitizeKeyword(String keyword) {
@@ -797,7 +807,7 @@ public class Helper {
         }
     }
 
-    public static <T> List<List<T>> chunkList(List<T> list, int size) {
+    static <T> List<List<T>> chunkList(List<T> list, int size) {
         List<List<T>> result = new ArrayList<>(list.size() / size);
         for (int i = 0; i < list.size(); i += size)
             result.add(list.subList(i, i + size < list.size() ? i + size : list.size()));

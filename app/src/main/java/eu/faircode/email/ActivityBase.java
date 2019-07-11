@@ -20,13 +20,12 @@ package eu.faircode.email;
 */
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.PowerManager;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -72,21 +71,22 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         this.contacts = hasPermission(Manifest.permission.READ_CONTACTS);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = prefs.getString("theme", null);
-        if ("system".equals(theme)) {
-            int uiMode = getResources().getConfiguration().uiMode;
-            Log.i("UI mode=" + uiMode);
-            if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+
+        if (!this.getClass().equals(ActivityMain.class)) {
+            String theme = prefs.getString("theme", null);
+            if ("system".equals(theme)) {
+                int uiMode = getResources().getConfiguration().uiMode;
+                Log.i("UI mode=" + uiMode);
+                if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+                    setTheme(R.style.AppThemeBlack);
+            }
+            if ("dark".equals(theme))
+                setTheme(R.style.AppThemeDark);
+            else if ("black".equals(theme))
                 setTheme(R.style.AppThemeBlack);
         }
-        if ("dark".equals(theme))
-            setTheme(R.style.AppThemeDark);
-        else if ("black".equals(theme))
-            setTheme(R.style.AppThemeBlack);
 
         prefs.registerOnSharedPreferenceChangeListener(this);
-
-        registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
 
         super.onCreate(savedInstanceState);
     }
@@ -141,9 +141,19 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+
+        if (pm != null && !pm.isInteractive()) {
+            Log.i("Stop with screen off");
+            Helper.clearAuthentication(this);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         Log.i("Destroy " + this.getClass().getName());
-        unregisterReceiver(onScreenOff);
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
         super.onDestroy();
     }
@@ -157,6 +167,20 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     }
 
     @Override
+    public void startActivity(Intent intent) {
+        if (Helper.hasAuthentication(this))
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        super.startActivity(intent);
+    }
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        if (Helper.hasAuthentication(this))
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+        super.startActivityForResult(intent, requestCode);
+    }
+
+    @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
         Log.i("Preference " + key + "=" + prefs.getAll().get(key));
         if ("theme".equals(key)) {
@@ -167,17 +191,6 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                 Arrays.asList(FragmentOptions.OPTIONS_RESTART).contains(key))
             finish();
     }
-
-    private BroadcastReceiver onScreenOff = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.i(intent.toString());
-            Log.logExtras(intent);
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityBase.this);
-            prefs.edit().remove("last_authentication").apply();
-        }
-    };
 
     public boolean hasPermission(String name) {
         return Helper.hasPermission(this, name);
