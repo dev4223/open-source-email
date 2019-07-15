@@ -50,7 +50,6 @@
         <item quantity="one">Rapportér %1$d meddelelse som spam?</item>
         <item quantity="other">Rapportér %1$d meddelelser som spam?</item>
     </plurals>
-    <string name="title_ask_spam_who">Rapportér meddelelse fra %1$s som spam?</string>
     <string name="title_notification_waiting">Venter på passende forbindelse</string>
     <string name="title_notification_sending">Sender meddelelser</string>
     <string name="title_notification_failed">\'%1$s\' mislykkedes</string>
@@ -236,7 +235,6 @@
     <string name="title_account_name_hint">Bruges til at differentiere mapper</string>
     <string name="title_account_interval_hint">Frekvensen på opdatering af forbindelsen for push-meddelelser eller frekvensen for at tjekke for nye meddelelser</string>
     <string name="title_account_signature">Signaturtekst</string>
-    <string name="title_account_color">Farve</string>
     <string name="title_account_notify">Adskilte underretninger</string>
     <string name="title_account_left">Stryg til venstre</string>
     <string name="title_account_right">Stryg til højre</string>

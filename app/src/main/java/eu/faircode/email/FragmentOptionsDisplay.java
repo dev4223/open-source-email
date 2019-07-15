@@ -33,6 +33,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RadioGroup;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -294,6 +295,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         for (String option : RESET_OPTIONS)
             editor.remove(option);
         editor.apply();
+        ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
     }
 
     private void setOptions() {
@@ -323,7 +325,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swContrast.setChecked(prefs.getBoolean("contrast", false));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
         swInline.setChecked(prefs.getBoolean("inline_images", false));
-        swImages.setChecked(prefs.getBoolean("autoimages", false));
+        swImages.setChecked(prefs.getBoolean("autoimages", true));
         swCollapseQuotes.setChecked(prefs.getBoolean("collapse_quotes", false));
         swRemoteContent.setChecked(prefs.getBoolean("autocontent", false));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));

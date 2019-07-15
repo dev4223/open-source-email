@@ -94,7 +94,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.FileProvider;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
@@ -114,6 +113,10 @@ import org.jsoup.nodes.Element;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.SimpleResolver;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -125,6 +128,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -885,7 +889,7 @@ public class FragmentCompose extends FragmentBase {
                 ss.removeSpan(span);
 
         etBody.setText(ss);
-        etBody.setSelection(end);
+        etBody.setSelection(end, end);
     }
 
     private void onMenuContactGroup() {
@@ -1104,70 +1108,74 @@ public class FragmentCompose extends FragmentBase {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch (requestCode) {
-            case REQUEST_CONTACT_TO:
-            case REQUEST_CONTACT_CC:
-            case REQUEST_CONTACT_BCC:
-                if (resultCode == RESULT_OK && data != null)
-                    onPickContact(requestCode, data);
-                break;
-            case REQUEST_IMAGE:
-                if (resultCode == RESULT_OK && data != null) {
-                    Uri uri = data.getData();
-                    if (uri != null)
-                        onAddAttachment(uri, true);
-                }
-                break;
-            case REQUEST_ATTACHMENT:
-            case REQUEST_RECORD_AUDIO:
-            case REQUEST_TAKE_PHOTO:
-                if (resultCode == RESULT_OK)
-                    if (requestCode == REQUEST_TAKE_PHOTO)
-                        onAddMedia(new Intent().setData(photoURI));
-                    else if (data != null)
-                        onAddMedia(data);
-                break;
-            case REQUEST_ENCRYPT:
-                if (resultCode == RESULT_OK && data != null) {
-                    if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
-                        Log.logExtras(data);
-                    onPgp(data);
-                }
-                break;
-            case REQUEST_COLOR:
-                if (resultCode == RESULT_OK && data != null)
-                    onColorSelected(data.getBundleExtra("args"));
-                break;
-            case REQUEST_SEND_AFTER:
-                if (resultCode == RESULT_OK && data != null) {
-                    Bundle args = data.getBundleExtra("args");
-                    onSendAfter(args.getLong("time"));
-                }
-                break;
-            case REQUEST_REF_EDIT:
-                if (resultCode == RESULT_OK)
-                    onReferenceEditConfirmed();
-                break;
-            case REQUEST_CONTACT_GROUP:
-                if (resultCode == RESULT_OK && data != null)
-                    onContactGroupSelected(data.getBundleExtra("args"));
-                break;
-            case REQUEST_ANSWER:
-                if (resultCode == RESULT_OK && data != null)
-                    onAnswerSelected(data.getBundleExtra("args"));
-                break;
-            case REQUEST_LINK:
-                if (resultCode == RESULT_OK && data != null)
-                    onLinkSelected(data.getBundleExtra("args"));
-                break;
-            case REQUEST_DISCARD:
-                if (resultCode == RESULT_OK)
-                    onAction(R.id.action_delete);
-                break;
-            case REQUEST_SEND:
-                if (resultCode == RESULT_OK)
-                    onActionSendConfirmed();
-                break;
+        try {
+            switch (requestCode) {
+                case REQUEST_CONTACT_TO:
+                case REQUEST_CONTACT_CC:
+                case REQUEST_CONTACT_BCC:
+                    if (resultCode == RESULT_OK && data != null)
+                        onPickContact(requestCode, data);
+                    break;
+                case REQUEST_IMAGE:
+                    if (resultCode == RESULT_OK && data != null) {
+                        Uri uri = data.getData();
+                        if (uri != null)
+                            onAddAttachment(uri, true);
+                    }
+                    break;
+                case REQUEST_ATTACHMENT:
+                case REQUEST_RECORD_AUDIO:
+                case REQUEST_TAKE_PHOTO:
+                    if (resultCode == RESULT_OK)
+                        if (requestCode == REQUEST_TAKE_PHOTO)
+                            onAddMedia(new Intent().setData(photoURI));
+                        else if (data != null)
+                            onAddMedia(data);
+                    break;
+                case REQUEST_ENCRYPT:
+                    if (resultCode == RESULT_OK && data != null) {
+                        if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
+                            Log.logExtras(data);
+                        onPgp(data);
+                    }
+                    break;
+                case REQUEST_COLOR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onColorSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_SEND_AFTER:
+                    if (resultCode == RESULT_OK && data != null) {
+                        Bundle args = data.getBundleExtra("args");
+                        onSendAfter(args.getLong("time"));
+                    }
+                    break;
+                case REQUEST_REF_EDIT:
+                    if (resultCode == RESULT_OK)
+                        onReferenceEditConfirmed();
+                    break;
+                case REQUEST_CONTACT_GROUP:
+                    if (resultCode == RESULT_OK && data != null)
+                        onContactGroupSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_ANSWER:
+                    if (resultCode == RESULT_OK && data != null)
+                        onAnswerSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_LINK:
+                    if (resultCode == RESULT_OK && data != null)
+                        onLinkSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_DISCARD:
+                    if (resultCode == RESULT_OK)
+                        onAction(R.id.action_delete);
+                    break;
+                case REQUEST_SEND:
+                    if (resultCode == RESULT_OK)
+                        onActionSendConfirmed();
+                    break;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
     }
 
@@ -1522,7 +1530,7 @@ public class FragmentCompose extends FragmentBase {
             ss.removeSpan(span);
         ss.setSpan(new ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         etBody.setText(ss);
-        etBody.setSelection(end);
+        etBody.setSelection(end, end);
     }
 
     private void onSendAfter(long time) {
@@ -1691,7 +1699,7 @@ public class FragmentCompose extends FragmentBase {
 
         ss.setSpan(new URLSpan(link), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         etBody.setText(ss);
-        etBody.setSelection(end);
+        etBody.setSelection(end, end);
     }
 
     private void onExit() {
@@ -2463,8 +2471,10 @@ public class FragmentCompose extends FragmentBase {
                     try {
                         ato = InternetAddress.parse(to);
                         if (action == R.id.action_send)
-                            for (InternetAddress address : ato)
+                            for (InternetAddress address : ato) {
                                 address.validate();
+                                lookup(address, context);
+                            }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(to, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2474,8 +2484,10 @@ public class FragmentCompose extends FragmentBase {
                     try {
                         acc = InternetAddress.parse(cc);
                         if (action == R.id.action_send)
-                            for (InternetAddress address : acc)
+                            for (InternetAddress address : acc) {
                                 address.validate();
+                                lookup(address, context);
+                            }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(cc, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2485,8 +2497,10 @@ public class FragmentCompose extends FragmentBase {
                     try {
                         abcc = InternetAddress.parse(bcc);
                         if (action == R.id.action_send)
-                            for (InternetAddress address : abcc)
+                            for (InternetAddress address : abcc) {
                                 address.validate();
+                                lookup(address, context);
+                            }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(bcc, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2609,7 +2623,7 @@ public class FragmentCompose extends FragmentBase {
                         Handler handler = new Handler(context.getMainLooper());
                         handler.post(new Runnable() {
                             public void run() {
-                                Toast.makeText(context, R.string.title_draft_deleted, Toast.LENGTH_LONG).show();
+                                ToastEx.makeText(context, R.string.title_draft_deleted, Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -2623,7 +2637,7 @@ public class FragmentCompose extends FragmentBase {
                     Handler handler = new Handler(context.getMainLooper());
                     handler.post(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, R.string.title_draft_saved, Toast.LENGTH_LONG).show();
+                            ToastEx.makeText(context, R.string.title_draft_saved, Toast.LENGTH_LONG).show();
                         }
                     });
 
@@ -2684,7 +2698,7 @@ public class FragmentCompose extends FragmentBase {
                     Handler handler = new Handler(context.getMainLooper());
                     handler.post(new Runnable() {
                         public void run() {
-                            Toast.makeText(context, feedback, Toast.LENGTH_LONG).show();
+                            ToastEx.makeText(context, feedback, Toast.LENGTH_LONG).show();
                         }
                     });
                 }
@@ -2743,7 +2757,31 @@ public class FragmentCompose extends FragmentBase {
                 Helper.unexpectedError(getFragmentManager(), ex);
         }
 
-        String getActionName(int id) {
+        private void lookup(InternetAddress address, Context context) throws TextParseException, UnknownHostException {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean lookup_mx = prefs.getBoolean("lookup_mx", false);
+            if (!lookup_mx)
+                return;
+
+            String email = address.getAddress();
+            if (email == null || !email.contains("@"))
+                return;
+
+            String domain = email.split("@")[1];
+            Lookup lookup = new Lookup(domain, Type.MX);
+            SimpleResolver resolver = new SimpleResolver(ConnectionHelper.getDnsServer(context));
+            lookup.setResolver(resolver);
+            Log.i("Lookup MX=" + domain + " @" + resolver.getAddress());
+
+            lookup.run();
+            if (lookup.getResult() == Lookup.HOST_NOT_FOUND ||
+                    lookup.getResult() == Lookup.TYPE_NOT_FOUND) {
+                Log.i("Lookup MX=" + domain + " result=" + lookup.getErrorString());
+                throw new IllegalArgumentException(context.getString(R.string.title_no_server, domain));
+            }
+        }
+
+        private String getActionName(int id) {
             switch (id) {
                 case R.id.action_delete:
                     return "delete";
@@ -2865,20 +2903,7 @@ public class FragmentCompose extends FragmentBase {
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
-                                    Drawable image = HtmlHelper.decodeImage(context, id, source, show_images, tvReference);
-
-                                    ConstraintLayout.LayoutParams params =
-                                            (ConstraintLayout.LayoutParams) tvReference.getLayoutParams();
-                                    float width = context.getResources().getDisplayMetrics().widthPixels
-                                            - params.leftMargin - params.rightMargin;
-                                    if (image.getIntrinsicWidth() > width) {
-                                        float scale = width / image.getIntrinsicWidth();
-                                        image.setBounds(0, 0,
-                                                Math.round(image.getIntrinsicWidth() * scale),
-                                                Math.round(image.getIntrinsicHeight() * scale));
-                                    }
-
-                                    return image;
+                                    return HtmlHelper.decodeImage(context, id, source, show_images, tvReference);
                                 }
                             },
                             null);
@@ -3162,7 +3187,7 @@ public class FragmentCompose extends FragmentBase {
                         ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                     etBody.setText(ss);
-                    etBody.setSelection(end);
+                    etBody.setSelection(end, end);
                     return true;
                 }
 
@@ -3177,7 +3202,7 @@ public class FragmentCompose extends FragmentBase {
                         ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                     etBody.setText(ss);
-                    etBody.setSelection(end);
+                    etBody.setSelection(end, end);
                     return true;
                 }
 
@@ -3200,7 +3225,7 @@ public class FragmentCompose extends FragmentBase {
                         ss.setSpan(new RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                     etBody.setText(ss);
-                    etBody.setSelection(end);
+                    etBody.setSelection(end, end);
                     return true;
                 }
 
@@ -3217,6 +3242,7 @@ public class FragmentCompose extends FragmentBase {
                     fragment.setTargetFragment(FragmentCompose.this, REQUEST_COLOR);
                     fragment.show(getFragmentManager(), "account:color");
 
+                    etBody.setSelection(end, end);
                     return true;
                 }
 

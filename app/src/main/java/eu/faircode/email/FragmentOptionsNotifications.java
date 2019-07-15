@@ -39,6 +39,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,6 +58,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private CheckBox cbNotifyActionSeen;
     private TextView tvNotifyActionsPro;
     private Button btnManage;
+    private TextView tvManageHint;
     private ImageButton ibManage;
     private SwitchCompat swLight;
     private Button btnSound;
@@ -85,6 +87,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         cbNotifyActionSeen = view.findViewById(R.id.cbNotifyActionSeen);
         tvNotifyActionsPro = view.findViewById(R.id.tvNotifyActionsPro);
         btnManage = view.findViewById(R.id.btnManage);
+        tvManageHint = view.findViewById(R.id.tvManageHint);
         ibManage = view.findViewById(R.id.ibManage);
         swLight = view.findViewById(R.id.swLight);
         btnSound = view.findViewById(R.id.btnSound);
@@ -154,6 +157,9 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         final Intent channel = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                 .putExtra(Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
                 .putExtra(Settings.EXTRA_CHANNEL_ID, "notification");
+
+        tvManageHint.setVisibility(channel.resolveActivity(pm) == null ? View.GONE : View.VISIBLE);
+
         ibManage.setVisibility(channel.resolveActivity(pm) == null ? View.GONE : View.VISIBLE);
         ibManage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -222,6 +228,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         for (String option : RESET_OPTIONS)
             editor.remove(option);
         editor.apply();
+        ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
     }
 
     private void setOptions() {
@@ -251,19 +258,28 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == ActivitySetup.REQUEST_SOUND)
-            if (resultCode == RESULT_OK) {
-                Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
-                Log.i("Selected ringtone=" + uri);
-                if (uri != null && "file".equals(uri.getScheme()))
-                    uri = null;
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                if (uri == null)
-                    prefs.edit().remove("sound").apply();
-                else
-                    prefs.edit().putString("sound", uri.toString()).apply();
+        try {
+            switch (requestCode) {
+                case ActivitySetup.REQUEST_SOUND:
+                    if (resultCode == RESULT_OK && data != null)
+                        onSelectSound((Uri) data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI));
+                    break;
             }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
+    private void onSelectSound(Uri uri) {
+        Log.i("Selected ringtone=" + uri);
+        if (uri != null && "file".equals(uri.getScheme()))
+            uri = null;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (uri == null)
+            prefs.edit().remove("sound").apply();
+        else
+            prefs.edit().putString("sound", uri.toString()).apply();
     }
 
     private static Intent getIntentNotifications(Context context) {

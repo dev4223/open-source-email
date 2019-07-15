@@ -41,9 +41,10 @@ For authorizing:
 * ~~Notification settings per folder~~
 * ~~Select local images for signatures~~ (this will not be added because it requires image file management and because images are not shown by default in most email clients anyway)
 * ~~Show messages matched by a rule~~
-* [ManageSieve](https://tools.ietf.org/html/rfc5804)
+* ~~[ManageSieve](https://tools.ietf.org/html/rfc5804)~~ (there are no maintained Java libraries with a suitable license and without dependencies and besides that, FairEmail has its own filter rules)
 * ~~Search for messages with/without attachments~~ (this cannot be added because IMAP doesn't support searching for attachments)
-* Search for a folder
+* ~~Search for a folder~~ (filtering a hierarchical folder list is problematic)
+* ~~Search suggestions~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -188,6 +189,9 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(111) Can you add OAuth authentication?](#user-content-faq111)
 * [(112) Which email provider do you recommend?](#user-content-faq112)
 * [(113) How does biometric authentication work?](#user-content-faq113)
+* [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
+* [(115) Can you add email address chips?](#user-content-faq114)
+* [(116) How can I show images in messages from trusted senders by default?](#user-content-faq116)
 
 [I have another question.](#support)
 
@@ -597,6 +601,8 @@ Before Android 8 Oreo: there is an advanced option in the setup for this.
 Android 8 Oreo and later: see [here](https://developer.android.com/training/notify-user/channels) about how to configure notification channels.
 You can use the button *Manage notifications* in the setup to directly go to the Android notification settings.
 Note that apps cannot change notification settings, including the notification light setting, on Android 8 Oreo and later anymore.
+Apps designed and targeting older Android versions might still be able to control the contents of notifications,
+but such apps cannot be updated anymore and recent Android versions will show a warning such apps are outdated.
 
 <br />
 
@@ -923,7 +929,7 @@ consider switching to a modern provider which supports push messages (IMAP IDLE)
 If your device has an [AMOLED](https://en.wikipedia.org/wiki/AMOLED) screen,
 you can save battery usage while viewing messages by switching to the black theme.
 
-Finally, make sure you are using [the latest version](https://github.com/M66B/open-source-email/releases/).
+Finally, make sure you are using [the latest version](https://github.com/M66B/FairEmail/releases/).
 
 <br />
 
@@ -1293,6 +1299,8 @@ Select the time the conversation(s) should snooze and confirm by tapping OK.
 The conversations will be hidden for the selected time and shown again afterwards.
 You will receive a new message notification as reminder.
 
+It is also possible to snooze messages with [a rule](#user-content-faq71).
+
 You can show snoozed messages by using the *Snoozed* item in the three dot overflow menu.
 
 You can tap on the small snooze icon to see until when a conversation is snoozed.
@@ -1361,6 +1369,7 @@ You can select one of these actions to apply to matching messages:
 
 * Mark as read
 * Mark as unread
+* Snooze
 * Add star
 * Move
 * Copy
@@ -1815,8 +1824,8 @@ Note that this needs to be enabled in the advance options (default enabled).
 <a name="faq107"></a>
 **(107) How do I use colored stars?**
 
-You can set a colored star via the *more* message menu, via multiple selection (started by long pressing a message)
-or automatically by using [rules](#user-content-faq71).
+You can set a colored star via the *more* message menu, via multiple selection (started by long pressing a message),
+by long pressing a star in a conversation or automatically by using [rules](#user-content-faq71).
 
 You need to know that colored stars are not supported by the IMAP protocol and can therefore not be synchronized to an email server.
 This means that colored stars will not be visible in other email clients and will be lost on downloading messages again.
@@ -1847,7 +1856,7 @@ Permanently delete messages from other folders would defeat the purpose of the t
 
 ~~You can solve this in two ways:~~
 
-* ~~Switch to the official version of FairEmail, see [here](https://github.com/M66B/open-source-email/blob/master/README.md#downloads) for the options~~
+* ~~Switch to the official version of FairEmail, see [here](https://github.com/M66B/FairEmail/blob/master/README.md#downloads) for the options~~
 * ~~Use app specific passwords, see [this FAQ](#user-content-faq6)~~
 
 ~~Using *select account* in third party builds is not possible in recent versions anymore.~~
@@ -1898,7 +1907,8 @@ for a list of privacy friendly email providers with advantages and disadvantages
 If your device has a biometric sensor, for example a fingerprint sensor, you can enable/disable biometric authentication in the navigation (hamburger) menu of the setup screen.
 When enabled FairEmail will require biometric authentication after a period of inactivity or after the screen has been turned off while FairEmail was running.
 Activity is navigation within FairEmail, for example opening a conversation thread.
-When biometric authentication is enabled new message notifications will not show any content.
+The inactivity period duration can be configured in the miscellaneous settings.
+When biometric authentication is enabled new message notifications will not show any content and FairEmail won't be visible on the Android recents screen.
 
 Biometric authentication is meant to prevent others from seeing your messages only.
 FairEmail relies on device encryption for data encryption, see also [this FAQ](#user-content-faq37).
@@ -1907,9 +1917,44 @@ Biometric authentication is a pro feature.
 
 <br />
 
+<a name="faq114"></a>
+**(114) Can you add an import for the settings of other email apps?**
+
+The format of the settings files of most other email apps is not documented, so this is difficult.
+Sometimes it is possible to reverse engineer the format, but as soon as the settings format changes things will break.
+Also, settings are often incompatible.
+For example, FairEmail has unlike most other email apps settings for the number of days to synchronize messages for
+and for the number of days to keep messages for, mainly to save on battery usage.
+Moreover, setting up an account/identity with the quick setup is simple, so it is not really worth the effort.
+
+<br />
+
+<a name="faq115"></a>
+**(115) Can you add email address chips?**
+
+Email address [chips](https://material.io/design/components/chips.html) look nice, but cannot be edited,
+which is quite inconvenient when you made a typo in an email address.
+
+Chips are not suitable for showing in a list
+and since the message header in a list should look similar to the message header of the message view it is not an option to use chips for viewing messages.
+
+Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f471b882ec87d5a5a5015).
+
+<br />
+
+<a name="faq116"></a>
+**(116) How can I show images in messages from trusted senders by default?**
+
+You can show images in messages from trusted senders by default by enabled the display setting *Automatically show images for known contacts*.
+
+People in the Android contacts list are considered to be known and trusted,
+unless the contact relation is set to '*Untrusted*' (case insensitive; the relation type, for example parent, child, friend, etc does not matter).
+
+<br />
+
 ## Support
 
 If you have another question, want to request a feature or report a bug, you can use [this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168).
 Registration is free.
 
-If you are a supporter of the project, you can get limited personal support by using [this form](https://contact.faircode.eu/?product=fairemail%2B).
+If you are a supporter of the project, you can get limited personal support by using [this form](https://contact.faircode.eu/?product=fairemailsupport).

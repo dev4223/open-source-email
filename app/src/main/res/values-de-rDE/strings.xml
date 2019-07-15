@@ -6,6 +6,7 @@
     <string name="app_welcome">FairEmail ist eine Open Source E-Mail-App mit dem Fokus auf Privatsphäre und Sicherheit. Aus diesem Grund können einige Funktionen anders funktionieren als Sie es gewohnt sind.</string>
     <string name="app_limitations">Beispielsweise werden Nachrichten neu formatiert um unsichere Elemente zu entfernen und die Lesbarkeit zu erhöhen. Um die Sicherheit zu erhöhen, muss das Öffnen eines Links vorab bestätigt werden.</string>
     <string name="app_crash">FairEmail wird auf diesem Gerät nicht unterstützt, da Fehler in der benutzten Android-Version Abstürze verursachen</string>
+    <string name="app_promote">Gesendet mit <a href="https://email.faircode.eu/">FairEmail</a>, einer Open-Source-E-Mail-App für Android, die die Privatspähre ihrer Nutzer schützt</string>
     <string name="app_exit">„Zurück” erneut drücken, um zu beenden</string>
     <string name="channel_service">Dienst</string>
     <string name="channel_send">Senden</string>
@@ -50,7 +51,7 @@
         <item quantity="one">%1$d Nachricht als Spam behandeln?</item>
         <item quantity="other">%1$d Nachrichten als Spam behandeln?</item>
     </plurals>
-    <string name="title_ask_spam_who">Nachricht von %1$s als Spam kennzeichnen?</string>
+    <string name="title_ask_spam_who">Nachricht von %1$s als Spam behandeln?</string>
     <string name="title_notification_waiting">Auf eine geeignete Verbindung wird gewartet</string>
     <string name="title_notification_sending">Nachrichten werden gesendet</string>
     <string name="title_notification_failed">„%1$s” fehlgeschlagen</string>
@@ -99,6 +100,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_account_remark">Um E-Mails zu empfangen</string>
     <string name="title_setup_identity">Identitäten einrichten</string>
     <string name="title_setup_identity_remark">Um E-Mails zu senden</string>
+    <string name="title_setup_identity_hint">Um Namen, Farbe, Signatur, etc. zu ändern</string>
     <string name="title_setup_permissions">Berechtigungen erteilen</string>
     <string name="title_setup_permissions_remark">Um auf Kontaktinformationen zuzugreifen (optional)</string>
     <string name="title_setup_doze">Akku-Optimierung einrichten</string>
@@ -158,6 +160,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_plain_only">Immer als Reintext senden</string>
     <string name="title_advanced_autoresize">Angehängte und eingebettete Bilder automatisch anpassen</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d Pixel</string>
+    <string name="title_advanced_lookup_mx">Überprüft die Empfänger-E-Mail-Adressen vor dem Senden</string>
     <string name="title_advanced_autosend">Senden von E-Mails bestätigen</string>
     <string name="title_advanced_send_delayed">Senden von Nachrichten verzögern</string>
     <string name="title_advanced_metered">Getaktete Verbindungen verwenden</string>
@@ -211,6 +214,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_badge">Startsymbol mit der Anzahl der neuen Nachrichten anzeigen</string>
     <string name="title_advanced_subscriptions">Ihre Abonnements verwalten</string>
     <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
+    <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
     <string name="title_advanced_english">Englische Sprache erzwingen</string>
     <string name="title_advanced_watchdog">Regelmäßig überprüfen, ob FairEmail noch aktiv ist</string>
     <string name="title_advanced_updates">Nach Aktualisierungen suchen</string>
@@ -223,6 +227,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_schedule_hint">Tippe auf eine Zeit, um eine Zeit zu setzen</string>
     <string name="title_advanced_sync_kept_hint">Dies überträgt zusätzliche Daten und verbraucht zusätzliche Akkuladung, insbesondere wenn viele Nachrichten auf dem Gerät gespeichert sind</string>
     <string name="title_advanced_sync_folders_hint">Wenn Sie dies deaktivieren, wird der Daten- und Akkubedarf etwas reduziert, aber auch die Aktualisierung der Ordnerliste deaktiviert.</string>
+    <string name="title_advanced_lookup_mx_hint">Dies wird überprüfen, ob DNS MX-Einträge existieren</string>
     <string name="title_advanced_metered_hint">Getaktete Verbindungen sind in der Regel mobile Verbindungen oder bezahlte Wi-Fi Hotspots</string>
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
@@ -261,7 +266,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_account_interval_hint">Häufigkeit der Aktualisierung der Verbindung für Push-Meldungen oder Häufigkeit der Überprüfung auf neue Nachrichten</string>
     <string name="title_account_partial_fetch_hint">Deaktivieren Sie dies nur bei Nachrichten ohne Inhalt oder beschädigten Anhängen</string>
     <string name="title_account_signature">Signaturtext</string>
-    <string name="title_account_color">Farbe</string>
+    <string name="title_color">Farbe</string>
     <string name="title_account_notify">Separate Benachrichtigungen</string>
     <string name="title_account_left">Nach links wischen</string>
     <string name="title_account_right">Nach rechts wischen</string>
@@ -418,7 +423,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_ask_show_image">Das Anzeigen von Bildern kann datenschutzrelevante Informationen preisgeben</string>
     <string name="title_ask_edit_ref">Nachrichtentext der zu beantwortenden/weitergeleitenden Nachricht bearbeiten?</string>
     <string name="title_ask_sync_all">Alle Nachrichten in %1$s synchronisieren?</string>
-    <string name="title_ask_delete_local">Nur lokale Nachrichten löschen, die auch auf dem entfernten Server gespeichert sind?</string>
+    <string name="title_ask_delete_local">Lokale Nachrichten löschen? Die Nachrichten bleiben auf dem entfernten Server.</string>
     <string name="title_ask_help">Helfen Sie mit, FairEmail zu verbessern</string>
     <string name="title_ask_reporting">Fehlerberichte senden?</string>
     <string name="title_reporting_why">Fehlerberichte helfen uns, FairEmail zu verbessern</string>
@@ -437,6 +442,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_save">Speichern</string>
     <string name="title_send">Senden</string>
     <string name="title_send_at">Später senden &#8230;</string>
+    <string name="title_no_server">Kein Server gefunden bei \'%1$s\'</string>
     <string name="title_style_bold">Fett</string>
     <string name="title_style_italic">Kursiv</string>
     <string name="title_style_underline">Unterstreichen</string>
@@ -711,5 +717,12 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
         <item>An</item>
         <item>Zusätzliche Empfänger (CC)</item>
         <item>Verdeckte Empfänger (BCC)</item>
+    </string-array>
+    <string-array name="biometricsTimeoutNames">
+        <item>Eine Minute</item>
+        <item>2 Minuten</item>
+        <item>5 Minuten</item>
+        <item>10 Minuten</item>
+        <item>20 Minuten</item>
     </string-array>
 </resources>

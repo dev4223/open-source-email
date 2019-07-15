@@ -6,6 +6,7 @@
     <string name="app_welcome">FairEmail是一个专注于隐私与安全的开源电子邮件软件。基于此某些功能的工作方式可能与您习惯的功能不同。</string>
     <string name="app_limitations">例如，为了去除不安全元素并提高阅读性，邮件将总被重建格式；出于安全考虑，打开邮件内链接需经用户确认</string>
     <string name="app_crash">此设备不支持 FairEmail, 因为 android 中的错误会导致崩溃</string>
+    <string name="app_promote">用开源、隐私友好的安卓电邮App<a href="https://email.faircode.eu/">FairEmail</a>发送</string>
     <string name="app_exit">再按一次返回键退出</string>
     <string name="channel_service">服务</string>
     <string name="channel_send">发送</string>
@@ -42,7 +43,7 @@
     <plurals name="title_ask_spam">
         <item quantity="other">把 %1$d 作为垃圾邮件处理？</item>
     </plurals>
-    <string name="title_ask_spam_who">将来自%1$s的消息举报为垃圾邮件?</string>
+    <string name="title_ask_spam_who">从 %1$s 中的消息作为垃圾邮件处理？</string>
     <string name="title_notification_waiting">等待合适连接</string>
     <string name="title_notification_sending">正发送消息</string>
     <string name="title_notification_failed">“%1$s”失败</string>
@@ -81,6 +82,7 @@
     <string name="title_setup_quick_imap">接收消息的IMAP 服务器</string>
     <string name="title_setup_quick_smtp">发送消息的SMTP服务器</string>
     <string name="title_setup_go">转到</string>
+    <string name="title_setup_wizard">向导</string>
     <string name="title_setup_instructions">设置指南</string>
     <string name="title_setup_no_settings">找不到 \"%1$s\" 的设置</string>
     <string name="title_setup_quick_success">已成功添加了一个账户和身份</string>
@@ -89,8 +91,10 @@
     <string name="title_setup_grant">同意</string>
     <string name="title_setup_account">设置账户</string>
     <string name="title_setup_account_remark">用于接收电子邮件</string>
+    <string name="title_setup_account_hint">左/右滑动目标文件夹来更改颜色</string>
     <string name="title_setup_identity">设置身份</string>
     <string name="title_setup_identity_remark">用于发送电子邮件</string>
+    <string name="title_setup_identity_hint">更改名称、颜色、签名等</string>
     <string name="title_setup_permissions">授予权限</string>
     <string name="title_setup_permissions_remark">获取联系人信息(可选)</string>
     <string name="title_setup_doze">设置电池优化选项</string>
@@ -150,6 +154,7 @@
     <string name="title_advanced_plain_only">默认仅发送纯文本</string>
     <string name="title_advanced_autoresize">自动调整附加和嵌入图像大小</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d 像素</string>
+    <string name="title_advanced_lookup_mx">发送前检查收件人电子邮件地址</string>
     <string name="title_advanced_autosend">确认发送邮件</string>
     <string name="title_advanced_send_delayed">延迟发送消息</string>
     <string name="title_advanced_metered">使用按流量计费的连接</string>
@@ -203,6 +208,7 @@
     <string name="title_advanced_badge">在启动器图标上显示新消息数目</string>
     <string name="title_advanced_subscriptions">管理文件夹订阅</string>
     <string name="title_advanced_sync_subscribed">只同步订阅的文件夹</string>
+    <string name="title_advanced_biometrics_timeout">生物认证超时</string>
     <string name="title_advanced_english">强制使用英语</string>
     <string name="title_advanced_watchdog">定期检查FairEmail是否仍在运行</string>
     <string name="title_advanced_updates">检查更新</string>
@@ -215,6 +221,7 @@
     <string name="title_advanced_schedule_hint">点击“时间”选项来设置时间</string>
     <string name="title_advanced_sync_kept_hint">这将使用额外的数据和额外电量，特别是如果有许多消息保留在设备上</string>
     <string name="title_advanced_sync_folders_hint">禁用此功能会降低数据和电池使用量，但也会禁用更新文件夹列表</string>
+    <string name="title_advanced_lookup_mx_hint">这将检查 DNS MX 记录是否存在</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>
@@ -253,7 +260,7 @@
     <string name="title_account_interval_hint">刷新连接推送消息的频率或检查新消息的频率</string>
     <string name="title_account_partial_fetch_hint">仅在空消息或损坏的附件时禁用此功能</string>
     <string name="title_account_signature">签名文本</string>
-    <string name="title_account_color">颜色</string>
+    <string name="title_color">颜色</string>
     <string name="title_account_notify">单独的通知</string>
     <string name="title_account_left">向左滑动</string>
     <string name="title_account_right">向右滑动</string>
@@ -410,7 +417,7 @@
     <string name="title_ask_show_image">显示图像可能会泄露隐私敏感信息</string>
     <string name="title_ask_edit_ref">编辑格式已更改的回复/转发消息文本？</string>
     <string name="title_ask_sync_all">同步所有在%1$s里的消息 ？</string>
-    <string name="title_ask_delete_local">只删除同样存储在远程服务器上的本地消息？</string>
+    <string name="title_ask_delete_local">删除本地消息？消息将保留在远程服务器上</string>
     <string name="title_ask_help">帮助改进FairEmail</string>
     <string name="title_ask_reporting">发送错误报告?</string>
     <string name="title_reporting_why">错误报告将有助于改进FairEmail</string>
@@ -429,6 +436,7 @@
     <string name="title_save">保存</string>
     <string name="title_send">发送</string>
     <string name="title_send_at">发送于 &#8230;</string>
+    <string name="title_no_server">在 \'%1$s\' 找不到服务器</string>
     <string name="title_style_bold">粗体</string>
     <string name="title_style_italic">斜体</string>
     <string name="title_style_underline">下划线</string>
@@ -703,5 +711,12 @@
         <item>发送至</item>
         <item>抄送</item>
         <item>密送</item>
+    </string-array>
+    <string-array name="biometricsTimeoutNames">
+        <item>一分钟</item>
+        <item>2分钟</item>
+        <item>5分钟</item>
+        <item>10分钟</item>
+        <item>20分钟</item>
     </string-array>
 </resources>

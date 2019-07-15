@@ -27,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.util.Patterns;
@@ -243,6 +244,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                         boolean inbox = false;
                         boolean drafts = false;
+                        EntityFolder altDrafts = null;
                         for (Folder ifolder : istore.getDefaultFolder().list("*")) {
                             String fullName = ifolder.getFullName();
                             String[] attrs = ((IMAPFolder) ifolder).getAttributes();
@@ -268,7 +270,14 @@ public class FragmentQuickSetup extends FragmentBase {
                                 }
                                 if (EntityFolder.DRAFTS.equals(type))
                                     drafts = true;
+                                if (folder.name.toLowerCase().contains("draft"))
+                                    altDrafts = folder;
                             }
+                        }
+
+                        if (!drafts && altDrafts != null) {
+                            drafts = true;
+                            altDrafts.type = EntityFolder.DRAFTS;
                         }
 
                         if (!inbox || !drafts)
@@ -348,7 +357,12 @@ public class FragmentQuickSetup extends FragmentBase {
 
                     identity.display = null;
                     identity.color = null;
-                    identity.signature = null;
+
+                    CharSequence promote = getText(R.string.app_promote);
+                    if (promote instanceof Spanned)
+                        identity.signature = HtmlHelper.toHtml((Spanned) promote);
+                    else
+                        identity.signature = null;
 
                     identity.auth_type = ConnectionHelper.AUTH_TYPE_PASSWORD;
                     identity.host = provider.smtp_host;
@@ -435,10 +449,14 @@ public class FragmentQuickSetup extends FragmentBase {
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        switch (requestCode) {
-            case REQUEST_DONE:
-                finish();
-                break;
+        try {
+            switch (requestCode) {
+                case REQUEST_DONE:
+                    finish();
+                    break;
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
     }
 

@@ -141,7 +141,11 @@ public class ServiceSend extends LifecycleService {
                                                     message = db.message().getMessage(op.message);
                                                     if (message == null)
                                                         throw new MessageRemovedException();
-                                                    send(message);
+                                                    onSend(message);
+                                                    break;
+
+                                                case EntityOperation.ANSWERED:
+                                                    // This will be fixed when synchronizing the message
                                                     break;
 
                                                 default:
@@ -286,7 +290,7 @@ public class ServiceSend extends LifecycleService {
         }
     };
 
-    private void send(EntityMessage message) throws MessagingException, IOException {
+    private void onSend(EntityMessage message) throws MessagingException, IOException {
         DB db = DB.getInstance(this);
 
         // Mark attempt

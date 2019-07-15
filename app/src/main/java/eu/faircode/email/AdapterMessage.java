@@ -55,9 +55,9 @@ import android.text.TextWatcher;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.LinkMovementMethod;
 import android.text.style.DynamicDrawableSpan;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
-import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -1061,7 +1061,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (line.length() > 0 && !Character.isWhitespace(line.charAt(0))) {
                         int colon = line.indexOf(':');
                         if (colon > 0)
-                            ssb.setSpan(new StyleSpan(Typeface.BOLD), index, index + colon, 0);
+                            ssb.setSpan(new ForegroundColorSpan(colorAccent), index, index + colon, 0);
                     }
                     index += line.length() + 1;
                 }
@@ -2008,20 +2008,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        Drawable image = HtmlHelper.decodeImage(context, message.id, source, show_images, tvBody);
-
-                        ConstraintLayout.LayoutParams params =
-                                (ConstraintLayout.LayoutParams) tvBody.getLayoutParams();
-                        float width = context.getResources().getDisplayMetrics().widthPixels
-                                - params.leftMargin - params.rightMargin;
-                        if (image.getIntrinsicWidth() > width) {
-                            float scale = width / image.getIntrinsicWidth();
-                            image.setBounds(0, 0,
-                                    Math.round(image.getIntrinsicWidth() * scale),
-                                    Math.round(image.getIntrinsicHeight() * scale));
-                        }
-
-                        return image;
+                        return HtmlHelper.decodeImage(context, message.id, source, show_images, tvBody);
                     }
                 }, null);
 
@@ -2977,10 +2964,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.contrast = prefs.getBoolean("contrast", false);
         this.monospaced = prefs.getBoolean("monospaced", false);
-        this.autoimages = (this.contacts && prefs.getBoolean("autoimages", false));
+        this.autoimages = (this.contacts && prefs.getBoolean("autoimages", true));
         this.collapse_quotes = prefs.getBoolean("collapse_quotes", false);
         this.authentication = prefs.getBoolean("authentication", true);
-        this.debug = prefs.getBoolean("debug", false);
+
+        debug = prefs.getBoolean("debug", false);
 
         AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(DIFF_CALLBACK)
                 .build();
@@ -3345,7 +3333,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         holder.unwire();
 
         TupleMessageEx message = differ.getItem(position);
-        if (message == null)
+        if (message == null || context == null)
             holder.clear();
         else {
             holder.bindTo(message);
