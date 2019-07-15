@@ -26,7 +26,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -108,6 +107,7 @@ import javax.mail.search.SearchTerm;
 import me.leolin.shortcutbadger.ShortcutBadger;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
 
 class Core {
     private static int lastUnseen = -1;
@@ -1197,8 +1197,8 @@ class Core {
                                 context,
                                 account, folder,
                                 ifolder, (IMAPMessage) isub[j],
-                                false,
-                                rules);
+                                false, download,
+                                rules, state);
                         ids[from + j] = message.id;
                     } catch (MessageRemovedException ex) {
                         Log.w(folder.name, ex);
@@ -1304,8 +1304,8 @@ class Core {
             Context context,
             EntityAccount account, EntityFolder folder,
             IMAPFolder ifolder, IMAPMessage imessage,
-            boolean browsed,
-            List<EntityRule> rules) throws MessagingException, IOException {
+            boolean browsed, boolean download,
+            List<EntityRule> rules, State state) throws MessagingException, IOException {
         long uid = ifolder.getUID(imessage);
 
         if (imessage.isExpunged()) {
@@ -1356,8 +1356,15 @@ class Core {
                         dup.uid = uid;
                         dup.msgid = msgid;
                         dup.thread = thread;
+
                         if (dup.size == null)
                             dup.size = helper.getSize();
+
+                        if (EntityFolder.OUTBOX.equals(dfolder.type)) {
+                            dup.received = helper.getReceived();
+                            dup.sent = helper.getSent();
+                        }
+
                         dup.error = null;
 
                         message = dup;
@@ -1422,7 +1429,7 @@ class Core {
             Uri lookupUri = ContactInfo.getLookupUri(context, message.from);
             message.avatar = (lookupUri == null ? null : lookupUri.toString());
 
-                /*
+            /*
                 // Authentication is more reliable
                 Address sender = helper.getSender(); // header
                 if (sender != null) {
@@ -1432,7 +1439,7 @@ class Core {
                     if (s.length > 1 && (f == null || (f.length > 1 && !s[1].equals(f[1]))))
                         message.warning = context.getString(R.string.title_via, s[1]);
                 }
-                */
+            */
 
             try {
                 db.beginTransaction();
@@ -1466,6 +1473,36 @@ class Core {
 
             if (message.received > account.created)
                 updateContactInfo(context, folder, message);
+
+            // Download small messages inline
+            if (download && message.size != null) {
+                long maxSize;
+                if (state == null || state.networkState.isUnmetered())
+                    maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
+                else {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    int downloadSize = prefs.getInt("download", 0);
+                    maxSize = (downloadSize == 0
+                            ? MessageHelper.SMALL_MESSAGE_SIZE
+                            : Math.min(downloadSize, MessageHelper.SMALL_MESSAGE_SIZE));
+                }
+
+                if (message.size < maxSize) {
+                    String body = parts.getHtml(context);
+                    Helper.writeText(message.getFile(context), body);
+                    db.message().setMessageContent(message.id,
+                            true,
+                            parts.isPlainOnly(),
+                            HtmlHelper.getPreview(body),
+                            parts.getWarnings(message.warning));
+                    Log.i(folder.name + " inline downloaded message id=" + message.id +
+                            " size=" + message.size + "/" + (body == null ? null : body.length()));
+
+                    if (!TextUtils.isEmpty(body))
+                        fixAttachments(context, message.id, body);
+                }
+            }
+
         } else {
             if (process) {
                 EntityIdentity identity = matchIdentity(context, folder, message);
@@ -1716,7 +1753,6 @@ class Core {
             maxSize = Long.MAX_VALUE;
 
         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-        MessageHelper helper = new MessageHelper(imessage);
 
         boolean fetch = false;
         if (!message.content)
@@ -1747,10 +1783,12 @@ class Core {
             //fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
             //ifolder.fetch(new Message[]{imessage}, fp);
 
+            MessageHelper helper = new MessageHelper(imessage);
             MessageHelper.MessageParts parts = helper.getMessageParts();
 
             if (!message.content) {
-                if (state.getNetworkState().isUnmetered() || (message.size != null && message.size < maxSize)) {
+                if (state.getNetworkState().isUnmetered() ||
+                        (message.size != null && message.size < maxSize)) {
                     String body = parts.getHtml(context);
                     Helper.writeText(message.getFile(context), body);
                     db.message().setMessageContent(message.id,
@@ -1865,6 +1903,7 @@ class Core {
             final List<Long> add = new ArrayList<>();
             final List<Long> remove = groupNotifying.get(group);
 
+            int updates = 0;
             for (Notification notification : notifications) {
                 Long id = notification.extras.getLong("id", 0);
                 if (id != 0)
@@ -1872,16 +1911,20 @@ class Core {
                         remove.remove(id);
                         Log.i("Notify existing=" + id);
                     } else {
-                        remove.remove(-id);
+                        if (remove.contains(-id)) {
+                            updates++;
+                            remove.remove(-id);
+                        }
                         add.add(id);
                         Log.i("Notify adding=" + id);
                     }
             }
 
             Log.i("Notify group=" + group + " count=" + notifications.size() +
-                    " added=" + add.size() + " removed=" + remove.size());
+                    " added=" + add.size() + " removed=" + remove.size() + " updates=" + updates);
 
-            if (notifications.size() == 0) {
+            if (notifications.size() == 0 ||
+                    (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && add.size() - updates > 0)) {
                 String tag = "unseen." + group + "." + 0;
                 Log.i("Notify cancel tag=" + tag);
                 nm.cancel(tag, 1);
@@ -1931,7 +1974,9 @@ class Core {
 
     private static List<Notification> getNotificationUnseen(Context context, String group, List<TupleMessageEx> messages) {
         List<Notification> notifications = new ArrayList<>();
-        // https://developer.android.com/training/notify-user/group
+
+        // Android 7+ https://developer.android.com/training/notify-user/group
+        // Android 8+ https://developer.android.com/training/notify-user/channels
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (messages == null || messages.size() == 0 || nm == null)
@@ -1981,7 +2026,10 @@ class Core {
                         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setGroup(group)
                         .setGroupSummary(true)
-                        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+                        .setGroupAlertBehavior(Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                                ? NotificationCompat.GROUP_ALERT_SUMMARY
+                                : NotificationCompat.GROUP_ALERT_CHILDREN)
+                        .setOnlyAlertOnce(true);
 
         Notification pub = builder.build();
         builder
@@ -2002,6 +2050,20 @@ class Core {
             builder.setStyle(new NotificationCompat.BigTextStyle()
                     .bigText(HtmlHelper.fromHtml(sb.toString()))
                     .setSummaryText(title));
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            if (light) {
+                builder.setDefaults(DEFAULT_LIGHTS);
+                //builder.setLights(Color.WHITE, 1000, 1000);
+                Log.i("Notify light enabled");
+            }
+
+            Uri uri = (sound == null ? null : Uri.parse(sound));
+            if (uri == null || "file".equals(uri.getScheme()))
+                uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            builder.setSound(uri);
+            Log.i("Notify sound=" + uri);
         }
 
         notifications.add(builder.build());
@@ -2058,7 +2120,9 @@ class Core {
                             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                             .setGroup(group)
                             .setGroupSummary(false)
-                            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+                            .setGroupAlertBehavior(Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                                    ? NotificationCompat.GROUP_ALERT_SUMMARY
+                                    : NotificationCompat.GROUP_ALERT_CHILDREN)
                             .setOnlyAlertOnce(true);
 
             if (biometrics)
@@ -2172,15 +2236,8 @@ class Core {
                 }
             }
 
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                if (light)
-                    mbuilder.setLights(Color.WHITE, 1000, 1000);
-
-                Uri uri = (sound == null ? null : Uri.parse(sound));
-                if (uri == null || "file".equals(uri.getScheme()))
-                    uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-                mbuilder.setSound(uri);
-            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+                mbuilder.setSound(null);
 
             notifications.add(mbuilder.build());
         }

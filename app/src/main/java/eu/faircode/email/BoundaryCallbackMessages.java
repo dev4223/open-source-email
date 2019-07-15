@@ -416,8 +416,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                             message = Core.synchronizeMessage(context,
                                     account, browsable,
                                     ifolder, (IMAPMessage) isub[j],
-                                    true,
-                                    rules);
+                                    true, true,
+                                    rules, null);
                             found++;
                         }
                         db.message().setMessageFound(message.account, message.thread);

@@ -1,11 +1,11 @@
-<img align="right" src="https://raw.githubusercontent.com/M66B/open-source-email/master/app/src/main/res/mipmap-hdpi/ic_launcher.png">
+<img align="right" src="https://raw.githubusercontent.com/M66B/FairEmail/master/app/src/main/res/mipmap-hdpi/ic_launcher.png">
 
 # FairEmail (Fork)
 
-![GitHub](https://img.shields.io/github/license/M66B/open-source-email.svg)
-![GitHub release](https://img.shields.io/github/release/M66B/open-source-email.svg)
-![GitHub commits since tagged version](https://img.shields.io/github/commits-since/M66B/open-source-email/0.1.svg)
-![GitHub stars](https://img.shields.io/github/stars/M66B/open-source-email.svg?style=social)
+![GitHub](https://img.shields.io/github/license/M66B/FairEmail.svg)
+![GitHub release](https://img.shields.io/github/release/M66B/FairEmail.svg)
+![GitHub commits since tagged version](https://img.shields.io/github/commits-since/M66B/FairEmail/0.1.svg)
+![GitHub stars](https://img.shields.io/github/stars/M66B/FairEmail.svg?style=social)
 
 *Open source, privacy friendly email app for Android*
 
@@ -42,8 +42,8 @@ This app starts a foreground service with a low priority status bar notification
 
 ## Main features
 
-* 100 % [open source](https://github.com/M66B/open-source-email/blob/master/LICENSE)
-* [Privacy friendly](https://github.com/M66B/open-source-email/blob/master/PRIVACY.md)
+* 100 % [open source](https://github.com/M66B/FairEmail/blob/master/LICENSE)
+* [Privacy friendly](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md)
 * Multiple accounts
 * Multiple email addresses
 * Unified inbox
@@ -62,26 +62,26 @@ This app starts a foreground service with a low priority status bar notification
 * Confirm showing images to prevent tracking
 * Confirm opening links to prevent tracking and phishing
 * Automatically recognize and disable tracking images
-* Warning if messages could not be [authenticated](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq92)
+* Warning if messages could not be [authenticated](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq92)
 
 ## Pro features
 
 All pro features are convenience or advanced features.
 
 * Account/identity colors
-* Colored stars ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq107))
+* Colored stars ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq107))
 * Notification settings (sounds) per account/folder/sender (requires Android 8 Oreo)
 * Configurable notification actions
-* Snooze messages ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq67))
+* Snooze messages ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq67))
 * Send messages after selected time
-* Synchronization scheduling ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq78))
+* Synchronization scheduling ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq78))
 * Reply templates
 * Accept/decline calendar invitations
-* Filter rules ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq71))
-* Search on device or server ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq13))
+* Filter rules ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
+* Search on device or server ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
 * Keyword management
-* Biometric authentication ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq113))
-* Encryption/decryption ([OpenPGP](https://www.openpgp.org/)) ([instructions](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq12))
+* Biometric authentication ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq113))
+* Encryption/decryption ([OpenPGP](https://www.openpgp.org/)) ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq12))
 * Export settings
 
 ## Simple
@@ -113,7 +113,7 @@ Please see [here](https://email.faircode.eu/#screenshots) for screenshots.
 
 ## Downloads
 
-* [GitHub](https://github.com/M66B/open-source-email/releases)
+* [GitHub](https://github.com/M66B/FairEmail/releases)
 * [Play store](https://play.google.com/store/apps/details?id=eu.faircode.email)
 * [Play store](https://play.google.com/apps/testing/eu.faircode.email) (test)
 
@@ -143,7 +143,7 @@ Because F-Droid builds and GitHub releases are signed differently, an F-Droid bu
 
 ## Privacy
 
-Please see [here](https://github.com/M66B/open-source-email/blob/master/PRIVACY.md#fairemail) for the privacy policy.
+Please see [here](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md#fairemail) for the privacy policy.
 
 ## Compatibility
 
@@ -153,11 +153,11 @@ because earlier Android versions do not support notification grouping.
 
 FairEmail will work properly on devices without any Google service installed.
 
-See [here](https://github.com/M66B/open-source-email/blob/master/FAQ.md#known-problems) for known problems.
+See [here](https://github.com/M66B/FairEmail/blob/master/FAQ.md#known-problems) for known problems.
 
 ## Support / frequently asked questions
 
-See [here](https://github.com/M66B/open-source-email/blob/master/FAQ.md) for a list of often asked questions and about how to get support.
+See [here](https://github.com/M66B/FairEmail/blob/master/FAQ.md) for a list of often asked questions and about how to get support.
 
 ## Contributing
 
@@ -205,7 +205,7 @@ Error reporting is sponsored by:
 ![Bugsnag Logo](/images/bugsnag_logo_navy.png)
 
 [Bugsnag](https://www.bugsnag.com/) monitors application stability
-and is used to [help improve FairEmail](https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq104).
+and is used to [help improve FairEmail](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq104).
 
 ## License
 

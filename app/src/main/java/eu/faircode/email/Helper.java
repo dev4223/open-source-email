@@ -19,9 +19,9 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,11 +33,13 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.hardware.biometrics.BiometricManager;
+import android.hardware.fingerprint.FingerprintManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
-import android.provider.Settings;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.format.DateUtils;
@@ -112,7 +114,7 @@ public class Helper {
 
     static final float LOW_LIGHT = 0.6f;
 
-    static final String FAQ_URI = "https://github.com/M66B/open-source-email/blob/master/FAQ.md";
+    static final String FAQ_URI = "https://github.com/M66B/FairEmail/blob/master/FAQ.md";
     static final String XDA_URI = "https://forum.xda-developers.com/android/apps-games/source-email-t3824168";
 
     static ThreadFactory backgroundThreadFactory = new ThreadFactory() {
@@ -216,17 +218,17 @@ public class Helper {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                Toast.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
+                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
             } catch (Throwable ex) {
                 Log.e(ex);
-                Toast.makeText(context, Helper.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
+                ToastEx.makeText(context, Helper.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
             }
         }
     }
 
     static Intent getIntentSetupHelp() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/SETUP.md#setup-help"));
+        intent.setData(Uri.parse("https://github.com/M66B/FairEmail/blob/master/SETUP.md#setup-help"));
         return intent;
     }
 
@@ -238,7 +240,7 @@ public class Helper {
 
     static Intent getIntentPrivacy() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://github.com/M66B/open-source-email/blob/master/PRIVACY.md#fairemail"));
+        intent.setData(Uri.parse("https://github.com/M66B/FairEmail/blob/master/PRIVACY.md#fairemail"));
         return intent;
     }
 
@@ -249,7 +251,7 @@ public class Helper {
     }
 
     static Intent getIntentIssue(Context context) {
-        if (BuildConfig.BETA_RELEASE && Helper.hasValidFingerprint(context)) {
+        if (BuildConfig.BETA_RELEASE) {
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (Helper.isPro(context) ? "+" : "");
@@ -487,9 +489,9 @@ public class Helper {
                                 @Override
                                 protected void onException(Bundle args, Throwable ex) {
                                     if (ex instanceof IllegalArgumentException)
-                                        Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+                                        ToastEx.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
                                     else
-                                        Toast.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
+                                        ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                                 }
                             }.execute(context, getActivity(), new Bundle(), "error:unexpected");
                         }
@@ -655,6 +657,19 @@ public class Helper {
         return Objects.equals(signed, expected);
     }
 
+    static boolean canAuthenticate(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            return false;
+        else if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+            FingerprintManager fpm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
+            return (fpm != null && fpm.isHardwareDetected() && fpm.hasEnrolledFingerprints());
+        } else {
+            @SuppressLint("WrongConstant")
+            BiometricManager bm = (BiometricManager) context.getSystemService(Context.BIOMETRIC_SERVICE);
+            return (bm != null && bm.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS);
+        }
+    }
+
     static boolean hasAuthentication(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getBoolean("biometrics", false);
@@ -663,17 +678,14 @@ public class Helper {
     static boolean shouldAuthenticate(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean biometrics = prefs.getBoolean("biometrics", false);
+        long biometrics_timeout = prefs.getInt("biometrics_timeout", 2) * 60 * 1000L;
 
         if (biometrics) {
-            ContentResolver resolver = context.getContentResolver();
-            int screen_timeout = Settings.System.getInt(resolver, Settings.System.SCREEN_OFF_TIMEOUT, -1);
-            Log.i("Screen timeout=" + screen_timeout);
-
             long now = new Date().getTime();
             long last_authentication = prefs.getLong("last_authentication", 0);
-            Log.i("Authentication valid until=" + new Date(last_authentication + screen_timeout));
+            Log.i("Authentication valid until=" + new Date(last_authentication + biometrics_timeout));
 
-            if (last_authentication + screen_timeout < now)
+            if (last_authentication + biometrics_timeout < now)
                 return true;
 
             prefs.edit().putLong("last_authentication", now).apply();
@@ -710,7 +722,7 @@ public class Helper {
                                         errorCode == BiometricPrompt.ERROR_USER_CANCELED)
                                     cancelled.run();
                                 else
-                                    Toast.makeText(activity,
+                                    ToastEx.makeText(activity,
                                             errString + " (" + errorCode + ")",
                                             Toast.LENGTH_LONG).show();
                             }
@@ -739,7 +751,7 @@ public class Helper {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(activity,
+                                ToastEx.makeText(activity,
                                         R.string.title_unexpected_error,
                                         Toast.LENGTH_LONG).show();
                                 cancelled.run();
@@ -794,16 +806,20 @@ public class Helper {
     }
 
     static void linkPro(final TextView tv) {
-        final Intent pro = new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRO_FEATURES_URI));
-        PackageManager pm = tv.getContext().getPackageManager();
-        if (pro.resolveActivity(pm) != null) {
-            tv.getPaint().setUnderlineText(true);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    tv.getContext().startActivity(pro);
-                }
-            });
+        if (isPro(tv.getContext()))
+            hide(tv);
+        else {
+            final Intent pro = new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRO_FEATURES_URI));
+            PackageManager pm = tv.getContext().getPackageManager();
+            if (pro.resolveActivity(pm) != null) {
+                tv.getPaint().setUnderlineText(true);
+                tv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        tv.getContext().startActivity(pro);
+                    }
+                });
+            }
         }
     }
 

@@ -151,19 +151,33 @@ public class EmailProvider {
     }
 
     static EmailProvider fromDomain(Context context, String domain) throws IOException {
+        EmailProvider autoconfig = fromDomainInternal(context, domain);
+
+        List<EmailProvider> providers = loadProfiles(context);
+        for (EmailProvider provider : providers)
+            if (provider.imap_host.equals(autoconfig.imap_host) ||
+                    provider.smtp_host.equals(autoconfig.smtp_host)) {
+                Log.i("Replacing autoconfig by profile " + provider.name);
+                return provider;
+            }
+
+        return autoconfig;
+    }
+
+    private static EmailProvider fromDomainInternal(Context context, String domain) throws IOException {
         try {
             Log.i("Provider from DNS domain=" + domain);
-            return addSpecials(context, fromDNS(domain));
+            return addSpecials(context, fromDNS(context, domain));
         } catch (Throwable ex) {
             Log.w(ex);
             try {
                 Log.i("Provider from ISPDB domain=" + domain);
-                return addSpecials(context, fromISPDB(domain));
+                return addSpecials(context, fromISPDB(context, domain));
             } catch (Throwable ex1) {
                 Log.w(ex1);
                 try {
                     Log.i("Provider from template domain=" + domain);
-                    return addSpecials(context, fromTemplate(domain));
+                    return addSpecials(context, fromTemplate(context, domain));
                 } catch (Throwable ex2) {
                     Log.w(ex2);
                     throw new UnknownHostException(context.getString(R.string.title_setup_no_settings, domain));
@@ -172,7 +186,7 @@ public class EmailProvider {
         }
     }
 
-    private static EmailProvider fromISPDB(String domain) throws IOException, XmlPullParserException {
+    private static EmailProvider fromISPDB(Context context, String domain) throws IOException, XmlPullParserException {
         EmailProvider provider = new EmailProvider(domain);
 
         // https://wiki.mozilla.org/Thunderbird:Autoconfiguration:ConfigFileFormat
@@ -352,10 +366,10 @@ public class EmailProvider {
         return provider;
     }
 
-    private static EmailProvider fromDNS(String domain) throws TextParseException, UnknownHostException {
+    private static EmailProvider fromDNS(Context context, String domain) throws TextParseException, UnknownHostException {
         // https://tools.ietf.org/html/rfc6186
-        SRVRecord imap = lookup("_imaps._tcp." + domain);
-        SRVRecord smtp = lookup("_submission._tcp." + domain);
+        SRVRecord imap = lookup(context, "_imaps._tcp." + domain);
+        SRVRecord smtp = lookup(context, "_submission._tcp." + domain);
 
         EmailProvider provider = new EmailProvider(domain);
         provider.imap_host = imap.getTarget().toString(true);
@@ -369,7 +383,7 @@ public class EmailProvider {
         return provider;
     }
 
-    private static EmailProvider fromTemplate(String domain) throws UnknownHostException {
+    private static EmailProvider fromTemplate(Context context, String domain) throws UnknownHostException {
         if (checkTemplate(domain, null, 993, null, 587))
             return new EmailProvider(domain, domain, null, null);
 
@@ -389,7 +403,7 @@ public class EmailProvider {
                 isHostReachable((smtp_prefix == null ? "" : smtp_prefix + ".") + domain, smtp_port, 5000);
     }
 
-    static boolean isHostReachable(String host, int port, int timeoutms) {
+    private static boolean isHostReachable(String host, int port, int timeoutms) {
         Log.i("Checking " + host + ":" + port);
         try (Socket socket = new Socket()) {
             InetAddress iaddr = InetAddress.getByName(host);
@@ -425,23 +439,26 @@ public class EmailProvider {
         return provider;
     }
 
-    private static SRVRecord lookup(String dns) throws TextParseException, UnknownHostException {
-        Lookup lookup = new Lookup(dns, Type.SRV);
+    private static SRVRecord lookup(Context context, String record) throws TextParseException, UnknownHostException {
+        Lookup lookup = new Lookup(record, Type.SRV);
 
         // https://dns.watch/ 84.200.69.80
-        SimpleResolver resolver = new SimpleResolver("8.8.8.8");
+        SimpleResolver resolver = new SimpleResolver(ConnectionHelper.getDnsServer(context));
         lookup.setResolver(resolver);
-        Log.i("Lookup dns=" + dns + " @" + resolver.getAddress());
+        Log.i("Lookup record=" + record + " @" + resolver.getAddress());
         Record[] records = lookup.run();
 
         if (lookup.getResult() != Lookup.SUCCESSFUL)
-            if (lookup.getResult() == Lookup.HOST_NOT_FOUND)
-                throw new UnknownHostException(dns);
+            if (lookup.getResult() == Lookup.HOST_NOT_FOUND ||
+                    lookup.getResult() == Lookup.TYPE_NOT_FOUND)
+                throw new UnknownHostException(record);
             else
                 throw new IllegalArgumentException(lookup.getErrorString());
 
-        Log.i("Found dns=" + (records == null ? -1 : records.length));
-        return (records == null || records.length == 0 ? null : (SRVRecord) records[0]);
+        SRVRecord result = (records == null || records.length == 0 ? null : (SRVRecord) records[0]);
+        Log.i("Found record=" + (records == null ? -1 : records.length) +
+                " result=" + (result == null ? "" : result.toString()));
+        return result;
     }
 
     @Override
