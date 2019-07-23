@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,11 +31,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,12 +51,16 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
 
     private List<TupleFolderNav> items = new ArrayList<>();
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
+    private NumberFormat NF = NumberFormat.getNumberInstance();
+    private DateFormat DTF;
+
+    private boolean debug;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private View view;
         private ImageView ivItem;
         private TextView tvItem;
+        private TextView tvItemExtra;
         private ImageView ivWarning;
 
         ViewHolder(View itemView) {
@@ -61,6 +69,7 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
             view = itemView.findViewById(R.id.clItem);
             ivItem = itemView.findViewById(R.id.ivItem);
             tvItem = itemView.findViewById(R.id.tvItem);
+            tvItemExtra = itemView.findViewById(R.id.tvItemExtra);
             ivWarning = itemView.findViewById(R.id.ivWarning);
         }
 
@@ -77,7 +86,7 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
                 if ("syncing".equals(folder.sync_state))
                     ivItem.setImageResource(R.drawable.baseline_compare_arrows_24);
                 else
-                    ivItem.setImageResource(R.drawable.baseline_send_24);
+                    ivItem.setImageResource(EntityFolder.getIcon(folder.type));
 
                 ivItem.clearColorFilter();
             } else {
@@ -104,10 +113,13 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
                 tvItem.setText(folder.getDisplayName(context));
             else
                 tvItem.setText(context.getString(R.string.title_name_count,
-                        folder.getDisplayName(context), nf.format(count)));
+                        folder.getDisplayName(context), NF.format(count)));
 
             tvItem.setTextColor(Helper.resolveColor(context,
                     count == 0 ? android.R.attr.textColorSecondary : R.attr.colorUnread));
+
+            tvItemExtra.setText(folder.last_sync == null ? null : DTF.format(folder.last_sync));
+            tvItemExtra.setVisibility(debug ? View.VISIBLE : View.GONE);
 
             ivWarning.setVisibility(folder.error == null ? View.GONE : View.VISIBLE);
         }
@@ -134,6 +146,12 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
         this.context = context;
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
+
+        this.DTF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        this.debug = prefs.getBoolean("debug", false);
+
         setHasStableIds(true);
     }
 
@@ -207,6 +225,7 @@ public class AdapterNavFolder extends RecyclerView.Adapter<AdapterNavFolder.View
                     Objects.equals(f1.accountColor, f2.accountColor) &&
                     Objects.equals(f1.state, f2.state) &&
                     Objects.equals(f1.sync_state, f2.sync_state) &&
+                    Objects.equals(f1.last_sync, f2.last_sync) &&
                     f1.unseen == f2.unseen &&
                     f1.operations == f2.operations &&
                     f1.executing == f2.executing);

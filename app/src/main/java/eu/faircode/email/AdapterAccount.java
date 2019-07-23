@@ -52,7 +52,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,8 +68,8 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
 
     private List<TupleAccountEx> items = new ArrayList<>();
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
-    private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
+    private NumberFormat NF = NumberFormat.getNumberInstance();
+    private DateFormat DTF;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
@@ -137,7 +136,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 tvName.setText(account.name);
             else {
                 if (account.unseen > 0)
-                    tvName.setText(context.getString(R.string.title_name_count, account.name, nf.format(account.unseen)));
+                    tvName.setText(context.getString(R.string.title_name_count, account.name, NF.format(account.unseen)));
                 else
                     tvName.setText(account.name);
 
@@ -159,7 +158,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
 
             tvHost.setText(String.format("%s:%d", account.host, account.port));
             tvLast.setText(context.getString(R.string.title_last_connected,
-                    account.last_connected == null ? "-" : df.format(account.last_connected)));
+                    account.last_connected == null ? "-" : DTF.format(account.last_connected)));
 
             tvAuthorize.setVisibility(account.auth_type == ConnectionHelper.AUTH_TYPE_PASSWORD ? View.GONE : View.VISIBLE);
             tvIdentity.setVisibility(account.identities > 0 || !settings ? View.GONE : View.VISIBLE);
@@ -244,8 +243,10 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                             boolean sync = args.getBoolean("sync");
 
                             DB db = DB.getInstance(context);
-                            if (!sync)
+                            if (!sync) {
+                                db.account().setAccountWarning(id, null);
                                 db.account().setAccountError(id, null);
+                            }
                             db.account().setAccountSynchronize(id, sync);
 
                             return sync;
@@ -289,6 +290,8 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
 
+        this.DTF = Helper.getDateTimeInstance(context, DateFormat.SHORT, DateFormat.SHORT);
+
         setHasStableIds(true);
 
         owner.getLifecycle().addObserver(new LifecycleObserver() {
@@ -296,8 +299,6 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
             public void onDestroyed() {
                 Log.i(AdapterAccount.this + " parent destroyed");
                 AdapterAccount.this.parentFragment = null;
-                AdapterAccount.this.context = null;
-                AdapterAccount.this.owner = null;
             }
         });
     }

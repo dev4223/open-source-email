@@ -109,14 +109,11 @@ import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
-import org.xbill.DNS.Lookup;
-import org.xbill.DNS.SimpleResolver;
-import org.xbill.DNS.TextParseException;
-import org.xbill.DNS.Type;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -130,7 +127,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -802,6 +798,7 @@ public class FragmentCompose extends FragmentBase {
 
         menu.findItem(R.id.menu_plain_only).setChecked(plain_only);
         menu.findItem(R.id.menu_encrypt).setChecked(encrypt);
+
         bottom_navigation.getMenu().findItem(R.id.action_send)
                 .setTitle(encrypt ? R.string.title_encrypt : R.string.title_send);
     }
@@ -924,6 +921,7 @@ public class FragmentCompose extends FragmentBase {
     private void onMenuEncrypt() {
         encrypt = !encrypt;
         getActivity().invalidateOptionsMenu();
+        onAction(R.id.action_save);
     }
 
     private void onMenuSendAfter() {
@@ -1453,11 +1451,21 @@ public class FragmentCompose extends FragmentBase {
                             intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                             return intent;
                         } else if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
-                            // Get sign key
-                            Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                            return intent;
+                            if (identity != null && identity.sign_key != null) {
+                                // Encrypt message
+                                Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
+                                intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
+                                intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
+                                intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+                                return intent;
+                            } else {
+                                // Get sign key
+                                return new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                            }
                         } else if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
                             pgpSignKeyId = result.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, -1);
+                            if (identity != null)
+                                db.identity().setIdentitySignKey(identity.id, pgpSignKeyId);
 
                             // Encrypt message
                             Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
@@ -1479,11 +1487,13 @@ public class FragmentCompose extends FragmentBase {
                         return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                     case OpenPgpApi.RESULT_CODE_ERROR:
+                        if (identity != null)
+                            db.identity().setIdentitySignKey(identity.id, null);
                         OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
                         if (error == null)
                             throw new IllegalArgumentException("Unknown error");
                         else
-                            throw new IllegalArgumentException(error.getMessage());
+                            throw new IllegalArgumentException(error.getMessage() + " (" + error.getErrorId() + ")");
 
                     default:
                         throw new IllegalArgumentException("Unknown result code=" + resultCode);
@@ -1750,6 +1760,7 @@ public class FragmentCompose extends FragmentBase {
         args.putString("subject", etSubject.getText().toString().trim());
         args.putString("body", HtmlHelper.toHtml(etBody.getText()));
         args.putBoolean("plain_only", plain_only);
+        args.putBoolean("encrypt", encrypt);
         args.putBoolean("empty", isEmpty());
 
         Log.i("Run execute id=" + working);
@@ -2008,8 +2019,17 @@ public class FragmentCompose extends FragmentBase {
                         if (answer > 0)
                             body = EntityAnswer.getAnswerText(db, answer, null) + body;
                     } else {
+                        // Actions:
+                        // - reply
+                        // - reply_all
+                        // - forward
+                        // - editasnew
+                        // - list
+                        // - receipt
+                        // - participation
                         if ("reply".equals(action) || "reply_all".equals(action) ||
-                                "list".equals(action) || "receipt".equals(action) ||
+                                "list".equals(action) ||
+                                "receipt".equals(action) ||
                                 "participation".equals(action)) {
                             if (ref.to != null && ref.to.length > 0) {
                                 String to = ((InternetAddress) ref.to[0]).getAddress();
@@ -2047,7 +2067,7 @@ public class FragmentCompose extends FragmentBase {
                             else if ("receipt".equals(action))
                                 draft.receipt_request = true;
 
-                        } else if ("forward".equals(action))
+                        } else if ("forward".equals(action) || "editasnew".equals(action))
                             draft.thread = draft.msgid; // new thread
 
                         String subject = (ref.subject == null ? "" : ref.subject);
@@ -2058,6 +2078,20 @@ public class FragmentCompose extends FragmentBase {
                                 draft.subject = context.getString(R.string.title_subject_reply, subject);
                             else
                                 draft.subject = ref.subject;
+                        } else if ("forward".equals(action)) {
+                            String fwd = context.getString(R.string.title_subject_forward, "");
+                            if (!prefix_once || !subject.startsWith(fwd.trim()))
+                                draft.subject = context.getString(R.string.title_subject_forward, subject);
+                            else
+                                draft.subject = ref.subject;
+                        } else if ("editasnew".equals(action)) {
+                            draft.subject = ref.subject;
+                            if (ref.content) {
+                                String html = Helper.readText(ref.getFile(context));
+                                Document document = Jsoup.parse(html);
+                                if (document.body() != null)
+                                    body = document.body().html();
+                            }
                         } else if ("list".equals(action)) {
                             draft.subject = ref.subject;
                         } else if ("receipt".equals(action)) {
@@ -2070,12 +2104,6 @@ public class FragmentCompose extends FragmentBase {
                             body = "<p>" + context.getString(R.string.title_receipt_text) + "</p>";
                             if (!Locale.getDefault().getLanguage().equals("en"))
                                 body += "<p>" + res.getString(R.string.title_receipt_text) + "</p>";
-                        } else if ("forward".equals(action)) {
-                            String fwd = context.getString(R.string.title_subject_forward, "");
-                            if (!prefix_once || !subject.startsWith(fwd.trim()))
-                                draft.subject = context.getString(R.string.title_subject_forward, subject);
-                            else
-                                draft.subject = ref.subject;
                         }
 
                         draft.plain_only = ref.plain_only;
@@ -2163,7 +2191,10 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     // Write reference text
-                    if (ref != null && ref.content && !"list".equals(action) && !"receipt".equals(action)) {
+                    if (ref != null && ref.content &&
+                            !"editasnew".equals(action) &&
+                            !"list".equals(action) &&
+                            !"receipt".equals(action)) {
                         String refBody = String.format("<p>%s %s:</p>\n<blockquote>%s</blockquote>",
                                 Html.escapeHtml(new Date(ref.received).toString()),
                                 Html.escapeHtml(MessageHelper.formatAddresses(ref.from)),
@@ -2176,12 +2207,19 @@ public class FragmentCompose extends FragmentBase {
                         if (uris != null)
                             for (Uri uri : uris)
                                 addAttachment(context, draft.id, uri, false);
-                    } else {
+                    } else if (ref != null &&
+                            ("reply".equals(action) || "reply_all".equals(action) ||
+                                    "forward".equals(action) || "editasnew".equals(action))) {
                         int sequence = 0;
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
-                            if (attachment.encryption == null &&
-                                    ("forward".equals(action) ||
+                            if (attachment.encryption != null &&
+                                    attachment.encryption.equals(EntityAttachment.PGP_MESSAGE)) {
+                                draft.encrypt = true;
+                                db.message().setMessageEncrypt(draft.id, true);
+
+                            } else if (attachment.encryption == null &&
+                                    ("forward".equals(action) || "editasnew".equals(action) ||
                                             (attachment.isInline() && attachment.isImage()))) {
                                 if (attachment.available) {
                                     File source = attachment.getFile(context);
@@ -2247,6 +2285,7 @@ public class FragmentCompose extends FragmentBase {
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
 
             plain_only = (draft.plain_only != null && draft.plain_only);
+            encrypt = (draft.encrypt != null && draft.encrypt);
             getActivity().invalidateOptionsMenu();
 
             if (args.getBoolean("incomplete"))
@@ -2408,11 +2447,13 @@ public class FragmentCompose extends FragmentBase {
             String subject = args.getString("subject");
             String body = args.getString("body");
             boolean plain_only = args.getBoolean("plain_only");
+            boolean encrypt = args.getBoolean("encrypt");
             boolean empty = args.getBoolean("empty");
 
             EntityMessage draft;
 
             DB db = DB.getInstance(context);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             try {
                 db.beginTransaction();
 
@@ -2467,14 +2508,17 @@ public class FragmentCompose extends FragmentBase {
                 InternetAddress acc[] = null;
                 InternetAddress abcc[] = null;
 
+                boolean lookup_mx = prefs.getBoolean("lookup_mx", false);
+
                 if (!TextUtils.isEmpty(to))
                     try {
                         ato = InternetAddress.parse(to);
-                        if (action == R.id.action_send)
-                            for (InternetAddress address : ato) {
+                        if (action == R.id.action_send) {
+                            for (InternetAddress address : ato)
                                 address.validate();
-                                lookup(address, context);
-                            }
+                            if (lookup_mx)
+                                ConnectionHelper.lookupMx(ato, context);
+                        }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(to, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2483,11 +2527,12 @@ public class FragmentCompose extends FragmentBase {
                 if (!TextUtils.isEmpty(cc))
                     try {
                         acc = InternetAddress.parse(cc);
-                        if (action == R.id.action_send)
-                            for (InternetAddress address : acc) {
+                        if (action == R.id.action_send) {
+                            for (InternetAddress address : acc)
                                 address.validate();
-                                lookup(address, context);
-                            }
+                            if (lookup_mx)
+                                ConnectionHelper.lookupMx(acc, context);
+                        }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(cc, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2496,11 +2541,12 @@ public class FragmentCompose extends FragmentBase {
                 if (!TextUtils.isEmpty(bcc))
                     try {
                         abcc = InternetAddress.parse(bcc);
-                        if (action == R.id.action_send)
-                            for (InternetAddress address : abcc) {
+                        if (action == R.id.action_send) {
+                            for (InternetAddress address : abcc)
                                 address.validate();
-                                lookup(address, context);
-                            }
+                            if (lookup_mx)
+                                ConnectionHelper.lookupMx(abcc, context);
+                        }
                     } catch (AddressException ex) {
                         throw new AddressException(context.getString(R.string.title_address_parse_error,
                                 Helper.ellipsize(bcc, ADDRESS_ELLIPSIZE), ex.getMessage()));
@@ -2522,6 +2568,7 @@ public class FragmentCompose extends FragmentBase {
                         !MessageHelper.equal(draft.cc, acc) ||
                         !MessageHelper.equal(draft.bcc, abcc) ||
                         !Objects.equals(draft.subject, subject) ||
+                        ((draft.encrypt != null && draft.encrypt) != encrypt) ||
                         last_available != available);
 
                 last_available = available;
@@ -2535,6 +2582,7 @@ public class FragmentCompose extends FragmentBase {
                     draft.cc = acc;
                     draft.bcc = abcc;
                     draft.subject = subject;
+                    draft.encrypt = encrypt;
                     draft.received = new Date().getTime();
                     draft.sender = MessageHelper.getSortKey(draft.from);
                     Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
@@ -2676,7 +2724,6 @@ public class FragmentCompose extends FragmentBase {
                         db.attachment().setMessage(attachment.id, draft.id);
 
                     // Delay sending message
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     int send_delayed = prefs.getInt("send_delayed", 0);
                     if (draft.ui_snoozed == null && send_delayed != 0) {
                         draft.ui_snoozed = new Date().getTime() + send_delayed * 1000L;
@@ -2691,8 +2738,8 @@ public class FragmentCompose extends FragmentBase {
                     if (draft.ui_snoozed == null)
                         feedback = context.getString(R.string.title_queued);
                     else {
-                        DateFormat df = SimpleDateFormat.getDateTimeInstance();
-                        feedback = context.getString(R.string.title_queued_at, df.format(draft.ui_snoozed));
+                        DateFormat DTF = Helper.getDateTimeInstance(context);
+                        feedback = context.getString(R.string.title_queued_at, DTF.format(draft.ui_snoozed));
                     }
 
                     Handler handler = new Handler(context.getMainLooper());
@@ -2751,34 +2798,11 @@ public class FragmentCompose extends FragmentBase {
         protected void onException(Bundle args, Throwable ex) {
             if (ex instanceof MessageRemovedException)
                 finish();
-            else if (ex instanceof IllegalArgumentException || ex instanceof AddressException)
+            else if (ex instanceof IllegalArgumentException ||
+                    ex instanceof AddressException || ex instanceof UnknownHostException)
                 Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
             else
                 Helper.unexpectedError(getFragmentManager(), ex);
-        }
-
-        private void lookup(InternetAddress address, Context context) throws TextParseException, UnknownHostException {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean lookup_mx = prefs.getBoolean("lookup_mx", false);
-            if (!lookup_mx)
-                return;
-
-            String email = address.getAddress();
-            if (email == null || !email.contains("@"))
-                return;
-
-            String domain = email.split("@")[1];
-            Lookup lookup = new Lookup(domain, Type.MX);
-            SimpleResolver resolver = new SimpleResolver(ConnectionHelper.getDnsServer(context));
-            lookup.setResolver(resolver);
-            Log.i("Lookup MX=" + domain + " @" + resolver.getAddress());
-
-            lookup.run();
-            if (lookup.getResult() == Lookup.HOST_NOT_FOUND ||
-                    lookup.getResult() == Lookup.TYPE_NOT_FOUND) {
-                Log.i("Lookup MX=" + domain + " result=" + lookup.getErrorString());
-                throw new IllegalArgumentException(context.getString(R.string.title_no_server, domain));
-            }
         }
 
         private String getActionName(int id) {
@@ -3096,8 +3120,10 @@ public class FragmentCompose extends FragmentBase {
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             EntityIdentity identity = (EntityIdentity) parent.getAdapter().getItem(position);
 
-            encrypt = (identity != null && identity.encrypt && Helper.isPro(getContext()));
-            getActivity().invalidateOptionsMenu();
+            if (identity != null && identity.encrypt) {
+                encrypt = true;
+                getActivity().invalidateOptionsMenu();
+            }
 
             int at = (identity == null ? -1 : identity.email.indexOf('@'));
             etExtra.setHint(at < 0 ? null : identity.email.substring(0, at));
@@ -3369,6 +3395,7 @@ public class FragmentCompose extends FragmentBase {
             }.execute(getContext(), getActivity(), new Bundle(), "compose:answer");
 
             return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.title_insert_template)
                     .setAdapter(adapter, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

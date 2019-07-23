@@ -155,6 +155,7 @@ public class EntityOperation {
                     long uid = message.uid;
                     boolean seen = message.seen;
                     boolean ui_seen = message.ui_seen;
+                    Long ui_hide = message.ui_hide;
                     boolean ui_browsed = message.ui_browsed;
                     String error = message.error;
 
@@ -167,6 +168,7 @@ public class EntityOperation {
                         message.seen = true;
                         message.ui_seen = true;
                     }
+                    message.ui_hide = 0L;
                     message.ui_browsed = false;
                     message.error = null;
                     message.id = db.message().insertMessage(message);
@@ -180,6 +182,7 @@ public class EntityOperation {
                     message.uid = uid;
                     message.seen = seen;
                     message.ui_seen = ui_seen;
+                    message.ui_hide = ui_hide;
                     message.ui_browsed = ui_browsed;
                     message.error = error;
 
@@ -226,7 +229,7 @@ public class EntityOperation {
         if (SEND.equals(name))
             ServiceSend.start(context);
         else
-            ServiceSynchronize.process(context);
+            ServiceSynchronize.process(context, false);
     }
 
     static void sync(Context context, long fid, boolean foreground) {
@@ -255,7 +258,7 @@ public class EntityOperation {
         if (folder.account == null) // Outbox
             ServiceSend.start(context);
         else if (foreground)
-            ServiceSynchronize.process(context);
+            ServiceSynchronize.process(context, true);
     }
 
     static void subscribe(Context context, long fid, boolean subscribe) {

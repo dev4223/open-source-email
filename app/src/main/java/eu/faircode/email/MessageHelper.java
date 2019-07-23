@@ -35,7 +35,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -264,7 +263,10 @@ public class MessageHelper {
                                 sb.append(line);
                     }
 
-                    imessage.addHeader("Autocrypt", "addr=" + from.getAddress() + "; keydata=" + sb.toString());
+                    imessage.addHeader("Autocrypt",
+                            "addr=" + from.getAddress() + ";" +
+                                    " prefer-encrypt=mutual;" +
+                                    " keydata=" + sb.toString());
                 }
 
         for (final EntityAttachment attachment : attachments)
@@ -346,40 +348,61 @@ public class MessageHelper {
         StringBuilder htmlContent = new StringBuilder();
         htmlContent.append(body.toString()).append("\n");
 
+        // multipart/mixed
+        //   multipart/related
+        //     multipart/alternative
+        //       text/plain
+        //       text/html
+        //     inlines
+        //  attachments
+
         BodyPart plainPart = new MimeBodyPart();
         plainPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
 
         BodyPart htmlPart = new MimeBodyPart();
         htmlPart.setContent(htmlContent.toString(), "text/html; charset=" + Charset.defaultCharset().name());
 
-        Multipart alternativePart = new MimeMultipart("alternative");
-        alternativePart.addBodyPart(plainPart);
-        alternativePart.addBodyPart(htmlPart);
+        Multipart altMultiPart = new MimeMultipart("alternative");
+        altMultiPart.addBodyPart(plainPart);
+        altMultiPart.addBodyPart(htmlPart);
 
-        int available = 0;
+        boolean plain_only = (message.plain_only != null && message.plain_only);
+
+        int availableAttachments = 0;
+        boolean hasInline = false;
         for (EntityAttachment attachment : attachments)
-            if (attachment.available)
-                available++;
-        Log.i("Attachments available=" + available);
+            if (attachment.available) {
+                availableAttachments++;
+                if (attachment.isInline())
+                    hasInline = true;
+            }
 
-        if (available == 0)
-            if (message.plain_only != null && message.plain_only)
+        if (availableAttachments == 0)
+            if (plain_only)
                 imessage.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
             else
-                imessage.setContent(alternativePart);
+                imessage.setContent(altMultiPart);
         else {
-            Multipart mixedPart = new MimeMultipart("mixed");
+            Multipart mixedMultiPart = new MimeMultipart("mixed");
+            Multipart relatedMultiPart = new MimeMultipart("related");
 
-            BodyPart attachmentPart = new MimeBodyPart();
-            if (message.plain_only != null && message.plain_only)
-                attachmentPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
+            BodyPart bodyPart = new MimeBodyPart();
+            if (plain_only)
+                bodyPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
             else
-                attachmentPart.setContent(alternativePart);
-            mixedPart.addBodyPart(attachmentPart);
+                bodyPart.setContent(altMultiPart);
+
+            if (hasInline && !plain_only) {
+                relatedMultiPart.addBodyPart(bodyPart);
+                MimeBodyPart relatedPart = new MimeBodyPart();
+                relatedPart.setContent(relatedMultiPart);
+                mixedMultiPart.addBodyPart(relatedPart);
+            } else
+                mixedMultiPart.addBodyPart(bodyPart);
 
             for (final EntityAttachment attachment : attachments)
                 if (attachment.available) {
-                    BodyPart bpAttachment = new MimeBodyPart();
+                    BodyPart attachmentPart = new MimeBodyPart();
 
                     File file = attachment.getFile(context);
 
@@ -409,18 +432,21 @@ public class MessageHelper {
                             return getContentType(new File(filename));
                         }
                     });
-                    bpAttachment.setDataHandler(new DataHandler(dataSource));
+                    attachmentPart.setDataHandler(new DataHandler(dataSource));
 
-                    bpAttachment.setFileName(attachment.name);
+                    attachmentPart.setFileName(attachment.name);
                     if (attachment.disposition != null)
-                        bpAttachment.setDisposition(attachment.disposition);
+                        attachmentPart.setDisposition(attachment.disposition);
                     if (attachment.cid != null)
-                        bpAttachment.setHeader("Content-ID", attachment.cid);
+                        attachmentPart.setHeader("Content-ID", attachment.cid);
 
-                    mixedPart.addBodyPart(bpAttachment);
+                    if (attachment.isInline() && !plain_only)
+                        relatedMultiPart.addBodyPart(attachmentPart);
+                    else
+                        mixedMultiPart.addBodyPart(attachmentPart);
                 }
 
-            imessage.setContent(mixedPart);
+            imessage.setContent(mixedMultiPart);
         }
     }
 
@@ -618,13 +644,6 @@ public class MessageHelper {
 
         subject = MimeUtility.unfold(subject);
         subject = new String(subject.getBytes(StandardCharsets.ISO_8859_1));
-
-        try {
-            subject = MimeUtility.decodeText(subject);
-        } catch (UnsupportedEncodingException ex) {
-            Log.w(ex);
-        }
-
         subject = decodeMime(subject);
 
         return subject;
@@ -725,6 +744,9 @@ public class MessageHelper {
         // encoded-word = "=?" charset "?" encoding "?" encoded-text "?="
 
         int i = 0;
+        boolean first = true;
+        List<MimeTextPart> parts = new ArrayList<>();
+
         while (i < text.length()) {
             int s = text.indexOf("=?", i);
             if (s < 0)
@@ -742,21 +764,71 @@ public class MessageHelper {
             if (e < 0)
                 break;
 
-            String decode = text.substring(s, e + 2);
-            try {
-                String decoded = MimeUtility.decodeWord(decode);
-                text = text.substring(0, s) + decoded + text.substring(e + 2);
-                i += decoded.length();
-            } catch (ParseException ex) {
-                Log.w(new IllegalArgumentException(text, ex));
-                i += decode.length();
-            } catch (UnsupportedEncodingException ex) {
-                Log.w(new IllegalArgumentException(text, ex));
-                i += decode.length();
-            }
+            String plain = text.substring(i, s);
+            if (!first)
+                plain = plain.replaceAll("[ \t\n\r]$", "");
+            if (!TextUtils.isEmpty(plain))
+                parts.add(new MimeTextPart(plain));
+
+            parts.add(new MimeTextPart(
+                    text.substring(s + 2, q1),
+                    text.substring(q1 + 1, q2),
+                    text.substring(q2 + 1, e)));
+
+            i = e + 2;
+            first = false;
         }
 
-        return text;
+        if (i < text.length())
+            parts.add(new MimeTextPart(text.substring(i)));
+
+        // Fold words to not break encoding
+        int p = 0;
+        while (p + 1 < parts.size()) {
+            MimeTextPart p1 = parts.get(p);
+            MimeTextPart p2 = parts.get(p + 1);
+            if (p1.charset != null && p1.charset.equalsIgnoreCase(p2.charset) &&
+                    p1.encoding != null && p1.encoding.equalsIgnoreCase(p2.encoding)) {
+                p1.text += p2.text;
+                parts.remove(p + 1);
+            } else
+                p++;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (MimeTextPart part : parts)
+            sb.append(part);
+        return sb.toString();
+    }
+
+    private static class MimeTextPart {
+        String charset;
+        String encoding;
+        String text;
+
+        MimeTextPart(String text) {
+            this.text = text;
+        }
+
+        MimeTextPart(String charset, String encoding, String text) {
+            this.charset = charset;
+            this.encoding = encoding;
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            if (charset == null)
+                return text;
+
+            String word = "=?" + charset + "?" + encoding + "?" + text + "?=";
+            try {
+                return decodeMime(MimeUtility.decodeWord(word));
+            } catch (Throwable ex) {
+                Log.w(new IllegalArgumentException(word, ex));
+                return word;
+            }
+        }
     }
 
     static String getSortKey(Address[] addresses) {
@@ -828,10 +900,6 @@ public class MessageHelper {
 
                 if (TextUtils.isEmpty(charset) || "US-ASCII".equals(charset.toUpperCase())) {
                     // The first 127 characters are the same as in US-ASCII
-                    result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
-                } else if (encoding != null && "8bit".equals(encoding.toLowerCase()) &&
-                        "ISO-8859-1".equals(charset.toUpperCase())) {
-                    // Workaround JavaMail bug
                     result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
                 } else {
                     if ("US-ASCII".equals(Charset.forName(charset).name()))

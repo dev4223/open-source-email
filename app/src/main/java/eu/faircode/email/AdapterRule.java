@@ -250,10 +250,9 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                                     EntityMessage message = db.message().getMessage(mid);
 
-                                    if (rule.matches(context, message, null)) {
-                                        rule.execute(context, message);
-                                        applied++;
-                                    }
+                                    if (rule.matches(context, message, null))
+                                        if (rule.execute(context, message))
+                                            applied++;
 
                                     db.setTransactionSuccessful();
                                 } finally {
@@ -298,8 +297,6 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
             public void onDestroyed() {
                 Log.i(AdapterRule.this + " parent destroyed");
                 AdapterRule.this.parentFragment = null;
-                AdapterRule.this.context = null;
-                AdapterRule.this.owner = null;
             }
         });
     }

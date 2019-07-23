@@ -46,7 +46,7 @@ public class AdapterRuleMatch extends RecyclerView.Adapter<AdapterRuleMatch.View
 
     private List<EntityMessage> items = new ArrayList<>();
 
-    private DateFormat DF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+    private DateFormat DTF;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         private View view;
@@ -68,7 +68,7 @@ public class AdapterRuleMatch extends RecyclerView.Adapter<AdapterRuleMatch.View
         }
 
         private void bindTo(EntityMessage message) {
-            tvTime.setText(DF.format(message.received));
+            tvTime.setText(DTF.format(message.received));
             tvSubject.setText(message.subject);
         }
     }
@@ -78,14 +78,14 @@ public class AdapterRuleMatch extends RecyclerView.Adapter<AdapterRuleMatch.View
         this.owner = owner;
         this.inflater = LayoutInflater.from(context);
 
+        this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+
         setHasStableIds(true);
 
         owner.getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
                 Log.i(AdapterRuleMatch.this + " parent destroyed");
-                AdapterRuleMatch.this.context = null;
-                AdapterRuleMatch.this.owner = null;
             }
         });
     }

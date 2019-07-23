@@ -47,6 +47,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swDate;
     private SwitchCompat swThreading;
     private SwitchCompat swAvatars;
+    private SwitchCompat swGeneratedIcons;
     private SwitchCompat swIdenticons;
     private SwitchCompat swCircular;
     private SwitchCompat swNameEmail;
@@ -58,16 +59,17 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     private SwitchCompat swContrast;
     private SwitchCompat swMonospaced;
-    private SwitchCompat swInline;
-    private SwitchCompat swImages;
+    private SwitchCompat swImagesInline;
+    private SwitchCompat swImagesContacts;
+    private SwitchCompat swImagesAll;
     private SwitchCompat swCollapseQuotes;
     private SwitchCompat swRemoteContent;
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "theme", "startup", "date", "threading", "avatars", "identicons", "circular", "name_email", "subject_italic",
+            "theme", "startup", "date", "threading", "avatars", "generated_icons", "identicons", "circular", "name_email", "subject_italic",
             "flags", "preview", "addresses", "attachments_alt",
-            "contrast", "monospaced", "inline_images", "autoimages", "collapse_quotes", "autocontent", "actionbar",
+            "contrast", "monospaced", "inline_images", "contact_images", "all_images", "collapse_quotes", "autocontent", "actionbar",
     };
 
     @Override
@@ -85,6 +87,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swDate = view.findViewById(R.id.swDate);
         swThreading = view.findViewById(R.id.swThreading);
         swAvatars = view.findViewById(R.id.swAvatars);
+        swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
         swIdenticons = view.findViewById(R.id.swIdenticons);
         swCircular = view.findViewById(R.id.swCircular);
         swNameEmail = view.findViewById(R.id.swNameEmail);
@@ -95,8 +98,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
         swContrast = view.findViewById(R.id.swContrast);
         swMonospaced = view.findViewById(R.id.swMonospaced);
-        swInline = view.findViewById(R.id.swInline);
-        swImages = view.findViewById(R.id.swImages);
+        swImagesInline = view.findViewById(R.id.swImagesInline);
+        swImagesContacts = view.findViewById(R.id.swImagesContacts);
+        swImagesAll = view.findViewById(R.id.swImagesAll);
         swCollapseQuotes = view.findViewById(R.id.swCollapseQuotes);
         swRemoteContent = view.findViewById(R.id.swRemoteContent);
         swActionbar = view.findViewById(R.id.swActionbar);
@@ -145,6 +149,15 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("avatars", checked).apply();
+                ContactInfo.clearCache();
+            }
+        });
+
+        swGeneratedIcons.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("generated_icons", checked).apply();
+                swIdenticons.setEnabled(checked);
                 ContactInfo.clearCache();
             }
         });
@@ -221,17 +234,24 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
-        swInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swImagesInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("inline_images", checked).apply();
             }
         });
 
-        swImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swImagesContacts.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("autoimages", checked).apply();
+                prefs.edit().putBoolean("contact_images", checked).apply();
+            }
+        });
+
+        swImagesAll.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("all_images", checked).apply();
             }
         });
 
@@ -314,7 +334,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swDate.setChecked(prefs.getBoolean("date", true));
         swThreading.setChecked(prefs.getBoolean("threading", true));
         swAvatars.setChecked(prefs.getBoolean("avatars", true));
+        swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
         swIdenticons.setChecked(prefs.getBoolean("identicons", false));
+        swIdenticons.setEnabled(swGeneratedIcons.isChecked());
         swCircular.setChecked(prefs.getBoolean("circular", true));
         swNameEmail.setChecked(prefs.getBoolean("name_email", !compact));
         swSubjectItalic.setChecked(prefs.getBoolean("subject_italic", true));
@@ -324,8 +346,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swAttachmentsAlt.setChecked(prefs.getBoolean("attachments_alt", false));
         swContrast.setChecked(prefs.getBoolean("contrast", false));
         swMonospaced.setChecked(prefs.getBoolean("monospaced", false));
-        swInline.setChecked(prefs.getBoolean("inline_images", false));
-        swImages.setChecked(prefs.getBoolean("autoimages", true));
+        swImagesInline.setChecked(prefs.getBoolean("inline_images", false));
+        swImagesContacts.setChecked(prefs.getBoolean("contact_images", true));
+        swImagesAll.setChecked(prefs.getBoolean("all_images", false));
         swCollapseQuotes.setChecked(prefs.getBoolean("collapse_quotes", false));
         swRemoteContent.setChecked(prefs.getBoolean("autocontent", false));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));

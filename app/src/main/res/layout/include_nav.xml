@@ -20,13 +20,38 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rvAccount" />
 
+    <ImageView
+        android:id="@+id/ivExpanderUnified"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/title_legend_expander"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/vSeparatorAccount"
+        app:srcCompat="@drawable/expander" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvUnified"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:nestedScrollingEnabled="false"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivExpanderUnified" />
+
+    <View
+        android:id="@+id/vSeparatorUnified"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorSeparator"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rvUnified" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvFolder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="false"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/vSeparatorAccount" />
+        app:layout_constraintTop_toBottomOf="@id/vSeparatorUnified" />
 
     <View
         android:id="@+id/vSeparatorFolder"
@@ -53,13 +78,13 @@
         app:layout_constraintTop_toBottomOf="@id/rvMenu" />
 
     <ImageView
-        android:id="@+id/ivExpander"
+        android:id="@+id/ivExpanderExtra"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:contentDescription="@string/title_legend_expander"
-        app:srcCompat="@drawable/expander"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/vSeparatorMenu" />
+        app:layout_constraintTop_toBottomOf="@id/vSeparatorMenu"
+        app:srcCompat="@drawable/expander" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMenuExtra"
@@ -67,5 +92,11 @@
         android:layout_height="wrap_content"
         android:nestedScrollingEnabled="false"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ivExpander" />
+        app:layout_constraintTop_toBottomOf="@id/ivExpanderExtra" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grpUnified"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:constraint_referenced_ids="rvUnified,vSeparatorUnified" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.app.ActivityManager;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
@@ -30,6 +31,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.PowerManager;
 import android.text.TextUtils;
 import android.view.Display;
@@ -53,7 +55,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -197,19 +198,19 @@ public class Log {
                     HtmlHelper.getPreview(body),
                     null);
 
+            attachSettings(context, draft.id, 1);
+            attachAccounts(context, draft.id, 2);
+            attachNetworkInfo(context, draft.id, 3);
+            attachLog(context, draft.id, 4);
+            attachOperations(context, draft.id, 5);
+            attachLogcat(context, draft.id, 6);
+
+            EntityOperation.queue(context, draft, EntityOperation.ADD);
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
         }
-
-        attachSettings(context, draft.id, 1);
-        attachAccounts(context, draft.id, 2);
-        attachNetworkInfo(context, draft.id, 3);
-        attachLog(context, draft.id, 4);
-        attachOperations(context, draft.id, 5);
-        attachLogcat(context, draft.id, 6);
-
-        EntityOperation.queue(context, draft, EntityOperation.ADD);
 
         return draft;
     }
@@ -242,6 +243,17 @@ public class Log {
         sb.append(String.format("Display: %s\r\n", Build.DISPLAY));
         sb.append(String.format("Id: %s\r\n", Build.ID));
         sb.append("\r\n");
+
+        sb.append(String.format("Processors: %d\r\n", Runtime.getRuntime().availableProcessors()));
+
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        sb.append(String.format("Memory class: %d\r\n", am.getMemoryClass()));
+
+        Runtime rt = Runtime.getRuntime();
+        long hused = (rt.totalMemory() - rt.freeMemory()) / 1024L;
+        long hmax = rt.maxMemory() / 1024L;
+        long nheap = Debug.getNativeHeapAllocatedSize() / 1024L;
+        sb.append(String.format("Heap usage: %s/%s KiB native: %s KiB\r\n", hused, hmax, nheap));
 
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
@@ -410,10 +422,10 @@ public class Log {
 
             long size = 0;
             long from = new Date().getTime() - 24 * 3600 * 1000L;
-            DateFormat DF = SimpleDateFormat.getTimeInstance();
+            DateFormat TF = Helper.getTimeInstance(context);
 
             for (EntityLog entry : db.log().getLogs(from))
-                size += write(os, String.format("%s %s\r\n", DF.format(entry.time), entry.data));
+                size += write(os, String.format("%s %s\r\n", TF.format(entry.time), entry.data));
 
             db.attachment().setDownloaded(attachment.id, size);
         }
@@ -436,11 +448,11 @@ public class Log {
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
 
             long size = 0;
-            DateFormat DF = SimpleDateFormat.getTimeInstance();
+            DateFormat TF = Helper.getTimeInstance(context);
 
             for (EntityOperation op : db.operation().getOperations())
                 size += write(os, String.format("%s %d %s %s %s\r\n",
-                        DF.format(op.created),
+                        TF.format(op.created),
                         op.message == null ? -1 : op.message,
                         op.name,
                         op.args,

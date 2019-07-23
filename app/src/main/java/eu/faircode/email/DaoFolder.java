@@ -53,8 +53,9 @@ public interface DaoFolder {
     @Query("SELECT folder.* FROM folder" +
             " JOIN account ON account.id = folder.account" +
             " WHERE account.synchronize" +
-            " AND folder.synchronize AND unified")
-    List<EntityFolder> getFoldersSynchronizingUnified();
+            " AND folder.synchronize" +
+            " AND ((:type IS NULL AND folder.unified) OR folder.type = :type)")
+    List<EntityFolder> getFoldersSynchronizingUnified(String type);
 
     @Query("SELECT folder.* FROM folder" +
             " JOIN account ON account.id = folder.account" +
@@ -101,9 +102,9 @@ public interface DaoFolder {
             " LEFT JOIN rule ON rule.folder = folder.id" +
             " LEFT JOIN operation ON operation.folder = folder.id" +
             " WHERE account.`synchronize`" +
-            " AND folder.unified" +
+            " AND ((:type IS NULL AND folder.unified) OR folder.type = :type)" +
             " GROUP BY folder.id")
-    LiveData<List<TupleFolderEx>> liveUnified();
+    LiveData<List<TupleFolderEx>> liveUnified(String type);
 
     @Query("SELECT folder.*" +
             ", account.`order` AS accountOrder, account.name AS accountName, account.color AS accountColor" +
@@ -153,6 +154,17 @@ public interface DaoFolder {
             " WHERE folder.account = :account" +
             " AND type <> '" + EntityFolder.USER + "'")
     List<EntityFolder> getSystemFolders(long account);
+
+    @Query("SELECT folder.type," +
+            " SUM(CASE WHEN NOT message.ui_seen AND message.ui_hide = 0 THEN 1 ELSE 0 END) AS unseen" +
+            " FROM folder" +
+            " JOIN account ON account.id = folder.account" +
+            " LEFT JOIN message ON message.folder = folder.id" +
+            " WHERE account.synchronize" +
+            " AND folder.type <> '" + EntityFolder.SYSTEM + "'" +
+            " AND folder.type <> '" + EntityFolder.USER + "'" +
+            " GROUP BY folder.type")
+    LiveData<List<EntityFolderUnified>> liveUnified();
 
     @Query("SELECT * FROM folder WHERE id = :id")
     EntityFolder getFolder(Long id);
