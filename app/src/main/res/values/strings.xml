@@ -80,6 +80,7 @@
     <string name="menu_legend">Legend</string>
     <string name="menu_faq">Support</string>
     <string name="menu_issue">Report issue</string>
+    <string name="menu_attribution">Attribution</string>
     <string name="menu_privacy">Privacy</string>
     <string name="menu_about">About</string>
 
@@ -209,6 +210,7 @@
     <string name="title_advanced_date_header">Group by date</string>
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_avatars">Show contact photos</string>
+    <string name="title_advanced_generated_icons">Show generated icons</string>
     <string name="title_advanced_identicons">Show identicons</string>
     <string name="title_advanced_circular">Show round icons</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
@@ -221,6 +223,7 @@
     <string name="title_advanced_monospaced">Use monospaced font for message text</string>
     <string name="title_advanced_images_inline">Automatically show inline images</string>
     <string name="title_advanced_images">Automatically show images for known contacts</string>
+    <string name="title_advanced_images_all">Automatically show all images</string>
     <string name="title_advanced_collapse_quotes">Collapse quoted text</string>
     <string name="title_advanced_remote_content">Automatically show remote content when viewing original messages</string>
     <string name="title_advanced_actionbar">Conversation action bar</string>
@@ -254,6 +257,7 @@
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
     <string name="title_advanced_sync_subscribed">Synchronize subscribed folders only</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
+    <string name="title_advanced_double_back">Double \'back\' to exit</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
@@ -268,10 +272,12 @@
     <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list. This will synchronize messages and execute operations for a limited time.</string>
     <string name="title_advanced_poll_hint">Synchronizing periodically will compare local and remote messages each and every time, which is an expensive operation possibly resulting in extra battery usage, especially when there are a lot of messages to synchronize. Always synchronizing will avoid this by continuous listening for changes only.</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
+    <string name="title_advanced_check_mx">Check sender email addresses on synchronizing messages</string>
     <string name="title_advanced_sync_kept_hint">This will transfer extra data and use extra battery power, especially if there are a lot of messages kept on the device</string>
     <string name="title_advanced_sync_folders_hint">Disabling this will reduce data and battery usage somewhat, but will disable updating the list of folders too</string>
 
     <string name="title_advanced_lookup_mx_hint">This will check if DNS MX records exist</string>
+    <string name="title_advanced_sync_delay_hint">This will delay synchronizing messages</string>
 
     <string name="title_advanced_metered_hint">Metered connections are generally mobile connections or paid Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Disabling this option will disable receiving and sending messages on mobile internet connections</string>
@@ -283,6 +289,7 @@
     <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
     <string name="title_advanced_preview_hint">Only available when message text was downloaded</string>
     <string name="title_advanced_inline_hint">Inline images are images included in the message</string>
+    <string name="title_advanced_permission_contacts_hint">This requires permission to read your contacts being granted</string>
 
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
     <string name="title_advanced_autocollapse_hint">Multiple expanded messages will always be closed on \'back\'</string>
@@ -428,6 +435,7 @@
     <string name="title_flag_color">Colored star &#8230;</string>
     <string name="title_unflag">Remove star</string>
     <string name="title_forward">Forward</string>
+    <string name="title_editasnew">Edit as new</string>
     <string name="title_create_rule">Create rule &#8230;</string>
     <string name="title_share">Share</string>
     <string name="title_print">Print</string>
@@ -741,6 +749,8 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
+    <string name="title_executing">Executing</string>
+    <string name="title_completed">Completed</string>
     <string name="title_ask_what">Ask what to do</string>
     <string name="title_no_ask_again">Do not ask this again</string>
     <string name="title_no_body">No message text found</string>
@@ -756,6 +766,7 @@
     <string name="title_pro_feature">This is a pro feature</string>
     <string name="title_pro_list">List of pro features</string>
     <string name="title_pro_purchase">Buy</string>
+    <string name="title_pro_once">Only once</string>
     <string name="title_pro_hint">Buying pro features will allow you to use all current and future pro features, will keep this app maintained, and supported</string>
     <string name="title_pro_price">Please see <a href="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq19">this FAQ</a> about the price of the pro features</string>
     <string name="title_pro_pending">Purchase pending</string>
@@ -774,16 +785,22 @@
 
     <string-array name="pollIntervalNames">
         <item>Always</item>
+        <item>Every 15 minutes</item>
+        <item>Every 30 minutes</item>
         <item>Every hour</item>
         <item>Every 2 hours</item>
         <item>Every 4 hours</item>
+        <item>Every 8 hours</item>
     </string-array>
 
     <integer-array name="pollIntervalValues" translatable="false">
         <item>0</item>
+        <item>15</item>
+        <item>30</item>
         <item>60</item>
         <item>120</item>
         <item>240</item>
+        <item>480</item>
     </integer-array>
 
     <string-array name="sendDelayedNames">

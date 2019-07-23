@@ -44,12 +44,13 @@ public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHold
 
     private List<NavMenuItem> items = new ArrayList<>();
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
+    private NumberFormat NF = NumberFormat.getNumberInstance();
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
         private ImageView ivItem;
         private TextView tvItem;
+        private TextView tvItemExtra;
         private ImageView ivWarning;
 
         ViewHolder(View itemView) {
@@ -58,6 +59,7 @@ public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHold
             view = itemView.findViewById(R.id.clItem);
             ivItem = itemView.findViewById(R.id.ivItem);
             tvItem = itemView.findViewById(R.id.tvItem);
+            tvItemExtra = itemView.findViewById(R.id.tvItemExtra);
             ivWarning = itemView.findViewById(R.id.ivWarning);
         }
 
@@ -78,10 +80,12 @@ public class AdapterNavMenu extends RecyclerView.Adapter<AdapterNavMenu.ViewHold
                 tvItem.setText(menu.getTitle());
             else
                 tvItem.setText(context.getString(R.string.title_name_count,
-                        context.getString(menu.getTitle()), nf.format(menu.getCount())));
+                        context.getString(menu.getTitle()), NF.format(menu.getCount())));
 
             tvItem.setTextColor(Helper.resolveColor(context,
                     menu.getCount() == null ? android.R.attr.textColorSecondary : R.attr.colorUnread));
+
+            tvItemExtra.setVisibility(View.GONE);
 
             ivWarning.setVisibility(menu.hasWarning() ? View.VISIBLE : View.GONE);
         }

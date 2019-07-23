@@ -90,6 +90,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_quick_imap">IMAP-Server für das Empfangen von Nachrichten</string>
     <string name="title_setup_quick_smtp">SMTP-Server zum Senden von Nachrichten</string>
     <string name="title_setup_go">Los</string>
+    <string name="title_setup_wizard">Assistent</string>
     <string name="title_setup_instructions">Einrichtungsanleitung</string>
     <string name="title_setup_no_settings">Keine Einstellungen für Domain „%1$s” gefunden</string>
     <string name="title_setup_quick_success">Ein Konto und eine Identität wurden erfolgreich hinzugefügt</string>
@@ -98,6 +99,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_grant">Zulassen</string>
     <string name="title_setup_account">Konten einrichten</string>
     <string name="title_setup_account_remark">Um E-Mails zu empfangen</string>
+    <string name="title_setup_account_hint">Um die Farbe, Zielordner für wischen nach links/rechts, usw. zu ändern</string>
     <string name="title_setup_identity">Identitäten einrichten</string>
     <string name="title_setup_identity_remark">Um E-Mails zu senden</string>
     <string name="title_setup_identity_hint">Um Namen, Farbe, Signatur, etc. zu ändern</string>
@@ -173,6 +175,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_date_header">Nach Datum gruppieren</string>
     <string name="title_advanced_threading">Konversationsansicht</string>
     <string name="title_advanced_avatars">Kontaktfotos anzeigen</string>
+    <string name="title_advanced_generated_icons">Zeige generierte Symbole (Anfangsbuchstaben)</string>
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
     <string name="title_advanced_circular">Runde Symbole benutzen</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
@@ -185,6 +188,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_monospaced">Unproportionale Schriftart für Nachrichtentext verwenden</string>
     <string name="title_advanced_images_inline">Eingebettete Grafiken automatisch anzeigen</string>
     <string name="title_advanced_images">Für bekannte Kontakte Bilder automatisch anzeigen</string>
+    <string name="title_advanced_images_all">Alle Bilder automatisch anzeigen</string>
     <string name="title_advanced_collapse_quotes">Zitierter Text ausblenden</string>
     <string name="title_advanced_remote_content">Zeige Remote-Inhalte automatisch beim Betrachten von Originalnachrichten</string>
     <string name="title_advanced_actionbar">Navigationsleiste in Konversationen</string>
@@ -215,6 +219,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_subscriptions">Ihre Abonnements verwalten</string>
     <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
+    <string name="title_advanced_double_back">Doppelt „Zurück” drücken zum Beenden</string>
     <string name="title_advanced_english">Englische Sprache erzwingen</string>
     <string name="title_advanced_watchdog">Regelmäßig überprüfen, ob FairEmail noch aktiv ist</string>
     <string name="title_advanced_updates">Nach Aktualisierungen suchen</string>
@@ -225,9 +230,11 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_manual_hint">Wenn die Synchronisation deaktiviert ist, ist es weiterhin möglich, die Synchronisation manuell durchzuführen, indem Sie die Nachrichtenliste herunterziehen. Dadurch werden Nachrichten synchronisiert und Operationen für eine begrenzte Zeit ausgeführt.</string>
     <string name="title_advanced_poll_hint">Die regelmäßige Synchronisation vergleicht jedes Mal lokale und entfernte Nachrichten, was ein aufwendiger Vorgang ist, der möglicherweise zu einem zusätzlichen Batterieverbrauch führt, besonders wenn es viele zu synchronisierende Nachrichten gibt. Durch die ständige Synchronisation wird dies vermieden, indem man ständig nur auf Änderungen achtet.</string>
     <string name="title_advanced_schedule_hint">Tippe auf eine Zeit, um eine Zeit zu setzen</string>
+    <string name="title_advanced_check_mx">Überprüft die Absender-E-Mail-Adressen bei Synchronisierung von Nachrichten</string>
     <string name="title_advanced_sync_kept_hint">Dies überträgt zusätzliche Daten und verbraucht zusätzliche Akkuladung, insbesondere wenn viele Nachrichten auf dem Gerät gespeichert sind</string>
     <string name="title_advanced_sync_folders_hint">Wenn Sie dies deaktivieren, wird der Daten- und Akkubedarf etwas reduziert, aber auch die Aktualisierung der Ordnerliste deaktiviert.</string>
     <string name="title_advanced_lookup_mx_hint">Dies wird überprüfen, ob DNS MX-Einträge existieren</string>
+    <string name="title_advanced_sync_delay_hint">Dies verzögert die Synchronisierung von Nachrichten</string>
     <string name="title_advanced_metered_hint">Getaktete Verbindungen sind in der Regel mobile Verbindungen oder bezahlte Wi-Fi Hotspots</string>
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
@@ -237,6 +244,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
     <string name="title_advanced_preview_hint">Nur verfügbar, wenn der E-Mail-Text heruntergeladen wurde</string>
     <string name="title_advanced_inline_hint">Eingebettete Grafiken sind Grafiken, die innerhalb der Nachricht enthalten sind</string>
+    <string name="title_advanced_permission_contacts_hint">Dies erfordert die Berechtigung, Ihre Kontakte zu lesen</string>
     <string name="title_advanced_autoexpand_hint">Eine (ungelesene) Nachricht wird automatisch geöffnet</string>
     <string name="title_advanced_autocollapse_hint">Mehrere erweiterte Nachrichten werden immer auf \'zurück\' geschlossen</string>
     <string name="title_advanced_autoclose_hint">Automatisches Schließen des Unterhaltungsthreads, wenn alle E-Mails archiviert, gesendet oder gelöscht wurden</string>
@@ -367,6 +375,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_flag_color">Farbige Kennzeichnung &#8230;</string>
     <string name="title_unflag">Kennzeichnung entfernen</string>
     <string name="title_forward">Weiterleiten</string>
+    <string name="title_editasnew">Als neu bearbeiten</string>
     <string name="title_create_rule">Regel &#8230; erstellen</string>
     <string name="title_share">Teilen</string>
     <string name="title_print">Drucken</string>
@@ -652,6 +661,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_report">Bericht</string>
     <string name="title_fix">Problem beheben</string>
     <string name="title_enable">Aktivieren</string>
+    <string name="title_executing">Wird ausgeführt</string>
+    <string name="title_completed">Fertig</string>
     <string name="title_ask_what">Fragen, was getan werden soll</string>
     <string name="title_no_ask_again">Dies nicht mehr anzeigen</string>
     <string name="title_no_body">Kein Nachrichtentext gefunden</string>
@@ -664,6 +675,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_pro_feature">Dies ist eine Pro-Funktion</string>
     <string name="title_pro_list">Liste der Pro-Funktionen</string>
     <string name="title_pro_purchase">Kaufen</string>
+    <string name="title_pro_once">Nur einmal</string>
     <string name="title_pro_hint">Der Erwerb der Pro-Funktionen erlaubt es Ihnen alle momentan und zukünftig verfügbaren Pro-Funktionen zu nutzen und ermöglicht die Weiterentwicklung und Pflege der App</string>
     <string name="title_pro_price">Informationen zum Preis der Pro-Funktionen finden Sie in der <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">Hilfe</a></string>
     <string name="title_pro_pending">Kauf ausstehend</string>
@@ -679,9 +691,12 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_crash_info_remark">Bitte beschreiben Sie, was Sie getan haben, während die App abgestürzt ist:</string>
     <string-array name="pollIntervalNames">
         <item>Immer</item>
-        <item>Stündlich</item>
-        <item>Alle zwei Stunden</item>
-        <item>Alle vier Stunden</item>
+        <item>Alle 15 Minuten</item>
+        <item>Alle 30 Minuten</item>
+        <item>Jede Stunde</item>
+        <item>Alle 2 Stunden</item>
+        <item>Alle 4 Stunden</item>
+        <item>Alle 8 Stunden</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Nein</item>

@@ -38,9 +38,9 @@ public class FragmentOptions extends FragmentBase {
     private PagerAdapter adapter;
 
     static String[] OPTIONS_RESTART = new String[]{
-            "startup", "date", "threading", "avatars", "identicons", "circular", "name_email", "subject_italic", "flags", "preview",
-            "addresses", "attachments_alt", "contrast", "monospaced", "autohtml", "autoimages", "actionbar",
-            "pull", "autoscroll", "swipenav", "autoexpand", "autoclose", "autonext",
+            "startup", "date", "threading", "avatars", "generated_icons", "identicons", "circular", "name_email", "subject_italic", "flags", "preview",
+            "addresses", "attachments_alt", "contrast", "monospaced", "inline_images", "contact_images", "all_images", "collapse_quotes", "autocontent", "actionbar",
+            "autoscroll", "swipenav", "autoexpand", "autoclose", "autonext",
             "subscriptions", "debug",
             "biometrics"
     };

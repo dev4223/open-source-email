@@ -86,7 +86,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     private List<TupleFolderEx> all = new ArrayList<>();
     private List<TupleFolderEx> items = new ArrayList<>();
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
+    private NumberFormat NF = NumberFormat.getNumberInstance();
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
@@ -220,7 +220,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (folder.unseen > 0)
                 tvName.setText(context.getString(R.string.title_name_count,
                         folder.getDisplayName(context, folder.parent_ref == null ? null : folder.parent_ref),
-                        nf.format(folder.unseen)));
+                        NF.format(folder.unseen)));
             else
                 tvName.setText(folder.getDisplayName(context, folder.parent_ref == null ? null : folder.parent_ref));
 
@@ -230,11 +230,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (listener == null && folder.selectable) {
                 StringBuilder sb = new StringBuilder();
                 if (folder.account == null)
-                    sb.append(nf.format(folder.messages));
+                    sb.append(NF.format(folder.messages));
                 else {
-                    sb.append(nf.format(folder.content));
+                    sb.append(NF.format(folder.content));
                     sb.append('/');
-                    sb.append(nf.format(folder.messages));
+                    sb.append(NF.format(folder.messages));
                 }
                 tvMessages.setText(sb.toString());
 
@@ -248,27 +248,22 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             if (listener == null && folder.selectable) {
                 if (account < 0)
                     tvType.setText(folder.accountName);
-                else {
-                    int resid = context.getResources().getIdentifier(
-                            "title_folder_" + folder.type.toLowerCase(),
-                            "string",
-                            context.getPackageName());
-                    tvType.setText(resid > 0 ? context.getString(resid) : folder.type);
-                }
+                else
+                    tvType.setText(Helper.localizeFolderType(context, folder.type));
 
-                tvTotal.setText(folder.total == null ? "" : nf.format(folder.total));
+                tvTotal.setText(folder.total == null ? "" : NF.format(folder.total));
 
                 if (folder.account == null) {
                     tvAfter.setText(null);
                     ivSync.setImageResource(R.drawable.baseline_sync_24);
                 } else {
                     StringBuilder a = new StringBuilder();
-                    a.append(nf.format(folder.sync_days));
+                    a.append(NF.format(folder.sync_days));
                     a.append('/');
                     if (folder.keep_days == Integer.MAX_VALUE)
                         a.append('∞');
                     else
-                        a.append(nf.format(folder.keep_days));
+                        a.append(NF.format(folder.keep_days));
                     tvAfter.setText(a.toString());
                     ivSync.setImageResource(folder.synchronize ? R.drawable.baseline_sync_24 : R.drawable.baseline_sync_disabled_24);
                 }
@@ -410,16 +405,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
                         case R.string.title_synchronize_now:
-                            Bundle args = new Bundle();
-                            args.putLong("folder", folder.id);
-                            args.putBoolean("all", false);
-                            Intent data = new Intent();
-                            data.putExtra("args", args);
-                            parentFragment.onActivityResult(FragmentFolders.REQUEST_SYNC, RESULT_OK, data);
+                            onActionSync();
                             return true;
 
                         case R.string.title_synchronize_all:
-                            onActionSynchronizeAll();
+                            onActionSynAll();
                             return true;
 
                         case R.string.title_unified_folder:
@@ -477,7 +467,16 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     }
                 }
 
-                private void onActionSynchronizeAll() {
+                private void onActionSync() {
+                    Bundle args = new Bundle();
+                    args.putLong("folder", folder.id);
+                    args.putBoolean("all", false);
+                    Intent data = new Intent();
+                    data.putExtra("args", args);
+                    parentFragment.onActivityResult(FragmentFolders.REQUEST_SYNC, RESULT_OK, data);
+                }
+
+                private void onActionSynAll() {
                     Bundle aargs = new Bundle();
                     aargs.putString("question",
                             context.getString(R.string.title_ask_sync_all, folder.getDisplayName(context)));
@@ -671,8 +670,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             public void onDestroyed() {
                 Log.i(AdapterFolder.this + " parent destroyed");
                 AdapterFolder.this.parentFragment = null;
-                AdapterFolder.this.context = null;
-                AdapterFolder.this.owner = null;
             }
         });
     }

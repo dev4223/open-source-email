@@ -63,6 +63,7 @@
     <string name="menu_legend">Légende</string>
     <string name="menu_faq">Support</string>
     <string name="menu_issue">Signaler un problème</string>
+    <string name="menu_attribution">Attribution</string>
     <string name="menu_privacy">Confidentialité</string>
     <string name="menu_about">À propos</string>
     <string name="menu_pro">Fonctionnalités Pro</string>
@@ -176,6 +177,7 @@
     <string name="title_advanced_date_header">Grouper par date</string>
     <string name="title_advanced_threading">Fil de conversation</string>
     <string name="title_advanced_avatars">Afficher la photo des contacts</string>
+    <string name="title_advanced_generated_icons">Afficher les icônes générées</string>
     <string name="title_advanced_identicons">Afficher les identicônes</string>
     <string name="title_advanced_circular">Afficher des icônes rondes</string>
     <string name="title_advanced_name_email">Afficher les noms et les adresses e-mail</string>
@@ -188,6 +190,7 @@
     <string name="title_advanced_monospaced">Utiliser la police mono-espacée pour le texte du message</string>
     <string name="title_advanced_images_inline">Afficher automatiquement les images incluses</string>
     <string name="title_advanced_images">Afficher automatiquement les images pour les contacts connus</string>
+    <string name="title_advanced_images_all">Afficher automatiquement toutes les images</string>
     <string name="title_advanced_collapse_quotes">Réduire le texte cité</string>
     <string name="title_advanced_remote_content">Afficher automatiquement le contenu distant lors de la visualisation des messages originaux</string>
     <string name="title_advanced_actionbar">Barre d\'action de conversation</string>
@@ -218,6 +221,7 @@
     <string name="title_advanced_subscriptions">Gérer les abonnements de dossier</string>
     <string name="title_advanced_sync_subscribed">Synchroniser les dossiers abonnés uniquement</string>
     <string name="title_advanced_biometrics_timeout">Délai d\'authentification biométrique</string>
+    <string name="title_advanced_double_back">\'Retour\' deux fois pour quitter</string>
     <string name="title_advanced_english">Forcer la langue anglaise</string>
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
@@ -228,9 +232,11 @@
     <string name="title_advanced_manual_hint">Si la synchronisation est désactivée, il est toujours possible de synchroniser manuellement en tirant vers le bas la liste des messages. Ceci synchronisera les messages et exécutera les opérations pendant une durée limitée.</string>
     <string name="title_advanced_poll_hint">La synchronisation périodique comparera les messages locaux et distants à chaque fois, ce qui est une opération coûteuse qui peut entraîner une utilisation supplémentaire de la batterie, surtout lorsqu\'il y a beaucoup de messages à synchroniser. La synchronisation en continu évitera cela en surveillant uniquement les changements.</string>
     <string name="title_advanced_schedule_hint">Appuyez sur une heure pour définir une heure</string>
+    <string name="title_advanced_check_mx">Vérifier l\'adresse mail de l\'expéditeur lors de la synchronisation des messages</string>
     <string name="title_advanced_sync_kept_hint">Ceci transférera des données supplémentaires et utilisera de la batterie supplémentaire, surtout s\'il y a beaucoup de messages conservés sur l\'appareil</string>
     <string name="title_advanced_sync_folders_hint">Désactiver ceci réduira quelque peu l\'utilisation des données et de la batterie mais désactivera également la mise à jour de la liste des dossiers</string>
     <string name="title_advanced_lookup_mx_hint">Ceci vérifiera si des enregistrements MX DNS existent</string>
+    <string name="title_advanced_sync_delay_hint">Ceci retardera la synchronisation des messages</string>
     <string name="title_advanced_metered_hint">Les connexions limitées sont généralement des connexions mobiles ou des points d\'accès Wi-Fi payants</string>
     <string name="title_advanced_metered_warning">Désactiver cette option désactivera la réception et l\'envoi de messages sur les connexions Internet mobiles</string>
     <string name="title_advanced_rlah_hint">On considère qu\'il n\'y a pas d\'itinérance au sein de l\'UE (roam like at home)</string>
@@ -240,6 +246,7 @@
     <string name="title_advanced_name_email_hint">Si désactivé, seuls les noms seront affichés si disponibles</string>
     <string name="title_advanced_preview_hint">Disponible uniquement lorsque le texte du message a été téléchargé</string>
     <string name="title_advanced_inline_hint">Les images en ligne sont des images incluses dans le message</string>
+    <string name="title_advanced_permission_contacts_hint">Ceci nécessite d\'accorder la permission de lire vos contacts</string>
     <string name="title_advanced_autoexpand_hint">Ouvrir automatiquement le message lorsqu’il n’y a qu’un seul message ou seulement un message non lu dans une conversation</string>
     <string name="title_advanced_autocollapse_hint">Les messages multiples étendus seront toujours fermés par « Retour »</string>
     <string name="title_advanced_autoclose_hint">Fermer automatiquement les fils de conversation quand tous les messages sont archivés, envoyés ou mis à la corbeille</string>
@@ -370,6 +377,7 @@
     <string name="title_flag_color">Couleur de suivi &#8230;</string>
     <string name="title_unflag">Marquer comme non suivi</string>
     <string name="title_forward">Transférer</string>
+    <string name="title_editasnew">Modifier en créant un nouveau</string>
     <string name="title_create_rule">Créer une règle &#8230;</string>
     <string name="title_share">Partager</string>
     <string name="title_print">Imprimer</string>
@@ -655,6 +663,8 @@
     <string name="title_report">Rapport</string>
     <string name="title_fix">Corriger</string>
     <string name="title_enable">Activer</string>
+    <string name="title_executing">Exécution en cours</string>
+    <string name="title_completed">Terminé</string>
     <string name="title_ask_what">Demander ce qu\'il faut faire</string>
     <string name="title_no_ask_again">Ne plus me le demander</string>
     <string name="title_no_body">Aucun texte de message trouvé</string>
@@ -667,6 +677,7 @@
     <string name="title_pro_feature">Il s\'agit d\'une fonctionnalité Pro</string>
     <string name="title_pro_list">Liste des fonctionnalités Pro</string>
     <string name="title_pro_purchase">Acheter</string>
+    <string name="title_pro_once">Une seule fois</string>
     <string name="title_pro_hint">L\'achat des fonctionnalités Pro vous autorisera à utiliser toutes les fonctionnalités Pro actuelles et futures et permettra de maintenir et de supporter cette application</string>
     <string name="title_pro_price">Veuillez voir <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">cette FAQ</a> à propos du prix des fonctionnalités Pro</string>
     <string name="title_pro_pending">Achat en cours</string>
@@ -682,9 +693,12 @@
     <string name="title_crash_info_remark">Veuillez décrire ce que vous faisiez lorsque l\'application s\'est arrêtée :</string>
     <string-array name="pollIntervalNames">
         <item>Toujours</item>
+        <item>Toutes les 15 minutes</item>
+        <item>Toutes les 30 minutes</item>
         <item>Toutes les heures</item>
         <item>Toutes les 2 heures</item>
         <item>Toutes les 4 heures</item>
+        <item>Toutes les 8 heures</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Non</item>

@@ -165,7 +165,6 @@ public class FragmentQuickSetup extends FragmentBase {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         PackageManager pm = getContext().getPackageManager();
-        menu.findItem(R.id.menu_help).setVisible(Helper.getIntentSetupHelp().resolveActivity(pm) != null);
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -181,7 +180,11 @@ public class FragmentQuickSetup extends FragmentBase {
     }
 
     private void onMenuHelp() {
-        startActivity(Helper.getIntentSetupHelp());
+        Bundle args = new Bundle();
+        args.putString("name", "SETUP.md");
+        FragmentDialogMarkdown fragment = new FragmentDialogMarkdown();
+        fragment.setArguments(args);
+        fragment.show(getChildFragmentManager(), "help");
     }
 
     private void onSave(boolean check) {
@@ -249,11 +252,11 @@ public class FragmentQuickSetup extends FragmentBase {
                             String fullName = ifolder.getFullName();
                             String[] attrs = ((IMAPFolder) ifolder).getAttributes();
                             String type = EntityFolder.getType(attrs, fullName, true);
-
                             Log.i(fullName + " attrs=" + TextUtils.join(" ", attrs) + " type=" + type);
 
-                            if (type != null && !EntityFolder.USER.equals(type)) {
+                            if (type != null) {
                                 int sync = EntityFolder.SYSTEM_FOLDER_SYNC.indexOf(type);
+
                                 EntityFolder folder = new EntityFolder();
                                 folder.name = fullName;
                                 folder.type = type;
@@ -261,23 +264,36 @@ public class FragmentQuickSetup extends FragmentBase {
                                 folder.download = (sync < 0 ? true : EntityFolder.SYSTEM_FOLDER_DOWNLOAD.get(sync));
                                 folder.sync_days = EntityFolder.DEFAULT_SYNC;
                                 folder.keep_days = EntityFolder.DEFAULT_KEEP;
-                                folders.add(folder);
 
                                 if (EntityFolder.INBOX.equals(type)) {
                                     folder.unified = true;
                                     folder.notify = true;
                                     inbox = true;
-                                }
-                                if (EntityFolder.DRAFTS.equals(type))
+                                } else if (EntityFolder.DRAFTS.equals(type))
                                     drafts = true;
-                                if (folder.name.toLowerCase().contains("draft"))
-                                    altDrafts = folder;
+
+                                folders.add(folder);
+                            } else if (fullName.toLowerCase().contains("draft")) {
+                                int sync = EntityFolder.SYSTEM_FOLDER_SYNC.indexOf(EntityFolder.DRAFTS);
+
+                                EntityFolder folder = new EntityFolder();
+                                folder.name = fullName;
+                                folder.type = EntityFolder.DRAFTS;
+                                folder.synchronize = (sync >= 0);
+                                folder.download = (sync < 0 ? true : EntityFolder.SYSTEM_FOLDER_DOWNLOAD.get(sync));
+                                folder.sync_days = EntityFolder.DEFAULT_SYNC;
+                                folder.keep_days = EntityFolder.DEFAULT_KEEP;
+
+                                altDrafts = folder;
                             }
                         }
 
+                        Log.i("Quick inbox=" + inbox + " drafts=" + drafts);
+
                         if (!drafts && altDrafts != null) {
                             drafts = true;
-                            altDrafts.type = EntityFolder.DRAFTS;
+                            folders.add(altDrafts);
+                            Log.i("Quick alt drafts=" + altDrafts.name);
                         }
 
                         if (!inbox || !drafts)
@@ -358,7 +374,7 @@ public class FragmentQuickSetup extends FragmentBase {
                     identity.display = null;
                     identity.color = null;
 
-                    CharSequence promote = getText(R.string.app_promote);
+                    CharSequence promote = context.getText(R.string.app_promote);
                     if (promote instanceof Spanned)
                         identity.signature = HtmlHelper.toHtml((Spanned) promote);
                     else
@@ -411,6 +427,8 @@ public class FragmentQuickSetup extends FragmentBase {
 
             @Override
             protected void onException(final Bundle args, Throwable ex) {
+                Log.i("Quick ex=" + Helper.formatThrowable(ex, false));
+
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else {

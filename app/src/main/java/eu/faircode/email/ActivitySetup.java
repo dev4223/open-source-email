@@ -235,14 +235,13 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 }
             }));
 
-        if (Helper.getIntentPrivacy().resolveActivity(pm) != null)
-            menus.add(new NavMenuItem(R.drawable.baseline_account_box_24, R.string.menu_privacy, new Runnable() {
-                @Override
-                public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
-                    onMenuPrivacy();
-                }
-            }));
+        menus.add(new NavMenuItem(R.drawable.baseline_account_box_24, R.string.menu_privacy, new Runnable() {
+            @Override
+            public void run() {
+                drawerLayout.closeDrawer(drawerContainer);
+                onMenuPrivacy();
+            }
+        }));
 
         menus.add(new NavMenuItem(R.drawable.baseline_info_24, R.string.menu_about, new Runnable() {
             @Override
@@ -436,7 +435,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     prefs.edit().putBoolean("biometrics", !biometrics).apply();
 
                 ToastEx.makeText(ActivitySetup.this,
-                        pro ? R.string.title_setup_done : R.string.title_pro_feature,
+                        pro
+                                ? biometrics
+                                ? R.string.title_setup_biometrics_disable
+                                : R.string.title_setup_biometrics_enable
+                                : R.string.title_pro_feature,
                         Toast.LENGTH_LONG).show();
             }
         }, new Runnable() {
@@ -470,7 +473,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuPrivacy() {
-        Helper.view(this, Helper.getIntentPrivacy());
+        Bundle args = new Bundle();
+        args.putString("name", "PRIVACY.md");
+        FragmentDialogMarkdown fragment = new FragmentDialogMarkdown();
+        fragment.setArguments(args);
+        fragment.show(getSupportFragmentManager(), "privacy");
     }
 
     private void onMenuAbout() {

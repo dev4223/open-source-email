@@ -45,11 +45,15 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
     private Button btnPurchase;
     private TextView tvPrice;
     private TextView tvPriceHint;
+    private Button btnCheck;
 
     @Override
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         setSubtitle(R.string.menu_pro);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean debug = prefs.getBoolean("debug", false);
 
         View view = inflater.inflate(R.layout.fragment_pro, container, false);
 
@@ -59,6 +63,7 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
         btnPurchase = view.findViewById(R.id.btnPurchase);
         tvPrice = view.findViewById(R.id.tvPrice);
         tvPriceHint = view.findViewById(R.id.tvPriceHint);
+        btnCheck = view.findViewById(R.id.btnCheck);
 
         tvList.setText(HtmlHelper.fromHtml(
                 "<a href=\"" + BuildConfig.PRO_FEATURES_URI + "\">" + Html.escapeHtml(getString(R.string.title_pro_list)) + "</a>"));
@@ -68,16 +73,26 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
             @Override
             public void onClick(View view) {
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                lbm.sendBroadcast(new Intent(ActivityView.ACTION_PURCHASE));
+                lbm.sendBroadcast(new Intent(ActivityBilling.ACTION_PURCHASE));
             }
         });
 
         tvPriceHint.setMovementMethod(LinkMovementMethod.getInstance());
 
+        btnCheck.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(new Intent(ActivityBilling.ACTION_PURCHASE_CHECK));
+            }
+        });
+
         tvPending.setVisibility(View.GONE);
         tvActivated.setVisibility(View.GONE);
         btnPurchase.setEnabled(false);
         tvPrice.setText(null);
+        btnCheck.setEnabled(false);
+        btnCheck.setVisibility(Helper.isPlayStoreInstall(getContext()) && debug ? View.VISIBLE : View.GONE);
 
         return view;
     }
@@ -87,6 +102,16 @@ public class FragmentPro extends FragmentBase implements SharedPreferences.OnSha
         super.onActivityCreated(savedInstanceState);
 
         addBillingListener(new ActivityBilling.IBillingListener() {
+            @Override
+            public void onConnected() {
+                btnCheck.setEnabled(true);
+            }
+
+            @Override
+            public void onDisconnected() {
+                btnCheck.setEnabled(false);
+            }
+
             @Override
             public void onSkuDetails(String sku, String price) {
                 if (ActivityBilling.getSkuPro().equals(sku)) {

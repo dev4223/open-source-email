@@ -46,14 +46,13 @@ import androidx.preference.PreferenceManager;
 
 import com.bugsnag.android.Bugsnag;
 
-import java.text.SimpleDateFormat;
-
 public class FragmentOptionsMisc extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swBadge;
     private SwitchCompat swSubscriptions;
     private TextView tvSubscriptionPro;
     private SwitchCompat swSubscribedOnly;
     private Spinner spBiometricsTimeout;
+    private SwitchCompat swDoubleBack;
     private SwitchCompat swEnglish;
     private SwitchCompat swWatchdog;
     private SwitchCompat swUpdates;
@@ -69,7 +68,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpDebug;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "badge", "subscriptions", "subscribed_only", "biometrics_timeout", "english", "watchdog", "updates", "crash_reports", "debug"
+            "badge", "subscriptions", "subscribed_only", "biometrics_timeout", "double_back", "english", "watchdog", "updates", "crash_reports", "debug"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -91,6 +90,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvSubscriptionPro = view.findViewById(R.id.tvSubscriptionPro);
         swSubscribedOnly = view.findViewById(R.id.swSubscribedOnly);
         spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
+        swDoubleBack = view.findViewById(R.id.swDoubleBack);
         swEnglish = view.findViewById(R.id.swEnglish);
         swWatchdog = view.findViewById(R.id.swWatchdog);
         swUpdates = view.findViewById(R.id.swUpdates);
@@ -146,6 +146,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("biometrics_timeout").apply();
+            }
+        });
+
+        swDoubleBack.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("double_back", checked).apply();
             }
         });
 
@@ -300,6 +307,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                 break;
             }
 
+        swDoubleBack.setChecked(prefs.getBoolean("double_back", true));
         swEnglish.setChecked(prefs.getBoolean("english", false));
         swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
@@ -318,10 +326,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     }
 
     private void setLastCleanup(long time) {
-        java.text.DateFormat df = SimpleDateFormat.getDateTimeInstance();
+        java.text.DateFormat DTF = Helper.getDateTimeInstance(getContext());
         tvLastCleanup.setText(
                 getString(R.string.title_advanced_last_cleanup,
-                        time < 0 ? "-" : df.format(time)));
+                        time < 0 ? "-" : DTF.format(time)));
     }
 
     private void restart() {

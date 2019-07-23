@@ -71,6 +71,7 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.util.FolderClosedIOException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -226,21 +227,9 @@ public class Helper {
         }
     }
 
-    static Intent getIntentSetupHelp() {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://github.com/M66B/FairEmail/blob/master/SETUP.md#setup-help"));
-        return intent;
-    }
-
     static Intent getIntentFAQ() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(Helper.FAQ_URI));
-        return intent;
-    }
-
-    static Intent getIntentPrivacy() {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse("https://github.com/M66B/FairEmail/blob/master/PRIVACY.md#fairemail"));
         return intent;
     }
 
@@ -254,6 +243,8 @@ public class Helper {
         if (BuildConfig.BETA_RELEASE) {
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
+                    (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
+                    (BuildConfig.DEBUG ? "d" : "") +
                     (Helper.isPro(context) ? "+" : "");
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setPackage(BuildConfig.APPLICATION_ID);
@@ -347,8 +338,17 @@ public class Helper {
         return new DecimalFormat("@@").format(bytes / Math.pow(unit, exp)) + " " + pre + "B";
     }
 
+    // https://issuetracker.google.com/issues/37054851
+
+    static DateFormat getTimeInstance(Context context) {
+        return Helper.getTimeInstance(context, SimpleDateFormat.MEDIUM);
+    }
+
+    static DateFormat getDateInstance(Context context) {
+        return SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM);
+    }
+
     static DateFormat getTimeInstance(Context context, int style) {
-        // https://issuetracker.google.com/issues/37054851
         if (context != null &&
                 (style == SimpleDateFormat.SHORT || style == SimpleDateFormat.MEDIUM)) {
             Locale locale = Locale.getDefault();
@@ -360,6 +360,15 @@ public class Helper {
             return new SimpleDateFormat(pattern, locale);
         } else
             return SimpleDateFormat.getTimeInstance(style);
+    }
+
+    static DateFormat getDateTimeInstance(Context context) {
+        return Helper.getDateTimeInstance(context, SimpleDateFormat.MEDIUM, SimpleDateFormat.MEDIUM);
+    }
+
+    static DateFormat getDateTimeInstance(Context context, int dateStyle, int timeStyle) {
+        // TODO fix time format
+        return SimpleDateFormat.getDateTimeInstance(dateStyle, timeStyle);
     }
 
     static CharSequence getRelativeTimeSpanString(Context context, long millis) {
@@ -387,6 +396,14 @@ public class Helper {
         for (Object span : spans)
             if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0)
                 text.removeSpan(span);
+    }
+
+    static String localizeFolderType(Context context, String type) {
+        int resid = context.getResources().getIdentifier(
+                "title_folder_" + type.toLowerCase(),
+                "string",
+                context.getPackageName());
+        return (resid > 0 ? context.getString(resid) : type);
     }
 
     static String localizeFolderName(Context context, String name) {
@@ -418,7 +435,7 @@ public class Helper {
             if (ex instanceof ConnectionException)
                 return null;
 
-            if (ex instanceof FolderClosedException)
+            if (ex instanceof FolderClosedException || ex instanceof FolderClosedIOException)
                 return null;
 
             if (ex instanceof IllegalStateException &&
@@ -661,6 +678,8 @@ public class Helper {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             return false;
         else if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+            if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT))
+                return false;
             FingerprintManager fpm = (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
             return (fpm != null && fpm.isHardwareDetected() && fpm.hasEnrolledFingerprints());
         } else {
@@ -806,7 +825,7 @@ public class Helper {
     }
 
     static void linkPro(final TextView tv) {
-        if (isPro(tv.getContext()))
+        if (isPro(tv.getContext()) && !BuildConfig.DEBUG)
             hide(tv);
         else {
             final Intent pro = new Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRO_FEATURES_URI));

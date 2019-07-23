@@ -6,6 +6,7 @@
     <string name="app_welcome">FairEmail je aplikacija otvorenog izvora (open source) usmjerena na privatnost i sigurnost. Zbog toga neke funkcije mogu raditi drugačije od onoga na što ste navikli.</string>
     <string name="app_limitations">Na primjer, poruke će uvijek biti preoblikovane kako bi se uklonili nesigurni elementi i poboljšana čitljivost, a otvaranje veza mora biti potvrđeno radi sigurnosti.</string>
     <string name="app_crash">FairEmail nije podržan na ovom uređaju jer greške u Androidu uzrokuju probleme i padove</string>
+    <string name="app_promote">Poslano sa <a href="https://email.faircode.eu/"> FairEmailom </a>, open source aplikacijom za e-poštu koja poštuje privatnost na Androidu</string>
     <string name="app_exit">Ponovo pritisnite \'natrag\' za izlazak</string>
     <string name="channel_service">Usluga</string>
     <string name="channel_send">Pošalji</string>
@@ -58,6 +59,7 @@
         <item quantity="few">Želite %1$d poruke tretirati kao neželjenu poštu?</item>
         <item quantity="other">Želite %1$d poruka tretirati kao neželjenu poštu?</item>
     </plurals>
+    <string name="title_ask_spam_who">Tretirati poruku od korisnika %1$s kao neželjenu poštu?</string>
     <string name="title_notification_waiting">Čeka se prikladna veza</string>
     <string name="title_notification_sending">Poruka se šalje</string>
     <string name="title_notification_failed">\'%1$s\' nije uspjelo</string>
@@ -96,6 +98,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_setup_quick_imap">IMAP server za primanje poruka</string>
     <string name="title_setup_quick_smtp">SMTP server za slanje poruka</string>
     <string name="title_setup_go">Idi</string>
+    <string name="title_setup_wizard">Asistent</string>
     <string name="title_setup_instructions">Upute za postavljanje</string>
     <string name="title_setup_no_settings">Nije pronađena nijedna postavka za domenu \'%1$s\'</string>
     <string name="title_setup_quick_success">Račun i identitet uspješno su dodani</string>
@@ -104,8 +107,10 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_setup_grant">Odobri</string>
     <string name="title_setup_account">Postavljanje računa</string>
     <string name="title_setup_account_remark">Za primanje e-pošte</string>
+    <string name="title_setup_account_hint">Da biste promijenili boju, povucite lijevu / desnu ciljnu mapu, itd</string>
     <string name="title_setup_identity">Postavljanje identiteta</string>
     <string name="title_setup_identity_remark">Za slanje e-pošte</string>
+    <string name="title_setup_identity_hint">Za promjenu imena, boje, potpisa itd</string>
     <string name="title_setup_permissions">Odobri dopuštenja</string>
     <string name="title_setup_permissions_remark">Pristup informacijama o kontaktu (izborno)</string>
     <string name="title_setup_doze">Postavljanje optimizacije baterije</string>
@@ -165,6 +170,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_plain_only">Standardno šaljite samo običan tekst</string>
     <string name="title_advanced_autoresize">Automatski promijeniti veličinu priloženih i ugrađenih slika</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixela</string>
+    <string name="title_advanced_lookup_mx">Provjeriva adrese e-pošte primatelja prije slanja</string>
     <string name="title_advanced_autosend">Potvrdite slanje poruka</string>
     <string name="title_advanced_send_delayed">Odgoda slanja poruka</string>
     <string name="title_advanced_metered">Koristiti mjerne veze</string>
@@ -177,6 +183,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_date_header">Grupiraj po datumu</string>
     <string name="title_advanced_threading">Prikaz razgovora</string>
     <string name="title_advanced_avatars">Prikaži fotografije kontakata</string>
+    <string name="title_advanced_generated_icons">Prikaži generirane ikone</string>
     <string name="title_advanced_identicons">Pokaži identitete</string>
     <string name="title_advanced_circular">Pokaži okrugle ikone</string>
     <string name="title_advanced_name_email">Prikažite imena i adrese e-pošte</string>
@@ -189,6 +196,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_monospaced">Upotrijebiti font u jednolikim razmjerima za tekst poruke</string>
     <string name="title_advanced_images_inline">Automatski prikaz uključenih slika</string>
     <string name="title_advanced_images">Automatski prikaz slika za poznate kontakte</string>
+    <string name="title_advanced_images_all">Automatski prikaži sve slike</string>
     <string name="title_advanced_collapse_quotes">Sažmi citirani tekst</string>
     <string name="title_advanced_remote_content">Automatsko prikazivanje udaljenog sadržaja pri pregledavanju izvornih poruka</string>
     <string name="title_advanced_actionbar">Traka s akcijama razgovora</string>
@@ -219,6 +227,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_subscriptions">Upravljanje pretplatama za mape</string>
     <string name="title_advanced_sync_subscribed">Sinkroniziraj samo pretplaćene mape</string>
     <string name="title_advanced_biometrics_timeout">Timeout biometrijske autentifikacije</string>
+    <string name="title_advanced_double_back">Dvaput \'natrag\' za izlaz</string>
     <string name="title_advanced_english">Prisiliti engleski jezik</string>
     <string name="title_advanced_watchdog">Povremeno provjeriti je li je FairEmail još uvijek aktivan</string>
     <string name="title_advanced_updates">Provjeri ažuriranja</string>
@@ -229,8 +238,11 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_manual_hint">Ako je sinkronizacija onemogućena, još uvijek je moguće ručno usklađivanje povlačenjem popisa poruka prema dolje. To će sinkronizirati poruke i izvršavati operacije na ograničeno vrijeme.</string>
     <string name="title_advanced_poll_hint">Sinkroniziranje povremeno će uspoređivati lokalne i udaljene poruke svaki put, što je skupa operacija koja vjerojatno rezultira dodatnom potrošnjom baterije, osobito kada postoji mnogo poruka za sinkronizaciju. Stalna sinkronizacija će to izbjeći kontinuiranim slušanjem samo na promjene.</string>
     <string name="title_advanced_schedule_hint">Dodirnite vrijeme za postavljanje vremena</string>
+    <string name="title_advanced_check_mx">Provjerite adrese pošiljatelja pri sinkronizaciji poruka</string>
     <string name="title_advanced_sync_kept_hint">To će prenijeti dodatne podatke i koristiti dodatnu snagu baterije, osobito ako se na uređaju čuva mnogo poruka</string>
     <string name="title_advanced_sync_folders_hint">Onemogućavanjem će se nešto smanjiti korištenje podataka i baterija, ali će se onemogućiti i ažuriranje popisa mapa</string>
+    <string name="title_advanced_lookup_mx_hint">Ovo će provjeriti dali postoju DNS MX zapisi</string>
+    <string name="title_advanced_sync_delay_hint">Ovo će odgoditi sinkronizaciju poruka</string>
     <string name="title_advanced_metered_hint">Mjerne veze su obično mobilne veze ili plaćene Wi-Fi pristupne točke</string>
     <string name="title_advanced_metered_warning">Onemogućivanjem ove opcije onemogućit ćete primanje i slanje poruka na mobilnim internetskim vezama</string>
     <string name="title_advanced_rlah_hint">Ne pretpostavljajući roaming unutar EU</string>
@@ -240,6 +252,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_name_email_hint">Kada onemogućeno, samo će imena biti prikazana ako su dostupna</string>
     <string name="title_advanced_preview_hint">Dostupno samo kada je preuzet tekst poruke</string>
     <string name="title_advanced_inline_hint">Inline slike su slike uključene u poruku</string>
+    <string name="title_advanced_permission_contacts_hint">Za to je potrebno da dodijeljite dozvolu za čitanje kontakata</string>
     <string name="title_advanced_autoexpand_hint">Automatski otvori poruku ako postoji samo jedna poruka ili samo jedna nepročitana poruka u razgovoru</string>
     <string name="title_advanced_autocollapse_hint">Višestruke proširene poruke uvijek će biti zatvorene na \'natrag\'</string>
     <string name="title_advanced_autoclose_hint">Automatski zatvori razgovore kada su sve poruke arhivirane, poslane ili stavljene u otpad</string>
@@ -269,6 +282,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_account_interval_hint">Učestalost osvježavanja veze za push poruke ili učestalost provjere novih poruka</string>
     <string name="title_account_partial_fetch_hint">Onemogućite ovo samo u slučaju praznih poruka ili oštećenih privitaka</string>
     <string name="title_account_signature">Tekst potpisa</string>
+    <string name="title_color">Boja</string>
     <string name="title_account_notify">Odvojene obavijesti</string>
     <string name="title_account_left">Povuci lijevo</string>
     <string name="title_account_right">Povuci desno</string>
@@ -332,7 +346,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_display_name">Prikaži ime</string>
     <string name="title_show_folders">Prikaži skrivene mape</string>
     <string name="title_hide_folder">Sakrij mapu</string>
-    <string name="title_unified_folder">Prikaži u objedinjenoj ulaznoj pošti</string>
+    <string name="title_unified_folder">Prikaži u objedinjenoj ulaznom spremniku</string>
     <string name="title_navigation_folder">Prikaži u navigacijskom izborniku</string>
     <string name="title_synchronize_folder">Sinkroniziranje (primanje poruka)</string>
     <string name="title_poll_folder">Povremeno provjeravanje umjesto kontinuirane sinkronizacije</string>
@@ -347,7 +361,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_folder_name_missing">Nedostaje naziv mape</string>
     <string name="title_folder_exists">Postoji mapa %1$s</string>
     <string name="title_folder_delete">Trajno izbrisati ovu mapu i sve poruke koje sadrži?</string>
-    <string name="title_folder_unified">Jedinstveni ulazni spremnik</string>
+    <string name="title_folder_unified">Objedinjeni ulazni spremnik</string>
     <string name="title_folder_inbox">Ulazni spremnik</string>
     <string name="title_folder_outbox">Odlazni spremnik</string>
     <string name="title_folder_all">Arhiva</string>
@@ -359,7 +373,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_folder_user">Korisnik</string>
     <string name="title_folder_primary">Mapa primarnog računa</string>
     <string name="title_folder_thread">Konverzacija %1$s</string>
-    <string name="title_folders_unified">Mape jedinstvenog ulaznog spremnika</string>
+    <string name="title_folders_unified">Mape objedinjenog ulaznog spremnika</string>
     <string name="title_no_messages">Nema poruka</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Npr: %1$s</string>
@@ -369,6 +383,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_flag_color">Obojena zvijezda &#8230;</string>
     <string name="title_unflag">Ukloni zvjezdicu</string>
     <string name="title_forward">Naprijed</string>
+    <string name="title_editasnew">Priredi kao novo</string>
     <string name="title_create_rule">Stvori pravilo &#8230;</string>
     <string name="title_share">Podijeli</string>
     <string name="title_print">Ispiši</string>
@@ -425,6 +440,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_ask_show_image">Prikazivanje slika može propuštati povjerljive informacije</string>
     <string name="title_ask_edit_ref">Uredi preoblikovani odgovor / proslijeđeni tekst poruke?</string>
     <string name="title_ask_sync_all">Sinkroniziranje svih poruka u%1$s?</string>
+    <string name="title_ask_delete_local">Izbrisati lokalne poruke? Poruke će ostati na udaljenom serveru.</string>
     <string name="title_ask_help">Pomozite poboljšati FairEmail</string>
     <string name="title_ask_reporting">Pošalji izvješća o pogreškama?</string>
     <string name="title_reporting_why">Izvješćivanje o pogreškama pomoći će u poboljšanju FairEmail aplikacije</string>
@@ -443,6 +459,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_save">Spremi</string>
     <string name="title_send">Pošalji</string>
     <string name="title_send_at">Pošalji u &#8230;</string>
+    <string name="title_no_server">Nije pronađen server na \'%1$s\'</string>
     <string name="title_style_bold">Podebljano</string>
     <string name="title_style_italic">Kurziv</string>
     <string name="title_style_underline">Naglasi</string>
@@ -559,7 +576,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_legend_downloading">Preuzimanje</string>
     <string name="title_legend_closing">Zatvaranje</string>
     <string name="title_legend_waiting">Čeka se sljedeća sinkronizacija</string>
-    <string name="title_legend_unified">Ujedinjen spremnik / primarni račun</string>
+    <string name="title_legend_unified">Objedinjeni spremnik / primarni račun</string>
     <string name="title_legend_inbox">Ulazni spremnik</string>
     <string name="title_legend_drafts">Skice</string>
     <string name="title_legend_sent">Poslano</string>
@@ -652,6 +669,8 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_report">Izvješće</string>
     <string name="title_fix">Popravi</string>
     <string name="title_enable">Omogući</string>
+    <string name="title_executing">Izvršava</string>
+    <string name="title_completed">Završeno</string>
     <string name="title_ask_what">Pitati što učiniti</string>
     <string name="title_no_ask_again">Ne pitaj ponovno</string>
     <string name="title_no_body">Nije pronađen tekst poruke</string>
@@ -664,6 +683,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_pro_feature">Ovo je pro funkcija</string>
     <string name="title_pro_list">Popis pro funkcija</string>
     <string name="title_pro_purchase">Kupi</string>
+    <string name="title_pro_once">Samo jednom</string>
     <string name="title_pro_hint">Kupnja pro funkcija će vam omogućiti da koristite sve trenutne i buduće mogućnosti aplikacije i zadržat će ovu aplikaciju održavanu i podržanu</string>
     <string name="title_pro_price">Pogledajte <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19"> ovaj FAQ </a> za cijenu pro funkcija</string>
     <string name="title_pro_pending">Kupnja na čekanju</string>
@@ -679,9 +699,12 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_crash_info_remark">Opišite što ste radili kada je aplikacija pala:</string>
     <string-array name="pollIntervalNames">
         <item>Uvijek</item>
+        <item>Svakih 15 minuta</item>
+        <item>Svakih 30 minuta</item>
         <item>Svaki sat</item>
         <item>Svaka 2 sata</item>
         <item>Svaka 4 sata</item>
+        <item>Svakih 8 sati</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Ne</item>
@@ -693,8 +716,8 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
         <item>10 minuta</item>
     </string-array>
     <string-array name="startupNames">
-        <item>Jedinstveni ulazni spremnik</item>
-        <item>Mape jedinstvenog ulaznog spremnika</item>
+        <item>Objedinjeni ulazni spremnik</item>
+        <item>Mape objedinjenog ulaznog spremnika</item>
         <item>Korisnički Računi</item>
     </string-array>
     <string-array name="downloadNames">

@@ -195,25 +195,28 @@ public class EntityFolder extends EntityOrder implements Serializable {
         jargs.put(keep_days);
         jargs.put(download);
         jargs.put(auto_delete);
+        jargs.put(initialize);
 
         return jargs;
     }
 
     static int getIcon(String type) {
-        if (type == null)
-            return R.drawable.baseline_list_24;
         if (EntityFolder.INBOX.equals(type))
             return R.drawable.baseline_inbox_24;
+        if (EntityFolder.OUTBOX.equals(type))
+            return R.drawable.baseline_send_24;
         if (EntityFolder.DRAFTS.equals(type))
             return R.drawable.baseline_drafts_24;
         if (EntityFolder.SENT.equals(type))
-            return R.drawable.baseline_send_24;
+            return R.drawable.baseline_forward_24;
         if (EntityFolder.ARCHIVE.equals(type))
             return R.drawable.baseline_archive_24;
         if (EntityFolder.TRASH.equals(type))
             return R.drawable.baseline_delete_24;
         if (EntityFolder.JUNK.equals(type))
             return R.drawable.baseline_flag_24;
+        if (EntityFolder.SYSTEM.equals(type))
+            return R.drawable.baseline_folder_special_24;
         return R.drawable.baseline_folder_24;
     }
 

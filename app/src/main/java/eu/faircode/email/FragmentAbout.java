@@ -81,6 +81,9 @@ public class FragmentAbout extends FragmentBase {
             case R.id.menu_issue:
                 onMenuIssue();
                 return true;
+            case R.id.menu_attribution:
+                onMenuAttribution();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -92,6 +95,14 @@ public class FragmentAbout extends FragmentBase {
 
     private void onMenuIssue() {
         startActivity(Helper.getIntentIssue(getContext()));
+    }
+
+    private void onMenuAttribution() {
+        Bundle args = new Bundle();
+        args.putString("name", "ATTRIBUTION.md");
+        FragmentDialogMarkdown fragment = new FragmentDialogMarkdown();
+        fragment.setArguments(args);
+        fragment.show(getFragmentManager(), "privacy");
     }
 
     private Intent getIntentChangelog() {

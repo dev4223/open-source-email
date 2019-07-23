@@ -45,6 +45,8 @@ For authorizing:
 * ~~Search for messages with/without attachments~~ (this cannot be added because IMAP doesn't support searching for attachments)
 * ~~Search for a folder~~ (filtering a hierarchical folder list is problematic)
 * ~~Search suggestions~~
+* ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
+* ~~Generic unified folders~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -61,8 +63,8 @@ Fonts, sizes, colors, etc should be material design wherever possible.
 
 Since FairEmail is meant to be privacy friendly, the following will not be added:
 
-* Open links without confirmation
-* Show images and original messages without confirmation, see also [this FAQ](#user-content-faq35)
+* Opening links without confirmation
+* Showing original messages without confirmation, see also [this FAQ](#user-content-faq35)
 * Direct file/folder access: for security/privacy reasons (other) apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider), see also [this FAQ](#user-content-faq49)
 
 Confirmation is just one tap, which is just a small price for better privacy.
@@ -82,7 +84,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(4) How can I use an invalid security certificate / IMAP STARTTLS / an empty password?](#user-content-faq4)
 * [(5) How can I customize the message view?](#user-content-faq5)
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
-* [(7) Why are sent messages not appearing sent folder?](#user-content-faq7)
+* [(7) Why are sent messages not appearing in the sent folder?](#user-content-faq7)
 * [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
 * [(9) What are identities / how do I add an alias?](#user-content-faq9)
 * [(11) Why is POP not supported?](#user-content-faq11)
@@ -192,6 +194,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
 * [(115) Can you add email address chips?](#user-content-faq114)
 * [(116) How can I show images in messages from trusted senders by default?](#user-content-faq116)
+* [(117) Can you help me restore my purchase?](#user-content-faq117)
 
 [I have another question.](#support)
 
@@ -378,15 +381,17 @@ See [this FAQ](#user-content-faq111) about why OAuth is not being used.
 <br />
 
 <a name="faq7"></a>
-**(7) Why are sent messages not appearing sent folder?**
+**(7) Why are sent messages not appearing in the sent folder?**
 
-Sent messages are normally added to the sent folder as soon as your provider adds the messages to the sent folder.
+Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder.
 This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.
-In these cases you can enable the advanced identity setting *Store sent messages* to workaround this.
+In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.
+Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.
 
-Note that FairEmail will automatically add sent messages to the sent folder when performing a full synchronize,
-which happens when reconnecting or if you synchronize manually.
+FairEmail will also add messages in the outbox not found in the sent folder to the sent folder when performing a full synchronize,
+which happens when reconnecting to the server or if when synchronizing manually.
+You'll likely want to enable the advanced setting *Store sent messages* instead to move messages to the sent folder sooner.
 
 <br />
 
@@ -444,6 +449,10 @@ tl;dr; consider to switch to IMAP.
 First of all you need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/).
 To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
 Similarly, to decrypt a received message, just select the menu *Decrypt* in the expanded message view.
+
+The first time you send an encrypted message you might be asked for a sign key.
+FairEmail will automatically store the sign key ID in the selected identity for the next time.
+If you need to reset the sign key, just save the identity to clear the sign key ID again.
 
 You can enable *Encrypt by default* in the identity settings, which replaces *Send* by *Encrypt and send*.
 
@@ -618,7 +627,7 @@ This can for example happen when connectivity was abruptly lost. A typical examp
 
 The message *... Connection reset by peer ...* or *... Broken pipe ...* means that the email server actively terminated an existing connection.
 
-The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connction is bad.
+The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
@@ -815,10 +824,12 @@ Setting identity colors is a pro feature.
 Viewing remotely stored images (see also [this FAQ](#user-content-faq27)) might not only tell the sender that you have seen the message,
 but will also leak your IP address.
 
-Opening attachments or viewing an original message might execute scripts,
+Opening attachments or viewing an original message might load remote content and execute scripts,
 that might not only cause privacy sensitive information to leak, but can also be a security risk.
 
 Note that your contacts could unknowingly send malicious messages if they got infected with malware.
+
+FairEmail formats messages again causing messages to look different from the original, but also uncovering phishing links.
 
 The Gmail app shows images by default by downloading the images through a Google proxy server.
 Since the images are downloaded from the source server [in real-time](https://blog.filippo.io/how-the-new-gmail-image-proxy-works-and-what-this-means-for-you/),
@@ -884,6 +895,8 @@ It is inevitable that synchronizing messages will use battery power because it r
 
 Reconnecting to an email server will use extra battery power, so an unstable internet connection will result in extra battery usage.
 In this case you might want to synchronize periodically, for example each hour, instead of continuously.
+Note that polling frequently (more than every 30-60 minutes) will likely use more battery power than synchronizing always
+because connection to the server and comparing the local and remotes messages are expensive operations.
 
 Most of the battery usage, not considering viewing messages, is due to synchronization (receiving and sending) of messages.
 So, to reduce the battery usage, set the number of days to synchronize message for to a lower value,
@@ -1193,11 +1206,11 @@ but even Google's Chrome cannot handle this.
 <a name="faq60"></a>
 **(60) Did you know ... ?**
 
-* Did you know that starred messages are always synchronized/kept?
+* Did you know that starred messages are by default synchronized/kept? (this can be changed in the receive settings)
 * Did you know that you can long press the 'write message' icon to go to the drafts folder?
 * Did you know that you can long press the account name in the navigation menu to go to the inbox of that account?
-* Did you know there is an advanced option to mark messages read when they are moved and that archiving and trashing is also moving?
-* Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it? You'll need to set a primary account and an archive folder for this to work, so FairEmail knows where to search. There will be 'FairEmail' in the menu with copy, cut, etc.
+* Did you know there is an advanced option to mark messages read when they are moved? (archiving and trashing is also moving)
+* Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it?
 * Did you know that FairEmail has a tablet mode? Rotate your device in landscape mode and conversation threads will be opened in a second column if there is enough screen space.
 * Did you know that you can long press a reply template to create a draft message from the template?
 * Did you know that you can long press, hold and swipe to select a range of messages?
@@ -1652,9 +1665,12 @@ This is why texts with dots are sometimes incorrectly recognized as links, which
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature
 and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client.
 
-However, FairEmail will show a small warning flag
+However, FairEmail will show a small red warning flag
 when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server.
 You can enable/disable [authentication verification](https://en.wikipedia.org/wiki/Email_authentication) in the behavior settings.
+
+FairEmail can show a warning flag too when the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server.
+This can be enabled in the receive settings. Be aware that this will slow down synchronization of messages significantly.
 
 If legitimate messages are failing authentication, you should notify the sender because this will result in a high risk of messages ending up in the spam folder.
 Moreover, without proper authentication there is a risk the sender will be impersonated.
@@ -1874,6 +1890,8 @@ Mostly you can workaround this by disabling *Partial fetch* in the advanced acco
 After disabling this setting, you can use the message 'more' (three dots) menu to 'resync' empty messages.
 Alternatively, you can *Delete local messages* by long pressing the folder(s) in the folder list and synchronize all messages again.
 
+Disabling *Partial fetch* will result in more memory usage.
+
 <br />
 
 <a name="faq111"></a>
@@ -1947,10 +1965,30 @@ Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f4
 
 You can show images in messages from trusted senders by default by enabled the display setting *Automatically show images for known contacts*.
 
-People in the Android contacts list are considered to be known and trusted,
-unless the contact relation is set to '*Untrusted*' (case insensitive; the relation type, for example parent, child, friend, etc does not matter).
+Contacts in the Android contacts list are considered to be known and trusted,
+unless the contact is in the group / has the label '*Untrusted*' (case insensitive).
 
 <br />
+
+<a name="faq117"></a>
+**(117) Can you help me restore my purchase?**
+
+Google manages all purchases, so as developer I have little control over purchases.
+So, the only thing I can do, is give some advice:
+
+* Make sure you have an active internet connection
+* Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
+* Open the Play store application and wait at least a minute to give it time to synchronize with the Google servers
+* Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases
+
+You can also try to clear the cache of the Play store app via the Android apps settings.
+
+Note that:
+
+* Purchases are stored in the Google cloud and cannot get lost
+* There is no time limit on purchases, so they cannot expire
+* Google does not expose details (name, e-mail, etc) about buyers to developers
+* An application like FairEmail cannot select which Google account to use
 
 ## Support
 

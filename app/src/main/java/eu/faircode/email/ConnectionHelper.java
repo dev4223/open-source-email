@@ -17,7 +17,12 @@ import com.bugsnag.android.BreadcrumbType;
 import com.bugsnag.android.Bugsnag;
 import com.sun.mail.imap.IMAPStore;
 
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.SimpleResolver;
+import org.xbill.DNS.Type;
+
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,10 +30,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 
 public class ConnectionHelper {
-    private static final String DEFAULT_DNS = "8.8.8.8";
+    // https://dns.watch/
+    private static final String DEFAULT_DNS = "84.200.69.80";
 
     static final int AUTH_TYPE_PASSWORD = 1;
     static final int AUTH_TYPE_GMAIL = 2;
@@ -275,21 +283,68 @@ public class ConnectionHelper {
     }
 
     static String getDnsServer(Context context) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M)
-            return DEFAULT_DNS;
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null)
             return DEFAULT_DNS;
-        Network active = cm.getActiveNetwork();
-        if (active == null)
-            return DEFAULT_DNS;
-        LinkProperties props = cm.getLinkProperties(active);
+
+        LinkProperties props = null;
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            for (Network network : cm.getAllNetworks()) {
+                NetworkInfo ni = cm.getNetworkInfo(network);
+                if (ni != null && ni.isConnected()) {
+                    props = cm.getLinkProperties(network);
+                    Log.i("Old props=" + props);
+                    break;
+                }
+            }
+        else {
+            Network active = cm.getActiveNetwork();
+            if (active == null)
+                return DEFAULT_DNS;
+            props = cm.getLinkProperties(active);
+            Log.i("New props=" + props);
+        }
+
         if (props == null)
             return DEFAULT_DNS;
+
         List<InetAddress> dns = props.getDnsServers();
         if (dns.size() == 0)
             return DEFAULT_DNS;
         else
             return dns.get(0).getHostAddress();
+    }
+
+    static boolean lookupMx(Address[] addresses, Context context) throws UnknownHostException {
+        boolean ok = true;
+
+        if (addresses != null)
+            for (Address address : addresses)
+                try {
+                    String email = ((InternetAddress) address).getAddress();
+                    if (email == null || !email.contains("@"))
+                        continue;
+                    String domain = email.split("@")[1];
+                    Lookup lookup = new Lookup(domain, Type.MX);
+                    SimpleResolver resolver = new SimpleResolver(ConnectionHelper.getDnsServer(context));
+                    lookup.setResolver(resolver);
+                    Log.i("Lookup MX=" + domain + " @" + resolver.getAddress());
+
+                    lookup.run();
+                    if (lookup.getResult() == Lookup.HOST_NOT_FOUND ||
+                            lookup.getResult() == Lookup.TYPE_NOT_FOUND) {
+                        Log.i("Lookup MX=" + domain + " result=" + lookup.getErrorString());
+                        throw new UnknownHostException(context.getString(R.string.title_no_server, domain));
+                    } else if (lookup.getResult() != Lookup.SUCCESSFUL)
+                        ok = false;
+                } catch (UnknownHostException ex) {
+                    throw ex;
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                    ok = false;
+                }
+
+        return ok;
     }
 }

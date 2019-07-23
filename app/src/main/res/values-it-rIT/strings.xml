@@ -63,6 +63,7 @@
     <string name="menu_legend">Legenda</string>
     <string name="menu_faq">Supporto</string>
     <string name="menu_issue">Segnala problema</string>
+    <string name="menu_attribution">Attribuzione</string>
     <string name="menu_privacy">Privacy</string>
     <string name="menu_about">Al riguardo</string>
     <string name="menu_pro">Funzionalità a pagamento</string>
@@ -175,6 +176,7 @@
     <string name="title_advanced_date_header">Raggruppa per data</string>
     <string name="title_advanced_threading">Thread di conversazione</string>
     <string name="title_advanced_avatars">Mostra foto del contatto</string>
+    <string name="title_advanced_generated_icons">Mostra icone generate</string>
     <string name="title_advanced_identicons">Visualizza identicon</string>
     <string name="title_advanced_circular">Mostra icone rotonde</string>
     <string name="title_advanced_name_email">Mostra nomi e indirizzi email</string>
@@ -187,6 +189,7 @@
     <string name="title_advanced_monospaced">Usa il carattere monospaziale per il testo del messaggio</string>
     <string name="title_advanced_images_inline">Mostra automaticamente le immagini in linea</string>
     <string name="title_advanced_images">Mostra automaticamente le immagini per i contatti noti</string>
+    <string name="title_advanced_images_all">Mostra automaticamente tutte le immagini</string>
     <string name="title_advanced_collapse_quotes">Comprimi testo citato</string>
     <string name="title_advanced_remote_content">Mostra automaticamente il contenuto remoto quando si visualizzano i messaggi originali</string>
     <string name="title_advanced_actionbar">Barra di azione di conversazione</string>
@@ -217,6 +220,7 @@
     <string name="title_advanced_subscriptions">Gestisci abbonamenti cartelle</string>
     <string name="title_advanced_sync_subscribed">Sincronizza solo le cartelle sottoscritte</string>
     <string name="title_advanced_biometrics_timeout">Timeout autenticazione biometrica</string>
+    <string name="title_advanced_double_back">Doppio \'indietro\' per uscire</string>
     <string name="title_advanced_english">Forza la lingua inglese</string>
     <string name="title_advanced_watchdog">Controlla periodicamente se FairEmail è ancora attiva</string>
     <string name="title_advanced_updates">Controlla aggiornamenti</string>
@@ -227,9 +231,11 @@
     <string name="title_advanced_manual_hint">Se la sincronizzazione è disabilitata, è ancora possibile sincronizzare manualmente tirando giù l\'elenco dei messaggi. Questo sincronizzerà i messaggi ed eseguirà le operazioni per un tempo limitato.</string>
     <string name="title_advanced_poll_hint">La sincronizzazione periodica compara i messaggi locali e remoti ogni volta, il che è un\'operazione costosa che potrebbe comportare un utilizzo aggiuntivo di batteria, specialmente quando ci sono molti messaggi da sincronizzare. La sincronizzazione sempre eviterà questo solo ascoltando continuamente le modifiche.</string>
     <string name="title_advanced_schedule_hint">Tocca un orario per impostare un orario</string>
+    <string name="title_advanced_check_mx">Controlla gli indirizzi email mittente alla sincronizzazione dei messaggi</string>
     <string name="title_advanced_sync_kept_hint">Questo trasferirà dati aggiuntivi e utilizzerà energia batteria extra, specialmente se ci sono molti messaggi conservati sul dispositivo</string>
     <string name="title_advanced_sync_folders_hint">Disabilitando questa opzione si ridurranno in qualche modo i dati e l\'utilizzo della batteria, ma disattiverà anche l\'aggiornamento della lista delle cartelle</string>
     <string name="title_advanced_lookup_mx_hint">Questo controllerà se esistono record DNS MX</string>
+    <string name="title_advanced_sync_delay_hint">Questo ritarderà la sincronizzazione dei messaggi</string>
     <string name="title_advanced_metered_hint">Le connessioni a consumo sono generalmente connessioni mobili o hotspot Wi-Fi a pagamento</string>
     <string name="title_advanced_metered_warning">Disabilitando questa opzione disattiverai la ricezione e l\'invio di messaggi sulle connessioni internet mobili</string>
     <string name="title_advanced_rlah_hint">Presumi nessun roaming all\'interno dell\'UE</string>
@@ -239,6 +245,7 @@
     <string name="title_advanced_name_email_hint">Quando disabilitati saranno mostrati solo i nomi quando disponibili</string>
     <string name="title_advanced_preview_hint">Disponibile solo quando è stato scaricato il testo del messaggio</string>
     <string name="title_advanced_inline_hint">Le immagini in linea sono incluse nel messaggio</string>
+    <string name="title_advanced_permission_contacts_hint">Questo richiede sia concesso il permesso di leggere i tuoi contatti</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando c\'è un solo messaggio o solo un messaggio da leggere in una conversazione</string>
     <string name="title_advanced_autocollapse_hint">Più messaggi estesi verranno sempre chiusi con \'indietro\'</string>
     <string name="title_advanced_autoclose_hint">Chiudi automaticamente le conversazioni raggruppate quando tutti i messaggi sono archiviati, inviati o cestinati</string>
@@ -369,6 +376,7 @@
     <string name="title_flag_color">Stella colorata &#8230;</string>
     <string name="title_unflag">Rimuovi stella</string>
     <string name="title_forward">Inoltra</string>
+    <string name="title_editasnew">Modifica come nuovo</string>
     <string name="title_create_rule">Crea regola &#8230;</string>
     <string name="title_share">Condividi</string>
     <string name="title_print">Stampa</string>
@@ -654,6 +662,8 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Correggi</string>
     <string name="title_enable">Attiva</string>
+    <string name="title_executing">Esecuzione</string>
+    <string name="title_completed">Completato</string>
     <string name="title_ask_what">Chiedi cosa fare</string>
     <string name="title_no_ask_again">Non chiedere di nuovo</string>
     <string name="title_no_body">Nessun messaggio di testo trovato</string>
@@ -666,6 +676,7 @@
     <string name="title_pro_feature">Questa è una funzionalità a pagamento</string>
     <string name="title_pro_list">Elenco delle funzionalità a pagamento</string>
     <string name="title_pro_purchase">Acquista</string>
+    <string name="title_pro_once">Solo una volta</string>
     <string name="title_pro_hint">L\'acquisto di funzionalità a pagamento ti permetterà di utilizzare tutte le attuali e future funzioni, aiuterà il mantenimento e il supporto dell\'app</string>
     <string name="title_pro_price">Consulta <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">queste FAQ</a> riguardo il prezzo delle funzioni a pagamento</string>
     <string name="title_pro_pending">Acquisto in sospeso</string>
@@ -681,9 +692,12 @@
     <string name="title_crash_info_remark">Descrivi cosa stavi facendo quando l\'app si è interrotta:</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
+        <item>Ogni 15 minuti</item>
+        <item>Ogni 30 minuti</item>
         <item>Ogni ora</item>
         <item>Ogni 2 ore</item>
         <item>Ogni 4 ore</item>
+        <item>Ogni 8 ore</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>No</item>

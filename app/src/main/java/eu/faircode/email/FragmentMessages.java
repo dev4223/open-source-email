@@ -177,6 +177,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private FloatingActionButton fabSearch;
     private FloatingActionButton fabError;
 
+    private String type;
     private long account;
     private long folder;
     private boolean server;
@@ -192,7 +193,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private boolean date;
     private boolean threading;
-    private boolean pull;
     private boolean swipenav;
     private boolean autoscroll;
     private boolean actionbar;
@@ -232,7 +232,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private LongSparseArray<List<EntityAttachment>> attachments = new LongSparseArray<>();
     private LongSparseArray<TupleAccountSwipes> accountSwipes = new LongSparseArray<>();
 
-    private NumberFormat nf = NumberFormat.getNumberInstance();
+    private NumberFormat NF = NumberFormat.getNumberInstance();
 
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
@@ -285,6 +285,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         // Get arguments
         Bundle args = getArguments();
+        type = args.getString("type");
         account = args.getLong("account", -1);
         folder = args.getLong("folder", -1);
         server = args.getBoolean("server", false);
@@ -308,11 +309,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             viewType = AdapterMessage.ViewType.SEARCH;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        if (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
-            pull = prefs.getBoolean("pull", true);
-        else
-            pull = false;
 
         swipenav = prefs.getBoolean("swipenav", true);
         autoscroll = (prefs.getBoolean("autoscroll", false) || viewType == AdapterMessage.ViewType.THREAD);
@@ -532,7 +528,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         String sort = prefs.getString("sort", "time");
         boolean filter_duplicates = prefs.getBoolean("filter_duplicates", false);
 
-        adapter = new AdapterMessage(this, viewType, compact, zoom, sort, filter_duplicates, iProperties);
+        adapter = new AdapterMessage(this, type, viewType, compact, zoom, sort, filter_duplicates, iProperties);
         rvMessage.setAdapter(adapter);
 
         seekBar.setOnTouchListener(new View.OnTouchListener() {
@@ -900,12 +896,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         fabMore.show();
                     else
                         fabMore.hide();
-                    updateSwipeRefresh();
                 }
             });
         }
 
-        updateSwipeRefresh();
+        swipeRefresh.setOnChildScrollUpCallback(new SwipeRefreshLayout.OnChildScrollUpCallback() {
+            @Override
+            public boolean canChildScrollUp(@NonNull SwipeRefreshLayout parent, @Nullable View child) {
+                if (viewType != AdapterMessage.ViewType.UNIFIED && viewType != AdapterMessage.ViewType.FOLDER)
+                    return true;
+                if (!prefs.getBoolean("pull", true))
+                    return true;
+                if (swiping)
+                    return true;
+                if (selectionTracker != null && selectionTracker.hasSelection())
+                    return true;
+                return rvMessage.canScrollVertically(-1);
+            }
+        });
 
         pgpService = new OpenPgpServiceConnection(getContext(), "org.sufficientlysecure.keychain");
         pgpService.bindToService();
@@ -946,10 +954,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         super.onDestroy();
     }
 
-    private void updateSwipeRefresh() {
-        swipeRefresh.setEnabled(pull && !swiping && (selectionTracker == null || !selectionTracker.hasSelection()));
-    }
-
     private void scrollToVisibleItem(LinearLayoutManager llm, boolean bottom) {
         int pos = llm.findLastVisibleItemPosition();
         if (pos == RecyclerView.NO_POSITION)
@@ -982,6 +986,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private void onSwipeRefresh() {
         Bundle args = new Bundle();
         args.putLong("folder", folder);
+        args.putString("type", type);
 
         new SimpleTask<Void>() {
             @Override
@@ -992,6 +997,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
+                String type = args.getString("type");
 
                 if (!ConnectionHelper.getNetworkState(context).isSuitable())
                     throw new IllegalStateException(context.getString(R.string.title_no_internet));
@@ -1004,7 +1010,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     List<EntityFolder> folders = new ArrayList<>();
                     if (fid < 0)
-                        folders.addAll(db.folder().getFoldersSynchronizingUnified());
+                        folders.addAll(db.folder().getFoldersSynchronizingUnified(type));
                     else {
                         EntityFolder folder = db.folder().getFolder(fid);
                         if (folder != null)
@@ -1249,15 +1255,29 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (swipes == null)
                 return;
 
+            Long action = (dX > 0 ? swipes.swipe_right : swipes.swipe_left);
+            if (action == null)
+                return;
+
             AdapterMessage.ViewHolder holder = ((AdapterMessage.ViewHolder) viewHolder);
             Rect rect = holder.getItemRect();
             int margin = Helper.dp2pixels(getContext(), 12);
             int size = Helper.dp2pixels(getContext(), 24);
 
+            int icon;
+            if (FragmentAccount.SWIPE_ACTION_ASK.equals(action))
+                icon = R.drawable.baseline_list_24;
+            else if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
+                if (message.ui_seen)
+                    icon = R.drawable.baseline_visibility_off_24;
+                else
+                    icon = R.drawable.baseline_visibility_24;
+            else
+                icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
+            Drawable d = getResources().getDrawable(icon, getContext().getTheme()).mutate();
+
             if (dX > 0) {
                 // Right swipe
-                Drawable d = getResources().getDrawable(
-                        EntityFolder.getIcon(swipes.right_type), getContext().getTheme()).mutate();
                 d.setAlpha(Math.round(255 * Math.min(dX / (2 * margin + size), 1.0f)));
                 int padding = (rect.height() - size);
                 d.setBounds(
@@ -1268,8 +1288,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 d.draw(canvas);
             } else if (dX < 0) {
                 // Left swipe
-                Drawable d = getResources().getDrawable(
-                        EntityFolder.getIcon(swipes.left_type), getContext().getTheme()).mutate();
                 d.setAlpha(Math.round(255 * Math.min(-dX / (2 * margin + size), 1.0f)));
                 int padding = (rect.height() - size);
                 d.setBounds(
@@ -1285,167 +1303,39 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
             super.onSelectedChanged(viewHolder, actionState);
             swiping = (actionState == ItemTouchHelper.ACTION_STATE_SWIPE);
-            updateSwipeRefresh();
         }
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             final TupleMessageEx message = getMessage(viewHolder);
             if (message == null) {
-                adapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                adapter.notifyDataSetChanged();
                 return;
             }
 
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
             if (swipes == null) {
-                adapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                adapter.notifyDataSetChanged();
+                return;
+            }
+
+            Long action = (direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
+            if (action == null) {
+                adapter.notifyDataSetChanged();
                 return;
             }
 
             Log.i("Swiped dir=" + direction + " message=" + message.id);
 
-            if (direction == ItemTouchHelper.LEFT ? swipes.swipe_left < 0 : swipes.swipe_right < 0) {
-                adapter.notifyItemChanged(viewHolder.getAdapterPosition());
-
-                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
-                popupMenu.setGravity(Gravity.RIGHT);
-
-                if (message.ui_seen)
-                    popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, 2, R.string.title_unseen);
-                else
-                    popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
-
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 3, R.string.title_flag_color);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 3, R.string.title_move);
-
-                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem target) {
-                        switch (target.getItemId()) {
-                            case R.string.title_seen:
-                                onActionSeenSelection(true, message.id);
-                                return true;
-                            case R.string.title_unseen:
-                                onActionSeenSelection(false, message.id);
-                                return true;
-                            case R.string.title_snooze:
-                                onMenuSnooze();
-                                return true;
-                            case R.string.title_flag_color:
-                                onMenuColor();
-                                return true;
-                            case R.string.title_move:
-                                onMenuMove();
-                                return true;
-                            default:
-                                return false;
-                        }
-                    }
-
-                    private void onMenuSnooze() {
-                        Bundle args = new Bundle();
-                        args.putString("title", getString(R.string.title_snooze));
-                        args.putLong("account", message.account);
-                        args.putString("thread", message.thread);
-                        args.putLong("id", message.id);
-                        args.putBoolean("finish", false);
-
-                        FragmentDialogDuration fragment = new FragmentDialogDuration();
-                        fragment.setArguments(args);
-                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
-                        fragment.show(getFragmentManager(), "message:snooze");
-                    }
-
-                    private void onMenuColor() {
-                        int color = (message.color == null ? Color.TRANSPARENT : message.color);
-
-                        Bundle args = new Bundle();
-                        args.putLong("id", message.id);
-
-                        FragmentDialogColor fragment = new FragmentDialogColor();
-                        fragment.initialize(R.string.title_flag_color, color, args, getContext());
-                        fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGE_COLOR);
-                        fragment.show(getFragmentManager(), "message:color");
-                    }
-
-                    private void onMenuMove() {
-                        Bundle args = new Bundle();
-                        args.putString("title", getString(R.string.title_move_to_folder));
-                        args.putLong("account", message.account);
-                        args.putLongArray("disabled", new long[]{message.folder});
-                        args.putLong("message", message.id);
-                        args.putBoolean("copy", false);
-                        args.putBoolean("similar", true);
-
-                        FragmentDialogFolder fragment = new FragmentDialogFolder();
-                        fragment.setArguments(args);
-                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_MOVE);
-                        fragment.show(getFragmentManager(), "message:move");
-                    }
-                });
-
-                popupMenu.show();
-
-            } else {
-                Bundle args = new Bundle();
-                args.putLong("id", message.id);
-                args.putBoolean("thread", viewType != AdapterMessage.ViewType.THREAD);
-                args.putLong("target", direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
-
-                new SimpleTask<ArrayList<MessageTarget>>() {
-                    @Override
-                    protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
-                        long id = args.getLong("id");
-                        boolean thread = args.getBoolean("thread");
-                        long tid = args.getLong("target");
-
-                        ArrayList<MessageTarget> result = new ArrayList<>();
-
-                        // Get target folder and hide message
-                        DB db = DB.getInstance(context);
-                        try {
-                            db.beginTransaction();
-
-                            EntityFolder target = db.folder().getFolder(tid);
-                            if (target == null)
-                                throw new IllegalArgumentException(context.getString(R.string.title_no_folder));
-
-                            EntityAccount account = db.account().getAccount(target.account);
-                            EntityMessage message = db.message().getMessage(id);
-                            if (message != null) {
-                                List<EntityMessage> messages = db.message().getMessageByThread(
-                                        message.account, message.thread, threading && thread ? null : id, message.folder);
-                                for (EntityMessage threaded : messages) {
-                                    result.add(new MessageTarget(threaded, account, target));
-                                    db.message().setMessageUiHide(threaded.id, new Date().getTime());
-                                    // Prevent new message notification on undo
-                                    db.message().setMessageUiIgnored(threaded.id, true);
-                                }
-                            }
-
-                            db.setTransactionSuccessful();
-                        } finally {
-                            db.endTransaction();
-                        }
-
-                        return result;
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                        moveUndo(result);
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
-                    }
-                }.execute(FragmentMessages.this, args, "messages:swipe");
-            }
+            if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
+                onActionSeenSelection(!message.ui_seen, message.id);
+            else if (FragmentAccount.SWIPE_ACTION_ASK.equals(action))
+                swipeAsk(message, viewHolder);
+            else
+                swipeFolder(message, action);
         }
 
-        private TupleMessageEx getMessage(RecyclerView.ViewHolder viewHolder) {
+        private TupleMessageEx getMessage(@NonNull RecyclerView.ViewHolder viewHolder) {
             if (selectionTracker != null && selectionTracker.hasSelection())
                 return null;
 
@@ -1468,6 +1358,150 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return null;
 
             return message;
+        }
+
+        private void swipeAsk(final @NonNull TupleMessageEx message, @NonNull RecyclerView.ViewHolder viewHolder) {
+            adapter.notifyDataSetChanged();
+
+            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
+            popupMenu.setGravity(Gravity.RIGHT);
+
+            if (message.ui_seen)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, 2, R.string.title_unseen);
+            else
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
+
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 3, R.string.title_flag_color);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 3, R.string.title_move);
+
+            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem target) {
+                    switch (target.getItemId()) {
+                        case R.string.title_seen:
+                            onActionSeenSelection(true, message.id);
+                            return true;
+                        case R.string.title_unseen:
+                            onActionSeenSelection(false, message.id);
+                            return true;
+                        case R.string.title_snooze:
+                            onMenuSnooze();
+                            return true;
+                        case R.string.title_flag_color:
+                            onMenuColor();
+                            return true;
+                        case R.string.title_move:
+                            onMenuMove();
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+
+                private void onMenuSnooze() {
+                    Bundle args = new Bundle();
+                    args.putString("title", getString(R.string.title_snooze));
+                    args.putLong("account", message.account);
+                    args.putString("thread", message.thread);
+                    args.putLong("id", message.id);
+                    args.putBoolean("finish", false);
+
+                    FragmentDialogDuration fragment = new FragmentDialogDuration();
+                    fragment.setArguments(args);
+                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
+                    fragment.show(getFragmentManager(), "message:snooze");
+                }
+
+                private void onMenuColor() {
+                    int color = (message.color == null ? Color.TRANSPARENT : message.color);
+
+                    Bundle args = new Bundle();
+                    args.putLong("id", message.id);
+
+                    FragmentDialogColor fragment = new FragmentDialogColor();
+                    fragment.initialize(R.string.title_flag_color, color, args, getContext());
+                    fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGE_COLOR);
+                    fragment.show(getFragmentManager(), "message:color");
+                }
+
+                private void onMenuMove() {
+                    Bundle args = new Bundle();
+                    args.putString("title", getString(R.string.title_move_to_folder));
+                    args.putLong("account", message.account);
+                    args.putLongArray("disabled", new long[]{message.folder});
+                    args.putLong("message", message.id);
+                    args.putBoolean("copy", false);
+                    args.putBoolean("similar", true);
+
+                    FragmentDialogFolder fragment = new FragmentDialogFolder();
+                    fragment.setArguments(args);
+                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_MOVE);
+                    fragment.show(getFragmentManager(), "message:move");
+                }
+            });
+
+            popupMenu.show();
+        }
+
+        private void swipeFolder(@NonNull TupleMessageEx message, @NonNull Long target) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+            args.putBoolean("thread", viewType != AdapterMessage.ViewType.THREAD);
+            args.putLong("target", target);
+
+            new SimpleTask<ArrayList<MessageTarget>>() {
+                @Override
+                protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+                    boolean thread = args.getBoolean("thread");
+                    long tid = args.getLong("target");
+
+                    ArrayList<MessageTarget> result = new ArrayList<>();
+
+                    // Get target folder and hide message
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
+
+                        EntityFolder target = db.folder().getFolder(tid);
+                        if (target == null)
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_folder));
+
+                        EntityAccount account = db.account().getAccount(target.account);
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message != null) {
+                            List<EntityMessage> messages = db.message().getMessageByThread(
+                                    message.account, message.thread, threading && thread ? null : id, message.folder);
+                            for (EntityMessage threaded : messages) {
+                                result.add(new MessageTarget(threaded, account, target));
+                                db.message().setMessageUiHide(threaded.id, new Date().getTime());
+                                // Prevent new message notification on undo
+                                db.message().setMessageUiIgnored(threaded.id, true);
+                            }
+                        }
+
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+
+                    return result;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
+                    moveUndo(result);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    if (ex instanceof IllegalArgumentException)
+                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    else
+                        Helper.unexpectedError(getFragmentManager(), ex);
+                }
+            }.execute(FragmentMessages.this, args, "messages:swipe");
         }
     };
 
@@ -1760,12 +1794,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     for (long id : selected) {
                         EntityMessage message = db.message().getMessage(id);
-                        if (message != null) {
-                            List<EntityMessage> messages = db.message().getMessageByThread(
-                                    message.account, message.thread, threading ? null : id, message.folder);
-                            for (EntityMessage threaded : messages)
-                                ids.add(threaded.id);
-                        }
+                        if (message != null && message.uid != null)
+                            ids.add(message.id);
                     }
 
                     db.setTransactionSuccessful();
@@ -2020,7 +2050,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         // Folder
         switch (viewType) {
             case UNIFIED:
-                db.folder().liveUnified().observe(getViewLifecycleOwner(), new Observer<List<TupleFolderEx>>() {
+                db.folder().liveUnified(type).observe(getViewLifecycleOwner(), new Observer<List<TupleFolderEx>>() {
                     @Override
                     public void onChanged(List<TupleFolderEx> folders) {
                         if (folders == null)
@@ -2029,7 +2059,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         updateState(folders);
                     }
                 });
-                db.message().liveHidden(null).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+                db.message().liveHiddenFolder(null, type).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                     @Override
                     public void onChanged(List<Long> ids) {
                         if (ids != null && selectionTracker != null)
@@ -2056,7 +2086,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         }
                     }
                 });
-                db.message().liveHidden(folder).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+                db.message().liveHiddenFolder(folder, null).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                     @Override
                     public void onChanged(List<Long> ids) {
                         if (ids != null && selectionTracker != null)
@@ -2085,7 +2115,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         }
                     }
                 });
-                db.message().liveHidden(account, thread).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
+                db.message().liveHiddenThread(account, thread).observe(getViewLifecycleOwner(), new Observer<List<Long>>() {
                     @Override
                     public void onChanged(List<Long> ids) {
                         if (ids != null) {
@@ -2594,7 +2624,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         // Get name
         String name;
         if (viewType == AdapterMessage.ViewType.UNIFIED)
-            name = getString(R.string.title_folder_unified);
+            if (type == null)
+                name = getString(R.string.title_folder_unified);
+            else
+                name = Helper.localizeFolderType(getContext(), type);
         else
             name = (folders.size() > 0 ? folders.get(0).getDisplayName(getContext()) : "");
 
@@ -2602,7 +2635,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (unseen == 0)
             setSubtitle(name);
         else
-            setSubtitle(getString(R.string.title_name_count, name, nf.format(unseen)));
+            setSubtitle(getString(R.string.title_name_count, name, NF.format(unseen)));
 
         if (errors)
             fabError.show();
@@ -2679,7 +2712,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         ViewModelMessages.Model vmodel = model.getModel(
                 getContext(), getViewLifecycleOwner(),
-                viewType, account, folder, thread, id, query, server);
+                viewType, type, account, folder, thread, id, query, server);
 
         vmodel.setCallback(callback);
         vmodel.setObserver(getViewLifecycleOwner(), observer);
@@ -4228,7 +4261,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     {
                         Element span = document.createElement("span");
-                        DateFormat DTF = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+                        DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
                         span.text(getString(R.string.title_received) + " " + DTF.format(message.received));
                         p.append(span.html() + "<br>");
                     }
