@@ -42,7 +42,7 @@
 
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorAccentDark</item>
 
         <item name="colorUnread">@color/darkColorUnread</item>
         <item name="colorSeparator">@color/darkColorSeparator</item>
