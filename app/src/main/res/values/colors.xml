@@ -4,14 +4,14 @@
     <color name="colorPrimaryDark">#006db3</color>
     <color name="colorAccent">#ffb300</color>
     <!-- colorAccentDark orig: #b27d00 -->
-    <color name="colorAccentDark">#c70045</color>
+    <color name="colorAccentDark">#FFE50A3E</color>
 
     <color name="colorError">#ff0000</color>
 
     <color name="blackPrimary">#026ca0</color>
     <color name="blackPrimaryDark">#004c7d</color>
     <!-- blackAccent orig: #b27d00 -->
-    <color name="blackAccent">#c70045</color>
+    <color name="blackAccent">#FFE50A3E</color>
 
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
@@ -33,7 +33,7 @@
     <color name="darkColorUnread">#fff</color>
     <color name="darkColorItemSelected">#444</color>
     <color name="darkColorSeparator">#444</color>
-    <color name="darkColorWarning">#ffffb300</color>
+    <color name="darkColorWarning">#FFFFAE00</color>
     <color name="darkColorDrawerScrim">#997f7f7f</color>
     <color name="darkColorDrawerText">#fff</color>
     <color name="darkColorDrawerBackground">#222</color>
@@ -43,7 +43,8 @@
     <color name="design_snackbar_background_color" tools:override="true">#222</color>
 
     <!-- color picker -->
-    <color name="red">#F6402C</color>
+    <!-- red ORIg: #F6402C -->
+    <color name="red">#D21C00</color>
     <color name="pink">#EB1460</color>
     <color name="purple">#9C1AB1</color>
     <color name="deep_purple">#6633B9</color>
