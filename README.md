@@ -1,3 +1,12 @@
+<img src="https://github.com/M66B/FairEmail/raw/master/images/banner_crying6.png" />
+
+<p align="center">
+	<a href="#downloads">Downloads</a> &bull;
+	<a href="#privacy">Privacy</a> &bull;
+	<a href="#support">Support</a> &bull;
+	<a href="#license">License</a>
+</p>
+
 <img align="right" src="https://raw.githubusercontent.com/M66B/FairEmail/master/app/src/main/res/mipmap-hdpi/ic_launcher.png">
 
 # FairEmail (Fork)
@@ -50,6 +59,7 @@ This app starts a foreground service with a low priority status bar notification
 * Flat [conversation threading](https://en.wikipedia.org/wiki/Conversation_threading)
 * Two way synchronization
 * Offline storage and operations
+* Encryption/decryption ([OpenPGP](https://www.openpgp.org/))
 * Battery friendly
 * Low data usage
 * Small (< 10 MB)
@@ -81,7 +91,7 @@ All pro features are convenience or advanced features.
 * Search on device or server ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
 * Keyword management
 * Biometric authentication ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq113))
-* Encryption/decryption ([OpenPGP](https://www.openpgp.org/)) ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq12))
+* Unified inbox widget
 * Export settings
 
 ## Simple
@@ -98,7 +108,7 @@ All pro features are convenience or advanced features.
 * Confirm opening links, images and attachments
 * No special permissions required
 * No advertisements
-* No analytics and no tracking
+* No analytics and no tracking ([error reporting](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq104) is opt-in)
 * No [Google backup](https://developer.android.com/guide/topics/data/backup)
 * FairEmail is an original work, not a fork or a clone
 
@@ -117,6 +127,8 @@ Please see [here](https://email.faircode.eu/#screenshots) for screenshots.
 * [Play store](https://play.google.com/store/apps/details?id=eu.faircode.email)
 * [Play store](https://play.google.com/apps/testing/eu.faircode.email) (test)
 
+To download a GitHub release you might need to expand the assets section to download the [APK file](https://en.wikipedia.org/wiki/Android_application_package).
+
 The GitHub version is being updated more often than the Play store version.
 The GitHub release will automatically check for updates on GitHub.
 You can turn this off in the miscellaneous settings.
@@ -132,6 +144,8 @@ SHA256: E0:20:67:24:9F:5A:35:0E:0E:C7:03:FE:9D:F4:DD:68:2E:02:91:A0:9F:0C:2E:04:
 One line command to display certificate fingerprints:
 
 ```unzip -p fairemail.apk META-INF/CERT.RSA | keytool -printcert```
+
+I do not hand over the signing keys of my apps to Google.
 
 * [F-Droid](https://f-droid.org/en/packages/eu.faircode.email/) ([last build status](https://f-droid.org/wiki/page/eu.faircode.email/lastbuild))
 
@@ -155,7 +169,7 @@ FairEmail will work properly on devices without any Google service installed.
 
 See [here](https://github.com/M66B/FairEmail/blob/master/FAQ.md#known-problems) for known problems.
 
-## Support / frequently asked questions
+## Support
 
 See [here](https://github.com/M66B/FairEmail/blob/master/FAQ.md) for a list of often asked questions and about how to get support.
 
@@ -194,19 +208,10 @@ and is used to [help improve FairEmail](https://github.com/M66B/FairEmail/blob/m
 
 ## License
 
+Copyright &copy; 2018-2019 Marcel Bokhorst. All rights reserved.
+
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl.txt)
 
-Copyright &copy; 2018-2019 Marcel Bokhorst. All rights reserved
+> FairEmail is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-FairEmail is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-FairEmail is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with FairEmail. If not, see [https://www.gnu.org/licenses/](https://www.gnu.org/licenses/).
+> FairEmail is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.

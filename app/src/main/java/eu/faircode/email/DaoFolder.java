@@ -109,6 +109,7 @@ public interface DaoFolder {
     @Query("SELECT folder.*" +
             ", account.`order` AS accountOrder, account.name AS accountName, account.color AS accountColor" +
             ", SUM(CASE WHEN message.ui_seen = 0 THEN 1 ELSE 0 END) AS unseen" +
+            ", SUM(CASE WHEN message.ui_snoozed IS NULL THEN 0 ELSE 1 END) AS snoozed" +
             ", (SELECT COUNT(operation.id) FROM operation WHERE operation.folder = folder.id) AS operations" +
             ", (SELECT COUNT(operation.id) FROM operation WHERE operation.folder = folder.id AND operation.state = 'executing') AS executing" +
             " FROM folder" +
@@ -248,7 +249,8 @@ public interface DaoFolder {
     int setFoldersUser(long account);
 
     @Query("UPDATE folder" +
-            " SET display = :display" +
+            " SET `rename` = :rename" +
+            ", display = :display" +
             ", unified = :unified" +
             ", navigation = :navigation" +
             ", notify = :notify" +
@@ -261,7 +263,7 @@ public interface DaoFolder {
             ", auto_delete = :auto_delete" +
             " WHERE id = :id")
     int setFolderProperties(
-            long id,
+            long id, String rename,
             String display, boolean unified, boolean navigation, boolean notify, boolean hide,
             boolean synchronize, boolean poll, boolean download,
             int sync_days, int keep_days, boolean auto_delete);
@@ -278,14 +280,20 @@ public interface DaoFolder {
     @Query("UPDATE folder SET keep_days = :days WHERE id = :id")
     int setFolderKeep(long id, int days);
 
+    @Query("UPDATE folder SET uidv = :uidv WHERE id = :id")
+    int setFolderUidValidity(long id, Long uidv);
+
     @Query("UPDATE folder SET last_sync = :last_sync WHERE id = :id")
-    int setFolderSync(long id, long last_sync);
+    int setFolderLastSync(long id, long last_sync);
 
     @Query("UPDATE folder SET read_only = :read_only WHERE id = :id")
     int setFolderReadOnly(long id, boolean read_only);
 
-    @Query("UPDATE folder SET tbc = null WHERE id = :id")
+    @Query("UPDATE folder SET tbc = NULL WHERE id = :id")
     int resetFolderTbc(long id);
+
+    @Query("UPDATE folder SET `rename` = NULL WHERE id = :id")
+    int resetFolderRename(long id);
 
     @Query("UPDATE folder SET tbd = 1 WHERE id = :id")
     int setFolderTbd(long id);

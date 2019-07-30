@@ -28,30 +28,31 @@ import android.content.Intent;
 import android.widget.RemoteViews;
 
 import java.text.NumberFormat;
-
-import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Widget extends AppWidgetProvider {
+    private static final ExecutorService executor =
+            Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+
     @Override
     public void onUpdate(final Context context, final AppWidgetManager appWidgetManager, final int[] appWidgetIds) {
-        Thread thread = new Thread(new Runnable() {
+        executor.submit(new Runnable() {
             @Override
             public void run() {
                 DB db = DB.getInstance(context);
-                update(appWidgetIds, appWidgetManager, context, db.message().getUnseenUnified());
+                update(context, appWidgetManager, appWidgetIds, db.message().getUnseenUnified());
             }
-        }, "widget:update");
-        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-        thread.start();
+        });
     }
 
     static void update(Context context, int count) {
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context, Widget.class));
-        update(appWidgetIds, appWidgetManager, context, count);
+        update(context, appWidgetManager, appWidgetIds, count);
     }
 
-    private static void update(int[] appWidgetIds, AppWidgetManager appWidgetManager, Context context, int count) {
+    private static void update(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds, int count) {
         Intent view = new Intent(context, ActivityView.class);
         view.setAction("unified");
         view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -63,6 +63,7 @@
     <string name="menu_legend">Legenda</string>
     <string name="menu_faq">Suporte</string>
     <string name="menu_issue">Reportar problema</string>
+    <string name="menu_attribution">Atribuição</string>
     <string name="menu_privacy">Privacidade</string>
     <string name="menu_about">Sobre</string>
     <string name="menu_pro">Recursos Pro</string>
@@ -110,17 +111,17 @@
     <string name="title_setup_doze_remark">Para receber continuamente e-mail (opcional)</string>
     <string name="title_setup_doze_instructions">Na próxima caixa de diálogo, selecione \"Todos os apps\" no topo, selecione este app, selecione e confirme \"Não otimizar\"</string>
     <string name="title_setup_doze_battery">Alto uso de bateria?</string>
-    <string name="title_setup_data">Desativar a economia de dados</string>
+    <string name="title_setup_data">Economia de dados está habilitada</string>
     <string name="title_setup_inbox">Ir para mensagens</string>
     <string name="title_setup_to_do">Para fazer</string>
     <string name="title_setup_done">Feito</string>
     <string name="title_setup_export">Exportar configurações</string>
     <string name="title_setup_import">Importar configurações</string>
-    <string name="title_setup_import_do">Contas importadas serão adicionadas, não sobrescritas</string>
+    <string name="title_setup_import_do">As contas importadas serão adicionadas sem sobrescrever as existentes</string>
     <string name="title_setup_password">Senha</string>
     <string name="title_setup_password_repeat">Repita a senha</string>
     <string name="title_setup_password_missing">Senha não informada</string>
-    <string name="title_setup_password_different">Senha diferente</string>
+    <string name="title_setup_password_different">As senhas não correspondem</string>
     <string name="title_setup_password_invalid">Senha inválida</string>
     <string name="title_setup_exported">Configurações exportadas</string>
     <string name="title_setup_imported">Configurações importadas</string>
@@ -176,6 +177,7 @@
     <string name="title_advanced_date_header">Agrupar por data</string>
     <string name="title_advanced_threading">Encadeamento de conversas</string>
     <string name="title_advanced_avatars">Mostrar fotos de contatos</string>
+    <string name="title_advanced_generated_icons">Mostrar ícones gerados</string>
     <string name="title_advanced_identicons">Mostrar identicons</string>
     <string name="title_advanced_circular">Mostrar ícones redondos</string>
     <string name="title_advanced_name_email">Mostrar os nomes e endereços de e-mail</string>
@@ -188,6 +190,7 @@
     <string name="title_advanced_monospaced">Usar fonte mono-espaçada para o texto da mensagem</string>
     <string name="title_advanced_images_inline">Mostrar imagens em linha automaticamente</string>
     <string name="title_advanced_images">Mostrar imagens automaticamente para contatos conhecidos</string>
+    <string name="title_advanced_images_all">Mostrar automaticamente todas as imagens</string>
     <string name="title_advanced_collapse_quotes">Recolher texto citado</string>
     <string name="title_advanced_remote_content">Mostrar automaticamente conteúdo remoto ao visualizar mensagens originais</string>
     <string name="title_advanced_actionbar">Barra de ação de conversa</string>
@@ -198,7 +201,7 @@
     <string name="title_advanced_autoexpand">Expandir mensagens automaticamente</string>
     <string name="title_advanced_collapse">Recolher mensagens em conversas ao \'voltar\'</string>
     <string name="title_advanced_autoclose">Fechar conversas automaticamente</string>
-    <string name="title_advanced_autonext">Ir para a próxima conversa automaticamente ao fechar a conversa</string>
+    <string name="title_advanced_onclose">Ao fechar uma conversa</string>
     <string name="title_advanced_autoread">Marcar mensagens como lidas automaticamente ao movê-las</string>
     <string name="title_advanced_automove">Confirmar ao mover mensagens</string>
     <string name="title_advanced_authentication">Mostrar um aviso quando o servidor de recebimento não puder autenticar a mensagem</string>
@@ -227,10 +230,11 @@
     <string name="title_advanced_cleanup">Limpeza</string>
     <string name="title_advanced_enabled_hint">Globalmente desabilitar ou habilitar o recebimento de mensagens</string>
     <string name="title_advanced_manual_hint">Se a sincronização estiver desativada, ainda é possível sincronizar manualmente, puxando a lista de mensagens. Isso irá sincronizar mensagens e executar operações por um tempo limitado.</string>
-    <string name="title_advanced_poll_hint">Sincronizar periodicamente irá comparar mensagens locais e remotas cada vez, o que é uma operação cara possivelmente resultando em uso extra de bateria, especialmente quando há muitas mensagens para sincronizar. Sincronizar sempre evitará isso escutando continuamente apenas as alterações.</string>
+    <string name="title_advanced_poll_hint">Sincronizar periodicamente irá cada vez comparar mensagens locais e remotas, o que é uma operação pesada, possivelmente resultando em uso extra de bateria, especialmente quando há muitas mensagens para sincronizar. Sincronizar sempre evitará isso através de um acompanhamento contínuo para somente alterações.</string>
     <string name="title_advanced_schedule_hint">Toque uma vez para definir um tempo</string>
     <string name="title_advanced_check_mx">Verificar endereços de e-mail do remetente na sincronização de mensagens</string>
-    <string name="title_advanced_sync_kept_hint">Isto irá transferir dados extras e usar energia extra da bateria, especialmente se houver muitas mensagens mantidas no dispositivo</string>
+    <string name="title_advanced_unseen_hint">Alguns provedores de e-mail não suportam isso corretamente, o que, por exemplo, pode resultar em todas as mensagens sendo sincronizadas</string>
+    <string name="title_advanced_sync_kept_hint">Isto irá transferir dados extras e consumir energia extra da bateria, especialmente se uma série de mensagens forem armazenadas no dispositivo</string>
     <string name="title_advanced_sync_folders_hint">Desativar isto irá reduzir um pouco o uso de dados e bateria, mas irá também desativar a atualização da lista de pastas</string>
     <string name="title_advanced_lookup_mx_hint">Isto irá verificar se existem registros DNS MX</string>
     <string name="title_advanced_sync_delay_hint">Isto atrasará a sincronização de mensagens</string>
@@ -243,7 +247,7 @@
     <string name="title_advanced_name_email_hint">Quando desativado apenas os nomes serão exibidos quando disponíveis</string>
     <string name="title_advanced_preview_hint">Somente disponível quando o texto da mensagem for baixado</string>
     <string name="title_advanced_inline_hint">Imagens em linha são incluídas na mensagem</string>
-    <string name="title_advanced_permission_contacts_hint">Isso requer permissão para ler seus contatos sendo concedidos</string>
+    <string name="title_advanced_permission_contacts_hint">Isto requer permissão para ler seus contatos</string>
     <string name="title_advanced_autoexpand_hint">Abrir automaticamente a mensagem quando há apenas uma mensagem ou uma mensagem não-lida em uma conversa</string>
     <string name="title_advanced_autocollapse_hint">Várias mensagens expandidas serão sempre fechadas ao \'voltar\'</string>
     <string name="title_advanced_autoclose_hint">Fechar automaticamente conversas quando todas as mensagens estiverem arquivadas, enviadas ou na lixeira</string>
@@ -256,6 +260,7 @@
     <string name="title_select">Selecionar &#8230;</string>
     <string name="title_identity_name">Seu nome</string>
     <string name="title_identity_email">Seu endereço de e-mail</string>
+    <string name="title_identity_color_hint">Cores de identidade têm precedência sobre as cores da conta</string>
     <string name="title_advanced_sender">Permitir editar o endereço do remetente</string>
     <string name="title_identity_reply_to">Resposta para o endereço</string>
     <string name="title_identity_encrypt">Criptografar por padrão</string>
@@ -263,8 +268,6 @@
     <string name="title_identity_read_receipt">Solicitar recibo de leitura</string>
     <string name="title_identity_delivery_receipt">Solicitar recibo de entrega</string>
     <string name="title_identity_receipt_remark">A maioria dos provedores ignoram solicitações de recebimento</string>
-    <string name="title_identity_store_sent">Armazenar mensagens enviadas</string>
-    <string name="title_identity_store_sent_remark">Habilitar isso somente se seu provedor não armazena automaticamente mensagens enviadas</string>
     <string name="title_optional">Opcional</string>
     <string name="title_recommended">Recomendado</string>
     <string name="title_account_linked">Conta vinculada</string>
@@ -366,6 +369,7 @@
     <string name="title_folder_thread">Conversa %1$s</string>
     <string name="title_folders_unified">Pastas de caixa de entrada unificada</string>
     <string name="title_no_messages">Sem mensagens</string>
+    <string name="title_no_folders">Sem pastas</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Enc: %1$s</string>
     <string name="title_seen">Marcar como lida</string>
@@ -374,6 +378,7 @@
     <string name="title_flag_color">Estrela colorida &#8230;</string>
     <string name="title_unflag">Remover estrela</string>
     <string name="title_forward">Encaminhar</string>
+    <string name="title_editasnew">Editar como novo</string>
     <string name="title_create_rule">Criar regra &#8230;</string>
     <string name="title_share">Compartilhar</string>
     <string name="title_print">Imprimir</string>
@@ -687,6 +692,10 @@
     <string name="title_debug_info">Informações de depuração</string>
     <string name="title_debug_info_remark">Por favor, descreva o problema e indique o momento em que ocorrera:</string>
     <string name="title_crash_info_remark">Por favor, descreva o que você estava fazendo quando o aplicativo falhou:</string>
+    <string name="title_search_special_prefix">especial</string>
+    <string name="title_search_special_unseen">não_lida</string>
+    <string name="title_search_special_flagged">favorito</string>
+    <string name="title_search_special_snoozed">adiado</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
         <item>A cada 15 minutos</item>
@@ -720,6 +729,11 @@
         <item>1 MB</item>
         <item>2 MB</item>
         <item>&#8734;</item>
+    </string-array>
+    <string-array name="onCloseNames">
+        <item>Não fazer nada</item>
+        <item>Ir para conversa anterior</item>
+        <item>Ir para a próxima conversa</item>
     </string-array>
     <string-array name="resizeNames">
         <item>Pequeno</item>

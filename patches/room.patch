@@ -1,0 +1,27 @@
+--- /home/marcel/support/room/runtime/src/main/java/androidx/room/RoomTrackingLiveData.java	2019-07-27 12:47:44.950985792 +0200
++++ app/src/main/java/androidx/room/RoomTrackingLiveData.java	2019-07-29 07:27:21.478734412 +0200
+@@ -89,8 +89,14 @@ class RoomTrackingLiveData<T> extends Li
+                             try {
+                                 value = mComputeFunction.call();
+                             } catch (Exception e) {
+-                                throw new RuntimeException("Exception while computing database"
+-                                        + " live data.", e);
++                                eu.faircode.email.Log.w(e);
++                                //throw new RuntimeException("Exception while computing database"
++                                //        + " live data.", e);
++                                computed = false;
++                                try {
++                                    Thread.sleep(3000L);
++                                } catch (InterruptedException ignored) {
++                                }
+                             }
+                         }
+                         if (computed) {
+@@ -125,6 +131,7 @@ class RoomTrackingLiveData<T> extends Li
+             }
+         }
+     };
++
+     @SuppressLint("RestrictedApi")
+     RoomTrackingLiveData(
+             RoomDatabase database,

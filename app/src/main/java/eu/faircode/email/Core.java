@@ -55,9 +55,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +76,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -120,12 +121,13 @@ class Core {
     private static final long YIELD_DURATION = 200L; // milliseconds
     private static final long MIN_HIDE = 60 * 1000L; // milliseconds
 
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+    private static final ExecutorService executor =
+            Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     static void processOperations(
             Context context,
             EntityAccount account, EntityFolder folder,
-            Session isession, Store istore, Folder ifolder,
+            Store istore, Folder ifolder,
             State state)
             throws MessagingException, JSONException, IOException {
         try {
@@ -208,15 +210,15 @@ class Core {
                                             " msg=" + op.message +
                                             " args=" + op.args);
                                 else
-                                    onAdd(context, jargs, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                    onAdd(context, jargs, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder);
                                 break;
 
                             case EntityOperation.MOVE:
-                                onMove(context, jargs, false, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                onMove(context, jargs, false, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder);
                                 break;
 
                             case EntityOperation.COPY:
-                                onMove(context, jargs, true, folder, message, isession, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                onMove(context, jargs, true, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder);
                                 break;
 
                             case EntityOperation.DELETE:
@@ -263,6 +265,7 @@ class Core {
 
                         if (ex instanceof OutOfMemoryError ||
                                 ex instanceof MessageRemovedException ||
+                                ex instanceof FileNotFoundException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
                                 ex.getCause() instanceof CommandFailedException) {
@@ -458,7 +461,7 @@ class Core {
         }
     }
 
-    private static void onAdd(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, Session isession, IMAPStore istore, IMAPFolder ifolder) throws MessagingException, JSONException, IOException {
+    private static void onAdd(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder) throws MessagingException, JSONException, IOException {
         // Add message
         DB db = DB.getInstance(context);
 
@@ -481,17 +484,17 @@ class Core {
             db.message().setMessageMsgId(message.id, message.msgid);
         }
 
+        Properties props = MessageHelper.getSessionProperties();
+        Session isession = Session.getInstance(props, null);
+
         // Get raw message
         MimeMessage imessage;
         if (folder.id.equals(message.folder)) {
-            // Pre flight checks
+            // Pre flight check
             if (!message.content)
                 throw new IllegalArgumentException("Message body missing");
 
-            EntityIdentity identity =
-                    (message.identity == null ? null : db.identity().getIdentity(message.identity));
-
-            imessage = MessageHelper.from(context, message, identity, isession);
+            imessage = MessageHelper.from(context, message, null, isession);
         } else {
             // Cross account move
             File file = message.getRawFile(context);
@@ -499,7 +502,7 @@ class Core {
                 throw new IllegalArgumentException("raw message file not found");
 
             Log.i(folder.name + " reading " + file);
-            try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+            try (InputStream is = new FileInputStream(file)) {
                 imessage = new MimeMessage(isession, is);
             }
         }
@@ -578,7 +581,7 @@ class Core {
         }
     }
 
-    private static void onMove(Context context, JSONArray jargs, boolean copy, EntityFolder folder, EntityMessage message, Session isession, IMAPStore istore, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
+    private static void onMove(Context context, JSONArray jargs, boolean copy, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
         // Move message
         DB db = DB.getInstance(context);
 
@@ -601,9 +604,12 @@ class Core {
             Log.i(folder.name + " move from " + folder.type + " to " + target.type);
 
             File file = message.getRawFile(context);
-            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+            try (OutputStream os = new FileOutputStream(file)) {
                 imessage.writeTo(os);
             }
+
+            Properties props = MessageHelper.getSessionProperties();
+            Session isession = Session.getInstance(props, null);
 
             Message icopy;
             try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
@@ -701,7 +707,7 @@ class Core {
                 throw new MessageRemovedException();
 
             File file = message.getRawFile(context);
-            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+            try (OutputStream os = new FileOutputStream(file)) {
                 imessage.writeTo(os);
                 db.message().setMessageRaw(message.id, true);
             }
@@ -795,6 +801,18 @@ class Core {
                 db.folder().resetFolderTbc(folder.id);
                 local.put(folder.name, folder);
                 sync_folders = true;
+
+            } else if (folder.rename != null) {
+                Log.i(folder.name + " rename into " + folder.rename);
+                Folder ifolder = istore.getFolder(folder.name);
+                if (ifolder.exists()) {
+                    ifolder.renameTo(istore.getFolder(folder.rename));
+                    db.folder().renameFolder(folder.account, folder.name, folder.rename);
+                    folder.name = folder.rename;
+                }
+                db.folder().resetFolderRename(folder.id);
+                sync_folders = true;
+
             } else if (folder.tbd != null && folder.tbd) {
                 Log.i(folder.name + " deleting");
                 Folder ifolder = istore.getFolder(folder.name);
@@ -802,6 +820,7 @@ class Core {
                     ifolder.delete(false);
                 db.folder().deleteFolder(folder.id);
                 sync_folders = true;
+
             } else {
                 local.put(folder.name, folder);
                 if (folder.initialize != 0)
@@ -858,7 +877,7 @@ class Core {
             String type = EntityFolder.getType(attr, fullName, false);
             boolean selectable = !Arrays.asList(attr).contains("\\Noselect");
 
-            if (EntityFolder.INBOX.equals(type))
+            if (EntityFolder.INBOX.equals(type) || fullName.equals(childName))
                 childName = null;
 
             Log.i(account.name + ":" + fullName + " subscribed=" + subscribed +
@@ -969,15 +988,33 @@ class Core {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean sync_unseen = prefs.getBoolean("sync_unseen", false);
-            boolean sync_flagged = prefs.getBoolean("sync_flagged", true);
+            boolean sync_flagged = prefs.getBoolean("sync_flagged", false);
             boolean sync_kept = prefs.getBoolean("sync_kept", true);
             boolean delete_unseen = prefs.getBoolean("delete_unseen", false);
+
+            if (account.host.toLowerCase().contains("imap.zoho")) {
+                sync_unseen = false;
+                sync_flagged = false;
+            }
 
             Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days +
                     " sync unseen=" + sync_unseen + " flagged=" + sync_flagged +
                     " delete unseen=" + delete_unseen + " kept=" + sync_kept);
 
             db.folder().setFolderSyncState(folder.id, "syncing");
+
+            // Check uid validity
+            try {
+                long uidv = ifolder.getUIDValidity();
+                if (folder.uidv != null && !folder.uidv.equals(uidv)) {
+                    Log.w(folder.name + " uid validity changed from " + folder.uidv + " to " + uidv);
+                    db.message().deleteLocalMessages(folder.id);
+                }
+                folder.uidv = uidv;
+                db.folder().setFolderUidValidity(folder.id, uidv);
+            } catch (MessagingException ex) {
+                Log.w(ex);
+            }
 
             // Get reference times
             Calendar cal_sync = Calendar.getInstance();
@@ -1195,6 +1232,19 @@ class Core {
 
                 for (int j = isub.length - 1; j >= 0 && state.running() && state.recoverable(); j--)
                     try {
+                        // Some providers, like Zoho, erroneously return old messages
+                        if (full.contains(isub[j])) {
+                            Date received = isub[j].getReceivedDate();
+                            boolean unseen = (sync_unseen && !isub[j].isSet(Flags.Flag.SEEN));
+                            boolean flagged = (sync_flagged && isub[j].isSet(Flags.Flag.FLAGGED));
+                            if (received != null && received.getTime() < sync_time && !unseen && !flagged) {
+                                long uid = ifolder.getUID(isub[j]);
+                                Log.i(folder.name + " Skipping old uid=" + uid + " date=" + received);
+                                ids[from + j] = null;
+                                continue;
+                            }
+                        }
+
                         EntityMessage message = synchronizeMessage(
                                 context,
                                 account, folder,
@@ -1231,6 +1281,7 @@ class Core {
                 for (EntityMessage orphan : orphans) {
                     Log.i(folder.name + " adding orphan id=" + orphan.id + " sent=" + new Date(orphan.sent));
                     orphan.folder = folder.id;
+                    orphan.ui_hide = 0L;
                     db.message().updateMessage(orphan);
                     EntityOperation.queue(context, orphan, EntityOperation.ADD);
                 }
@@ -1294,7 +1345,7 @@ class Core {
                 }
             }
 
-            db.folder().setFolderSync(folder.id, new Date().getTime());
+            db.folder().setFolderLastSync(folder.id, new Date().getTime());
             db.folder().setFolderError(folder.id, null);
 
         } finally {
@@ -1368,6 +1419,11 @@ class Core {
                             dup.received = helper.getReceived();
                             dup.sent = helper.getSent();
                         }
+
+                        // Download message again to get signature / quoted message
+                        // This will propagate any modifications by the server locally as well
+                        if (EntityFolder.SENT.equals(folder.type))
+                            dup.content = false;
 
                         dup.error = null;
 

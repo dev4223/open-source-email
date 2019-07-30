@@ -33,7 +33,6 @@ import androidx.constraintlayout.widget.Group;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
@@ -96,9 +95,9 @@ public class ActivityEml extends ActivityBase {
 
                 ContentResolver resolver = context.getContentResolver();
                 AssetFileDescriptor descriptor = resolver.openTypedAssetFileDescriptor(uri, "*/*", null);
-                try (InputStream is = new BufferedInputStream(descriptor.createInputStream())) {
+                try (InputStream is = descriptor.createInputStream()) {
 
-                    Properties props = MessageHelper.getSessionProperties(null, false);
+                    Properties props = MessageHelper.getSessionProperties();
                     Session isession = Session.getInstance(props, null);
                     MimeMessage mmessage = new MimeMessage(isession, is);
 

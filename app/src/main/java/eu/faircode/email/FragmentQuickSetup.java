@@ -52,17 +52,13 @@ import androidx.constraintlayout.widget.Group;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.IMAPStore;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
 import javax.mail.Folder;
-import javax.mail.Session;
-import javax.mail.Transport;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -74,6 +70,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private EditText etEmail;
     private TextInputLayout tilPassword;
     private Button btnCheck;
+    private ContentLoadingProgressBar pbCheck;
 
     private TextView tvError;
     private Button btnHelp;
@@ -82,6 +79,8 @@ public class FragmentQuickSetup extends FragmentBase {
     private TextView tvImap;
     private TextView tvSmtp;
     private Button btnSave;
+    private ContentLoadingProgressBar pbSave;
+
     private Group grpSetup;
 
     private static final int REQUEST_DONE = 1;
@@ -100,6 +99,7 @@ public class FragmentQuickSetup extends FragmentBase {
         etEmail = view.findViewById(R.id.etEmail);
         tilPassword = view.findViewById(R.id.tilPassword);
         btnCheck = view.findViewById(R.id.btnCheck);
+        pbCheck = view.findViewById(R.id.pbCheck);
 
         tvError = view.findViewById(R.id.tvError);
         btnHelp = view.findViewById(R.id.btnHelp);
@@ -108,6 +108,8 @@ public class FragmentQuickSetup extends FragmentBase {
         tvImap = view.findViewById(R.id.tvImap);
         tvSmtp = view.findViewById(R.id.tvSmtp);
         btnSave = view.findViewById(R.id.btnSave);
+        pbSave = view.findViewById(R.id.pbSave);
+
         grpSetup = view.findViewById(R.id.grpSetup);
 
         // Wire controls
@@ -147,6 +149,8 @@ public class FragmentQuickSetup extends FragmentBase {
         });
 
         // Initialize
+        pbCheck.setVisibility(View.GONE);
+        pbSave.setVisibility(View.GONE);
         tvError.setVisibility(View.GONE);
         btnHelp.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
@@ -200,6 +204,8 @@ public class FragmentQuickSetup extends FragmentBase {
                 boolean check = args.getBoolean("check");
 
                 Helper.setViewsEnabled(view, false);
+                pbCheck.setVisibility(check ? View.VISIBLE : View.GONE);
+                pbSave.setVisibility(check ? View.GONE : View.VISIBLE);
                 tvError.setVisibility(View.GONE);
                 btnHelp.setVisibility(View.GONE);
                 tvInstructions.setVisibility(View.GONE);
@@ -208,7 +214,11 @@ public class FragmentQuickSetup extends FragmentBase {
 
             @Override
             protected void onPostExecute(Bundle args) {
+                boolean check = args.getBoolean("check");
+
                 Helper.setViewsEnabled(view, true);
+                pbCheck.setVisibility(View.GONE);
+                pbSave.setVisibility(View.GONE);
             }
 
             @Override
@@ -239,16 +249,14 @@ public class FragmentQuickSetup extends FragmentBase {
                 long now = new Date().getTime();
 
                 {
-                    Properties props = MessageHelper.getSessionProperties(null, false);
-                    Session isession = Session.getInstance(props, null);
-                    isession.setDebug(true);
-                    try (IMAPStore istore = (IMAPStore) isession.getStore(provider.imap_starttls ? "imap" : "imaps")) {
-                        istore.connect(provider.imap_host, provider.imap_port, user, password);
+                    String protocol = provider.imap_starttls ? "imap" : "imaps";
+                    try (MailService iservice = new MailService(context, protocol, null, false, true)) {
+                        iservice.connect(provider.imap_host, provider.imap_port, user, password);
 
                         boolean inbox = false;
                         boolean drafts = false;
                         EntityFolder altDrafts = null;
-                        for (Folder ifolder : istore.getDefaultFolder().list("*")) {
+                        for (Folder ifolder : iservice.getStore().getDefaultFolder().list("*")) {
                             String fullName = ifolder.getFullName();
                             String[] attrs = ((IMAPFolder) ifolder).getAttributes();
                             String type = EntityFolder.getType(attrs, fullName, true);
@@ -303,11 +311,9 @@ public class FragmentQuickSetup extends FragmentBase {
                 }
 
                 {
-                    Properties props = MessageHelper.getSessionProperties(null, false);
-                    Session isession = Session.getInstance(props, null);
-                    isession.setDebug(true);
-                    try (Transport itransport = isession.getTransport(provider.smtp_starttls ? "smtp" : "smtps")) {
-                        itransport.connect(provider.smtp_host, provider.smtp_port, user, password);
+                    String protocol = provider.smtp_starttls ? "smtp" : "smtps";
+                    try (MailService iservice = new MailService(context, protocol, null, false, true)) {
+                        iservice.connect(provider.smtp_host, provider.smtp_port, user, password);
                     }
                 }
 

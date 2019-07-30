@@ -64,16 +64,13 @@
     <string name="title_setup_doze">إعداد تحسينات البطارية</string>
     <string name="title_setup_doze_remark">لتلقي البريد الإلكتروني باستمرار (اختياري)</string>
     <string name="title_setup_doze_instructions">في مربع الحوار التالي، حدد \"كافة تطبيقات\" في الجزء العلوي، حدد هذا التطبيق وتحديد وتأكيد \"لا الأمثل\"</string>
-    <string name="title_setup_data">تعطيل حفظ البيانات</string>
     <string name="title_setup_to_do">للانجاز</string>
     <string name="title_setup_done">تمّ</string>
     <string name="title_setup_export">تصدير الإعدادات</string>
     <string name="title_setup_import">استيراد الإعدادات</string>
-    <string name="title_setup_import_do">سيتم إضافة حسابات المستوردة، لا تتم الكتابة فوق</string>
     <string name="title_setup_password">الكلمة السرية</string>
     <string name="title_setup_password_repeat">أعد كتابة الكلمة السرية</string>
     <string name="title_setup_password_missing">كلمة المرور مفقودة</string>
-    <string name="title_setup_password_different">كلمات المرور غير متطابقة</string>
     <string name="title_setup_password_invalid">الكلمة السرية غير صالحة</string>
     <string name="title_setup_exported">تم تصدير الإعدادات</string>
     <string name="title_setup_imported">تم استيراد الإعدادات</string>
@@ -121,7 +118,6 @@
     <string name="title_identity_encrypt">تشفير بشكل افتراضي</string>
     <string name="title_identity_read_receipt">طلب إيصال بالقراءة</string>
     <string name="title_identity_delivery_receipt">طلب إيصال بالقراءة</string>
-    <string name="title_identity_store_sent">الإحتفاظ بالرسائل المبعوثة</string>
     <string name="title_optional">اختياري</string>
     <string name="title_recommended">موصى به</string>
     <string name="title_account_linked">الحساب المرتبط</string>

@@ -73,18 +73,14 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.util.FolderClosedIOException;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -103,6 +99,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.FolderClosedException;
 import javax.mail.MessageRemovedException;
+import javax.mail.MessagingException;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.browser.customtabs.CustomTabsService.ACTION_CUSTOM_TABS_CONNECTION;
@@ -114,6 +111,7 @@ public class Helper {
     static final int NOTIFICATION_UPDATE = 4;
 
     static final float LOW_LIGHT = 0.6f;
+    static final int BUFFER_SIZE = 8192; // Same as in Files class
 
     static final String FAQ_URI = "https://github.com/M66B/FairEmail/blob/master/FAQ.md";
     static final String XDA_URI = "https://forum.xda-developers.com/android/apps-games/source-email-t3824168";
@@ -141,7 +139,8 @@ public class Helper {
         }
     };
 
-    private final static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService executor =
+            Executors.newSingleThreadExecutor(backgroundThreadFactory);
 
     // Features
 
@@ -428,6 +427,13 @@ public class Helper {
             if (ex instanceof MessageRemovedException)
                 return null;
 
+            if (ex instanceof MessagingException &&
+                    ex.getCause() instanceof ConnectionException &&
+                    ex.getCause().getMessage() != null &&
+                    (ex.getCause().getMessage().contains("Read error") ||
+                            ex.getCause().getMessage().contains("Write error")))
+                return null;
+
             if (ex instanceof IOException &&
                     ex.getCause() instanceof MessageRemovedException)
                 return null;
@@ -522,7 +528,14 @@ public class Helper {
     static String sanitizeFilename(String name) {
         if (name == null)
             return null;
-        return name.replaceAll("[?:\"*|/\\\\<>]", "_");
+
+        name = name.replaceAll("[?:\"*|/\\\\<>]", "_");
+
+        // Both the name and extension can be long
+        if (name.length() > 255)
+            name = name.substring(0, 255);
+
+        return name;
     }
 
     static String getExtension(String filename) {
@@ -535,14 +548,15 @@ public class Helper {
     }
 
     static void writeText(File file, String content) throws IOException {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
-            out.write(content == null ? "" : content);
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            if (content != null)
+                out.write(content.getBytes());
         }
     }
 
     static String readStream(InputStream is, String charset) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        byte[] buffer = new byte[16384];
+        byte[] buffer = new byte[BUFFER_SIZE];
         for (int len = is.read(buffer); len != -1; len = is.read(buffer))
             os.write(buffer, 0, len);
         return new String(os.toByteArray(), charset);
@@ -550,14 +564,14 @@ public class Helper {
 
     static String readText(File file) throws IOException {
         try (FileInputStream in = new FileInputStream(file)) {
-            return readStream(in, "UTF-8");
+            return readStream(in, StandardCharsets.UTF_8.name());
         }
     }
 
     static void copy(File src, File dst) throws IOException {
-        try (InputStream in = new BufferedInputStream(new FileInputStream(src))) {
-            try (OutputStream out = new BufferedOutputStream(new FileOutputStream(dst))) {
-                byte[] buf = new byte[4096];
+        try (InputStream in = new FileInputStream(src)) {
+            try (FileOutputStream out = new FileOutputStream(dst)) {
+                byte[] buf = new byte[BUFFER_SIZE];
                 int len;
                 while ((len = in.read(buf)) > 0)
                     out.write(buf, 0, len);
@@ -697,11 +711,11 @@ public class Helper {
     static boolean shouldAuthenticate(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean biometrics = prefs.getBoolean("biometrics", false);
-        long biometrics_timeout = prefs.getInt("biometrics_timeout", 2) * 60 * 1000L;
 
         if (biometrics) {
             long now = new Date().getTime();
             long last_authentication = prefs.getLong("last_authentication", 0);
+            long biometrics_timeout = prefs.getInt("biometrics_timeout", 2) * 60 * 1000L;
             Log.i("Authentication valid until=" + new Date(last_authentication + biometrics_timeout));
 
             if (last_authentication + biometrics_timeout < now)
