@@ -115,7 +115,6 @@ import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -750,7 +749,7 @@ public class FragmentCompose extends FragmentBase {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                             checkInternet();
                     }
                 });
@@ -807,7 +806,7 @@ public class FragmentCompose extends FragmentBase {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     onExit();
                 return true;
             case R.id.menu_zoom:
@@ -1061,12 +1060,6 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onEncrypt() {
-        if (!Helper.isPro(getContext())) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(new Intent(ActivityCompose.ACTION_SHOW_PRO));
-            return;
-        }
-
         if (pgpService.isBound())
             try {
                 String to = etTo.getText().toString();
@@ -1076,7 +1069,7 @@ public class FragmentCompose extends FragmentBase {
 
                 String[] tos = new String[ato.length];
                 for (int i = 0; i < ato.length; i++)
-                    tos[i] = ato[i].getAddress();
+                    tos[i] = ato[i].getAddress().toLowerCase();
 
                 Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
                 intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, tos);
@@ -1352,14 +1345,11 @@ public class FragmentCompose extends FragmentBase {
                         attachments.remove(attachment);
                     }
 
-                EntityIdentity identity =
-                        (message.identity == null ? null : db.identity().getIdentity(message.identity));
-
                 // Build message
-                Properties props = MessageHelper.getSessionProperties(null, false);
+                Properties props = MessageHelper.getSessionProperties();
                 Session isession = Session.getInstance(props, null);
                 MimeMessage imessage = new MimeMessage(isession);
-                MessageHelper.build(context, message, attachments, identity, imessage);
+                MessageHelper.build(context, message, attachments, null, imessage);
 
                 // Serialize message
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -1383,6 +1373,10 @@ public class FragmentCompose extends FragmentBase {
                     Log.i("Result " + result);
                     Log.logExtras(result);
                 }
+
+                // Identity to store sign key ID into
+                EntityIdentity identity =
+                        (message.identity == null ? null : db.identity().getIdentity(message.identity));
 
                 int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
                 switch (resultCode) {
@@ -1426,7 +1420,7 @@ public class FragmentCompose extends FragmentBase {
                                 File file = attachment.getFile(context);
                                 if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
                                     Log.i("Writing " + file + " size=" + bytes.length);
-                                try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+                                try (OutputStream out = new FileOutputStream(file)) {
                                     out.write(bytes);
                                     db.attachment().setDownloaded(attachment.id, (long) bytes.length);
                                 }
@@ -1828,9 +1822,9 @@ public class FragmentCompose extends FragmentBase {
             OutputStream os = null;
             try {
                 is = context.getContentResolver().openInputStream(uri);
-                os = new BufferedOutputStream(new FileOutputStream(file));
+                os = new FileOutputStream(file);
 
-                byte[] buffer = new byte[MessageHelper.ATTACHMENT_BUFFER_SIZE];
+                byte[] buffer = new byte[Helper.BUFFER_SIZE];
                 for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
                     size += len;
                     os.write(buffer, 0, len);
@@ -1918,7 +1912,7 @@ public class FragmentCompose extends FragmentBase {
                         scaled = rotated;
                     }
 
-                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+                    try (OutputStream out = new FileOutputStream(file)) {
                         scaled.compress("image/jpeg".equals(attachment.type)
                                         ? Bitmap.CompressFormat.JPEG
                                         : Bitmap.CompressFormat.PNG,
@@ -2470,10 +2464,10 @@ public class FragmentCompose extends FragmentBase {
                 // Move draft to new account
                 if (draft.account != aid && aid >= 0) {
                     Log.i("Account changed");
-                    Long uid = draft.uid;
-                    String msgid = draft.msgid;
 
                     // To prevent violating constraints
+                    Long uid = draft.uid;
+                    String msgid = draft.msgid;
                     draft.uid = null;
                     draft.msgid = null;
                     db.message().updateMessage(draft);
@@ -2614,7 +2608,10 @@ public class FragmentCompose extends FragmentBase {
                                 null);
                     }
                 } else {
-                    String previous = Helper.readText(draft.getFile(context));
+                    File file = draft.getFile(context);
+                    if (!file.exists())
+                        Helper.writeText(file, body);
+                    String previous = Helper.readText(file);
                     if (!body.equals(previous) ||
                             plain_only != (draft.plain_only != null && draft.plain_only)) {
                         dirty = true;
@@ -3308,7 +3305,7 @@ public class FragmentCompose extends FragmentBase {
     private ActivityBase.IBackPressedListener onBackPressedListener = new ActivityBase.IBackPressedListener() {
         @Override
         public boolean onBackPressed() {
-            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                 onExit();
             return true;
         }

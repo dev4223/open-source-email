@@ -13,10 +13,6 @@ import android.telephony.TelephonyManager;
 
 import androidx.preference.PreferenceManager;
 
-import com.bugsnag.android.BreadcrumbType;
-import com.bugsnag.android.Bugsnag;
-import com.sun.mail.imap.IMAPStore;
-
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.SimpleResolver;
 import org.xbill.DNS.Type;
@@ -25,13 +21,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.Address;
-import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 
 public class ConnectionHelper {
@@ -252,29 +244,6 @@ public class ConnectionHelper {
         // Assume metered
         Log.i("isMetered: underlying assume metered");
         return true;
-    }
-
-    static void connect(Context context, IMAPStore istore, EntityAccount account) throws MessagingException {
-        istore.connect(account.host, account.port, account.user, account.password);
-
-        // https://www.ietf.org/rfc/rfc2971.txt
-        if (istore.hasCapability("ID"))
-            try {
-                Map<String, String> id = new LinkedHashMap<>();
-                id.put("name", context.getString(R.string.app_name));
-                id.put("version", BuildConfig.VERSION_NAME);
-                Map<String, String> sid = istore.id(id);
-                if (sid != null) {
-                    Map<String, String> crumb = new HashMap<>();
-                    for (String key : sid.keySet()) {
-                        crumb.put(key, sid.get(key));
-                        EntityLog.log(context, "Server " + key + "=" + sid.get(key));
-                    }
-                    Bugsnag.leaveBreadcrumb("server", BreadcrumbType.LOG, crumb);
-                }
-            } catch (MessagingException ex) {
-                Log.w(ex);
-            }
     }
 
     static boolean airplaneMode(Context context) {

@@ -39,6 +39,10 @@
         <item quantity="one">%1$d neue</item>
         <item quantity="other">%1$d neue</item>
     </plurals>
+    <plurals name="title_selected_messages">
+        <item quantity="one">%1$d Nachricht ausgewählt</item>
+        <item quantity="other">%1$d Nachrichten ausgewählt</item>
+    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Verschiebe eine E-Mail nach %2$s ?</item>
         <item quantity="other">Verschiebe %1$d E-Mails nach %2$s ?</item>
@@ -63,6 +67,7 @@
     <string name="menu_legend">Legende</string>
     <string name="menu_faq">Unterstützung</string>
     <string name="menu_issue">Problem melden</string>
+    <string name="menu_attribution">Eigenschaften</string>
     <string name="menu_privacy">Datenschutz</string>
     <string name="menu_about">Über</string>
     <string name="menu_pro">Pro-Funktionen</string>
@@ -109,17 +114,17 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_doze_remark">Um kontinuierlich E-Mails zu empfangen (optional)</string>
     <string name="title_setup_doze_instructions">Rufen Sie im folgendem Auswahldialog (oben) \"Alle Apps\" auf; wählen Sie anschließend FairEmail aus und bestätigen Sie die Option \"Nicht optimieren\" mit Fertig.</string>
     <string name="title_setup_doze_battery">Hoher Akkuverbrauch?</string>
-    <string name="title_setup_data">Deaktiviere Datenreduzierung</string>
+    <string name="title_setup_data">Datensparmodus aktiviert</string>
     <string name="title_setup_inbox">Zu Nachrichten wechseln</string>
     <string name="title_setup_to_do">Nicht erledigt</string>
     <string name="title_setup_done">Erledigt</string>
     <string name="title_setup_export">Einstellungen exportieren</string>
     <string name="title_setup_import">Einstellungen importieren</string>
-    <string name="title_setup_import_do">Importierte Konten werden hinzugefügt, nicht überschrieben</string>
+    <string name="title_setup_import_do">Importierte Konten werden hinzugefügt, ohne vorhandene zu überschreiben</string>
     <string name="title_setup_password">Passwort</string>
     <string name="title_setup_password_repeat">Passwort erneut eingeben</string>
     <string name="title_setup_password_missing">Passwort fehlt</string>
-    <string name="title_setup_password_different">Passwörter stimmen nicht überein</string>
+    <string name="title_setup_password_different">Die Passworte stimmen nicht überein</string>
     <string name="title_setup_password_invalid">Passwort ungültig</string>
     <string name="title_setup_exported">Einstellungen exportiert</string>
     <string name="title_setup_imported">Einstellungen importiert</string>
@@ -199,7 +204,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_autoexpand">Nachrichten automatisch erweitern</string>
     <string name="title_advanced_collapse">\'Zurück\' klappt die Konversationsansicht zusammen</string>
     <string name="title_advanced_autoclose">Konversationen automatisch schließen</string>
-    <string name="title_advanced_autonext">Automatisch beim Schließen einer Konversation zur nächsten Konversation wechseln</string>
+    <string name="title_advanced_onclose">Beim Schließen einer Unterhaltung</string>
     <string name="title_advanced_autoread">Nachrichten beim Verschieben automatisch als gelesen kennzeichnen</string>
     <string name="title_advanced_automove">Verschieben von Nachrichten bestätigen</string>
     <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
@@ -231,6 +236,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_poll_hint">Die regelmäßige Synchronisation vergleicht jedes Mal lokale und entfernte Nachrichten, was ein aufwendiger Vorgang ist, der möglicherweise zu einem zusätzlichen Batterieverbrauch führt, besonders wenn es viele zu synchronisierende Nachrichten gibt. Durch die ständige Synchronisation wird dies vermieden, indem man ständig nur auf Änderungen achtet.</string>
     <string name="title_advanced_schedule_hint">Tippe auf eine Zeit, um eine Zeit zu setzen</string>
     <string name="title_advanced_check_mx">Überprüft die Absender-E-Mail-Adressen bei Synchronisierung von Nachrichten</string>
+    <string name="title_advanced_unseen_hint">Einige Anbieter unterstützen dies nicht korrekt, was zum Beispiel dazu führen könnte, dass alle Nachrichten synchronisiert werden</string>
     <string name="title_advanced_sync_kept_hint">Dies überträgt zusätzliche Daten und verbraucht zusätzliche Akkuladung, insbesondere wenn viele Nachrichten auf dem Gerät gespeichert sind</string>
     <string name="title_advanced_sync_folders_hint">Wenn Sie dies deaktivieren, wird der Daten- und Akkubedarf etwas reduziert, aber auch die Aktualisierung der Ordnerliste deaktiviert.</string>
     <string name="title_advanced_lookup_mx_hint">Dies wird überprüfen, ob DNS MX-Einträge existieren</string>
@@ -244,7 +250,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
     <string name="title_advanced_preview_hint">Nur verfügbar, wenn der E-Mail-Text heruntergeladen wurde</string>
     <string name="title_advanced_inline_hint">Eingebettete Grafiken sind Grafiken, die innerhalb der Nachricht enthalten sind</string>
-    <string name="title_advanced_permission_contacts_hint">Dies erfordert die Berechtigung, Ihre Kontakte zu lesen</string>
+    <string name="title_advanced_permission_contacts_hint">Dies erfordert die Gewährung der Berechtigung, Ihre Kontakte zu lesen</string>
     <string name="title_advanced_autoexpand_hint">Eine (ungelesene) Nachricht wird automatisch geöffnet</string>
     <string name="title_advanced_autocollapse_hint">Mehrere erweiterte Nachrichten werden immer auf \'zurück\' geschlossen</string>
     <string name="title_advanced_autoclose_hint">Automatisches Schließen des Unterhaltungsthreads, wenn alle E-Mails archiviert, gesendet oder gelöscht wurden</string>
@@ -257,6 +263,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_select">Auswählen &#8230;</string>
     <string name="title_identity_name">Ihr Name</string>
     <string name="title_identity_email">Ihre E-Mail-Adresse</string>
+    <string name="title_identity_color_hint">Identitätsfarben haben Vorrang vor den Kontofarben</string>
     <string name="title_advanced_sender">Bearbeitung der Absenderadresse erlauben</string>
     <string name="title_identity_reply_to">Antwortadresse</string>
     <string name="title_identity_encrypt">Standardmäßig verschlüsseln</string>
@@ -264,8 +271,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_identity_read_receipt">Lesebestätigung anfordern</string>
     <string name="title_identity_delivery_receipt">Übermittlungsbestätigung anfordern</string>
     <string name="title_identity_receipt_remark">Die meisten Anbieter ignorieren Lesebestätigungsanfragen</string>
-    <string name="title_identity_store_sent">Gesendete E-Mails speichern</string>
-    <string name="title_identity_store_sent_remark">Aktivieren Sie diese Option nur, wenn Ihr Provider gesendete E-Mails nicht automatisch speichert</string>
     <string name="title_optional">Optional</string>
     <string name="title_recommended">Empfohlen</string>
     <string name="title_account_linked">Verknüpftes Konto</string>
@@ -367,6 +372,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_folder_thread">%1$s | Thread</string>
     <string name="title_folders_unified">Sammeleingangsordner</string>
     <string name="title_no_messages">Keine E-Mails</string>
+    <string name="title_no_folders">Keine Ordner</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_seen">Als gelesen kennzeichnen</string>
@@ -689,6 +695,10 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_debug_info">Debuginformationen</string>
     <string name="title_debug_info_remark">Bitte beschreiben Sie das Problem und zu welchem Zeitpunkt es aufgetreten ist:</string>
     <string name="title_crash_info_remark">Bitte beschreiben Sie, was Sie getan haben, während die App abgestürzt ist:</string>
+    <string name="title_search_special_prefix">speziell</string>
+    <string name="title_search_special_unseen">ungelesen</string>
+    <string name="title_search_special_flagged">markiert</string>
+    <string name="title_search_special_snoozed">zurückgestellt</string>
     <string-array name="pollIntervalNames">
         <item>Immer</item>
         <item>Alle 15 Minuten</item>
@@ -722,6 +732,11 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
         <item>1 MB</item>
         <item>2 MB</item>
         <item>&#8734;</item>
+    </string-array>
+    <string-array name="onCloseNames">
+        <item>Nichts tun</item>
+        <item>Gehe zu vorheriger Unterhaltung</item>
+        <item>Gehe zur nächstem Unterhaltung</item>
     </string-array>
     <string-array name="resizeNames">
         <item>Klein</item>

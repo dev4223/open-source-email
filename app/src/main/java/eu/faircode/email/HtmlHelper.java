@@ -54,8 +54,6 @@ import org.jsoup.safety.Whitelist;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -85,7 +83,8 @@ public class HtmlHelper {
     private static final List<String> tails = Collections.unmodifiableList(Arrays.asList(
             "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li"));
 
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+    private static final ExecutorService executor =
+            Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     static String sanitize(Context context, String html, boolean show_images) {
         Document parsed = Jsoup.parse(html);
@@ -233,6 +232,32 @@ public class HtmlHelper {
                     img.appendText(alt);
                 }
             }
+
+            // Annotate source with width and height
+            if (img.hasAttr("src")) {
+                int width = 0;
+                int height = 0;
+
+                String awidth = img.attr("width");
+                for (int i = 0; i < awidth.length(); i++)
+                    if (Character.isDigit(awidth.charAt(i)))
+                        width = width * 10 + (byte) awidth.charAt(i) - (byte) '0';
+                    else
+                        break;
+
+                String aheight = img.attr("height");
+                for (int i = 0; i < aheight.length(); i++)
+                    if (Character.isDigit(aheight.charAt(i)))
+                        height = height * 10 + (byte) aheight.charAt(i) - (byte) '0';
+                    else
+                        break;
+
+                if (width != 0 || height != 0) {
+                    String src = img.attr("src");
+                    AnnotatedSource a = new AnnotatedSource(src, width, height);
+                    img.attr("src", a.getAnnotated());
+                }
+            }
         }
 
         // Autolink
@@ -315,7 +340,7 @@ public class HtmlHelper {
         return (body == null ? "" : body.html());
     }
 
-    static Drawable decodeImage(final Context context, final long id, final String source, boolean show, final TextView view) {
+    static Drawable decodeImage(final Context context, final long id, String source, boolean show, final TextView view) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("zoom", compact ? 0 : 1);
@@ -326,23 +351,25 @@ public class HtmlHelper {
         final Resources.Theme theme = context.getTheme();
         final Resources res = context.getResources();
 
-        if (TextUtils.isEmpty(source)) {
+        final AnnotatedSource a = new AnnotatedSource(source);
+
+        if (TextUtils.isEmpty(a.source)) {
             Drawable d = res.getDrawable(R.drawable.baseline_broken_image_24, theme);
             d.setBounds(0, 0, px, px);
             return d;
         }
 
-        boolean embedded = source.startsWith("cid:");
-        boolean data = source.startsWith("data:");
+        boolean embedded = a.source.startsWith("cid:");
+        boolean data = a.source.startsWith("data:");
 
         if (BuildConfig.DEBUG)
             Log.i("Image show=" + show + " inline=" + inline +
-                    " embedded=" + embedded + " data=" + data + " source=" + source);
+                    " embedded=" + embedded + " data=" + data + " source=" + a.source);
 
         // Embedded images
         if (embedded && (show || inline)) {
             DB db = DB.getInstance(context);
-            String cid = "<" + source.substring(4) + ">";
+            String cid = "<" + a.source.substring(4) + ">";
             EntityAttachment attachment = db.attachment().getAttachment(id, cid);
             if (attachment == null) {
                 Log.i("Image not found CID=" + cid);
@@ -367,7 +394,7 @@ public class HtmlHelper {
                     DisplayMetrics dm = context.getResources().getDisplayMetrics();
                     d.setBounds(0, 0, Math.round(bm.getWidth() * dm.density), Math.round(bm.getHeight() * dm.density));
                     if (view != null)
-                        fitDrawable(d, view);
+                        fitDrawable(d, a, view);
                     return d;
                 }
             }
@@ -376,9 +403,9 @@ public class HtmlHelper {
         // Data URI
         if (data && (show || inline))
             try {
-                Drawable d = getDataDrawable(context, source);
+                Drawable d = getDataDrawable(context, a.source);
                 if (view != null)
-                    fitDrawable(d, view);
+                    fitDrawable(d, a, view);
                 return d;
             } catch (IllegalArgumentException ex) {
                 Log.w(ex);
@@ -399,16 +426,19 @@ public class HtmlHelper {
         File dir = new File(context.getCacheDir(), "images");
         if (!dir.exists())
             dir.mkdir();
-        final File file = new File(dir, id + "_" + Math.abs(source.hashCode()) + ".png");
+        final File file = new File(dir, id + "_" + Math.abs(a.source.hashCode()) + ".png");
 
         Drawable cached = getCachedImage(context, file);
         if (cached != null || view == null) {
-            if (view == null) {
-                Drawable d = res.getDrawable(R.drawable.baseline_hourglass_empty_24, theme);
-                d.setBounds(0, 0, px, px);
-                return d;
-            } else
-                fitDrawable(cached, view);
+            if (view == null)
+                if (cached == null) {
+                    Drawable d = res.getDrawable(R.drawable.baseline_hourglass_empty_24, theme);
+                    d.setBounds(0, 0, px, px);
+                    return d;
+                } else
+                    return cached;
+            else
+                fitDrawable(cached, a, view);
             return cached;
         }
 
@@ -424,21 +454,21 @@ public class HtmlHelper {
                 try {
                     Drawable cached = getCachedImage(context, file);
                     if (cached != null) {
-                        fitDrawable(cached, view);
-                        post(cached, source);
+                        fitDrawable(cached, a, view);
+                        post(cached, a.source);
                         return;
                     }
 
                     BitmapFactory.Options options = new BitmapFactory.Options();
-                    Log.i("Probe " + source);
-                    try (InputStream probe = new URL(source).openStream()) {
+                    Log.i("Probe " + a.source);
+                    try (InputStream probe = new URL(a.source).openStream()) {
                         options.inJustDecodeBounds = true;
                         BitmapFactory.decodeStream(probe, null, options);
                     }
 
-                    Log.i("Download " + source);
+                    Log.i("Download " + a.source);
                     Bitmap bm;
-                    try (InputStream is = new URL(source).openStream()) {
+                    try (InputStream is = new URL(a.source).openStream()) {
                         int scaleTo = res.getDisplayMetrics().widthPixels;
                         int factor = 1;
                         while (options.outWidth / factor > scaleTo)
@@ -454,11 +484,11 @@ public class HtmlHelper {
                     }
 
                     if (bm == null)
-                        throw new FileNotFoundException("Download image failed source=" + source);
+                        throw new FileNotFoundException("Download image failed source=" + a.source);
 
-                    Log.i("Downloaded image source=" + source);
+                    Log.i("Downloaded image source=" + a.source);
 
-                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                    try (OutputStream os = new FileOutputStream(file)) {
                         bm.compress(Bitmap.CompressFormat.PNG, 90, os);
                     }
 
@@ -466,8 +496,8 @@ public class HtmlHelper {
                     Drawable d = new BitmapDrawable(res, bm);
                     DisplayMetrics dm = context.getResources().getDisplayMetrics();
                     d.setBounds(0, 0, Math.round(bm.getWidth() * dm.density), Math.round(bm.getHeight() * dm.density));
-                    fitDrawable(d, view);
-                    post(d, source);
+                    fitDrawable(d, a, view);
+                    post(d, a.source);
                 } catch (Throwable ex) {
                     // Show broken icon
                     Log.w(ex);
@@ -476,7 +506,7 @@ public class HtmlHelper {
                             : R.drawable.baseline_broken_image_24);
                     Drawable d = res.getDrawable(resid, theme);
                     d.setBounds(0, 0, px, px);
-                    post(d, source);
+                    post(d, a.source);
                 }
             }
 
@@ -501,10 +531,21 @@ public class HtmlHelper {
         return lld;
     }
 
-    private static void fitDrawable(Drawable d, View view) {
+    private static void fitDrawable(Drawable d, AnnotatedSource a, View view) {
         Rect bounds = d.getBounds();
         int w = bounds.width();
         int h = bounds.height();
+
+        if (a.width == 0 && a.height != 0)
+            a.width = Math.round(a.height * w / (float) h);
+        if (a.height == 0 && a.width != 0)
+            a.height = Math.round(a.width * h / (float) w);
+
+        if (a.width != 0 && a.height != 0) {
+            w = Helper.dp2pixels(view.getContext(), a.width);
+            h = Helper.dp2pixels(view.getContext(), a.height);
+            d.setBounds(0, 0, w, h);
+        }
 
         float width = view.getWidth();
         if (w > width) {
@@ -637,7 +678,7 @@ public class HtmlHelper {
                 EntityAttachment attachment = db.attachment().getAttachment(id, cid);
                 if (attachment != null && attachment.available) {
                     File file = attachment.getFile(context);
-                    try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                    try (InputStream is = new FileInputStream(file)) {
                         byte[] bytes = new byte[(int) file.length()];
                         if (is.read(bytes) != bytes.length)
                             throw new IOException("length");
@@ -720,5 +761,50 @@ public class HtmlHelper {
         }
 
         return doc.outerHtml();
+    }
+
+    public static class AnnotatedSource {
+        private String source;
+        private int width = 0;
+        private int height = 0;
+
+        // Encapsulate some ugliness
+
+        AnnotatedSource(String source) {
+            this.source = source;
+
+            if (source != null && source.endsWith("###")) {
+                int pos = source.substring(0, source.length() - 3).lastIndexOf("###");
+                if (pos > 0) {
+                    int x = source.indexOf("x", pos + 3);
+                    if (x > 0)
+                        try {
+                            this.width = Integer.parseInt(source.substring(pos + 3, x));
+                            this.height = Integer.parseInt(source.substring(x + 1, source.length() - 3));
+                            this.source = source.substring(0, pos);
+                        } catch (NumberFormatException ex) {
+                            Log.e(ex);
+                            this.width = 0;
+                            this.height = 0;
+                        }
+                }
+            }
+        }
+
+        private AnnotatedSource(String source, int width, int height) {
+            this.source = source;
+            this.width = width;
+            this.height = height;
+        }
+
+        public String getSource() {
+            return this.source;
+        }
+
+        private String getAnnotated() {
+            return (width == 0 && height == 0
+                    ? source
+                    : source + "###" + width + "x" + height + "###");
+        }
     }
 }

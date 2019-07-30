@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.paging.PagedList;
@@ -31,7 +32,6 @@ import com.sun.mail.iap.Argument;
 import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
-import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.IMAPResponse;
 
@@ -40,7 +40,6 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,7 +50,6 @@ import javax.mail.FolderClosedException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.UIDFolder;
 import javax.mail.search.BodyTerm;
 import javax.mail.search.FlagTerm;
@@ -79,7 +77,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
     private List<Long> messages = null;
 
-    private IMAPStore istore = null;
+    private MailService iservice = null;
     private IMAPFolder ifolder = null;
     private Message[] imessages = null;
 
@@ -177,6 +175,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         try {
             db.beginTransaction();
 
+            String find = (TextUtils.isEmpty(query) ? null : query.toLowerCase());
             for (int i = index; i < messages.size() && found < pageSize && !destroyed; i++) {
                 index = i + 1;
 
@@ -185,31 +184,45 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     continue;
 
                 boolean match = false;
-                if (query == null)
+                if (find == null)
                     match = true;
                 else {
-                    String find = query.toLowerCase();
-                    String body = null;
-                    if (message.content)
-                        try {
-                            body = Helper.readText(message.getFile(context));
-                        } catch (IOException ex) {
-                            Log.e(ex);
+                    if (find.startsWith(context.getString(R.string.title_search_special_prefix) + ":")) {
+                        String special = find.split(":")[1];
+                        if (context.getString(R.string.title_search_special_unseen).equals(special))
+                            match = !message.ui_seen;
+                        else if (context.getString(R.string.title_search_special_flagged).equals(special))
+                            match = message.ui_flagged;
+                        else if (context.getString(R.string.title_search_special_snoozed).equals(special))
+                            match = (message.ui_snoozed != null);
+                    } else {
+                        if (message.from != null && message.from.length > 0)
+                            for (int j = 0; j < message.from.length && !match; j++)
+                                match = message.from[j].toString().toLowerCase().contains(find);
+
+                        if (!match && message.to != null && message.to.length > 0)
+                            for (int j = 0; j < message.to.length && !match; j++)
+                                match = message.to[j].toString().toLowerCase().contains(find);
+
+                        if (!match && message.subject != null)
+                            match = message.subject.toLowerCase().contains(find);
+
+                        if (!match && message.keywords != null && message.keywords.length > 0)
+                            for (String keyword : message.keywords)
+                                if (keyword.toLowerCase().contains(find)) {
+                                    match = true;
+                                    break;
+                                }
+
+                        if (!match && message.content) {
+                            try {
+                                String body = Helper.readText(message.getFile(context));
+                                match = body.toLowerCase().contains(find);
+                            } catch (IOException ex) {
+                                Log.e(ex);
+                            }
                         }
-
-                    if (message.from != null)
-                        for (int j = 0; j < message.from.length && !match; j++)
-                            match = message.from[j].toString().toLowerCase().contains(find);
-
-                    if (message.to != null)
-                        for (int j = 0; j < message.to.length && !match; j++)
-                            match = message.to[j].toString().toLowerCase().contains(find);
-
-                    if (message.subject != null && !match)
-                        match = message.subject.toLowerCase().contains(find);
-
-                    if (!match && message.content)
-                        match = body.toLowerCase().contains(find);
+                    }
                 }
 
                 if (match) {
@@ -250,32 +263,28 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
 
-                String protocol = account.getProtocol();
-
-                // Get properties
-                Properties props = MessageHelper.getSessionProperties(account.realm, account.insecure);
-                if (!account.partial_fetch) {
-                    props.put("mail.imap.partialfetch", "false");
-                    props.put("mail.imaps.partialfetch", "false");
-                }
-                props.put("mail." + protocol + ".separatestoreconnection", "true");
-
-                // Create session
-                Session isession = Session.getInstance(props, null);
-                isession.setDebug(debug);
-
                 Log.i("Boundary server connecting account=" + account.name);
-                istore = (IMAPStore) isession.getStore(protocol);
-                ConnectionHelper.connect(context, istore, account);
+                iservice = new MailService(context, account.getProtocol(), account.realm, account.insecure, debug);
+                iservice.setPartialFetch(account.partial_fetch);
+                iservice.setSeparateStoreConnection();
+                iservice.connect(account);
 
                 Log.i("Boundary server opening folder=" + browsable.name);
-                ifolder = (IMAPFolder) istore.getFolder(browsable.name);
+                ifolder = (IMAPFolder) iservice.getStore().getFolder(browsable.name);
                 ifolder.open(Folder.READ_WRITE);
 
                 Log.i("Boundary server query=" + query);
                 if (query == null)
                     imessages = ifolder.getMessages();
-                else {
+                else if (query.startsWith(context.getString(R.string.title_search_special_prefix) + ":")) {
+                    String special = query.split(":")[1];
+                    if (context.getString(R.string.title_search_special_unseen).equals(special))
+                        imessages = ifolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+                    else if (context.getString(R.string.title_search_special_flagged).equals(special))
+                        imessages = ifolder.search(new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
+                    else
+                        imessages = new Message[0];
+                } else {
                     Object result = ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                         @Override
                         public Object doCommand(IMAPProtocol protocol) {
@@ -290,7 +299,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                             try {
                                 // https://tools.ietf.org/html/rfc3501#section-6.4.4
                                 Argument arg = new Argument();
-                                if (query.startsWith("raw:") && istore.hasCapability("X-GM-EXT-1")) {
+                                if (query.startsWith("raw:") && iservice.getStore().hasCapability("X-GM-EXT-1")) {
                                     // https://support.google.com/mail/answer/7190
                                     // https://developers.google.com/gmail/imap/imap-extensions#extension_of_the_search_command_x-gm-raw
                                     arg.writeAtom("X-GM-RAW");
@@ -456,8 +465,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             public void run() {
                 Log.i("Boundary destroy");
                 try {
-                    if (istore != null)
-                        istore.close();
+                    if (iservice != null)
+                        iservice.close();
                 } catch (Throwable ex) {
                     Log.e("Boundary", ex);
                 }

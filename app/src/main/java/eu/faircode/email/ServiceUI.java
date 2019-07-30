@@ -65,6 +65,7 @@ public class ServiceUI extends IntentService {
         // - Executing a PendingIntent from a notification.
         // https://developer.android.com/about/versions/oreo/background#services
         Log.i("Service UI intent=" + intent);
+        Log.logExtras(intent);
 
         if (intent == null)
             return;
@@ -176,7 +177,7 @@ public class ServiceUI extends IntentService {
 
             EntityMessage message = db.message().getMessage(id);
             if (message != null) {
-                List<EntityMessage> messages = db.message().getMessageByThread(
+                List<EntityMessage> messages = db.message().getMessagesByThread(
                         message.account, message.thread, threading ? null : id, null);
                 for (EntityMessage threaded : messages) {
                     EntityOperation.queue(this, threaded, EntityOperation.FLAG, true);

@@ -131,8 +131,15 @@ public class EntityOperation {
                 if (source.id.equals(target.id))
                     return;
 
-                if (!EntityFolder.ARCHIVE.equals(source.type) || EntityFolder.TRASH.equals(target.type))
+                if (!EntityFolder.ARCHIVE.equals(source.type) ||
+                        EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type))
                     db.message().setMessageUiHide(message.id, new Date().getTime());
+
+                if (message.ui_snoozed != null &&
+                        (EntityFolder.ARCHIVE.equals(target.type) || EntityFolder.TRASH.equals(target.type))) {
+                    message.ui_snoozed = null;
+                    EntityMessage.snooze(context, message.id, null);
+                }
 
                 Calendar cal_keep = Calendar.getInstance();
                 cal_keep.add(Calendar.DAY_OF_MONTH, -target.keep_days);

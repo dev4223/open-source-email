@@ -34,6 +34,9 @@
     <plurals name="title_tile_unseen">
         <item quantity="other">%1$d则新邮件</item>
     </plurals>
+    <plurals name="title_selected_messages">
+        <item quantity="other">选中 %1$d 条消息</item>
+    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="other">移动 %1$d 邮件到  %2$s 吗？</item>
     </plurals>
@@ -102,17 +105,17 @@
     <string name="title_setup_doze_remark">持续接受邮件(可选)</string>
     <string name="title_setup_doze_instructions">在下个界面，选择最上面的\"所有应用\"，选择这个app如何选择并确定\"不优化\"</string>
     <string name="title_setup_doze_battery">高耗电?</string>
-    <string name="title_setup_data">禁用省流量</string>
+    <string name="title_setup_data">已启用数据节省</string>
     <string name="title_setup_inbox">转到信息</string>
     <string name="title_setup_to_do">未设置</string>
     <string name="title_setup_done">完成</string>
     <string name="title_setup_export">导出设置</string>
     <string name="title_setup_import">导入设置</string>
-    <string name="title_setup_import_do">导入的账号将被添加，但不会覆写</string>
+    <string name="title_setup_import_do">导入的账户不会覆盖任何现有的帐户</string>
     <string name="title_setup_password">密码</string>
     <string name="title_setup_password_repeat">再次输入密码</string>
     <string name="title_setup_password_missing">密码缺失</string>
-    <string name="title_setup_password_different">两次输入密码不同</string>
+    <string name="title_setup_password_different">密码不匹配</string>
     <string name="title_setup_password_invalid">密码无效</string>
     <string name="title_setup_exported">设置已导出！</string>
     <string name="title_setup_imported">设置已导入！</string>
@@ -192,7 +195,7 @@
     <string name="title_advanced_autoexpand">自动伸展消息</string>
     <string name="title_advanced_collapse">按返回键折叠对话中的邮件</string>
     <string name="title_advanced_autoclose">自动关闭对话</string>
-    <string name="title_advanced_autonext">关闭对话时自动转到下一个对话</string>
+    <string name="title_advanced_onclose">关闭对话时</string>
     <string name="title_advanced_autoread">将移动的邮件自动标记为已读</string>
     <string name="title_advanced_automove">确认移动邮件</string>
     <string name="title_advanced_authentication">当接收服务器无法验证消息时显示警告</string>
@@ -224,10 +227,11 @@
     <string name="title_advanced_poll_hint">定期同步将每次都比较本地和远程消息，这是一个昂贵的操作，可能导致额外的电池使用，特别是在有很多消息要同步的时候。始终同步将通过持续比较变化以避免发生上述情形。</string>
     <string name="title_advanced_schedule_hint">点击“时间”选项来设置时间</string>
     <string name="title_advanced_check_mx">同步消息时检查发送者电子邮件地址</string>
-    <string name="title_advanced_sync_kept_hint">这将使用额外的数据和额外电量，特别是如果有许多消息保留在设备上</string>
+    <string name="title_advanced_unseen_hint">一些提供商未正确支持支持该功能，这可能导致同步所有信息。</string>
+    <string name="title_advanced_sync_kept_hint">这将传输额外数据，消耗额外的电池电量，特别是如果有许多消息存储在设备上</string>
     <string name="title_advanced_sync_folders_hint">禁用此功能会降低数据和电池使用量，但也会禁用更新文件夹列表</string>
     <string name="title_advanced_lookup_mx_hint">这将检查 DNS MX 记录是否存在</string>
-    <string name="title_advanced_sync_delay_hint">这将延迟同步消息</string>
+    <string name="title_advanced_sync_delay_hint">这将减缓同步消息的速度</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>
@@ -237,7 +241,7 @@
     <string name="title_advanced_name_email_hint">禁用该选项，将仅显示名称（如果可用）</string>
     <string name="title_advanced_preview_hint">只有当消息文本下载时才可用</string>
     <string name="title_advanced_inline_hint">内联图像是邮件中包含的图像</string>
-    <string name="title_advanced_permission_contacts_hint">这需要授予读取联系人的权限</string>
+    <string name="title_advanced_permission_contacts_hint">这需要授权读取联系人的权限</string>
     <string name="title_advanced_autoexpand_hint">当对话中只有一条消息或只是一条未读消息时，自动打开该消息</string>
     <string name="title_advanced_autocollapse_hint">App将在您按下“返回”键时关闭多条展开的消息</string>
     <string name="title_advanced_autoclose_hint">在所有邮件存档、发送或丢弃时自动关闭对话线程</string>
@@ -250,6 +254,7 @@
     <string name="title_select">选择 &#8230;</string>
     <string name="title_identity_name">姓名</string>
     <string name="title_identity_email">电子邮件地址</string>
+    <string name="title_identity_color_hint">身份颜色优先于帐户颜色</string>
     <string name="title_advanced_sender">允许编辑发件人地址</string>
     <string name="title_identity_reply_to">回复地址</string>
     <string name="title_identity_encrypt">默认加密</string>
@@ -257,8 +262,6 @@
     <string name="title_identity_read_receipt">请求读取回执</string>
     <string name="title_identity_delivery_receipt">请求发出凭据</string>
     <string name="title_identity_receipt_remark">大部份提供商忽略接收请求</string>
-    <string name="title_identity_store_sent">存储已发送消息</string>
-    <string name="title_identity_store_sent_remark">仅当您的电邮供应商不自动存储已发送消息时才启用此选项</string>
     <string name="title_optional">可选</string>
     <string name="title_recommended">推荐</string>
     <string name="title_account_linked">已绑定的账户</string>
@@ -360,6 +363,7 @@
     <string name="title_folder_thread">会话%1$s</string>
     <string name="title_folders_unified">聚合收件箱文件夹</string>
     <string name="title_no_messages">没有邮件</string>
+    <string name="title_no_folders">无文件夹</string>
     <string name="title_subject_reply">回复：%1$s</string>
     <string name="title_subject_forward">转发：%1$s</string>
     <string name="title_seen">标记为已读</string>
@@ -682,6 +686,10 @@
     <string name="title_debug_info">调试信息</string>
     <string name="title_debug_info_remark">请描述问题及问题发生的时间：</string>
     <string name="title_crash_info_remark">请描述应用崩溃时您的操作</string>
+    <string name="title_search_special_prefix">特殊</string>
+    <string name="title_search_special_unseen">未读</string>
+    <string name="title_search_special_flagged">星标</string>
+    <string name="title_search_special_snoozed">延后</string>
     <string-array name="pollIntervalNames">
         <item>总是</item>
         <item>每15分钟</item>
@@ -715,6 +723,11 @@
         <item>1 MB</item>
         <item>2 MB</item>
         <item>&#8734;</item>
+    </string-array>
+    <string-array name="onCloseNames">
+        <item>不进行任何操作</item>
+        <item>转到上一个对话</item>
+        <item>转到下一个对话</item>
     </string-array>
     <string-array name="resizeNames">
         <item>小</item>

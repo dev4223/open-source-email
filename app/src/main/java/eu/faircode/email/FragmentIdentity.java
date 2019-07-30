@@ -64,17 +64,10 @@ import androidx.lifecycle.Lifecycle;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
-
-import javax.mail.Session;
-import javax.mail.Transport;
 
 import static android.app.Activity.RESULT_OK;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
@@ -120,8 +113,6 @@ public class FragmentIdentity extends FragmentBase {
     private CheckBox cbEncrypt;
     private CheckBox cbDeliveryReceipt;
     private CheckBox cbReadReceipt;
-
-    private CheckBox cbStoreSent;
 
     private Button btnSave;
     private ContentLoadingProgressBar pbSave;
@@ -198,8 +189,6 @@ public class FragmentIdentity extends FragmentBase {
         cbEncrypt = view.findViewById(R.id.cbEncrypt);
         cbDeliveryReceipt = view.findViewById(R.id.cbDeliveryReceipt);
         cbReadReceipt = view.findViewById(R.id.cbReadReceipt);
-
-        cbStoreSent = view.findViewById(R.id.cbStoreSent);
 
         btnSave = view.findViewById(R.id.btnSave);
         pbSave = view.findViewById(R.id.pbSave);
@@ -505,7 +494,6 @@ public class FragmentIdentity extends FragmentBase {
         args.putBoolean("encrypt", cbEncrypt.isChecked());
         args.putBoolean("delivery_receipt", cbDeliveryReceipt.isChecked());
         args.putBoolean("read_receipt", cbReadReceipt.isChecked());
-        args.putBoolean("store_sent", cbStoreSent.isChecked());
         args.putLong("account", account == null ? -1 : account.id);
         args.putString("host", etHost.getText().toString());
         args.putBoolean("starttls", rgEncryption.getCheckedRadioButtonId() == R.id.radio_starttls);
@@ -570,7 +558,6 @@ public class FragmentIdentity extends FragmentBase {
                 boolean encrypt = args.getBoolean("encrypt");
                 boolean delivery_receipt = args.getBoolean("delivery_receipt");
                 boolean read_receipt = args.getBoolean("read_receipt");
-                boolean store_sent = args.getBoolean("store_sent");
 
                 boolean should = args.getBoolean("should");
 
@@ -662,8 +649,6 @@ public class FragmentIdentity extends FragmentBase {
                         return true;
                     if (!Objects.equals(identity.read_receipt, read_receipt))
                         return true;
-                    if (!Objects.equals(identity.store_sent, store_sent))
-                        return true;
                     if (identity.error != null)
                         return true;
 
@@ -687,31 +672,11 @@ public class FragmentIdentity extends FragmentBase {
 
                 // Check SMTP server
                 if (check) {
-                    String protocol = (starttls ? "smtp" : "smtps");
-
-                    // Get properties
-                    Properties props = MessageHelper.getSessionProperties(realm, insecure);
-
-                    String haddr;
-                    if (use_ip) {
-                        InetAddress addr = InetAddress.getByName(host);
-                        if (addr instanceof Inet4Address)
-                            haddr = "[" + Inet4Address.getLocalHost().getHostAddress() + "]";
-                        else
-                            haddr = "[IPv6:" + Inet6Address.getLocalHost().getHostAddress() + "]";
-                    } else
-                        haddr = host;
-
-                    Log.i("Send localhost=" + haddr);
-                    props.put("mail." + protocol + ".localhost", haddr);
-
-                    // Create session
-                    Session isession = Session.getInstance(props, null);
-                    isession.setDebug(true);
-
                     // Create transport
-                    try (Transport itransport = isession.getTransport(protocol)) {
-                        itransport.connect(host, Integer.parseInt(port), user, password);
+                    String protocol = (starttls ? "smtp" : "smtps");
+                    try (MailService iservice = new MailService(context, protocol, realm, insecure, true)) {
+                        iservice.setUseIp(use_ip, host);
+                        iservice.connect(host, Integer.parseInt(port), user, password);
                     }
                 }
 
@@ -746,7 +711,6 @@ public class FragmentIdentity extends FragmentBase {
                     identity.encrypt = encrypt;
                     identity.delivery_receipt = delivery_receipt;
                     identity.read_receipt = read_receipt;
-                    identity.store_sent = store_sent;
                     identity.sent_folder = null;
                     identity.sign_key = null;
                     identity.error = null;
@@ -785,7 +749,7 @@ public class FragmentIdentity extends FragmentBase {
                     fragment.setArguments(aargs);
                     fragment.setTargetFragment(FragmentIdentity.this, REQUEST_SAVE);
                     fragment.show(getFragmentManager(), "identity:save");
-                } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getFragmentManager().popBackStack();
             }
 
@@ -887,7 +851,6 @@ public class FragmentIdentity extends FragmentBase {
                     cbEncrypt.setChecked(identity == null ? false : identity.encrypt);
                     cbDeliveryReceipt.setChecked(identity == null ? false : identity.delivery_receipt);
                     cbReadReceipt.setChecked(identity == null ? false : identity.read_receipt);
-                    cbStoreSent.setChecked(identity == null ? false : identity.store_sent);
 
                     color = (identity == null || identity.color == null ? Color.TRANSPARENT : identity.color);
 
@@ -959,12 +922,15 @@ public class FragmentIdentity extends FragmentBase {
                             spProvider.setTag(0);
                             spProvider.setSelection(0);
                             if (identity != null)
-                                for (int pos = 1; pos < providers.size(); pos++)
-                                    if (providers.get(pos).smtp_host.equals(identity.host)) {
+                                for (int pos = 1; pos < providers.size(); pos++) {
+                                    EmailProvider provider = providers.get(pos);
+                                    if (provider.smtp_host.equals(identity.host) &&
+                                            provider.smtp_port == identity.port) {
                                         spProvider.setTag(pos);
                                         spProvider.setSelection(pos);
                                         break;
                                     }
+                                }
 
                             spAccount.setTag(0);
                             spAccount.setSelection(0);
@@ -1058,7 +1024,7 @@ public class FragmentIdentity extends FragmentBase {
                             }
                         });
                         onSave(false);
-                    } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                    } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                         getFragmentManager().popBackStack();
                     break;
                 case REQUEST_DELETE:
@@ -1109,7 +1075,7 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getFragmentManager().popBackStack();
             }
 

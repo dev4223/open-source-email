@@ -87,6 +87,14 @@
         </activity>
 
         <activity
+            android:name=".ActivityWidgetUnified"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ActivityView"
             android:exported="false"
             android:launchMode="singleTop"
@@ -244,7 +252,7 @@
 
         <receiver
             android:name=".Widget"
-            android:label="@string/app_name">
+            android:label="@string/tile_unseen">
 
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -254,6 +262,23 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget" />
         </receiver>
+
+        <receiver
+            android:name=".WidgetUnified"
+            android:label="@string/title_folder_unified">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_unified" />
+        </receiver>
+
+        <service
+            android:name="WidgetUnifiedService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <receiver android:name=".ReceiverAutoStart">
             <intent-filter>

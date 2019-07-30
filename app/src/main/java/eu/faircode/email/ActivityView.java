@@ -102,6 +102,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     static final int REQUEST_OUTBOX = 4;
     static final int REQUEST_ERROR = 5;
     static final int REQUEST_UPDATE = 6;
+    static final int REQUEST_WIDGET = 7;
 
     static final String ACTION_VIEW_FOLDERS = BuildConfig.APPLICATION_ID + ".VIEW_FOLDERS";
     static final String ACTION_VIEW_MESSAGES = BuildConfig.APPLICATION_ID + ".VIEW_MESSAGES";
@@ -435,8 +436,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         if (savedInstanceState != null)
             drawerToggle.setDrawerIndicatorEnabled(savedInstanceState.getBoolean("fair:toggle"));
 
-        new Handler().post(checkIntent);
-
+        checkIntent();
         checkFirst();
         checkCrash();
 
@@ -469,59 +469,58 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         fragmentTransaction.commit();
     }
 
-    private Runnable checkIntent = new Runnable() {
-        @Override
-        public void run() {
-            if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
-                return;
+    private void checkIntent() {
+        Intent intent = getIntent();
 
-            Intent intent = getIntent();
+        String action = intent.getAction();
+        Log.i("View intent=" + intent + " action=" + action);
+        if (action != null) {
+            intent.setAction(null);
+            setIntent(intent);
 
-            String action = intent.getAction();
-            Log.i("View intent=" + intent + " action=" + action);
-            if (action != null) {
-                intent.setAction(null);
-                setIntent(intent);
-
-                if ("unified".equals(action)) {
+            if ("unified".equals(action)) {
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
 
-                } else if ("why".equals(action)) {
+            } else if ("why".equals(action)) {
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
 
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityView.this);
-                    boolean why = prefs.getBoolean("why", false);
-                    if (!why) {
-                        prefs.edit().putBoolean("why", true).apply();
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ActivityView.this);
+                boolean why = prefs.getBoolean("why", false);
+                if (!why) {
+                    prefs.edit().putBoolean("why", true).apply();
 
-                        Intent iwhy = new Intent(Intent.ACTION_VIEW);
-                        iwhy.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq2"));
-                        iwhy.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        if (iwhy.resolveActivity(getPackageManager()) != null)
-                            startActivity(iwhy);
-                    }
-
-                } else if ("outbox".equals(action))
-                    onMenuOutbox();
-                else if (action.startsWith("thread")) {
-                    intent.putExtra("thread", action.split(":", 2)[1]);
-                    onViewThread(intent);
+                    Intent iwhy = new Intent(Intent.ACTION_VIEW);
+                    iwhy.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq2"));
+                    iwhy.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    if (iwhy.resolveActivity(getPackageManager()) != null)
+                        startActivity(iwhy);
                 }
-            }
 
-            if (intent.hasExtra(Intent.EXTRA_PROCESS_TEXT)) {
-                searching = true;
-                String search = getIntent().getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT).toString();
+            } else if ("outbox".equals(action))
+                onMenuOutbox();
 
-                intent.removeExtra(Intent.EXTRA_PROCESS_TEXT);
-                setIntent(intent);
+            else if (action.startsWith("thread")) {
+                intent.putExtra("thread", action.split(":", 2)[1]);
+                onViewThread(intent);
 
-                FragmentMessages.search(
-                        ActivityView.this, ActivityView.this, getSupportFragmentManager(),
-                        -1, false, search);
-            }
+            } else if (action.equals("widget"))
+                onViewThread(intent);
         }
-    };
+
+        if (intent.hasExtra(Intent.EXTRA_PROCESS_TEXT)) {
+            searching = true;
+            String search = getIntent().getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT).toString();
+
+            intent.removeExtra(Intent.EXTRA_PROCESS_TEXT);
+            setIntent(intent);
+
+            FragmentMessages.search(
+                    ActivityView.this, ActivityView.this, getSupportFragmentManager(),
+                    -1, false, search);
+        }
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -540,7 +539,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        new Handler().post(checkIntent);
+        checkIntent();
     }
 
     @Override
@@ -628,7 +627,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         switch (item.getItemId()) {
             case android.R.id.home:
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack();
                 return true;
             default:
@@ -814,7 +813,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuFolders(long account) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("unified", 0);
 
         Bundle args = new Bundle();
@@ -841,7 +840,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
             @Override
             protected void onExecuted(Bundle args, Long folder) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack("unified", 0);
 
                 LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(ActivityView.this);
@@ -859,7 +858,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuOperations() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("operations", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -868,7 +867,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuAnswers() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("answers", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -881,7 +880,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuLegend() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("legend", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -906,7 +905,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onMenuAbout() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("about", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -960,7 +959,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onShowLog() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("logs", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -971,7 +970,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                 String action = intent.getAction();
 
                 if (ACTION_VIEW_FOLDERS.equals(action))
@@ -1004,7 +1003,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onViewMessages(Intent intent) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("messages", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         Bundle args = new Bundle();
@@ -1031,7 +1030,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private void onViewThread(Intent intent) {
         boolean found = intent.getBooleanExtra("found", false);
 
-        if (!found && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (!found && getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         Bundle args = new Bundle();
@@ -1096,7 +1095,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     }
 
     private void onShowPro(Intent intent) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("pro", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();

@@ -23,14 +23,14 @@ For authorizing:
 
 ## Known problems
 
-* ~~A [bug in Android](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping.~~
-* ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue.~~
-* ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty.~~
-* "*... Couldn't read row ...*" causes sometimes a crash. This could be caused by a bug in the [Room Persistence Library](https://developer.android.com/topic/libraries/architecture/room) but more likely indicates a corrupt database.
-* A [bug in Android](https://issuetracker.google.com/issues/119872129) "*... Bad notification posted ...*" lets FairEmail crash on some devices after updating FairEmail and tapping on a notification.
-* A [bug in Android](https://issuetracker.google.com/issues/62427912) "*... ActivityRecord not found for ...*" sometimes causes a crash after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) migth fix the problem.
-* Encryption with [YubiKey](https://www.yubico.com/) results into an infinite loop. FairEmail follows the latest version of the [OpenKeychain API](https://github.com/open-keychain/openpgp-api), so this is likely being caused by an external bug.
-* A bug in the Nova Launcher lets FairEmail crash with a *java.lang.StackOverflowError* when the Nova Launcher has access to the accessibility service.
+* ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue. A workaround was added.~~
+* ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty. Google has fixed this.~~
+* ~~Encryption with [YubiKey](https://www.yubico.com/) results into an infinite loop. FairEmail follows the latest version of the [OpenKeychain API](https://github.com/open-keychain/openpgp-api), so this is likely being caused by an external bug. This seems not be happening anymore.~~
+* ~~A [bug in AndroidX](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping. Google has fixed this.~~
+* ~~A [bug in AndroidX ROOM](https://issuetracker.google.com/issues/138441698) causes sometimes a crash with "*... Exception while computing database live data ... Couldn't read row ...*". A workaround was added.~~
+* A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash with "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
+* A [bug in Android](https://issuetracker.google.com/issues/62427912) sometimes causes a crash with "*... ActivityRecord not found for ...*" after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) might fix the problem.
+* A bug in Nova Launcher or Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 
 ## Planned features
 
@@ -54,7 +54,6 @@ Anything on this list is in random order and *might* be added in the near future
 ## Frequently requested features
 
 * *Design*: the design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too. See below for the design goals.
-* *Widget to read messages*: widgets can have limited user interaction only, so a widget to read conversations would not be very convenient. Moreover, it would be not very useful to duplicate functions which are already available in the app.
 * *ActiveSync*: using the Exchange ActiveSync protocol requires [a license](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing), so this cannot be added.
 
 The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc).
@@ -84,7 +83,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(4) How can I use an invalid security certificate / IMAP STARTTLS / an empty password?](#user-content-faq4)
 * [(5) How can I customize the message view?](#user-content-faq5)
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
-* [(7) Why are sent messages not appearing in the sent folder?](#user-content-faq7)
+* [(7) Why are sent messages not appearing (directly) in the sent folder?](#user-content-faq7)
 * [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
 * [(9) What are identities / how do I add an alias?](#user-content-faq9)
 * [(11) Why is POP not supported?](#user-content-faq11)
@@ -100,7 +99,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
 * [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection reset by peer', 'Read timed out' and 'Broken pipe' mean?](#user-content-faq22)
-* [(23) Why do I get 'Too many simultaneous connections' ?](#user-content-faq23)
+* [(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
 * [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
@@ -131,7 +130,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(51) How are folders sorted?](#user-content-faq51)
 * [(52) Why does it take some time to reconnect to an account?](#user-content-faq52)
 * [(53) Can you stick the message action bar to the top/bottom?](#user-content-faq53)
-* [(54) How do I use a namespace prefix?](#user-content-faq54)
+* [~~(54) How do I use a namespace prefix?~~](#user-content-faq54)
 * [(55) How can I mark all messages as read / move or delete all messages?](#user-content-faq55)
 * [(56) Can you add support for JMAP?](#user-content-faq56)
 * [(57) Can I use HTML in signatures?](#user-content-faq57)
@@ -195,6 +194,8 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(115) Can you add email address chips?](#user-content-faq114)
 * [(116) How can I show images in messages from trusted senders by default?](#user-content-faq116)
 * [(117) Can you help me restore my purchase?](#user-content-faq117)
+* [(118) What does 'Remove tracking parameters' exactly?](#user-content-faq118)
+* [(119) Can you add colors to the unified inbox widget?](#user-content-faq119)
 
 [I have another question.](#support)
 
@@ -381,17 +382,23 @@ See [this FAQ](#user-content-faq111) about why OAuth is not being used.
 <br />
 
 <a name="faq7"></a>
-**(7) Why are sent messages not appearing in the sent folder?**
+**(7) Why are sent messages not appearing (directly) in the sent folder?**
 
 Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder.
 This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
-If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.
-In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.
-Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.
 
-FairEmail will also add messages in the outbox not found in the sent folder to the sent folder when performing a full synchronize,
-which happens when reconnecting to the server or if when synchronizing manually.
-You'll likely want to enable the advanced setting *Store sent messages* instead to move messages to the sent folder sooner.
+Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider.
+In these cases FairEmail will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message have been sent.
+Note that this will result in extra internet traffic.
+
+~~If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.~~
+~~In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.~~
+~~Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.~~
+~~Also beware that enabling this setting will result in extra data usage, especially when when sending messages with large attachments.~~
+
+~~If sent messages in the outbox are not found in the sent folder on a full synchronize, they will be moved from the outbox to the sent folder too.~~
+~~A full synchronize happens when reconnecting to the server or when synchronizing periodically or manually.~~
+~~You'll likely want to enable the advanced setting *Store sent messages* instead to move messages to the sent folder sooner.~~
 
 <br />
 
@@ -648,7 +655,7 @@ This delay will be doubled after each failed attempt to prevent draining the bat
 <br />
 
 <a name="faq23"></a>
-**(23) Why do I get 'Too many simultaneous connections' ?**
+**(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?**
 
 The message *Too many simultaneous connections* is sent by the email server
 when there are too many folder connections for the same email account at the same time.
@@ -909,7 +916,7 @@ Note that you can set the number of days to *keep* messages for to a higher numb
 You could for example initially synchronize messages for a large number of days and after this has been completed
 reduce the number of days to synchronize messages for, but leave the number of days to keep messages for.
 
-Starred messages will by default always be synchronized (this can be turned off in the receive settings),
+In the receive settings you can enable to always synchronize starred messages,
 which will allow you to keep older messages around while synchronizing messages for a limited number of days.
 
 Disabling the folder option *Automatically download message texts and attachments*
@@ -951,7 +958,8 @@ Finally, make sure you are using [the latest version](https://github.com/M66B/Fa
 
 You can reduce the network usage basically in the same way as reducing battery usage, see the previous question for suggestions.
 
-Additionally, you can let FairEmail download small messages and attachments only on a metered (mobile, paid) connection only.
+By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection.
+You can change this in the connection settings.
 
 <br />
 
@@ -1133,17 +1141,17 @@ You can use the *Home* button to quickly go to the top of the message.
 <br />
 
 <a name="faq54"></a>
-**(54) How do I use a namespace prefix?**
+**~~(54) How do I use a namespace prefix?~~**
 
-A namespace prefix is used to automatically remove the prefix providers sometimes add to folder names.
+~~A namespace prefix is used to automatically remove the prefix providers sometimes add to folder names.~~
 
-For example the Gmail spam folder is called:
+~~For example the Gmail spam folder is called:~~
 
 ```
 [Gmail]/Spam
 ```
 
-By setting the namespace prefix to *[Gmail]* FairEmail will automatically remove *[Gmail]/* from all folder names.
+~~By setting the namespace prefix to *[Gmail]* FairEmail will automatically remove *[Gmail]/* from all folder names.~~
 
 <br />
 
@@ -1219,6 +1227,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can tap on an image to see where it will be downloaded from?
 * Did you know that you can long press the folder icon in the action bar to select an account?
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
+* Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 
 <br />
 
@@ -1989,6 +1998,26 @@ Note that:
 * There is no time limit on purchases, so they cannot expire
 * Google does not expose details (name, e-mail, etc) about buyers to developers
 * An application like FairEmail cannot select which Google account to use
+
+<br />
+
+<a name="faq118"></a>
+**(118) What does 'Remove tracking parameters' exactly?**
+
+Checking *Remove tracking parameters* will remove all [UTM parameters](https://en.wikipedia.org/wiki/UTM_parameters) from a link.
+
+<br />
+
+<a name="faq119"></a>
+**(119) Can you add colors to the unified inbox widget?**
+
+The widget is designed to look good on most home/launcher screens by making it monochrome and by using a half transparent background.
+This way the widget will nicely blend in, while still being properly readable.
+
+Adding (account) colors will cause problems with some backgrounds and will cause readability problems, which is why this won't be added.
+
+<br />
+
 
 ## Support
 

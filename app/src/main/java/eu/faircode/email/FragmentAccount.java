@@ -59,7 +59,6 @@ import androidx.lifecycle.Lifecycle;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 
 import java.net.UnknownHostException;
@@ -68,11 +67,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Properties;
 
 import javax.mail.Folder;
-import javax.mail.Session;
-import javax.mail.Store;
 
 import static android.app.Activity.RESULT_OK;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
@@ -231,7 +227,7 @@ public class FragmentAccount extends FragmentBase {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long itemid) {
                 EmailProvider provider = (EmailProvider) adapterView.getSelectedItem();
-                grpServer.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
+                grpServer.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
                 grpAuthorize.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
 
                 btnAdvanced.setVisibility(position > 0 ? View.VISIBLE : View.GONE);
@@ -533,13 +529,11 @@ public class FragmentAccount extends FragmentBase {
                 result.folders = new ArrayList<>();
 
                 // Check IMAP server / get folders
-                Properties props = MessageHelper.getSessionProperties(realm, insecure);
-                Session isession = Session.getInstance(props, null);
-                isession.setDebug(true);
-                try (Store istore = isession.getStore("imap" + (starttls ? "" : "s"))) {
-                    istore.connect(host, Integer.parseInt(port), user, password);
+                String protocol = "imap" + (starttls ? "" : "s");
+                try (MailService iservice = new MailService(context, protocol, realm, insecure, true)) {
+                    iservice.connect(host, Integer.parseInt(port), user, password);
 
-                    result.idle = ((IMAPStore) istore).hasCapability("IDLE");
+                    result.idle = iservice.getStore().hasCapability("IDLE");
 
                     boolean inbox = false;
                     boolean archive = false;
@@ -553,7 +547,7 @@ public class FragmentAccount extends FragmentBase {
                     EntityFolder altSent = null;
                     EntityFolder altJunk = null;
 
-                    for (Folder ifolder : istore.getDefaultFolder().list("*")) {
+                    for (Folder ifolder : iservice.getStore().getDefaultFolder().list("*")) {
                         // Check folder attributes
                         String fullName = ifolder.getFullName();
                         String[] attrs = ((IMAPFolder) ifolder).getAttributes();
@@ -889,14 +883,11 @@ public class FragmentAccount extends FragmentBase {
                 // Check IMAP server
                 EntityFolder inbox = null;
                 if (check) {
-                    Properties props = MessageHelper.getSessionProperties(realm, insecure);
-                    Session isession = Session.getInstance(props, null);
-                    isession.setDebug(true);
+                    String protocol = "imap" + (starttls ? "" : "s");
+                    try (MailService iservice = new MailService(context, protocol, realm, insecure, true)) {
+                        iservice.connect(host, Integer.parseInt(port), user, password);
 
-                    try (Store istore = isession.getStore("imap" + (starttls ? "" : "s"))) {
-                        istore.connect(host, Integer.parseInt(port), user, password);
-
-                        for (Folder ifolder : istore.getDefaultFolder().list("*")) {
+                        for (Folder ifolder : iservice.getStore().getDefaultFolder().list("*")) {
                             // Check folder attributes
                             String fullName = ifolder.getFullName();
                             String[] attrs = ((IMAPFolder) ifolder).getAttributes();
@@ -1067,7 +1058,7 @@ public class FragmentAccount extends FragmentBase {
                     fragment.setArguments(aargs);
                     fragment.setTargetFragment(FragmentAccount.this, REQUEST_SAVE);
                     fragment.show(getFragmentManager(), "account:save");
-                } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getFragmentManager().popBackStack();
             }
 
@@ -1316,7 +1307,7 @@ public class FragmentAccount extends FragmentBase {
                             }
                         });
                         onSave(false);
-                    } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                    } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                         getFragmentManager().popBackStack();
                     break;
                 case REQUEST_DELETE:
@@ -1363,7 +1354,7 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getFragmentManager().popBackStack();
             }
 

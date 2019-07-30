@@ -33,15 +33,11 @@ import android.text.TextUtils;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleService;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -57,13 +53,12 @@ import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.Session;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
-public class ServiceSend extends LifecycleService {
+public class ServiceSend extends ServiceBase {
     private int lastUnsent = 0;
     private boolean lastSuitable = false;
     private TwoStateOwner cowner;
@@ -77,6 +72,7 @@ public class ServiceSend extends LifecycleService {
     public void onCreate() {
         Log.i("Service send create");
         super.onCreate();
+        startForeground(Helper.NOTIFICATION_SEND, getNotificationService(null, null).build());
 
         cowner = new TwoStateOwner(ServiceSend.this, "send");
         final DB db = DB.getInstance(this);
@@ -106,9 +102,13 @@ public class ServiceSend extends LifecycleService {
                         process = true;
                     ops.add(op.id);
                 }
+                for (Long h : handling)
+                    if (!ops.contains(h))
+                        process = true;
+
                 handling = ops;
 
-                if (handling.size() > 0 && process) {
+                if (process) {
                     Log.i("OUTBOX operations=" + operations.size());
 
                     executor.submit(new Runnable() {
@@ -165,6 +165,7 @@ public class ServiceSend extends LifecycleService {
 
                                             if (ex instanceof OutOfMemoryError ||
                                                     ex instanceof MessageRemovedException ||
+                                                    ex instanceof FileNotFoundException ||
                                                     ex instanceof SendFailedException ||
                                                     ex instanceof IllegalArgumentException) {
                                                 Log.w("Unrecoverable");
@@ -223,10 +224,7 @@ public class ServiceSend extends LifecycleService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(Helper.NOTIFICATION_SEND, getNotificationService(null, null).build());
-
         super.onStartCommand(intent, flags, startId);
-
         return START_STICKY;
     }
 
@@ -309,32 +307,9 @@ public class ServiceSend extends LifecycleService {
         if (ident == null)
             throw new IllegalArgumentException("Identity not found");
 
-        String protocol = ident.getProtocol();
-
-        // Get properties
-        Properties props = MessageHelper.getSessionProperties(ident.realm, ident.insecure);
-
-        String haddr;
-        if (ident.use_ip) {
-            InetAddress addr = InetAddress.getByName(ident.host);
-            if (addr instanceof Inet4Address)
-                haddr = "[" + Inet4Address.getLocalHost().getHostAddress() + "]";
-            else {
-                // Inet6Address.getLocalHost() will return the IPv6 local host
-                byte[] LOOPBACK = new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-                haddr = "[IPv6:" + Inet6Address.getByAddress("ip6-localhost", LOOPBACK, 0).getHostAddress() + "]";
-            }
-        } else
-            haddr = ident.host;
-
-        EntityLog.log(this, "Send localhost=" + haddr);
-        props.put("mail." + protocol + ".localhost", haddr);
-
-        // Create session
-        final Session isession = Session.getInstance(props, null);
-        isession.setDebug(debug);
-
         // Create message
+        Properties props = MessageHelper.getSessionProperties();
+        Session isession = Session.getInstance(props, null);
         MimeMessage imessage = MessageHelper.from(this, message, ident, isession);
 
         // Add reply to
@@ -362,29 +337,22 @@ public class ServiceSend extends LifecycleService {
         }
 
         // Create transport
-        try (Transport itransport = isession.getTransport(protocol)) {
+        try (MailService iservice = new MailService(
+                this, ident.getProtocol(), ident.realm, ident.insecure, debug)) {
+            iservice.setUseIp(ident.use_ip, ident.host);
+
             // Connect transport
             db.identity().setIdentityState(ident.id, "connecting");
-            itransport.connect(ident.host, ident.port, ident.user, ident.password);
+            iservice.connect(ident);
             db.identity().setIdentityState(ident.id, "connected");
 
             // Send message
             Address[] to = imessage.getAllRecipients();
-            itransport.sendMessage(imessage, to);
+            iservice.getTransport().sendMessage(imessage, to);
             long time = new Date().getTime();
             EntityLog.log(this,
                     "Sent via " + ident.host + "/" + ident.user +
                             " to " + TextUtils.join(", ", to));
-
-            // Append replied/forwarded text
-            StringBuilder sb = new StringBuilder();
-            sb.append(Helper.readText(message.getFile(this)));
-            if (!TextUtils.isEmpty(ident.signature))
-                sb.append(ident.signature);
-            File refFile = message.getRefFile(this);
-            if (refFile.exists())
-                sb.append(Helper.readText(refFile));
-            Helper.writeText(message.getFile(this), sb.toString());
 
             try {
                 db.beginTransaction();
@@ -395,16 +363,12 @@ public class ServiceSend extends LifecycleService {
                 db.message().setMessageSeen(message.id, true);
                 db.message().setMessageUiSeen(message.id, true);
                 db.message().setMessageError(message.id, null);
+                if (!BuildConfig.DEBUG && !debug)
+                    db.message().setMessageUiHide(message.id, new Date().getTime());
 
                 EntityFolder sent = db.folder().getFolderByType(message.account, EntityFolder.SENT);
-                if (ident.store_sent && sent != null) {
-                    db.message().setMessageFolder(message.id, sent.id);
-                    message.folder = sent.id;
-                    EntityOperation.queue(this, message, EntityOperation.ADD);
-                } else {
-                    if (!BuildConfig.DEBUG && !debug)
-                        db.message().setMessageUiHide(message.id, new Date().getTime());
-                }
+                if (sent != null)
+                    EntityOperation.sync(this, sent.id, false);
 
                 if (message.inreplyto != null) {
                     List<EntityMessage> replieds = db.message().getMessageByMsgId(message.account, message.inreplyto);
@@ -416,9 +380,6 @@ public class ServiceSend extends LifecycleService {
             } finally {
                 db.endTransaction();
             }
-
-            if (refFile.exists())
-                refFile.delete();
 
             db.identity().setIdentityConnected(ident.id, new Date().getTime());
             db.identity().setIdentityError(ident.id, null);
@@ -443,7 +404,7 @@ public class ServiceSend extends LifecycleService {
 
             long now = new Date().getTime();
             long delayed = now - message.last_attempt;
-            if (delayed > IDENTITY_ERROR_AFTER * 60 * 1000L || ex instanceof SendFailedException) {
+            if (delayed > IDENTITY_ERROR_AFTER * 60 * 1000L) {
                 Log.i("Reporting send error after=" + delayed);
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.notify("send:" + message.identity, 1,

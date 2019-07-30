@@ -13,13 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 604
-        versionName "1.604.1"
+        versionCode 624
+        versionName "1.624"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        // Upcoming: Echinodon
-        buildConfigField "String", "RELEASE_NAME", "\"Dinodocus\""
+        buildConfigField "String", "RELEASE_NAME", "\"Echinodon\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -39,6 +38,11 @@ android {
     lintOptions {
         disable 'MissingTranslation'
         abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     packagingOptions {
@@ -133,6 +137,10 @@ repositories {
 }
 
 configurations.all {
+    // Workaround https://issuetracker.google.com/issues/138441698
+    // Support @69c481c39a17d4e1e44a4eb298bb81c48f226eef
+    exclude group: "androidx.room", module: "room-runtime"
+    // Workaround https://issuetracker.google.com/issues/134685570
     exclude group: "androidx.lifecycle", module: "lifecycle-livedata"
 }
 
@@ -196,6 +204,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/androidx.room/room-runtime
     implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-common:$room_version" // because of exclude
+    // https://mvnrepository.com/artifact/androidx.sqlite/sqlite-framework
+    implementation "androidx.sqlite:sqlite-framework:2.0.1" // because of exclude
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
     // https://mvnrepository.com/artifact/androidx.paging/paging-runtime

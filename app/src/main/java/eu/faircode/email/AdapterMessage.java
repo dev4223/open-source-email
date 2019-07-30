@@ -198,12 +198,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private DateFormat TF;
     private DateFormat DTF;
 
+    // https://github.com/newhouse/url-tracking-stripper
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             "utm_source",
             "utm_medium",
             "utm_campaign",
             "utm_term",
-            "utm_content"
+            "utm_content",
+
+            "utm_name",
+            "utm_cid",
+            "utm_reader",
+            "utm_viz_id",
+            "utm_pubreferrer",
+            "utm_swu",
+
+            "gclid",
+            "fbclid"
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
@@ -1540,10 +1551,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     db.beginTransaction();
 
                                     EntityMessage message = db.message().getMessage(id);
-                                    if (message == null)
-                                        return null;
-
-                                    EntityOperation.queue(context, message, EntityOperation.SEEN, !message.ui_seen);
+                                    if (message != null) {
+                                        List<EntityMessage> messages = db.message().getMessagesByThread(
+                                                message.account, message.thread, threading ? null : id, null);
+                                        for (EntityMessage threaded : messages)
+                                            if (threaded.ui_seen == message.ui_seen)
+                                                EntityOperation.queue(context, threaded, EntityOperation.SEEN, !message.ui_seen);
+                                    }
 
                                     db.setTransactionSuccessful();
                                 } finally {
@@ -1558,8 +1572,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                             }
                         }.execute(context, owner, args, "message:seen");
-
-
                     }
                 }
             }
@@ -1618,7 +1630,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (message == null)
                             return null;
 
-                        List<EntityMessage> messages = db.message().getMessageByThread(
+                        List<EntityMessage> messages = db.message().getMessagesByThread(
                                 message.account, message.thread, threading && thread ? null : id, null);
                         for (EntityMessage threaded : messages)
                             EntityOperation.queue(context, threaded, EntityOperation.FLAG, flagged);
@@ -2133,7 +2145,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!show_images) {
                         ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
                         if (image.length > 0 && image[0].getSource() != null) {
-                            Uri uri = Uri.parse(image[0].getSource());
+                            HtmlHelper.AnnotatedSource a = new HtmlHelper.AnnotatedSource(image[0].getSource());
+                            Uri uri = Uri.parse(a.getSource());
                             if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
                                 onOpenLink(uri, null);
                                 return true;
@@ -2371,7 +2384,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return null;
                         db.message().deleteMessage(id);
 
-                        EntityOperation.sync(context, message.folder, false);
+                        EntityOperation.sync(context, message.folder, true);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -3215,6 +3228,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("size changed id=" + next.id);
                     }
+                    if (!Objects.equals(prev.attachments, next.attachments)) {
+                        same = false;
+                        Log.i("attachments changed id=" + next.id);
+                    }
                     if (!prev.content.equals(next.content)) {
                         same = false;
                         Log.i("content changed id=" + next.id);
@@ -3476,16 +3493,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 // https://en.wikipedia.org/wiki/UTM_parameters
                 Uri.Builder builder = uri.buildUpon();
 
+                boolean changed = false;
                 builder.clearQuery();
                 for (String key : uri.getQueryParameterNames())
-                    if (!PARANOID_QUERY.contains(key.toLowerCase()))
-                        for (String value : uri.getQueryParameters(key))
-                            if (!TextUtils.isEmpty(key)) {
-                                Log.i("Query " + key + "=" + value);
-                                builder.appendQueryParameter(key, value);
-                            }
+                    if (PARANOID_QUERY.contains(key.toLowerCase()))
+                        changed = true;
+                    else if (!TextUtils.isEmpty(key))
+                        for (String value : uri.getQueryParameters(key)) {
+                            Log.i("Query " + key + "=" + value);
+                            builder.appendQueryParameter(key, value);
+                        }
 
-                sanitized = builder.build();
+                sanitized = (changed ? builder.build() : uri);
             }
 
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_open_link, null);

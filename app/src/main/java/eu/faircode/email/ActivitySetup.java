@@ -38,9 +38,11 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -66,6 +68,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 
 import org.json.JSONArray;
@@ -73,7 +76,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,6 +106,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private ActionBarDrawerToggle drawerToggle;
     private ConstraintLayout drawerContainer;
     private RecyclerView rvMenu;
+    private Snackbar sbDataSaver;
 
     private boolean hasAccount;
     private String password;
@@ -253,6 +256,20 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
         adapter.set(menus);
 
+        sbDataSaver = Snackbar.make(view, R.string.title_setup_data, Snackbar.LENGTH_INDEFINITE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            final Intent settings = new Intent(
+                    Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                    Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+            if (settings.resolveActivity(getPackageManager()) != null)
+                sbDataSaver.setAction(R.string.title_setup_manage, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        startActivity(settings);
+                    }
+                });
+        }
+
         getSupportFragmentManager().addOnBackStackChangedListener(this);
 
         if (getSupportFragmentManager().getFragments().size() == 0) {
@@ -298,6 +315,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     @Override
     protected void onResume() {
         super.onResume();
+
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         IntentFilter iff = new IntentFilter();
         iff.addAction(ACTION_QUICK_SETUP);
@@ -306,6 +324,16 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         iff.addAction(ACTION_EDIT_ACCOUNT);
         iff.addAction(ACTION_EDIT_IDENTITY);
         lbm.registerReceiver(receiver, iff);
+
+        // https://developer.android.com/training/basics/network-ops/data-saver.html
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm != null) {
+                int status = cm.getRestrictBackgroundStatus();
+                if (status == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED)
+                    sbDataSaver.show();
+            }
+        }
     }
 
     @Override
@@ -313,6 +341,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         super.onPause();
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         lbm.unregisterReceiver(receiver);
+
+        if (sbDataSaver.isShown())
+            sbDataSaver.dismiss();
     }
 
     @Override
@@ -350,7 +381,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
         switch (item.getItemId()) {
             case android.R.id.home:
-                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+                if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                     getSupportFragmentManager().popBackStack();
                 return true;
         }
@@ -408,7 +439,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuOrder(int title, Class clazz) {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("order", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         Bundle args = new Bundle();
@@ -451,7 +482,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuContacts() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("contacts", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -460,7 +491,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuLegend() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("legend", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -481,7 +512,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onMenuAbout() {
-        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED))
+        if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             getSupportFragmentManager().popBackStack("about", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -495,6 +526,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         args.putString("password", password);
 
         new SimpleTask<Void>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                ToastEx.makeText(ActivitySetup.this, R.string.title_executing, Toast.LENGTH_LONG).show();
+            }
+
             @Override
             protected Void onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
@@ -602,7 +638,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                 ContentResolver resolver = context.getContentResolver();
                 DocumentFile file = DocumentFile.fromSingleUri(context, uri);
-                try (OutputStream raw = new BufferedOutputStream(resolver.openOutputStream(uri))) {
+                try (OutputStream raw = resolver.openOutputStream(uri)) {
                     Log.i("Writing URI=" + uri + " name=" + file.getName() + " virtual=" + file.isVirtual());
 
                     if (TextUtils.isEmpty(password))
@@ -655,6 +691,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         args.putString("password", password);
 
         new SimpleTask<Void>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                ToastEx.makeText(ActivitySetup.this, R.string.title_executing, Toast.LENGTH_LONG).show();
+            }
+
             @Override
             protected Void onExecute(Context context, Bundle args) throws Throwable {
                 Uri uri = args.getParcelable("uri");
@@ -718,14 +759,21 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         answer.id = db.answer().insertAnswer(answer);
                         xAnswer.put(id, answer.id);
 
-                        Log.i("Imported answer=" + answer.name);
+                        Log.i("Imported answer=" + answer.name + " id=" + answer.id + " (" + id + ")");
                     }
+
+                    EntityAccount primary = db.account().getPrimaryAccount();
 
                     // Accounts
                     JSONArray jaccounts = jimport.getJSONArray("accounts");
                     for (int a = 0; a < jaccounts.length(); a++) {
                         JSONObject jaccount = (JSONObject) jaccounts.get(a);
                         EntityAccount account = EntityAccount.fromJSON(jaccount);
+                        Long aid = account.id;
+                        account.id = null;
+
+                        if (primary != null)
+                            account.primary = false;
 
                         // Forward referenced
                         Long swipe_left = account.swipe_left;
@@ -737,7 +785,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                         account.created = new Date().getTime();
                         account.id = db.account().insertAccount(account);
-                        Log.i("Imported account=" + account.name);
+                        Log.i("Imported account=" + account.name + " id=" + account.id + " (" + aid + ")");
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             account.deleteNotificationChannel(context);
@@ -768,7 +816,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                             identity.id = db.identity().insertIdentity(identity);
                             xIdentity.put(id, identity.id);
 
-                            Log.i("Imported identity=" + identity.email);
+                            Log.i("Imported identity=" + identity.email + " id=" + identity + id + " (" + id + ")");
                         }
 
                         Map<Long, Long> xFolder = new HashMap<>();
@@ -813,14 +861,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                     rules.add(rule);
                                 }
                             }
-                            Log.i("Imported folder=" + folder.name);
+                            Log.i("Imported folder=" + folder.name + " id=" + folder.id + " (" + id + ")");
                         }
 
                         for (EntityRule rule : rules) {
                             try {
                                 JSONObject jaction = new JSONObject(rule.action);
-                                int type = jaction.getInt("type");
 
+                                int type = jaction.getInt("type");
                                 switch (type) {
                                     case EntityRule.TYPE_MOVE:
                                     case EntityRule.TYPE_COPY:
@@ -829,14 +877,16 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                         jaction.put("target", xFolder.get(target));
                                         break;
                                     case EntityRule.TYPE_ANSWER:
-                                        long iid = jaction.getLong("identity");
-                                        long aid = jaction.getLong("answer");
-                                        Log.i("XLAT identity " + iid + " > " + xIdentity.get(iid));
-                                        Log.i("XLAT target " + aid + " > " + xAnswer.get(aid));
-                                        jaction.put("identity", xIdentity.get(iid));
-                                        jaction.put("answer", xAnswer.get(aid));
+                                        long identity = jaction.getLong("identity");
+                                        long answer = jaction.getLong("answer");
+                                        Log.i("XLAT identity " + identity + " > " + xIdentity.get(identity));
+                                        Log.i("XLAT answer " + answer + " > " + xAnswer.get(answer));
+                                        jaction.put("identity", xIdentity.get(identity));
+                                        jaction.put("answer", xAnswer.get(answer));
                                         break;
                                 }
+
+                                rule.action = jaction.toString();
                             } catch (JSONException ex) {
                                 Log.e(ex);
                             }
@@ -851,11 +901,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                 JSONObject jcontact = (JSONObject) jcontacts.get(c);
                                 EntityContact contact = EntityContact.fromJSON(jcontact);
                                 contact.account = account.id;
-                                if (db.contact().getContact(contact.account, contact.type, contact.email) == null) {
+                                if (db.contact().getContact(contact.account, contact.type, contact.email) == null)
                                     contact.id = db.contact().insertContact(contact);
-                                    Log.i("Imported contact=" + contact);
-                                }
                             }
+                            Log.i("Imported contacts=" + jcontacts.length());
                         }
 
                         // Update swipe left/right
@@ -1092,7 +1141,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED)) {
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                 String action = intent.getAction();
                 if (ACTION_QUICK_SETUP.equals(action))
                     onViewQuickSetup(intent);

@@ -54,13 +54,11 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.Collator;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static android.app.Activity.RESULT_OK;
@@ -148,17 +146,19 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private void wire() {
             view.setOnClickListener(this);
             ivExpander.setOnClickListener(this);
-            view.setOnLongClickListener(this);
+            if (listener == null)
+                view.setOnLongClickListener(this);
         }
 
         private void unwire() {
             view.setOnClickListener(null);
             ivExpander.setOnClickListener(null);
-            view.setOnLongClickListener(null);
+            if (listener == null)
+                view.setOnLongClickListener(null);
         }
 
         private void bindTo(final TupleFolderEx folder) {
-            view.setActivated(folder.tbc != null || folder.tbd != null);
+            view.setActivated(folder.tbc != null || folder.rename != null || folder.tbd != null);
             view.setAlpha(folder.hide || !folder.selectable || disabledIds.contains(folder.id)
                     ? Helper.LOW_LIGHT : 1.0f);
 
@@ -242,8 +242,11 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         ? R.drawable.baseline_mail_24 : R.drawable.baseline_mail_outline_24);
             }
 
-            if (folder.selectable)
+            if (folder.selectable) {
+                ivType.setVisibility(View.VISIBLE);
                 ivType.setImageResource(EntityFolder.getIcon(folder.type));
+            } else if (listener != null)
+                ivType.setVisibility(View.GONE);
 
             if (listener == null && folder.selectable) {
                 if (account < 0)
@@ -689,16 +692,12 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         Log.i("Set folders=" + folders.size());
         all = folders;
 
-        final Collator collator = Collator.getInstance(Locale.getDefault());
-        collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
-
-        if (folders.size() > 0)
-            Collections.sort(folders, folders.get(0).getComparator(context));
-
         List<TupleFolderEx> hierarchical;
-        if (account < 0)
+        if (account < 0) {
+            if (folders.size() > 0)
+                Collections.sort(folders, folders.get(0).getComparator(context));
             hierarchical = folders;
-        else {
+        } else {
             List<TupleFolderEx> parents = new ArrayList<>();
             Map<Long, TupleFolderEx> idFolder = new HashMap<>();
             Map<Long, List<TupleFolderEx>> parentChilds = new HashMap<>();
@@ -735,8 +734,16 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     anyChild = true;
                     break;
                 }
-            for (TupleFolderEx parent : parents)
+            for (TupleFolderEx parent : parents) {
                 parent.expander = anyChild;
+
+                if (!parent.selectable && parent.child_refs != null && EntityFolder.USER.equals(parent.type))
+                    for (TupleFolderEx child : parent.child_refs)
+                        if (!EntityFolder.USER.equals(child.type)) {
+                            parent.type = EntityFolder.SYSTEM;
+                            break;
+                        }
+            }
 
             hierarchical = getHierarchical(parents, anyChild ? 0 : 1);
         }
@@ -769,13 +776,17 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         diff.dispatchUpdatesTo(this);
     }
 
-    List<TupleFolderEx> getHierarchical(List<TupleFolderEx> parents, int indentation) {
+    private List<TupleFolderEx> getHierarchical(List<TupleFolderEx> parents, int indentation) {
         List<TupleFolderEx> result = new ArrayList<>();
+
+        if (parents.size() > 0)
+            Collections.sort(parents, parents.get(0).getComparator(context));
 
         for (TupleFolderEx parent : parents)
             if (!parent.hide || show_hidden) {
                 parent.indentation = indentation;
                 result.add(parent);
+
                 if (!parent.collapsed && parent.child_refs != null)
                     result.addAll(getHierarchical(parent.child_refs, indentation + 1));
             }
