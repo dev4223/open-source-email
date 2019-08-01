@@ -82,6 +82,9 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
     private void run(final Context context, final LifecycleOwner owner, final Bundle args, final String name) {
         final Handler handler = new Handler();
 
+        if (owner instanceof TwoStateOwner)
+            Log.e(new Throwable("SimpleTask/TwoStateOwner"));
+
         // prevent garbage collection
         synchronized (tasks) {
             tasks.add(this);
@@ -122,28 +125,27 @@ public abstract class SimpleTask<T> implements LifecycleObserver {
                         if (state.equals(Lifecycle.State.DESTROYED)) {
                             // No delivery
                             cleanup(context);
-                        } else if (state.isAtLeast(Lifecycle.State.STARTED)) {
+                        } else if (state.isAtLeast(Lifecycle.State.RESUMED)) {
                             // Inline delivery
                             Log.i("Deliver task " + name);
                             deliver();
                             cleanup(context);
                         } else
                             owner.getLifecycle().addObserver(new LifecycleObserver() {
-                                @OnLifecycleEvent(Lifecycle.Event.ON_START)
-                                public void onStart() {
-                                    // Deferred delivery
-                                    Log.i("Deferred delivery task " + name);
-                                    owner.getLifecycle().removeObserver(this);
-                                    deliver();
-                                    cleanup(context);
-                                }
-
-                                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                                public void onDestroyed() {
-                                    // No delivery
-                                    Log.i("Destroyed task " + name);
-                                    owner.getLifecycle().removeObserver(this);
-                                    cleanup(context);
+                                @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
+                                public void onAny() {
+                                    Lifecycle.State state = owner.getLifecycle().getCurrentState();
+                                    if (state.equals(Lifecycle.State.DESTROYED)) {
+                                        Log.i("Destroyed task " + name);
+                                        owner.getLifecycle().removeObserver(this);
+                                        cleanup(context);
+                                    } else if (state.isAtLeast(Lifecycle.State.RESUMED)) {
+                                        Log.i("Deferred delivery task " + name);
+                                        owner.getLifecycle().removeObserver(this);
+                                        deliver();
+                                        cleanup(context);
+                                    } else
+                                        Log.i("Task deferring " + state);
                                 }
                             });
                     }
