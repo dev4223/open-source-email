@@ -77,8 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -121,9 +119,6 @@ class Core {
     private static final long YIELD_DURATION = 200L; // milliseconds
     private static final long MIN_HIDE = 60 * 1000L; // milliseconds
 
-    private static final ExecutorService executor =
-            Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
-
     static void processOperations(
             Context context,
             EntityAccount account, EntityFolder folder,
@@ -148,7 +143,9 @@ class Core {
                     Map<String, String> crumb = new HashMap<>();
                     crumb.put("name", op.name);
                     crumb.put("args", op.args);
-                    crumb.put("folder", folder.type);
+                    crumb.put("folder", op.folder + ":" + folder.type);
+                    if (op.message != null)
+                        crumb.put("message", Long.toString(op.message));
                     crumb.put("free", Integer.toString(Log.getFreeMemMb()));
                     Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.LOG, crumb);
 
@@ -1115,6 +1112,8 @@ class Core {
 
             if (uids.size() > 0) {
                 // This is done outside of JavaMail to prevent changed notifications
+                if (!ifolder.isOpen())
+                    throw new FolderClosedException(ifolder, "UID FETCH");
                 MessagingException ex = (MessagingException) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                     @Override
                     public Object doCommand(IMAPProtocol protocol) {
@@ -1916,6 +1915,8 @@ class Core {
     }
 
     static void notifyMessages(Context context, List<TupleMessageEx> messages) {
+        if (messages == null)
+            messages = new ArrayList<>();
         Log.i("Notify messages=" + messages.size());
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -2016,27 +2017,11 @@ class Core {
             }
 
             if (remove.size() + add.size() > 0) {
-                final DB db = DB.getInstance(context);
-
-                executor.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            db.beginTransaction();
-
-                            for (long id : remove)
-                                db.message().setMessageNotifying(Math.abs(id), 0);
-                            for (long id : add)
-                                db.message().setMessageNotifying(Math.abs(id), (int) Math.signum(id));
-
-                            db.setTransactionSuccessful();
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                        } finally {
-                            db.endTransaction();
-                        }
-                    }
-                });
+                DB db = DB.getInstance(context);
+                for (long id : remove)
+                    db.message().setMessageNotifying(Math.abs(id), 0);
+                for (long id : add)
+                    db.message().setMessageNotifying(Math.abs(id), (int) Math.signum(id));
             }
         }
     }

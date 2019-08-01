@@ -72,7 +72,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
-            "welcome", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "edit_ref_confirmed", "crash_reports_confirmed"
+            "welcome", "show_html_confirmed", "show_images_confirmed", "print_html_confirmed", "edit_ref_confirmed", "crash_reports_asked"
     };
 
     @Override
@@ -186,7 +186,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swCrashReports.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("crash_reports", checked).apply();
+                prefs.edit()
+                        .remove("crash_reports_asked")
+                        .putBoolean("crash_reports", checked)
+                        .apply();
                 if (checked)
                     Bugsnag.startSession();
                 else
@@ -264,22 +267,19 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             protected void onPreExecute(Bundle args) {
                 btnCleanup.setEnabled(false);
+                ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected void onPostExecute(Bundle args) {
                 btnCleanup.setEnabled(true);
+                ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
             }
 
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 WorkerCleanup.cleanup(context, true);
                 return null;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, Void data) {
-                ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
             }
 
             @Override

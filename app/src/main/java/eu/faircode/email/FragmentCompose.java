@@ -415,6 +415,7 @@ public class FragmentCompose extends FragmentBase {
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
         grpAddresses.setVisibility(View.GONE);
+        ivCcBcc.setVisibility(View.GONE);
         grpAttachments.setVisibility(View.GONE);
         tvNoInternet.setVisibility(View.GONE);
         grpBody.setVisibility(View.GONE);
@@ -1902,24 +1903,28 @@ public class FragmentCompose extends FragmentBase {
                 options.inJustDecodeBounds = false;
                 options.inSampleSize = factor;
 
-                Bitmap scaled = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
-                if (scaled != null) {
-                    Log.i("Image target size=" + scaled.getWidth() + "x" + scaled.getHeight() + " rotation=" + rotation);
+                Bitmap resized = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+                if (resized != null) {
+                    Log.i("Image target size=" + resized.getWidth() + "x" + resized.getHeight() + " rotation=" + rotation);
 
                     if (rotation != null) {
-                        Bitmap rotated = Bitmap.createBitmap(scaled, 0, 0, scaled.getWidth(), scaled.getHeight(), rotation, true);
-                        scaled.recycle();
-                        scaled = rotated;
+                        Bitmap rotated = Bitmap.createBitmap(resized, 0, 0, resized.getWidth(), resized.getHeight(), rotation, true);
+                        resized.recycle();
+                        resized = rotated;
                     }
 
-                    try (OutputStream out = new FileOutputStream(file)) {
-                        scaled.compress("image/jpeg".equals(attachment.type)
+                    File tmp = File.createTempFile(Long.toString(attachment.id), ".resized", context.getCacheDir());
+                    try (OutputStream out = new FileOutputStream(tmp)) {
+                        resized.compress("image/jpeg".equals(attachment.type)
                                         ? Bitmap.CompressFormat.JPEG
                                         : Bitmap.CompressFormat.PNG,
                                 REDUCED_IMAGE_QUALITY, out);
                     } finally {
-                        scaled.recycle();
+                        resized.recycle();
                     }
+
+                    file.delete();
+                    tmp.renameTo(file);
 
                     DB db = DB.getInstance(context);
                     db.attachment().setDownloaded(attachment.id, file.length());
@@ -2174,7 +2179,7 @@ public class FragmentCompose extends FragmentBase {
                         EntityAttachment attachment = new EntityAttachment();
                         attachment.message = draft.id;
                         attachment.sequence = 1;
-                        attachment.name = ics.getName();
+                        attachment.name = "meeting.ics";
                         attachment.type = "text/calendar";
                         attachment.disposition = Part.ATTACHMENT;
                         attachment.size = ics.length();
@@ -2274,6 +2279,7 @@ public class FragmentCompose extends FragmentBase {
 
             grpHeader.setVisibility(View.VISIBLE);
             grpAddresses.setVisibility("reply_all".equals(action) ? View.VISIBLE : View.GONE);
+            ivCcBcc.setVisibility(View.VISIBLE);
 
             bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision != null && draft.revision > 1);
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
@@ -2345,6 +2351,9 @@ public class FragmentCompose extends FragmentBase {
                                 }
                             }
 
+                            Log.i("Attachments=" + attachments.size() +
+                                    " available=" + available + " downloading=" + downloading);
+
                             // Attachment deleted
                             if (available < last_available)
                                 onAction(R.id.action_save);
@@ -2353,8 +2362,6 @@ public class FragmentCompose extends FragmentBase {
 
                             rvAttachment.setTag(downloading);
                             checkInternet();
-
-                            checkDraft(draft.id);
                         }
                     });
 
@@ -2365,10 +2372,12 @@ public class FragmentCompose extends FragmentBase {
                     if (draft == null || draft.ui_hide != 0)
                         finish();
                     else {
+                        Log.i("Draft content=" + draft.content);
+                        if (draft.content && state == State.NONE)
+                            showDraft(draft);
+
                         tvNoInternet.setTag(draft.content);
                         checkInternet();
-
-                        checkDraft(draft.id);
                     }
                 }
             });
@@ -2821,42 +2830,6 @@ public class FragmentCompose extends FragmentBase {
             }
         }
     };
-
-    private void checkDraft(long id) {
-        Bundle args = new Bundle();
-        args.putLong("id", id);
-
-        new SimpleTask<EntityMessage>() {
-            @Override
-            protected EntityMessage onExecute(Context context, Bundle args) {
-                long id = args.getLong("id");
-
-                DB db = DB.getInstance(context);
-
-                EntityMessage draft = db.message().getMessage(id);
-                if (draft == null || !draft.content)
-                    return null;
-
-                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                for (EntityAttachment attachment : attachments)
-                    if (!attachment.available)
-                        return null;
-
-                return draft;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityMessage draft) {
-                if (draft != null && state == State.NONE)
-                    showDraft(draft);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
-            }
-        }.execute(this, args, "compose:check");
-    }
 
     private void showDraft(long id) {
         Bundle args = new Bundle();

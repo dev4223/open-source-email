@@ -266,6 +266,7 @@ public interface DaoMessage {
 
     String widget = "SELECT message.*, account.name AS accountName" +
             ", SUM(1 - message.ui_seen) AS unseen" +
+            ", COUNT(message.id) - SUM(message.ui_flagged) AS unflagged" +
             ", MAX(message.received) AS dummy" +
             " FROM message" +
             " JOIN account ON account.id = message.account" +
@@ -277,7 +278,8 @@ public interface DaoMessage {
             " AND (NOT :unseen OR NOT message.ui_seen)" +
             " AND (NOT :flagged OR message.ui_flagged)" +
             " GROUP BY account.id, CASE WHEN message.thread IS NULL THEN message.id ELSE message.thread END" +
-            " ORDER BY message.received DESC";
+            " ORDER BY message.received DESC" +
+            " LIMIT 100";
 
     @Query(widget)
     @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)

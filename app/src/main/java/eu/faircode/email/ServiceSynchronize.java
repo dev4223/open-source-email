@@ -168,19 +168,25 @@ public class ServiceSynchronize extends ServiceBase {
         });
 
         db.message().liveUnseenNotify().observe(cowner, new Observer<List<TupleMessageEx>>() {
+            private ExecutorService executor =
+                    Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+
             @Override
-            public void onChanged(List<TupleMessageEx> messages) {
-                try {
-                    if (messages == null)
-                        messages = new ArrayList<>();
-                    Core.notifyMessages(ServiceSynchronize.this, messages);
-                } catch (SecurityException ex) {
-                    Log.w(ex);
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
-                    prefs.edit().remove("sound").apply();
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
+            public void onChanged(final List<TupleMessageEx> messages) {
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Core.notifyMessages(ServiceSynchronize.this, messages);
+                        } catch (SecurityException ex) {
+                            Log.w(ex);
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
+                            prefs.edit().remove("sound").apply();
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
+                    }
+                });
             }
         });
 
@@ -202,6 +208,7 @@ public class ServiceSynchronize extends ServiceBase {
                                 !m1.received.equals(m2.received) ||
                                 !Objects.equals(m1.subject, m2.subject) ||
                                 !(m1.unseen == m2.unseen) ||
+                                !(m1.unflagged == m2.unflagged) ||
                                 !Objects.equals(m1.accountName, m2.accountName)) {
                             changed = true;
                             break;
@@ -253,6 +260,7 @@ public class ServiceSynchronize extends ServiceBase {
         Log.logExtras(intent);
 
         super.onStartCommand(intent, flags, startId);
+        startForeground(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(null).build());
 
         if (action != null)
             try {
@@ -1416,51 +1424,51 @@ public class ServiceSynchronize extends ServiceBase {
     };
 
     static void boot(final Context context) {
-        if (!booted) {
-            booted = true;
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DB db = DB.getInstance(context);
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        DB db = DB.getInstance(context);
+                    // Restore notifications
+                    db.message().clearNotifyingMessages();
 
-                        // Restore notifications
-                        db.message().clearNotifyingMessages();
+                    // Restore snooze timers
+                    for (EntityMessage message : db.message().getSnoozed())
+                        EntityMessage.snooze(context, message.id, message.ui_snoozed);
 
-                        // Restore snooze timers
-                        for (EntityMessage message : db.message().getSnoozed())
-                            EntityMessage.snooze(context, message.id, message.ui_snoozed);
+                    // Restore schedule
+                    schedule(context);
 
-                        // Restore schedule
-                        schedule(context);
+                    // Conditionally init service
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean enabled = prefs.getBoolean("enabled", true);
+                    int pollInterval = prefs.getInt("poll_interval", 0);
+                    int accounts = db.account().getSynchronizingAccounts().size();
+                    if (enabled && pollInterval == 0 && accounts > 0)
+                        init(context);
+                    else {
+                        for (EntityAccount account : db.account().getAccounts())
+                            db.account().setAccountState(account.id, null);
 
-                        // Conditionally init service
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        boolean enabled = prefs.getBoolean("enabled", true);
-                        int pollInterval = prefs.getInt("poll_interval", 0);
-                        int accounts = db.account().getSynchronizingAccounts().size();
-                        if (enabled && pollInterval == 0 && accounts > 0)
-                            ContextCompat.startForegroundService(context,
-                                    new Intent(context, ServiceSynchronize.class)
-                                            .setAction("init"));
-                        else {
-                            for (EntityAccount account : db.account().getAccounts())
-                                db.account().setAccountState(account.id, null);
-
-                            for (EntityFolder folder : db.folder().getFolders()) {
-                                db.folder().setFolderState(folder.id, null);
-                                db.folder().setFolderSyncState(folder.id, null);
-                            }
+                        for (EntityFolder folder : db.folder().getFolders()) {
+                            db.folder().setFolderState(folder.id, null);
+                            db.folder().setFolderSyncState(folder.id, null);
                         }
-                    } catch (Throwable ex) {
-                        Log.e(ex);
                     }
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            }, "synchronize:boot");
-            thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-            thread.start();
-        }
+            }
+        }, "synchronize:boot");
+        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
+        thread.start();
+    }
+
+    static void init(Context context) {
+        ContextCompat.startForegroundService(context,
+                new Intent(context, ServiceSynchronize.class)
+                        .setAction("init"));
     }
 
     private static void schedule(Context context) {

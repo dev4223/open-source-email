@@ -1397,6 +1397,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             ev.setUid(event.getUid());
                             if (event.getSequence() != null)
                                 ev.setSequence(event.getSequence());
+                            if (event.getDateStart() != null)
+                                ev.setDateStart(event.getDateStart());
+                            if (event.getDateEnd() != null)
+                                ev.setDateEnd(event.getDateEnd());
 
                             InternetAddress to = (InternetAddress) message.to[0];
                             Attendee attendee = new Attendee(to.getPersonal(), to.getAddress());
@@ -1415,14 +1419,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             ev.addAttendee(attendee);
 
+                            // https://icalendar.org/validator.html
                             ICalendar response = new ICalendar();
                             response.setMethod(Method.REPLY);
                             response.addEvent(ev);
 
-                            File dir = new File(context.getFilesDir(), "temporary");
-                            if (!dir.exists())
-                                dir.mkdir();
-                            File ics = new File(dir, "meeting.ics");
+                            File ics = File.createTempFile(Long.toString(attachment.id), ".ics", context.getCacheDir());
                             response.write(ics);
 
                             return ics;

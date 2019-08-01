@@ -36,12 +36,17 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
+import com.bugsnag.android.BreadcrumbType;
+import com.bugsnag.android.Bugsnag;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -131,6 +136,15 @@ public class ServiceSend extends ServiceBase {
                                                     " start op=" + op.id + "/" + op.name +
                                                     " msg=" + op.message +
                                                     " args=" + op.args);
+
+                                            Map<String, String> crumb = new HashMap<>();
+                                            crumb.put("name", op.name);
+                                            crumb.put("args", op.args);
+                                            crumb.put("folder", op.folder + ":outbox");
+                                            if (op.message != null)
+                                                crumb.put("message", Long.toString(op.message));
+                                            crumb.put("free", Integer.toString(Log.getFreeMemMb()));
+                                            Bugsnag.leaveBreadcrumb("operation", BreadcrumbType.LOG, crumb);
 
                                             switch (op.name) {
                                                 case EntityOperation.SYNC:
@@ -225,6 +239,7 @@ public class ServiceSend extends ServiceBase {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        startForeground(Helper.NOTIFICATION_SEND, getNotificationService(null, null).build());
         return START_STICKY;
     }
 
@@ -339,7 +354,7 @@ public class ServiceSend extends ServiceBase {
         // Create transport
         try (MailService iservice = new MailService(
                 this, ident.getProtocol(), ident.realm, ident.insecure, debug)) {
-            iservice.setUseIp(ident.use_ip, ident.host);
+            iservice.setUseIp(ident.use_ip);
 
             // Connect transport
             db.identity().setIdentityState(ident.id, "connecting");
@@ -418,25 +433,21 @@ public class ServiceSend extends ServiceBase {
     }
 
     static void boot(final Context context) {
-        if (!booted) {
-            booted = true;
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        DB db = DB.getInstance(context);
-                        EntityFolder outbox = db.folder().getOutbox();
-                        if (outbox != null && db.operation().getOperations(outbox.id).size() > 0)
-                            start(context);
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                    }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    DB db = DB.getInstance(context);
+                    EntityFolder outbox = db.folder().getOutbox();
+                    if (outbox != null && db.operation().getOperations(outbox.id).size() > 0)
+                        start(context);
+                } catch (Throwable ex) {
+                    Log.e(ex);
                 }
-            }, "send:boot");
-            thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-            thread.start();
-        }
+            }
+        }, "send:boot");
+        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
+        thread.start();
     }
 
     static void start(Context context) {
