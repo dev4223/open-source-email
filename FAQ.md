@@ -936,7 +936,7 @@ If you don't mind that old messages that were delete from the server are still v
 
 Some providers don't follow the IMAP standard and don't keep connections open long enough, forcing FairEmail to reconnect often, causing extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if there are frequent reconnects.
-You can workaround this by lowering the keep-alive interval in the advanced account settings to for example 9 minutes.
+You can workaround this by lowering the keep-alive interval in the advanced account settings to for example 9 or 15 minutes.
 
 Some providers send every two minutes something like '*Still there*' resulting in network traffic and your device to wake up and causing unnecessary extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if your provider is doing this.
@@ -1504,6 +1504,13 @@ You can also automate turning synchronization on and off by sending these comman
 
 Sending these commands will automatically turn scheduling off.
 
+It is also possible to just enable/disable one account, for example the account with the name *Gmail*:
+
+```
+(adb shell) am startservice -a eu.faircode.email.ENABLE --es account Gmail
+(adb shell) am startservice -a eu.faircode.email.DISABLE --es account Gmail
+```
+
 You can automatically send commands with for example [Tasker](https://tasker.joaoapps.com/userguide/en/intents.html):
 
 ```
@@ -1512,6 +1519,14 @@ Action Category: Misc/Send Intent
 Action: eu.faircode.email.ENABLE
 Target: Service
 ```
+
+To enable/disable an account with the name *Gmail*:
+
+```
+Extras: account:Gmail
+```
+
+Account names are case sensitive.
 
 Automation can be used for more advanced schedules,
 like for example multiple synchronization periods per day or different synchronization periods for different days.

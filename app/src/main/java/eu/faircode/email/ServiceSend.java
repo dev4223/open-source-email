@@ -373,6 +373,7 @@ public class ServiceSend extends ServiceBase {
                 db.beginTransaction();
 
                 db.message().setMessageIdentity(message.id, null);
+                db.message().setMessageFrom(message.id, DB.Converters.encodeAddresses(imessage.getFrom())); // extra
                 db.message().setMessageSent(message.id, time);
                 db.message().setMessageReceiptRequested(message.id, ident.delivery_receipt || ident.read_receipt);
                 db.message().setMessageSeen(message.id, true);
@@ -453,5 +454,9 @@ public class ServiceSend extends ServiceBase {
     static void start(Context context) {
         ContextCompat.startForegroundService(context,
                 new Intent(context, ServiceSend.class));
+    }
+
+    static void watchdog(Context context) {
+        boot(context);
     }
 }

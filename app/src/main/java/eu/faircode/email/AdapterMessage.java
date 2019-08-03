@@ -1424,7 +1424,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             response.setMethod(Method.REPLY);
                             response.addEvent(ev);
 
-                            File ics = File.createTempFile(Long.toString(attachment.id), ".ics", context.getCacheDir());
+                            File ics = File.createTempFile("calendar", ".ics", context.getCacheDir());
                             response.write(ics);
 
                             return ics;
