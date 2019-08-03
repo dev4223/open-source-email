@@ -226,7 +226,7 @@ public class FragmentCompose extends FragmentBase {
         super.onCreate(savedInstanceState);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        prefix_once = prefs.getBoolean("prefix_once", false);
+        prefix_once = prefs.getBoolean("prefix_once", true);
         monospaced = prefs.getBoolean("monospaced", false);
         style = prefs.getBoolean("style_toolbar", true);
     }
@@ -787,6 +787,7 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_send_after).setVisible(state == State.LOADED);
 
         menu.findItem(R.id.menu_zoom).setEnabled(!busy);
+        menu.findItem(R.id.menu_media_toolbar).setEnabled(!busy);
         menu.findItem(R.id.menu_clear).setEnabled(!busy);
         menu.findItem(R.id.menu_contact_group).setEnabled(!busy && hasPermission(Manifest.permission.READ_CONTACTS));
         menu.findItem(R.id.menu_answer).setEnabled(!busy);
@@ -795,7 +796,6 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_send_after).setEnabled(!busy);
 
         menu.findItem(R.id.menu_media_toolbar).setChecked(style);
-
         menu.findItem(R.id.menu_plain_only).setChecked(plain_only);
         menu.findItem(R.id.menu_encrypt).setChecked(encrypt);
 
@@ -940,7 +940,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onActionTakePhoto() {
-        File dir = new File(getContext().getFilesDir(), "temporary");
+        File dir = new File(getContext().getCacheDir(), "photo");
         if (!dir.exists())
             dir.mkdir();
         File file = new File(dir, new Date().getTime() + ".jpg");
@@ -1857,8 +1857,8 @@ public class FragmentCompose extends FragmentBase {
             db.attachment().setDownloaded(attachment.id, size);
 
             if ("eu.faircode.email".equals(uri.getAuthority())) {
-                // content://eu.faircode.email/temporary/nnn.jpg
-                File tmp = new File(context.getFilesDir(), uri.getPath());
+                // content://eu.faircode.email/photo/nnn.jpg
+                File tmp = new File(context.getCacheDir(), uri.getPath());
                 Log.i("Deleting " + tmp);
                 if (!tmp.delete())
                     Log.w("Error deleting " + tmp);
@@ -1913,7 +1913,7 @@ public class FragmentCompose extends FragmentBase {
                         resized = rotated;
                     }
 
-                    File tmp = File.createTempFile(Long.toString(attachment.id), ".resized", context.getCacheDir());
+                    File tmp = File.createTempFile("image", ".resized", context.getCacheDir());
                     try (OutputStream out = new FileOutputStream(tmp)) {
                         resized.compress("image/jpeg".equals(attachment.type)
                                         ? Bitmap.CompressFormat.JPEG
@@ -2072,17 +2072,17 @@ public class FragmentCompose extends FragmentBase {
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action) ||
                                 "participation".equals(action)) {
-                            String re = context.getString(R.string.title_subject_reply, "");
-                            if (!prefix_once || !subject.startsWith(re))
-                                draft.subject = context.getString(R.string.title_subject_reply, subject);
-                            else
-                                draft.subject = ref.subject;
+                            if (prefix_once) {
+                                String re = context.getString(R.string.title_subject_reply, "");
+                                subject = subject.replace(re.trim(), "").trim();
+                            }
+                            draft.subject = context.getString(R.string.title_subject_reply, subject);
                         } else if ("forward".equals(action)) {
-                            String fwd = context.getString(R.string.title_subject_forward, "");
-                            if (!prefix_once || !subject.startsWith(fwd.trim()))
-                                draft.subject = context.getString(R.string.title_subject_forward, subject);
-                            else
-                                draft.subject = ref.subject;
+                            if (prefix_once) {
+                                String fwd = context.getString(R.string.title_subject_forward, "");
+                                subject = subject.replace(fwd.trim(), "").trim();
+                            }
+                            draft.subject = context.getString(R.string.title_subject_forward, subject);
                         } else if ("editasnew".equals(action)) {
                             draft.subject = ref.subject;
                             if (ref.content) {
