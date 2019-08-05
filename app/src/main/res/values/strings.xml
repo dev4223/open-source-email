@@ -614,11 +614,13 @@
     <string name="title_rule_recipient">Recipient contains</string>
     <string name="title_rule_subject">Subject contains</string>
     <string name="title_rule_header">Header contains</string>
+    <string name="title_rule_time">Time between</string>
     <string name="title_rule_regex">Regex</string>
     <string name="title_rule_and">AND</string>
     <string name="title_rule_action">Action</string>
     <string name="title_rule_action_remark">This action will be applied to new messages arriving in the folder %1$s</string>
     <string name="title_rule_hours">Hours</string>
+    <string name="title_rule_schedule_end">Until the end of the time condition</string>
     <string name="title_rule_folder">Folder</string>
     <string name="title_rule_thread">All messages in same conversation and folder</string>
     <string name="title_rule_identity">Identity</string>
@@ -755,6 +757,7 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
+    <string name="title_any">Any</string>
     <string name="title_executing">Executing</string>
     <string name="title_completed">Completed</string>
     <string name="title_ask_what">Ask what to do</string>

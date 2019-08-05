@@ -48,6 +48,7 @@ For authorizing:
 * ~~Search suggestions~~
 * ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
 * ~~Generic unified folders~~
+* ~~New message notification schedules per account~~ (implemented by added a time condition to rules, so messages can be snoozed in selected periods)
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -377,7 +378,8 @@ You might get the alert "*Please log in via your web browser*".
 This happens when Google considers the network that connects you to the internet (this could be a VPN) to to be unsafe.
 This can be prevented by using an app specific password.
 
-See [here](https://support.google.com/mail/accounts/answer/78754) for troubleshooting.
+See [here](https://support.google.com/mail/answer/7126229) for Google's instructions
+and [here](https://support.google.com/mail/accounts/answer/78754) for troubleshooting.
 
 See [this FAQ](#user-content-faq111) about why OAuth is not being used.
 
@@ -522,6 +524,8 @@ Searching messages is a pro feature.
 To use Outlook or Hotmail with two factor authentication enabled, you need to create an app password.
 See [here](https://support.microsoft.com/en-us/help/12409/microsoft-account-app-passwords-two-step-verification) for the details.
 
+See [here](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040) for Microsoft's instructions.
+
 <br />
 
 <a name="faq15"></a>
@@ -530,6 +534,9 @@ See [here](https://support.microsoft.com/en-us/help/12409/microsoft-account-app-
 The message header and message body are fetched separately from the server.
 The message text of larger messages is not being pre-fetched on metered connections and need to be fetched on opening the message.
 The message text will keep loading if there is no connection to the account, see also the next question.
+
+You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons)
+and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
 
 In the advanced settings you can set the maximum size for automatically downloading of messages on metered connections.
 
@@ -1531,6 +1538,12 @@ Account names are case sensitive.
 Automation can be used for more advanced schedules,
 like for example multiple synchronization periods per day or different synchronization periods for different days.
 
+It is possible to install FairEmail in multiple user profiles, for example a personal and a work profile, and to configure FairEmail differently in each profile,
+which is another possibility to have different synchronization schedules and to synchronize a different set of accounts.
+
+It is also possible to create [rules](#user-content-faq71) with a time condition and to snooze messages until the end time of the time condition.
+This way it is possible to snooze business related messages until the start of the business hours.
+
 Scheduling is a pro feature.
 
 <br />
@@ -1548,6 +1561,8 @@ This will start the synchronization service for 60 seconds for all configured ac
 The synchronization process will also be started to execute [operations](#user-content-faq3),
 for example to mark a message read, move a message or store a draft.
 This is to keep the local and remote message store synchronized.
+
+If you want to synchronize some or all folders of an account manually, just disable synchronization for the folders (but not of the account).
 
 <br />
 

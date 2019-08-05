@@ -13,13 +13,13 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 629
-        versionName "1.629"
+        versionCode 635
+        versionName "1.635"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        // Gastonia, Hypsilophodon, Iguanodon
-        buildConfigField "String", "RELEASE_NAME", "\"Fabrosaurus\""
+        // Hypsilophodon, Iguanodon
+        buildConfigField "String", "RELEASE_NAME", "\"Gastonia\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -129,6 +129,25 @@ task copyMarkdown(type: Copy) {
     include "ATTRIBUTION.md"
 }
 preBuild.dependsOn copyMarkdown
+
+task copySetup(type: Copy) {
+    from "src/main/res"
+    include '**/SETUP.md'
+    into "src/main/assets"
+    eachFile { file ->
+        file.relativePath = new RelativePath(true, "SETUP-${file.file.parentFile.name}.md")
+    }
+    includeEmptyDirs = false
+}
+preBuild.dependsOn copySetup
+
+task cleanCrowdin(type: Delete) {
+    delete fileTree("src/main/res").matching {
+        include "**/SETUP.md"
+    }
+}
+preBuild.dependsOn cleanCrowdin
+cleanCrowdin.shouldRunAfter copySetup
 
 repositories {
     google()

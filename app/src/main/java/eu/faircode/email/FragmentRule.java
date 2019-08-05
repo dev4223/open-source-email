@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.app.Dialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -30,6 +31,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +40,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -45,12 +48,15 @@ import android.widget.NumberPicker;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,7 +67,10 @@ import com.google.android.material.snackbar.Snackbar;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -92,10 +101,15 @@ public class FragmentRule extends FragmentBase {
     private EditText etHeader;
     private CheckBox cbHeader;
 
+    private Spinner spScheduleDay;
+    private TextView tvScheduleStart;
+    private TextView tvScheduleEnd;
+
     private Spinner spAction;
     private TextView tvActionRemark;
 
     private NumberPicker npDuration;
+    private CheckBox cbScheduleEnd;
 
     private Button btnColor;
     private View vwColor;
@@ -123,6 +137,7 @@ public class FragmentRule extends FragmentBase {
     private Group grpAnswer;
     private Group grpAutomation;
 
+    private ArrayAdapter<String> adapterDay;
     private ArrayAdapter<Action> adapterAction;
     private ArrayAdapter<EntityFolder> adapterTarget;
     private ArrayAdapter<EntityIdentity> adapterIdentity;
@@ -139,6 +154,8 @@ public class FragmentRule extends FragmentBase {
     private static final int REQUEST_RECIPIENT = 2;
     private static final int REQUEST_COLOR = 3;
     private final static int REQUEST_DELETE = 4;
+    private final static int REQUEST_SCHEDULE_START = 5;
+    private final static int REQUEST_SCHEDULE_END = 6;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -182,12 +199,15 @@ public class FragmentRule extends FragmentBase {
         etHeader = view.findViewById(R.id.etHeader);
         cbHeader = view.findViewById(R.id.cbHeader);
 
+        spScheduleDay = view.findViewById(R.id.spScheduleDay);
+        tvScheduleStart = view.findViewById(R.id.tvScheduleStart);
+        tvScheduleEnd = view.findViewById(R.id.tvScheduleEnd);
+
         spAction = view.findViewById(R.id.spAction);
         tvActionRemark = view.findViewById(R.id.tvActionRemark);
 
         npDuration = view.findViewById(R.id.npDuration);
-        npDuration.setMinValue(1);
-        npDuration.setMaxValue(99);
+        cbScheduleEnd = view.findViewById(R.id.cbScheduleEnd);
 
         btnColor = view.findViewById(R.id.btnColor);
         vwColor = view.findViewById(R.id.vwColor);
@@ -238,6 +258,10 @@ public class FragmentRule extends FragmentBase {
             }
         });
 
+        adapterDay = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<String>());
+        adapterDay.setDropDownViewResource(R.layout.spinner_item1_dropdown);
+        spScheduleDay.setAdapter(adapterDay);
+
         adapterAction = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<Action>());
         adapterAction.setDropDownViewResource(R.layout.spinner_item1_dropdown);
         spAction.setAdapter(adapterAction);
@@ -253,6 +277,37 @@ public class FragmentRule extends FragmentBase {
         adapterAnswer = new ArrayAdapter<>(getContext(), R.layout.spinner_item1, android.R.id.text1, new ArrayList<EntityAnswer>());
         adapterAnswer.setDropDownViewResource(R.layout.spinner_item1_dropdown);
         spAnswer.setAdapter(adapterAnswer);
+
+        adapterDay.add(getString(R.string.title_any));
+        String[] dayNames = DateFormatSymbols.getInstance().getWeekdays();
+        for (int day = Calendar.SUNDAY; day <= Calendar.SATURDAY; day++)
+            adapterDay.add(dayNames[day]);
+
+        tvScheduleStart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Object time = v.getTag();
+                Bundle args = new Bundle();
+                args.putLong("minutes", time == null ? 0 : (int) time);
+                DialogFragment timePicker = new TimePickerFragment();
+                timePicker.setArguments(args);
+                timePicker.setTargetFragment(FragmentRule.this, REQUEST_SCHEDULE_START);
+                timePicker.show(getFragmentManager(), "timePicker");
+            }
+        });
+
+        tvScheduleEnd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Object time = v.getTag();
+                Bundle args = new Bundle();
+                args.putLong("minutes", time == null ? 0 : (int) time);
+                DialogFragment timePicker = new TimePickerFragment();
+                timePicker.setArguments(args);
+                timePicker.setTargetFragment(FragmentRule.this, REQUEST_SCHEDULE_END);
+                timePicker.show(getFragmentManager(), "timePicker");
+            }
+        });
 
         List<Action> actions = new ArrayList<>();
         actions.add(new Action(EntityRule.TYPE_SEEN, getString(R.string.title_rule_seen)));
@@ -290,6 +345,16 @@ public class FragmentRule extends FragmentBase {
                         scroll.smoothScrollTo(0, content.getBottom());
                     }
                 });
+            }
+        });
+
+        npDuration.setMinValue(1);
+        npDuration.setMaxValue(99);
+
+        cbScheduleEnd.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                npDuration.setEnabled(!checked);
             }
         });
 
@@ -443,6 +508,14 @@ public class FragmentRule extends FragmentBase {
                     if (resultCode == RESULT_OK)
                         onDelete();
                     break;
+                case REQUEST_SCHEDULE_START:
+                    if (resultCode == RESULT_OK)
+                        onScheduleStart(data);
+                    break;
+                case REQUEST_SCHEDULE_END:
+                    if (resultCode == RESULT_OK)
+                        onScheduleEnd(data);
+                    break;
             }
         } catch (Throwable ex) {
             Log.e(ex);
@@ -511,6 +584,20 @@ public class FragmentRule extends FragmentBase {
         }.execute(FragmentRule.this, args, "rule:delete");
     }
 
+    private void onScheduleStart(Intent data) {
+        int minutes = data.getIntExtra("minutes", 0);
+        tvScheduleStart.setTag(minutes);
+        tvScheduleStart.setText(formatHour(getContext(), minutes));
+        cbScheduleEnd.setChecked(true);
+    }
+
+    private void onScheduleEnd(Intent data) {
+        int minutes = data.getIntExtra("minutes", 0);
+        tvScheduleEnd.setTag(minutes);
+        tvScheduleEnd.setText(formatHour(getContext(), minutes));
+        cbScheduleEnd.setChecked(true);
+    }
+
     private void loadRule() {
         Bundle rargs = new Bundle();
         rargs.putLong("id", id);
@@ -535,6 +622,7 @@ public class FragmentRule extends FragmentBase {
                     JSONObject jrecipient = jcondition.optJSONObject("recipient");
                     JSONObject jsubject = jcondition.optJSONObject("subject");
                     JSONObject jheader = jcondition.optJSONObject("header");
+                    JSONObject jschedule = jcondition.optJSONObject("schedule");
 
                     etName.setText(rule == null ? args.getString("subject") : rule.name);
                     etOrder.setText(rule == null ? null : Integer.toString(rule.order));
@@ -553,6 +641,15 @@ public class FragmentRule extends FragmentBase {
                     etHeader.setText(jheader == null ? null : jheader.getString("value"));
                     cbHeader.setChecked(jheader != null && jheader.getBoolean("regex"));
 
+                    if (jschedule != null && jschedule.has("day"))
+                        spScheduleDay.setSelection(jschedule.getInt("day") + 1);
+                    int start = (jschedule != null && jschedule.has("start") ? jschedule.getInt("start") : 0);
+                    tvScheduleStart.setTag(start);
+                    tvScheduleStart.setText(formatHour(getContext(), start));
+                    int end = (jschedule != null && jschedule.has("end") ? jschedule.getInt("end") : 0);
+                    tvScheduleEnd.setTag(end);
+                    tvScheduleEnd.setText(formatHour(getContext(), end));
+
                     if (rule == null) {
                         for (int pos = 0; pos < adapterIdentity.getCount(); pos++)
                             if (adapterIdentity.getItem(pos).primary) {
@@ -564,6 +661,7 @@ public class FragmentRule extends FragmentBase {
                         switch (type) {
                             case EntityRule.TYPE_SNOOZE:
                                 npDuration.setValue(jaction.getInt("duration"));
+                                cbScheduleEnd.setChecked(jaction.optBoolean("schedule_end", false));
                                 break;
 
                             case EntityRule.TYPE_FLAG:
@@ -721,8 +819,9 @@ public class FragmentRule extends FragmentBase {
                     JSONObject jrecipient = jcondition.optJSONObject("recipient");
                     JSONObject jsubject = jcondition.optJSONObject("subject");
                     JSONObject jheader = jcondition.optJSONObject("header");
+                    JSONObject jschedule = jcondition.optJSONObject("schedule");
 
-                    if (jsender == null && jrecipient == null && jsubject == null && jheader == null)
+                    if (jsender == null && jrecipient == null && jsubject == null && jheader == null && jschedule == null)
                         throw new IllegalArgumentException(context.getString(R.string.title_rule_condition_missing));
 
                     if (TextUtils.isEmpty(order))
@@ -807,6 +906,21 @@ public class FragmentRule extends FragmentBase {
             jcondition.put("header", jheader);
         }
 
+        int day = spScheduleDay.getSelectedItemPosition();
+        Object start = tvScheduleStart.getTag();
+        Object end = tvScheduleEnd.getTag();
+        if (start == null)
+            start = 0;
+        if (end == null)
+            end = 0;
+        if (!(day == 0 && start.equals(end))) {
+            JSONObject jschedule = new JSONObject();
+            jschedule.put("day", spScheduleDay.getSelectedItemPosition() - 1);
+            jschedule.put("start", (int) start);
+            jschedule.put("end", (int) end);
+            jcondition.put("schedule", jschedule);
+        }
+
         return jcondition;
     }
 
@@ -819,6 +933,7 @@ public class FragmentRule extends FragmentBase {
             switch (action.type) {
                 case EntityRule.TYPE_SNOOZE:
                     jaction.put("duration", npDuration.getValue());
+                    jaction.put("schedule_end", cbScheduleEnd.isChecked());
                     break;
 
                 case EntityRule.TYPE_FLAG:
@@ -871,7 +986,45 @@ public class FragmentRule extends FragmentBase {
         }
     }
 
-    public static class FragmentDialogCheck extends DialogFragmentEx {
+    private String formatHour(Context context, int minutes) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, minutes / 60);
+        cal.set(Calendar.MINUTE, minutes % 60);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(cal.getTime());
+    }
+
+    public static class TimePickerFragment extends FragmentDialogEx implements TimePickerDialog.OnTimeSetListener {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            Bundle args = getArguments();
+            int minutes = args.getInt("minutes");
+
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, minutes / 60);
+            cal.set(Calendar.MINUTE, minutes % 60);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+
+            return new TimePickerDialog(getContext(), this,
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE),
+                    DateFormat.is24HourFormat(getContext()));
+        }
+
+        public void onTimeSet(TimePicker view, int hour, int minute) {
+            Fragment target = getTargetFragment();
+            if (target != null) {
+                Intent data = new Intent();
+                data.putExtra("minutes", hour * 60 + minute);
+                target.onActivityResult(getTargetRequestCode(), RESULT_OK, data);
+            }
+        }
+    }
+
+    public static class FragmentDialogCheck extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

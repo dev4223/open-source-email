@@ -168,6 +168,7 @@ public class ServiceSynchronize extends ServiceBase {
         });
 
         db.message().liveUnseenNotify().observe(cowner, new Observer<List<TupleMessageEx>>() {
+            private Map<String, List<Long>> groupNotifying = new HashMap<>();
             private ExecutorService executor =
                     Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
@@ -177,7 +178,7 @@ public class ServiceSynchronize extends ServiceBase {
                     @Override
                     public void run() {
                         try {
-                            Core.notifyMessages(ServiceSynchronize.this, messages);
+                            Core.notifyMessages(ServiceSynchronize.this, messages, groupNotifying);
                         } catch (SecurityException ex) {
                             Log.w(ex);
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
@@ -190,7 +191,7 @@ public class ServiceSynchronize extends ServiceBase {
             }
         });
 
-        db.message().liveWidgetUnified(false, false).observe(cowner, new Observer<List<TupleMessageWidget>>() {
+        db.message().liveWidgetUnified(false, false).observe(this, new Observer<List<TupleMessageWidget>>() {
             private List<TupleMessageWidget> last = null;
 
             @Override
