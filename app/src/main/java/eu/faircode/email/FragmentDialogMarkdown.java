@@ -14,10 +14,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 import io.noties.markwon.Markwon;
 
-public class FragmentDialogMarkdown extends DialogFragmentEx {
+public class FragmentDialogMarkdown extends FragmentDialogEx {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -50,6 +53,25 @@ public class FragmentDialogMarkdown extends DialogFragmentEx {
             @Override
             protected Spanned onExecute(Context context, Bundle args) throws Throwable {
                 String name = args.getString("name");
+                String[] c = name.split("\\.");
+
+                List<String> assets = Arrays.asList(getResources().getAssets().list(""));
+
+                String country = Locale.getDefault().getCountry();
+                String language = Locale.getDefault().getLanguage();
+
+                String localized = c[0] + "-" + language + "-" + country + "." + c[1];
+                Log.i("Checking " + localized);
+                if (assets.contains(localized))
+                    name = localized;
+                else {
+                    localized = c[0] + "-" + language + "." + c[1];
+                    Log.i("Checking " + localized);
+                    if (assets.contains(localized))
+                        name = localized;
+                }
+                Log.i("Using " + name);
+
                 try (InputStream is = context.getAssets().open(name)) {
                     byte[] buffer = new byte[is.available()];
                     is.read(buffer);

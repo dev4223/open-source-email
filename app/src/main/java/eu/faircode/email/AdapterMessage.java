@@ -671,6 +671,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivExpander.setVisibility(View.GONE);
 
             // Line 1
+            boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
+            Address[] addresses = (outgoing ? message.to : message.senders);
+            tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
             Long size = ("size".equals(sort) ? message.totalSize : message.size);
             tvSize.setText(size == null ? null : Helper.humanReadableByteCount(size, true));
             tvSize.setVisibility(size == null || (message.content && !"size".equals(sort)) ? View.GONE : View.VISIBLE);
@@ -772,8 +775,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             // Contact info
-            boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
-            Address[] addresses = (outgoing ? message.to : message.from);
             ContactInfo info = ContactInfo.get(context, addresses, true);
             if (info == null) {
                 Bundle aargs = new Bundle();
@@ -783,9 +784,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 new SimpleTask<ContactInfo>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
-                        Address[] addresses = (Address[]) args.getSerializable("addresses");
+                        //Address[] addresses = (Address[]) args.getSerializable("addresses");
                         ivAvatar.setVisibility(View.GONE);
-                        tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
+                        //tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
                     }
 
                     @Override
@@ -917,7 +918,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivAvatar.setVisibility(View.VISIBLE);
             } else
                 ivAvatar.setVisibility(View.GONE);
-            tvFrom.setText(info.getDisplayName(name_email));
+            //tvFrom.setText(info.getDisplayName(name_email));
         }
 
         private void bindExpanded(final TupleMessageEx message) {
@@ -980,7 +981,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Addresses
             ivExpanderAddress.setImageLevel(show_addresses ? 0 /* less */ : 1 /* more */);
 
-            String from = MessageHelper.formatAddresses(message.from);
+            String from = MessageHelper.formatAddresses(message.senders);
             String to = MessageHelper.formatAddresses(message.to);
             String replyto = MessageHelper.formatAddresses(message.reply);
             String cc = MessageHelper.formatAddresses(message.cc);
@@ -3481,7 +3482,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void finish();
     }
 
-    public static class FragmentDialogLink extends DialogFragmentEx {
+    public static class FragmentDialogLink extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3658,7 +3659,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentDialogImage extends DialogFragmentEx {
+    public static class FragmentDialogImage extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3690,7 +3691,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentDialogFull extends DialogFragmentEx {
+    public static class FragmentDialogFull extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3724,7 +3725,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentDialogWebView extends DialogFragmentEx {
+    public static class FragmentDialogWebView extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3889,7 +3890,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentKeywordManage extends DialogFragmentEx {
+    public static class FragmentKeywordManage extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3984,7 +3985,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentKeywordAdd extends DialogFragmentEx {
+    public static class FragmentKeywordAdd extends FragmentDialogEx {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {

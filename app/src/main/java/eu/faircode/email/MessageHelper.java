@@ -599,17 +599,26 @@ public class MessageHelper {
             return "";
 
         List<String> formatted = new ArrayList<>();
-        for (Address address : addresses)
-            if (address instanceof InternetAddress) {
-                InternetAddress a = (InternetAddress) address;
-                String personal = a.getPersonal();
+        for (int i = 0; i < addresses.length; i++) {
+            boolean duplicate = false;
+            for (int j = 0; j < i; j++)
+                if (addresses[i].equals(addresses[j])) {
+                    duplicate = true;
+                    break;
+                }
+            if (duplicate)
+                continue;
+
+            if (addresses[i] instanceof InternetAddress) {
+                InternetAddress address = (InternetAddress) addresses[i];
+                String personal = address.getPersonal();
                 if (TextUtils.isEmpty(personal))
-                    formatted.add(a.getAddress());
+                    formatted.add(address.getAddress());
                 else {
                     if (compose) {
                         boolean quote = false;
-                        for (int i = 0; i < personal.length(); i++)
-                            if ("()<>,;:\\\"[]@".indexOf(personal.charAt(i)) >= 0) {
+                        for (int c = 0; c < personal.length(); c++)
+                            if ("()<>,;:\\\"[]@".indexOf(personal.charAt(c)) >= 0) {
                                 quote = true;
                                 break;
                             }
@@ -618,12 +627,13 @@ public class MessageHelper {
                     }
 
                     if (full)
-                        formatted.add(personal + " <" + a.getAddress() + ">");
+                        formatted.add(personal + " <" + address.getAddress() + ">");
                     else
                         formatted.add(personal);
                 }
             } else
-                formatted.add(address.toString());
+                formatted.add(addresses[i].toString());
+        }
         return TextUtils.join(", ", formatted);
     }
 
@@ -790,13 +800,11 @@ public class MessageHelper {
                 ContentType ct = new ContentType(part.getContentType());
                 String charset = ct.getParameter("charset");
 
-                String encoding = null;
-                try {
-                    String[] enc = part.getHeader("Content-Transfer-Encoding");
-                    if (enc != null && enc.length > 0)
-                        encoding = enc[0];
-                } catch (MessagingException ex) {
-                    Log.w(ex);
+                // Fix common mistakes
+                if (charset != null) {
+                    charset = charset.replace("\"", "");
+                    if ("ASCII".equals(charset.toUpperCase()))
+                        charset = "us-ascii";
                 }
 
                 if (TextUtils.isEmpty(charset) || "US-ASCII".equals(charset.toUpperCase())) {

@@ -39,6 +39,7 @@ import androidx.preference.PreferenceManager;
 
 import com.bugsnag.android.BreadcrumbType;
 import com.bugsnag.android.Bugsnag;
+import com.sun.mail.iap.BadCommandException;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.Response;
@@ -265,7 +266,11 @@ class Core {
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
+                                ex.getCause() instanceof BadCommandException ||
                                 ex.getCause() instanceof CommandFailedException) {
+                            // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
+                            // com.sun.mail.iap.CommandFailedException: AY3 NO [CANNOT] Cannot APPEND to a SPAM folder
+                            // com.sun.mail.iap.CommandFailedException: B16 NO [ALERT] Cannot MOVE messages out of the Drafts folder
                             Log.w("Unrecoverable");
 
                             // There is no use in repeating
@@ -645,6 +650,8 @@ class Core {
         // Delete message
         DB db = DB.getInstance(context);
 
+        boolean deleted = false;
+
         if (message.uid != null) {
             Message iexisting = ifolder.getMessageByUID(message.uid);
             if (iexisting == null)
@@ -653,12 +660,13 @@ class Core {
                 try {
                     Log.i(folder.name + " deleting uid=" + message.uid);
                     iexisting.setFlag(Flags.Flag.DELETED, true);
+                    deleted = true;
                 } catch (MessageRemovedException ignored) {
                     Log.w(folder.name + " existing gone uid=" + message.uid);
                 }
         }
 
-        if (!TextUtils.isEmpty(message.msgid)) {
+        if (!TextUtils.isEmpty(message.msgid) && !deleted) {
             Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
             if (imessages == null)
                 Log.w(folder.name + " search for msgid=" + message.msgid + " returned null");
@@ -795,6 +803,8 @@ class Core {
                 Folder ifolder = istore.getFolder(folder.name);
                 if (!ifolder.exists())
                     ifolder.create(Folder.HOLDS_MESSAGES);
+                if (subscribed_only)
+                    ifolder.setSubscribed(true);
                 db.folder().resetFolderTbc(folder.id);
                 local.put(folder.name, folder);
                 sync_folders = true;
@@ -1917,7 +1927,7 @@ class Core {
         }
     }
 
-    static void notifyMessages(Context context, List<TupleMessageEx> messages) {
+    static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<String, List<Long>> groupNotifying) {
         if (messages == null)
             messages = new ArrayList<>();
         Log.i("Notify messages=" + messages.size());
@@ -1932,7 +1942,6 @@ class Core {
 
         // Current
         int unseen = 0;
-        final Map<String, List<Long>> groupNotifying = new HashMap<>();
         Map<String, List<TupleMessageEx>> groupMessages = new HashMap<>();
         for (TupleMessageEx message : messages) {
             if (!(message.ui_seen || message.ui_ignored || message.ui_hide != 0))
@@ -1979,7 +1988,7 @@ class Core {
             List<Notification> notifications = getNotificationUnseen(context, group, groupMessages.get(group));
 
             final List<Long> add = new ArrayList<>();
-            final List<Long> remove = groupNotifying.get(group);
+            final List<Long> remove = new ArrayList<>(groupNotifying.get(group));
 
             for (Notification notification : notifications) {
                 Long id = notification.extras.getLong("id", 0);
@@ -2021,10 +2030,14 @@ class Core {
 
             if (remove.size() + add.size() > 0) {
                 DB db = DB.getInstance(context);
-                for (long id : remove)
+                for (long id : remove) {
+                    groupNotifying.get(group).remove(id);
                     db.message().setMessageNotifying(Math.abs(id), 0);
-                for (long id : add)
+                }
+                for (long id : add) {
+                    groupNotifying.get(group).add(id);
                     db.message().setMessageNotifying(Math.abs(id), (int) Math.signum(id));
+                }
             }
         }
     }
@@ -2078,6 +2091,7 @@ class Core {
                             .setContentTitle(title)
                             .setContentIntent(piSummary)
                             .setNumber(messages.size())
+                            .setShowWhen(false)
                             .setDeleteIntent(piClear)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_STATUS)
@@ -2204,7 +2218,10 @@ class Core {
                         .setSubText(message.accountName + " · " + folderName);
             }
 
-            if (notify_trash) {
+            DB db = DB.getInstance(context);
+
+            if (notify_trash &&
+                    db.folder().getFolderByType(message.account, EntityFolder.TRASH) != null) {
                 Intent trash = new Intent(context, ServiceUI.class)
                         .setAction("trash:" + message.id)
                         .putExtra("group", group);
@@ -2216,7 +2233,8 @@ class Core {
                 mbuilder.addAction(actionTrash.build());
             }
 
-            if (notify_archive) {
+            if (notify_archive &&
+                    db.folder().getFolderByType(message.account, EntityFolder.ARCHIVE) != null) {
                 Intent archive = new Intent(context, ServiceUI.class)
                         .setAction("archive:" + message.id)
                         .putExtra("group", group);
@@ -2228,7 +2246,8 @@ class Core {
                 mbuilder.addAction(actionArchive.build());
             }
 
-            if (notify_reply && message.content) {
+            if (notify_reply && message.content &&
+                    db.identity().getComposableIdentities(message.account).size() > 0) {
                 Intent reply = new Intent(context, ActivityCompose.class)
                         .putExtra("action", "reply")
                         .putExtra("reference", message.id);
