@@ -71,10 +71,8 @@ public class ViewModelMessages extends ViewModel {
         if (model == null || !model.args.equals(args)) {
             Log.i("Creating model=" + viewType + " replace=" + (model != null));
 
-            if (model != null) {
+            if (model != null)
                 model.list.removeObservers(owner);
-                model.clear();
-            }
 
             DB db = DB.getInstance(context);
 
@@ -174,7 +172,7 @@ public class ViewModelMessages extends ViewModel {
 
                 if (viewType == AdapterMessage.ViewType.THREAD || lowmem) {
                     Log.i("Remove model=" + viewType);
-                    remove(viewType);
+                    models.remove(viewType);
                 }
 
                 dump();
@@ -182,10 +180,10 @@ public class ViewModelMessages extends ViewModel {
         });
 
         if (viewType == AdapterMessage.ViewType.UNIFIED) {
-            remove(AdapterMessage.ViewType.FOLDER);
-            remove(AdapterMessage.ViewType.SEARCH);
+            models.remove(AdapterMessage.ViewType.FOLDER);
+            models.remove(AdapterMessage.ViewType.SEARCH);
         } else if (viewType == AdapterMessage.ViewType.FOLDER)
-            remove(AdapterMessage.ViewType.SEARCH);
+            models.remove(AdapterMessage.ViewType.SEARCH);
 
         if (viewType != AdapterMessage.ViewType.THREAD) {
             last = viewType;
@@ -201,15 +199,7 @@ public class ViewModelMessages extends ViewModel {
     @Override
     protected void onCleared() {
         for (AdapterMessage.ViewType viewType : new ArrayList<>(models.keySet()))
-            remove(viewType);
-    }
-
-    private void remove(AdapterMessage.ViewType viewType) {
-        Model model = models.get(viewType);
-        if (model != null) {
-            model.clear();
             models.remove(viewType);
-        }
     }
 
     void observePrevNext(LifecycleOwner owner, final long id, final IPrevNext intf) {
@@ -275,7 +265,10 @@ public class ViewModelMessages extends ViewModel {
             protected List<Long> onExecute(Context context, Bundle args) {
                 List<Long> ids = new ArrayList<>();
 
-                LimitOffsetDataSource<TupleMessageEx> ds = (LimitOffsetDataSource<TupleMessageEx>) model.list.getValue().getDataSource();
+                PagedList<TupleMessageEx> plist = model.list.getValue();
+                if (plist == null)
+                    return ids;
+                LimitOffsetDataSource<TupleMessageEx> ds = (LimitOffsetDataSource<TupleMessageEx>) plist.getDataSource();
                 int count = ds.countItems();
                 for (int i = 0; i < count; i += 100)
                     for (TupleMessageEx message : ds.loadRange(i, Math.min(100, count - i)))
@@ -385,19 +378,22 @@ public class ViewModelMessages extends ViewModel {
             this.boundary = boundary;
         }
 
-        void setCallback(BoundaryCallbackMessages.IBoundaryCallbackMessages callback) {
-            if (boundary != null)
+        void setCallback(LifecycleOwner owner, BoundaryCallbackMessages.IBoundaryCallbackMessages callback) {
+            if (boundary != null) {
                 boundary.setCallback(callback);
+
+                owner.getLifecycle().addObserver(new LifecycleObserver() {
+                    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                    public void onDestroyed() {
+                        boundary.close();
+                    }
+                });
+            }
         }
 
         void setObserver(LifecycleOwner owner, @NonNull Observer<PagedList<TupleMessageEx>> observer) {
             //list.removeObservers(owner);
             list.observe(owner, observer);
-        }
-
-        private void clear() {
-            if (this.boundary != null)
-                this.boundary.clear();
         }
     }
 

@@ -52,6 +52,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.format.DateUtils;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.LinkMovementMethod;
 import android.text.style.DynamicDrawableSpan;
@@ -60,6 +61,7 @@ import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.URLSpan;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -218,8 +220,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
-            View.OnClickListener,
-            BottomNavigationView.OnNavigationItemSelectedListener, View.OnLongClickListener {
+            View.OnClickListener, View.OnLongClickListener, View.OnKeyListener,
+            BottomNavigationView.OnNavigationItemSelectedListener {
         private View view;
         private View vwColor;
         private ImageView ivExpander;
@@ -477,6 +479,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     view.setTouchDelegate(new TouchDelegate(rect, touch));
                 }
             });
+            view.setOnKeyListener(this);
 
             ivSnoozed.setOnClickListener(this);
             ivFlagged.setOnClickListener(this);
@@ -505,11 +508,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void unwire() {
-            if (viewType == ViewType.THREAD) {
-                vwColor.setOnClickListener(null);
-                ivExpander.setOnClickListener(null);
-            } else
-                view.setOnClickListener(null);
+            final View touch = (viewType == ViewType.THREAD ? ivExpander : vwColor);
+            touch.setOnClickListener(null);
+            view.setOnKeyListener(null);
 
             ivSnoozed.setOnClickListener(null);
             ivFlagged.setOnClickListener(null);
@@ -673,7 +674,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Line 1
             boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
             Address[] addresses = (outgoing ? message.to : message.senders);
-            tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
+            tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             Long size = ("size".equals(sort) ? message.totalSize : message.size);
             tvSize.setText(size == null ? null : Helper.humanReadableByteCount(size, true));
             tvSize.setVisibility(size == null || (message.content && !"size".equals(sort)) ? View.GONE : View.VISIBLE);
@@ -786,7 +787,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onPreExecute(Bundle args) {
                         //Address[] addresses = (Address[]) args.getSerializable("addresses");
                         ivAvatar.setVisibility(View.GONE);
-                        //tvFrom.setText(MessageHelper.formatAddresses(addresses, !compact, false));
+                        //tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
                     }
 
                     @Override
@@ -1594,13 +1595,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             return false;
         }
 
+        @Override
+        public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
+            if (keyEvent.getAction() == KeyEvent.ACTION_DOWN &&
+                    (keyCode == KeyEvent.KEYCODE_ENTER ||
+                            keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                            keyCode == KeyEvent.KEYCODE_BUTTON_A)) {
+                onClick(view);
+                return true;
+            } else
+                return false;
+        }
+
         private void onShowSnoozed(TupleMessageEx message) {
             if (message.ui_snoozed != null) {
                 DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
                 DateFormat D = new SimpleDateFormat("E");
                 Snackbar.make(
                         parentFragment.getView(),
-                        D.format(message.ui_snoozed) + " " + DTF.format(message.ui_snoozed),
+                        D.format(message.ui_snoozed) + " " + DTF.format(message.ui_snoozed) + " - " +
+                                DateUtils.getRelativeTimeSpanString(
+                                        message.ui_snoozed,
+                                        System.currentTimeMillis(),
+                                        DateUtils.MINUTE_IN_MILLIS,
+                                        DateUtils.FORMAT_ABBREV_RELATIVE),
                         Snackbar.LENGTH_LONG).show();
             }
         }
