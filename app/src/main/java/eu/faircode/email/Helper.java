@@ -114,7 +114,7 @@ public class Helper {
     static final int BUFFER_SIZE = 8192; // Same as in Files class
 
     static final String FAQ_URI = "https://github.com/M66B/FairEmail/blob/master/FAQ.md";
-    static final String XDA_URI = "https://forum.xda-developers.com/android/apps-games/source-email-t3824168";
+    static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
 
     static ThreadFactory backgroundThreadFactory = new ThreadFactory() {
         private final AtomicInteger threadId = new AtomicInteger();
@@ -124,17 +124,6 @@ public class Helper {
             Thread thread = new Thread(runnable);
             thread.setName("FairEmail_bg_" + threadId.getAndIncrement());
             thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-            return thread;
-        }
-    };
-
-    static ThreadFactory foregroundThreadFactory = new ThreadFactory() {
-        private final AtomicInteger threadId = new AtomicInteger();
-
-        @Override
-        public Thread newThread(@NonNull Runnable runnable) {
-            Thread thread = new Thread(runnable);
-            thread.setName("FairEmail_fg_" + threadId.getAndIncrement());
             return thread;
         }
     };
@@ -239,7 +228,7 @@ public class Helper {
     }
 
     static Intent getIntentIssue(Context context) {
-        if (BuildConfig.BETA_RELEASE) {
+        if (BuildConfig.BETA_RELEASE && hasValidFingerprint(context)) {
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
@@ -549,7 +538,7 @@ public class Helper {
     }
 
     static String readStream(InputStream is, String charset) throws IOException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ByteArrayOutputStream os = new ByteArrayOutputStream(Math.max(BUFFER_SIZE, is.available()));
         byte[] buffer = new byte[BUFFER_SIZE];
         for (int len = is.read(buffer); len != -1; len = is.read(buffer))
             os.write(buffer, 0, len);

@@ -73,12 +73,15 @@ public class ApplicationEx extends Application {
 
         logMemory("App create version=" + BuildConfig.VERSION_NAME);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final boolean crash_reports = prefs.getBoolean("crash_reports", false);
+
         prev = Thread.getDefaultUncaughtExceptionHandler();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable ex) {
-                if (ownFault(ex)) {
+                if (!crash_reports && ownFault(ex)) {
                     Log.e(ex);
 
                     if (BuildConfig.BETA_RELEASE ||
@@ -199,7 +202,10 @@ public class ApplicationEx extends Application {
 
                     if (ex instanceof MessagingException &&
                             ("connection failure".equals(ex.getMessage()) ||
-                                    "failed to create new store connection".equals(ex.getMessage())))
+                                    "failed to create new store connection".equals(ex.getMessage()) ||
+                                    "Failed to fetch headers".equals(ex.getMessage()) ||
+                                    "Failed to load IMAP envelope".equals(ex.getMessage()) ||
+                                    "Unable to load BODYSTRUCTURE".equals(ex.getMessage())))
                         return false;
 
                     if (ex instanceof IllegalStateException &&

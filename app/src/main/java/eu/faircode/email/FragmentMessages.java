@@ -1255,10 +1255,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             int flags = 0;
             if (swipes.swipe_left != null &&
-                    (swipes.swipe_left < 0 || !swipes.swipe_left.equals(message.folder)))
+                    (swipes.swipe_left < 0 ||
+                            (swipes.left_type != null && !swipes.swipe_left.equals(message.folder))))
                 flags |= ItemTouchHelper.LEFT;
             if (swipes.swipe_right != null &&
-                    (swipes.swipe_right < 0 || !swipes.swipe_right.equals(message.folder)))
+                    (swipes.swipe_right < 0 ||
+                            (swipes.right_type != null && !swipes.swipe_right.equals(message.folder))))
                 flags |= ItemTouchHelper.RIGHT;
 
             return makeMovementFlags(0, flags);
@@ -1726,7 +1728,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
         args.putBoolean("seen", seen);
 
-        selectionTracker.clearSelection();
+        if (selectionTracker != null)
+            selectionTracker.clearSelection();
 
         new SimpleTask<Void>() {
             @Override
@@ -2776,7 +2779,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 getContext(), getViewLifecycleOwner(),
                 viewType, type, account, folder, thread, id, query, server);
 
-        vmodel.setCallback(callback);
+        vmodel.setCallback(getViewLifecycleOwner(), callback);
         vmodel.setObserver(getViewLifecycleOwner(), observer);
     }
 
