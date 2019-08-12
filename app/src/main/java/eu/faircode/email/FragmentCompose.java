@@ -129,8 +129,10 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
@@ -1948,6 +1950,12 @@ public class FragmentCompose extends FragmentBase {
 
             Log.i("Load draft action=" + action + " id=" + id + " reference=" + reference);
 
+            Map<String, String> crumb = new HashMap<>();
+            crumb.put("draft", Long.toString(id));
+            crumb.put("reference", Long.toString(reference));
+            crumb.put("action", action);
+            Log.breadcrumb("compose", crumb);
+
             EntityMessage draft;
 
             DB db = DB.getInstance(context);
@@ -2480,9 +2488,12 @@ public class FragmentCompose extends FragmentBase {
                 if (draft.account != aid && aid >= 0) {
                     Log.i("Account changed");
 
-                    // To prevent violating constraints
                     Long uid = draft.uid;
                     String msgid = draft.msgid;
+                    boolean content = draft.content;
+                    long ui_hide = draft.ui_hide;
+
+                    // To prevent violating constraints
                     draft.uid = null;
                     draft.msgid = null;
                     db.message().updateMessage(draft);
@@ -2494,7 +2505,7 @@ public class FragmentCompose extends FragmentBase {
                     draft.content = false;
                     draft.ui_hide = new Date().getTime();
                     draft.id = db.message().insertMessage(draft);
-                    EntityOperation.queue(context, draft, EntityOperation.DELETE); // by msgid
+                    EntityOperation.queue(context, draft, EntityOperation.DELETE);
 
                     // Restore original with new account, no uid and new msgid
                     draft.id = id;
@@ -2502,11 +2513,20 @@ public class FragmentCompose extends FragmentBase {
                     draft.folder = db.folder().getFolderByType(aid, EntityFolder.DRAFTS).id;
                     draft.uid = null;
                     draft.msgid = EntityMessage.generateMessageId();
-                    draft.content = true;
-                    draft.ui_hide = 0L;
+                    draft.content = content;
+                    draft.ui_hide = ui_hide;
                     db.message().updateMessage(draft);
-                    EntityOperation.queue(context, draft, EntityOperation.ADD);
+
+                    if (content)
+                        EntityOperation.queue(context, draft, EntityOperation.ADD);
                 }
+
+                Map<String, String> crumb = new HashMap<>();
+                crumb.put("draft", draft.folder + ":" + draft.id);
+                crumb.put("content", Boolean.toString(draft.content));
+                crumb.put("file", Boolean.toString(draft.getFile(context).exists()));
+                crumb.put("action", getActionName(action));
+                Log.breadcrumb("compose", crumb);
 
                 List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);
 
