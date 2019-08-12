@@ -119,9 +119,8 @@
         android:contentDescription="@string/title_legend_auth"
         android:src="@drawable/baseline_flag_24"
         android:tint="@color/colorError"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivType"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivType" />
 
     <ImageView
         android:id="@+id/ivSnoozed"
@@ -130,9 +129,8 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_snoozed"
         android:src="@drawable/baseline_timelapse_24"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivAuth"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivAuth" />
 
     <ImageView
         android:id="@+id/ivBrowsed"
@@ -141,9 +139,9 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_browsed"
         android:src="@drawable/baseline_playlist_add_24"
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
         app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivSnoozed"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintStart_toEndOf="@id/ivSnoozed" />
 
     <ImageView
         android:id="@+id/ivAnswered"
@@ -152,9 +150,8 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_answered"
         android:src="@drawable/baseline_reply_24"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivBrowsed"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivBrowsed" />
 
     <ImageView
         android:id="@+id/ivPlain"
@@ -163,9 +160,8 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_plain_only"
         android:src="@drawable/baseline_notes_24"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivAnswered"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivAnswered" />
 
     <ImageView
         android:id="@+id/ivReceipt"
@@ -174,9 +170,8 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_receipt"
         android:src="@drawable/baseline_playlist_add_check_24"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivPlain"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivPlain" />
 
     <ImageView
         android:id="@+id/ivAttachments"
@@ -185,9 +180,8 @@
         android:layout_marginStart="6dp"
         android:contentDescription="@string/title_legend_attachment"
         android:src="@drawable/baseline_attachment_24"
-        app:layout_constraintBottom_toBottomOf="@+id/tvSubject"
-        app:layout_constraintStart_toEndOf="@id/ivReceipt"
-        app:layout_constraintTop_toTopOf="@+id/tvSubject" />
+        app:layout_constraintTop_toBottomOf="@id/tvFrom"
+        app:layout_constraintStart_toEndOf="@id/ivReceipt" />
 
     <TextView
         android:id="@+id/tvSubject"
@@ -256,7 +250,7 @@
         android:paddingBottom="6dp"
         android:src="@drawable/baseline_star_24"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@id/tvSubject"
+        app:layout_constraintBottom_toBottomOf="@id/ivPlain"
         app:layout_constraintEnd_toStartOf="@id/paddingEnd"
         app:layout_constraintTop_toBottomOf="@id/paddingTop" />
 
