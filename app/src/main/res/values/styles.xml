@@ -1,6 +1,7 @@
 <resources>
     <attr name="themeName" format="string" />
     <attr name="colorUnread" format="reference" />
+    <attr name="colorSubject" format="reference" />
     <attr name="colorSeparator" format="reference" />
     <attr name="colorWarning" format="reference" />
     <attr name="colorDrawerScrim" format="reference" />
@@ -17,6 +18,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
 
+        <item name="colorSubject">@color/lightColorUnread</item>
         <item name="colorUnread">@color/lightColorUnread</item>
         <item name="colorSeparator">@color/lightColorSeparator</item>
         <item name="colorWarning">@color/lightColorWarning</item>
@@ -44,6 +46,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccentDark</item>
 
+        <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorUnread">@color/darkColorUnread</item>
         <item name="colorSeparator">@color/darkColorSeparator</item>
         <item name="colorWarning">@color/darkColorWarning</item>
@@ -66,6 +69,8 @@
         <item name="themeName">black</item>
         <item name="colorPrimary">@color/blackPrimary</item>
         <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
+
+        <item name="colorSubject">@color/blackColorSubject</item>
 
         <item name="android:windowBackground">@android:color/black</item>
         <item name="colorDrawerBackground">@android:color/black</item>

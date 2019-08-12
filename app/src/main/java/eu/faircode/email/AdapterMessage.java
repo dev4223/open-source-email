@@ -171,7 +171,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int textColorPrimary;
     private int textColorSecondary;
     private int colorUnread;
-
+    private int colorSubject;
     private boolean hasWebView;
     private boolean contacts;
     private float textSize;
@@ -661,7 +661,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
             // dev4223: subject in unseen-color
             tvSubject.setTextColor(colorUnseen);
-            tvFrom.setTextColor(colorUnseen);
+            // dev4223: from in new color
+            int colorUnseenFrom = (message.unseen > 0 ? colorUnread : colorSubject);
+            if (viewType == ViewType.THREAD)
+                tvFrom.setTextColor(colorUnseen);
+            else
+                tvFrom.setTextColor(colorUnseenFrom);
             tvSize.setTextColor(colorUnseen);
             tvTime.setTextColor(colorUnseen);
             tvCount.setTextColor(colorAccent);
@@ -3033,6 +3038,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
+        this.colorSubject = Helper.resolveColor(context, R.attr.colorSubject);
 
         this.hasWebView = Helper.hasWebView(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);

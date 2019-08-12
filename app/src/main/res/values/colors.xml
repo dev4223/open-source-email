@@ -12,6 +12,7 @@
     <color name="blackPrimaryDark">#004c7d</color>
     <!-- blackAccent orig: #b27d00 -->
     <color name="blackAccent">#FFE50A3E</color>
+    <color name="blackColorSubject">#ddd</color>
 
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
