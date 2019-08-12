@@ -34,6 +34,8 @@ import androidx.preference.PreferenceManager;
 import java.util.List;
 
 public class ActivityMain extends ActivityBase implements FragmentManager.OnBackStackChangedListener, SharedPreferences.OnSharedPreferenceChangeListener {
+    private static final String ACTION_REFRESH = BuildConfig.APPLICATION_ID + ".REFRESH";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         getSupportFragmentManager().addOnBackStackChangedListener(this);
@@ -82,7 +84,9 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                 @Override
                 protected void onExecuted(Bundle args, Boolean hasAccounts) {
                     if (hasAccounts) {
-                        startActivity(new Intent(ActivityMain.this, ActivityView.class));
+                        Intent view = new Intent(ActivityMain.this, ActivityView.class);
+                        view.putExtra("refresh", true);
+                        startActivity(view);
                         ServiceSynchronize.watchdog(ActivityMain.this);
                         ServiceSend.watchdog(ActivityMain.this);
                     } else
@@ -142,7 +146,7 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
                 start.execute(this, new Bundle(), "main:accounts");
         } else {
             // Enable compact view on small screens
-            if (!getResources().getConfiguration().isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL))
+            if (!getResources().getConfiguration().isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_LARGE))
                 prefs.edit().putBoolean("compact", true).apply();
 
             setTheme(R.style.AppThemeLight);
@@ -176,7 +180,8 @@ public class ActivityMain extends ActivityBase implements FragmentManager.OnBack
     }
 
     private boolean isSupportedDevice() {
-        if ("Amazon".equals(Build.BRAND) && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        if (Helper.isPlayStoreInstall(this) &&
+                "Amazon".equals(Build.BRAND) && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
         /*
             java.lang.IllegalArgumentException: Comparison method violates its general contract!
             java.lang.IllegalArgumentException: Comparison method violates its general contract!

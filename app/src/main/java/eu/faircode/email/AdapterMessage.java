@@ -128,7 +128,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.mail.Address;
@@ -180,6 +182,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean subject_italic;
     private boolean flags;
     private boolean preview;
+    private boolean preview_italic;
     private boolean attachments_alt;
     private boolean contrast;
     private boolean monospaced;
@@ -192,6 +195,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int answers = -1;
     private boolean gotoTop = false;
     private AsyncPagedListDiffer<TupleMessageEx> differ;
+    private Map<Long, Integer> keyPosition = new HashMap<>();
     private SelectionTracker<Long> selectionTracker = null;
 
     enum ViewType {UNIFIED, FOLDER, THREAD, SEARCH}
@@ -575,6 +579,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void bindTo(final TupleMessageEx message) {
             pbLoading.setVisibility(View.GONE);
 
+            boolean inbox = EntityFolder.INBOX.equals(message.folderType);
+            boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
+
             if (viewType == ViewType.THREAD)
                 view.setVisibility(!filter_duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
 
@@ -695,7 +702,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivType.setImageResource(message.drafts > 0
                     ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
             ivType.setVisibility(message.drafts > 0 ||
-                    (viewType == ViewType.UNIFIED && type == null && !EntityFolder.INBOX.equals(message.folderType)) ||
+                    (viewType == ViewType.UNIFIED && type == null && !inbox) ||
                     (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
                     ? View.VISIBLE : View.GONE);
             ivAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
@@ -707,7 +714,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
 
             if (viewType == ViewType.FOLDER)
-                tvFolder.setText(message.accountName);
+                tvFolder.setText(outbox ? message.identityEmail : message.accountName);
             else if (type == null) {
                 String folderName = (message.folderDisplay == null
                         ? Helper.localizeFolderName(context, message.folderName)
@@ -722,7 +729,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // dev4223: dont show folder and attachemnt in compact view
             // orig190304: tvFolder.setVisibility(compact && (!threading || viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) ? View.GONE : View.VISIBLE);
-            if((viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) && compact) {
+            // 190812 dev4223: if((viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) && compact) {
+            // 190812 ORIG   : tvFolder.setVisibility(compact && ((viewType == ViewType.FOLDER && !outbox) || (viewType == ViewType.UNIFIED && type == null && inbox)) ? View.GONE : View.VISIBLE);
+            if(((viewType == ViewType.FOLDER && !outbox) || (viewType == ViewType.UNIFIED && type == null && inbox)) && compact) {
                 tvFolder.setVisibility(View.GONE);
             } else if(compact) {
                 tvFolder.setVisibility(!threading ? View.VISIBLE : View.GONE);
@@ -744,7 +753,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Message text preview
             tvPreview.setTextColor(contrast ? textColorPrimary : textColorSecondary);
-            tvPreview.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT, Typeface.ITALIC);
+            tvPreview.setTypeface(
+                    monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT,
+                    preview_italic ? Typeface.ITALIC : Typeface.NORMAL);
             tvPreview.setText(message.preview);
             tvPreview.setVisibility(preview && !TextUtils.isEmpty(message.preview) ? View.VISIBLE : View.GONE);
 
@@ -996,7 +1007,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (message.to != null) {
                         String v = MessageHelper.canonicalAddress(via.getAddress());
                         for (Address t : message.to) {
-                            if (v.equals(MessageHelper.canonicalAddress(((InternetAddress) t).getAddress()))) {
+                            if (EntityFolder.isOutgoing(message.folderType) ||
+                                    v.equals(MessageHelper.canonicalAddress(((InternetAddress) t).getAddress()))) {
                                 self = true;
                                 break;
                             }
@@ -3033,6 +3045,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);
+        this.preview_italic = prefs.getBoolean("preview_italic", true);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.contrast = prefs.getBoolean("contrast", false);
         this.monospaced = prefs.getBoolean("monospaced", false);
@@ -3071,6 +3084,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void submitList(PagedList<TupleMessageEx> list) {
+        keyPosition.clear();
         differ.submitList(list);
     }
 
@@ -3431,50 +3445,54 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     int getPositionForKey(long key) {
-        PagedList<TupleMessageEx> messages = getCurrentList();
-        if (messages != null)
-            for (int i = 0; i < messages.size(); i++) {
-                TupleMessageEx message = messages.get(i);
-                if (message != null && message.id.equals(key)) {
-                    Log.i("Position=" + i + " @Key=" + key);
-                    return i;
+        if (keyPosition.isEmpty()) {
+            PagedList<TupleMessageEx> messages = getCurrentList();
+            if (messages != null) {
+                for (int i = 0; i < messages.size(); i++) {
+                    TupleMessageEx message = messages.get(i);
+                    if (message != null)
+                        keyPosition.put(message.id, i);
                 }
+                Log.i("Mapped keys=" + keyPosition.size());
             }
+        }
+
+        if (keyPosition.containsKey(key)) {
+            int pos = keyPosition.get(key);
+            Log.d("Position=" + pos + " @Key=" + key);
+            return pos;
+        }
+
         Log.i("Position=" + RecyclerView.NO_POSITION + " @Key=" + key);
         return RecyclerView.NO_POSITION;
     }
 
     TupleMessageEx getItemAtPosition(int pos) {
-        PagedList<TupleMessageEx> list = getCurrentList();
-        if (list != null && pos >= 0 && pos < list.size()) {
-            TupleMessageEx message = list.get(pos);
+        PagedList<TupleMessageEx> messages = getCurrentList();
+        if (messages != null && pos >= 0 && pos < messages.size()) {
+            TupleMessageEx message = messages.get(pos);
             Long key = (message == null ? null : message.id);
-            Log.i("Item=" + key + " @Position=" + pos);
+            Log.d("Item=" + key + " @Position=" + pos);
             return message;
         } else {
-            Log.i("Item=" + null + " @Position=" + pos);
+            Log.d("Item=" + null + " @Position=" + pos);
             return null;
         }
     }
 
     TupleMessageEx getItemForKey(long key) {
-        PagedList<TupleMessageEx> messages = getCurrentList();
-        if (messages != null)
-            for (int i = 0; i < messages.size(); i++) {
-                TupleMessageEx message = messages.get(i);
-                if (message != null && message.id.equals(key)) {
-                    Log.i("Item=" + message.id + " @Key=" + key);
-                    return message;
-                }
-            }
-        Log.i("Item=" + null + " @Key=" + key);
-        return null;
+        int pos = getPositionForKey(key);
+        if (pos == RecyclerView.NO_POSITION) {
+            Log.d("Item=" + null + " @Key=" + key);
+            return null;
+        } else
+            return getItemAtPosition(pos);
     }
 
     Long getKeyAtPosition(int pos) {
         TupleMessageEx message = getItemAtPosition(pos);
         Long key = (message == null ? null : message.id);
-        Log.i("Key=" + key + " @Position=" + pos);
+        Log.d("Key=" + key + " @Position=" + pos);
         return key;
     }
 

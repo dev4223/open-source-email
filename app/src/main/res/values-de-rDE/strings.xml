@@ -187,6 +187,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_subject_italic">Betreff kursiv anzeigen</string>
     <string name="title_advanced_flags">Sterne anzeigen</string>
     <string name="title_advanced_preview">Nachrichtenvorschau anzeigen</string>
+    <string name="title_advanced_preview_italic">Nachrichtenvorschau kursiv anzeigen</string>
     <string name="title_advanced_addresses">Adressdetails standardmäßig anzeigen</string>
     <string name="title_advanced_attachments_alt">Anhänge nach dem Nachrichtentext anzeigen</string>
     <string name="title_advanced_contrast">Hohen Kontrast für den Nachrichtentext verwenden</string>
@@ -406,8 +407,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_snooze">Zurückstellen &#8230;</string>
     <string name="title_archive">Archivieren</string>
     <string name="title_reply">Antworten</string>
-    <string name="title_reply_to_sender">Nur dem Absender antworten</string>
-    <string name="title_reply_to_all">Allen Empfängern antworten</string>
+    <string name="title_reply_to_sender">Absender</string>
+    <string name="title_reply_to_all">Allen</string>
     <string name="title_reply_list">Liste</string>
     <string name="title_reply_receipt">Lesebestätigung</string>
     <string name="title_reply_template">Vorlage</string>
