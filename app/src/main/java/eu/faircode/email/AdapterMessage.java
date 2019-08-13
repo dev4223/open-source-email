@@ -166,6 +166,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private LayoutInflater inflater;
     private boolean suitable;
 
+    private int dp3;
     private int dp36;
     private int colorPrimary;
     private int colorPrimaryDark;
@@ -181,6 +182,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private boolean date;
     private boolean threading;
+    private boolean circular;
     private boolean name_email;
     private boolean subject_italic;
     private boolean flags;
@@ -336,6 +338,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             view = itemView.findViewById(R.id.clItem);
 
             vwColor = itemView.findViewById(R.id.vwColor);
+            vwColor.setRadius(circular ? dp3 / 2f : 0f);
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivFlagged = itemView.findViewById(R.id.ivFlagged);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
@@ -3035,6 +3038,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
         this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
+        this.dp3 = Helper.dp2pixels(context, 3);
         this.dp36 = Helper.dp2pixels(context, 36);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
@@ -3052,6 +3056,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
+        this.circular = prefs.getBoolean("circular", true);
         this.name_email = prefs.getBoolean("name_email", !compact);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.flags = prefs.getBoolean("flags", true);
