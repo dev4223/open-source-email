@@ -30,8 +30,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -69,7 +67,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
@@ -81,10 +78,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
-import androidx.appcompat.widget.SearchView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
-import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
@@ -377,8 +372,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         tvSupport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
             }
         });
 
@@ -2326,97 +2320,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_messages, menu);
 
-        final MenuItem menuSearch = menu.findItem(R.id.menu_search);
-        final SearchView searchView = (SearchView) menuSearch.getActionView();
-        searchView.setQueryHint(getString(R.string.title_search));
-
-        if (!TextUtils.isEmpty(searching)) {
-            menuSearch.expandActionView();
-            searchView.setQuery(searching, false);
-        }
-
-        AutoCompleteTextView autoCompleteTextView = searchView.findViewById(androidx.appcompat.R.id.search_src_text);
-        autoCompleteTextView.setThreshold(0);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        MenuItem menuSearch = menu.findItem(R.id.menu_search);
+        SearchViewEx searchView = (SearchViewEx) menuSearch.getActionView();
+        searchView.setup(getViewLifecycleOwner(), menuSearch, searching, new SearchViewEx.ISearch() {
             @Override
-            public boolean onQueryTextChange(String newText) {
-                searching = newText;
-
-                if (TextUtils.isEmpty(newText)) {
-                    MatrixCursor cursor = new MatrixCursor(new String[]{"_id", "suggestion"});
-                    String prefix = getString(R.string.title_search_special_prefix);
-                    cursor.addRow(new Object[]{-1, prefix + ":" + getString(R.string.title_search_special_unseen)});
-                    cursor.addRow(new Object[]{-2, prefix + ":" + getString(R.string.title_search_special_flagged)});
-                    cursor.addRow(new Object[]{-3, prefix + ":" + getString(R.string.title_search_special_snoozed)});
-                    SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                            getContext(),
-                            R.layout.search_suggestion,
-                            cursor,
-                            new String[]{"suggestion"},
-                            new int[]{android.R.id.text1},
-                            0);
-                    searchView.setSuggestionsAdapter(adapter);
-                    adapter.notifyDataSetChanged();
-                } else {
-                    Bundle args = new Bundle();
-                    args.putString("query", newText);
-
-                    new SimpleTask<Cursor>() {
-                        @Override
-                        protected Cursor onExecute(Context context, Bundle args) {
-                            String query = args.getString("query");
-
-                            DB db = DB.getInstance(context);
-                            return db.message().getSuggestions("%" + query + "%");
-                        }
-
-                        @Override
-                        protected void onExecuted(Bundle args, Cursor cursor) {
-                            Log.i("Suggestions=" + cursor.getCount());
-                            SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                                    getContext(),
-                                    R.layout.search_suggestion,
-                                    cursor,
-                                    new String[]{"suggestion"},
-                                    new int[]{android.R.id.text1},
-                                    0);
-                            searchView.setSuggestionsAdapter(adapter);
-                            adapter.notifyDataSetChanged();
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getFragmentManager(), ex);
-                        }
-                    }.execute(FragmentMessages.this, args, "messages:suggestions");
-                }
-
-                return true;
+            public void onSave(String query) {
+                searching = query;
             }
 
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                searching = null;
-                menuSearch.collapseActionView();
-                search(
+            public void onSearch(String query) {
+                FragmentMessages.search(
                         getContext(), getViewLifecycleOwner(), getFragmentManager(),
                         folder, false, query);
-                return true;
-            }
-        });
-
-        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
-            @Override
-            public boolean onSuggestionSelect(int position) {
-                return false;
-            }
-
-            @Override
-            public boolean onSuggestionClick(int position) {
-                Cursor cursor = (Cursor) searchView.getSuggestionsAdapter().getItem(position);
-                searchView.setQuery(cursor.getString(1), true);
-                return false;
             }
         });
 
@@ -2487,6 +2403,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_select_all).setVisible(!outbox &&
                 (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
+
+        menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -2560,6 +2478,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             case R.id.menu_select_all:
                 onMenuSelectAll();
+                return true;
+
+            case R.id.menu_force_sync:
+                onMenuForceSync();
                 return true;
 
             default:
@@ -2660,6 +2582,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void onMenuForceSync() {
+        ServiceSynchronize.reset(getContext());
+        ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
     }
 
     private void updateState(List<TupleFolderEx> folders) {
@@ -3480,9 +3407,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     break;
                 case REQUEST_MESSAGES_COLOR:
                     if (resultCode == RESULT_OK && data != null) {
-                        if (!Helper.isPro(getContext())) {
-                            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+                        if (!ActivityBilling.isPro(getContext())) {
+                            getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
                             return;
                         }
 
@@ -4079,9 +4005,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onColor(long id, int color) {
-        if (!Helper.isPro(getContext())) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+        if (!ActivityBilling.isPro(getContext())) {
+            getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
             return;
         }
 
@@ -4117,9 +4042,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onSnooze(Bundle args) {
-        if (!Helper.isPro(getContext())) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+        if (!ActivityBilling.isPro(getContext())) {
+            getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
             return;
         }
 
@@ -4171,9 +4095,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onSnoozeSelection(Bundle args) {
-        if (!Helper.isPro(getContext())) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+        if (!ActivityBilling.isPro(getContext())) {
+            getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
             return;
         }
 
@@ -4394,9 +4317,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static void search(
             final Context context, final LifecycleOwner owner, final FragmentManager manager,
             long folder, boolean server, String query) {
-        if (!Helper.isPro(context)) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(new Intent(ActivityView.ACTION_SHOW_PRO));
+        if (!ActivityBilling.isPro(context)) {
+            context.startActivity(new Intent(context, ActivityBilling.class));
             return;
         }
 

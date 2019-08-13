@@ -49,6 +49,7 @@ For authorizing:
 * ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
 * ~~Generic unified folders~~
 * ~~New message notification schedules per account~~ (implemented by added a time condition to rules, so messages can be snoozed in selected periods)
+* ~~Copy accounts and identities~~
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -201,6 +202,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(120) Why are new message notifications not removed on opening the app?](#user-content-faq120)
 * [(121) How are messages grouped into a conversation?](#user-content-faq121)
 * [(122) Why is the recipient name/email address show with a warning color?](#user-content-faq122)
+* [(123) What does 'force sync'?](#user-content-faq123)
 
 [I have another question.](#support)
 
@@ -2086,6 +2088,16 @@ because this could result in grouping unrelated messages and would be at the exp
 The recipient name and/or email address in the addresses section will be shown in a warning color
 when the sender domain name and the domain name of the *to* address do not match.
 Mostly this indicates that the message was received *via* an account with another email address.
+
+<br />
+
+<a name="faq123"></a>
+**(123) What does 'force sync'?**
+
+FairEmail will wait a fixed time after connectivity changes
+and will use a logarithmic back-off time after failing to connect to an account to prevent from being locked out.
+*Force sync* will reset all timers and restart the synchronization service.
+This should not normally be used.
 
 <br />
 

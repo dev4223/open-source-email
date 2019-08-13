@@ -6,7 +6,7 @@
         android:id="@+id/menu_search"
         android:icon="@drawable/baseline_search_24"
         android:title="@string/title_search"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:actionViewClass="eu.faircode.email.SearchViewEx"
         app:showAsAction="collapseActionView|always" />
 
     <item
@@ -93,5 +93,11 @@
         android:id="@+id/menu_select_all"
         android:icon="@drawable/baseline_format_size_24"
         android:title="@string/title_select_all"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_force_sync"
+        android:icon="@drawable/baseline_sync_24"
+        android:title="@string/title_force_sync"
         app:showAsAction="never" />
 </menu>

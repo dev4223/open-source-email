@@ -506,7 +506,6 @@ public class ServiceSynchronize extends ServiceBase {
             private PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             private PowerManager.WakeLock wl = pm.newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":main");
-            private List<Core.State> threadState = new ArrayList<>();
 
             @Override
             public void run() {
@@ -549,7 +548,7 @@ public class ServiceSynchronize extends ServiceBase {
                             }
                         }, "sync.account." + account.id);
                         astate.start();
-                        threadState.add(astate);
+                        state.childs.add(astate);
                     }
 
                     EntityLog.log(ServiceSynchronize.this, "Main started");
@@ -564,11 +563,11 @@ public class ServiceSynchronize extends ServiceBase {
                     }
 
                     // Stop monitoring accounts
-                    for (Core.State astate : threadState)
+                    for (Core.State astate : state.childs)
                         astate.stop();
-                    for (Core.State astate : threadState)
+                    for (Core.State astate : state.childs)
                         astate.join();
-                    threadState.clear();
+                    state.childs.clear();
 
                     EntityLog.log(ServiceSynchronize.this, "Main exited");
                 } catch (Throwable ex) {
@@ -619,7 +618,7 @@ public class ServiceSynchronize extends ServiceBase {
             final DB db = DB.getInstance(this);
 
             int backoff = CONNECT_BACKOFF_START;
-            while (state.running()) {
+            while (state.isRunning()) {
                 state.reset();
                 Log.i(account.name + " run");
 
@@ -1013,7 +1012,7 @@ public class ServiceSynchronize extends ServiceBase {
                                 public void run() {
                                     try {
                                         Log.i(folder.name + " start idle");
-                                        while (state.running() && state.recoverable()) {
+                                        while (state.isRunning() && state.isRecoverable()) {
                                             Log.i(folder.name + " do idle");
                                             ifolder.idle(false);
                                         }
@@ -1155,8 +1154,8 @@ public class ServiceSynchronize extends ServiceBase {
                     // Keep alive
                     AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
                     try {
-                        while (state.running()) {
-                            if (!state.recoverable())
+                        while (state.isRunning()) {
+                            if (!state.isRecoverable())
                                 throw new StoreClosedException(iservice.getStore(), "Unrecoverable");
 
                             // Sends store NOOP
@@ -1260,7 +1259,7 @@ public class ServiceSynchronize extends ServiceBase {
                             db.folder().setFolderState(folder.id, null);
                 }
 
-                if (state.running())
+                if (state.isRunning())
                     try {
                         if (backoff <= CONNECT_BACKOFF_MAX) {
                             // Short back-off period, keep device awake
@@ -1489,7 +1488,7 @@ public class ServiceSynchronize extends ServiceBase {
         am.cancel(piAlarm);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        if (!prefs.getBoolean("schedule", false) || !Helper.isPro(context))
+        if (!prefs.getBoolean("schedule", false) || !ActivityBilling.isPro(context))
             return;
 
         int minuteStart = prefs.getInt("schedule_start", 0);
@@ -1555,6 +1554,13 @@ public class ServiceSynchronize extends ServiceBase {
     }
 
     static void reset(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean enabled = prefs.getBoolean("enabled", true);
+        int pollInterval = prefs.getInt("poll_interval", 0);
+        if (!enabled || pollInterval > 0) {
+            ServiceSynchronize.sync = true;
+            oneshot = true;
+        }
         ContextCompat.startForegroundService(context,
                 new Intent(context, ServiceSynchronize.class)
                         .setAction("reset"));

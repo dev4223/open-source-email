@@ -31,7 +31,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
@@ -53,7 +52,6 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -126,6 +124,7 @@ public class FragmentIdentity extends FragmentBase {
     private Group grpAdvanced;
 
     private long id = -1;
+    private long copy = -1;
     private boolean saving = false;
     private int color = Color.TRANSPARENT;
 
@@ -140,7 +139,10 @@ public class FragmentIdentity extends FragmentBase {
 
         // Get arguments
         Bundle args = getArguments();
-        id = args.getLong("id", -1);
+        if (args.getBoolean("copy"))
+            copy = args.getLong("id", -1);
+        else
+            id = args.getLong("id", -1);
     }
 
     @Override
@@ -258,6 +260,25 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
+
+        etEmail.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                String email = editable.toString();
+                if (email.contains("@"))
+                    etDomain.setText(email.split("@")[1]);
+                else
+                    etDomain.setText(null);
             }
         });
 
@@ -594,7 +615,7 @@ public class FragmentIdentity extends FragmentBase {
                 if (TextUtils.isEmpty(bcc))
                     bcc = null;
 
-                if (color == Color.TRANSPARENT || !Helper.isPro(context))
+                if (color == Color.TRANSPARENT || !ActivityBilling.isPro(context))
                     color = null;
                 if (TextUtils.isEmpty(signature))
                     signature = null;
@@ -809,7 +830,7 @@ public class FragmentIdentity extends FragmentBase {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = new Bundle();
-        args.putLong("id", id);
+        args.putLong("id", copy < 0 ? id : copy);
 
         new SimpleTask<EntityIdentity>() {
             @Override
@@ -827,11 +848,6 @@ public class FragmentIdentity extends FragmentBase {
                     etDisplay.setText(identity == null ? null : identity.display);
 
                     String signature = (identity == null ? null : identity.signature);
-                    if (identity == null) {
-                        CharSequence promote = getText(R.string.app_promote);
-                        if (promote instanceof Spanned)
-                            signature = HtmlHelper.toHtml((Spanned) promote);
-                    }
                     etSignature.setText(TextUtils.isEmpty(signature) ? null : HtmlHelper.fromHtml(signature));
                     etSignature.setTag(signature);
 
@@ -855,7 +871,7 @@ public class FragmentIdentity extends FragmentBase {
 
                     color = (identity == null || identity.color == null ? Color.TRANSPARENT : identity.color);
 
-                    if (identity == null)
+                    if (identity == null || copy > 0)
                         new SimpleTask<Integer>() {
                             @Override
                             protected Integer onExecute(Context context, Bundle args) {
@@ -1010,11 +1026,11 @@ public class FragmentIdentity extends FragmentBase {
             switch (requestCode) {
                 case REQUEST_COLOR:
                     if (resultCode == RESULT_OK && data != null) {
-                        if (Helper.isPro(getContext())) {
+                        if (ActivityBilling.isPro(getContext())) {
                             Bundle args = data.getBundleExtra("args");
                             setColor(args.getInt("color"));
                         } else
-                            ToastEx.makeText(getContext(), R.string.title_pro_feature, Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(getContext(), ActivityBilling.class));
                     }
                     break;
                 case REQUEST_SAVE:

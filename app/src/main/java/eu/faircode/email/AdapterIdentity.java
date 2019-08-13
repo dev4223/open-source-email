@@ -107,7 +107,7 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
         private void bindTo(TupleIdentityEx identity) {
             view.setActivated(identity.tbd != null);
             vwColor.setBackgroundColor(identity.color == null ? Color.TRANSPARENT : identity.color);
-            vwColor.setVisibility(Helper.isPro(context) ? View.VISIBLE : View.INVISIBLE);
+            vwColor.setVisibility(ActivityBilling.isPro(context) ? View.VISIBLE : View.INVISIBLE);
 
             ivSync.setImageResource(identity.synchronize ? R.drawable.baseline_sync_24 : R.drawable.baseline_sync_disabled_24);
 
@@ -167,6 +167,8 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
             popupMenu.getMenu().add(Menu.NONE, R.string.title_synchronize_enabled, 1, R.string.title_synchronize_enabled)
                     .setCheckable(true).setChecked(identity.synchronize);
 
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_copy, 2, R.string.title_copy);
+
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
@@ -174,6 +176,11 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
                         case R.string.title_synchronize_enabled:
                             onActionSync(!item.isChecked());
                             return true;
+
+                        case R.string.title_copy:
+                            onActionCopy();
+                            return true;
+
                         default:
                             return false;
                     }
@@ -203,6 +210,14 @@ public class AdapterIdentity extends RecyclerView.Adapter<AdapterIdentity.ViewHo
                             Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "identitty:enable");
+                }
+
+                private void onActionCopy() {
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(
+                            new Intent(ActivitySetup.ACTION_EDIT_IDENTITY)
+                                    .putExtra("id", identity.id)
+                                    .putExtra("copy", true));
                 }
             });
 

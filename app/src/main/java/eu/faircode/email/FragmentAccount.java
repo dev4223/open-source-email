@@ -49,7 +49,6 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -136,6 +135,7 @@ public class FragmentAccount extends FragmentBase {
     private Group grpFolders;
 
     private long id = -1;
+    private long copy = -1;
     private boolean saving = false;
     private int color = Color.TRANSPARENT;
 
@@ -152,7 +152,10 @@ public class FragmentAccount extends FragmentBase {
 
         // Get arguments
         Bundle args = getArguments();
-        id = args.getLong("id", -1);
+        if (args.getBoolean("copy"))
+            copy = args.getLong("id", -1);
+        else
+            id = args.getLong("id", -1);
     }
 
     @Override
@@ -762,7 +765,7 @@ public class FragmentAccount extends FragmentBase {
                 EntityFolder left = (EntityFolder) args.getSerializable("left");
                 EntityFolder right = (EntityFolder) args.getSerializable("right");
 
-                boolean pro = Helper.isPro(context);
+                boolean pro = ActivityBilling.isPro(context);
                 boolean should = args.getBoolean("should");
 
                 if (host.contains(":")) {
@@ -1115,7 +1118,7 @@ public class FragmentAccount extends FragmentBase {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = new Bundle();
-        args.putLong("id", id);
+        args.putLong("id", copy < 0 ? id : copy);
 
         new SimpleTask<EntityAccount>() {
             @Override
@@ -1167,7 +1170,7 @@ public class FragmentAccount extends FragmentBase {
 
                     etName.setText(account == null ? null : account.name);
 
-                    boolean pro = Helper.isPro(getContext());
+                    boolean pro = ActivityBilling.isPro(getContext());
                     cbNotify.setChecked(account != null && account.notify && pro);
                     cbNotify.setEnabled(pro);
 
@@ -1214,34 +1217,36 @@ public class FragmentAccount extends FragmentBase {
                 // Consider previous check/save/delete as cancelled
                 pbWait.setVisibility(View.GONE);
 
-                args.putLong("account", account == null ? -1 : account.id);
+                if (copy < 0) {
+                    args.putLong("account", account == null ? -1 : account.id);
 
-                new SimpleTask<List<EntityFolder>>() {
-                    @Override
-                    protected List<EntityFolder> onExecute(Context context, Bundle args) {
-                        long account = args.getLong("account");
+                    new SimpleTask<List<EntityFolder>>() {
+                        @Override
+                        protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                            long account = args.getLong("account");
 
-                        DB db = DB.getInstance(context);
-                        List<EntityFolder> folders = db.folder().getFolders(account, false, true);
+                            DB db = DB.getInstance(context);
+                            List<EntityFolder> folders = db.folder().getFolders(account, false, true);
 
-                        if (folders != null && folders.size() > 0)
-                            Collections.sort(folders, folders.get(0).getComparator(null));
+                            if (folders != null && folders.size() > 0)
+                                Collections.sort(folders, folders.get(0).getComparator(null));
 
-                        return folders;
-                    }
+                            return folders;
+                        }
 
-                    @Override
-                    protected void onExecuted(Bundle args, List<EntityFolder> folders) {
-                        if (folders == null)
-                            folders = new ArrayList<>();
-                        setFolders(folders, account);
-                    }
+                        @Override
+                        protected void onExecuted(Bundle args, List<EntityFolder> folders) {
+                            if (folders == null)
+                                folders = new ArrayList<>();
+                            setFolders(folders, account);
+                        }
 
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
-                    }
-                }.execute(FragmentAccount.this, args, "account:folders");
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getFragmentManager(), ex);
+                        }
+                    }.execute(FragmentAccount.this, args, "account:folders");
+                }
             }
 
             @Override
@@ -1292,11 +1297,11 @@ public class FragmentAccount extends FragmentBase {
             switch (requestCode) {
                 case REQUEST_COLOR:
                     if (resultCode == RESULT_OK && data != null) {
-                        if (Helper.isPro(getContext())) {
+                        if (ActivityBilling.isPro(getContext())) {
                             Bundle args = data.getBundleExtra("args");
                             setColor(args.getInt("color"));
                         } else
-                            ToastEx.makeText(getContext(), R.string.title_pro_feature, Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(getContext(), ActivityBilling.class));
                     }
                     break;
                 case REQUEST_SAVE:
