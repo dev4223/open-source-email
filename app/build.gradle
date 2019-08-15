@@ -13,12 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 650
-        versionName "1.650"
+        versionCode 656
+        versionName "1.656"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        buildConfigField "String", "RELEASE_NAME", "\"Iguanodon\""
+        buildConfigField "String", "RELEASE_NAME", "\"Jobaria\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -275,7 +275,7 @@ dependencies {
 
     // https://github.com/bugsnag/bugsnag-android
     implementation("com.bugsnag:bugsnag-android:$bugsnag_version") {
-        exclude group: "com.bugsnag", module: "bugsnag-plugin-android-anr"
+        //exclude group: "com.bugsnag", module: "bugsnag-plugin-android-anr"
         exclude group: "com.bugsnag", module: "bugsnag-plugin-android-ndk"
     }
 

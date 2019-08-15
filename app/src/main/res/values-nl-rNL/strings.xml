@@ -179,6 +179,7 @@
     <string name="title_advanced_manage_connectivity">Beheer connectiviteit</string>
     <string name="title_advanced_browse">Blader door berichten op de server</string>
     <string name="title_advanced_startup">Toon op het startscherm</string>
+    <string name="title_advanced_cards">Toon kaarten</string>
     <string name="title_advanced_date_header">Op datum groeperen</string>
     <string name="title_advanced_threading">Gesprekken groeperen</string>
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
@@ -204,6 +205,7 @@
     <string name="title_advanced_autoscroll">Scroll naar boven bij het ontvangen van nieuwe berichten</string>
     <string name="title_advanced_swipenav">Veeg links/rechts om naar het volgende/vorige gesprek te gaan</string>
     <string name="title_advanced_double_tap">Dubbel tik om bericht gelezen/ongelezen te markeren</string>
+    <string name="title_advanced_autotoolbar">Berichtacties automatisch verbergen</string>
     <string name="title_advanced_autoexpand">Berichten automatisch uitvouwen</string>
     <string name="title_advanced_collapse">Berichten in gesprekken samenvouwen bij \'terug\'</string>
     <string name="title_advanced_autoclose">Gesprekken automatisch sluiten</string>
@@ -495,6 +497,7 @@
     <string name="title_signature_valid">Handtekening bericht geldig</string>
     <string name="title_signature_invalid">Handtekening bericht ongeldig</string>
     <string name="title_search">Zoek</string>
+    <string name="title_search_server">Zoek op server</string>
     <string name="title_search_in">Zoeken in</string>
     <string name="title_searching">Zoeken naar \'%1$s\'</string>
     <string name="title_sort_on">Sorteer op</string>

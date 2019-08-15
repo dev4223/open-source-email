@@ -179,6 +179,7 @@
     <string name="title_advanced_manage_connectivity">Administrar conectividad</string>
     <string name="title_advanced_browse">Explorar mensajes en el servidor</string>
     <string name="title_advanced_startup">Mostrar en pantalla de inicio</string>
+    <string name="title_advanced_cards">Mostrar tarjetas</string>
     <string name="title_advanced_date_header">Agrupar por fecha</string>
     <string name="title_advanced_threading">Hilos de conversación</string>
     <string name="title_advanced_avatars">Mostrar fotos de contactos</string>
@@ -204,6 +205,7 @@
     <string name="title_advanced_autoscroll">Desplazar hacia arriba al recibir nuevos mensajes</string>
     <string name="title_advanced_swipenav">Deslice a la izquierda/derecha para ir a la siguiente/anterior conversación</string>
     <string name="title_advanced_double_tap">Doble toque para marcar mensaje leído/no leído</string>
+    <string name="title_advanced_autotoolbar">Ocultar automáticamente acciones de mensaje</string>
     <string name="title_advanced_autoexpand">Expandir mensajes automáticamente</string>
     <string name="title_advanced_collapse">Contraer mensajes en conversaciones al ir \'atrás\'</string>
     <string name="title_advanced_autoclose">Cerrar conversaciones automáticamente</string>
@@ -495,6 +497,7 @@
     <string name="title_signature_valid">Firma de mensaje válida</string>
     <string name="title_signature_invalid">Firma de mensaje no válida</string>
     <string name="title_search">Buscar</string>
+    <string name="title_search_server">Buscar en el servidor</string>
     <string name="title_search_in">Buscar en</string>
     <string name="title_searching">Buscando \'%1$s\'</string>
     <string name="title_sort_on">Ordenar por</string>

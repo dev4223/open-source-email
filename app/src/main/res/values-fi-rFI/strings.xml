@@ -179,6 +179,7 @@
     <string name="title_advanced_manage_connectivity">Hallitse verkkoyhteyksiä</string>
     <string name="title_advanced_browse">Selaa palvelimella olevia viestejä</string>
     <string name="title_advanced_startup">Näytä aloitusnäytössä</string>
+    <string name="title_advanced_cards">Näytä kortit</string>
     <string name="title_advanced_date_header">Ryhmittely päivämäärän mukaan</string>
     <string name="title_advanced_threading">Keskustelujen ketjuttaminen</string>
     <string name="title_advanced_avatars">Näytä yhteystietojen kuvat</string>
@@ -204,6 +205,7 @@
     <string name="title_advanced_autoscroll">Vieritä ylös, kun uusi viesti saapuu</string>
     <string name="title_advanced_swipenav">Pyyhkäise vasemmalle/oikealle siirtyäksesi seuraavaan/edelliseen keskusteluun</string>
     <string name="title_advanced_double_tap">Tuplanäpäytys merkitsee viestin luetuksi/lukemattomaksi</string>
+    <string name="title_advanced_autotoolbar">Piilota viestien toiminnot automaattisesti</string>
     <string name="title_advanced_autoexpand">Laajenna viestit automaattisesti</string>
     <string name="title_advanced_collapse">Tiivistä viestit keskusteluissa takaisin-painikkeella</string>
     <string name="title_advanced_autoclose">Sulje keskustelut automaattisesti</string>
@@ -495,6 +497,7 @@
     <string name="title_signature_valid">Viestin allekirjoitus vahvistettu</string>
     <string name="title_signature_invalid">Viestin allekirjoitus ei vahvistettu</string>
     <string name="title_search">Hae</string>
+    <string name="title_search_server">Hae palvelimella</string>
     <string name="title_search_in">Hae kohteesta</string>
     <string name="title_searching">Haetaan \'%1$s\'</string>
     <string name="title_sort_on">Järjestys</string>

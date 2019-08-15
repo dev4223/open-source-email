@@ -191,6 +191,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private long attachment = -1;
     private OpenPgpServiceConnection pgpService;
 
+    private boolean cards;
     private boolean date;
     private boolean threading;
     private boolean swipenav;
@@ -311,6 +312,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         swipenav = prefs.getBoolean("swipenav", true);
         autoscroll = (prefs.getBoolean("autoscroll", false) || viewType == AdapterMessage.ViewType.THREAD);
+        cards = prefs.getBoolean("cards", true);
         date = prefs.getBoolean("date", true);
         threading = prefs.getBoolean("threading", true);
         actionbar = prefs.getBoolean("actionbar", true);
@@ -455,17 +457,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         };
         rvMessage.setLayoutManager(llm);
 
-        DividerItemDecoration itemDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
-            @Override
-            public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-                if (view.findViewById(R.id.clItem).getVisibility() == View.GONE)
-                    outRect.setEmpty();
-                else
-                    super.getItemOffsets(outRect, view, parent, state);
-            }
-        };
-        itemDecorator.setDrawable(getContext().getDrawable(R.drawable.divider));
-        rvMessage.addItemDecoration(itemDecorator);
+        if (!cards) {
+            DividerItemDecoration itemDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
+                @Override
+                public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+                    if (view.findViewById(R.id.clItem).getVisibility() == View.GONE)
+                        outRect.setEmpty();
+                    else
+                        super.getItemOffsets(outRect, view, parent, state);
+                }
+            };
+            itemDecorator.setDrawable(getContext().getDrawable(R.drawable.divider));
+            rvMessage.addItemDecoration(itemDecorator);
+        }
 
         DividerItemDecoration dateDecorator = new DividerItemDecoration(getContext(), llm.getOrientation()) {
             @Override
@@ -523,6 +527,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 View header = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_date, parent, false);
                 TextView tvDate = header.findViewById(R.id.tvDate);
                 tvDate.setTextSize(TypedValue.COMPLEX_UNIT_PX, Helper.getTextSize(parent.getContext(), adapter.getZoom()));
+
+                if (cards) {
+                    View vSeparatorDate = header.findViewById(R.id.vSeparatorDate);
+                    vSeparatorDate.setVisibility(View.GONE);
+                }
 
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(new Date());
@@ -749,7 +758,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
                             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
-                            popupMenu.getMenu().add(Menu.NONE, 0, 0, R.string.title_search_in).setEnabled(false);
+                            popupMenu.getMenu().add(Menu.NONE, 0, 0, R.string.title_search_server).setEnabled(false);
 
                             int order = 1;
                             for (EntityAccount account : accounts)
@@ -1118,6 +1127,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return values.get(name).contains(id);
             else if ("addresses".equals(name))
                 return !addresses;
+            else if ("toolbar".equals(name)) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                return !prefs.getBoolean("autotoolbar", false);
+            }
             return false;
         }
 
@@ -4406,17 +4419,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             final Button btnInfo = dview.findViewById(R.id.btnInfo);
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
-            final Intent info = new Intent(Intent.ACTION_VIEW);
-            info.setData(Uri.parse(Helper.FAQ_URI + "#user-content-faq104"));
-            info.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-            btnInfo.setVisibility(
-                    info.resolveActivity(getContext().getPackageManager()) == null ? View.GONE : View.VISIBLE);
-
             btnInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    startActivity(info);
+                    Helper.viewFAQ(getContext(), 104);
                 }
             });
 

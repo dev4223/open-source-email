@@ -197,6 +197,7 @@
     <string name="title_advanced_manage_connectivity">Управление подключением</string>
     <string name="title_advanced_browse">Просмотр сообщений на сервере</string>
     <string name="title_advanced_startup">Показать на стартовом экране</string>
+    <string name="title_advanced_cards">\"Карточная\" компоновка</string>
     <string name="title_advanced_date_header">Группировать по дате</string>
     <string name="title_advanced_threading">Связанные диалоги</string>
     <string name="title_advanced_avatars">Показать фотографии контакта</string>
@@ -513,6 +514,7 @@
     <string name="title_signature_valid">Подпись сообщения действительна</string>
     <string name="title_signature_invalid">Подпись сообщения недействительна</string>
     <string name="title_search">Поиск</string>
+    <string name="title_search_server">Поиск на сервере</string>
     <string name="title_search_in">Поиск в</string>
     <string name="title_searching">Поиск \'%1$s\'</string>
     <string name="title_sort_on">Сортировать по</string>

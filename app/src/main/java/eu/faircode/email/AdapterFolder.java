@@ -75,6 +75,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     private boolean subscriptions;
     private boolean debug;
+
     private int dp12;
     private float textSize;
     private int colorUnread;
@@ -88,6 +89,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         private View view;
+
         private View vwColor;
         private ImageView ivState;
         private ImageView ivReadOnly;
@@ -118,6 +120,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             super(itemView);
 
             view = itemView.findViewById(R.id.clItem);
+
             vwColor = itemView.findViewById(R.id.vwColor);
             ivState = itemView.findViewById(R.id.ivState);
             ivReadOnly = itemView.findViewById(R.id.ivReadOnly);

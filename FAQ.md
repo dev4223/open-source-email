@@ -50,6 +50,7 @@ For authorizing:
 * ~~Generic unified folders~~
 * ~~New message notification schedules per account~~ (implemented by added a time condition to rules, so messages can be snoozed in selected periods)
 * ~~Copy accounts and identities~~
+* Pinch zoom
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -132,7 +133,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(50) Can you add an option to synchronize all messages?](#user-content-faq50)
 * [(51) How are folders sorted?](#user-content-faq51)
 * [(52) Why does it take some time to reconnect to an account?](#user-content-faq52)
-* [(53) Can you stick the message action bar to the top/bottom?](#user-content-faq53)
+* [~~(53) Can you stick the message action bar to the top/bottom?~~](#user-content-faq53)
 * [~~(54) How do I use a namespace prefix?~~](#user-content-faq54)
 * [(55) How can I mark all messages as read / move or delete all messages?](#user-content-faq55)
 * [(56) Can you add support for JMAP?](#user-content-faq56)
@@ -369,6 +370,8 @@ or go [directy to the setting](https://www.google.com/settings/security/lesssecu
 If you use multiple Gmail accounts, make sure you change the "less secure apps" setting of the right account(s).
 
 Be aware that you need to leave the "less secure apps" settings screen by using the back arrow to apply the setting.
+
+If you use this method, you should use a [strong password](https://en.wikipedia.org/wiki/Password_strength) for your Gmail account.
 
 When "less secure apps" is not enabled,
 you'll get the error *Authentication failed - invalid credentials* for accounts (IMAP)
@@ -1143,13 +1146,16 @@ You can long press *Settings* in the navigation menu to reconnect immediately.
 <br />
 
 <a name="faq53"></a>
-**(53) Can you stick the message action bar to the top/bottom?**
+**~~(53) Can you stick the message action bar to the top/bottom?~~**
 
-The message action bar works on a single message and the bottom action bar works on all the messages in the conversation.
-Since there is often more than one message in a conversation, this is not possible.
-Moreover, there are quite some message specific actions, like forwarding.
+~~The message action bar works on a single message and the bottom action bar works on all the messages in the conversation.~~
+~~Since there is often more than one message in a conversation, this is not possible.~~
+~~Moreover, there are quite some message specific actions, like forwarding.~~
 
-You can use the *Home* button to quickly go to the top of the message.
+~~Moving the message action bar to the bottom of the message is visually not appealing because there is already a conversation action bar at the bottom of the screen.~~
+
+~~Note that there are not many, if any, email apps that display a conversation as a list of expandable messages.~~
+~~This has a lot of advantages, but the also causes the need for message specific actions.~~
 
 <br />
 

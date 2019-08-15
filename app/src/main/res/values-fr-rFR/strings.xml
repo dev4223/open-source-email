@@ -179,6 +179,7 @@
     <string name="title_advanced_manage_connectivity">Gérer la connectivité</string>
     <string name="title_advanced_browse">Parcourir les messages sur le serveur</string>
     <string name="title_advanced_startup">Afficher sur l\'écran de démarrage</string>
+    <string name="title_advanced_cards">Afficher les cartes</string>
     <string name="title_advanced_date_header">Grouper par date</string>
     <string name="title_advanced_threading">Fil de conversation</string>
     <string name="title_advanced_avatars">Afficher la photo des contacts</string>
@@ -495,6 +496,7 @@
     <string name="title_signature_valid">Signature de message valide</string>
     <string name="title_signature_invalid">Signature de message invalide</string>
     <string name="title_search">Rechercher</string>
+    <string name="title_search_server">Rechercher sur le serveur</string>
     <string name="title_search_in">Rechercher dans</string>
     <string name="title_searching">Recherche de \'%1$s\'</string>
     <string name="title_sort_on">Trier par</string>

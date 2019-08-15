@@ -169,6 +169,7 @@
     <string name="title_advanced_manage_connectivity">管理连接</string>
     <string name="title_advanced_browse">浏览服务器上的消息</string>
     <string name="title_advanced_startup">在启动屏幕上显示</string>
+    <string name="title_advanced_cards">展示卡片</string>
     <string name="title_advanced_date_header">按日期分组</string>
     <string name="title_advanced_threading">会话线程</string>
     <string name="title_advanced_avatars">显示联系人头像</string>
@@ -194,6 +195,7 @@
     <string name="title_advanced_autoscroll">在收到新消息时滚动至顶部</string>
     <string name="title_advanced_swipenav">向左/右滑动来前往下一个/上一个邮件会话</string>
     <string name="title_advanced_double_tap">双击标记消息已读/未读</string>
+    <string name="title_advanced_autotoolbar">自动隐藏消息动作</string>
     <string name="title_advanced_autoexpand">自动伸展消息</string>
     <string name="title_advanced_collapse">按返回键折叠对话中的邮件</string>
     <string name="title_advanced_autoclose">自动关闭对话</string>
@@ -485,6 +487,7 @@
     <string name="title_signature_valid">消息签名有效</string>
     <string name="title_signature_invalid">消息签名无效</string>
     <string name="title_search">搜索</string>
+    <string name="title_search_server">在服务器上搜索</string>
     <string name="title_search_in">搜索范围</string>
     <string name="title_searching">搜索 “%1$s”</string>
     <string name="title_sort_on">分类方式</string>
