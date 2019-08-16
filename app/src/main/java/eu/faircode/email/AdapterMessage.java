@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.Manifest;
+import android.animation.Animator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Dialog;
@@ -68,9 +69,11 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.TouchDelegate;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.webkit.DownloadListener;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -169,7 +172,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int colorPrimary;
     private int colorPrimaryDark;
     private int colorAccent;
-    private int colorWarning;
     private int textColorPrimary;
     private int textColorSecondary;
     private int colorUnread;
@@ -227,11 +229,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
             View.OnClickListener, View.OnLongClickListener, BottomNavigationView.OnNavigationItemSelectedListener, View.OnKeyListener {
+        private View card;
         private View view;
-        private View vwRipple;
 
         private View vwColor;
-        private ImageView ivExpander;
+        private ImageButton ivExpander;
         private ImageView ivFlagged;
         private ImageView ivAvatar;
         private TextView tvFrom;
@@ -255,7 +257,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private View vsBody;
 
-        private ImageView ivExpanderAddress;
+        private ImageButton ivExpanderAddress;
 
         private ImageButton ibSearchContact;
         private ImageButton ibNotifyContact;
@@ -336,8 +338,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         ViewHolder(final View itemView) {
             super(itemView);
 
+            card = itemView.findViewById(R.id.card);
             view = itemView.findViewById(R.id.clItem);
-            vwRipple = itemView.findViewById(R.id.vwRipple);
 
             vwColor = itemView.findViewById(R.id.vwColor);
             ivExpander = itemView.findViewById(R.id.ivExpander);
@@ -1536,8 +1538,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onToggleMessage(message);
                 }
             } else {
-                vwRipple.setPressed(true);
-                vwRipple.setPressed(false);
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    // Unreveal
+                    int cx = card.getWidth() / 2;
+                    int cy = card.getHeight() / 2;
+                    int r = Math.max(card.getWidth(), card.getHeight());
+                    Animator anim = ViewAnimationUtils.createCircularReveal(card, cx, cy, r, 0);
+                    anim.setInterpolator(new AccelerateDecelerateInterpolator());
+                    anim.setDuration(context.getResources().getInteger(android.R.integer.config_mediumAnimTime));
+                    anim.start();
+                } else {
+                    // selectableItemBackground
+                    card.setClickable(true);
+                    card.setPressed(true);
+                }
 
                 if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1)
                     context.startActivity(
@@ -3060,7 +3074,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
-        this.colorWarning = Helper.resolveColor(context, R.attr.colorWarning);
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
