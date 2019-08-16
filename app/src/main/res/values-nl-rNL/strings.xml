@@ -205,7 +205,6 @@
     <string name="title_advanced_autoscroll">Scroll naar boven bij het ontvangen van nieuwe berichten</string>
     <string name="title_advanced_swipenav">Veeg links/rechts om naar het volgende/vorige gesprek te gaan</string>
     <string name="title_advanced_double_tap">Dubbel tik om bericht gelezen/ongelezen te markeren</string>
-    <string name="title_advanced_autotoolbar">Berichtacties automatisch verbergen</string>
     <string name="title_advanced_autoexpand">Berichten automatisch uitvouwen</string>
     <string name="title_advanced_collapse">Berichten in gesprekken samenvouwen bij \'terug\'</string>
     <string name="title_advanced_autoclose">Gesprekken automatisch sluiten</string>
@@ -265,6 +264,7 @@
     <string name="title_advanced_english_hint">Dit zal de app herstarten</string>
     <string name="title_advanced_debug_hint">Extra logging inschakelen en debug informatie tonen op verschillende plaatsen</string>
     <string name="title_advanced_cleanup_hint">Dit zal alle tijdelijke bestanden verwijderen</string>
+    <string name="title_advanced_never_favorite">Nooit favoriet</string>
     <string name="title_select">Selecteer &#8230;</string>
     <string name="title_identity_name">Uw naam</string>
     <string name="title_identity_email">Uw e-mailadres</string>
@@ -418,6 +418,7 @@
     <string name="title_reply_template">Sjabloon</string>
     <string name="title_moving">Verplaatsen naar %1$s</string>
     <string name="title_open_with">Openen met</string>
+    <string name="title_authentication_failed">%1$s authenticatie mislukt</string>
     <string name="title_receipt_subject">Leesbevestiging: %1$s</string>
     <string name="title_receipt_text">Deze leesbevestiging erkent alleen dat het bericht is weergegeven. Er is geen garantie dat de ontvanger de inhoud van het bericht heeft gelezen.</string>
     <string name="title_no_answers">Geen sjablonen gedefinieerd</string>
@@ -654,7 +655,7 @@
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
     <string name="title_hint_image_link">Afbeeldingskoppeling</string>
     <string name="title_hint_tracking_image">Tracking afbeelding %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Druk lang op een contact om het nooit als een favoriet te beschouwen</string>
+    <string name="title_hint_contact_actions">Druk lang voor opties</string>
     <string name="title_open_link">Koppeling openen</string>
     <string name="title_secure_link">Maak koppeling veilig</string>
     <string name="title_link_secured">Link is veilig</string>

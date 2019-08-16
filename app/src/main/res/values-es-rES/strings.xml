@@ -205,7 +205,6 @@
     <string name="title_advanced_autoscroll">Desplazar hacia arriba al recibir nuevos mensajes</string>
     <string name="title_advanced_swipenav">Deslice a la izquierda/derecha para ir a la siguiente/anterior conversación</string>
     <string name="title_advanced_double_tap">Doble toque para marcar mensaje leído/no leído</string>
-    <string name="title_advanced_autotoolbar">Ocultar automáticamente acciones de mensaje</string>
     <string name="title_advanced_autoexpand">Expandir mensajes automáticamente</string>
     <string name="title_advanced_collapse">Contraer mensajes en conversaciones al ir \'atrás\'</string>
     <string name="title_advanced_autoclose">Cerrar conversaciones automáticamente</string>
@@ -418,6 +417,7 @@
     <string name="title_reply_template">Plantilla</string>
     <string name="title_moving">Moviendo a %1$s</string>
     <string name="title_open_with">Abrir con</string>
+    <string name="title_authentication_failed">Fallo en autenticación %1$s</string>
     <string name="title_receipt_subject">Confirmación de lectura: %1$s</string>
     <string name="title_receipt_text">Esta confirmación de lectura sólo afirma que el mensaje fue mostrado. No hay garantía de que el destinatario haya leído el contenido del mensaje.</string>
     <string name="title_no_answers">No hay plantillas de respuesta definidas</string>
@@ -654,7 +654,6 @@
     <string name="title_hint_sync">Descargar mensajes puede llevar algún tiempo, dependiendo de la velocidad del proveedor, la conexión a internet, dispositivo y el número de mensajes. Mientras se descargan mensajes, la aplicación puede responder más lentamente.</string>
     <string name="title_hint_image_link">Enlace de imagen</string>
     <string name="title_hint_tracking_image">Imagen de seguimiento %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Mantener pulsado un contacto para no considerarlo nunca como favorito</string>
     <string name="title_open_link">Abrir enlace</string>
     <string name="title_secure_link">Hacer enlace seguro</string>
     <string name="title_link_secured">El enlace es seguro</string>

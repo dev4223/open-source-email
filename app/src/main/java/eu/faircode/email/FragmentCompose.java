@@ -108,7 +108,6 @@ import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
@@ -674,6 +673,7 @@ public class FragmentCompose extends FragmentBase {
                 args.putLong("account", a.getLong("account", -1));
                 args.putLong("reference", a.getLong("reference", -1));
                 args.putSerializable("ics", a.getSerializable("ics"));
+                args.putString("status", a.getString("status"));
                 args.putBoolean("raw", a.getBoolean("raw", false));
                 args.putLong("answer", a.getLong("answer", -1));
                 args.putString("to", a.getString("to"));
@@ -1944,6 +1944,7 @@ public class FragmentCompose extends FragmentBase {
             long id = args.getLong("id", -1);
             long reference = args.getLong("reference", -1);
             File ics = (File) args.getSerializable("ics");
+            String status = args.getString("status");
             long answer = args.getLong("answer", -1);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -2085,8 +2086,7 @@ public class FragmentCompose extends FragmentBase {
                             draft.thread = draft.msgid; // new thread
 
                         String subject = (ref.subject == null ? "" : ref.subject);
-                        if ("reply".equals(action) || "reply_all".equals(action) ||
-                                "participation".equals(action)) {
+                        if ("reply".equals(action) || "reply_all".equals(action)) {
                             if (prefix_once) {
                                 String re = context.getString(R.string.title_subject_reply, "");
                                 subject = subject.replaceAll("(?i)" + Pattern.quote(re.trim()), "").trim();
@@ -2102,9 +2102,7 @@ public class FragmentCompose extends FragmentBase {
                             draft.subject = ref.subject;
                             if (ref.content) {
                                 String html = Helper.readText(ref.getFile(context));
-                                Document document = Jsoup.parse(html);
-                                if (document.body() != null)
-                                    body = document.body().html();
+                                body = HtmlHelper.sanitize(context, html, true);
                             }
                         } else if ("list".equals(action)) {
                             draft.subject = ref.subject;
@@ -2118,7 +2116,8 @@ public class FragmentCompose extends FragmentBase {
                             body = "<p>" + context.getString(R.string.title_receipt_text) + "</p>";
                             if (!Locale.getDefault().getLanguage().equals("en"))
                                 body += "<p>" + res.getString(R.string.title_receipt_text) + "</p>";
-                        }
+                        } else if ("participation".equals(action))
+                            draft.subject = status + ": " + ref.subject;
 
                         draft.plain_only = ref.plain_only;
                         if (answer > 0)

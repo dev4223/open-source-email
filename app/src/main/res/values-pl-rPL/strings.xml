@@ -435,6 +435,7 @@
     <string name="title_reply_template">Szablon</string>
     <string name="title_moving">Przenoszę do %1$s</string>
     <string name="title_open_with">Otwórz z</string>
+    <string name="title_authentication_failed">%1$s uwierzytelnianie nie powiodło się</string>
     <string name="title_receipt_subject">Potwierdzenie: %1$s</string>
     <string name="title_receipt_text">To potwierdzenie odczytu potwierdza tylko, że wiadomość została wyświetlona. Nie ma gwarancji, że odbiorca przeczytał treść wiadomości.</string>
     <string name="title_no_answers">Brak zdefiniowanych szablonów odpowiedzi</string>
@@ -671,7 +672,6 @@
     <string name="title_hint_sync">Pobieranie wiadomości może trochę potrwać, zależnie od prędkości dostawcy, połączenie internetowego i urządzenia oraz liczby wiadomości. Podczas pobierania wiadomości aplikacja może odpowiadać wolniej.</string>
     <string name="title_hint_image_link">Adres obrazka</string>
     <string name="title_hint_tracking_image">Web beacon %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Długo naciśnij kontakt, aby nigdy nie uznać go za ulubiony</string>
     <string name="title_open_link">Otwórz link</string>
     <string name="title_secure_link">Utwórz bezpieczny link</string>
     <string name="title_link_secured">Link jest bezpieczny</string>

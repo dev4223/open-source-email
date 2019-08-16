@@ -417,6 +417,7 @@
     <string name="title_reply_template">Mal</string>
     <string name="title_moving">Flytter til %1$s</string>
     <string name="title_open_with">Åpne med</string>
+    <string name="title_authentication_failed">%1$s godkjenning mislyktes</string>
     <string name="title_receipt_subject">Lesebekreftelse: %1$s</string>
     <string name="title_receipt_text">Denne lesekvitteringen bekrefter bare at meldingen ble vist. Det er ingen garanti for at mottakeren har lest meldings innholdet.</string>
     <string name="title_no_answers">Ingen svarmaler definert</string>
@@ -653,7 +654,6 @@
     <string name="title_hint_sync">Nedlasting av meldinger kan ta litt tid, avhengig av leverandørens hastighet, internettforbindelse og enhet og antall meldinger. Mens du laster ned meldinger, kan appen reagere langsommere.</string>
     <string name="title_hint_image_link">Bildelink</string>
     <string name="title_hint_tracking_image">Sporer bilde %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Langt trykk på en kontakt for å aldri betrakte den som favoritt</string>
     <string name="title_open_link">Åpne link</string>
     <string name="title_secure_link">Gjør koblingen sikker</string>
     <string name="title_link_secured">Koblingen er sikker</string>

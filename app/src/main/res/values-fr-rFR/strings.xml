@@ -417,6 +417,7 @@
     <string name="title_reply_template">Modèle</string>
     <string name="title_moving">Déplacement vers %1$s</string>
     <string name="title_open_with">Ouvrir avec</string>
+    <string name="title_authentication_failed">L\'authentification %1$s a échoué</string>
     <string name="title_receipt_subject">Accusé de réception : %1$s</string>
     <string name="title_receipt_text">Cet accusé de réception atteste seulement que le message a été affiché. Il n\'y a aucune garantie que le destinataire ait lu le contenu du message.</string>
     <string name="title_no_answers">Aucun modèle de réponse défini</string>
@@ -653,7 +654,6 @@
     <string name="title_hint_sync">Le téléchargement des messages peut prendre un certain temps selon la vitesse du fournisseur d\'accès, la connexion internet et le périphérique et selon le nombre de messages. Lors du téléchargement des messages, l\'application peut répondre plus lentement.</string>
     <string name="title_hint_image_link">Lien de l\'image</string>
     <string name="title_hint_tracking_image">Image de suivi %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Appuyer longuement sur un contact pour ne jamais le considérer comme un favori</string>
     <string name="title_open_link">Ouvrir le lien</string>
     <string name="title_secure_link">Sécuriser le lien</string>
     <string name="title_link_secured">Le lien est sécurisé</string>

@@ -204,7 +204,6 @@
     <string name="title_advanced_autoscroll">Scorri verso l\'alto quando ricevi nuovi messaggi</string>
     <string name="title_advanced_swipenav">Scorri a sinistra/destra per andare alla conversazione successiva/precedente</string>
     <string name="title_advanced_double_tap">Doppio tocco per segnare il messaggio letto/non letto</string>
-    <string name="title_advanced_autotoolbar">Nascondi automaticamente le azioni dei messaggi</string>
     <string name="title_advanced_autoexpand">Espandi automaticamente i messaggi</string>
     <string name="title_advanced_collapse">Raggruppa i messaggi in conversazioni premendo \'indietro\'</string>
     <string name="title_advanced_autoclose">Chiudi automaticamente le conversazioni</string>
@@ -417,6 +416,7 @@
     <string name="title_reply_template">Modello</string>
     <string name="title_moving">Spostamento in %1$s</string>
     <string name="title_open_with">Apri con</string>
+    <string name="title_authentication_failed">%1$s autenticazione fallita</string>
     <string name="title_receipt_subject">Conferma di lettura: %1$s</string>
     <string name="title_receipt_text">Questa conferma di lettura riconosce solo se il messaggio è stato visualizzato. Non c\'è garanzia che il destinatario abbia letto il contenuto del messaggio.</string>
     <string name="title_no_answers">Nessun modello di risposta definito</string>
@@ -653,7 +653,6 @@
     <string name="title_hint_sync">Scaricare i messaggi può richiedere molto tempo, a seconda della velocità del provider, della connessione internet e del dispositivo e dal numero di messaggi. Durante il download l\'app potrebbe funzionare più lentamente.</string>
     <string name="title_hint_image_link">Link Immagine</string>
     <string name="title_hint_tracking_image">Immagine di tracciamento %1$sx%2$s</string>
-    <string name="title_hint_ignore_contact">Tieni premuto un contatto per non considerarlo un preferito</string>
     <string name="title_open_link">Apri collegamento</string>
     <string name="title_secure_link">Rendi il link sicuro</string>
     <string name="title_link_secured">Il link è sicuro</string>
