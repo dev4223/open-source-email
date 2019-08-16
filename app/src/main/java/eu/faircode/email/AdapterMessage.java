@@ -437,7 +437,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 lparam.height = dp36;
                 bnvActions.setLayoutParams(lparam);
             }
-            
+
             ibFull = vsBody.findViewById(R.id.ibFull);
             ibImages = vsBody.findViewById(R.id.ibImages);
             ibDecrypt = vsBody.findViewById(R.id.ibDecrypt);
