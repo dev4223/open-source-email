@@ -76,6 +76,7 @@
         <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
 
         <item name="colorSubject">@color/blackColorSubject</item>
+        <item name="colorUnread">@color/blackColorUnread</item>
 
         <item name="android:windowBackground">@android:color/black</item>
         <item name="colorDrawerBackground">@android:color/black</item>

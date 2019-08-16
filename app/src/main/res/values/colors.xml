@@ -12,7 +12,8 @@
     <color name="blackPrimaryDark">#004c7d</color>
     <!-- blackAccent orig: #b27d00 -->
     <color name="blackAccent">#FFE50A3E</color>
-    <color name="blackColorSubject">#ddd</color>
+    <color name="blackColorSubject">#dfdfdf</color>
+    <color name="blackColorUnread">#fff</color>
 
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
@@ -42,14 +43,13 @@
     <color name="darkColorDrawerText">#fff</color>
     <color name="darkColorDrawerBackground">#222</color>
     <color name="darkestColorDrawerBackground">#111</color>
-    <!-- darkColorCardBackground orig: #222 -->
-    <color name="darkColorCardBackground">#1b1b1b</color>
+    <color name="darkColorCardBackground">#1d1d1d</color>
 
     <!-- default: #323232 -->
     <color name="design_snackbar_background_color" tools:override="true">#222</color>
 
     <!-- color picker -->
-    <!-- red ORIg: #F6402C -->
+    <!-- red ORIG: #F6402C -->
     <color name="red">#D21C00</color>
     <color name="pink">#EB1460</color>
     <color name="purple">#9C1AB1</color>
