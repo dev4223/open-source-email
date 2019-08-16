@@ -32,7 +32,7 @@
             android:id="@+id/tvSizeEx"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="6dp"
+            android:layout_marginEnd="12dp"
             android:gravity="end"
             android:text="9023 MB"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"

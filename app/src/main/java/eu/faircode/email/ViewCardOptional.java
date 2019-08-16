@@ -51,7 +51,8 @@ public class ViewCardOptional extends CardView {
         boolean cards = prefs.getBoolean("cards", true);
         boolean compact = prefs.getBoolean("compact", false);
         if (cards) {
-            int dp6 = Helper.dp2pixels(getContext(), 6);
+            // dev4223: was dp: 6
+            int dp6 = Helper.dp2pixels(getContext(), 1);
             int color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
 
             FrameLayout.LayoutParams lparam = (FrameLayout.LayoutParams) getLayoutParams();
@@ -62,7 +63,8 @@ public class ViewCardOptional extends CardView {
             setElevation(compact ? dp6 / 2f : dp6);
             setCardBackgroundColor(color);
 
-            getChildAt(0).setPadding(dp6, dp6, dp6, dp6);
+            // dev4223: was getChildAt(0).setPadding(dp6, dp6, dp6, dp6);
+            getChildAt(0).setPadding(0, 0, 0, 0);
         } else {
             setRadius(0);
             setElevation(0);
