@@ -3076,14 +3076,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
         this.textColorPrimary = Helper.resolveColor(context, android.R.attr.textColorPrimary);
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
-        this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
         this.colorSubject = Helper.resolveColor(context, R.attr.colorSubject);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean highlight_unread = prefs.getBoolean("highlight_unread", false);
+
+        if (highlight_unread)
+            this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
+        else
+            this.colorUnread = this.textColorPrimary;
 
         this.hasWebView = Helper.hasWebView(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
         this.name_email = prefs.getBoolean("name_email", !compact);
