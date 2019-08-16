@@ -43,7 +43,7 @@
     <color name="darkColorDrawerBackground">#222</color>
     <color name="darkestColorDrawerBackground">#111</color>
     <!-- darkColorCardBackground orig: #222 -->
-    <color name="darkColorCardBackground">#171717</color>
+    <color name="darkColorCardBackground">#1b1b1b</color>
 
     <!-- default: #323232 -->
     <color name="design_snackbar_background_color" tools:override="true">#222</color>
