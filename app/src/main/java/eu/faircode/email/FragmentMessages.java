@@ -300,15 +300,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         connected = args.getBoolean("connected", false);
 
         if (TextUtils.isEmpty(query))
-            if (thread == null)
+            if (thread == null) {
                 if (folder < 0)
                     viewType = AdapterMessage.ViewType.UNIFIED;
                 else
                     viewType = AdapterMessage.ViewType.FOLDER;
-            else
+                setTitle(getResources().getQuantityString(R.plurals.page_conversation, 10));
+            } else {
                 viewType = AdapterMessage.ViewType.THREAD;
-        else
+                setTitle(getResources().getQuantityString(R.plurals.page_conversation, 1));
+            }
+        else {
             viewType = AdapterMessage.ViewType.SEARCH;
+            setTitle(R.string.title_search);
+        }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -699,13 +704,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fabReply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (values.containsKey("expanded") && values.get("expanded").size() > 0) {
-                    long id = values.get("expanded").get(0);
-                    Intent reply = new Intent(getContext(), ActivityCompose.class)
-                            .putExtra("action", "reply_all")
-                            .putExtra("reference", id);
-                    startActivity(reply);
-                }
+                onReply("reply");
+            }
+        });
+
+        fabReply.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                return onReply("reply_all");
             }
         });
 
@@ -1574,6 +1580,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
     };
 
+    private boolean onReply(String action) {
+        if (values.containsKey("expanded") && values.get("expanded").size() > 0) {
+            long id = values.get("expanded").get(0);
+            Intent reply = new Intent(getContext(), ActivityCompose.class)
+                    .putExtra("action", action)
+                    .putExtra("reference", id);
+            startActivity(reply);
+            return true;
+        } else
+            return false;
+    }
+
     private void onMore() {
         Bundle args = new Bundle();
         args.putLongArray("ids", getSelection());
@@ -2180,8 +2198,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     public void onChanged(TupleThreadStats stats) {
-                        setSubtitle(getString(R.string.title_folder_thread,
-                                stats == null || stats.accountName == null ? "" : stats.accountName));
+                        setSubtitle(stats == null || stats.accountName == null ? "" : stats.accountName);
 
                         if (stats != null && stats.count != null && stats.seen != null) {
                             int unseen = stats.count - stats.seen;
@@ -2211,7 +2228,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 break;
 
             case SEARCH:
-                setSubtitle(getString(R.string.title_searching, query));
+                setSubtitle(query);
                 break;
         }
 

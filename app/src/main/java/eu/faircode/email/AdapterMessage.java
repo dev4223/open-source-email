@@ -937,9 +937,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0
                     ? message.color == null || !ActivityBilling.isPro(context)
                     ? colorAccent : message.color : textColorSecondary));
-            ivFlagged.setVisibility(flags && !message.folderReadOnly
-                    ? (message.uid == null ? View.INVISIBLE : View.VISIBLE)
-                    : View.GONE);
+            ivFlagged.setVisibility(flags && !message.folderReadOnly ? View.VISIBLE : View.GONE);
+            ivFlagged.setEnabled(message.uid != null);
         }
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
@@ -1551,6 +1550,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     // selectableItemBackground
                     card.setClickable(true);
                     card.setPressed(true);
+                    card.setPressed(false);
+                    card.setClickable(false);
                 }
 
                 if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1)

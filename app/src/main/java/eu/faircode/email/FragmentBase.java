@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -27,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -38,8 +40,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FragmentBase extends Fragment {
+    private String title = null;
     private String subtitle = " ";
     private boolean finish = false;
+
+    protected void setTitle(int resid) {
+        setTitle(getString(resid));
+    }
+
+    protected void setTitle(String title) {
+        this.title = title;
+        updateSubtitle();
+    }
 
     protected void setSubtitle(int resid) {
         setSubtitle(getString(resid));
@@ -52,16 +64,26 @@ public class FragmentBase extends Fragment {
 
     @Override
     public void startActivity(Intent intent) {
-        if (Helper.hasAuthentication(getContext()))
-            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        super.startActivity(intent);
+        try {
+            if (Helper.hasAuthentication(getContext()))
+                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            super.startActivity(intent);
+        } catch (ActivityNotFoundException ex) {
+            Log.e(ex);
+            ToastEx.makeText(getContext(), getString(R.string.title_no_viewer, intent.getAction()), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
-        if (Helper.hasAuthentication(getContext()))
-            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        super.startActivityForResult(intent, requestCode);
+        try {
+            if (Helper.hasAuthentication(getContext()))
+                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            super.startActivityForResult(intent, requestCode);
+        } catch (ActivityNotFoundException ex) {
+            Log.e(ex);
+            ToastEx.makeText(getContext(), getString(R.string.title_no_viewer, intent.getAction()), Toast.LENGTH_LONG).show();
+        }
     }
 
     protected void finish() {
@@ -170,8 +192,10 @@ public class FragmentBase extends Fragment {
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         if (activity != null && !isPane()) {
             ActionBar actionbar = activity.getSupportActionBar();
-            if (actionbar != null)
+            if (actionbar != null) {
+                actionbar.setTitle(title == null ? getString(R.string.app_name) : title);
                 actionbar.setSubtitle(subtitle);
+            }
         }
     }
 

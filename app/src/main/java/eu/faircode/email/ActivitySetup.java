@@ -140,12 +140,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.app_name, R.string.app_name) {
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
-                getSupportActionBar().setTitle(getString(R.string.app_name));
             }
 
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                getSupportActionBar().setTitle(getString(R.string.app_name));
             }
         };
         drawerLayout.addDrawerListener(drawerToggle);
@@ -169,7 +167,6 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         itemDecorator.setDrawable(d);
         rvMenu.addItemDecoration(itemDecorator);
 
-        PackageManager pm = getPackageManager();
         final List<NavMenuItem> menus = new ArrayList<>();
 
         menus.add(new NavMenuItem(R.drawable.baseline_archive_24, R.string.title_setup_export, new Runnable() {

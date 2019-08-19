@@ -81,6 +81,7 @@ public class FragmentAccount extends FragmentBase {
 
     private EditText etDomain;
     private Button btnAutoConfig;
+    private ContentLoadingProgressBar pbAutoConfig;
 
     private EditText etHost;
     private RadioGroup rgEncryption;
@@ -172,6 +173,7 @@ public class FragmentAccount extends FragmentBase {
 
         etDomain = view.findViewById(R.id.etDomain);
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
+        pbAutoConfig = view.findViewById(R.id.pbAutoConfig);
 
         etHost = view.findViewById(R.id.etHost);
         etPort = view.findViewById(R.id.etPort);
@@ -246,9 +248,9 @@ public class FragmentAccount extends FragmentBase {
                     return;
                 adapterView.setTag(position);
 
-                etHost.setText(provider.imap_host);
-                etPort.setText(provider.imap_host == null ? null : Integer.toString(provider.imap_port));
-                rgEncryption.check(provider.imap_starttls ? R.id.radio_starttls : R.id.radio_ssl);
+                etHost.setText(provider.imap.host);
+                etPort.setText(provider.imap.host == null ? null : Integer.toString(provider.imap.port));
+                rgEncryption.check(provider.imap.starttls ? R.id.radio_starttls : R.id.radio_ssl);
 
                 etUser.setTag(null);
                 etUser.setText(null);
@@ -394,6 +396,7 @@ public class FragmentAccount extends FragmentBase {
         Helper.setViewsEnabled(view, false);
 
         btnAutoConfig.setEnabled(false);
+        pbAutoConfig.setVisibility(View.GONE);
 
         rgEncryption.setVisibility(View.GONE);
         cbInsecure.setVisibility(View.GONE);
@@ -432,25 +435,27 @@ public class FragmentAccount extends FragmentBase {
             protected void onPreExecute(Bundle args) {
                 etDomain.setEnabled(false);
                 btnAutoConfig.setEnabled(false);
+                pbAutoConfig.setVisibility(View.VISIBLE);
             }
 
             @Override
             protected void onPostExecute(Bundle args) {
                 etDomain.setEnabled(true);
                 btnAutoConfig.setEnabled(true);
+                pbAutoConfig.setVisibility(View.GONE);
             }
 
             @Override
             protected EmailProvider onExecute(Context context, Bundle args) throws Throwable {
                 String domain = args.getString("domain");
-                return EmailProvider.fromDomain(context, domain);
+                return EmailProvider.fromDomain(context, domain, EmailProvider.Discover.IMAP);
             }
 
             @Override
             protected void onExecuted(Bundle args, EmailProvider provider) {
-                etHost.setText(provider.imap_host);
-                etPort.setText(Integer.toString(provider.imap_port));
-                rgEncryption.check(provider.imap_starttls ? R.id.radio_starttls : R.id.radio_ssl);
+                etHost.setText(provider.imap.host);
+                etPort.setText(Integer.toString(provider.imap.port));
+                rgEncryption.check(provider.imap.starttls ? R.id.radio_starttls : R.id.radio_ssl);
             }
 
             @Override
@@ -1144,9 +1149,9 @@ public class FragmentAccount extends FragmentBase {
                         boolean found = false;
                         for (int pos = 2; pos < providers.size(); pos++) {
                             EmailProvider provider = providers.get(pos);
-                            if (provider.imap_host.equals(account.host) &&
-                                    provider.imap_port == account.port &&
-                                    provider.imap_starttls == account.starttls) {
+                            if (provider.imap.host.equals(account.host) &&
+                                    provider.imap.port == account.port &&
+                                    provider.imap.starttls == account.starttls) {
                                 found = true;
                                 spProvider.setTag(pos);
                                 spProvider.setSelection(pos);
