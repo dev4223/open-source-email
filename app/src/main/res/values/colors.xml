@@ -14,8 +14,10 @@
     <color name="colorError">#ff0000</color>
 
     <!-- shade 900 -->
-    <color name="blackPrimary">#01579b</color>
-    <color name="blackPrimaryDark">#003c6c</color>
+    <!-- blackPrimary orig: #01579b -->
+    <color name="blackPrimary">#003560</color>
+    <!-- blackPrimaryDark orig: #003c6c -->
+    <color name="blackPrimaryDark">#001F2A</color>
     <!-- color name="blackPrimary">#026ca0</color -->
     <!-- color name="blackPrimaryDark">#004c7d</color -->
     <!-- blackAccent orig: #b27d00 -->
