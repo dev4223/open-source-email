@@ -299,22 +299,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         primary = args.getLong("primary", -1);
         connected = args.getBoolean("connected", false);
 
-        if (TextUtils.isEmpty(query))
-            if (thread == null) {
-                if (folder < 0)
-                    viewType = AdapterMessage.ViewType.UNIFIED;
-                else
-                    viewType = AdapterMessage.ViewType.FOLDER;
-                setTitle(getResources().getQuantityString(R.plurals.page_conversation, 10));
-            } else {
-                viewType = AdapterMessage.ViewType.THREAD;
-                setTitle(getResources().getQuantityString(R.plurals.page_conversation, 1));
-            }
-        else {
-            viewType = AdapterMessage.ViewType.SEARCH;
-            setTitle(R.string.title_search);
-        }
-
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         swipenav = prefs.getBoolean("swipenav", true);
@@ -330,6 +314,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         colorPrimary = Helper.resolveColor(getContext(), R.attr.colorPrimary);
         colorAccent = Helper.resolveColor(getContext(), R.attr.colorAccent);
+
+        if (TextUtils.isEmpty(query))
+            if (thread == null) {
+                if (folder < 0)
+                    viewType = AdapterMessage.ViewType.UNIFIED;
+                else
+                    viewType = AdapterMessage.ViewType.FOLDER;
+                setTitle(getResources().getQuantityString(
+                        threading ? R.plurals.page_conversation : R.plurals.page_message, 10));
+            } else {
+                viewType = AdapterMessage.ViewType.THREAD;
+                setTitle(getResources().getQuantityString(
+                        threading ? R.plurals.page_conversation : R.plurals.page_message, 1));
+            }
+        else {
+            viewType = AdapterMessage.ViewType.SEARCH;
+            setTitle(R.string.title_search);
+        }
     }
 
     @Override
@@ -4379,7 +4381,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static void search(
             final Context context, final LifecycleOwner owner, final FragmentManager manager,
             long folder, boolean server, String query) {
-        if (!ActivityBilling.isPro(context)) {
+        if (server && !ActivityBilling.isPro(context)) {
             context.startActivity(new Intent(context, ActivityBilling.class));
             return;
         }
