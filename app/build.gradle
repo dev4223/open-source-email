@@ -13,12 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 661
-        versionName "1.661.1"
+        versionCode 667
+        versionName "1.667"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        buildConfigField "String", "RELEASE_NAME", "\"Jobaria\""
+        buildConfigField "String", "RELEASE_NAME", "\"Kryptops\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -143,6 +143,7 @@ preBuild.dependsOn copySetup
 task cleanCrowdin(type: Delete) {
     delete fileTree("src/main/res").matching {
         include "**/SETUP.md"
+        include "**/PLAYSTORE.txt"
     }
 }
 preBuild.dependsOn cleanCrowdin
@@ -196,6 +197,7 @@ dependencies {
     // https://developer.android.com/jetpack/androidx/releases/
 
     // https://mvnrepository.com/artifact/androidx.appcompat/appcompat
+    // https://mvnrepository.com/artifact/androidx.fragment/fragment
     implementation "androidx.appcompat:appcompat:$appcompat_version"
     implementation "androidx.fragment:fragment:$fragment_version"
 

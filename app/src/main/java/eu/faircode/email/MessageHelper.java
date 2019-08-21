@@ -34,12 +34,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -475,7 +478,22 @@ public class MessageHelper {
             return null;
 
         header = new String(header.getBytes(StandardCharsets.ISO_8859_1));
-        return InternetAddress.parseHeader(header, false);
+        Address[] addresses = InternetAddress.parseHeader(header, false);
+
+        for (Address address : addresses) {
+            InternetAddress iaddress = (InternetAddress) address;
+            iaddress.setAddress(decodeMime(iaddress.getAddress()));
+            String personal = iaddress.getPersonal();
+            if (personal != null) {
+                try {
+                    iaddress.setPersonal(decodeMime(personal));
+                } catch (UnsupportedEncodingException ex) {
+                    Log.w(ex);
+                }
+            }
+        }
+
+        return addresses;
     }
 
     Address[] getFrom() throws MessagingException {
@@ -860,9 +878,15 @@ public class MessageHelper {
             }
 
             if (!found) {
+                Map<String, String> crumb = new HashMap<>();
+                crumb.put("local", local.toString());
                 Log.w("Attachment not found local=" + local);
-                for (EntityAttachment remote : remotes)
+                for (int i = 0; i < remotes.size(); i++) {
+                    EntityAttachment remote = remotes.get(i);
+                    crumb.put("remote:" + i, remote.toString());
                     Log.w("Attachment remote=" + remote);
+                }
+                Log.breadcrumb("attachments", crumb);
                 throw new IllegalArgumentException("Attachment not found");
             }
         }
@@ -1004,6 +1028,8 @@ public class MessageHelper {
                 String filename;
                 try {
                     filename = part.getFileName();
+                    if (filename != null)
+                        filename = decodeMime(filename);
                 } catch (MessagingException ex) {
                     Log.w(ex);
                     parts.warnings.add(Helper.formatThrowable(ex, false));

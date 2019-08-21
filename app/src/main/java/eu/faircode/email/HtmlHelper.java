@@ -74,9 +74,11 @@ import static androidx.core.text.HtmlCompat.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE;
 
 public class HtmlHelper {
-    static final int PREVIEW_SIZE = 250;
+    static final int PREVIEW_SIZE = 250; // characters
 
-    private static final int TRACKING_PIXEL_SURFACE = 25;
+    private static final int MAX_SIZE = 100 * 1024; // characters
+    private static final int MAX_LINKS = 500;
+    private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
 
     private static final List<String> heads = Collections.unmodifiableList(Arrays.asList(
             "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "table", "br", "hr"));
@@ -122,6 +124,13 @@ public class HtmlHelper {
                     Log.i("Removed tag=" + tag);
                 }
             }
+        }
+
+        int size = parsed.text().length();
+        int links = parsed.select("a").size();
+        if (size > MAX_SIZE || links > MAX_LINKS) {
+            Log.i("Message size=" + size + " links=" + links);
+            return "<strong>" + context.getString(R.string.title_hint_too_complex) + "</strong>";
         }
 
         Whitelist whitelist = Whitelist.relaxed()
@@ -266,6 +275,8 @@ public class HtmlHelper {
                         PatternsCompat.AUTOLINK_WEB_URL.pattern());
 
         NodeTraversor.traverse(new NodeVisitor() {
+            private int alinks = links;
+
             @Override
             public void head(Node node, int depth) {
                 if (node instanceof TextNode) {
@@ -294,7 +305,7 @@ public class HtmlHelper {
                                         " " + matcher.start() + "..." + matcher.end() + "/" + text.length() +
                                         " linked=" + linked + " email=" + email);
 
-                            if (linked)
+                            if (linked || alinks >= MAX_LINKS)
                                 span.appendText(text.substring(pos, matcher.end()));
                             else {
                                 span.appendText(text.substring(pos, matcher.start()));
@@ -303,6 +314,8 @@ public class HtmlHelper {
                                 a.attr("href", (email ? "mailto:" : "") + matcher.group());
                                 a.text(matcher.group());
                                 span.appendChild(a);
+
+                                alinks++;
                             }
 
                             pos = matcher.end();

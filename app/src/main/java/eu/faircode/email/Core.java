@@ -885,7 +885,8 @@ class Core {
             boolean subscribed = subscription.contains(fullName);
             String[] attr = ((IMAPFolder) ifolder).getAttributes();
             String type = EntityFolder.getType(attr, fullName, false);
-            boolean selectable = !Arrays.asList(attr).contains("\\Noselect");
+            boolean selectable = !Arrays.asList(attr).contains("\\Noselect") &&
+                    ((ifolder.getType() & IMAPFolder.HOLDS_MESSAGES) != 0);
 
             if (EntityFolder.INBOX.equals(type) || fullName.equals(childName))
                 childName = null;
@@ -2061,6 +2062,7 @@ class Core {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean biometrics = prefs.getBoolean("biometrics", false);
+        boolean biometric_notify = prefs.getBoolean("biometrics_notify", false);
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
         boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
@@ -2113,7 +2115,7 @@ class Core {
                     .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                     .setPublicVersion(pub);
 
-            if (!biometrics) {
+            if (!biometrics || biometric_notify) {
                 DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
                 StringBuilder sb = new StringBuilder();
                 for (EntityMessage message : messages) {
@@ -2211,7 +2213,7 @@ class Core {
                 mbuilder.setDefaults(def);
             }
 
-            if (biometrics)
+            if (biometrics && !biometric_notify)
                 mbuilder.setContentTitle(context.getResources().getQuantityString(
                         R.plurals.title_notification_unseen, 1, 1));
             else {
@@ -2289,7 +2291,7 @@ class Core {
                 mbuilder.addAction(actionSeen.build());
             }
 
-            if (!biometrics) {
+            if (!biometrics || biometric_notify) {
                 if (!TextUtils.isEmpty(message.subject))
                     mbuilder.setContentText(message.subject);
 

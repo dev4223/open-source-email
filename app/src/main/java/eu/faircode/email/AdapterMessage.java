@@ -2081,7 +2081,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                         for (EntityAttachment attachment : attachments)
-                            if (!attachment.available && !TextUtils.isEmpty(attachment.cid))
+                            if (!attachment.available && attachment.isInline() && attachment.isImage())
                                 EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
 
                         db.setTransactionSuccessful();
@@ -2132,14 +2132,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     String via = (identity == null ? null : MessageHelper.canonicalAddress(identity.email));
                     Address[] recipients = message.getAllRecipients(via);
 
-                    if (recipients.length == 0 &&
-                            message.list_post == null &&
-                            message.receipt_to == null &&
-                            (answers == 0 && ActivityBilling.isPro(context))) {
-                        onMenuReply(message, "reply");
-                        return;
-                    }
-
                     View anchor = bnvActions.findViewById(R.id.action_reply);
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
                     popupMenu.inflate(R.menu.menu_reply);
@@ -2167,6 +2159,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 case R.id.menu_reply_answer:
                                     onMenuAnswer(message);
                                     return true;
+                                case R.id.menu_forward:
+                                    onMenuReply(message, "forward");
                                 default:
                                     return false;
                             }
@@ -2244,13 +2238,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, new Bundle(), "message:answer");
-        }
-
-        private void onActionForward(final TupleMessageEx message) {
-            Intent forward = new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "forward")
-                    .putExtra("reference", message.id);
-            context.startActivity(forward);
         }
 
         private void onActionArchive(TupleMessageEx message) {
@@ -2361,7 +2348,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
             popupMenu.inflate(R.menu.menu_message);
 
-            popupMenu.getMenu().findItem(R.id.menu_forward).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(message.uid != null && !message.folderReadOnly);
@@ -2396,9 +2382,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 public boolean onMenuItemClick(MenuItem target) {
                     switch (target.getItemId()) {
-                        case R.id.menu_forward:
-                            onActionForward(message);
-                            return true;
                         case R.id.menu_editasnew:
                             onMenuEditAsNew(message);
                             return true;
@@ -2467,8 +2450,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private SimpleTask<SpannableStringBuilder> bodyTask = new SimpleTask<SpannableStringBuilder>() {
             @Override
             protected SpannableStringBuilder onExecute(final Context context, final Bundle args) throws IOException {
-                final TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                final boolean show_images = args.getBoolean("show_images");
+                TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                boolean show_images = args.getBoolean("show_images");
                 boolean show_quotes = args.getBoolean("show_quotes");
                 int zoom = args.getInt("zoom");
 
@@ -2480,9 +2463,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return null;
 
                 String body = Helper.readText(file);
+                Document document = Jsoup.parse(body);
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean inline = prefs.getBoolean("inline_images", false);
+
+                boolean has_images = false;
+                for (Element img : document.select("img")) {
+                    if (inline) {
+                        String src = img.attr("src");
+                        if (!src.startsWith("cid:")) {
+                            has_images = true;
+                            break;
+                        }
+                    } else {
+                        has_images = true;
+                        break;
+                    }
+                }
+                args.putBoolean("has_images", has_images);
 
                 if (!show_quotes) {
-                    Document document = Jsoup.parse(body);
                     for (Element quote : document.select("blockquote"))
                         quote.html("&#8230;");
                     body = document.html();
@@ -2528,25 +2529,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 builder.getSpanEnd(squote),
                                 builder.getSpanFlags(squote));
                 }
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean inline = prefs.getBoolean("inline_images", false);
-
-                boolean has_images;
-                ImageSpan[] spans = builder.getSpans(0, body.length(), ImageSpan.class);
-                if (inline) {
-                    has_images = false;
-                    for (ImageSpan span : spans) {
-                        String source = span.getSource();
-                        if (source == null || !source.startsWith("cid:")) {
-                            has_images = true;
-                            break;
-                        }
-                    }
-                } else
-                    has_images = spans.length > 0;
-
-                args.putBoolean("has_images", has_images);
 
                 return builder;
             }
