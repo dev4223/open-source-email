@@ -173,9 +173,12 @@
     <string name="title_advanced_delete_unseen">Slet gamle, ulæste beskeder</string>
     <string name="title_advanced_kept_removed">Tjek, om gamle beskeder er fjernet fra serveren</string>
     <string name="title_advanced_sync_folders">Synkronisér mappeliste</string>
+    <string name="title_advanced_subscriptions">Håndér mappeabonnementer</string>
+    <string name="title_advanced_sync_subscribed">Synkronisér kun abonnerede mapper</string>
     <string name="title_advanced_keyboard">Vis tastatur som standard</string>
     <string name="title_advanced_prefix_once">Kun ét emnepræfiks ved svar eller videresendelse</string>
     <string name="title_advanced_plain_only">Send kun simpel tekst som standard</string>
+    <string name="title_advanced_usenet_signature">Usenet-signaturkonvention</string>
     <string name="title_advanced_autoresize">Skalér automatisk vedhæftede og indlejrede billeder</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_lookup_mx">Tjek modtager e-mail inden afsendelse</string>
@@ -231,6 +234,7 @@
     <string name="title_advanced_notify_action_reply">Besvar</string>
     <string name="title_advanced_notify_action_flag">Stjerne</string>
     <string name="title_advanced_notify_action_seen">Læs</string>
+    <string name="title_advanced_biometrics_notify">Vis notifikationsindhold ved brug af biometrisk godkendelse</string>
     <string name="title_advanced_light">Benyt notifikations-LED</string>
     <string name="title_advanced_sound">Vælg notifikationslyd</string>
     <string name="title_advanced_badge_hint">Kun tilgængelig i understøttede launchers</string>
@@ -238,7 +242,6 @@
     <string name="title_advanced_notify_manage_hint">Tryk på kanalnavnet \'Notifikationer\' for at opsætte standardnotifikationslyd mv.</string>
     <string name="title_advanced_double_back">Dobbelttryk \"Tilbage\"/stryg for at lukke</string>
     <string name="title_advanced_biometrics_timeout">Biometrisk godkendelse fik timeout</string>
-    <string name="title_advanced_biometrics_notify">Vis notifikationsindhold ved brug af biometrisk godkendelse</string>
     <string name="title_advanced_english">Gennemtving engelsk sprog</string>
     <string name="title_advanced_watchdog">Tjek periodisk om FairEmail stadig er aktiv</string>
     <string name="title_advanced_updates">Søg efter opdateringer</string>
@@ -253,10 +256,8 @@
     <string name="title_advanced_unseen_hint">Visse udbydere understøtter ikke dette korrekt, hvilket f.eks. kan resultere i, at alle beskeder synkroniseres</string>
     <string name="title_advanced_sync_kept_hint">Dette vil overføre ekstra data og forbruge ekstra strøm, især hvis der er mange beskeder lagret på enheden</string>
     <string name="title_advanced_sync_folders_hint">Deaktivering af dette reducerer data- og strømforbruget noget, men deaktiverer også mappelisteopdatering</string>
-    <string name="title_advanced_subscriptions">Håndér mappeabonnementer</string>
-    <string name="title_advanced_sync_subscribed">Synkronisér kun abonnerede mapper</string>
-    <string name="title_advanced_lookup_mx_hint">Dette tjekker, om der findes DNS MX-poster</string>
     <string name="title_advanced_sync_delay_hint">Dette vil forøge beskedsynkroniseringstiden</string>
+    <string name="title_advanced_lookup_mx_hint">Dette tjekker, om der findes DNS MX-poster</string>
     <string name="title_advanced_metered_hint">Forbrugsbaserede forbindelser er typisk mobildataforbindelser eller betalte Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Deaktivering af denne indstilling vil ikke gøre det muligt at modtage og sende meddelelser på mobildataforbindelser</string>
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>

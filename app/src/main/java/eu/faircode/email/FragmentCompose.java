@@ -35,7 +35,8 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.database.CursorWrapper;
+import android.database.MatrixCursor;
+import android.database.MergeCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -110,7 +111,12 @@ import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
@@ -168,6 +174,7 @@ public class FragmentCompose extends FragmentBase {
     private TextView tvNoInternet;
     private TextView tvSignature;
     private TextView tvReference;
+    private ImageButton ibCloseRefHint;
     private ImageButton ibReferenceEdit;
     private ImageButton ibReferenceImages;
     private BottomNavigationView edit_bar;
@@ -179,7 +186,7 @@ public class FragmentCompose extends FragmentBase {
     private Group grpAttachments;
     private Group grpBody;
     private Group grpSignature;
-    private Group grpReference;
+    private Group grpReferenceHint;
 
     private ContentResolver resolver;
     private AdapterAttachment adapter;
@@ -260,6 +267,7 @@ public class FragmentCompose extends FragmentBase {
         tvNoInternet = view.findViewById(R.id.tvNoInternet);
         tvSignature = view.findViewById(R.id.tvSignature);
         tvReference = view.findViewById(R.id.tvReference);
+        ibCloseRefHint = view.findViewById(R.id.ibCloseRefHint);
         ibReferenceEdit = view.findViewById(R.id.ibReferenceEdit);
         ibReferenceImages = view.findViewById(R.id.ibReferenceImages);
         edit_bar = view.findViewById(R.id.edit_bar);
@@ -272,7 +280,7 @@ public class FragmentCompose extends FragmentBase {
         grpAttachments = view.findViewById(R.id.grpAttachments);
         grpBody = view.findViewById(R.id.grpBody);
         grpSignature = view.findViewById(R.id.grpSignature);
-        grpReference = view.findViewById(R.id.grpReference);
+        grpReferenceHint = view.findViewById(R.id.grpReferenceHint);
 
         resolver = getContext().getContentResolver();
 
@@ -336,6 +344,15 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public void onInputContent(Uri uri) {
                 onAddAttachment(uri, true);
+            }
+        });
+
+        ibCloseRefHint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                prefs.edit().putBoolean("compose_reference", false).apply();
+                grpReferenceHint.setVisibility(View.GONE);
             }
         });
 
@@ -425,9 +442,10 @@ public class FragmentCompose extends FragmentBase {
         tvNoInternet.setVisibility(View.GONE);
         grpBody.setVisibility(View.GONE);
         grpSignature.setVisibility(View.GONE);
-        grpReference.setVisibility(View.GONE);
+        grpReferenceHint.setVisibility(View.GONE);
         ibReferenceEdit.setVisibility(View.GONE);
         ibReferenceImages.setVisibility(View.GONE);
+        tvReference.setVisibility(View.GONE);
         edit_bar.setVisibility(View.GONE);
         bottom_navigation.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
@@ -436,24 +454,19 @@ public class FragmentCompose extends FragmentBase {
         Helper.setViewsEnabled(view, false);
 
         final DB db = DB.getInstance(getContext());
-        final boolean contacts = Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS);
 
         SimpleCursorAdapter cadapter = new SimpleCursorAdapter(
                 getContext(),
                 R.layout.spinner_item2_dropdown,
                 null,
-                contacts
-                        ? new String[]{
-                        ContactsContract.Contacts.DISPLAY_NAME,
-                        ContactsContract.CommonDataKinds.Email.DATA}
-                        : new String[]{"name", "email"},
+                new String[]{"name", "email"},
                 new int[]{android.R.id.text1, android.R.id.text2},
                 0);
 
         cadapter.setCursorToStringConverter(new SimpleCursorAdapter.CursorToStringConverter() {
             public CharSequence convertToString(Cursor cursor) {
-                int colName = cursor.getColumnIndex(contacts ? ContactsContract.Contacts.DISPLAY_NAME : "name");
-                int colEmail = cursor.getColumnIndex(contacts ? ContactsContract.CommonDataKinds.Email.DATA : "email");
+                int colName = cursor.getColumnIndex("name");
+                int colEmail = cursor.getColumnIndex("email");
                 String name = cursor.getString(colName);
                 String email = cursor.getString(colEmail);
                 StringBuilder sb = new StringBuilder();
@@ -467,20 +480,19 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
-        etTo.setAdapter(cadapter);
-        etCc.setAdapter(cadapter);
-        etBcc.setAdapter(cadapter);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean suggest_local = prefs.getBoolean("suggest_local", false);
 
-        etTo.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-        etCc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-        etBcc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        cadapter.setFilterQueryProvider(new FilterQueryProvider() {
+            public Cursor runQuery(CharSequence typed) {
+                Log.i("Searching provided contact=" + typed);
 
-        if (contacts)
-            cadapter.setFilterQueryProvider(new FilterQueryProvider() {
-                public Cursor runQuery(CharSequence typed) {
-                    Log.i("Searching provided contact=" + typed);
-                    String wildcard = "%" + typed + "%";
-                    return new CursorWrapper(resolver.query(
+                String wildcard = "%" + typed + "%";
+                boolean contacts = Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS);
+                MatrixCursor provided = new MatrixCursor(new String[]{"_id", "name", "email"});
+
+                if (contacts) {
+                    Cursor cursor = resolver.query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             new String[]{
                                     ContactsContract.CommonDataKinds.Email.CONTACT_ID,
@@ -493,47 +505,29 @@ public class FragmentCompose extends FragmentBase {
                             new String[]{wildcard, wildcard},
                             "CASE WHEN " + ContactsContract.Contacts.DISPLAY_NAME + " NOT LIKE '%@%' THEN 0 ELSE 1 END" +
                                     ", " + ContactsContract.Contacts.DISPLAY_NAME + " COLLATE NOCASE" +
-                                    ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE")) {
+                                    ", " + ContactsContract.CommonDataKinds.Email.DATA + " COLLATE NOCASE");
+                    while (cursor != null && cursor.moveToNext())
+                        provided.newRow()
+                                .add(cursor.getLong(0))
+                                .add(cursor.getString(1))
+                                .add(cursor.getString(2));
 
-                        @Override
-                        public String[] getColumnNames() {
-                            String[] names = super.getColumnNames();
-                            names[0] = "_id";
-                            return names;
-                        }
-
-                        @Override
-                        public String getColumnName(int index) {
-                            if (index == 0)
-                                return "_id";
-                            return super.getColumnName(index);
-                        }
-
-                        @Override
-                        public int getColumnIndex(String name) {
-                            if ("_id".equals(name))
-                                return 0;
-                            return super.getColumnIndex(name);
-                        }
-
-                        @Override
-                        public int getColumnIndexOrThrow(String name) throws IllegalArgumentException {
-                            if ("_id".equals(name))
-                                return 0;
-                            return super.getColumnIndexOrThrow(name);
-                        }
-                    };
+                    if (!suggest_local)
+                        return provided;
                 }
-            });
-        else
-            cadapter.setFilterQueryProvider(new FilterQueryProvider() {
-                @Override
-                public Cursor runQuery(CharSequence typed) {
-                    Log.i("Searching local contact=" + typed);
-                    String wildcard = "%" + typed + "%";
-                    return db.contact().searchContacts(null, null, wildcard);
-                }
-            });
+
+                Cursor local = db.contact().searchContacts(null, null, wildcard);
+                return new MergeCursor(new Cursor[]{provided, local});
+            }
+        });
+
+        etTo.setAdapter(cadapter);
+        etCc.setAdapter(cadapter);
+        etBcc.setAdapter(cadapter);
+
+        etTo.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        etCc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+        etBcc.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
         rvAttachment.setHasFixedSize(false);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
@@ -599,7 +593,7 @@ public class FragmentCompose extends FragmentBase {
 
                 String ref = Helper.readText(refFile);
                 String plain = HtmlHelper.getText(ref);
-                String html = "<p>" + plain.replaceAll("\\r?\\n", "<br />" + "</p>");
+                String html = "<p>" + plain.replaceAll("\\r?\\n", "<br>") + "</p>";
 
                 try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
                     out.write(body);
@@ -2028,7 +2022,7 @@ public class FragmentCompose extends FragmentBase {
 
                         draft.subject = args.getString("subject", "");
                         body = args.getString("body", "");
-                        body = body.replaceAll("\\r?\\n", "<br />");
+                        body = body.replaceAll("\\r?\\n", "<br>");
 
                         if (answer > 0) {
                             EntityAnswer a = db.answer().getAnswer(answer);
@@ -2050,11 +2044,13 @@ public class FragmentCompose extends FragmentBase {
                                 "list".equals(action) ||
                                 "receipt".equals(action) ||
                                 "participation".equals(action)) {
-                            if (ref.to != null && ref.to.length > 0) {
-                                String to = ((InternetAddress) ref.to[0]).getAddress();
-                                int at = to.indexOf('@');
+                            EntityFolder rfolder = db.folder().getFolder(ref.folder);
+                            Address[] sender = (rfolder != null && EntityFolder.isOutgoing(rfolder.type) ? ref.from : ref.to);
+                            if (sender != null && sender.length > 0) {
+                                String s = ((InternetAddress) sender[0]).getAddress();
+                                int at = s.indexOf('@');
                                 if (at > 0)
-                                    draft.extra = to.substring(0, at);
+                                    draft.extra = s.substring(0, at);
                             }
 
                             draft.references = (ref.references == null ? "" : ref.references + " ") + ref.msgid;
@@ -2212,10 +2208,44 @@ public class FragmentCompose extends FragmentBase {
                             !"editasnew".equals(action) &&
                             !"list".equals(action) &&
                             !"receipt".equals(action)) {
+                        String refText = Helper.readText(ref.getFile(context));
+
+                        boolean usenet = prefs.getBoolean("usenet_signature", false);
+                        if (usenet) {
+                            Document rdoc = Jsoup.parse(refText);
+
+                            List<Node> tbd = new ArrayList<>();
+
+                            NodeTraversor.traverse(new NodeVisitor() {
+                                boolean found = false;
+
+                                public void head(Node node, int depth) {
+                                    if (node instanceof TextNode &&
+                                            "-- ".equals(((TextNode) node).getWholeText()) &&
+                                            node.nextSibling() != null &&
+                                            "br".equals(node.nextSibling().nodeName()))
+                                        found = true;
+                                    if (found)
+                                        tbd.add(node);
+                                }
+
+                                public void tail(Node node, int depth) {
+                                    // Do nothing
+                                }
+                            }, rdoc);
+
+                            if (tbd.size() > 0) {
+                                for (Node node : tbd)
+                                    node.remove();
+
+                                refText = (rdoc.body() == null ? "" : rdoc.body().html());
+                            }
+                        }
+
                         String refBody = String.format("<p>%s %s:</p>\n<blockquote>%s</blockquote>",
                                 Html.escapeHtml(new Date(ref.received).toString()),
                                 Html.escapeHtml(MessageHelper.formatAddresses(ref.from)),
-                                Helper.readText(ref.getFile(context)));
+                                refText);
                         Helper.writeText(draft.getRefFile(context), refBody);
                     }
 
@@ -2955,8 +2985,12 @@ public class FragmentCompose extends FragmentBase {
 
                 boolean ref_has_images = args.getBoolean("ref_has_images");
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                boolean ref_hint = prefs.getBoolean("compose_reference", true);
+
                 tvReference.setText(text[1]);
-                grpReference.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
+                tvReference.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
+                grpReferenceHint.setVisibility(text[1] == null || !ref_hint ? View.GONE : View.VISIBLE);
                 ibReferenceEdit.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 ibReferenceImages.setVisibility(ref_has_images && !show_images ? View.VISIBLE : View.GONE);
 

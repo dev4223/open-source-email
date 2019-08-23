@@ -166,6 +166,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private SeekBar seekBar;
     private ImageButton ibDown;
     private ImageButton ibUp;
+    private ImageButton ibSnoozed;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
     private Group grpSupport;
@@ -357,6 +358,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         seekBar = view.findViewById(R.id.seekBar);
         ibDown = view.findViewById(R.id.ibDown);
         ibUp = view.findViewById(R.id.ibUp);
+        ibSnoozed = view.findViewById(R.id.ibSnoozed);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
 
         pbWait = view.findViewById(R.id.pbWait);
@@ -607,6 +609,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
         });
 
+        ibSnoozed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean filter = prefs.getBoolean("filter_snoozed", true);
+                onMenuFilterSnoozed(!filter);
+            }
+        });
+
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -854,9 +864,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         seekBar.setVisibility(View.GONE);
         ibDown.setVisibility(View.GONE);
         ibUp.setVisibility(View.GONE);
+        ibSnoozed.setVisibility(
+                BuildConfig.DEBUG &&
+                        (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
+                        ? View.VISIBLE : View.GONE);
         bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(false);
         bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(false);
-        bottom_navigation.setVisibility(actionbar ? View.INVISIBLE : View.GONE);
+        bottom_navigation.setVisibility(actionbar && viewType == AdapterMessage.ViewType.THREAD ? View.INVISIBLE : View.GONE);
         grpReady.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
 
@@ -3044,7 +3058,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(this, args, "messages:navigation");
+            }.setLog(false).execute(this, args, "messages:navigation");
         }
         return false;
     }
@@ -3118,7 +3132,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(this, args, "messages:expand");
+        }.setLog(false).execute(this, args, "messages:expand");
     }
 
     private void handleAutoClose() {
@@ -3829,7 +3843,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             int end = body.indexOf(PGP_END_MESSAGE);
                             if (begin >= 0 && begin < end) {
                                 String section = body.substring(begin, end + PGP_END_MESSAGE.length());
-                                String[] lines = section.split("<br />");
+                                String[] lines = section.split("<br>");
                                 List<String> disarmored = new ArrayList<>();
                                 for (String line : lines)
                                     if (!TextUtils.isEmpty(line) && !line.contains(": "))

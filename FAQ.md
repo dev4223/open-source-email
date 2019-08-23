@@ -30,7 +30,7 @@ For authorizing:
 * ~~A [bug in AndroidX ROOM](https://issuetracker.google.com/issues/138441698) causes sometimes a crash with "*... Exception while computing database live data ... Couldn't read row ...*". A workaround was added.~~
 * A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash with "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) sometimes causes a crash with "*... ActivityRecord not found for ...*" after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) might fix the problem.
-* A bug in Nova Launcher or Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
+* A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * The folder selector sometimes shows no folders for yet unknown reasons.
 
 ## Planned features
@@ -52,9 +52,11 @@ For authorizing:
 * ~~Copy accounts and identities~~
 * ~~Pinch zoom~~ (not reliably possible in a scrolling list; the full message view can be zoomed instead)
 * ~~More compact folder view~~
+* ~~Compose lists and tables~~ (this requires a rich text editor, see [this FAQ](#user-content-faq99))
 * Send as attachment
 * Themes
-* Search options
+* Search for settings
+* Select any day for time conditions
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -208,6 +210,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(121) How are messages grouped into a conversation?](#user-content-faq121)
 * [~~(122) Why is the recipient name/email address show with a warning color?~~](#user-content-faq122)
 * [(123) What does 'force sync'?](#user-content-faq123)
+* [(124) Why do I get 'Message too large or too complex to display'?](#user-content-faq124)
 
 [I have another question.](#support)
 
@@ -1434,7 +1437,7 @@ You can select one of these actions to apply to matching messages:
 * Automation
 
 Filter rules are applied direct after the message header has been fetched, before the message text has been downloaded,
-so it is not possible to apply filter rules to the message text.
+so it is not possible to apply filter conditions and actions to the message text.
 Note that large message texts are downloaded on demand on a metered connection to save data.
 
 To debug rules you can long press *Operations* to see logging about the evaluation of rule conditions.
@@ -1635,6 +1638,8 @@ So, double check the password or reduce the number of folders to synchronize.
 
 <a name="faq84"></a>
 **(84) What are local contacts for?**
+
+Local contact information is based on names and addresses found in incoming and outgoing messages.
 
 The main use of the local contacts storage is to offer auto completion when no contacts permission has been granted to FairEmail.
 
@@ -2123,6 +2128,14 @@ FairEmail will wait a fixed time after connectivity changes
 and will use a logarithmic back-off time after failing to connect to an account to prevent from being locked out.
 *Force sync* will reset all timers and restart the synchronization service.
 This should not normally be used.
+
+<br />
+
+<a name="faq124"></a>
+**(124) Why do I get 'Message too large or too complex to display'?**
+
+The message *Message too large or too complex to display* will be shown if there are more than 100,000 characters or more than 500 links in a message.
+Reformatting and displaying such messages will take too long. You can try to use the original message view, powered by the browser, instead.
 
 <br />
 

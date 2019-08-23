@@ -174,9 +174,13 @@
     <string name="title_advanced_delete_unseen">Verwijder oude, ongelezen berichten</string>
     <string name="title_advanced_kept_removed">Controleer of oude berichten van de server werden verwijderd</string>
     <string name="title_advanced_sync_folders">Lijst met mappen synchroniseren</string>
+    <string name="title_advanced_subscriptions">Beheer map abonnementen</string>
+    <string name="title_advanced_sync_subscribed">Alleen geabonneerde mappen synchroniseren</string>
     <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
+    <string name="title_advanced_suggest_local">Suggereer lokaal opgeslagen contacten</string>
     <string name="title_advanced_prefix_once">Prefix onderwerp slechts één keer bij beantwoorden of doorsturen</string>
     <string name="title_advanced_plain_only">Verstuur standaard alleen tekst</string>
+    <string name="title_advanced_usenet_signature">Usenet handtekening conventie</string>
     <string name="title_advanced_autoresize">Automatisch bijgevoegde en ingesloten afbeeldingen verkleinen</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_lookup_mx">Controleer e-mailadressen van de ontvangers voor verzenden</string>
@@ -198,6 +202,7 @@
     <string name="title_advanced_identicons">Toon identicons</string>
     <string name="title_advanced_circular">Toon ronde iconen</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
+    <string name="title_advanced_subject_top">Toon onderwerp boven afzender</string>
     <string name="title_advanced_subject_italic">Toon onderwerp cursief</string>
     <string name="title_advanced_flags">Toon sterren</string>
     <string name="title_advanced_preview">Toon berichtvoorbeeld</string>
@@ -234,6 +239,7 @@
     <string name="title_advanced_notify_action_reply">Beantwoorden</string>
     <string name="title_advanced_notify_action_flag">Ster</string>
     <string name="title_advanced_notify_action_seen">Gelezen</string>
+    <string name="title_advanced_biometrics_notify">Toon notificatie inhoud bij het gebruik van biometrische verificatie</string>
     <string name="title_advanced_light">Gebruik meldingslicht</string>
     <string name="title_advanced_sound">Selecteer meldingsgeluid</string>
     <string name="title_advanced_badge_hint">Alleen beschikbaar op ondersteunde launchers</string>
@@ -241,7 +247,6 @@
     <string name="title_advanced_notify_manage_hint">Tik op de naam van het kanaal \'Meldingen\' om het standaard meldingsgeluid in te stellen, etc</string>
     <string name="title_advanced_double_back">Dubbel \'terug\' om te sluiten</string>
     <string name="title_advanced_biometrics_timeout">Biometrische verificatie verlopen na</string>
-    <string name="title_advanced_biometrics_notify">Toon notificatie inhoud bij het gebruik van biometrische verificatie</string>
     <string name="title_advanced_english">Forceer Engelse taal</string>
     <string name="title_advanced_watchdog">Periodiek controleren of FairEmail nog actief is</string>
     <string name="title_advanced_updates">Controleren op updates</string>
@@ -256,10 +261,9 @@
     <string name="title_advanced_unseen_hint">Sommige aanbieders ondersteunen dit niet goed, wat bijvoorbeeld kan leiden tot synchronisatie van alle berichten</string>
     <string name="title_advanced_sync_kept_hint">Dit zal extra gegevens en extra batterijvermogen gebruiken, vooral als er veel berichten op het apparaat zijn opgeslagen</string>
     <string name="title_advanced_sync_folders_hint">Dit uitschakelen zal het gebruik van gegevens en batterij enigszins verminderen, maar zal ook het bijwerken van de lijst met mappen uitschakelen</string>
-    <string name="title_advanced_subscriptions">Beheer map abonnementen</string>
-    <string name="title_advanced_sync_subscribed">Alleen geabonneerde mappen synchroniseren</string>
-    <string name="title_advanced_lookup_mx_hint">Dit zal controleren of DNS MX records bestaan</string>
     <string name="title_advanced_sync_delay_hint">Dit zal de synchronisatie van berichten vertragen</string>
+    <string name="title_advanced_suggest_local_hint">Naast contacten geleverd door Android</string>
+    <string name="title_advanced_lookup_mx_hint">Dit zal controleren of DNS MX records bestaan</string>
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Uitschakelen van deze optie zal het ontvangen en verzenden van berichten op mobiele internetverbindingen uitschakelen</string>
     <string name="title_advanced_rlah_hint">Veronderstel geen roaming binnen de EU</string>

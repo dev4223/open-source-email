@@ -83,6 +83,7 @@ import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 
 public class Log {
+    private static final int MAX_CRASH_REPORTS = 5;
     private static final String TAG = "fairemail";
 
     public static int d(String msg) {
@@ -201,6 +202,12 @@ public class Log {
         config.beforeSend(new BeforeSend() {
             @Override
             public boolean run(@NonNull Report report) {
+                int count = prefs.getInt("crash_report_count", 0);
+                count++;
+                prefs.edit().putInt("crash_report_count", count).apply();
+                if (count > MAX_CRASH_REPORTS)
+                    return false;
+
                 Throwable ex = report.getError().getException();
 
                 if (ex instanceof MessagingException &&
@@ -388,7 +395,7 @@ public class Log {
             sb.append(ex.toString()).append("\n").append(android.util.Log.getStackTraceString(ex));
         if (log != null)
             sb.append(log);
-        String body = "<pre>" + sb.toString().replaceAll("\\r?\\n", "<br />") + "</pre>";
+        String body = "<pre>" + sb.toString().replaceAll("\\r?\\n", "<br>") + "</pre>";
 
         EntityMessage draft;
 

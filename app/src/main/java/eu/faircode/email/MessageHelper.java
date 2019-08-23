@@ -20,12 +20,18 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.MailTo;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
+import androidx.preference.PreferenceManager;
+
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -210,6 +216,9 @@ public class MessageHelper {
     }
 
     static void build(Context context, EntityMessage message, List<EntityAttachment> attachments, EntityIdentity identity, MimeMessage imessage) throws IOException, MessagingException {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean usenet = prefs.getBoolean("usenet_signature", false);
+
         if (message.receipt_request != null && message.receipt_request) {
             // https://www.ietf.org/rfc/rfc3798.txt
             Multipart report = new MimeMultipart("report; report-type=disposition-notification");
@@ -234,23 +243,31 @@ public class MessageHelper {
             return;
         }
 
+        // Build html body
         StringBuilder body = new StringBuilder();
-        body.append(Helper.readText(message.getFile(context)));
+        body.append("<html><body>");
+
+        Document mdoc = Jsoup.parse(Helper.readText(message.getFile(context)));
+        if (mdoc.body() != null)
+            body.append(mdoc.body().html());
 
         // When sending message
         if (identity != null) {
-            if (!TextUtils.isEmpty(identity.signature))
-                body.append(identity.signature);
+            if (!TextUtils.isEmpty(identity.signature)) {
+                Document sdoc = Jsoup.parse(identity.signature);
+                if (sdoc.body() != null) {
+                    if (usenet) // https://www.ietf.org/rfc/rfc3676.txt
+                        body.append("<span>-- <br></span>");
+                    body.append(sdoc.body().html());
+                }
+            }
 
             File refFile = message.getRefFile(context);
             if (refFile.exists())
                 body.append(Helper.readText(refFile));
         }
 
-        String plainContent = HtmlHelper.getText(body.toString());
-
-        StringBuilder htmlContent = new StringBuilder();
-        htmlContent.append(body.toString()).append("\n");
+        body.append("</body></html>");
 
         // multipart/mixed
         //   multipart/related
@@ -260,11 +277,14 @@ public class MessageHelper {
         //     inlines
         //  attachments
 
+        String htmlContent = body.toString();
+        String plainContent = HtmlHelper.getText(htmlContent);
+
         BodyPart plainPart = new MimeBodyPart();
         plainPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
 
         BodyPart htmlPart = new MimeBodyPart();
-        htmlPart.setContent(htmlContent.toString(), "text/html; charset=" + Charset.defaultCharset().name());
+        htmlPart.setContent(htmlContent, "text/html; charset=" + Charset.defaultCharset().name());
 
         Multipart altMultiPart = new MimeMultipart("alternative");
         altMultiPart.addBodyPart(plainPart);
@@ -844,7 +864,7 @@ public class MessageHelper {
 
             if (part.isMimeType("text/plain")) {
                 result = TextUtils.htmlEncode(result);
-                result = result.replaceAll("\\r?\\n", "<br />");
+                result = result.replaceAll("\\r?\\n", "<br>");
                 result = "<span>" + result + "</span>";
             }
 
@@ -865,19 +885,32 @@ public class MessageHelper {
         void downloadAttachment(Context context, EntityAttachment local) throws IOException, MessagingException {
             List<EntityAttachment> remotes = getAttachments();
 
-            // Match attachment by attributes
             // Some servers order attachments randomly
-            boolean found = false;
+            int index = -1;
+
+            // Match attachment by name/cid
             for (int i = 0; i < remotes.size(); i++) {
                 EntityAttachment remote = remotes.get(i);
                 if (Objects.equals(remote.name, local.name) &&
                         Objects.equals(remote.cid, local.cid)) {
-                    found = true;
-                    downloadAttachment(context, i, local);
+                    index = i;
+                    break;
                 }
             }
 
-            if (!found) {
+            // Match attachment by type/size
+            if (index < 0)
+                for (int i = 0; i < remotes.size(); i++) {
+                    EntityAttachment remote = remotes.get(i);
+                    if (remote.name == null && remote.cid == null &&
+                            Objects.equals(remote.type, local.type) &&
+                            Objects.equals(remote.size, local.size)) {
+                        index = i;
+                        break;
+                    }
+                }
+
+            if (index < 0) {
                 Map<String, String> crumb = new HashMap<>();
                 crumb.put("local", local.toString());
                 Log.w("Attachment not found local=" + local);
@@ -889,10 +922,12 @@ public class MessageHelper {
                 Log.breadcrumb("attachments", crumb);
                 throw new IllegalArgumentException("Attachment not found");
             }
+
+            downloadAttachment(context, index, local);
         }
 
         void downloadAttachment(Context context, int index, EntityAttachment local) throws MessagingException, IOException {
-            Log.i("downloading attachment id=" + local.id);
+            Log.i("downloading attachment id=" + local.id + " index=" + index + " " + local);
 
             DB db = DB.getInstance(context);
 

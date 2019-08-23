@@ -162,9 +162,13 @@
     <string name="title_advanced_delete_unseen">删除旧的未读消息</string>
     <string name="title_advanced_kept_removed">检查旧消息是否从服务器上被移除</string>
     <string name="title_advanced_sync_folders">同步文件夹列表</string>
+    <string name="title_advanced_subscriptions">管理文件夹订阅</string>
+    <string name="title_advanced_sync_subscribed">只同步订阅的文件夹</string>
     <string name="title_advanced_keyboard">默认显示键盘</string>
+    <string name="title_advanced_suggest_local">提示本地存储的联系人</string>
     <string name="title_advanced_prefix_once">答复或抄送邮件时, 主题前的Re或CC只出现一次</string>
     <string name="title_advanced_plain_only">默认仅发送纯文本</string>
+    <string name="title_advanced_usenet_signature">Usenet签名公约（RFC3676）</string>
     <string name="title_advanced_autoresize">自动调整附加和嵌入图像大小</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d 像素</string>
     <string name="title_advanced_lookup_mx">发送前检查收件人电子邮件地址</string>
@@ -186,6 +190,7 @@
     <string name="title_advanced_identicons">显示哈希头像</string>
     <string name="title_advanced_circular">使用圆形图标</string>
     <string name="title_advanced_name_email">显示名称和电子邮件地址</string>
+    <string name="title_advanced_subject_top">在发件人上方显示主题</string>
     <string name="title_advanced_subject_italic">用斜体字显示邮件主题</string>
     <string name="title_advanced_flags">显示星标</string>
     <string name="title_advanced_preview">显示邮件预览</string>
@@ -222,6 +227,7 @@
     <string name="title_advanced_notify_action_reply">回复</string>
     <string name="title_advanced_notify_action_flag">标星</string>
     <string name="title_advanced_notify_action_seen">已读</string>
+    <string name="title_advanced_biometrics_notify">使用生物认证时显示通知内容</string>
     <string name="title_advanced_light">使用指示灯</string>
     <string name="title_advanced_sound">选择通知提示音</string>
     <string name="title_advanced_badge_hint">仅可用于支持的启动器</string>
@@ -229,7 +235,6 @@
     <string name="title_advanced_notify_manage_hint">点击频道名称“通知”设置默认通知声音等</string>
     <string name="title_advanced_double_back">双击返回键退出</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时</string>
-    <string name="title_advanced_biometrics_notify">使用生物认证时显示通知内容</string>
     <string name="title_advanced_english">强制使用英语</string>
     <string name="title_advanced_watchdog">定期检查FairEmail是否仍在运行</string>
     <string name="title_advanced_updates">检查更新</string>
@@ -244,10 +249,9 @@
     <string name="title_advanced_unseen_hint">一些提供商未正确支持支持该功能，这可能导致同步所有信息。</string>
     <string name="title_advanced_sync_kept_hint">这将传输额外数据，消耗额外的电池电量，特别是如果有许多消息存储在设备上</string>
     <string name="title_advanced_sync_folders_hint">禁用此功能会降低数据和电池使用量，但也会禁用更新文件夹列表</string>
-    <string name="title_advanced_subscriptions">管理文件夹订阅</string>
-    <string name="title_advanced_sync_subscribed">只同步订阅的文件夹</string>
-    <string name="title_advanced_lookup_mx_hint">这将检查 DNS MX 记录是否存在</string>
     <string name="title_advanced_sync_delay_hint">这将减缓同步消息的速度</string>
+    <string name="title_advanced_suggest_local_hint">除了Android提供的联系人外</string>
+    <string name="title_advanced_lookup_mx_hint">这将检查 DNS MX 记录是否存在</string>
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>

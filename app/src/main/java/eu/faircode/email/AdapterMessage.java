@@ -183,6 +183,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean date;
     private boolean threading;
     private boolean name_email;
+    private boolean subject_top;
     private boolean subject_italic;
     private boolean flags;
     private boolean preview;
@@ -345,7 +346,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivExpander = itemView.findViewById(R.id.ivExpander);
             ivFlagged = itemView.findViewById(R.id.ivFlagged);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
-            tvFrom = itemView.findViewById(R.id.tvFrom);
+            tvFrom = itemView.findViewById(subject_top ? R.id.tvSubject : R.id.tvFrom);
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
             ivType = itemView.findViewById(R.id.ivType);
@@ -356,7 +357,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivPlain = itemView.findViewById(R.id.ivPlain);
             ivReceipt = itemView.findViewById(R.id.ivReceipt);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
-            tvSubject = itemView.findViewById(R.id.tvSubject);
+            tvSubject = itemView.findViewById(subject_top ? R.id.tvFrom : R.id.tvSubject);
             tvPreview = itemView.findViewById(R.id.tvPreview);
             tvFolder = itemView.findViewById(R.id.tvFolder);
             tvCount = itemView.findViewById(R.id.tvCount);
@@ -838,7 +839,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                     }
-                }.execute(context, owner, aargs, "message:avatar");
+                }.setLog(false).execute(context, owner, aargs, "message:avatar");
             } else
                 bindContactInfo(info, message);
 
@@ -1186,7 +1187,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
-            }.execute(context, owner, sargs, "message:actions");
+            }.setLog(false).execute(context, owner, sargs, "message:actions");
 
             // Message text
             pbBody.setVisibility(suitable || message.content ? View.VISIBLE : View.GONE);
@@ -1373,7 +1374,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
-            }.execute(context, owner, args, "message:calendar");
+            }.setLog(false).execute(context, owner, args, "message:calendar");
         }
 
         private void onActionCalendar(TupleMessageEx message, int action) {
@@ -2443,7 +2444,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 args.putBoolean("show_images", show_images);
                 args.putBoolean("show_quotes", show_quotes);
                 args.putInt("zoom", zoom);
-                bodyTask.setCount(false).execute(context, owner, args, "message:body");
+                bodyTask.setLog(false).setCount(false).execute(context, owner, args, "message:body");
             }
         }
 
@@ -3076,6 +3077,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
         this.name_email = prefs.getBoolean("name_email", !compact);
+        this.subject_top = prefs.getBoolean("subject_top", false);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);

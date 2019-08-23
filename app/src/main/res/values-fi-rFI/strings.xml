@@ -174,9 +174,13 @@
     <string name="title_advanced_delete_unseen">Poista vanhat lukemattomat viestit</string>
     <string name="title_advanced_kept_removed">Tarkista onko vanhoja viestejä poistettu palvelimelta</string>
     <string name="title_advanced_sync_folders">Synkronoi kansiolista</string>
+    <string name="title_advanced_subscriptions">Hallinnoi tilattuja kansioita</string>
+    <string name="title_advanced_sync_subscribed">Synkronoi vain tilatut kansiot</string>
     <string name="title_advanced_keyboard">Näytä näppäimistö oletuksena</string>
+    <string name="title_advanced_suggest_local">Ehdota paikallisesti tallennettuja yhteystietoja</string>
     <string name="title_advanced_prefix_once">Lisää aiheeseen etuliite vain kerran vastatessa ja edelleenlähetettäessä</string>
     <string name="title_advanced_plain_only">Lähetä muotoilemattomana tekstinä oletuksena</string>
+    <string name="title_advanced_usenet_signature">Usenetin allekirjoitustyyli</string>
     <string name="title_advanced_autoresize">Muuta liitettyjen ja upotettujen kuvien koot</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d kuvapistettä</string>
     <string name="title_advanced_lookup_mx">Tarkista vastaanottajien sähköpostiosoitteet ennen lähettämistä</string>
@@ -198,6 +202,7 @@
     <string name="title_advanced_identicons">Näytä identikonit</string>
     <string name="title_advanced_circular">Näytä pyöreät kuvakkeet</string>
     <string name="title_advanced_name_email">Näytä nimet ja sähköpostiosoitteet</string>
+    <string name="title_advanced_subject_top">Näytä aihe lähettäjän yläpuolella</string>
     <string name="title_advanced_subject_italic">Näytä aihe kursiivilla</string>
     <string name="title_advanced_flags">Näytä tähdet</string>
     <string name="title_advanced_preview">Näytä viestin esikatselu</string>
@@ -234,6 +239,7 @@
     <string name="title_advanced_notify_action_reply">Vastaa</string>
     <string name="title_advanced_notify_action_flag">Lisää tähti</string>
     <string name="title_advanced_notify_action_seen">Lue</string>
+    <string name="title_advanced_biometrics_notify">Näytä ilmoituksen sisältö käytettäessä biometristä tunnistautumista</string>
     <string name="title_advanced_light">Käytä LED-ilmoitusta</string>
     <string name="title_advanced_sound">Valitse ilmoituksen ääni</string>
     <string name="title_advanced_badge_hint">Käytössä vain tuetuissa käynnistinsovelluksissa</string>
@@ -241,7 +247,6 @@
     <string name="title_advanced_notify_manage_hint">Näpäytä kanavan nimeä \'Ilmoitukset\' asettaaksesi oletusilmoitusäänen yms.</string>
     <string name="title_advanced_double_back">\'Takaisin\' kaksi kertaa sulkee sovelluksen</string>
     <string name="title_advanced_biometrics_timeout">Biometrisen tunnistautumisen aikakatkaisu</string>
-    <string name="title_advanced_biometrics_notify">Näytä ilmoituksen sisältö käytettäessä biometristä tunnistautumista</string>
     <string name="title_advanced_english">Pakota englannin kieli</string>
     <string name="title_advanced_watchdog">Tarkista toistuvasti, että FairEmail on edelleen aktiivinen</string>
     <string name="title_advanced_updates">Päivitysten tarkastus</string>
@@ -256,10 +261,9 @@
     <string name="title_advanced_unseen_hint">Jotkin palveluntarjoajat eivät tue tätä kunnolla, mikä voi aiheuttaa esimerkiksi kaikkien viestien synkronoinnin</string>
     <string name="title_advanced_sync_kept_hint">Tämä lisää datan ja akun käyttöä varsinkin, jos paikallisia viestejä on paljon</string>
     <string name="title_advanced_sync_folders_hint">Tämän kytkeminen pois vähentää datan ja akun käyttöä, mutta kytkee pois myös kansiolistan päivittymisen</string>
-    <string name="title_advanced_subscriptions">Hallinnoi tilattuja kansioita</string>
-    <string name="title_advanced_sync_subscribed">Synkronoi vain tilatut kansiot</string>
-    <string name="title_advanced_lookup_mx_hint">Tämä tarkistaa löytyykö DNS MX-tietoja</string>
     <string name="title_advanced_sync_delay_hint">Tämä hidastaa viestien synkronointia</string>
+    <string name="title_advanced_suggest_local_hint">Androidin tarjoamien yhteystietojen lisäksi</string>
+    <string name="title_advanced_lookup_mx_hint">Tämä tarkistaa löytyykö DNS MX-tietoja</string>
     <string name="title_advanced_metered_hint">Käytön mukaan laskutettavat yhteydet ovat yleensä mobiiliyhteyksiä tai maksullisia Wi-Fi-yhteyspisteitä</string>
     <string name="title_advanced_metered_warning">Tämän kytkeminen pois estää viestien vastaanoton ja lähetyksen mobiiliyhteyttä käytettessä</string>
     <string name="title_advanced_rlah_hint">Oletetaan, että EU:ssa on kotimaanhintaiset verkkovierailut</string>

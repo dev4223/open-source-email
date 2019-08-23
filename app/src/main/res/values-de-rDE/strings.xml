@@ -173,9 +173,12 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_delete_unseen">Alte ungelesene Nachrichten löschen</string>
     <string name="title_advanced_kept_removed">Überprüfen, ob alte Nachrichten vom Server entfernt wurden</string>
     <string name="title_advanced_sync_folders">Ordnerliste synchronisieren</string>
+    <string name="title_advanced_subscriptions">Ihre Abonnements verwalten</string>
+    <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
     <string name="title_advanced_keyboard">Tastatur immer anzeigen</string>
     <string name="title_advanced_prefix_once">Betreff nur einmal beim Antworten oder Weiterleiten voranstellen</string>
     <string name="title_advanced_plain_only">Immer als Reintext senden</string>
+    <string name="title_advanced_usenet_signature">Usenet Signatur-Konvention</string>
     <string name="title_advanced_autoresize">Angehängte und eingebettete Bilder automatisch anpassen</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d Pixel</string>
     <string name="title_advanced_lookup_mx">Überprüft die Empfänger-E-Mail-Adressen vor dem Senden</string>
@@ -197,6 +200,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
     <string name="title_advanced_circular">Runde Symbole benutzen</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
+    <string name="title_advanced_subject_top">Zeige Betreff oberhalb des Absenders</string>
     <string name="title_advanced_subject_italic">Betreff kursiv anzeigen</string>
     <string name="title_advanced_flags">Sterne anzeigen</string>
     <string name="title_advanced_preview">Nachrichtenvorschau anzeigen</string>
@@ -233,6 +237,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_notify_action_reply">Antworten</string>
     <string name="title_advanced_notify_action_flag">Kennzeichnen</string>
     <string name="title_advanced_notify_action_seen">Gelesen</string>
+    <string name="title_advanced_biometrics_notify">Benachrichtigungsinhalt bei Nutzung der biometrischen Authentifizierung anzeigen</string>
     <string name="title_advanced_light">Benachrichtigungslicht verwenden</string>
     <string name="title_advanced_sound">Benachrichtigungston auswählen</string>
     <string name="title_advanced_badge_hint">Nur verfügbar auf unterstützten Launchern</string>
@@ -240,7 +245,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_notify_manage_hint">„Benachrichtigungen” antippen, um den Standard-Benachrichtigungston usw. einzustellen</string>
     <string name="title_advanced_double_back">Doppelt „Zurück” drücken zum Beenden</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
-    <string name="title_advanced_biometrics_notify">Benachrichtigungsinhalt bei Nutzung der biometrischen Authentifizierung anzeigen</string>
     <string name="title_advanced_english">Englische Sprache erzwingen</string>
     <string name="title_advanced_watchdog">Regelmäßig überprüfen, ob FairEmail noch aktiv ist</string>
     <string name="title_advanced_updates">Nach Aktualisierungen suchen</string>
@@ -255,10 +259,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_unseen_hint">Einige Anbieter unterstützen dies nicht korrekt, was zum Beispiel dazu führen könnte, dass alle Nachrichten synchronisiert werden</string>
     <string name="title_advanced_sync_kept_hint">Dies überträgt zusätzliche Daten und verbraucht zusätzliche Akkuladung, insbesondere wenn viele Nachrichten auf dem Gerät gespeichert sind</string>
     <string name="title_advanced_sync_folders_hint">Wenn Sie dies deaktivieren, wird der Daten- und Akkubedarf etwas reduziert, aber auch die Aktualisierung der Ordnerliste deaktiviert.</string>
-    <string name="title_advanced_subscriptions">Ihre Abonnements verwalten</string>
-    <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
-    <string name="title_advanced_lookup_mx_hint">Dies wird überprüfen, ob DNS MX-Einträge existieren</string>
     <string name="title_advanced_sync_delay_hint">Dies verzögert die Synchronisierung von Nachrichten</string>
+    <string name="title_advanced_lookup_mx_hint">Dies wird überprüfen, ob DNS MX-Einträge existieren</string>
     <string name="title_advanced_metered_hint">Getaktete Verbindungen sind in der Regel mobile Verbindungen oder bezahlte Wi-Fi Hotspots</string>
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
@@ -761,7 +763,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string-array name="onCloseNames">
         <item>Nichts tun</item>
         <item>Gehe zu vorheriger Unterhaltung</item>
-        <item>Gehe zur nächstem Unterhaltung</item>
+        <item>Gehe zur nächsten Unterhaltung</item>
     </string-array>
     <string-array name="resizeNames">
         <item>Klein</item>
