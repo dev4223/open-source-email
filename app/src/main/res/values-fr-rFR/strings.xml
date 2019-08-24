@@ -237,6 +237,7 @@
     <string name="title_advanced_notify_action_trash">Supprimer</string>
     <string name="title_advanced_notify_action_archive">Archiver</string>
     <string name="title_advanced_notify_action_reply">Répondre</string>
+    <string name="title_advanced_notify_action_reply_direct">Répondre directement</string>
     <string name="title_advanced_notify_action_flag">Suivre</string>
     <string name="title_advanced_notify_action_seen">Marquer lu</string>
     <string name="title_advanced_biometrics_notify">Afficher le contenu de notification lors de l\'utilisation de l\'authentification biométrique</string>
@@ -250,6 +251,7 @@
     <string name="title_advanced_english">Forcer la langue anglaise</string>
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
+    <string name="title_advanced_experiments">Essayer les fonctionnalités expérimentales</string>
     <string name="title_advanced_crash_reports">Envoyer des rapports d\'erreur</string>
     <string name="title_advanced_debug">Débogage</string>
     <string name="title_advanced_cleanup">Nettoyage</string>
@@ -280,6 +282,7 @@
     <string name="title_advanced_sender_hint">La plupart des fournisseurs n\'autorisent pas les adresses d\'expéditeur modifiées</string>
     <string name="title_advanced_subscribed_only_hint">Activer ceci supprimera tous les dossiers locaux sans abonnement</string>
     <string name="title_advanced_english_hint">Ceci va redémarrer l’application</string>
+    <string name="title_advanced_experiments_hint">Liste des fonctionnalités expérimentales actuelles</string>
     <string name="title_advanced_debug_hint">Activer la journalisation supplémentaire et afficher les informations de débogage à différents endroits</string>
     <string name="title_advanced_cleanup_hint">Ceci supprimera tous les fichiers temporaires</string>
     <string name="title_advanced_never_favorite">Jamais favori</string>
@@ -344,8 +347,7 @@
     <string name="title_identity_delete">Supprimer définitivement cette identité ?</string>
     <string name="title_edit_html">Modifier en HTML</string>
     <string name="title_last_connected">Dernière connexion : %1$s</string>
-    <string name="title_pop3_hint">POP3 a des limitations significatives, donc utilisez IMAP si possible</string>
-    <string name="title_pop3_support">POP3 n\'est pas pris en charge, voir aussi la FAQ</string>
+    <string name="title_pop3_support">POP3 n\'est pas supporté</string>
     <string name="title_synchronize_now">Synchroniser maintenant</string>
     <string name="title_synchronize_all">Synchroniser tous les messages</string>
     <string name="title_synchronize_enabled">Synchroniser</string>

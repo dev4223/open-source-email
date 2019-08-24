@@ -2144,7 +2144,7 @@ Reformatting and displaying such messages will take too long. You can try to use
 
 The current experimental features are:
 
-* Small, dimmed infinite / timelapse icon at the bottom of the messages to quicly toggle filtering snoozed messages
+* Small, dimmed infinite / timelapse icon at the bottom of the messages to quicly toggle filtering of snoozed messages
 
 <br />
 
