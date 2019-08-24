@@ -8,6 +8,7 @@
     <attr name="colorDrawerText" format="reference" />
     <attr name="colorDrawerBackground" format="reference" />
     <attr name="dateColorDrawerBackground" format="reference" />
+    <attr name="dateColorDrawerForeground" format="reference" />
     <attr name="colorCardBackground" format="reference" />
     <attr name="activatableItemBackground" format="reference" />
 
@@ -28,6 +29,7 @@
         <item name="colorDrawerText">@color/lightColorDrawerText</item>
         <item name="colorDrawerBackground">@color/lightColorDrawerBackground</item>
         <item name="dateColorDrawerBackground">@color/lightColorDrawerBackground</item>
+        <item name="dateColorDrawerForeground">@color/lightColorDrawerText</item>
 
         <item name="colorCardBackground">@color/lightColorCardBackground</item>
 
@@ -58,6 +60,7 @@
         <item name="colorDrawerText">@color/darkColorDrawerText</item>
         <item name="colorDrawerBackground">@color/darkColorDrawerBackground</item>
         <item name="dateColorDrawerBackground">@color/darkColorDrawerBackground</item>
+        <item name="dateColorDrawerForeground">@color/darkColorDrawerText</item>
 
         <item name="colorCardBackground">@color/darkColorCardBackground</item>
 
@@ -81,6 +84,7 @@
         <item name="android:windowBackground">@android:color/black</item>
         <item name="colorDrawerBackground">@android:color/black</item>
         <item name="dateColorDrawerBackground">@color/darkestColorDrawerBackground</item>
+        <item name="dateColorDrawerForeground">@color/blackPrimaryLight</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">

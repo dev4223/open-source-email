@@ -20,6 +20,7 @@
     <color name="blackPrimaryDark">#001F2A</color>
     <!-- color name="blackPrimary">#026ca0</color -->
     <!-- color name="blackPrimaryDark">#004c7d</color -->
+    <color name="blackPrimaryLight">#006FCD</color>
     <!-- blackAccent orig: #b27d00 -->
     <color name="blackAccent">#FFE50A3E</color>
     <color name="blackColorSubject">#dfdfdf</color>
