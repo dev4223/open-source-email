@@ -211,6 +211,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [~~(122) Why is the recipient name/email address show with a warning color?~~](#user-content-faq122)
 * [(123) What does 'force sync'?](#user-content-faq123)
 * [(124) Why do I get 'Message too large or too complex to display'?](#user-content-faq124)
+* [(125) What are the current experimental features?](#user-content-faq125)
 
 [I have another question.](#support)
 
@@ -1251,7 +1252,6 @@ but even Google's Chrome cannot handle this.
 
 * Did you know that starred messages are by default synchronized/kept? (this can be changed in the receive settings)
 * Did you know that you can long press the 'write message' icon to go to the drafts folder?
-* Did you know that you can long press the account name in the navigation menu to go to the inbox of that account?
 * Did you know there is an advanced option to mark messages read when they are moved? (archiving and trashing is also moving)
 * Did you know that you can select text (or an email address) in any app on recent Android versions and let FairEmail search for it?
 * Did you know that FairEmail has a tablet mode? Rotate your device in landscape mode and conversation threads will be opened in a second column if there is enough screen space.
@@ -2136,6 +2136,15 @@ This should not normally be used.
 
 The message *Message too large or too complex to display* will be shown if there are more than 100,000 characters or more than 500 links in a message.
 Reformatting and displaying such messages will take too long. You can try to use the original message view, powered by the browser, instead.
+
+<br />
+
+<a name="faq125"></a>
+**(125) What are the current experimental features?**
+
+The current experimental features are:
+
+* Small, dimmed infinite / timelapse icon at the bottom of the messages to quicly toggle filtering snoozed messages
 
 <br />
 

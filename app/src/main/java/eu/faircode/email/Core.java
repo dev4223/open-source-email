@@ -44,6 +44,7 @@ import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.imap.protocol.FLAGS;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.UID;
@@ -1115,7 +1116,8 @@ class Core {
 
             for (int i = 0; i < imessages.length && state.isRunning() && state.isRecoverable(); i++)
                 try {
-                    uids.remove(ifolder.getUID(imessages[i]));
+                    if (!imessages[i].isSet(Flags.Flag.DELETED))
+                        uids.remove(ifolder.getUID(imessages[i]));
                 } catch (MessageRemovedException ex) {
                     Log.w(folder.name, ex);
                 } catch (Throwable ex) {
@@ -1165,14 +1167,15 @@ class Core {
                                 else
                                     sb.append(range.first).append(':').append(range.second);
                             }
-                            Response[] responses = protocol.command("UID FETCH " + sb + " (UID)", null);
+                            Response[] responses = protocol.command("UID FETCH " + sb + " (UID FLAGS)", null);
 
                             if (responses.length > 0 && responses[responses.length - 1].isOK()) {
                                 for (Response response : responses)
                                     if (response instanceof FetchResponse) {
                                         FetchResponse fr = (FetchResponse) response;
                                         UID uid = fr.getItem(UID.class);
-                                        if (uid != null)
+                                        FLAGS flags = fr.getItem(FLAGS.class);
+                                        if (uid != null && (flags == null || !flags.contains(Flags.Flag.DELETED)))
                                             uids.remove(uid.uid);
                                     }
                             } else {
@@ -1967,8 +1970,11 @@ class Core {
                 groupMessages.put(group, new ArrayList<TupleMessageEx>());
             }
 
-            if (message.notifying != 0)
-                groupNotifying.get(group).add(message.id * message.notifying);
+            if (message.notifying != 0) {
+                long id = message.id * message.notifying;
+                if (!groupNotifying.get(group).contains(id))
+                    groupNotifying.get(group).add(id);
+            }
 
             if (!(message.ui_seen || message.ui_ignored || message.ui_hide != 0)) {
                 // This assumes the messages are properly ordered
@@ -2050,6 +2056,8 @@ class Core {
                 }
             }
         }
+
+        groupNotifying.clear();
     }
 
     private static List<Notification> getNotificationUnseen(Context context, String group, List<TupleMessageEx> messages) {

@@ -291,6 +291,7 @@
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
+    <string name="title_advanced_experiments">Try experimental features</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
     <string name="title_advanced_debug">Debug mode</string>
     <string name="title_advanced_cleanup">Cleanup</string>
@@ -330,6 +331,7 @@
 
     <string name="title_advanced_subscribed_only_hint">Enabling this will delete all local folders without subscription</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
+    <string name="title_advanced_experiments_hint">List of current experimental features</string>
     <string name="title_advanced_debug_hint">Enable extra logging and show debug information at various places</string>
     <string name="title_advanced_cleanup_hint">This will delete all temporary files</string>
 
@@ -402,8 +404,7 @@
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>
     <string name="title_last_connected">Last connected: %1$s</string>
-    <string name="title_pop3_hint">POP3 has significant limitations, so use IMAP whenever possible</string>
-    <string name="title_pop3_support">POP3 is not supported, see also the FAQ</string>
+    <string name="title_pop3_support">POP3 is not supported</string>
 
     <string name="title_synchronize_now">Synchronize now</string>
     <string name="title_synchronize_all">Synchronize all messages</string>
