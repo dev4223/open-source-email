@@ -15,7 +15,7 @@
 
     <!-- shade 900 -->
     <!-- blackPrimary orig: #01579b -->
-    <color name="blackPrimary">#003560</color>
+    <color name="blackPrimary">#003254</color>
     <!-- blackPrimaryDark orig: #003c6c -->
     <color name="blackPrimaryDark">#001F2A</color>
     <!-- color name="blackPrimary">#026ca0</color -->
