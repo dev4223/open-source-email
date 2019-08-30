@@ -994,13 +994,17 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onActionDiscard() {
-        Bundle args = new Bundle();
-        args.putString("question", getString(R.string.title_ask_discard));
+        if (isEmpty())
+            onAction(R.id.action_delete);
+        else {
+            Bundle args = new Bundle();
+            args.putString("question", getString(R.string.title_ask_discard));
 
-        FragmentDialogAsk fragment = new FragmentDialogAsk();
-        fragment.setArguments(args);
-        fragment.setTargetFragment(this, REQUEST_DISCARD);
-        fragment.show(getFragmentManager(), "compose:discard");
+            FragmentDialogAsk fragment = new FragmentDialogAsk();
+            fragment.setArguments(args);
+            fragment.setTargetFragment(this, REQUEST_DISCARD);
+            fragment.show(getFragmentManager(), "compose:discard");
+        }
     }
 
     private void onActionSend() {
@@ -1697,10 +1701,18 @@ public class FragmentCompose extends FragmentBase {
 
         SpannableString ss = new SpannableString(etBody.getText());
 
-        for (URLSpan span : ss.getSpans(start, end, URLSpan.class))
+        List<Object> spans = new ArrayList<>();
+        for (Object span : ss.getSpans(start, end, Object.class)) {
+            if (!(span instanceof URLSpan))
+                spans.add(span);
             ss.removeSpan(span);
+        }
 
         ss.setSpan(new URLSpan(link), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        for (Object span : spans)
+            ss.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
         etBody.setText(ss);
         etBody.setSelection(end, end);
     }
@@ -3370,7 +3382,8 @@ public class FragmentCompose extends FragmentBase {
                             ContactsContract.Groups._ID,
                             ContactsContract.Groups.TITLE
                     },
-                    null, null, ContactsContract.Groups.TITLE
+                    ContactsContract.Groups.GROUP_VISIBLE + " = 1", null,
+                    ContactsContract.Groups.TITLE
             );
 
             final SimpleCursorAdapter adapter = new SimpleCursorAdapter(

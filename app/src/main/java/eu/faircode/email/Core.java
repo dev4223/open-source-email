@@ -1168,7 +1168,8 @@ class Core {
                                 else
                                     sb.append(range.first).append(':').append(range.second);
                             }
-                            Response[] responses = protocol.command("UID FETCH " + sb + " (UID FLAGS)", null);
+                            String command = "UID FETCH " + sb + " (UID FLAGS)";
+                            Response[] responses = protocol.command(command, null);
 
                             if (responses.length > 0 && responses[responses.length - 1].isOK()) {
                                 for (Response response : responses)
@@ -1439,17 +1440,11 @@ class Core {
                                 dup.sent = helper.getSent();
                             }
 
-                            // Download message again to get signature / quoted message
-                            // This will propagate any modifications by the server locally as well
-                            if (EntityFolder.SENT.equals(folder.type))
-                                dup.content = false;
-
                             dup.error = null;
 
                             message = dup;
                             process = true;
-                        } else if (dup.uid < 0)
-                            throw new MessageRemovedException();
+                        }
                     }
                 }
             }

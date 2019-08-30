@@ -57,6 +57,8 @@ For authorizing:
 * Themes
 * Search for settings
 * Select any day for time conditions
+* Widget for selected account
+* Pinch zoom
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -212,6 +214,8 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(123) What does 'force sync'?](#user-content-faq123)
 * [(124) Why do I get 'Message too large or too complex to display'?](#user-content-faq124)
 * [(125) What are the current experimental features?](#user-content-faq125)
+* [(126) What does 'User is authenticated but not connected' mean?](#user-content-faq126)
+* [(127) How can I fix 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
 
 [I have another question.](#support)
 
@@ -654,6 +658,9 @@ but such apps cannot be updated anymore and recent Android versions will show a 
 
 <a name="faq22"></a>
 **(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'Connection closed/reset by peer', 'Read timed out' and 'Broken pipe' mean?**
+
+FairEmail does not hide errors like similar apps often do, so it is easier to diagnose problems.
+Also, FairEmail will always retry again later, so transient errors will automatically be solved.
 
 The messages *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
 mean that FairEmail was not able to connect to the email server.
@@ -2145,6 +2152,21 @@ Reformatting and displaying such messages will take too long. You can try to use
 The current experimental features are:
 
 * Small, dimmed infinite / timelapse icon at the bottom of the messages to quicly toggle filtering of snoozed messages
+
+<br />
+
+<a name="faq126"></a>
+**(126) What does 'User is authenticated but not connected' mean?**
+
+The message *User is authenticated but not connected* is caused by a bug in older versions of Microsoft's Exchange server.
+This message in fact means that the password was invalid, likely because it was changed.
+
+<br />
+
+<a name="faq127"></a>
+**(127) How can I fix 'Syntactically invalid HELO argument(s)'?**
+
+You can likely fix the error *Syntactically invalid HELO argument(s)* by disabling the advanced indentity option *Use local IP address instead of host name*.
 
 <br />
 

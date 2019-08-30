@@ -30,8 +30,10 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LevelListDrawable;
 import android.os.Handler;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -89,6 +91,11 @@ public class HtmlHelper {
             Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     static String sanitize(Context context, String html, boolean show_images) {
+        if (html.length() > MAX_SIZE) {
+            Log.i("Message size=" + html.length());
+            return "<strong>" + context.getString(R.string.title_hint_too_complex) + "</strong>";
+        }
+
         Document parsed = Jsoup.parse(html);
 
         // <html xmlns:v="urn:schemas-microsoft-com:vml"
@@ -126,10 +133,9 @@ public class HtmlHelper {
             }
         }
 
-        int size = parsed.text().length();
         int links = parsed.select("a").size();
-        if (size > MAX_SIZE || links > MAX_LINKS) {
-            Log.i("Message size=" + size + " links=" + links);
+        if (links > MAX_LINKS) {
+            Log.i("Message links=" + links);
             return "<strong>" + context.getString(R.string.title_hint_too_complex) + "</strong>";
         }
 
@@ -279,7 +285,7 @@ public class HtmlHelper {
 
             @Override
             public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
+                if (alinks < MAX_LINKS && node instanceof TextNode) {
                     TextNode tnode = (TextNode) node;
                     String text = tnode.text();
 
@@ -305,7 +311,7 @@ public class HtmlHelper {
                                         " " + matcher.start() + "..." + matcher.end() + "/" + text.length() +
                                         " linked=" + linked + " email=" + email);
 
-                            if (linked || alinks >= MAX_LINKS)
+                            if (linked)
                                 span.appendText(text.substring(pos, matcher.end()));
                             else {
                                 span.appendText(text.substring(pos, matcher.start()));
@@ -319,7 +325,7 @@ public class HtmlHelper {
                             }
 
                             pos = matcher.end();
-                        } while (matcher.find());
+                        } while (alinks < MAX_LINKS && matcher.find());
 
                         span.appendText(text.substring(pos));
 
@@ -726,6 +732,21 @@ public class HtmlHelper {
         } catch (NumberFormatException ignored) {
             return false;
         }
+    }
+
+    static Spanned highlightHeaders(Context context, String headers) {
+        int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
+        SpannableStringBuilder ssb = new SpannableStringBuilder(headers);
+        int index = 0;
+        for (String line : headers.split("\n")) {
+            if (line.length() > 0 && !Character.isWhitespace(line.charAt(0))) {
+                int colon = line.indexOf(':');
+                if (colon > 0)
+                    ssb.setSpan(new ForegroundColorSpan(colorAccent), index, index + colon, 0);
+            }
+            index += line.length() + 1;
+        }
+        return ssb;
     }
 
     static Spanned fromHtml(@NonNull String html) {

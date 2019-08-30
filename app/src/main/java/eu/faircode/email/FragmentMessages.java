@@ -1808,7 +1808,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         EntityMessage message = db.message().getMessage(id);
                         if (message != null) {
                             List<EntityMessage> messages = db.message().getMessagesByThread(
-                                    message.account, message.thread, threading ? null : id, null);
+                                    message.account, message.thread, threading ? null : id, seen ? null : message.folder);
                             for (EntityMessage threaded : messages)
                                 if (threaded.ui_seen != seen)
                                     EntityOperation.queue(context, threaded, EntityOperation.SEEN, seen);
@@ -2969,11 +2969,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     expand = messages.get(0);
 
                 if (expand != null &&
-                        (expand.content || unmetered || (expand.size != null && expand.size < download))) {
+                        (expand.content || unmetered || (expand.size != null && expand.size < download)))
                     iProperties.setValue("expanded", expand.id, true);
-                    if (!expand.ui_seen)
-                        return true;
-                }
             }
         } else {
             if (autoCloseCount > 0 && (autoclose || onclose != null)) {
@@ -3067,6 +3064,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
             }.setLog(false).execute(this, args, "messages:navigation");
         }
+
         return false;
     }
 
@@ -3098,6 +3096,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 long id = args.getLong("id");
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean expand_read = prefs.getBoolean("expand_read", true);
                 boolean inline_images = prefs.getBoolean("inline_images", false);
 
                 DB db = DB.getInstance(context);
@@ -3123,7 +3122,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
                         }
 
-                        if (!message.ui_seen && !folder.read_only)
+                        if (expand_read && !message.ui_seen && !folder.read_only)
                             EntityOperation.queue(context, message, EntityOperation.SEEN, true);
                     }
 
