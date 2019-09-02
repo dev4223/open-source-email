@@ -78,8 +78,7 @@ import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE;
 public class HtmlHelper {
     static final int PREVIEW_SIZE = 250; // characters
 
-    private static final int MAX_SIZE = 100 * 1024; // characters
-    private static final int MAX_LINKS = 500;
+    private static final int MAX_AUTO_LINK = 250;
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
 
     private static final List<String> heads = Collections.unmodifiableList(Arrays.asList(
@@ -91,11 +90,6 @@ public class HtmlHelper {
             Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
     static String sanitize(Context context, String html, boolean show_images) {
-        if (html.length() > MAX_SIZE) {
-            Log.i("Message size=" + html.length());
-            return "<strong>" + context.getString(R.string.title_hint_too_complex) + "</strong>";
-        }
-
         Document parsed = Jsoup.parse(html);
 
         // <html xmlns:v="urn:schemas-microsoft-com:vml"
@@ -133,12 +127,6 @@ public class HtmlHelper {
             }
         }
 
-        int links = parsed.select("a").size();
-        if (links > MAX_LINKS) {
-            Log.i("Message links=" + links);
-            return "<strong>" + context.getString(R.string.title_hint_too_complex) + "</strong>";
-        }
-
         Whitelist whitelist = Whitelist.relaxed()
                 .addTags("hr", "abbr")
                 .removeTags("col", "colgroup", "thead", "tbody")
@@ -157,9 +145,24 @@ public class HtmlHelper {
         }
 
         // Pre formatted text
-        for (Element code : document.select("pre")) {
-            code.html(code.html().replaceAll("\\r?\\n", "<br>"));
-            code.tagName("div");
+        for (Element pre : document.select("pre")) {
+            String[] lines = pre.html().split("\\r?\\n");
+            for (int i = 0; i < lines.length; i++) {
+                if (!"-- ".equals(lines[i])) {
+                    StringBuilder sb = new StringBuilder();
+                    int len = lines[i].length();
+                    for (int j = 0; j < len; j++) {
+                        char kar = lines[i].charAt(j);
+                        if (kar == ' ' && j + 1 < len && lines[i].charAt(j + 1) == ' ')
+                            sb.append("&nbsp;");
+                        else
+                            sb.append(kar);
+                    }
+                    lines[i] = sb.toString();
+                }
+            }
+            pre.html(TextUtils.join("<br>", lines));
+            pre.tagName("div");
         }
 
         // Code
@@ -203,12 +206,19 @@ public class HtmlHelper {
 
         // Tables
         for (Element col : document.select("th,td")) {
-            // separate columns by a space
-            if (col.nextElementSibling() == null) {
-                if (col.selectFirst("div,table,p") == null)
+            boolean content = false;
+            for (Element e : col.children())
+                if (!e.isBlock() && hasContent(e)) {
+                    content = true;
+                    break;
+                }
+
+            // separate columns
+            if (content)
+                if (col.nextElementSibling() == null)
                     col.appendElement("br");
-            } else
-                col.append("&nbsp;");
+                else
+                    col.appendText(" ");
 
             if ("th".equals(col.tagName()))
                 col.tagName("strong");
@@ -281,11 +291,11 @@ public class HtmlHelper {
                         PatternsCompat.AUTOLINK_WEB_URL.pattern());
 
         NodeTraversor.traverse(new NodeVisitor() {
-            private int alinks = links;
+            private int links = 0;
 
             @Override
             public void head(Node node, int depth) {
-                if (alinks < MAX_LINKS && node instanceof TextNode) {
+                if (links < MAX_AUTO_LINK && node instanceof TextNode) {
                     TextNode tnode = (TextNode) node;
                     String text = tnode.text();
 
@@ -309,7 +319,7 @@ public class HtmlHelper {
                             if (BuildConfig.DEBUG)
                                 Log.i("Web url=" + matcher.group() +
                                         " " + matcher.start() + "..." + matcher.end() + "/" + text.length() +
-                                        " linked=" + linked + " email=" + email);
+                                        " linked=" + linked + " email=" + email + " count=" + links);
 
                             if (linked)
                                 span.appendText(text.substring(pos, matcher.end()));
@@ -321,11 +331,11 @@ public class HtmlHelper {
                                 a.text(matcher.group());
                                 span.appendChild(a);
 
-                                alinks++;
+                                links++;
                             }
 
                             pos = matcher.end();
-                        } while (alinks < MAX_LINKS && matcher.find());
+                        } while (links < MAX_AUTO_LINK && matcher.find());
 
                         span.appendText(text.substring(pos));
 
@@ -342,10 +352,7 @@ public class HtmlHelper {
 
         // Remove block elements displaying nothing
         for (Element e : document.select("*"))
-            if (e.isBlock() &&
-                    !e.hasText() &&
-                    e.select("br").size() == 0 &&
-                    e.select("img").size() == 0)
+            if (e.isBlock() && !hasContent(e))
                 e.remove();
 
         // Prevent too many line breaks
@@ -357,6 +364,10 @@ public class HtmlHelper {
 
         Element body = document.body();
         return (body == null ? "" : body.html());
+    }
+
+    private static boolean hasContent(Element element) {
+        return (element.hasText() || element.selectFirst("img") != null);
     }
 
     static Drawable decodeImage(final Context context, final long id, String source, boolean show, final TextView view) {

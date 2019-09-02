@@ -221,8 +221,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_contrast">Koristi visoki kontrast za tekst poruke</string>
     <string name="title_advanced_monospaced">Upotrijebiti font u jednolikim razmjerima za tekst poruke</string>
     <string name="title_advanced_images_inline">Automatski prikaz uključenih slika</string>
-    <string name="title_advanced_images">Automatski prikaz slika za poznate kontakte</string>
-    <string name="title_advanced_images_all">Automatski prikaži sve slike</string>
     <string name="title_advanced_collapse_quotes">Sažmi citirani tekst</string>
     <string name="title_advanced_remote_content">Automatsko prikazivanje udaljenog sadržaja pri pregledavanju izvornih poruka</string>
     <string name="title_advanced_actionbar">Traka s akcijama razgovora</string>
@@ -284,7 +282,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_name_email_hint">Kada onemogućeno, samo će imena biti prikazana ako su dostupna</string>
     <string name="title_advanced_preview_hint">Dostupno samo kada je preuzet tekst poruke</string>
     <string name="title_advanced_inline_hint">Inline slike su slike uključene u poruku</string>
-    <string name="title_advanced_permission_contacts_hint">Ovo zahtijeva odobrenje za čitanje kontakata</string>
     <string name="title_advanced_autoexpand_hint">Automatski otvori poruku ako postoji samo jedna poruka ili samo jedna nepročitana poruka u razgovoru</string>
     <string name="title_advanced_autocollapse_hint">Višestruke proširene poruke uvijek će biti zatvorene na \'natrag\'</string>
     <string name="title_advanced_autoclose_hint">Automatski zatvori razgovore kada su sve poruke arhivirane, poslane ili stavljene u otpad</string>
@@ -681,7 +678,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_hint_message_selection">Dugo pritisnite poruku za početak odabiranja više poruka</string>
     <string name="title_hint_sync">Preuzimanje poruka može potrajati neko vrijeme, ovisno o brzini davatelja, internetskoj vezi i uređaju te broju poruka. Tijekom preuzimanja poruka aplikacija može reagirati sporije.</string>
     <string name="title_hint_image_link">Link slike</string>
-    <string name="title_hint_too_complex">Poruka je prevelika ili previše složena za prikaz</string>
     <string name="title_hint_tracking_image">Slika za praćenje %1$sx%2$s</string>
     <string name="title_hint_contact_actions">Dugo pritisni za opcije</string>
     <string name="title_open_link">Otvori link</string>

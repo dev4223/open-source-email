@@ -121,7 +121,7 @@ public class MessageHelper {
         if (message.inreplyto != null)
             imessage.addHeader("In-Reply-To", message.inreplyto);
 
-        imessage.addHeader("X-FairEmail-ID", message.msgid);
+        imessage.addHeader("X-Correlation-ID", message.msgid);
 
         imessage.setFlag(Flags.Flag.SEEN, message.seen);
         imessage.setFlag(Flags.Flag.FLAGGED, message.flagged);
@@ -405,7 +405,7 @@ public class MessageHelper {
 
     String getMessageID() throws MessagingException {
         // Outlook outbox -> sent
-        String header = imessage.getHeader("X-FairEmail-ID", null);
+        String header = imessage.getHeader("X-Correlation-ID", null);
         if (header == null)
             header = imessage.getHeader("Message-ID", null);
         return (header == null ? null : MimeUtility.unfold(header));
@@ -862,11 +862,8 @@ public class MessageHelper {
             // Prevent Jsoup throwing an exception
             result = result.replace("\0", "");
 
-            if (part.isMimeType("text/plain")) {
-                result = TextUtils.htmlEncode(result);
-                result = result.replaceAll("\\r?\\n", "<br>");
-                result = "<span>" + result + "</span>";
-            }
+            if (part.isMimeType("text/plain"))
+                result = "<pre>" + TextUtils.htmlEncode(result) + "</pre>";
 
             return result;
         }
@@ -902,8 +899,7 @@ public class MessageHelper {
             if (index < 0)
                 for (int i = 0; i < remotes.size(); i++) {
                     EntityAttachment remote = remotes.get(i);
-                    if (remote.name == null && remote.cid == null &&
-                            Objects.equals(remote.type, local.type) &&
+                    if (Objects.equals(remote.type, local.type) &&
                             Objects.equals(remote.size, local.size)) {
                         index = i;
                         break;
@@ -1021,6 +1017,8 @@ public class MessageHelper {
 
     private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException, FolderClosedException {
         try {
+            if (BuildConfig.DEBUG)
+                Log.i("Part class=" + part.getClass() + " type=" + part.getContentType());
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart;
                 Object content = part.getContent();

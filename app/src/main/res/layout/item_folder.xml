@@ -54,7 +54,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
-                android:id="@+id/ivExpander"
+                android:id="@+id/ibExpander"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_gravity="center_vertical|center_horizontal"
@@ -74,7 +74,7 @@
                 android:contentDescription="@string/title_unified_folder"
                 android:paddingEnd="6dp"
                 app:layout_constraintBottom_toBottomOf="@+id/tvName"
-                app:layout_constraintStart_toEndOf="@id/ivExpander"
+                app:layout_constraintStart_toEndOf="@id/ibExpander"
                 app:layout_constraintTop_toTopOf="@+id/tvName"
                 app:srcCompat="@drawable/baseline_folder_special_24" />
 
@@ -157,7 +157,7 @@
                 android:contentDescription="@string/title_legend_folder_type"
                 android:paddingEnd="6dp"
                 app:layout_constraintBottom_toBottomOf="@+id/tvType"
-                app:layout_constraintStart_toEndOf="@id/ivExpander"
+                app:layout_constraintStart_toEndOf="@id/ibExpander"
                 app:layout_constraintTop_toTopOf="@+id/tvType"
                 app:srcCompat="@drawable/baseline_inbox_24" />
 
@@ -224,7 +224,7 @@
                 android:text="Keywords"
                 android:textAppearance="@android:style/TextAppearance.Small"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/ivExpander"
+                app:layout_constraintStart_toEndOf="@id/ibExpander"
                 app:layout_constraintTop_toBottomOf="@id/tvType" />
 
             <TextView
@@ -238,8 +238,22 @@
                 android:textColor="?attr/colorWarning"
                 android:textIsSelectable="true"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/ivExpander"
+                app:layout_constraintStart_toEndOf="@id/ibExpander"
                 app:layout_constraintTop_toBottomOf="@id/tvKeywords" />
+
+            <Button
+                android:id="@+id/btnHelp"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="?attr/colorAccent"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:text="@string/title_setup_help"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvError" />
 
             <View
                 android:id="@+id/paddingBottom"
@@ -247,7 +261,7 @@
                 android:layout_height="6dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvError" />
+                app:layout_constraintTop_toBottomOf="@id/btnHelp" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </eu.faircode.email.ViewCardOptional>
 </FrameLayout>

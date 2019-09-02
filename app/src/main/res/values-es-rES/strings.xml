@@ -211,8 +211,6 @@
     <string name="title_advanced_contrast">Utilizar contraste alto para el texto del mensaje</string>
     <string name="title_advanced_monospaced">Usar fuente monoespaciada para texto de mensaje</string>
     <string name="title_advanced_images_inline">Mostrar imágenes embebidas automáticamente</string>
-    <string name="title_advanced_images">Mostrar automáticamente imágenes de contactos conocidos</string>
-    <string name="title_advanced_images_all">Mostrar automáticamente todas las imágenes</string>
     <string name="title_advanced_collapse_quotes">Colapsar texto citado</string>
     <string name="title_advanced_remote_content">Mostrar contenido remoto automáticamente al visualizar mensajes originales</string>
     <string name="title_advanced_actionbar">Barra de acciones de conversación</string>
@@ -220,6 +218,7 @@
     <string name="title_advanced_autoscroll">Desplazar hacia arriba al recibir nuevos mensajes</string>
     <string name="title_advanced_swipenav">Deslice a la izquierda/derecha para ir a la siguiente/anterior conversación</string>
     <string name="title_advanced_double_tap">Doble toque para marcar mensaje leído/no leído</string>
+    <string name="title_advanced_expand_read">Marcar mensajes leídos al expandir</string>
     <string name="title_advanced_autoexpand">Expandir mensajes automáticamente</string>
     <string name="title_advanced_collapse">Contraer mensajes en conversaciones al ir \'atrás\'</string>
     <string name="title_advanced_autoclose">Cerrar conversaciones automáticamente</string>
@@ -274,7 +273,6 @@
     <string name="title_advanced_name_email_hint">Si está desactivado, solo se mostrarán los nombres cuando estén disponibles</string>
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
     <string name="title_advanced_inline_hint">Las imágenes embebidas son imágenes incluídas en el mensaje</string>
-    <string name="title_advanced_permission_contacts_hint">Esto requiere otorgar permiso para leer tus contactos</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
     <string name="title_advanced_autocollapse_hint">Múltiples mensajes expandidos siempre se cerrarán con \'atrás\'</string>
     <string name="title_advanced_autoclose_hint">Cerrar automáticamente hilos de conversación cuando todos los mensajes son archivados, enviados o eliminados</string>
@@ -671,7 +669,6 @@
     <string name="title_hint_message_selection">Mantenga presionado un mensaje para empezar a seleccionar múltiples mensajes</string>
     <string name="title_hint_sync">Descargar mensajes puede llevar algún tiempo, dependiendo de la velocidad del proveedor, la conexión a internet, dispositivo y el número de mensajes. Mientras se descargan mensajes, la aplicación puede responder más lentamente.</string>
     <string name="title_hint_image_link">Enlace de imagen</string>
-    <string name="title_hint_too_complex">Mensaje demasiado grande o demasiado complejo para mostrar</string>
     <string name="title_hint_tracking_image">Imagen de seguimiento %1$sx%2$s</string>
     <string name="title_hint_contact_actions">Mantenga pulsado para opciones</string>
     <string name="title_open_link">Abrir enlace</string>
@@ -699,6 +696,7 @@
     <string name="title_completed">Completado</string>
     <string name="title_ask_what">Preguntar qué hacer</string>
     <string name="title_no_ask_again">No volver a preguntar</string>
+    <string name="title_no_ask_for_again">No volver a preguntar esto por %1$s</string>
     <string name="title_no_body">No se encontró texto en el mensaje</string>
     <string name="title_no_charset">Codificación no soportada: %1$s</string>
     <string name="title_via">Vía: %1$s</string>

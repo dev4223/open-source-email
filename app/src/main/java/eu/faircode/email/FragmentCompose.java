@@ -87,7 +87,6 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.Spinner;
@@ -161,13 +160,13 @@ public class FragmentCompose extends FragmentBase {
     private EditText etExtra;
     private TextView tvDomain;
     private MultiAutoCompleteTextView etTo;
-    private ImageView ivToAdd;
+    private ImageButton ibToAdd;
     private MultiAutoCompleteTextView etCc;
-    private ImageView ivCcAdd;
+    private ImageButton ibCcAdd;
     private MultiAutoCompleteTextView etBcc;
-    private ImageView ivBccAdd;
+    private ImageButton ibBccAdd;
     private EditText etSubject;
-    private ImageView ivCcBcc;
+    private ImageButton ibCcBcc;
     private RecyclerView rvAttachment;
     private TextView tvNoInternetAttachments;
     private EditTextCompose etBody;
@@ -254,13 +253,13 @@ public class FragmentCompose extends FragmentBase {
         etExtra = view.findViewById(R.id.etExtra);
         tvDomain = view.findViewById(R.id.tvDomain);
         etTo = view.findViewById(R.id.etTo);
-        ivToAdd = view.findViewById(R.id.ivToAdd);
+        ibToAdd = view.findViewById(R.id.ivToAdd);
         etCc = view.findViewById(R.id.etCc);
-        ivCcAdd = view.findViewById(R.id.ivCcAdd);
+        ibCcAdd = view.findViewById(R.id.ivCcAdd);
         etBcc = view.findViewById(R.id.etBcc);
-        ivBccAdd = view.findViewById(R.id.ivBccAdd);
+        ibBccAdd = view.findViewById(R.id.ivBccAdd);
         etSubject = view.findViewById(R.id.etSubject);
-        ivCcBcc = view.findViewById(R.id.ivCcBcc);
+        ibCcBcc = view.findViewById(R.id.ivCcBcc);
         rvAttachment = view.findViewById(R.id.rvAttachment);
         tvNoInternetAttachments = view.findViewById(R.id.tvNoInternetAttachments);
         etBody = view.findViewById(R.id.etBody);
@@ -299,7 +298,7 @@ public class FragmentCompose extends FragmentBase {
         etSubject.setMaxLines(Integer.MAX_VALUE);
         etSubject.setHorizontallyScrolling(false);
 
-        ivCcBcc.setOnClickListener(new View.OnClickListener() {
+        ibCcBcc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onMenuAddresses();
@@ -332,9 +331,9 @@ public class FragmentCompose extends FragmentBase {
             }
         };
 
-        ivToAdd.setOnClickListener(onPick);
-        ivCcAdd.setOnClickListener(onPick);
-        ivBccAdd.setOnClickListener(onPick);
+        ibToAdd.setOnClickListener(onPick);
+        ibCcAdd.setOnClickListener(onPick);
+        ibBccAdd.setOnClickListener(onPick);
 
         setZoom();
 
@@ -437,7 +436,7 @@ public class FragmentCompose extends FragmentBase {
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
         grpAddresses.setVisibility(View.GONE);
-        ivCcBcc.setVisibility(View.GONE);
+        ibCcBcc.setVisibility(View.GONE);
         grpAttachments.setVisibility(View.GONE);
         tvNoInternet.setVisibility(View.GONE);
         grpBody.setVisibility(View.GONE);
@@ -2339,7 +2338,7 @@ public class FragmentCompose extends FragmentBase {
 
             grpHeader.setVisibility(View.VISIBLE);
             grpAddresses.setVisibility("reply_all".equals(action) ? View.VISIBLE : View.GONE);
-            ivCcBcc.setVisibility(View.VISIBLE);
+            ibCcBcc.setVisibility(View.VISIBLE);
 
             bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision != null && draft.revision > 1);
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
@@ -2666,7 +2665,6 @@ public class FragmentCompose extends FragmentBase {
                         draft.bcc = abcc;
                         draft.subject = subject;
                         draft.encrypt = encrypt;
-                        draft.received = new Date().getTime();
                         draft.sender = MessageHelper.getSortKey(draft.from);
                         Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
                         draft.avatar = (lookupUri == null ? null : lookupUri.toString());
@@ -2724,6 +2722,11 @@ public class FragmentCompose extends FragmentBase {
                                     HtmlHelper.getPreview(body),
                                     null);
                         }
+                    }
+
+                    if (dirty) {
+                        draft.received = new Date().getTime();
+                        db.message().setMessageReceived(draft.id, draft.received);
                     }
 
                     // Remove unused inline images
@@ -3377,12 +3380,15 @@ public class FragmentCompose extends FragmentBase {
             final Spinner spTarget = dview.findViewById(R.id.spTarget);
 
             Cursor groups = getContext().getContentResolver().query(
-                    ContactsContract.Groups.CONTENT_URI,
+                    ContactsContract.Groups.CONTENT_SUMMARY_URI,
                     new String[]{
                             ContactsContract.Groups._ID,
-                            ContactsContract.Groups.TITLE
+                            ContactsContract.Groups.TITLE,
+                            ContactsContract.Groups.SUMMARY_COUNT
                     },
-                    ContactsContract.Groups.GROUP_VISIBLE + " = 1", null,
+                    ContactsContract.Groups.DELETED + " = 0" +
+                            " AND " + ContactsContract.Groups.SUMMARY_COUNT + " > 0",
+                    null,
                     ContactsContract.Groups.TITLE
             );
 

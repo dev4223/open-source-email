@@ -1289,20 +1289,18 @@ class Core {
                     }
             }
 
-            // Delete not synchronized messages without uid
-            db.message().deleteOrphans(folder.id);
-
             // Add local sent messages to remote sent folder
             if (EntityFolder.SENT.equals(folder.type)) {
-                List<EntityMessage> orphans = db.message().getSentOrphans(folder.account);
-                Log.i(folder.name + " sent orphans=" + orphans.size() + " account=" + folder.account);
+                List<EntityMessage> orphans = db.message().getOrphans(folder.id);
+                Log.i(folder.name + " sent orphans=" + orphans.size());
                 for (EntityMessage orphan : orphans) {
-                    Log.i(folder.name + " adding orphan id=" + orphan.id + " sent=" + new Date(orphan.sent));
-                    orphan.folder = folder.id;
-                    orphan.ui_hide = 0L;
-                    db.message().updateMessage(orphan);
-                    EntityOperation.queue(context, orphan, EntityOperation.ADD);
+                    Log.i(folder.name + " adding orphan id=" + orphan.id);
+                    if (orphan.content && orphan.ui_hide == 0L)
+                        EntityOperation.queue(context, orphan, EntityOperation.ADD);
                 }
+            } else {
+                // Delete not synchronized messages without uid
+                db.message().deleteOrphans(folder.id);
             }
 
             int count = ifolder.getMessageCount();
@@ -1418,8 +1416,7 @@ class Core {
                             " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
                             " msgid=" + dup.msgid + " thread=" + dup.thread);
 
-                    if (dup.folder.equals(folder.id) ||
-                            (EntityFolder.OUTBOX.equals(dfolder.type) && EntityFolder.SENT.equals(folder.type))) {
+                    if (dup.folder.equals(folder.id)) {
                         String thread = helper.getThreadId(context, account.id, uid);
                         Log.i(folder.name + " found as id=" + dup.id +
                                 " uid=" + dup.uid + "/" + uid +
@@ -1427,15 +1424,13 @@ class Core {
 
                         if (dup.uid == null) {
                             Log.i(folder.name + " set uid=" + uid);
-                            dup.folder = folder.id; // outbox to sent
                             dup.uid = uid;
-                            dup.msgid = msgid;
                             dup.thread = thread;
 
                             if (dup.size == null)
                                 dup.size = helper.getSize();
 
-                            if (EntityFolder.OUTBOX.equals(dfolder.type)) {
+                            if (EntityFolder.SENT.equals(folder.type)) {
                                 dup.received = helper.getReceived();
                                 dup.sent = helper.getSent();
                             }
@@ -1927,7 +1922,7 @@ class Core {
         }
     }
 
-    static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<String, List<Long>> groupNotifying) {
+    static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<Long, List<Long>> groupNotifying) {
         if (messages == null)
             messages = new ArrayList<>();
         Log.i("Notify messages=" + messages.size());
@@ -1942,8 +1937,8 @@ class Core {
         boolean pro = ActivityBilling.isPro(context);
 
         int unseen = 0;
-        Map<String, List<TupleMessageEx>> groupMessages = new HashMap<>();
-        for (String group : groupNotifying.keySet())
+        Map<Long, List<TupleMessageEx>> groupMessages = new HashMap<>();
+        for (long group : groupNotifying.keySet())
             groupMessages.put(group, new ArrayList<>());
 
         // Current
@@ -1960,7 +1955,7 @@ class Core {
                     continue;
             }
 
-            String group = Long.toString(pro && message.accountNotify ? message.account : 0);
+            long group = (pro && message.accountNotify ? message.account : 0);
             if (!groupMessages.containsKey(group)) {
                 groupNotifying.put(group, new ArrayList<Long>());
                 groupMessages.put(group, new ArrayList<TupleMessageEx>());
@@ -1991,7 +1986,7 @@ class Core {
         }
 
         // Difference
-        for (String group : groupMessages.keySet()) {
+        for (long group : groupMessages.keySet()) {
             // Difference
             final List<Long> add = new ArrayList<>();
             final List<Long> remove = new ArrayList<>(groupNotifying.get(group));
@@ -2056,7 +2051,7 @@ class Core {
         groupNotifying.clear();
     }
 
-    private static List<Notification> getNotificationUnseen(Context context, String group, List<TupleMessageEx> messages) {
+    private static List<Notification> getNotificationUnseen(Context context, long group, List<TupleMessageEx> messages) {
         List<Notification> notifications = new ArrayList<>();
 
         // Android 7+ N https://developer.android.com/training/notify-user/group
@@ -2071,6 +2066,7 @@ class Core {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean biometrics = prefs.getBoolean("biometrics", false);
         boolean biometric_notify = prefs.getBoolean("biometrics_notify", false);
+        boolean name_email = prefs.getBoolean("name_email", false);
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
         boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
@@ -2093,7 +2089,7 @@ class Core {
             Intent summary = new Intent(context, ActivityView.class).setAction("unified");
             PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
 
-            Intent clear = new Intent(context, ServiceUI.class).setAction("clear");
+            Intent clear = new Intent(context, ServiceUI.class).setAction("clear:" + group);
             PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Build title
@@ -2112,9 +2108,18 @@ class Core {
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_STATUS)
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                            .setGroup(group)
+                            .setGroup(Long.toString(group))
                             .setGroupSummary(true)
                             .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
+
+            if (pro && group != 0 && messages.size() > 0) {
+                TupleMessageEx amessage = messages.get(0);
+                if (amessage.accountColor != null) {
+                    builder.setColor(amessage.accountColor);
+                    builder.setColorized(true);
+                }
+                builder.setSubText(amessage.accountName);
+            }
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
                 builder.setSound(null);
@@ -2128,7 +2133,7 @@ class Core {
                 DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
                 StringBuilder sb = new StringBuilder();
                 for (EntityMessage message : messages) {
-                    sb.append("<strong>").append(messageContact.get(message).getDisplayName(true)).append("</strong>");
+                    sb.append("<strong>").append(messageContact.get(message).getDisplayName(name_email)).append("</strong>");
                     if (!TextUtils.isEmpty(message.subject))
                         sb.append(": ").append(message.subject);
                     sb.append(" ").append(DTF.format(message.received));
@@ -2197,7 +2202,7 @@ class Core {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 mbuilder
-                        .setGroup(group)
+                        .setGroup(Long.toString(group))
                         .setGroupSummary(false)
                         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
 
@@ -2230,7 +2235,7 @@ class Core {
                         ? Helper.localizeFolderName(context, message.folderName)
                         : message.folderDisplay;
 
-                mbuilder.setContentTitle(info.getDisplayName(true))
+                mbuilder.setContentTitle(info.getDisplayName(name_email))
                         .setSubText(message.accountName + " · " + folderName);
             }
 

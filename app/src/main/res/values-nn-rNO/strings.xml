@@ -211,8 +211,6 @@
     <string name="title_advanced_contrast">Bruk høy kontrast for meldingstekst</string>
     <string name="title_advanced_monospaced">Bruk monospaced skrift for meldingstekst</string>
     <string name="title_advanced_images_inline">Vis automatisk innebygde bilder</string>
-    <string name="title_advanced_images">Vis automatisk bilder for kjente kontakter</string>
-    <string name="title_advanced_images_all">Vis automatisk alle bilder</string>
     <string name="title_advanced_collapse_quotes">Kollapse sitert tekst</string>
     <string name="title_advanced_remote_content">Vis automatisk fjerninnhold når du ser på originale meldinger</string>
     <string name="title_advanced_actionbar">Konversasjons handlingslinje</string>
@@ -275,7 +273,6 @@
     <string name="title_advanced_name_email_hint">Når deaktivert, vil bare navn bli vist når det er tilgjengelig</string>
     <string name="title_advanced_preview_hint">Kun tilgjengelig når meldingstekst ble lastet ned</string>
     <string name="title_advanced_inline_hint">Innebygde bilder er bilder som er inkludert i meldingen</string>
-    <string name="title_advanced_permission_contacts_hint">Dette krever at du gir tillatelse til å lese kontaktene dine</string>
     <string name="title_advanced_autoexpand_hint">Åpne automatisk melding når det bare er én melding eller bare en ulest melding i en samtale</string>
     <string name="title_advanced_autocollapse_hint">Flere utvidede meldinger vil alltid bli lukket ved \'tilbake\'</string>
     <string name="title_advanced_autoclose_hint">Lukk samtaler automatisk når alle meldinger arkiveres, sendes eller kastet</string>
@@ -672,7 +669,6 @@
     <string name="title_hint_message_selection">Langt trykk på en melding for å begynne å velge flere meldinger</string>
     <string name="title_hint_sync">Nedlasting av meldinger kan ta litt tid, avhengig av leverandørens hastighet, internettforbindelse og enhet og antall meldinger. Mens du laster ned meldinger, kan appen reagere langsommere.</string>
     <string name="title_hint_image_link">Bildelink</string>
-    <string name="title_hint_too_complex">Meldingen er for stor eller for kompleks til å vises</string>
     <string name="title_hint_tracking_image">Sporer bilde %1$sx%2$s</string>
     <string name="title_hint_contact_actions">Langt trykk for flere instillinger</string>
     <string name="title_open_link">Åpne link</string>
@@ -700,6 +696,7 @@
     <string name="title_completed">Fullført</string>
     <string name="title_ask_what">Spør hva du skal gjøre</string>
     <string name="title_no_ask_again">Ikke spør dette igjen</string>
+    <string name="title_no_ask_for_again">Ikke spør dette igjen for %1$s</string>
     <string name="title_no_body">Ingen meldingstekst funnet</string>
     <string name="title_no_charset">Koding støttes ikke: %1$s</string>
     <string name="title_via">Via: %1$s</string>

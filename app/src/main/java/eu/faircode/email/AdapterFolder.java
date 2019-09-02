@@ -37,6 +37,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -96,7 +97,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         private ImageView ivReadOnly;
 
         private View vwLevel;
-        private ImageButton ivExpander;
+        private ImageButton ibExpander;
 
         private ImageView ivUnified;
         private ImageView ivSubscribed;
@@ -114,6 +115,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
         private TextView tvKeywords;
         private TextView tvError;
+        private Button btnHelp;
 
         private TwoStateOwner powner = new TwoStateOwner(owner, "FolderPopup");
 
@@ -127,7 +129,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             ivReadOnly = itemView.findViewById(R.id.ivReadOnly);
 
             vwLevel = itemView.findViewById(R.id.vwLevel);
-            ivExpander = itemView.findViewById(R.id.ivExpander);
+            ibExpander = itemView.findViewById(R.id.ibExpander);
 
             ivUnified = itemView.findViewById(R.id.ivUnified);
             ivSubscribed = itemView.findViewById(R.id.ivSubscribed);
@@ -145,20 +147,25 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
             tvError = itemView.findViewById(R.id.tvError);
+            btnHelp = itemView.findViewById(R.id.btnHelp);
         }
 
         private void wire() {
             view.setOnClickListener(this);
-            ivExpander.setOnClickListener(this);
+            ibExpander.setOnClickListener(this);
             if (listener == null)
                 view.setOnLongClickListener(this);
+            if (btnHelp != null)
+                btnHelp.setOnClickListener(this);
         }
 
         private void unwire() {
             view.setOnClickListener(null);
-            ivExpander.setOnClickListener(null);
+            ibExpander.setOnClickListener(null);
             if (listener == null)
                 view.setOnLongClickListener(null);
+            if (btnHelp != null)
+                btnHelp.setOnClickListener(null);
         }
 
         private void bindTo(final TupleFolderEx folder) {
@@ -208,8 +215,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             lp.width = (account < 0 ? 1 : folder.indentation) * dp12;
             vwLevel.setLayoutParams(lp);
 
-            ivExpander.setImageLevel(folder.collapsed ? 1 /* more */ : 0 /* less */);
-            ivExpander.setVisibility(account < 0 || !folder.expander
+            ibExpander.setImageLevel(folder.collapsed ? 1 /* more */ : 0 /* less */);
+            ibExpander.setVisibility(account < 0 || !folder.expander
                     ? View.GONE
                     : folder.child_refs != null && folder.child_refs.size() > 0
                     ? View.VISIBLE : View.INVISIBLE);
@@ -283,32 +290,38 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
                 tvError.setText(folder.error);
                 tvError.setVisibility(folder.error != null ? View.VISIBLE : View.GONE);
+                if (btnHelp != null)
+                    btnHelp.setVisibility(folder.error == null ? View.GONE : View.VISIBLE);
             }
         }
 
         @Override
         public void onClick(View view) {
-            int pos = getAdapterPosition();
-            if (pos == RecyclerView.NO_POSITION)
-                return;
+            if (view.getId() == R.id.btnHelp)
+                Helper.viewFAQ(context, 22);
+            else {
+                int pos = getAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION)
+                    return;
 
-            TupleFolderEx folder = items.get(pos);
-            if (folder.tbd != null)
-                return;
+                TupleFolderEx folder = items.get(pos);
+                if (folder.tbd != null)
+                    return;
 
-            if (view.getId() == R.id.ivExpander)
-                onCollapse(folder);
-            else if (folder.selectable) {
-                if (listener == null) {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                    lbm.sendBroadcast(
-                            new Intent(ActivityView.ACTION_VIEW_MESSAGES)
-                                    .putExtra("account", folder.account)
-                                    .putExtra("folder", folder.id));
-                } else {
-                    if (disabledIds.contains(folder.id))
-                        return;
-                    listener.onFolderSelected(folder);
+                if (view.getId() == R.id.ibExpander)
+                    onCollapse(folder);
+                else if (folder.selectable) {
+                    if (listener == null) {
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                        lbm.sendBroadcast(
+                                new Intent(ActivityView.ACTION_VIEW_MESSAGES)
+                                        .putExtra("account", folder.account)
+                                        .putExtra("folder", folder.id));
+                    } else {
+                        if (disabledIds.contains(folder.id))
+                            return;
+                        listener.onFolderSelected(folder);
+                    }
                 }
             }
         }
