@@ -152,6 +152,7 @@
     <string name="title_setup_light_theme">Licht thema</string>
     <string name="title_setup_dark_theme">Donker thema</string>
     <string name="title_setup_black_theme">Zwart thema</string>
+    <string name="title_setup_grey_theme">Grijs thema</string>
     <string name="title_setup_system_theme">Systeem thema</string>
     <string name="title_setup_advanced">Geavanceerd</string>
     <string name="title_setup_options">Opties</string>
@@ -325,7 +326,7 @@
     <string name="title_check">Controleer</string>
     <string name="title_no_name">Naam ontbreekt</string>
     <string name="title_no_email">Email adres ontbreekt</string>
-    <string name="title_email_invalid">E-mail adres ongeldig</string>
+    <string name="title_email_invalid">E-mailadres ongeldig: \'%1$s\'</string>
     <string name="title_address_parse_error">Adres \'%1$s\' ongeldig: %2$s</string>
     <string name="title_no_account">Account ontbreekt</string>
     <string name="title_no_host">Hostnaam ontbreekt</string>
@@ -345,6 +346,7 @@
     <string name="title_edit_html">Bewerk HTML</string>
     <string name="title_last_connected">Laatst verbonden: %1$s</string>
     <string name="title_pop3_support">POP wordt niet ondersteund</string>
+    <string name="title_oauth_support">OAuth wordt niet ondersteund</string>
     <string name="title_synchronize_now">Nu synchroniseren</string>
     <string name="title_synchronize_all">Alle berichten synchroniseren</string>
     <string name="title_synchronize_enabled">Synchroniseren</string>
@@ -651,6 +653,7 @@
     <string name="title_legend_expander">Uitvouwen</string>
     <string name="title_legend_avatar">Avatar</string>
     <string name="title_legend_show_quotes">Toon citaten</string>
+    <string name="title_legend_show_unsubscribe">Uitschrijven van lijst</string>
     <string name="title_legend_show_images">Toon afbeeldingen</string>
     <string name="title_legend_show_full">Toon volledig scherm</string>
     <string name="title_legend_edit">Bewerk</string>
@@ -666,8 +669,8 @@
     <string name="title_hint_folder_actions">Druk lang voor opties</string>
     <string name="title_hint_folder_sync">Om het gebruik van de batterij en het netwerk te beperken, worden niet alle mappen en niet alle berichten standaard gesynchroniseerd</string>
     <string name="title_hint_support">Als u een vraag of een probleem heeft, gebruik dan het menu ondersteuning om hulp te krijgen</string>
-    <string name="title_hint_message_actions">Veeg naar links om weg te gooien; veeg naar rechts om te archiveren (indien beschikbaar)</string>
-    <string name="title_hint_message_selection">Druk lang op een bericht om te beginnen met het selecteren van meerdere berichten</string>
+    <string name="title_hint_message_actions">Veeg naar links om weg te gooien; Veeg naar rechts om te archiveren (indien beschikbaar); De veegacties kunnen worden geconfigureerd in de accountinstellingen</string>
+    <string name="title_hint_message_selection">Druk lang op een bericht om meerdere berichten te selecteren; Hou vast en veeg omhoog of omlaag om meer berichten te selecteren</string>
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
     <string name="title_hint_image_link">Afbeeldingskoppeling</string>
     <string name="title_hint_tracking_image">Tracking afbeelding %1$sx%2$s</string>
@@ -701,6 +704,8 @@
     <string name="title_no_body">Geen berichttekst gevonden</string>
     <string name="title_no_charset">Codering niet ondersteund: %1$s</string>
     <string name="title_via">Via: %1$s</string>
+    <string name="title_1hour">1 uur</string>
+    <string name="title_1day">1 dag</string>
     <string name="title_icalendar_accept">Accepteer</string>
     <string name="title_icalendar_decline">Weiger</string>
     <string name="title_icalendar_maybe">Misschien</string>
@@ -709,7 +714,8 @@
     <string name="title_pro_list">Lijst van pro-functies</string>
     <string name="title_pro_purchase">Koop</string>
     <string name="title_pro_once">Eenmalig</string>
-    <string name="title_pro_hint">Het kopen van pro functies geeft toegang tot alle huidige en toekomstige pro functies en zorgt voor onderhoud en ondersteuning van deze app</string>
+    <string name="title_pro_info">Het ontwikkelen van FairEmail kostte letterlijk duizenden uren en ondanks dat zijn de meeste functies gratis te gebruiken. Om FairEmail op de lange termijn duurzaam te maken, zijn sommige gebruiksgemak en geavanceerde functies niet gratis te gebruiken. FairEmail geeft een klein bericht weer om u hieraan te herinneren, dat wordt verwijderd als u de pro functies aanschaft.</string>
+    <string name="title_pro_hint">Het kopen van pro functies geeft toegang tot alle huidige en toekomstige pro functies en zorgt voor onderhoud en ondersteuning van deze app.</string>
     <string name="title_pro_price">Zie <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">deze FAQ</a> over de prijs van de pro-functies</string>
     <string name="title_pro_pending">Aankoop in behandeling</string>
     <string name="title_pro_activated">Alle pro-functies zijn geactiveerd</string>

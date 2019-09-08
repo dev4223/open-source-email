@@ -55,8 +55,9 @@ For authorizing:
 * ~~More compact folder view~~
 * ~~Compose lists and tables~~ (this requires a rich text editor, see [this FAQ](#user-content-faq99))
 * ~~Pinch zoom text size~~
+* ~~Display GIFs~~
+* ~~Themes~~ (a grey theme was added because this is what most people seems to want)
 * Send as attachment
-* Themes
 * Search for settings
 * Select any day for time conditions
 * Widget for selected account
@@ -111,7 +112,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(19) Why are the pro features so expensive?](#user-content-faq19)
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out' and 'Broken pipe' mean?](#user-content-faq22)
+* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out', 'Broken pipe', 'ParseException' and 'SendFailedException' mean?](#user-content-faq22)
 * [(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
@@ -383,6 +384,8 @@ or enable two factor authentication and use an app specific password.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
+See [this FAQ](#user-content-faq111) about why OAuth (Google login) is not being supported.
+
 **Enable "Less secure apps"**
 
 See [here](https://support.google.com/accounts/answer/6010255) about how to enable "less secure apps"
@@ -408,8 +411,6 @@ This can be prevented by using an app specific password.
 
 See [here](https://support.google.com/mail/answer/7126229) for Google's instructions
 and [here](https://support.google.com/mail/accounts/answer/78754) for troubleshooting.
-
-See [this FAQ](#user-content-faq111) about why OAuth is not being used.
 
 <br />
 
@@ -513,8 +514,6 @@ Note that signed only or encrypted only messages are not supported, see here abo
 * [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
 If you want, you can verify a signature by opening the *signature.asc* attachment.
-
-Encryption/decryption is a pro feature.
 
 Please see the [known problems](#known-problems) about YubiKey.
 
@@ -660,7 +659,7 @@ but such apps cannot be updated anymore and recent Android versions will show a 
 <br />
 
 <a name="faq22"></a>
-**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out' and 'Broken pipe' mean?**
+**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out', 'Broken pipe', 'ParseException' and 'SendFailedException' mean?**
 
 FairEmail does not hide errors like similar apps often do, so it is easier to diagnose problems.
 Also, FairEmail will always retry again later, so transient errors will automatically be solved.
@@ -679,6 +678,12 @@ see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/)
 
 The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
+The message *... ParseException ...* means that there is a problem with a received message, likely caused by a bug in the sending software.
+FairEmail will workaround this is most cases, so this message can mostly be considered as a warning instead of an error.
+
+The message *...SendFailedException...* means that there was a problem with sending a message.
+The message will almost always include a reason. Common reasons are that the message is too big or that one or more recipient addresses are invalid.
+
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
 Possible causes are:
@@ -689,6 +694,9 @@ Possible causes are:
 * The email server is refusing to accept connections
 * The email server is refusing to accept a message, for example because it is too large or contains unacceptable links
 * There are too many connections to the server, see also the next question
+
+Many public Wi-Fi networks block outgoing email to prevent spam.
+Sometimes you can workaround this by using another SMTP port. See the documentation of the provider for the usable port numbers.
 
 If you are using a VPN, the VPN provider might block the connection because it is too aggressively trying to prevent spam.
 
@@ -1986,8 +1994,10 @@ Disabling *Partial fetch* will result in more memory usage.
 <a name="faq111"></a>
 **(111) Can you add OAuth authentication?**
 
-(X)OAuth authentication, formerly available as *Select account* for Google accounts, requires creating an online (Google, Microsoft, etc) app,
-which would make authentication for many people dependent on one (developer) account, which is a bad idea.
+(X)OAuth authentication, [formerly available](https://github.com/M66B/FairEmail/commit/eddfad1e25ca12c438d86793323895b41872f7b9) as *Select account* for Google accounts,
+requires creating an online (Google, Microsoft, etc) app, which would make authentication for many people dependent on one (developer) account, which is a bad idea.
+
+Moreover, periodically refreshing the OAuth token has shown to be less reliable than using an app password, which is just as safe as OAuth authentication.
 
 See also [this related article](https://arstechnica.com/gadgets/2019/06/gmails-api-lockdown-will-kill-some-third-party-app-access-starting-july-15/).
 
@@ -2156,6 +2166,8 @@ Reformatting and displaying such messages will take too long. You can try to use
 
 The current experimental features are:
 
+* Small, dimmed unread / read icon at the bottom of the messages to quicly toggle filtering of read messages
+* Small, dimmed starred / unstarred icon at the bottom of the messages to quicly toggle filtering of starred messages
 * Small, dimmed infinite / timelapse icon at the bottom of the messages to quicly toggle filtering of snoozed messages
 
 <br />

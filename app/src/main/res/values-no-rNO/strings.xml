@@ -152,6 +152,7 @@
     <string name="title_setup_light_theme">Lyst tema</string>
     <string name="title_setup_dark_theme">Mørkt tema</string>
     <string name="title_setup_black_theme">Svart tema</string>
+    <string name="title_setup_grey_theme">Grått tema</string>
     <string name="title_setup_system_theme">System tema</string>
     <string name="title_setup_advanced">Avansert</string>
     <string name="title_setup_options">Alternativer</string>
@@ -325,7 +326,6 @@
     <string name="title_check">Sjekk</string>
     <string name="title_no_name">Navn mangler</string>
     <string name="title_no_email">E-post adressen mangler</string>
-    <string name="title_email_invalid">E-post adressen er ugyldig</string>
     <string name="title_address_parse_error">Adresse \'%1$s\' ugyldig: %2$s</string>
     <string name="title_no_account">Konto mangler</string>
     <string name="title_no_host">Vertsnavn mangler</string>
@@ -345,6 +345,7 @@
     <string name="title_edit_html">Rediger som HTML</string>
     <string name="title_last_connected">Sist tilkoblet: %1$s</string>
     <string name="title_pop3_support">POP3 støttes ikke</string>
+    <string name="title_oauth_support">OAuth støttes ikke</string>
     <string name="title_synchronize_now">Synkroniser nå</string>
     <string name="title_synchronize_all">Synkroniser alle meldinger</string>
     <string name="title_synchronize_enabled">Synkroniser</string>
@@ -651,6 +652,7 @@
     <string name="title_legend_expander">Utvidet</string>
     <string name="title_legend_avatar">Profilbilde</string>
     <string name="title_legend_show_quotes">Vis sitater</string>
+    <string name="title_legend_show_unsubscribe">Avslutt abonnement fra listen</string>
     <string name="title_legend_show_images">Vise bilder</string>
     <string name="title_legend_show_full">Vis fullskjerm</string>
     <string name="title_legend_edit">Rediger</string>
@@ -666,8 +668,8 @@
     <string name="title_hint_folder_actions">Langt trykk for flere instillinger</string>
     <string name="title_hint_folder_sync">For å begrense batteri- og nettverks bruk, vil ikke alle mapper og ikke alle meldinger synkroniseres som standard</string>
     <string name="title_hint_support">Hvis du har et spørsmål eller et problem, vennligst bruk support menyen for å få hjelp</string>
-    <string name="title_hint_message_actions">Sveip mot venstre til papirkurven. Sveip til høyre for å arkivere (hvis tilgjengelig)</string>
-    <string name="title_hint_message_selection">Langt trykk på en melding for å begynne å velge flere meldinger</string>
+    <string name="title_hint_message_actions">Sveip til venstre for å slette; Sveip til høyre for å arkivere (hvis tilgjengelig); Sveipe handlingene kan konfigureres i kontoinnstillingene</string>
+    <string name="title_hint_message_selection">Trykk lenge på en melding for å begynne å velge flere meldinger; Hold og sveip opp eller ned for å velge flere meldinger</string>
     <string name="title_hint_sync">Nedlasting av meldinger kan ta litt tid, avhengig av leverandørens hastighet, internettforbindelse og enhet og antall meldinger. Mens du laster ned meldinger, kan appen reagere langsommere.</string>
     <string name="title_hint_image_link">Bildelink</string>
     <string name="title_hint_tracking_image">Sporer bilde %1$sx%2$s</string>
@@ -701,6 +703,8 @@
     <string name="title_no_body">Ingen meldingstekst funnet</string>
     <string name="title_no_charset">Koding støttes ikke: %1$s</string>
     <string name="title_via">Via: %1$s</string>
+    <string name="title_1hour">1 time</string>
+    <string name="title_1day">1 dag</string>
     <string name="title_icalendar_accept">Godta</string>
     <string name="title_icalendar_decline">Avslå</string>
     <string name="title_icalendar_maybe">Kanskje</string>
@@ -709,6 +713,10 @@
     <string name="title_pro_list">Liste over Pro funksjoner</string>
     <string name="title_pro_purchase">Kjøp</string>
     <string name="title_pro_once">Bare en gang</string>
+    <string name="title_pro_info">Å utvikle FairEmail tok bokstavelig talt tusenvis av timer, og til tross for at de fleste funksjoner er gratis å bruke.
+         For å gjøre FairEmail bærekraftig på lang sikt er det noe brukervennlighet og avanserte funksjoner som ikke er gratis å bruke.
+         FairEmail viser en liten melding for å minne deg på dette, og som vil bli fjernet hvis du kjøper pro funksjonene.
+    </string>
     <string name="title_pro_hint">Ved å kjøpe pro-funksjoner kan du bruke alle aktuelle og fremtidige pro-funksjoner, og vil holde denne appen vedlikeholdt og støttet</string>
     <string name="title_pro_price">Vennligst se <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">denne FAQ</a> om pris på Pro-funksjonene</string>
     <string name="title_pro_pending">Ventende kjøp</string>

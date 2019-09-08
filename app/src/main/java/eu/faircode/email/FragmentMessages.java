@@ -166,6 +166,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private SeekBar seekBar;
     private ImageButton ibDown;
     private ImageButton ibUp;
+    private ImageButton ibSeen;
+    private ImageButton ibUnflagged;
     private ImageButton ibSnoozed;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
@@ -359,6 +361,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         seekBar = view.findViewById(R.id.seekBar);
         ibDown = view.findViewById(R.id.ibDown);
         ibUp = view.findViewById(R.id.ibUp);
+        ibSeen = view.findViewById(R.id.ibSeen);
+        ibUnflagged = view.findViewById(R.id.ibUnflagged);
         ibSnoozed = view.findViewById(R.id.ibSnoozed);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
 
@@ -608,6 +612,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onClick(View v) {
                 scrollToVisibleItem(llm, false);
+            }
+        });
+
+        ibSeen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean filter = prefs.getBoolean("filter_seen", true);
+                onMenuFilterSeen(!filter);
+            }
+        });
+
+        ibUnflagged.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean filter = prefs.getBoolean("filter_unflagged", true);
+                onMenuFilterUnflagged(!filter);
             }
         });
 
@@ -865,6 +885,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         seekBar.setVisibility(View.GONE);
         ibDown.setVisibility(View.GONE);
         ibUp.setVisibility(View.GONE);
+        ibSeen.setVisibility(View.GONE);
+        ibUnflagged.setVisibility(View.GONE);
         ibSnoozed.setVisibility(View.GONE);
         bottom_navigation.getMenu().findItem(R.id.action_prev).setEnabled(false);
         bottom_navigation.getMenu().findItem(R.id.action_next).setEnabled(false);
@@ -873,11 +895,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         pbWait.setVisibility(View.VISIBLE);
 
         fabReply.hide();
-        fabCompose.hide();
+
+        if (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
+            fabCompose.show();
+        else
+            fabCompose.hide();
+
         if (viewType == AdapterMessage.ViewType.SEARCH && !server)
             fabSearch.show();
         else
             fabSearch.hide();
+
         fabMore.hide();
         fabError.hide();
 
@@ -1573,13 +1601,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     try {
                         db.beginTransaction();
 
-                        EntityFolder target = db.folder().getFolder(tid);
-                        if (target == null)
-                            throw new IllegalArgumentException(context.getString(R.string.title_no_folder));
-
-                        EntityAccount account = db.account().getAccount(target.account);
                         EntityMessage message = db.message().getMessage(id);
-                        if (message != null) {
+
+                        EntityFolder target = null;
+                        if (message != null)
+                            target = db.folder().getFolder(tid);
+
+                        if (target != null) {
+                            EntityAccount account = db.account().getAccount(target.account);
                             List<EntityMessage> messages = db.message().getMessagesByThread(
                                     message.account, message.thread, threading && thread ? null : id, message.folder);
                             for (EntityMessage threaded : messages) {
@@ -2283,19 +2312,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         else
             fabMore.hide();
 
-        if (viewType != AdapterMessage.ViewType.THREAD && viewType != AdapterMessage.ViewType.SEARCH) {
-            db.identity().liveComposableIdentities(account < 0 ? null : account).observe(getViewLifecycleOwner(),
-                    new Observer<List<TupleIdentityEx>>() {
-                        @Override
-                        public void onChanged(List<TupleIdentityEx> identities) {
-                            if (identities == null || identities.size() == 0)
-                                fabCompose.hide();
-                            else
-                                fabCompose.show();
-                        }
-                    });
-        }
-
         checkReporting();
     }
 
@@ -2354,8 +2370,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if ("pro".equals(key)) {
             boolean pro = prefs.getBoolean(key, false);
             grpSupport.setVisibility(
-                    viewType == AdapterMessage.ViewType.THREAD || pro
-                            ? View.GONE : View.VISIBLE);
+                    !pro && viewType == AdapterMessage.ViewType.UNIFIED
+                            ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -2507,10 +2523,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
 
-        ibSnoozed.setImageResource(filter_snoozed ? R.drawable.baseline_all_inclusive_24 : R.drawable.baseline_timelapse_24);
-        ibSnoozed.setVisibility(experiments &&
-                (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
-                ? View.VISIBLE : View.GONE);
+        ibSeen.setImageResource(filter_seen ? R.drawable.baseline_drafts_24 : R.drawable.baseline_mail_24);
+        ibUnflagged.setImageResource(filter_unflagged ? R.drawable.baseline_star_border_24 : R.drawable.baseline_star_24);
+        ibSnoozed.setImageResource(filter_snoozed ? R.drawable.baseline_timelapse_24 : R.drawable.baseline_timer_off_24);
+
+        boolean folder = (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
+
+        ibSeen.setVisibility(experiments && folder ? View.VISIBLE : View.GONE);
+        ibUnflagged.setVisibility(experiments && folder ? View.VISIBLE : View.GONE);
+        ibSnoozed.setVisibility(experiments && folder ? View.VISIBLE : View.GONE);
 
         super.onPrepareOptionsMenu(menu);
     }
@@ -2563,7 +2584,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return true;
 
             case R.id.menu_filter_seen:
-                onMenuFilterRead(!item.isChecked());
+                onMenuFilterSeen(!item.isChecked());
                 return true;
 
             case R.id.menu_filter_unflagged:
@@ -2633,7 +2654,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         loadMessages(true);
     }
 
-    private void onMenuFilterRead(boolean filter) {
+    private void onMenuFilterSeen(boolean filter) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefs.edit().putBoolean("filter_seen", filter).apply();
         getActivity().invalidateOptionsMenu();
@@ -4308,36 +4329,37 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onMove(Bundle args) {
-        new SimpleTask<Void>() {
+        new SimpleTask<ArrayList<MessageTarget>>() {
             @Override
-            protected Void onExecute(Context context, Bundle args) {
+            protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) {
                 long id = args.getLong("message");
-                long target = args.getLong("folder");
+                long tid = args.getLong("folder");
                 boolean copy = args.getBoolean("copy");
                 boolean similar = args.getBoolean("similar");
+
+                ArrayList<MessageTarget> result = new ArrayList<>();
 
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
 
                     EntityMessage message = db.message().getMessage(id);
-                    if (message == null)
-                        return null;
 
-                    if (similar) {
-                        if (copy)
-                            throw new IllegalArgumentException();
-                        else {
+                    EntityFolder target = null;
+                    if (message != null)
+                        target = db.folder().getFolder(tid);
+
+                    if (target != null) {
+                        EntityAccount account = db.account().getAccount(target.account);
+                        if (account != null) {
                             List<EntityMessage> messages = db.message().getMessagesByThread(
-                                    message.account, message.thread, threading ? null : id, message.folder);
+                                    message.account, message.thread, threading && similar ? null : id, message.folder);
                             for (EntityMessage threaded : messages)
-                                EntityOperation.queue(context, threaded, EntityOperation.MOVE, target);
+                                if (copy)
+                                    EntityOperation.queue(context, message, EntityOperation.COPY, tid);
+                                else
+                                    result.add(new MessageTarget(threaded, account, target));
                         }
-                    } else {
-                        if (copy)
-                            EntityOperation.queue(context, message, EntityOperation.COPY, target);
-                        else
-                            EntityOperation.queue(context, message, EntityOperation.MOVE, target);
                     }
 
                     db.setTransactionSuccessful();
@@ -4345,14 +4367,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
-                return null;
+                return result;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
+                moveAsk(result);
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(this, args, "message:copy");
+        }.execute(this, args, "message:move");
     }
 
     private WebView printWebView = null;

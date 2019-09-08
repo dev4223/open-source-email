@@ -148,7 +148,7 @@ class Core {
                     Map<String, String> crumb = new HashMap<>();
                     crumb.put("name", op.name);
                     crumb.put("args", op.args);
-                    crumb.put("folder", op.folder + ":" + folder.type);
+                    crumb.put("folder", op.account + ":" + op.folder + ":" + folder.type);
                     if (op.message != null)
                         crumb.put("message", Long.toString(op.message));
                     crumb.put("free", Integer.toString(Log.getFreeMemMb()));
@@ -471,6 +471,10 @@ class Core {
     private static void onAdd(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder) throws MessagingException, JSONException, IOException {
         // Add message
         DB db = DB.getInstance(context);
+
+        // Drafts can change accounts
+        if (jargs.length() == 0 && !folder.id.equals(message.folder))
+            throw new IllegalArgumentException("Message folder changed");
 
         // Get arguments
         long target = jargs.optLong(0, folder.id);
@@ -1376,6 +1380,7 @@ class Core {
             IMAPFolder ifolder, IMAPMessage imessage,
             boolean browsed, boolean download,
             List<EntityRule> rules, State state) throws MessagingException, IOException {
+        // Instead of locking the database while performing message I/O
         lockFolders.putIfAbsent(folder.id, folder.id);
         synchronized (lockFolders.get(folder.id)) {
             long uid = ifolder.getUID(imessage);
@@ -1473,6 +1478,7 @@ class Core {
                 message.bcc = helper.getBcc();
                 message.reply = helper.getReply();
                 message.list_post = helper.getListPost();
+                message.unsubscribe = helper.getListUnsubscribe();
                 message.subject = helper.getSubject();
                 message.size = helper.getSize();
                 message.content = false;
@@ -1535,7 +1541,8 @@ class Core {
                     for (EntityAttachment attachment : parts.getAttachments()) {
                         Log.i(folder.name + " attachment seq=" + sequence +
                                 " name=" + attachment.name + " type=" + attachment.type +
-                                " cid=" + attachment.cid + " pgp=" + attachment.encryption);
+                                " cid=" + attachment.cid + " pgp=" + attachment.encryption +
+                                " size=" + attachment.size);
                         attachment.message = message.id;
                         attachment.sequence = sequence++;
                         attachment.id = db.attachment().insertAttachment(attachment);
@@ -2199,6 +2206,8 @@ class Core {
                             .setCategory(NotificationCompat.CATEGORY_EMAIL)
                             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                             .setOnlyAlertOnce(true);
+
+            // TODO: setAllowSystemGeneratedContextualActions
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 mbuilder

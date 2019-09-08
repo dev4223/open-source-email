@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- https://material-ui.com/customization/color/#color-palette -->
+    <!-- https://material.io/resources/color/ -->
 
-    <!-- shade 600 -->
+    <!-- Light blue 600 / Amber 600 -->
     <color name="colorPrimary">#039be5</color>
-    <color name="colorPrimaryDark">#026ca0</color>
+    <color name="colorPrimaryDark">#006db3</color>
     <color name="colorAccent">#ffb300</color>
     <color name="colorPrimaryLight">#35afea</color>
     <color name="colorAccentLight">#ffc233</color>
-    <!-- colorAccentDark orig: #b27d00 -->
+    <!-- colorAccentDark orig: #c68400 -->
     <color name="colorAccentDark">#FFE50A3E</color>
 
     <color name="colorError">#ff0000</color>
 
-    <!-- shade 900 -->
+    <!-- Light blue 900 -->
     <!-- blackPrimary orig: #01579b -->
     <color name="blackPrimary">#003254</color>
-    <!-- blackPrimaryDark orig: #003c6c -->
+    <!-- blackPrimaryDark orig: #002f6c -->
     <color name="blackPrimaryDark">#001F2A</color>
     <!-- color name="blackPrimary">#026ca0</color -->
     <!-- color name="blackPrimaryDark">#004c7d</color -->
@@ -26,11 +26,16 @@
     <color name="blackColorSubject">#dfdfdf</color>
     <color name="blackColorUnread">#fff</color>
 
+    <!-- Grey 800 / Blue grey 300 -->
+    <color name="greyPrimary">#424242</color>
+    <color name="greyPrimaryDark">#1b1b1b</color>
+    <color name="greyAccent">#90a4ae</color>
+
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
 
     <color name="colorToastForeground">#fff</color>
-    <color name="colorToastBackground">#026ca0</color>
+    <color name="colorToastBackground">#006db3</color>
 
     <color name="colorWidgetForeground">#fff</color>
     <color name="colorWidgetBackground">#7f000000</color>

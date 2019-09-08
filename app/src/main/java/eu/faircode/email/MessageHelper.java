@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.MailTo;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
@@ -253,7 +254,7 @@ public class MessageHelper {
 
         // When sending message
         if (identity != null) {
-            if (!TextUtils.isEmpty(identity.signature)) {
+            if (!TextUtils.isEmpty(identity.signature) && message.signature) {
                 Document sdoc = Jsoup.parse(identity.signature);
                 if (sdoc.body() != null) {
                     if (usenet) // https://www.ietf.org/rfc/rfc3676.txt
@@ -548,27 +549,64 @@ public class MessageHelper {
                 return null;
 
             list = MimeUtility.unfold(list);
+            list = decodeMime(list);
 
             // List-Post: NO (posting not allowed on this list)
             if (list != null && list.startsWith("NO"))
                 return null;
 
             // https://www.ietf.org/rfc/rfc2368.txt
-            for (String _to : list.split(",")) {
-                String to = _to.trim();
-                int lt = to.indexOf("<");
-                int gt = to.lastIndexOf(">");
+            for (String entry : list.split(",")) {
+                entry = entry.trim();
+                int lt = entry.indexOf("<");
+                int gt = entry.lastIndexOf(">");
                 if (lt >= 0 && gt > lt)
                     try {
-                        MailTo mailto = MailTo.parse(to.substring(lt + 1, gt));
+                        MailTo mailto = MailTo.parse(entry.substring(lt + 1, gt));
                         if (mailto.getTo() != null)
-                            return new Address[]{new InternetAddress(mailto.getTo().split(",")[0])};
-                    } catch (android.net.ParseException ex) {
+                            return new Address[]{new InternetAddress(mailto.getTo().split(",")[0], null)};
+                    } catch (Throwable ex) {
                         Log.i(ex);
                     }
             }
 
             Log.w(new IllegalArgumentException("List-Post: " + list));
+            return null;
+        } catch (AddressException ex) {
+            Log.w(ex);
+            return null;
+        }
+    }
+
+    String getListUnsubscribe() throws MessagingException {
+        String list;
+        try {
+            // https://www.ietf.org/rfc/rfc2369.txt
+            list = imessage.getHeader("List-Unsubscribe", null);
+            if (list == null)
+                return null;
+
+            list = MimeUtility.unfold(list);
+            list = decodeMime(list);
+
+            if (list != null && list.startsWith("NO"))
+                return null;
+
+            for (String entry : list.split(",")) {
+                entry = entry.trim();
+                int lt = entry.indexOf("<");
+                int gt = entry.lastIndexOf(">");
+                if (lt >= 0 && gt > lt) {
+                    String unsubscribe = entry.substring(lt + 1, gt);
+                    Uri uri = Uri.parse(unsubscribe);
+                    String scheme = uri.getScheme();
+                    if ("mailto".equals(scheme) ||
+                            "http".equals(scheme) || "https".equals(scheme))
+                        return unsubscribe;
+                }
+            }
+
+            Log.w(new IllegalArgumentException("List-Unsubscribe: " + list));
             return null;
         } catch (AddressException ex) {
             Log.w(ex);
@@ -883,20 +921,39 @@ public class MessageHelper {
             List<EntityAttachment> remotes = getAttachments();
 
             // Some servers order attachments randomly
+
             int index = -1;
+            boolean warning = false;
+
+            // Get attachment by position
+            if (local.sequence <= remotes.size()) {
+                EntityAttachment remote = remotes.get(local.sequence - 1);
+                if (Objects.equals(remote.name, local.name) &&
+                        Objects.equals(remote.type, local.type) &&
+                        Objects.equals(remote.disposition, local.disposition) &&
+                        Objects.equals(remote.cid, local.cid) &&
+                        Objects.equals(remote.size, local.size))
+                    index = local.sequence - 1;
+            }
 
             // Match attachment by name/cid
-            for (int i = 0; i < remotes.size(); i++) {
-                EntityAttachment remote = remotes.get(i);
-                if (Objects.equals(remote.name, local.name) &&
-                        Objects.equals(remote.cid, local.cid)) {
-                    index = i;
-                    break;
+            if (index < 0 && !(local.name == null && local.cid == null)) {
+                warning = true;
+                Log.w("Matching attachment by name/cid");
+                for (int i = 0; i < remotes.size(); i++) {
+                    EntityAttachment remote = remotes.get(i);
+                    if (Objects.equals(remote.name, local.name) &&
+                            Objects.equals(remote.cid, local.cid)) {
+                        index = i;
+                        break;
+                    }
                 }
             }
 
             // Match attachment by type/size
-            if (index < 0)
+            if (index < 0) {
+                warning = true;
+                Log.w("Matching attachment by type/size");
                 for (int i = 0; i < remotes.size(); i++) {
                     EntityAttachment remote = remotes.get(i);
                     if (Objects.equals(remote.type, local.type) &&
@@ -905,8 +962,9 @@ public class MessageHelper {
                         break;
                     }
                 }
+            }
 
-            if (index < 0) {
+            if (index < 0 || warning) {
                 Map<String, String> crumb = new HashMap<>();
                 crumb.put("local", local.toString());
                 Log.w("Attachment not found local=" + local);
@@ -916,8 +974,10 @@ public class MessageHelper {
                     Log.w("Attachment remote=" + remote);
                 }
                 Log.breadcrumb("attachments", crumb);
-                throw new IllegalArgumentException("Attachment not found");
             }
+
+            if (index < 0)
+                throw new IllegalArgumentException("Attachment not found");
 
             downloadAttachment(context, index, local);
         }
@@ -1034,11 +1094,18 @@ public class MessageHelper {
                 for (int i = 0; i < multipart.getCount(); i++)
                     try {
                         Part cpart = multipart.getBodyPart(i);
-                        ContentType ct = new ContentType(cpart.getContentType());
-                        if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase()))
-                            pgp = true;
-                        else
-                            getMessageParts(cpart, parts, pgp);
+
+                        try {
+                            ContentType ct = new ContentType(cpart.getContentType());
+                            if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase())) {
+                                pgp = true;
+                                continue;
+                            }
+                        } catch (ParseException ex) {
+                            Log.w(ex);
+                        }
+
+                        getMessageParts(cpart, parts, pgp);
                     } catch (ParseException ex) {
                         // Nested body: try to continue
                         // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
@@ -1117,12 +1184,15 @@ public class MessageHelper {
 
                     // Try to guess a better content type
                     // For example, sometimes PDF files are sent as application/octet-stream
-                    if ("application/octet-stream".equalsIgnoreCase(apart.attachment.type)) {
+                    if (!apart.pgp) {
                         String extension = Helper.getExtension(apart.attachment.name);
-                        if (extension != null) {
+                        if (extension != null &&
+                                ("pdf".equals(extension.toLowerCase()) ||
+                                        "application/octet-stream".equals(apart.attachment.type))) {
                             String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
                             if (type != null) {
-                                Log.w("Guessing file=" + apart.attachment.name + " type=" + type);
+                                if (!type.equals(apart.attachment.type))
+                                    Log.w("Guessing file=" + apart.attachment.name + " type=" + type);
                                 apart.attachment.type = type;
                             }
                         }

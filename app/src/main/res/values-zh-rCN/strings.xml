@@ -140,6 +140,7 @@
     <string name="title_setup_light_theme">亮色主题</string>
     <string name="title_setup_dark_theme">暗色主题</string>
     <string name="title_setup_black_theme">黑色主题</string>
+    <string name="title_setup_grey_theme">灰色主题</string>
     <string name="title_setup_system_theme">系统主题</string>
     <string name="title_setup_advanced">高级选项</string>
     <string name="title_setup_options">选项</string>
@@ -313,7 +314,6 @@
     <string name="title_check">检查</string>
     <string name="title_no_name">缺少名称</string>
     <string name="title_no_email">缺少邮箱地址</string>
-    <string name="title_email_invalid">邮件地址无效</string>
     <string name="title_address_parse_error">地址 \'%1$s\' 无效: %2$s</string>
     <string name="title_no_account">缺少账户</string>
     <string name="title_no_host">缺少主机名称</string>
@@ -333,6 +333,7 @@
     <string name="title_edit_html">以 html 格式编辑</string>
     <string name="title_last_connected">上次连接%1$s前</string>
     <string name="title_pop3_support">不支持POP3协议</string>
+    <string name="title_oauth_support">不支持OAuth</string>
     <string name="title_synchronize_now">现在同步</string>
     <string name="title_synchronize_all">同步所有消息</string>
     <string name="title_synchronize_enabled">同步</string>
@@ -512,6 +513,7 @@
     <string name="title_sort_on_subject">主题</string>
     <string name="title_sort_on_size">大小</string>
     <string name="title_sort_on_snoozed">已设置待办</string>
+    <string name="title_sort_ascending">最旧的在最前</string>
     <string name="title_filter">筛选</string>
     <string name="title_filter_seen">读取</string>
     <string name="title_filter_unflagged">未标星</string>
@@ -638,6 +640,7 @@
     <string name="title_legend_expander">已展开</string>
     <string name="title_legend_avatar">头像</string>
     <string name="title_legend_show_quotes">显示引用内容</string>
+    <string name="title_legend_show_unsubscribe">取消订阅</string>
     <string name="title_legend_show_images">显示图片</string>
     <string name="title_legend_show_full">全屏显示</string>
     <string name="title_legend_edit">编辑</string>
@@ -653,11 +656,11 @@
     <string name="title_hint_folder_actions">长按以显示更多选项</string>
     <string name="title_hint_folder_sync">为了减少电池和网络的使用量, 默认情况下, 并非所有文件夹和邮件都将同步</string>
     <string name="title_hint_support">如果您要提问或有问题，请使用支持选项获取帮助</string>
-    <string name="title_hint_message_actions">向左滑至垃圾箱；向右滑归档(如果可用)</string>
-    <string name="title_hint_message_selection">长按一则邮件以开始选择多则邮件</string>
+    <string name="title_hint_message_actions">左滑移动到回收站; 右滑存档 (如果可用); 滑动操作可以在账户设置中配置</string>
+    <string name="title_hint_message_selection">长按一则消息开始选择多条消息；按住并向上或向下滑动来选择更多消息</string>
     <string name="title_hint_sync">下载邮件可能需要一些时间, 具体取决于提供商的速度、网络连接、设备以及邮件数量。在下载邮件时, 应用的响应速度可能会变慢。</string>
     <string name="title_hint_image_link">图片链接</string>
-    <string name="title_hint_tracking_image">跟踪图像%1$sx%2$s</string>
+    <string name="title_hint_tracking_image">跟踪图像 %1$sx%2$s</string>
     <string name="title_hint_contact_actions">长按以显示更多选项</string>
     <string name="title_open_link">打开链接</string>
     <string name="title_secure_link">确保链接安全</string>
@@ -688,6 +691,8 @@
     <string name="title_no_body">没有找到消息文本</string>
     <string name="title_no_charset">不支持的编码: %1$s</string>
     <string name="title_via">通过: %1$s</string>
+    <string name="title_1hour">1 小时</string>
+    <string name="title_1day">1 天</string>
     <string name="title_icalendar_accept">接受</string>
     <string name="title_icalendar_decline">拒绝</string>
     <string name="title_icalendar_maybe">待定</string>
@@ -696,6 +701,9 @@
     <string name="title_pro_list">专业版功能列表</string>
     <string name="title_pro_purchase">购买</string>
     <string name="title_pro_once">仅一次</string>
+    <string name="title_pro_info">毫不夸张地说，我在开发FairEmail上花费了数千小时，尽管如此，多数功能依旧可免费使用。
+为了让FairEmail开发持续下去，免费版无法使用一些便利和高级的功能。
+FairEmail会显示一条消息来提醒您这一点，这条消息在您购买专业版后将被移除。</string>
     <string name="title_pro_hint">购买专业版将获得现在以及未来更新中全部专业版功能，并将支持开发者维护这个应用</string>
     <string name="title_pro_price">请参见<a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">常见问题</a>关于专业版的价格</string>
     <string name="title_pro_pending">购买待处理</string>

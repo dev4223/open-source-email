@@ -329,7 +329,7 @@ public class ServiceSend extends ServiceBase {
 
         // Add reply to
         if (ident.replyto != null)
-            imessage.setReplyTo(new Address[]{new InternetAddress(ident.replyto)});
+            imessage.setReplyTo(new Address[]{new InternetAddress(ident.replyto, null)});
 
         // Add bcc
         if (ident.bcc != null) {
@@ -337,7 +337,7 @@ public class ServiceSend extends ServiceBase {
             Address[] existing = imessage.getRecipients(Message.RecipientType.BCC);
             if (existing != null)
                 bcc.addAll(Arrays.asList(existing));
-            bcc.add(new InternetAddress(ident.bcc));
+            bcc.add(new InternetAddress(ident.bcc, null));
             imessage.setRecipients(Message.RecipientType.BCC, bcc.toArray(new Address[0]));
         }
 
@@ -360,6 +360,11 @@ public class ServiceSend extends ServiceBase {
             long id = message.id;
 
             MessageHelper helper = new MessageHelper(imessage);
+
+            if (message.uid != null) {
+                Log.e("Outbox id=" + message.id + " uid=" + message.uid);
+                message.uid = null;
+            }
 
             message.id = null;
             message.folder = sent.id;

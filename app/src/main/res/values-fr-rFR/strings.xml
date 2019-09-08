@@ -152,6 +152,7 @@
     <string name="title_setup_light_theme">Thème clair</string>
     <string name="title_setup_dark_theme">Thème sombre</string>
     <string name="title_setup_black_theme">Thème noir</string>
+    <string name="title_setup_grey_theme">Thème gris</string>
     <string name="title_setup_system_theme">Thème système</string>
     <string name="title_setup_advanced">Avancé</string>
     <string name="title_setup_options">Options</string>
@@ -325,7 +326,6 @@
     <string name="title_check">Vérifier</string>
     <string name="title_no_name">Nom manquant</string>
     <string name="title_no_email">Adresse e-mail manquante</string>
-    <string name="title_email_invalid">Adresse e-mail invalide</string>
     <string name="title_address_parse_error">Adresse \'%1$s\' invalide : %2$s</string>
     <string name="title_no_account">Compte manquant</string>
     <string name="title_no_host">Nom d\'hôte manquant</string>
@@ -345,6 +345,7 @@
     <string name="title_edit_html">Modifier en HTML</string>
     <string name="title_last_connected">Dernière connexion : %1$s</string>
     <string name="title_pop3_support">POP3 n\'est pas supporté</string>
+    <string name="title_oauth_support">OAuth n\'est pas pris en charge</string>
     <string name="title_synchronize_now">Synchroniser maintenant</string>
     <string name="title_synchronize_all">Synchroniser tous les messages</string>
     <string name="title_synchronize_enabled">Synchroniser</string>
@@ -524,6 +525,7 @@
     <string name="title_sort_on_subject">Objet</string>
     <string name="title_sort_on_size">Taille</string>
     <string name="title_sort_on_snoozed">Différé</string>
+    <string name="title_sort_ascending">Le plus ancien en premier</string>
     <string name="title_filter">Filtrer (exclure)</string>
     <string name="title_filter_seen">Lu</string>
     <string name="title_filter_unflagged">Non suivi</string>
@@ -650,6 +652,7 @@
     <string name="title_legend_expander">Développer</string>
     <string name="title_legend_avatar">Avatar</string>
     <string name="title_legend_show_quotes">Afficher les citations</string>
+    <string name="title_legend_show_unsubscribe">Se désabonner de la liste</string>
     <string name="title_legend_show_images">Afficher les images</string>
     <string name="title_legend_show_full">Afficher en plein écran</string>
     <string name="title_legend_edit">Modifier</string>
@@ -665,8 +668,8 @@
     <string name="title_hint_folder_actions">Appui long pour les options</string>
     <string name="title_hint_folder_sync">Pour limiter l\'utilisation de la batterie et du réseau, les dossiers et les messages ne seront pas tous synchronisés par défaut</string>
     <string name="title_hint_support">Si vous avez une question ou un problème, veuillez utiliser le menu Support pour obtenir de l\'aide</string>
-    <string name="title_hint_message_actions">Balayer à gauche pour supprimer, balayer à droite pour archiver (si disponible)</string>
-    <string name="title_hint_message_selection">Appuyer longtemps sur un message pour commencer à en sélectionner plusieurs</string>
+    <string name="title_hint_message_actions">Balayer vers la gauche pour mettre à la corbeille; balayer vers la droite pour archiver (si disponible) ; les actions de balayage peuvent être configurées dans les paramètres du compte</string>
+    <string name="title_hint_message_selection">Appuyer longuement sur un message pour commencer à sélectionner plusieurs messages ; maintenez et faites glisser vers le haut ou vers le bas pour sélectionner plus de messages</string>
     <string name="title_hint_sync">Le téléchargement des messages peut prendre un certain temps selon la vitesse du fournisseur d\'accès, la connexion internet et le périphérique et selon le nombre de messages. Lors du téléchargement des messages, l\'application peut répondre plus lentement.</string>
     <string name="title_hint_image_link">Lien de l\'image</string>
     <string name="title_hint_tracking_image">Image de suivi %1$sx%2$s</string>
@@ -700,6 +703,8 @@
     <string name="title_no_body">Aucun texte de message trouvé</string>
     <string name="title_no_charset">Format d\'encodage non pris en charge : %1$s</string>
     <string name="title_via">Via : %1$s</string>
+    <string name="title_1hour">1 heure</string>
+    <string name="title_1day">1 jour</string>
     <string name="title_icalendar_accept">Accepter</string>
     <string name="title_icalendar_decline">Refuser</string>
     <string name="title_icalendar_maybe">Peut-être</string>
@@ -708,6 +713,10 @@
     <string name="title_pro_list">Liste des fonctionnalités Pro</string>
     <string name="title_pro_purchase">Acheter</string>
     <string name="title_pro_once">Une seule fois</string>
+    <string name="title_pro_info">        Développer FairEmail a pris littéralement des milliers d\'heures et malgré cela, la plupart des fonctionnalités sont libres d\'utilisation.
+        Pour rendre FairEmail durable à long terme, certaines fonctionnalités pratiques et avancées ne sont pas libres d\'utilisation.
+        FairEmail affiche un petit message pour vous rappeler ceci, message qui sera retiré si vous achetez les fonctionnalités Pro.
+    </string>
     <string name="title_pro_hint">L\'achat des fonctionnalités Pro vous autorisera à utiliser toutes les fonctionnalités Pro actuelles et futures et permettra de maintenir et de supporter cette application</string>
     <string name="title_pro_price">Veuillez voir <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">cette FAQ</a> à propos du prix des fonctionnalités Pro</string>
     <string name="title_pro_pending">Achat en cours</string>

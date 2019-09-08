@@ -151,6 +151,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_light_theme">Helles Design</string>
     <string name="title_setup_dark_theme">Dunkles Design</string>
     <string name="title_setup_black_theme">Schwarzes Design</string>
+    <string name="title_setup_grey_theme">Graues Thema</string>
     <string name="title_setup_system_theme">System Design</string>
     <string name="title_setup_advanced">Erweitert</string>
     <string name="title_setup_options">Optionen</string>
@@ -324,7 +325,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_check">Prüfen</string>
     <string name="title_no_name">Name fehlt</string>
     <string name="title_no_email">E-Mail-Adresse fehlt</string>
-    <string name="title_email_invalid">E-Mail-Adresse ungültig</string>
     <string name="title_address_parse_error">Adresse \'%1$s\' ungültig: %2$s</string>
     <string name="title_no_account">Konto fehlt</string>
     <string name="title_no_host">Hostname fehlt</string>
@@ -344,6 +344,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_edit_html">Als HTML bearbeiten</string>
     <string name="title_last_connected">Zuletzt verbunden: %1$s</string>
     <string name="title_pop3_support">POP3 wird nicht unterstützt</string>
+    <string name="title_oauth_support">OAuth wird nicht unterstützt</string>
     <string name="title_synchronize_now">Jetzt synchronisieren</string>
     <string name="title_synchronize_all">Alle Nachrichten synchronisieren</string>
     <string name="title_synchronize_enabled">Synchronisieren</string>
@@ -524,6 +525,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_sort_on_subject">Betreff</string>
     <string name="title_sort_on_size">Größe</string>
     <string name="title_sort_on_snoozed">Zurückgestellt</string>
+    <string name="title_sort_ascending">Älteste zuerst</string>
     <string name="title_filter">Ausfiltern</string>
     <string name="title_filter_seen">Gelesen</string>
     <string name="title_filter_unflagged">Nicht markiert</string>
@@ -650,6 +652,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_legend_expander">Erweitern</string>
     <string name="title_legend_avatar">Benutzerbild</string>
     <string name="title_legend_show_quotes">Zitate anzeigen</string>
+    <string name="title_legend_show_unsubscribe">Aus Liste abmelden</string>
     <string name="title_legend_show_images">Bilder anzeigen</string>
     <string name="title_legend_show_full">Vollbild anzeigen</string>
     <string name="title_legend_edit">Bearbeiten</string>
@@ -665,8 +668,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_hint_folder_actions">Gedrückt halten für weitere Optionen</string>
     <string name="title_hint_folder_sync">Um Akkuverbrauch und Datennutzung zu reduzieren, werden standardmäßig nicht alle Ordner und E-Mails synchronisiert</string>
     <string name="title_hint_support">Wenn Sie eine Frage oder ein Problem haben, verwenden Sie bitte die Hilfe im Menü</string>
-    <string name="title_hint_message_actions">Nach links wischen um zu Löschen; nach rechts wischen um zu Archivieren (falls vorhanden)</string>
-    <string name="title_hint_message_selection">Lange auf eine Nachricht drücken, um mehrere Nachrichten auszuwählen</string>
+    <string name="title_hint_message_actions">Standard: Wische links zum Papierkorb; Wische rechts zum Archiv (falls verfügbar); Diese Wischgesten können aber in den Kontoeinstellungen auch individuell anders konfiguriert werden</string>
+    <string name="title_hint_message_selection">Um mehrere Nachrichten auszuwählen, drücken Sie zunächst lange auf eine Nachricht, halten und wischen Sie sodann nach oben oder unten, um weitere Nachrichten auszuwählen</string>
     <string name="title_hint_sync">Das Herunterladen von E-Mails kann einige Zeit in Anspruch nehmen, abhängig von der Geschwindigkeit des Providers, der Internetverbindung, des Gerätes und von der Anzahl der E-Mails. Beim Herunterladen der E-Mails kann die App träge reagieren.</string>
     <string name="title_hint_image_link">Bildlink</string>
     <string name="title_hint_tracking_image">Tracking-Bild %1$sx%2$s</string>
@@ -700,6 +703,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_no_body">Kein Nachrichtentext gefunden</string>
     <string name="title_no_charset">Nicht unterstützte Codierung: %1$s</string>
     <string name="title_via">über %1$s</string>
+    <string name="title_1hour">1 Stunde</string>
+    <string name="title_1day">1 Tag</string>
     <string name="title_icalendar_accept">Akzeptieren</string>
     <string name="title_icalendar_decline">Ablehnen</string>
     <string name="title_icalendar_maybe">Vielleicht</string>
@@ -708,6 +713,9 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_pro_list">Liste der Pro-Funktionen</string>
     <string name="title_pro_purchase">Kaufen</string>
     <string name="title_pro_once">Nur einmal</string>
+    <string name="title_pro_info">Die Entwicklung von FairEmail hat buchstäblich tausende von Stunden gedauert und trotzdem sind die meisten Funktionen kostenlos nutzbar.
+        Um FairEmail langfristig mit Support verfügbar zu erhalten, sind einige Komfort- und erweiterte Funktionen nicht frei nutzbar.
+        FairEmail zeigt daher ein kleines Banner an, das Sie daran erinnert und beim Kauf der Pro-Funktionen auch sofort entfernt wird.    </string>
     <string name="title_pro_hint">Der Erwerb der Pro-Funktionen erlaubt es Ihnen alle momentan und zukünftig verfügbaren Pro-Funktionen zu nutzen und ermöglicht die Weiterentwicklung und Pflege der App.</string>
     <string name="title_pro_price">Informationen zum Preis der Pro-Funktionen finden Sie in der <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">Hilfe</a></string>
     <string name="title_pro_pending">Kauf ausstehend</string>

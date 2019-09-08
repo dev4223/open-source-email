@@ -152,6 +152,7 @@
     <string name="title_setup_light_theme">Vaalea teema</string>
     <string name="title_setup_dark_theme">Tumma teema</string>
     <string name="title_setup_black_theme">Musta teema</string>
+    <string name="title_setup_grey_theme">Harmaa teema</string>
     <string name="title_setup_system_theme">Järjestelmän teema</string>
     <string name="title_setup_advanced">Lisäasetukset</string>
     <string name="title_setup_options">Asetukset</string>
@@ -325,7 +326,6 @@
     <string name="title_check">Tarkista</string>
     <string name="title_no_name">Nimi puuttuu</string>
     <string name="title_no_email">Sähköpostiosoite puuttuu</string>
-    <string name="title_email_invalid">Virheellinen sähköpostiosoite</string>
     <string name="title_address_parse_error">Osoite \'%1$s\' virheellinen: %2$s</string>
     <string name="title_no_account">Tili puuttuu</string>
     <string name="title_no_host">Verkko-osoite puuttuu</string>
@@ -345,6 +345,7 @@
     <string name="title_edit_html">Muokkaa HTML-muodossa</string>
     <string name="title_last_connected">Viimeksi yhdistetty: %1$s</string>
     <string name="title_pop3_support">POP3 ei ole tuettu</string>
+    <string name="title_oauth_support">OAuth ei ole tuettu</string>
     <string name="title_synchronize_now">Synkronoi nyt</string>
     <string name="title_synchronize_all">Synkronoi kaikki viestit</string>
     <string name="title_synchronize_enabled">Synkronoi</string>
@@ -524,6 +525,7 @@
     <string name="title_sort_on_subject">Aihe</string>
     <string name="title_sort_on_size">Koko</string>
     <string name="title_sort_on_snoozed">Torkutettu</string>
+    <string name="title_sort_ascending">Vanhin ensin</string>
     <string name="title_filter">Suodata pois</string>
     <string name="title_filter_seen">Luettu</string>
     <string name="title_filter_unflagged">Tähdetön</string>
@@ -650,6 +652,7 @@
     <string name="title_legend_expander">Laajennin</string>
     <string name="title_legend_avatar">Hahmo</string>
     <string name="title_legend_show_quotes">Näytä lainaukset</string>
+    <string name="title_legend_show_unsubscribe">Peruuta listan tilaus</string>
     <string name="title_legend_show_images">Näytä kuvat</string>
     <string name="title_legend_show_full">Näytä koko näytöllä</string>
     <string name="title_legend_edit">Muokkaa</string>
@@ -665,8 +668,6 @@
     <string name="title_hint_folder_actions">Pitkä painallus avaa asetukset</string>
     <string name="title_hint_folder_sync">Akun ja verkon käytön rajoittamiseksi kaikkia kansioita ja viestejä ei oletusarvoisesti synkronoida</string>
     <string name="title_hint_support">Jos sinulla on kysyttävää tai ongelma, ole hyvä ja käytä tukivalikkoa saadaksesi apua</string>
-    <string name="title_hint_message_actions">Pyyhkäise vasemmalle siirtääksesi roskakoriin; pyyhkäise oikealle arkistoidaksesi (jos käytettävissä)</string>
-    <string name="title_hint_message_selection">Paina viestiä pitkään aloittaaksesi useamman viestin valinnan</string>
     <string name="title_hint_sync">Viestien lataaminen voi kestää riippuen verkkoyhteyden nopeudesta, käytettävästä laitteesta ja viestien lukumäärästä. Viestejä ladatessa sovellus voi toimia normaalia hitaammin.</string>
     <string name="title_hint_image_link">Kuvalinkki</string>
     <string name="title_hint_tracking_image">Seurantakuva %1$sx%2$s</string>

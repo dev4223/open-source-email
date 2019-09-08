@@ -108,6 +108,7 @@ public class EntityMessage implements Serializable {
     public Address[] bcc;
     public Address[] reply;
     public Address[] list_post;
+    public String unsubscribe;
     public String headers;
     public Boolean raw;
     public String subject;
@@ -119,6 +120,8 @@ public class EntityMessage implements Serializable {
     public Boolean plain_only = null;
     public Boolean encrypt = null;
     public String preview;
+    @NonNull
+    public Boolean signature = true;
     public Long sent; // compose = null
     @NonNull
     public Long received; // compose = stored

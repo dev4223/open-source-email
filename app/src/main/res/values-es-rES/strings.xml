@@ -325,7 +325,6 @@
     <string name="title_check">Verificar</string>
     <string name="title_no_name">Falta nombre</string>
     <string name="title_no_email">Falta dirección de correo electrónico</string>
-    <string name="title_email_invalid">Dirección de correo electrónico inválida</string>
     <string name="title_address_parse_error">Dirección \'%1$s\' inválida: %2$s</string>
     <string name="title_no_account">Falta cuenta</string>
     <string name="title_no_host">Falta nombre de host</string>
@@ -345,6 +344,7 @@
     <string name="title_edit_html">Editar como HTML</string>
     <string name="title_last_connected">Última conexión: %1$s</string>
     <string name="title_pop3_support">POP3 no es compatible</string>
+    <string name="title_oauth_support">OAuth no está soportado</string>
     <string name="title_synchronize_now">Sincronizar ahora</string>
     <string name="title_synchronize_all">Sincronizar todos los mensajes</string>
     <string name="title_synchronize_enabled">Sincronizar</string>
@@ -524,6 +524,7 @@
     <string name="title_sort_on_subject">Asunto</string>
     <string name="title_sort_on_size">Tamaño</string>
     <string name="title_sort_on_snoozed">Pospuesto</string>
+    <string name="title_sort_ascending">Más antiguo primero</string>
     <string name="title_filter">Filtrar</string>
     <string name="title_filter_seen">Leer</string>
     <string name="title_filter_unflagged">No destacado</string>
@@ -665,8 +666,8 @@
     <string name="title_hint_folder_actions">Mantenga pulsado para opciones</string>
     <string name="title_hint_folder_sync">Para limitar el uso de batería y redes, no todas las carpetas y mensajes serán sincronizados por defecto</string>
     <string name="title_hint_support">Si tiene una pregunta o problema, por favor use el menú de soporte para obtener ayuda</string>
-    <string name="title_hint_message_actions">Deslice a la izquierda para eliminar; deslice a la derecha para archivar (si está disponible)</string>
-    <string name="title_hint_message_selection">Mantenga presionado un mensaje para empezar a seleccionar múltiples mensajes</string>
+    <string name="title_hint_message_actions">Desliza a la izquierda para enviar a la papelera; Desliza a la derecha para archivar (si está disponible); las acciones de deslizamiento pueden configurarse en la configuración de la cuenta</string>
+    <string name="title_hint_message_selection">Mantenga pulsado un mensaje para empezar a seleccionar varios mensajes; mantenga pulsado y deslice hacia arriba o abajo para seleccionar más mensajes</string>
     <string name="title_hint_sync">Descargar mensajes puede llevar algún tiempo, dependiendo de la velocidad del proveedor, la conexión a internet, dispositivo y el número de mensajes. Mientras se descargan mensajes, la aplicación puede responder más lentamente.</string>
     <string name="title_hint_image_link">Enlace de imagen</string>
     <string name="title_hint_tracking_image">Imagen de seguimiento %1$sx%2$s</string>
@@ -700,6 +701,8 @@
     <string name="title_no_body">No se encontró texto en el mensaje</string>
     <string name="title_no_charset">Codificación no soportada: %1$s</string>
     <string name="title_via">Vía: %1$s</string>
+    <string name="title_1hour">1 hora</string>
+    <string name="title_1day">1 día</string>
     <string name="title_icalendar_accept">Aceptar</string>
     <string name="title_icalendar_decline">Rechazar</string>
     <string name="title_icalendar_maybe">Tal vez</string>
@@ -708,6 +711,10 @@
     <string name="title_pro_list">Lista de características Pro</string>
     <string name="title_pro_purchase">Comprar</string>
     <string name="title_pro_once">Sólo una vez</string>
+    <string name="title_pro_info">        El desarrollo de FairEmail tomó literalmente miles de horas, y a pesar de ello la mayoría de las funciones son de uso libre.
+        Para hacer a Fairemail sostenible en el largo plazo, algunas funciones de conveniencia y avanzadas no son de uso libre.
+        FairEmail muestra un pequeño mensaje para recordarte esto, que dejará de mostrarse si compras las funciones avanzadas.
+    </string>
     <string name="title_pro_hint">La compra de características Pro le permitirá usar todas las características Pro actuales y futuras, y ayudará al mantenimiento y desarrollo de esta aplicación</string>
     <string name="title_pro_price">Por favor vea <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">estas Preguntas Frecuentes</a> acerca del precio de las características Pro</string>
     <string name="title_pro_pending">Compra pendiente</string>

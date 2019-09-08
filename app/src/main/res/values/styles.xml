@@ -41,6 +41,10 @@
         <item name="android:buttonStyleSmall">@style/buttonStyleSmall</item>
         <item name="android:buttonStyleToggle">@style/buttonStyleToggle</item>
         <item name="android:radioButtonStyle">@style/radioButtonStyle</item>
+
+        <item name="android:scrollbarSize">6dp</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scroll_thumb</item>
+        <item name="android:scrollbarTrackVertical">@drawable/scroll_track</item>
     </style>
 
     <style name="AppThemeDark" parent="Base.Theme.AppCompat">
@@ -71,6 +75,10 @@
         <item name="android:buttonStyleSmall">@style/buttonStyleSmall</item>
         <item name="android:buttonStyleToggle">@style/buttonStyleToggle</item>
         <item name="android:radioButtonStyle">@style/radioButtonStyle</item>
+
+        <item name="android:scrollbarSize">6dp</item>
+        <item name="android:scrollbarThumbVertical">@drawable/scroll_thumb</item>
+        <item name="android:scrollbarTrackVertical">@drawable/scroll_track</item>
     </style>
 
     <style name="AppThemeBlack" parent="AppThemeDark">
@@ -85,6 +93,19 @@
         <item name="colorDrawerBackground">@android:color/black</item>
         <item name="dateColorDrawerBackground">@color/darkestColorDrawerBackground</item>
         <item name="dateColorDrawerForeground">@color/blackAccent</item>
+    </style>
+
+    <style name="AppThemeGrey" parent="AppThemeDark">
+        <item name="themeName">black</item>
+        <item name="colorPrimary">@color/greyPrimary</item>
+        <item name="colorPrimaryDark">@color/greyPrimaryDark</item>
+        <item name="colorAccent">@color/greyAccent</item>
+
+        <item name="colorUnread">@color/greyAccent</item>
+        <item name="colorSeparator">@color/greyPrimary</item>
+
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="colorDrawerBackground">@android:color/black</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">
