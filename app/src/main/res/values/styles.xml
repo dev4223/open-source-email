@@ -10,6 +10,13 @@
     <attr name="dateColorDrawerBackground" format="reference" />
     <attr name="dateColorDrawerForeground" format="reference" />
     <attr name="colorCardBackground" format="reference" />
+    <attr name="colorActionForeground" format="reference" />
+    <attr name="colorActionForegroundDisabled" format="reference" />
+    <attr name="colorActionBackground" format="reference" />
+    <attr name="colorFabForeground" format="reference" />
+    <attr name="colorFabBackground" format="reference" />
+    <attr name="colorToastForeground" format="reference" />
+    <attr name="colorToastBackground" format="reference" />
     <attr name="activatableItemBackground" format="reference" />
 
     <style name="AppThemeLight" parent="Base.Theme.AppCompat.Light.DarkActionBar">
@@ -32,6 +39,16 @@
         <item name="dateColorDrawerForeground">@color/lightColorDrawerText</item>
 
         <item name="colorCardBackground">@color/lightColorCardBackground</item>
+
+        <item name="colorActionForeground">@color/colorActionForeground</item>
+        <item name="colorActionForegroundDisabled">@color/colorActionForegroundDisabled</item>
+        <item name="colorActionBackground">@color/colorActionBackground</item>
+
+        <item name="colorFabForeground">@android:color/white</item>
+        <item name="colorFabBackground">@color/colorAccent</item>
+
+        <item name="colorToastForeground">@android:color/white</item>
+        <item name="colorToastBackground">@color/colorPrimaryDark</item>
 
         <item name="activatableItemBackground">@drawable/activatable_item_background_light</item>
 
@@ -68,6 +85,12 @@
 
         <item name="colorCardBackground">@color/darkColorCardBackground</item>
 
+        <item name="colorFabForeground">@android:color/white</item>
+        <item name="colorFabBackground">@color/colorAccent</item>
+
+        <item name="colorToastForeground">@android:color/white</item>
+        <item name="colorToastBackground">@color/colorPrimaryDark</item>
+
         <item name="activatableItemBackground">@drawable/activatable_item_background_dark</item>
 
         <item name="android:checkboxStyle">@style/checkboxStyle</item>
@@ -101,7 +124,12 @@
         <item name="colorPrimaryDark">@color/greyPrimaryDark</item>
         <item name="colorAccent">@color/greyAccent</item>
 
-        <item name="colorUnread">@color/greyAccent</item>
+        <item name="colorUnread">@color/greyAccentDark</item>
+
+        <item name="colorFabBackground">@color/greyAccent</item>
+
+        <item name="colorToastForeground">@android:color/white</item>
+        <item name="colorToastBackground">@color/greyAccent</item>
     </style>
 
     <style name="AppThemeGreyDark" parent="AppThemeDark">
@@ -112,6 +140,13 @@
 
         <item name="colorUnread">@color/greyAccent</item>
         <item name="colorSeparator">@color/greyPrimary</item>
+
+        <item name="colorActionBackground">@color/greyPrimary</item>
+
+        <item name="colorFabBackground">@color/greyAccentDark</item>
+
+        <item name="colorToastForeground">@android:color/white</item>
+        <item name="colorToastBackground">@color/greyAccentDark</item>
 
         <item name="android:windowBackground">@android:color/black</item>
         <item name="colorDrawerBackground">@android:color/black</item>

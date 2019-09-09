@@ -186,6 +186,7 @@
     <string name="title_setup_grey_dark_theme">Grey dark theme</string>
     <string name="title_setup_system_theme">System theme</string>
     <string name="title_setup_grey_system_theme">Grey system theme</string>
+    <string name="title_setup_system_theme_hint">The system themes will automatically switch to light/dark on day/night, if supported by Android</string>
     <string name="title_setup_advanced">Advanced</string>
 
     <string name="title_setup_options">Options</string>
@@ -243,7 +244,7 @@
     <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_subject_top">Show subject above sender</string>
     <string name="title_advanced_subject_italic">Show subject in italics</string>
-    <string name="title_advanced_subject_elipsed">When needed shorten the subject</string>
+    <string name="title_advanced_subject_elipsed">When needed, shorten the subject</string>
     <string name="title_advanced_flags">Show stars</string>
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_preview_italic">Show message preview in italics</string>
@@ -254,7 +255,8 @@
     <string name="title_advanced_images_inline">Automatically show inline images</string>
     <string name="title_advanced_collapse_quotes">Collapse quoted text</string>
     <string name="title_advanced_remote_content">Automatically show remote content when viewing original messages</string>
-    <string name="title_advanced_actionbar">Conversation action bar</string>
+    <string name="title_advanced_seekbar">Show relative conversation position with a dot</string>
+    <string name="title_advanced_actionbar">Show conversation action bar</string>
 
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
     <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
@@ -531,6 +533,7 @@
     <string name="title_ask_discard">Discard draft?</string>
     <string name="title_ask_show_html">Showing the original message can leak privacy sensitive information</string>
     <string name="title_ask_show_image">Showing images can leak privacy sensitive information</string>
+    <string name="title_ask_delete_ref">Delete replied/forwarded message text? This cannot be undone.</string>
     <string name="title_ask_edit_ref">Edit reformatted replied/forwarded message text?</string>
     <string name="title_ask_sync_all">Synchronize all messages in %1$s?</string>
     <string name="title_ask_delete_local">Delete local messages? Messages will remain on the remote server.</string>
@@ -576,6 +579,8 @@
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
+    <string name="title_attachment_keywords">attached,attachment,attachments,included</string>
+    <string name="title_attachment_reminder">Did you intend to add an attachment?</string>
     <string name="title_attachments_missing">Not all attachments are downloaded</string>
     <string name="title_draft_deleted">Draft discarded</string>
     <string name="title_draft_saved">Draft saved</string>

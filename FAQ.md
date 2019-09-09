@@ -21,6 +21,8 @@ For authorizing:
 * Microsoft Exchange: see [question 8](#user-content-faq8)
 * Yahoo!: see [question 88](#user-content-faq88)
 
+Please see [here](#user-content-faq22) for common error messages.
+
 ## Known problems
 
 * ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue. A workaround was added.~~
@@ -59,8 +61,8 @@ For authorizing:
 * ~~Themes~~ (a grey light and dark theme were added because this is what most people seems to want)
 * ~~Any day time condition~~ (any day doesn't really fit into the from/to date/time condition)
 * ~~Send as attachment~~
+* ~~Widget for selected account~~ (the unified inbox is / can be composed of selected folders already, so I see no real need for this complication)
 * Search for settings
-* Widget for selected account
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -112,7 +114,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(19) Why are the pro features so expensive?](#user-content-faq19)
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out', 'Broken pipe', 'ParseException' and 'SendFailedException' mean?](#user-content-faq22)
+* [(22) What does account/folder error ... mean?](#user-content-faq22)
 * [(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
@@ -220,8 +222,9 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(127) How can I fix 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
 * [(128) How can I reset asked questions, for example to show images?](#user-content-faq128)
 * [(129) Is ProtonMail supported?](#user-content-faq129)
+* [(130) What does message error ... mean?](#user-content-faq130)
 
-[I have another question.](#support)
+[I have another question.](#user-content-support)
 
 <a name="faq1"></a>
 **(1) Which permissions are needed and why?**
@@ -269,7 +272,10 @@ only suggesting contacts won't work without contacts permissions.
 **(2) Why is there a permanent notification shown?**
 
 A low priority permanent status bar notification with the number of accounts being synchronized and the number of operations pending (see next question) is shown
-to prevent Android from killing the service that takes care of receiving and sending email.
+to prevent Android from killing the service that takes care of continuous receiving email.
+
+You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might used more battery power.
+See [here](#user-content-faq39) for more details about battery usage.
 
 Android shows icons of high priority status bar notifications first and will hide the icon of FairEmail's notification if there is no space to show icons anymore.
 
@@ -660,30 +666,24 @@ but such apps cannot be updated anymore and recent Android versions will show a 
 <br />
 
 <a name="faq22"></a>
-**(22) What do 'Couldn't connect to host', 'Connection refused', 'Network unreachable', 'Software caused connection abort', 'BYE Logging out', 'Connection closed/reset by peer', 'Read timed out', 'Broken pipe', 'ParseException' and 'SendFailedException' mean?**
+**(22) What does account/folder error ... mean?**
 
 FairEmail does not hide errors like similar apps often do, so it is easier to diagnose problems.
 Also, FairEmail will always retry again later, so transient errors will automatically be solved.
 
-The messages *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
+The errors *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
 mean that FairEmail was not able to connect to the email server.
 
-The message *... Software caused connection abort ...*
+The error *... Software caused connection abort ...*
 means that the email server or something between FairEmail and the email server actively terminated an existing connection.
 This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
-The message *... BYE Logging out ...*, *... Connection reset by peer ...* or *... Broken pipe ...* means that the email server actively terminated an existing connection.
+The error *... BYE Logging out ...*, *... Connection reset by peer ...* or *... Broken pipe ...* means that the email server actively terminated an existing connection.
 
-The message *... Connection closed by peer ...* might be caused by a not updated Exchange server,
+The error *... Connection closed by peer ...* might be caused by a not updated Exchange server,
 see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
 
-The message *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
-
-The message *... ParseException ...* means that there is a problem with a received message, likely caused by a bug in the sending software.
-FairEmail will workaround this is most cases, so this message can mostly be considered as a warning instead of an error.
-
-The message *...SendFailedException...* means that there was a problem with sending a message.
-The message will almost always include a reason. Common reasons are that the message is too big or that one or more recipient addresses are invalid.
+The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
@@ -703,6 +703,8 @@ If you are using a VPN, the VPN provider might block the connection because it i
 
 FairEmail will automatically try to connect again after a delay.
 This delay will be doubled after each failed attempt to prevent draining the battery and to prevent from being locked out permanently.
+
+When in doubt, you can ask for [support](#user-content-support).
 
 <br />
 
@@ -2201,6 +2203,17 @@ You can reset asked questions via the three dots overflow menu in the miscellane
 ProtonMail uses a proprietary email protocol
 and [does not directly support IMAP](https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/),
 so you cannot use FairEmail to access ProtonMail.
+
+<a name="faq130"></a>
+**(130) What does message error ... mean?**
+
+The error *... ParseException ...* means that there is a problem with a received message, likely caused by a bug in the sending software.
+FairEmail will workaround this is in most cases, so this message can mostly be considered as a warning instead of an error.
+
+The error *...SendFailedException...* means that there was a problem while sending a message.
+The error will almost always include a reason. Common reasons are that the message was too big or that one or more recipient addresses were invalid.
+
+Please see [here](#user-content-faq22) for other error messages in the outbox.
 
 ## Support
 

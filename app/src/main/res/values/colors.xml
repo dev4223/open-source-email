@@ -30,12 +30,11 @@
     <color name="greyPrimary">#424242</color>
     <color name="greyPrimaryDark">#1b1b1b</color>
     <color name="greyAccent">#90a4ae</color>
+    <color name="greyAccentDark">#62757f</color>
 
     <color name="colorActionForeground">#fff</color>
     <color name="colorActionForegroundDisabled">#ccc</color>
-
-    <color name="colorToastForeground">#fff</color>
-    <color name="colorToastBackground">#006db3</color>
+    <color name="colorActionBackground">#ccc</color>
 
     <color name="colorWidgetForeground">#fff</color>
     <color name="colorWidgetBackground">#7f000000</color>
