@@ -56,10 +56,10 @@ For authorizing:
 * ~~Compose lists and tables~~ (this requires a rich text editor, see [this FAQ](#user-content-faq99))
 * ~~Pinch zoom text size~~
 * ~~Display GIFs~~
-* ~~Themes~~ (a grey theme was added because this is what most people seems to want)
-* Send as attachment
+* ~~Themes~~ (a grey light and dark theme were added because this is what most people seems to want)
+* ~~Any day time condition~~ (any day doesn't really fit into the from/to date/time condition)
+* ~~Send as attachment~~
 * Search for settings
-* Select any day for time conditions
 * Widget for selected account
 
 Anything on this list is in random order and *might* be added in the near future.
@@ -488,7 +488,8 @@ tl;dr; consider to switch to IMAP.
 
 First of all you need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/).
 To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
-Similarly, to decrypt a received message, just select the menu *Decrypt* in the expanded message view.
+To decrypt a received message, open the message and tap the padlock icon just below the grey message action bar.
+If the message is inline encrypted (not advised), select the menu *Decrypt* in the message 'more' three dots menu.
 
 The first time you send an encrypted message you might be asked for a sign key.
 FairEmail will automatically store the sign key ID in the selected identity for the next time.

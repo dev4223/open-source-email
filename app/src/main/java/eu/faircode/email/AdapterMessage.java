@@ -94,6 +94,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
@@ -187,6 +188,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean name_email;
     private boolean subject_top;
     private boolean subject_italic;
+    private String subject_ellipsize;
+
     private boolean flags;
     private boolean preview;
     private boolean preview_italic;
@@ -373,6 +376,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvError = itemView.findViewById(R.id.tvError);
             btnHelp = itemView.findViewById(R.id.btnHelp);
             pbLoading = itemView.findViewById(R.id.pbLoading);
+
+            if (compact)
+                if ("start".equals(subject_ellipsize))
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.START);
+                else if ("end".equals(subject_ellipsize))
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.END);
+                else
+                    tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
         }
 
         private void ensureExpanded() {
@@ -2447,10 +2458,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(message.uid != null);
 
-            popupMenu.getMenu().findItem(R.id.menu_raw).setEnabled(
-                    message.uid != null && (message.raw == null || message.raw));
-            popupMenu.getMenu().findItem(R.id.menu_raw).setTitle(
-                    message.raw == null || !message.raw ? R.string.title_raw_download : R.string.title_raw_save);
+            popupMenu.getMenu().findItem(R.id.menu_raw_download).setEnabled(
+                    message.uid != null && (message.raw == null || !message.raw));
+            popupMenu.getMenu().findItem(R.id.menu_raw_save).setEnabled(
+                    message.uid != null && (message.raw != null && message.raw));
+            popupMenu.getMenu().findItem(R.id.menu_raw_send).setEnabled(
+                    message.uid != null && (message.raw != null && message.raw));
 
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
 
@@ -2503,8 +2516,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         case R.id.menu_show_headers:
                             onMenuShowHeaders(message);
                             return true;
-                        case R.id.menu_raw:
-                            onMenuRaw(message);
+                        case R.id.menu_raw_download:
+                            onMenuRawDownload(message);
+                            return true;
+                        case R.id.menu_raw_save:
+                            onMenuRawSave(message);
+                            return true;
+                        case R.id.menu_raw_send:
+                            onMenuRawSend(message);
                             return true;
                         default:
                             return false;
@@ -3095,46 +3114,56 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 notifyDataSetChanged();
         }
 
-        private void onMenuRaw(TupleMessageEx message) {
-            if (message.raw == null) {
-                Bundle args = new Bundle();
-                args.putLong("id", message.id);
+        private void onMenuRawDownload(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
 
-                new SimpleTask<Void>() {
-                    @Override
-                    protected Void onExecute(Context context, Bundle args) {
-                        Long id = args.getLong("id");
+            new SimpleTask<Void>() {
+                @Override
+                protected Void onExecute(Context context, Bundle args) {
+                    Long id = args.getLong("id");
 
-                        DB db = DB.getInstance(context);
-                        try {
-                            db.beginTransaction();
+                    DB db = DB.getInstance(context);
+                    try {
+                        db.beginTransaction();
 
-                            EntityMessage message = db.message().getMessage(id);
-                            if (message == null)
-                                return null;
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message == null)
+                            return null;
 
-                            EntityOperation.queue(context, message, EntityOperation.RAW);
+                        EntityOperation.queue(context, message, EntityOperation.RAW);
 
-                            db.message().setMessageRaw(message.id, false);
+                        db.message().setMessageRaw(message.id, false);
 
-                            db.setTransactionSuccessful();
-                        } finally {
-                            db.endTransaction();
-                        }
-                        return null;
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
                     }
+                    return null;
+                }
 
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
-                    }
-                }.execute(context, owner, args, "message:raw");
-            } else {
-                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-                lbm.sendBroadcast(
-                        new Intent(FragmentMessages.ACTION_STORE_RAW)
-                                .putExtra("id", message.id));
-            }
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
+                }
+            }.execute(context, owner, args, "message:raw");
+        }
+
+        private void onMenuRawSave(TupleMessageEx message) {
+            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+            lbm.sendBroadcast(
+                    new Intent(FragmentMessages.ACTION_STORE_RAW)
+                            .putExtra("id", message.id));
+        }
+
+        private void onMenuRawSend(TupleMessageEx message) {
+            File file = message.getRawFile(context);
+            Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+
+            Intent send = new Intent(Intent.ACTION_SEND);
+            send.putExtra(Intent.EXTRA_STREAM, uri);
+            send.setType("message/rfc822");
+            context.startActivity(send);
         }
 
         ItemDetailsLookup.ItemDetails<Long> getItemDetails(@NonNull MotionEvent motionEvent) {
@@ -3192,6 +3221,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.name_email = prefs.getBoolean("name_email", false);
         this.subject_top = prefs.getBoolean("subject_top", false);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
+        this.subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
         this.flags = prefs.getBoolean("flags", true);
         this.preview = prefs.getBoolean("preview", false);
         this.preview_italic = prefs.getBoolean("preview_italic", true);
