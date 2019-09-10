@@ -40,9 +40,9 @@
 
         <item name="colorCardBackground">@color/lightColorCardBackground</item>
 
-        <item name="colorActionForeground">@color/colorActionForeground</item>
-        <item name="colorActionForegroundDisabled">@color/colorActionForegroundDisabled</item>
-        <item name="colorActionBackground">@color/colorActionBackground</item>
+        <item name="colorActionForeground">@color/lightActionForeground</item>
+        <item name="colorActionForegroundDisabled">@color/lightActionForegroundDisabled</item>
+        <item name="colorActionBackground">@color/lightActionBackground</item>
 
         <item name="colorFabForeground">@android:color/white</item>
         <item name="colorFabBackground">@color/colorAccent</item>
@@ -68,9 +68,9 @@
         <item name="themeName">dark</item>
         <item name="android:windowDisablePreview">true</item>
 
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccentDark</item>
+        <item name="colorPrimary">@color/darkPrimary</item>
+        <item name="colorPrimaryDark">@color/darkPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
 
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorUnread">@color/colorAccent</item>
@@ -84,6 +84,10 @@
         <item name="dateColorDrawerForeground">@color/darkColorDrawerText</item>
 
         <item name="colorCardBackground">@color/darkColorCardBackground</item>
+
+        <item name="colorActionForeground">@color/darkActionForeground</item>
+        <item name="colorActionForegroundDisabled">@color/darkActionForegroundDisabled</item>
+        <item name="colorActionBackground">@color/darkActionBackground</item>
 
         <item name="colorFabForeground">@android:color/white</item>
         <item name="colorFabBackground">@color/colorAccent</item>
@@ -106,8 +110,6 @@
 
     <style name="AppThemeBlack" parent="AppThemeDark">
         <item name="themeName">black</item>
-        <item name="colorPrimary">@color/blackPrimary</item>
-        <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
 
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorUnread">@color/blackColorUnread</item>
