@@ -15,8 +15,8 @@
     <string name="channel_error">Fehler</string>
     <string name="channel_group_contacts">Kontakte</string>
     <plurals name="page_conversation">
-        <item quantity="one">Unterhaltung</item>
-        <item quantity="other">Unterhaltungen</item>
+        <item quantity="one">Thread</item>
+        <item quantity="other">Threads</item>
     </plurals>
     <plurals name="page_message">
         <item quantity="one">Nachricht</item>
@@ -788,8 +788,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     </string-array>
     <string-array name="onCloseNames">
         <item>Nichts tun</item>
-        <item>Gehe zu vorheriger Unterhaltung</item>
-        <item>Gehe zur nächsten Unterhaltung</item>
+        <item>Gehe zu vorherigem Thread</item>
+        <item>Gehe zu nächstem Thread</item>
     </string-array>
     <string-array name="resizeNames">
         <item>Klein</item>

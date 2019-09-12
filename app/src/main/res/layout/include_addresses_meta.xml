@@ -22,7 +22,7 @@
             android:id="@+id/tvSizeExTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="0dp"
+            android:layout_marginEnd="2dp"
             android:text="@string/title_size"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintEnd_toStartOf="@+id/tvSizeEx"
