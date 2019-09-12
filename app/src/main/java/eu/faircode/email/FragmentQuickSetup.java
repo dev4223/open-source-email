@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.mail.AuthenticationFailedException;
 import javax.mail.Folder;
 
 import static android.app.Activity.RESULT_OK;
@@ -254,6 +255,7 @@ public class FragmentQuickSetup extends FragmentBase {
                     args.putString("documentation", provider.documentation.toString());
 
                 String user = (provider.user == EmailProvider.UserType.EMAIL ? email : dparts[0]);
+                Log.i("User type=" + provider.user + " name=" + user);
 
                 List<EntityFolder> folders = new ArrayList<>();
                 long now = new Date().getTime();
@@ -261,7 +263,17 @@ public class FragmentQuickSetup extends FragmentBase {
                 {
                     String protocol = provider.imap.starttls ? "imap" : "imaps";
                     try (MailService iservice = new MailService(context, protocol, null, false, true)) {
-                        iservice.connect(provider.imap.host, provider.imap.port, user, password);
+                        try {
+                            iservice.connect(provider.imap.host, provider.imap.port, user, password);
+                        } catch (AuthenticationFailedException ex) {
+                            if (user.contains("@")) {
+                                Log.w(ex);
+                                user = dparts[0];
+                                Log.i("Retry with user=" + user);
+                                iservice.connect(provider.imap.host, provider.imap.port, user, password);
+                            } else
+                                throw ex;
+                        }
 
                         boolean inbox = false;
                         boolean drafts = false;
@@ -469,7 +481,7 @@ public class FragmentQuickSetup extends FragmentBase {
                 });
 
             }
-        }.execute(FragmentQuickSetup.this, args, "setup:quick");
+        }.execute(this, args, "setup:quick");
     }
 
     @Override
@@ -487,7 +499,7 @@ public class FragmentQuickSetup extends FragmentBase {
         }
     }
 
-    public static class FragmentDialogDone extends FragmentDialogEx {
+    public static class FragmentDialogDone extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -499,6 +511,7 @@ public class FragmentQuickSetup extends FragmentBase {
                             sendResult(RESULT_OK);
                         }
                     })
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }
     }

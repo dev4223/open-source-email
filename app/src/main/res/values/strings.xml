@@ -215,13 +215,14 @@
 
     <string name="title_advanced_keyboard">Show keyboard by default</string>
     <string name="title_advanced_suggest_local">Suggest locally stored contacts</string>
+    <string name="title_advanced_suggest_sent">Suggest addresses found in sent messages</string>
+    <string name="title_advanced_suggest_received">Suggest addresses found in received messages</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_plain_only">Send plain text only by default</string>
     <string name="title_advanced_usenet_signature">Usenet signature convention</string>
     <string name="title_advanced_autoresize">Automatically resize attached and embedded images</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_lookup_mx">Check recipient email addresses before sending</string>
-    <string name="title_advanced_autosend">Confirm sending messages</string>
     <string name="title_advanced_send_delayed">Delay sending messages</string>
 
     <string name="title_advanced_metered">Use metered connections</string>
@@ -242,6 +243,7 @@
     <string name="title_advanced_identicons">Show identicons</string>
     <string name="title_advanced_circular">Show round icons</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
+    <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_subject_top">Show subject above sender</string>
     <string name="title_advanced_subject_italic">Show subject in italics</string>
     <string name="title_advanced_subject_elipsed">When needed, shorten the subject</string>
@@ -270,7 +272,6 @@
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
     <string name="title_advanced_discard_delete">On discard draft permanently delete draft</string>
-    <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
@@ -409,6 +410,7 @@
     <string name="title_edit_html">Edit as HTML</string>
     <string name="title_last_connected">Last connected: %1$s</string>
     <string name="title_pop3_support">POP3 is not supported</string>
+    <string name="title_activesync_support">ActiveSync is not supported</string>
     <string name="title_oauth_support">OAuth is not supported</string>
 
     <string name="title_synchronize_now">Synchronize now</string>
@@ -533,6 +535,7 @@
     <string name="title_ask_discard">Discard draft?</string>
     <string name="title_ask_show_html">Showing the original message can leak privacy sensitive information</string>
     <string name="title_ask_show_image">Showing images can leak privacy sensitive information</string>
+    <string name="title_ask_show_image_hint">Images recognized as tracking images will not be shown</string>
     <string name="title_ask_delete_ref">Delete replied/forwarded message text? This cannot be undone.</string>
     <string name="title_ask_edit_ref">Edit reformatted replied/forwarded message text?</string>
     <string name="title_ask_sync_all">Synchronize all messages in %1$s?</string>
@@ -555,6 +558,7 @@
     <string name="title_discard">Discard</string>
     <string name="title_save">Save</string>
     <string name="title_send">Send</string>
+    <string name="title_send_with_options">Send &#8230;</string>
     <string name="title_send_at">Send at &#8230;</string>
     <string name="title_no_server">No server found at \'%1$s\'</string>
 
@@ -575,13 +579,15 @@
     <string name="title_media_toolbar">Media toolbar</string>
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
-    <string name="title_send_plain_text">Send plain text only</string>
+    <string name="title_send_plain_text">Plain text only</string>
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
+    <string name="title_subject_reminder">Subject is empty</string>
     <string name="title_attachment_keywords">attached,attachment,attachments,included</string>
     <string name="title_attachment_reminder">Did you intend to add an attachment?</string>
     <string name="title_attachments_missing">Not all attachments are downloaded</string>
+    <string name="title_send_dialog_hint">This dialog will still be available via the three dot overflow menu in the action bar</string>
     <string name="title_draft_deleted">Draft discarded</string>
     <string name="title_draft_saved">Draft saved</string>
     <string name="title_ask_send_via">Send message to %1$s via %2$s?</string>
@@ -807,6 +813,9 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 hour</string>
     <string name="title_1day">1 day</string>
+    <string name="title_now">Now</string>
+    <string name="title_after">After %1$s</string>
+    <string name="title_reset">Reset</string>
 
     <string name="title_icalendar_accept">Accept</string>
     <string name="title_icalendar_decline">Decline</string>

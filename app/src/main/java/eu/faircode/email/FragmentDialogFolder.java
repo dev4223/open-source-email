@@ -36,7 +36,7 @@ import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
-public class FragmentDialogFolder extends FragmentDialogEx {
+public class FragmentDialogFolder extends FragmentDialogBase {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -53,7 +53,7 @@ public class FragmentDialogFolder extends FragmentDialogEx {
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rvFolder.setLayoutManager(llm);
 
-        final AdapterFolder adapter = new AdapterFolder(getContext(), getActivity(),
+        final AdapterFolder adapter = new AdapterFolder(getContext(), getViewLifecycleOwner(),
                 account, false, new AdapterFolder.IFolderSelectedListener() {
             @Override
             public void onFolderSelected(TupleFolderEx folder) {
@@ -106,11 +106,12 @@ public class FragmentDialogFolder extends FragmentDialogEx {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(getContext(), getActivity(), args, "folder:select");
+        }.execute(this, args, "folder:select");
 
         return new AlertDialog.Builder(getContext())
                 .setTitle(title)
                 .setView(dview)
+                .setNegativeButton(android.R.string.cancel, null)
                 .create();
     }
 }

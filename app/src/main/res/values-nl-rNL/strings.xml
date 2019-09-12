@@ -102,7 +102,7 @@
     </string>
     <string name="title_setup_quick">Snel instellen</string>
     <string name="title_setup_quick_remark">Voor het snel instellen van een account en een identiteit voor de meeste providers</string>
-    <string name="title_setup_quick_hint">De snelle instelling zal configuratie informatie ophalen van autoconfig.thunderbird.net</string>
+    <string name="title_setup_quick_hint">De snelle instelling zal configuratie-informatie ophalen van autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">IMAP-server om berichten te ontvangen</string>
     <string name="title_setup_quick_smtp">SMTP-server om berichten te verzenden</string>
     <string name="title_setup_go">Ga</string>
@@ -181,13 +181,14 @@
     <string name="title_advanced_sync_subscribed">Alleen geabonneerde mappen synchroniseren</string>
     <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
     <string name="title_advanced_suggest_local">Suggereer lokaal opgeslagen contacten</string>
+    <string name="title_advanced_suggest_sent">Suggereer adressen gevonden in verzonden berichten</string>
+    <string name="title_advanced_suggest_received">Suggereer adressen gevonden in ontvangen berichten</string>
     <string name="title_advanced_prefix_once">Prefix onderwerp slechts één keer bij beantwoorden of doorsturen</string>
     <string name="title_advanced_plain_only">Verstuur standaard alleen tekst</string>
     <string name="title_advanced_usenet_signature">Usenet handtekening conventie</string>
     <string name="title_advanced_autoresize">Automatisch bijgevoegde en ingesloten afbeeldingen verkleinen</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_lookup_mx">Controleer e-mailadressen van de ontvangers voor verzenden</string>
-    <string name="title_advanced_autosend">Bevestig het verzenden van berichten</string>
     <string name="title_advanced_send_delayed">Verzenden van berichten uitstellen</string>
     <string name="title_advanced_metered">Gemeten verbindingen gebruiken</string>
     <string name="title_advanced_download">Automatisch downloaden van berichten en bijlagen op een gemeten verbinding tot</string>
@@ -205,6 +206,7 @@
     <string name="title_advanced_identicons">Toon identicons</string>
     <string name="title_advanced_circular">Toon ronde iconen</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
+    <string name="title_advanced_authentication">Toon een waarschuwing wanneer de ontvangende server het bericht niet kon verifiëren</string>
     <string name="title_advanced_subject_top">Toon onderwerp boven afzender</string>
     <string name="title_advanced_subject_italic">Toon onderwerp cursief</string>
     <string name="title_advanced_subject_elipsed">Wanneer nodig, verkort het onderwerp</string>
@@ -232,8 +234,7 @@
     <string name="title_advanced_autoread">Markeer berichten automatisch als gelezen bij het verplaatsen van berichten</string>
     <string name="title_advanced_automove">Bevestig het verplaatsen van berichten</string>
     <string name="title_advanced_discard_delete">Bij het verwijderen van een concept het concept permanent verwijderen</string>
-    <string name="title_advanced_authentication">Toon een waarschuwing wanneer de ontvangende server het bericht niet kon verifiëren</string>
-    <string name="title_advanced_tracking">Automatisch herkennen en uitschakelen van tracking afbeeldingen</string>
+    <string name="title_advanced_tracking">Automatisch herkennen en uitschakelen van tracking-afbeeldingen</string>
     <string name="title_advanced_badge">Toon opstartpictogram met aantal nieuwe berichten</string>
     <string name="title_advanced_unseen_ignored">Laat het aantal nieuwe berichten overeenkomen met het aantal meldingen</string>
     <string name="title_advanced_notify_preview">Toon berichtvoorbeeld in meldingen</string>
@@ -351,6 +352,7 @@
     <string name="title_edit_html">Bewerk HTML</string>
     <string name="title_last_connected">Laatst verbonden: %1$s</string>
     <string name="title_pop3_support">POP wordt niet ondersteund</string>
+    <string name="title_activesync_support">ActiveSync wordt niet ondersteund</string>
     <string name="title_oauth_support">OAuth wordt niet ondersteund</string>
     <string name="title_synchronize_now">Nu synchroniseren</string>
     <string name="title_synchronize_all">Alle berichten synchroniseren</string>
@@ -466,6 +468,7 @@
     <string name="title_ask_discard">Concept weggooien?</string>
     <string name="title_ask_show_html">Het originele bericht tonen kan privacy gevoelige informatie lekken</string>
     <string name="title_ask_show_image">Afbeeldingen tonen kan privacy gevoelige informatie lekken</string>
+    <string name="title_ask_show_image_hint">Afbeeldingen die als tracking-afbeeldingen zijn herkend, worden niet getoond</string>
     <string name="title_ask_delete_ref">Verwijder beantwoorde/doorgestuurde berichttekst? Dit kan niet ongedaan worden gemaakt.</string>
     <string name="title_ask_edit_ref">Bewerk opnieuw geformatteerde beantwoorde/doorgestuurde berichttekst?</string>
     <string name="title_ask_sync_all">Alle berichten in %1$s synchroniseren?</string>
@@ -487,6 +490,7 @@
     <string name="title_discard">Weggooien</string>
     <string name="title_save">Bewaren</string>
     <string name="title_send">Verzenden</string>
+    <string name="title_send_with_options">Verzenden &#8230;</string>
     <string name="title_send_at">Verzenden om &#8230;</string>
     <string name="title_no_server">Geen server gevonden op \'%1$s\'</string>
     <string name="title_style_bold">Vet</string>
@@ -505,9 +509,10 @@
     <string name="title_media_toolbar">Media werkbalk</string>
     <string name="title_insert_contact_group">Contactgroep toevoegen</string>
     <string name="title_insert_template">Sjabloon invoegen</string>
-    <string name="title_send_plain_text">Verstuur alleen platte tekst</string>
+    <string name="title_send_plain_text">Alleen platte tekst</string>
     <string name="title_from_missing">Zender ontbreekt</string>
     <string name="title_to_missing">Ontvanger ontbreekt</string>
+    <string name="title_subject_reminder">Onderwerp is leeg</string>
     <string name="title_attachment_keywords">bijlage, bijlagen</string>
     <string name="title_attachment_reminder">Was u van plan een bijlage toe te voegen?</string>
     <string name="title_attachments_missing">Niet alle bijlagen zijn gedownload</string>
@@ -682,7 +687,7 @@
     <string name="title_hint_message_selection">Druk lang op een bericht om meerdere berichten te selecteren; Hou vast en veeg omhoog of omlaag om meer berichten te selecteren</string>
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
     <string name="title_hint_image_link">Afbeeldingskoppeling</string>
-    <string name="title_hint_tracking_image">Tracking afbeelding %1$sx%2$s</string>
+    <string name="title_hint_tracking_image">Tracking-afbeelding %1$sx%2$s</string>
     <string name="title_hint_contact_actions">Druk lang voor opties</string>
     <string name="title_open_link">Koppeling openen</string>
     <string name="title_secure_link">Maak koppeling veilig</string>
@@ -715,6 +720,9 @@
     <string name="title_via">Via: %1$s</string>
     <string name="title_1hour">1 uur</string>
     <string name="title_1day">1 dag</string>
+    <string name="title_now">Nu</string>
+    <string name="title_after">Over %1$s</string>
+    <string name="title_reset">Herstellen</string>
     <string name="title_icalendar_accept">Accepteer</string>
     <string name="title_icalendar_decline">Weiger</string>
     <string name="title_icalendar_maybe">Misschien</string>

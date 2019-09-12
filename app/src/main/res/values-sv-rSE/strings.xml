@@ -183,7 +183,6 @@
     <string name="title_advanced_autoresize">Ändra storlek automatiskt på bifogade och inbäddade bilder</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixlar</string>
     <string name="title_advanced_lookup_mx">Kontrollera mottagarens e-postadresser innan du skickar</string>
-    <string name="title_advanced_autosend">Bekräfta sändning av meddelanden</string>
     <string name="title_advanced_send_delayed">Fördröj sändning av meddelanden</string>
     <string name="title_advanced_metered">Använda uppmätta anslutningar</string>
     <string name="title_advanced_download">Hämta automatiskt meddelanden och bilagor på en uppmätt anslutning upp till</string>
@@ -201,6 +200,7 @@
     <string name="title_advanced_identicons">Visa identicons</string>
     <string name="title_advanced_circular">Visa runda ikoner</string>
     <string name="title_advanced_name_email">Visa namn och e-postadresser</string>
+    <string name="title_advanced_authentication">Visa en varning när den mottagande servern inte kunde autentisera meddelandet</string>
     <string name="title_advanced_subject_top">Visa ämne ovanför avsändaren</string>
     <string name="title_advanced_subject_italic">Visa ämnet kursivt</string>
     <string name="title_advanced_flags">Visa stjärnor</string>
@@ -225,7 +225,6 @@
     <string name="title_advanced_autoread">Märk automatiskt meddelanden som lästa vid flyttning av meddelanden</string>
     <string name="title_advanced_automove">Bekräfta flyttning av meddelanden</string>
     <string name="title_advanced_discard_delete">Ta bort utkastet permanent om du kastar det</string>
-    <string name="title_advanced_authentication">Visa en varning när den mottagande servern inte kunde autentisera meddelandet</string>
     <string name="title_advanced_tracking">Automatiskt känna igen och inaktivera spårningsbilder</string>
     <string name="title_advanced_badge">Visa programstartarikon med antal nya meddelanden</string>
     <string name="title_advanced_unseen_ignored">Låt antalet nya meddelanden matcha antalet aviseringar</string>
@@ -494,7 +493,6 @@
     <string name="title_media_toolbar">Verktygsfält för media</string>
     <string name="title_insert_contact_group">Infoga kontaktgrupp</string>
     <string name="title_insert_template">Infoga mall</string>
-    <string name="title_send_plain_text">Skicka endast oformaterad text</string>
     <string name="title_from_missing">Avsändaren saknas</string>
     <string name="title_to_missing">Mottagare saknas</string>
     <string name="title_attachments_missing">Inte alla bilagor har hämtats</string>
@@ -695,6 +693,7 @@
     <string name="title_no_body">Ingen meddelandetext hittades</string>
     <string name="title_no_charset">Kodningen stöds inte: %1$s</string>
     <string name="title_via">Via: %1$s</string>
+    <string name="title_reset">Återställ</string>
     <string name="title_icalendar_accept">Godkänn</string>
     <string name="title_icalendar_decline">Avfärda</string>
     <string name="title_icalendar_maybe">Kanske</string>

@@ -471,7 +471,7 @@ public class Helper {
         fragment.show(manager, "error:unexpected");
     }
 
-    public static class FragmentDialogUnexpected extends FragmentDialogEx {
+    public static class FragmentDialogUnexpected extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -507,7 +507,7 @@ public class Helper {
                                     else
                                         ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
                                 }
-                            }.execute(context, getActivity(), new Bundle(), "error:unexpected");
+                            }.execute(getContext(), getActivity(), new Bundle(), "error:unexpected");
                         }
                     })
                     .create();

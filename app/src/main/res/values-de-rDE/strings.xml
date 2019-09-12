@@ -180,13 +180,14 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_sync_subscribed">Nur abonnierte Ordner synchronisieren</string>
     <string name="title_advanced_keyboard">Tastatur immer anzeigen</string>
     <string name="title_advanced_suggest_local">Lokal gespeicherte Kontakte vorschlagen</string>
+    <string name="title_advanced_suggest_sent">Adressen in gesendeten Nachrichten vorschlagen</string>
+    <string name="title_advanced_suggest_received">Adressen in empfangenen Nachrichten vorschlagen</string>
     <string name="title_advanced_prefix_once">Betreff nur einmal beim Antworten oder Weiterleiten voranstellen</string>
     <string name="title_advanced_plain_only">Immer als Reintext senden</string>
     <string name="title_advanced_usenet_signature">Usenet Signatur-Konvention</string>
     <string name="title_advanced_autoresize">Angehängte und eingebettete Bilder automatisch anpassen</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d Pixel</string>
     <string name="title_advanced_lookup_mx">Überprüft die Empfänger-E-Mail-Adressen vor dem Senden</string>
-    <string name="title_advanced_autosend">Senden von E-Mails bestätigen</string>
     <string name="title_advanced_send_delayed">Senden von Nachrichten verzögern</string>
     <string name="title_advanced_metered">Getaktete Verbindungen verwenden</string>
     <string name="title_advanced_download">Automatisches Herunterladen von E-Mails und Anhängen auf getakteten Verbindungen bis zu einer Größe von</string>
@@ -204,6 +205,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
     <string name="title_advanced_circular">Runde Symbole benutzen</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
+    <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
     <string name="title_advanced_subject_top">Zeige Betreff oberhalb des Absenders</string>
     <string name="title_advanced_subject_italic">Betreff kursiv anzeigen</string>
     <string name="title_advanced_subject_elipsed">Wenn nötig, den Betreff kürzen</string>
@@ -231,7 +233,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_autoread">Nachrichten beim Verschieben automatisch als gelesen kennzeichnen</string>
     <string name="title_advanced_automove">Verschieben von Nachrichten bestätigen</string>
     <string name="title_advanced_discard_delete">Nach Verwerfen eines Mail-Entwurfes diesen Entwurf dauerhaft löschen</string>
-    <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
     <string name="title_advanced_tracking">Tracking-Bilder automatisch erkennen und deaktivieren</string>
     <string name="title_advanced_badge">Startsymbol mit der Anzahl der neuen Nachrichten anzeigen</string>
     <string name="title_advanced_unseen_ignored">Lässt die Anzahl der neuen Nachrichten (im Widget) mit der Anzahl der Mails in den Benachrichtigungen übereinstimmen</string>
@@ -350,6 +351,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_edit_html">Als HTML bearbeiten</string>
     <string name="title_last_connected">Zuletzt verbunden: %1$s</string>
     <string name="title_pop3_support">POP3 wird nicht unterstützt</string>
+    <string name="title_activesync_support">ActiveSync wird nicht unterstützt</string>
     <string name="title_oauth_support">OAuth wird nicht unterstützt</string>
     <string name="title_synchronize_now">Jetzt synchronisieren</string>
     <string name="title_synchronize_all">Alle Nachrichten synchronisieren</string>
@@ -466,6 +468,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_ask_discard">Entwurf löschen?</string>
     <string name="title_ask_show_html">Das Anzeigen der originalen Nachricht kann datenschutzrelevante Informationen preisgeben</string>
     <string name="title_ask_show_image">Das Anzeigen von Bildern kann datenschutzrelevante Informationen preisgeben</string>
+    <string name="title_ask_show_image_hint">Bilder, die als Tracking-Bilder erkannt werden, werden nicht angezeigt</string>
     <string name="title_ask_delete_ref">Den Text der beantworteten/weitergeleiteten Nachricht löschen? Dies kann nicht rückgängig gemacht werden.</string>
     <string name="title_ask_edit_ref">Nachrichtentext der zu beantwortenden/weitergeleitenden Nachricht bearbeiten?</string>
     <string name="title_ask_sync_all">Alle Nachrichten in %1$s synchronisieren?</string>
@@ -505,10 +508,11 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_media_toolbar">Mediensymbolleiste</string>
     <string name="title_insert_contact_group">Kontaktgruppe einfügen</string>
     <string name="title_insert_template">Vorlage einfügen</string>
-    <string name="title_send_plain_text">Nur Text senden</string>
+    <string name="title_send_plain_text">Nur Text</string>
     <string name="title_from_missing">Absender fehlt</string>
     <string name="title_to_missing">Empfänger fehlt</string>
-    <string name="title_attachment_keywords">angehängt,Anhang,Anhänge,beigefügt,Anlage,Anlagen</string>
+    <string name="title_subject_reminder">Betreff ist leer</string>
+    <string name="title_attachment_keywords">angehängt,Anhang,Anhänge,beigefügt,Anlage,Anlagen,anbei</string>
     <string name="title_attachment_reminder">Beabsichtigen Sie einen Anhang hinzuzufügen?</string>
     <string name="title_attachments_missing">Nicht alle Dateianhänge wurden heruntergeladen</string>
     <string name="title_draft_deleted">Entwurf gelöscht</string>
@@ -700,6 +704,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_undo">Rückgängig</string>
     <string name="title_redo">Rückgängig</string>
     <string name="title_add">Hinzufügen</string>
+    <string name="title_browse">App auswählen</string>
     <string name="title_info">Info</string>
     <string name="title_report">Bericht</string>
     <string name="title_fix">Problem beheben</string>
@@ -714,6 +719,9 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_via">über %1$s</string>
     <string name="title_1hour">1 Stunde</string>
     <string name="title_1day">1 Tag</string>
+    <string name="title_now">Jetzt</string>
+    <string name="title_after">Nach %1$s</string>
+    <string name="title_reset">Zurücksetzen</string>
     <string name="title_icalendar_accept">Akzeptieren</string>
     <string name="title_icalendar_decline">Ablehnen</string>
     <string name="title_icalendar_maybe">Vielleicht</string>

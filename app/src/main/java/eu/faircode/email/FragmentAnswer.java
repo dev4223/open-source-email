@@ -262,10 +262,10 @@ public class FragmentAnswer extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentAnswer.this, args, "answer:delete");
+        }.execute(this, args, "answer:delete");
     }
 
-    public static class FragmentInfo extends FragmentDialogEx {
+    public static class FragmentInfo extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -284,6 +284,7 @@ public class FragmentAnswer extends FragmentBase {
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }
     }

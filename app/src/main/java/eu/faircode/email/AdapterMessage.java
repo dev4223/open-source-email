@@ -1143,7 +1143,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Attachments
             bindAttachments(message, properties.getAttachments(message.id));
             cowner.recreate();
-            cowner.start();
             db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
                 private int lastInlineImages = 0;
 
@@ -2095,11 +2094,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowImages(final TupleMessageEx message) {
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_ask_again, null);
-            final TextView tvMessage = dview.findViewById(R.id.tvMessage);
+            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_show_images, null);
+            final TextView tvTracking = dview.findViewById(R.id.tvTracking);
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
-            tvMessage.setText(context.getText(R.string.title_ask_show_image));
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
+            tvTracking.setVisibility(disable_tracking ? View.VISIBLE : View.GONE);
+
             if (message.from == null || message.from.length == 0)
                 cbNotAgain.setVisibility(View.GONE);
             else {
@@ -2686,6 +2688,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     properties.scrollTo(getAdapterPosition());
 
                 pbBody.setVisibility(View.GONE);
+
+                // Show attachments/images
+                cowner.start();
             }
 
             @Override
@@ -3701,7 +3706,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void finish();
     }
 
-    public static class FragmentDialogLink extends FragmentDialogEx {
+    public static class FragmentDialogLink extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3853,7 +3858,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         protected void onException(Bundle args, Throwable ex) {
                             tvOwner.setText(ex.getMessage());
                         }
-                    }.execute(getContext(), getActivity(), args, "link:owner");
+                    }.execute(FragmentDialogLink.this, args, "link:owner");
                 }
             });
 
@@ -3878,7 +3883,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentDialogImage extends FragmentDialogEx {
+    public static class FragmentDialogImage extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3905,7 +3910,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(getContext(), getActivity(), getArguments(), "view:image");
+            }.execute(this, getArguments(), "view:image");
 
             final Dialog dialog = new Dialog(getContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
             dialog.setContentView(pv);
@@ -3914,7 +3919,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentDialogFull extends FragmentDialogEx {
+    public static class FragmentDialogFull extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -3944,11 +3949,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             sendResult(RESULT_OK);
                         }
                     })
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }
     }
 
-    public static class FragmentDialogWebView extends FragmentDialogEx {
+    public static class FragmentDialogWebView extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -4036,7 +4042,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(getContext(), getActivity(), getArguments(), "message:full");
+            }.execute(this, getArguments(), "message:full");
 
             return dialog;
         }
@@ -4113,7 +4119,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentKeywordManage extends FragmentDialogEx {
+    public static class FragmentKeywordManage extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -4203,11 +4209,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             fragment.show(getFragmentManager(), "keyword:add");
                         }
                     })
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }
     }
 
-    public static class FragmentKeywordAdd extends FragmentDialogEx {
+    public static class FragmentKeywordAdd extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -4255,7 +4262,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 }.execute(getContext(), getActivity(), args, "message:keyword:add");
                             }
                         }
-                    }).create();
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
         }
     }
 }

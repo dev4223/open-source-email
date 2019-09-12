@@ -577,7 +577,7 @@ public class FragmentRule extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentRule.this, args, "rule:delete");
+        }.execute(this, args, "rule:delete");
     }
 
     private void onScheduleStart(Intent data) {
@@ -724,7 +724,7 @@ public class FragmentRule extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(FragmentRule.this, rargs, "rule:get");
+        }.execute(this, rargs, "rule:get");
     }
 
     private void showActionParameters(int type) {
@@ -998,7 +998,7 @@ public class FragmentRule extends FragmentBase {
         return Helper.getTimeInstance(context, SimpleDateFormat.SHORT).format(cal.getTime());
     }
 
-    public static class TimePickerFragment extends FragmentDialogEx implements TimePickerDialog.OnTimeSetListener {
+    public static class TimePickerFragment extends FragmentDialogBase implements TimePickerDialog.OnTimeSetListener {
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -1027,7 +1027,7 @@ public class FragmentRule extends FragmentBase {
         }
     }
 
-    public static class FragmentDialogCheck extends FragmentDialogEx {
+    public static class FragmentDialogCheck extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -1043,7 +1043,7 @@ public class FragmentRule extends FragmentBase {
             LinearLayoutManager llm = new LinearLayoutManager(getContext());
             rvMessage.setLayoutManager(llm);
 
-            final AdapterRuleMatch adapter = new AdapterRuleMatch(getContext(), getActivity());
+            final AdapterRuleMatch adapter = new AdapterRuleMatch(getContext(), getViewLifecycleOwner());
             rvMessage.setAdapter(adapter);
 
             tvNoMessages.setVisibility(View.GONE);
@@ -1093,11 +1093,12 @@ public class FragmentRule extends FragmentBase {
                 protected void onException(Bundle args, Throwable ex) {
                     Helper.unexpectedError(getFragmentManager(), ex);
                 }
-            }.execute(getContext(), getActivity(), args, "rule:check");
+            }.execute(this, args, "rule:check");
 
             return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.title_rule_matched)
                     .setView(dview)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }
     }

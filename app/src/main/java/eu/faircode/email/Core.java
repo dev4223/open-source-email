@@ -117,7 +117,7 @@ class Core {
     private static int lastUnseen = -1;
     private static ConcurrentMap<Long, Long> lockFolders = new ConcurrentHashMap<>();
 
-    private static final int MAX_NOTIFICATION_COUNT = 10; // per group
+    private static final int MAX_NOTIFICATION_COUNT = 100; // per group
     private static final int SYNC_CHUNCK_SIZE = 200;
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
@@ -652,6 +652,17 @@ class Core {
             } catch (MessageRemovedException ignored) {
             }
             ifolder.expunge();
+        }
+
+        // Delete junk contacts
+        if (EntityFolder.JUNK.equals(target.type)) {
+            Address[] recipients = (message.reply != null ? message.reply : message.from);
+            if (recipients != null)
+                for (Address recipient : recipients) {
+                    String email = ((InternetAddress) recipient).getAddress();
+                    int count = db.contact().deleteContact(target.account, EntityContact.TYPE_FROM, email);
+                    Log.i("Deleted contact email=" + email + " count=" + count);
+                }
         }
     }
 
@@ -1765,12 +1776,23 @@ class Core {
     private static void updateContactInfo(Context context, final EntityFolder folder, final EntityMessage message) {
         final DB db = DB.getInstance(context);
 
-        if (EntityFolder.ARCHIVE.equals(folder.type) ||
+        if (EntityFolder.DRAFTS.equals(folder.type) ||
+                EntityFolder.ARCHIVE.equals(folder.type) ||
                 EntityFolder.TRASH.equals(folder.type) ||
                 EntityFolder.JUNK.equals(folder.type))
             return;
 
         final int type = (folder.isOutgoing() ? EntityContact.TYPE_TO : EntityContact.TYPE_FROM);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean suggest_sent = prefs.getBoolean("suggest_sent", false);
+        boolean suggest_received = prefs.getBoolean("suggest_received", false);
+
+        if (type == EntityContact.TYPE_TO && !suggest_sent)
+            return;
+        if (type == EntityContact.TYPE_FROM && !suggest_received)
+            return;
+
         Address[] recipients = (type == EntityContact.TYPE_TO
                 ? message.to
                 : (message.reply != null ? message.reply : message.from));

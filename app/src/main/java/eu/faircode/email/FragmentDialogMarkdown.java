@@ -20,7 +20,7 @@ import java.util.Locale;
 
 import io.noties.markwon.Markwon;
 
-public class FragmentDialogMarkdown extends FragmentDialogEx {
+public class FragmentDialogMarkdown extends FragmentDialogBase {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -90,7 +90,7 @@ public class FragmentDialogMarkdown extends FragmentDialogEx {
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
-        }.execute(getContext(), getActivity(), getArguments(), "markdown:read");
+        }.execute(this, getArguments(), "markdown:read");
 
         return dialog;
     }
