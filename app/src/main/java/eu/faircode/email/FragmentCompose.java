@@ -183,7 +183,7 @@ public class FragmentCompose extends FragmentBase {
     private ImageButton ibReferenceDelete;
     private ImageButton ibReferenceEdit;
     private ImageButton ibReferenceImages;
-    private BottomNavigationView edit_bar;
+    private BottomNavigationView media_bar;
     private BottomNavigationView bottom_navigation;
     private ContentLoadingProgressBar pbWait;
     private Group grpHeader;
@@ -199,7 +199,8 @@ public class FragmentCompose extends FragmentBase {
 
     private boolean prefix_once = false;
     private boolean monospaced = false;
-    private boolean style = true;
+    private boolean media = true;
+    private boolean compact = false;
 
     private long working = -1;
     private State state = State.NONE;
@@ -242,7 +243,8 @@ public class FragmentCompose extends FragmentBase {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefix_once = prefs.getBoolean("prefix_once", true);
         monospaced = prefs.getBoolean("monospaced", false);
-        style = prefs.getBoolean("style_toolbar", true);
+        media = prefs.getBoolean("compose_media", true);
+        compact = prefs.getBoolean("compose_compact", false);
 
         setTitle(R.string.page_compose);
         setSubtitle(getResources().getQuantityString(R.plurals.page_message, 1));
@@ -276,7 +278,7 @@ public class FragmentCompose extends FragmentBase {
         ibReferenceDelete = view.findViewById(R.id.ibReferenceDelete);
         ibReferenceEdit = view.findViewById(R.id.ibReferenceEdit);
         ibReferenceImages = view.findViewById(R.id.ibReferenceImages);
-        edit_bar = view.findViewById(R.id.edit_bar);
+        media_bar = view.findViewById(R.id.media_bar);
         bottom_navigation = view.findViewById(R.id.bottom_navigation);
 
         pbWait = view.findViewById(R.id.pbWait);
@@ -423,10 +425,10 @@ public class FragmentCompose extends FragmentBase {
         PackageManager pm = getContext().getPackageManager();
         Intent take_photo = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         Intent record_audio = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
-        edit_bar.getMenu().findItem(R.id.menu_take_photo).setVisible(take_photo.resolveActivity(pm) != null);
-        edit_bar.getMenu().findItem(R.id.menu_record_audio).setVisible(record_audio.resolveActivity(pm) != null);
+        media_bar.getMenu().findItem(R.id.menu_take_photo).setVisible(take_photo.resolveActivity(pm) != null);
+        media_bar.getMenu().findItem(R.id.menu_record_audio).setVisible(record_audio.resolveActivity(pm) != null);
 
-        edit_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+        media_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int action = item.getItemId();
@@ -452,6 +454,8 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
+        setCompact(compact);
+
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -470,7 +474,7 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
-        view.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
+        //view.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
 
         addBackPressedListener(onBackPressedListener);
 
@@ -493,7 +497,7 @@ public class FragmentCompose extends FragmentBase {
         ibReferenceEdit.setVisibility(View.GONE);
         ibReferenceImages.setVisibility(View.GONE);
         tvReference.setVisibility(View.GONE);
-        edit_bar.setVisibility(View.GONE);
+        media_bar.setVisibility(View.GONE);
         bottom_navigation.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
 
@@ -899,18 +903,23 @@ public class FragmentCompose extends FragmentBase {
         super.onPrepareOptionsMenu(menu);
 
         menu.findItem(R.id.menu_zoom).setVisible(state == State.LOADED);
-        menu.findItem(R.id.menu_media_toolbar).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_media).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_compact).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_clear).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_contact_group).setVisible(state == State.LOADED);
         menu.findItem(R.id.menu_answer).setVisible(state == State.LOADED);
+        menu.findItem(R.id.menu_send).setVisible(state == State.LOADED);
 
         menu.findItem(R.id.menu_zoom).setEnabled(!busy);
-        menu.findItem(R.id.menu_media_toolbar).setEnabled(!busy);
+        menu.findItem(R.id.menu_media).setEnabled(!busy);
+        menu.findItem(R.id.menu_compact).setEnabled(!busy);
         menu.findItem(R.id.menu_clear).setEnabled(!busy);
         menu.findItem(R.id.menu_contact_group).setEnabled(!busy && hasPermission(Manifest.permission.READ_CONTACTS));
         menu.findItem(R.id.menu_answer).setEnabled(!busy);
+        menu.findItem(R.id.menu_send).setEnabled(!busy);
 
-        menu.findItem(R.id.menu_media_toolbar).setChecked(style);
+        menu.findItem(R.id.menu_media).setChecked(media);
+        menu.findItem(R.id.menu_compact).setChecked(compact);
     }
 
     @Override
@@ -923,8 +932,11 @@ public class FragmentCompose extends FragmentBase {
             case R.id.menu_zoom:
                 onMenuZoom();
                 return true;
-            case R.id.menu_media_toolbar:
-                onMenuStyleToolbar();
+            case R.id.menu_media:
+                onMenuMediabar();
+                return true;
+            case R.id.menu_compact:
+                onMenuCompact();
                 return true;
             case R.id.menu_clear:
                 onMenuClear();
@@ -971,11 +983,27 @@ public class FragmentCompose extends FragmentBase {
         }
     }
 
-    private void onMenuStyleToolbar() {
-        style = !style;
+    private void onMenuMediabar() {
+        media = !media;
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        prefs.edit().putBoolean("style_toolbar", style).apply();
-        edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
+        prefs.edit().putBoolean("compose_media", media).apply();
+        media_bar.setVisibility(media ? View.VISIBLE : View.GONE);
+    }
+
+    private void onMenuCompact() {
+        compact = !compact;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean("compose_compact", compact).apply();
+        setCompact(compact);
+    }
+
+    private void setCompact(boolean compact) {
+        bottom_navigation.setLabelVisibilityMode(compact
+                ? LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED
+                : LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
+        ViewGroup.LayoutParams params = bottom_navigation.getLayoutParams();
+        params.height = Helper.dp2pixels(view.getContext(), compact ? 36 : 56);
+        bottom_navigation.setLayoutParams(params);
     }
 
     private void onMenuClear() {
@@ -2489,22 +2517,14 @@ public class FragmentCompose extends FragmentBase {
 
         @Override
         protected void onPreExecute(Bundle args) {
-            int action = args.getInt("action");
-            if (action != R.id.action_check) {
-                busy = true;
-                Helper.setViewsEnabled(view, false);
-                getActivity().invalidateOptionsMenu();
-            }
+            setBusy(true);
         }
 
         @Override
         protected void onPostExecute(Bundle args) {
             int action = args.getInt("action");
-            if (action != R.id.action_check) {
-                busy = false;
-                Helper.setViewsEnabled(view, true);
-                getActivity().invalidateOptionsMenu();
-            }
+            if (action != R.id.action_check)
+                setBusy(false);
         }
 
         @Override
@@ -2921,6 +2941,8 @@ public class FragmentCompose extends FragmentBase {
                 boolean remind_attachment = args.getBoolean("remind_attachment", false);
 
                 if (dialog || remind_subject || remind_attachment) {
+                    setBusy(false);
+
                     FragmentDialogSend fragment = new FragmentDialogSend();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentCompose.this, REQUEST_SEND);
@@ -2936,6 +2958,10 @@ public class FragmentCompose extends FragmentBase {
 
         @Override
         protected void onException(Bundle args, Throwable ex) {
+            int action = args.getInt("action");
+            if (action == R.id.action_check)
+                setBusy(false);
+
             if (ex instanceof MessageRemovedException)
                 finish();
             else if (ex instanceof IllegalArgumentException ||
@@ -2962,6 +2988,13 @@ public class FragmentCompose extends FragmentBase {
                 default:
                     return Integer.toString(id);
             }
+        }
+
+
+        private void setBusy(boolean busy) {
+            FragmentCompose.this.busy = busy;
+            Helper.setViewsEnabled(view, !busy);
+            getActivity().invalidateOptionsMenu();
         }
     };
 
@@ -3000,7 +3033,7 @@ public class FragmentCompose extends FragmentBase {
                 autosave = true;
 
                 pbWait.setVisibility(View.GONE);
-                edit_bar.setVisibility(style ? View.VISIBLE : View.GONE);
+                media_bar.setVisibility(media ? View.VISIBLE : View.GONE);
                 bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision != null && draft.revision > 1);
                 bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
                 bottom_navigation.setVisibility(View.VISIBLE);
@@ -3402,7 +3435,7 @@ public class FragmentCompose extends FragmentBase {
         @Override
         public void onGlobalLayout() {
             int bottom = view.getBottom()
-                    - edit_bar.getHeight()
+                    - media_bar.getHeight()
                     - Helper.dp2pixels(view.getContext(), 56); // full bottom navigation
             int remain = bottom - etBody.getTop();
             int threshold = Helper.dp2pixels(view.getContext(), 100);

@@ -224,6 +224,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(128) How can I reset asked questions, for example to show images?](#user-content-faq128)
 * [(129) Is ProtonMail supported?](#user-content-faq129)
 * [(130) What does message error ... mean?](#user-content-faq130)
+* [(131) Can you change the direction for swiping to previous/next message?](#user-content-faq131)
 
 [I have another question.](#user-content-support)
 
@@ -2187,8 +2188,14 @@ ProtonMail uses a proprietary email protocol
 and [does not directly support IMAP](https://protonmail.com/support/knowledge-base/imap-smtp-and-pop3-setup/),
 so you cannot use FairEmail to access ProtonMail.
 
+<br />
+
 <a name="faq130"></a>
 **(130) What does message error ... mean?**
+
+The warning *No server found at ...* means that there was no email server registered at the indicated domain name.
+Replying to the message might not be possible and might result in an error.
+This could indicate a falsified email address and/or spam.
 
 The error *... ParseException ...* means that there is a problem with a received message, likely caused by a bug in the sending software.
 FairEmail will workaround this is in most cases, so this message can mostly be considered as a warning instead of an error.
@@ -2197,6 +2204,18 @@ The error *...SendFailedException...* means that there was a problem while sendi
 The error will almost always include a reason. Common reasons are that the message was too big or that one or more recipient addresses were invalid.
 
 Please see [here](#user-content-faq22) for other error messages in the outbox.
+
+<br />
+
+<a name="faq131"></a>
+**(131) Can you change the direction for swiping to previous/next message?**
+
+If you read from left to right, swiping to the left will show the next message.
+Similarly, if you read from right to left, swiping to the right will show the next message.
+
+This behavior seems quite natural to me.
+
+<br />
 
 ## Support
 
