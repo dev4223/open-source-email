@@ -263,9 +263,11 @@
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
     <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
     <string name="title_advanced_swipenav">Swipe left/right to go to next/previous conversation</string>
+    <string name="title_advanced_swipe_reversed">Reverse swipe direction</string>
     <string name="title_advanced_double_tap">Double tap to mark message read/unread</string>
     <string name="title_advanced_expand_read">Mark messages read on expanding</string>
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
+    <string name="title_advanced_expand_one">Expand only one message at a time</string>
     <string name="title_advanced_collapse">Collapse messages in conversations on \'back\'</string>
     <string name="title_advanced_autoclose">Automatically close conversations</string>
     <string name="title_advanced_onclose">On closing a conversation</string>
@@ -287,6 +289,7 @@
     <string name="title_advanced_biometrics_notify">Show notification content when using biometric authentication</string>
     <string name="title_advanced_light">Use notification light</string>
     <string name="title_advanced_sound">Select notification sound</string>
+    <string name="title_advanced_alert_once" translatable="false">MIUI notification sound workaround</string>
 
     <string name="title_advanced_badge_hint">Only available on supported launchers</string>
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
@@ -381,8 +384,6 @@
     <string name="title_password">Password</string>
     <string name="title_realm">Realm</string>
     <string name="title_use_ip">Use local IP address instead of host name</string>
-    <string name="title_synchronize_account">Synchronize (receive messages)</string>
-    <string name="title_synchronize_identity">Synchronize (send messages)</string>
     <string name="title_primary_account">Primary (default account)</string>
     <string name="title_primary_identity">Primary (default identity)</string>
     <string name="title_keep_alive_interval">Keep-alive/poll interval (minutes)</string>
@@ -713,6 +714,7 @@
     <string name="title_legend_primary">Primary</string>
     <string name="title_legend_subscribed">Subscribed to</string>
     <string name="title_legend_rule">Has rules</string>
+    <string name="title_legend_similar">Search similar messages</string>
     <string name="title_legend_notify">Notify on new messages</string>
     <string name="title_legend_sync_keep">Number of days to synchronize / to keep messages</string>
     <string name="title_legend_download_fetch">Number of message downloaded / headers fetched</string>
@@ -803,6 +805,7 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
+    <string name="title_enabled">Enabled</string>
     <string name="title_executing">Executing</string>
     <string name="title_completed">Completed</string>
     <string name="title_ask_what">Ask what to do</string>

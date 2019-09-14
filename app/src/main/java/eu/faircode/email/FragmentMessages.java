@@ -944,29 +944,33 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (swipenav) {
                 Log.i("Swipe navigation");
 
-                boolean ltr = (getContext().getResources().getConfiguration().getLayoutDirection() == View.LAYOUT_DIRECTION_LTR);
-
                 final SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
                     @Override
                     public boolean onSwipeRight() {
-                        if (previous == null) {
+                        boolean rtl = prefs.getBoolean("swipe_reversed", false);
+                        Long go = (rtl ? next : previous);
+
+                        if (go == null) {
                             Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_right);
                             view.startAnimation(bounce);
                         } else
-                            navigate(previous, ltr);
+                            navigate(go, true);
 
-                        return (previous != null);
+                        return (go != null);
                     }
 
                     @Override
                     public boolean onSwipeLeft() {
-                        if (next == null) {
+                        boolean rtl = prefs.getBoolean("swipe_reversed", false);
+                        Long go = (rtl ? previous : next);
+
+                        if (go == null) {
                             Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
                             view.startAnimation(bounce);
                         } else
-                            navigate(next, !ltr);
+                            navigate(go, false);
 
-                        return (next != null);
+                        return (go != null);
                     }
                 });
 
@@ -1192,6 +1196,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public void setValue(String name, long id, boolean enabled) {
             if (!values.containsKey(name))
                 values.put(name, new ArrayList<Long>());
+
             if (enabled) {
                 if (!values.get(name).contains(id))
                     values.get(name).add(id);
@@ -1199,6 +1204,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 values.get(name).remove(id);
 
             if ("expanded".equals(name)) {
+                // Collapse other messages
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                boolean expand_one = prefs.getBoolean("expand_one", false);
+                if (expand_one) {
+                    for (Long other : new ArrayList<>(values.get(name)))
+                        if (!other.equals(id)) {
+                            values.get(name).remove(other);
+                            int pos = adapter.getPositionForKey(other);
+                            if (pos != RecyclerView.NO_POSITION)
+                                adapter.notifyItemChanged(pos);
+                        }
+                }
+
                 updateExpanded();
                 if (enabled)
                     handleExpand(id);
@@ -2783,8 +2801,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 name = getString(R.string.title_folder_unified);
             else
                 name = Helper.localizeFolderType(getContext(), type);
-        else
+        else {
             name = (folders.size() > 0 ? folders.get(0).getDisplayName(getContext()) : "");
+            if (folders.size() == 1) {
+                String accountName = folders.get(0).accountName;
+                if (accountName != null)
+                    name += "/" + accountName;
+            }
+        }
 
         // Show name/unread
         if (unseen == 0)
@@ -4025,7 +4049,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         OpenPgpSignatureResult sigResult = result.getParcelableExtra(OpenPgpApi.RESULT_SIGNATURE);
                         int sresult = (sigResult == null ? RESULT_NO_SIGNATURE : sigResult.getResult());
                         if (sresult == RESULT_NO_SIGNATURE)
-                            db.message().setMessageError(id, getString(R.string.title_signature_none));
+                            Snackbar.make(view, R.string.title_signature_none, Snackbar.LENGTH_LONG).show();
                         else if (sresult == RESULT_VALID_KEY_CONFIRMED)
                             Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG).show();
                         else

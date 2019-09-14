@@ -224,9 +224,11 @@
     <string name="title_advanced_pull_refresh">Trascina in basso per aggiornare</string>
     <string name="title_advanced_autoscroll">Scorri verso l\'alto quando ricevi nuovi messaggi</string>
     <string name="title_advanced_swipenav">Scorri a sinistra/destra per andare alla conversazione successiva/precedente</string>
+    <string name="title_advanced_swipe_reversed">Inverti direzione scorrimento</string>
     <string name="title_advanced_double_tap">Doppio tocco per segnare il messaggio letto/non letto</string>
     <string name="title_advanced_expand_read">Segna i messaggi come letti in fase di espansione</string>
     <string name="title_advanced_autoexpand">Espandi automaticamente i messaggi</string>
+    <string name="title_advanced_expand_one">Espandi solo un messaggio alla volta</string>
     <string name="title_advanced_collapse">Raggruppa i messaggi in conversazioni premendo \'indietro\'</string>
     <string name="title_advanced_autoclose">Chiudi automaticamente le conversazioni</string>
     <string name="title_advanced_onclose">Alla chiusura di una conversazione</string>
@@ -323,8 +325,6 @@
     <string name="title_password">Password</string>
     <string name="title_realm">Dominio</string>
     <string name="title_use_ip">Usa l\'indirizzo IP locale invece del nome dell\'host</string>
-    <string name="title_synchronize_account">Sincronizza (ricevi messaggi)</string>
-    <string name="title_synchronize_identity">Sincronizza (invia messaggi)</string>
     <string name="title_primary_account">Principale (account predefinito)</string>
     <string name="title_primary_identity">Principale (identità predefinita)</string>
     <string name="title_keep_alive_interval">Intervallo resta-attivo/sondaggio (minuti)</string>
@@ -626,6 +626,7 @@
     <string name="title_legend_primary">Principale</string>
     <string name="title_legend_subscribed">Iscritto a</string>
     <string name="title_legend_rule">Ha regole</string>
+    <string name="title_legend_similar">Cerca messaggi simili</string>
     <string name="title_legend_notify">Notifica nuovi messaggi</string>
     <string name="title_legend_sync_keep">Numero di giorni da sincronizzare / di cui mantenere i messaggi</string>
     <string name="title_legend_download_fetch">Numero di messaggi scaricati / intestazioni recuperate</string>
@@ -710,6 +711,7 @@
     <string name="title_report">Report</string>
     <string name="title_fix">Correggi</string>
     <string name="title_enable">Attiva</string>
+    <string name="title_enabled">Abilitato</string>
     <string name="title_executing">Esecuzione</string>
     <string name="title_completed">Completato</string>
     <string name="title_ask_what">Chiedi cosa fare</string>
