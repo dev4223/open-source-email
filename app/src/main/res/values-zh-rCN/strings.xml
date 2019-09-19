@@ -95,6 +95,7 @@
     <string name="title_setup_quick_smtp">发送消息的SMTP服务器</string>
     <string name="title_setup_go">转到</string>
     <string name="title_setup_wizard">向导</string>
+    <string name="title_authorizing">授权中 &#8230;</string>
     <string name="title_setup_instructions">设置指南</string>
     <string name="title_setup_no_settings">找不到 \"%1$s\" 的设置</string>
     <string name="title_setup_quick_success">已成功添加了一个账户和身份</string>
@@ -213,10 +214,11 @@
     <string name="title_advanced_pull_refresh">下拉刷新</string>
     <string name="title_advanced_autoscroll">在收到新消息时滚动至顶部</string>
     <string name="title_advanced_swipenav">向左/右滑动来前往下一个/上一个邮件会话</string>
-    <string name="title_advanced_swipe_reversed">反转滑动方向</string>
+    <string name="title_advanced_reversed">翻转导航方向</string>
     <string name="title_advanced_double_tap">双击标记消息已读/未读</string>
     <string name="title_advanced_expand_read">将展开的消息标记为已读</string>
     <string name="title_advanced_autoexpand">自动伸展消息</string>
+    <string name="title_advanced_expand_one">每次仅展开一个消息</string>
     <string name="title_advanced_collapse">按返回键折叠对话中的邮件</string>
     <string name="title_advanced_autoclose">自动关闭对话</string>
     <string name="title_advanced_onclose">关闭对话时</string>
@@ -234,11 +236,13 @@
     <string name="title_advanced_notify_action_reply_direct">直接回复</string>
     <string name="title_advanced_notify_action_flag">标星</string>
     <string name="title_advanced_notify_action_seen">已读</string>
+    <string name="title_advanced_notify_remove">点击通知时移除新的消息通知</string>
     <string name="title_advanced_biometrics_notify">使用生物认证时显示通知内容</string>
     <string name="title_advanced_light">使用指示灯</string>
     <string name="title_advanced_sound">选择通知提示音</string>
     <string name="title_advanced_badge_hint">仅可用于支持的启动器</string>
     <string name="title_advanced_notify_action_hint">最多显示三项操作</string>
+    <string name="title_advanced_notify_remove_hint">滑动走并标记消息已读时将总是移除新消息通知</string>
     <string name="title_advanced_notify_manage_hint">点击频道名称“通知”设置默认通知声音等</string>
     <string name="title_advanced_double_back">双击返回键退出</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时</string>
@@ -265,6 +269,7 @@
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>
     <string name="title_advanced_roaming_hint">当漫游时，将始终获取消息头。您可以使用设备的漫游设置在漫游时禁用互联网。</string>
     <string name="title_advanced_browse_hint">向下滚动时拉取更多邮件</string>
+    <string name="title_advanced_date_hint">若按时间对消息排序，将仅按日期对消息分组</string>
     <string name="title_advanced_threading_hint">对相互关联的邮件进行分组</string>
     <string name="title_advanced_name_email_hint">禁用该选项，将仅显示名称（如果可用）</string>
     <string name="title_advanced_preview_hint">只有当消息文本下载时才可用</string>

@@ -77,8 +77,9 @@ public class EntityOperation {
     static final String ADD = "add";
     static final String MOVE = "move";
     static final String COPY = "copy";
+    static final String FETCH = "fetch";
     static final String DELETE = "delete";
-    static final String SEND = "send";
+    static final String DELETED = "deleted";
     static final String SEEN = "seen";
     static final String ANSWERED = "answered";
     static final String FLAG = "flag";
@@ -89,6 +90,8 @@ public class EntityOperation {
     static final String ATTACHMENT = "attachment";
     static final String SYNC = "sync";
     static final String SUBSCRIBE = "subscribe";
+    static final String SEND = "send";
+    static final String EXISTS = "exists";
 
     static void queue(Context context, EntityMessage message, String name, Object... values) {
         DB db = DB.getInstance(context);
@@ -138,6 +141,9 @@ public class EntityOperation {
                         " source=" + source.id + ":" + source.name + "" +
                         " target=" + target.id + ":" + target.name +
                         " autoread=" + autoread);
+
+                if (autoread)
+                    db.message().setMessageUiSeen(message.id, true);
 
                 if (!EntityFolder.ARCHIVE.equals(source.type) ||
                         EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type))
@@ -254,6 +260,36 @@ public class EntityOperation {
             ServiceSend.start(context);
         else
             ServiceSynchronize.process(context, false);
+    }
+
+    static void queue(Context context, EntityFolder folder, String name, Object... values) {
+        DB db = DB.getInstance(context);
+
+        JSONArray jargs = new JSONArray();
+        for (Object value : values)
+            jargs.put(value);
+
+        EntityOperation op = new EntityOperation();
+        op.account = folder.account;
+        op.folder = folder.id;
+        op.message = null;
+        op.name = name;
+        op.args = jargs.toString();
+        op.created = new Date().getTime();
+        op.id = db.operation().insertOperation(op);
+
+        Log.i("Queued op=" + op.id + "/" + op.name +
+                " folder=" + op.folder + " msg=" + op.message +
+                " args=" + op.args);
+
+        Map<String, String> crumb = new HashMap<>();
+        crumb.put("name", op.name);
+        crumb.put("args", op.args);
+        crumb.put("folder", op.account + ":" + op.folder);
+        if (op.message != null)
+            crumb.put("message", Long.toString(op.message));
+        crumb.put("free", Integer.toString(Log.getFreeMemMb()));
+        Log.breadcrumb("queued", crumb);
     }
 
     static void sync(Context context, long fid, boolean foreground) {

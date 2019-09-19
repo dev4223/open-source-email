@@ -655,8 +655,13 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, EntityMessage draft) {
-                if (draft != null)
-                    showDraft(draft);
+                if (draft != null) {
+                    tvReference.setVisibility(View.GONE);
+                    grpReferenceHint.setVisibility(View.GONE);
+                    ibReferenceDelete.setVisibility(View.GONE);
+                    ibReferenceEdit.setVisibility(View.GONE);
+                    ibReferenceImages.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -1406,6 +1411,9 @@ public class FragmentCompose extends FragmentBase {
                 EntityMessage message = db.message().getMessage(id);
                 if (message == null)
                     throw new MessageRemovedException();
+                EntityIdentity identity = db.identity().getIdentity(message.identity);
+                if (identity == null)
+                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
 
                 List<EntityAttachment> attachments = db.attachment().getAttachments(id);
                 for (EntityAttachment attachment : new ArrayList<>(attachments))
@@ -1419,7 +1427,7 @@ public class FragmentCompose extends FragmentBase {
                 Properties props = MessageHelper.getSessionProperties();
                 Session isession = Session.getInstance(props, null);
                 MimeMessage imessage = new MimeMessage(isession);
-                MessageHelper.build(context, message, attachments, null, imessage);
+                MessageHelper.build(context, message, attachments, identity, imessage);
 
                 // Serialize message
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -1443,10 +1451,6 @@ public class FragmentCompose extends FragmentBase {
                     Log.i("Result " + result);
                     Log.logExtras(result);
                 }
-
-                // Identity to store sign key ID into
-                EntityIdentity identity =
-                        (message.identity == null ? null : db.identity().getIdentity(message.identity));
 
                 int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
                 switch (resultCode) {
@@ -3670,6 +3674,11 @@ public class FragmentCompose extends FragmentBase {
             db.message().liveMessage(id).observe(getViewLifecycleOwner(), new Observer<TupleMessageEx>() {
                 @Override
                 public void onChanged(TupleMessageEx draft) {
+                    if (draft == null) {
+                        dismiss();
+                        return;
+                    }
+
                     int plus = (draft.cc == null ? 0 : draft.cc.length) +
                             (draft.bcc == null ? 0 : draft.bcc.length);
                     tvTo.setText(MessageHelper.formatAddressesShort(draft.to) + (plus > 0 ? " +" + plus : ""));

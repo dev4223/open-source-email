@@ -33,9 +33,6 @@ public class ConnectionHelper {
     // https://dns.watch/
     private static final String DEFAULT_DNS = "84.200.69.80";
 
-    static final int AUTH_TYPE_PASSWORD = 1;
-    static final int AUTH_TYPE_GMAIL = 2;
-
     // Roam like at home
     // https://en.wikipedia.org/wiki/European_Union_roaming_regulations
     private static final List<String> RLAH_COUNTRY_CODES = Collections.unmodifiableList(Arrays.asList(
@@ -167,6 +164,11 @@ public class ConnectionHelper {
             Log.i("isMetered: no active network");
             return null;
         }
+
+        // onLost [... state: DISCONNECTED/DISCONNECTED ... available: true]
+        NetworkInfo ani = cm.getNetworkInfo(active);
+        if (ani == null || !ani.isConnected())
+            return null;
 
         NetworkCapabilities caps = cm.getNetworkCapabilities(active);
         if (caps == null) {

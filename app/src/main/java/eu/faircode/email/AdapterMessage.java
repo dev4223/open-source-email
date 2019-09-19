@@ -742,7 +742,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibExpander.setVisibility(View.GONE);
 
             // Line 1
-            boolean outgoing = (viewType != ViewType.THREAD && EntityFolder.isOutgoing(message.folderType));
+            boolean outgoing = false;
+            if (viewType != ViewType.THREAD)
+                if (EntityFolder.isOutgoing(message.folderType))
+                    outgoing = true;
+                else if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
+                        message.identityEmail != null &&
+                        message.from != null && message.from.length == 1 &&
+                        message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
+                    outgoing = true;
             Address[] addresses = (outgoing ? message.to : message.senders);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             Long size = ("size".equals(sort) ? message.totalSize : message.size);
@@ -762,12 +770,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             Boolean.FALSE.equals(message.mx));
 
             // Line 3
-            ivType.setImageResource(message.drafts > 0
-                    ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
-            ivType.setVisibility(message.drafts > 0 ||
-                    (viewType == ViewType.UNIFIED && type == null && !inbox) ||
-                    (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
-                    ? View.VISIBLE : View.GONE);
+            if (outgoing && !EntityFolder.SENT.equals(message.folderType)) {
+                ivType.setImageResource(EntityFolder.getIcon(EntityFolder.SENT));
+                ivType.setVisibility(View.VISIBLE);
+            } else {
+                ivType.setImageResource(message.drafts > 0
+                        ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
+                ivType.setVisibility(message.drafts > 0 ||
+                        (viewType == ViewType.UNIFIED && type == null && !inbox) ||
+                        (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
+                        ? View.VISIBLE : View.GONE);
+            }
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
             ibSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
@@ -2093,9 +2106,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowImages(final TupleMessageEx message) {
-            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_show_images, null);
-            final TextView tvTracking = dview.findViewById(R.id.tvTracking);
-            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+            View dview = LayoutInflater.from(context).inflate(R.layout.dialog_show_images, null);
+            TextView tvTracking = dview.findViewById(R.id.tvTracking);
+            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
@@ -2111,21 +2124,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         TextUtils.join(", ", froms)));
             }
 
+            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    for (Address address : message.from) {
+                        String from = ((InternetAddress) address).getAddress();
+                        editor.putBoolean(from + ".show_images", isChecked);
+                    }
+                    editor.apply();
+                }
+            });
+
             // TODO: dialog fragment
             final Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            if (cbNotAgain.isChecked()) {
-                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                                SharedPreferences.Editor editor = prefs.edit();
-                                for (Address address : message.from) {
-                                    String from = ((InternetAddress) address).getAddress();
-                                    editor.putBoolean(from + ".show_images", true);
-                                }
-                                editor.apply();
-                            }
                             properties.setValue("images", message.id, true);
                             onShowImagesConfirmed(message);
                         }

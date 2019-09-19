@@ -44,9 +44,7 @@ import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.IMAPMessage;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -63,19 +61,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
 import javax.mail.AuthenticationFailedException;
-import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.FolderClosedException;
 import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
-import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.ReadOnlyFolderException;
 import javax.mail.StoreClosedException;
-import javax.mail.UIDFolder;
-import javax.mail.event.ConnectionAdapter;
-import javax.mail.event.ConnectionEvent;
 import javax.mail.event.FolderAdapter;
 import javax.mail.event.FolderEvent;
 import javax.mail.event.MessageChangedEvent;
@@ -176,13 +169,13 @@ public class ServiceSynchronize extends ServiceBase {
                     if (tag != null && tag.startsWith("unseen.")) {
                         String[] p = tag.split(("\\."));
                         long group = Long.parseLong(p[1]);
-                        long id = Long.parseLong(p[2]);
+                        long id = sbn.getNotification().extras.getLong("id", 0);
 
                         if (!groupNotifying.containsKey(group))
                             groupNotifying.put(group, new ArrayList<>());
 
                         if (id > 0) {
-                            Log.i("Notify restore " + tag);
+                            Log.i("Notify restore " + tag + " id=" + id);
                             groupNotifying.get(group).add(id);
                         }
                     }
@@ -798,24 +791,6 @@ public class ServiceSynchronize extends ServiceBase {
                         }
                     });
 
-                    // Listen for connection events
-                    iservice.getStore().addConnectionListener(new ConnectionAdapter() {
-                        @Override
-                        public void opened(ConnectionEvent e) {
-                            Log.i(account.name + " opened event");
-                        }
-
-                        @Override
-                        public void disconnected(ConnectionEvent e) {
-                            Log.e(account.name + " disconnected event");
-                        }
-
-                        @Override
-                        public void closed(ConnectionEvent e) {
-                            Log.e(account.name + " closed event");
-                        }
-                    });
-
                     // Update folder list
                     Core.onSynchronizeFolders(this, account, iservice.getStore(), state);
 
@@ -854,17 +829,17 @@ public class ServiceSynchronize extends ServiceBase {
                                     ifolder.open(Folder.READ_ONLY);
                                     db.folder().setFolderReadOnly(folder.id, true);
                                 } catch (MessagingException ex1) {
-                                    Log.w(ex1);
+                                    Log.w(folder.name, ex1);
                                     db.folder().setFolderState(folder.id, null);
                                     db.folder().setFolderError(folder.id, Helper.formatThrowable(ex1));
                                     continue;
                                 }
                             } catch (FolderNotFoundException ex) {
-                                Log.w(ex);
+                                Log.w(folder.name, ex);
                                 db.folder().deleteFolder(folder.id);
                                 continue;
                             } catch (MessagingException ex) {
-                                Log.w(ex);
+                                Log.w(folder.name, ex);
                                 db.folder().setFolderState(folder.id, null);
                                 db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                                 continue;
@@ -890,52 +865,10 @@ public class ServiceSynchronize extends ServiceBase {
                                         wlMessage.acquire();
                                         Log.i(folder.name + " messages added");
 
-                                        FetchProfile fp = new FetchProfile();
-                                        fp.add(FetchProfile.Item.ENVELOPE);
-                                        fp.add(FetchProfile.Item.FLAGS);
-                                        fp.add(FetchProfile.Item.CONTENT_INFO); // body structure
-                                        fp.add(UIDFolder.FetchProfileItem.UID);
-                                        fp.add(IMAPFolder.FetchProfileItem.HEADERS);
-                                        //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
-                                        fp.add(FetchProfile.Item.SIZE);
-                                        fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
-                                        ifolder.fetch(e.getMessages(), fp);
-
-                                        boolean download = db.folder().getFolderDownload(folder.id);
-
-                                        for (Message imessage : e.getMessages())
-                                            try {
-                                                EntityMessage message = Core.synchronizeMessage(
-                                                        ServiceSynchronize.this,
-                                                        account, folder,
-                                                        ifolder, (IMAPMessage) imessage,
-                                                        false, download,
-                                                        db.rule().getEnabledRules(folder.id),
-                                                        state);
-
-                                                if (download)
-                                                    Core.downloadMessage(ServiceSynchronize.this,
-                                                            folder, ifolder,
-                                                            (IMAPMessage) imessage, message.id, state);
-                                            } catch (MessageRemovedException ex) {
-                                                Log.w(folder.name, ex);
-                                            } catch (FolderClosedException ex) {
-                                                throw ex;
-                                            } catch (IOException ex) {
-                                                if (ex.getCause() instanceof MessagingException) {
-                                                    Log.w(folder.name, ex);
-                                                    db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
-                                                } else
-                                                    throw ex;
-                                            } catch (Throwable ex) {
-                                                Log.e(folder.name, ex);
-                                                db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
-                                            } finally {
-                                                ((IMAPMessage) imessage).invalidateHeaders();
-                                            }
-
-                                        int count = ifolder.getMessageCount();
-                                        db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
+                                        for (Message imessage : e.getMessages()) {
+                                            long uid = ifolder.getUID(imessage);
+                                            EntityOperation.queue(ServiceSynchronize.this, folder, EntityOperation.FETCH, uid);
+                                        }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
                                         EntityLog.log(
@@ -952,29 +885,16 @@ public class ServiceSynchronize extends ServiceBase {
                                     try {
                                         wlMessage.acquire();
                                         Log.i(folder.name + " messages removed");
-                                        for (Message imessage : e.getMessages())
-                                            try {
-                                                long uid = ifolder.getUID(imessage);
 
-                                                DB db = DB.getInstance(ServiceSynchronize.this);
-                                                int count = db.message().setMessageUiHide(folder.id, uid, new Date().getTime());
-                                                // Will be deleted on next sync
-
-                                                Log.i(folder.name + " deleted uid=" + uid + " count=" + count);
-                                            } catch (MessageRemovedException ex) {
-                                                Log.w(folder.name, ex);
-                                            } finally {
-                                                ((IMAPMessage) imessage).invalidateHeaders();
-                                            }
-
-                                        int count = ifolder.getMessageCount();
-                                        db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
+                                        for (Message imessage : e.getMessages()) {
+                                            long uid = ifolder.getUID(imessage);
+                                            EntityOperation.queue(ServiceSynchronize.this, folder, EntityOperation.FETCH, uid);
+                                        }
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
                                         EntityLog.log(
                                                 ServiceSynchronize.this,
                                                 folder.name + " " + Helper.formatThrowable(ex, false));
-                                        db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
                                         state.error(ex);
                                     } finally {
                                         wlMessage.release();
@@ -990,44 +910,10 @@ public class ServiceSynchronize extends ServiceBase {
                                 public void messageChanged(MessageChangedEvent e) {
                                     try {
                                         wlMessage.acquire();
-                                        try {
-                                            Log.i(folder.name + " message changed");
+                                        Log.i(folder.name + " message changed");
 
-                                            FetchProfile fp = new FetchProfile();
-                                            fp.add(UIDFolder.FetchProfileItem.UID);
-                                            fp.add(IMAPFolder.FetchProfileItem.FLAGS);
-                                            ifolder.fetch(new Message[]{e.getMessage()}, fp);
-
-                                            boolean download = db.folder().getFolderDownload(folder.id);
-
-                                            EntityMessage message = Core.synchronizeMessage(
-                                                    ServiceSynchronize.this,
-                                                    account, folder,
-                                                    ifolder, (IMAPMessage) e.getMessage(),
-                                                    false, download,
-                                                    db.rule().getEnabledRules(folder.id),
-                                                    state);
-
-                                            if (download)
-                                                Core.downloadMessage(ServiceSynchronize.this,
-                                                        folder, ifolder,
-                                                        (IMAPMessage) e.getMessage(), message.id, state);
-                                        } catch (MessageRemovedException ex) {
-                                            Log.w(folder.name, ex);
-                                        } catch (FolderClosedException ex) {
-                                            throw ex;
-                                        } catch (IOException ex) {
-                                            if (ex.getCause() instanceof MessagingException) {
-                                                Log.w(folder.name, ex);
-                                                db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
-                                            } else
-                                                throw ex;
-                                        } catch (Throwable ex) {
-                                            Log.e(folder.name, ex);
-                                            db.folder().setFolderError(folder.id, Helper.formatThrowable(ex));
-                                        } finally {
-                                            ((IMAPMessage) e.getMessage()).invalidateHeaders();
-                                        }
+                                        long uid = ifolder.getUID(e.getMessage());
+                                        EntityOperation.queue(ServiceSynchronize.this, folder, EntityOperation.FETCH, uid);
                                     } catch (Throwable ex) {
                                         Log.e(folder.name, ex);
                                         EntityLog.log(
@@ -1133,7 +1019,7 @@ public class ServiceSynchronize extends ServiceBase {
                                                                     state);
 
                                                         } catch (FolderNotFoundException ex) {
-                                                            Log.w(ex);
+                                                            Log.w(folder.name, ex);
                                                             db.folder().deleteFolder(folder.id);
                                                         } catch (Throwable ex) {
                                                             Log.e(folder.name, ex);
@@ -1240,14 +1126,14 @@ public class ServiceSynchronize extends ServiceBase {
                         try {
                             unregisterReceiver(alarm);
                         } catch (IllegalArgumentException ex) {
-                            Log.w(new IllegalStateException("Killed", ex));
+                            Log.w(account.name, new IllegalStateException("Killed", ex));
                             reload(ServiceSynchronize.this, "killed");
                         }
                     }
 
                     Log.i(account.name + " done state=" + state);
                 } catch (StoreClosedException ex) {
-                    Log.w(ex);
+                    Log.w(account.name, ex);
                 } catch (Throwable ex) {
                     Log.e(account.name, ex);
                     EntityLog.log(
@@ -1340,7 +1226,7 @@ public class ServiceSynchronize extends ServiceBase {
                                 try {
                                     unregisterReceiver(alarm);
                                 } catch (IllegalArgumentException ex) {
-                                    Log.w(new IllegalStateException("Killed", ex));
+                                    Log.w(account.name, new IllegalStateException("Killed", ex));
                                     reload(ServiceSynchronize.this, "killed");
                                 }
                             }
@@ -1368,7 +1254,13 @@ public class ServiceSynchronize extends ServiceBase {
             synchronized (ServiceSynchronize.this) {
                 try {
                     ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                    EntityLog.log(ServiceSynchronize.this, "Available " + network + " capabilities " + cm.getNetworkCapabilities(network));
+                    EntityLog.log(ServiceSynchronize.this, "Available " + network +
+                            " capabilities " + cm.getNetworkCapabilities(network) +
+                            " connected=" + networkState.isConnected() +
+                            " suitable=" + networkState.isSuitable() +
+                            " unmetered=" + networkState.isUnmetered() +
+                            " roaming=" + networkState.isRoaming() +
+                            " started=" + started);
 
                     if (networkState.isSuitable())
                         if (started) {
@@ -1439,7 +1331,14 @@ public class ServiceSynchronize extends ServiceBase {
 
             synchronized (ServiceSynchronize.this) {
                 try {
-                    EntityLog.log(ServiceSynchronize.this, "Lost " + network);
+                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                    EntityLog.log(ServiceSynchronize.this, "Lost " + network +
+                            " active=" + cm.getActiveNetworkInfo() +
+                            " connected=" + networkState.isConnected() +
+                            " suitable=" + networkState.isSuitable() +
+                            " unmetered=" + networkState.isUnmetered() +
+                            " roaming=" + networkState.isRoaming() +
+                            " started=" + started);
 
                     if (started && !networkState.isSuitable()) {
                         lastLost = new Date().getTime();

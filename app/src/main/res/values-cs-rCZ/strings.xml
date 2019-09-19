@@ -129,6 +129,7 @@
     <string name="title_setup_quick_smtp">SMTP server pro odesílání zpráv</string>
     <string name="title_setup_go">Přejít</string>
     <string name="title_setup_wizard">Průvodce</string>
+    <string name="title_authorizing">Probíhá autorizace &#8230;</string>
     <string name="title_setup_instructions">Pokyny pro nastavení</string>
     <string name="title_setup_no_settings">Pro doménu \'%1$s\' nebylo nalezeno žádné nastavení</string>
     <string name="title_setup_quick_success">Účet a identita byly úspěšně přidány</string>
@@ -247,9 +248,11 @@
     <string name="title_advanced_pull_refresh">Aktualizovat tažením dolů</string>
     <string name="title_advanced_autoscroll">Posun na začátek při příjmu nových zpráv</string>
     <string name="title_advanced_swipenav">Tažením doleva/doprava přejít na předešlou/následující konverzaci</string>
+    <string name="title_advanced_reversed">Obrátit směr navigace</string>
     <string name="title_advanced_double_tap">Dvojstisk pro označení zprávy jako přečtené/nepřečtené</string>
     <string name="title_advanced_expand_read">Označit zprávy jako přečtené při rozbalení</string>
     <string name="title_advanced_autoexpand">Automaticky rozbalovat zprávy</string>
+    <string name="title_advanced_expand_one">Rozbalit vždy pouze jednu zprávu</string>
     <string name="title_advanced_collapse">Sbalit zprávy v konverzacích při pohybu zpět</string>
     <string name="title_advanced_autoclose">Automaticky zavírat konverzace</string>
     <string name="title_advanced_onclose">Při zavření konverzace</string>
@@ -258,7 +261,7 @@
     <string name="title_advanced_discard_delete">Při zahození konceptu jej permanentně smazat</string>
     <string name="title_advanced_tracking">Automaticky rozpoznat a zakázat sledovací obrázky</string>
     <string name="title_advanced_badge">Zobrazit počet nových zpráv na ikoně aplikace</string>
-    <string name="title_advanced_unseen_ignored">Nechť počet nových zpráv odpovídá počtu oznámení</string>
+    <string name="title_advanced_unseen_ignored">Nechť počet nových zpráv souhlasí s počtem oznámení</string>
     <string name="title_advanced_notify_preview">Zobrazit náhled zprávy v oznámení</string>
     <string name="title_advanced_notify_actions">Akce oznámení</string>
     <string name="title_advanced_notify_action_trash">Koš</string>
@@ -267,11 +270,13 @@
     <string name="title_advanced_notify_action_reply_direct">Přímá odpověď</string>
     <string name="title_advanced_notify_action_flag">Hvězdička</string>
     <string name="title_advanced_notify_action_seen">Přečteno</string>
+    <string name="title_advanced_notify_remove">Odebrat oznámení nové zprávy při stisku oznámení</string>
     <string name="title_advanced_biometrics_notify">Zobrazit obsah oznámení při používání biometrického ověření</string>
     <string name="title_advanced_light">Použít oznamovací LED</string>
     <string name="title_advanced_sound">Vybrat zvuk oznámení</string>
     <string name="title_advanced_badge_hint">K dispozici pouze v podporovaných spouštěčích aplikací</string>
     <string name="title_advanced_notify_action_hint">Budou zobrazeny nejvýše tři akce</string>
+    <string name="title_advanced_notify_remove_hint">Oznámení nových zpráv budou při odtažení prstem a při označení zpráv jako přečtených odebrána vždy</string>
     <string name="title_advanced_notify_manage_hint">Stiskněte název kanálu \"Oznámení\" pro nastavení výchozího zvuku oznámení, atd</string>
     <string name="title_advanced_double_back">Dvakrát \"zpět\" pro ukončení</string>
     <string name="title_advanced_biometrics_timeout">Vypršení biometrického ověření</string>
@@ -298,6 +303,7 @@
     <string name="title_advanced_rlah_hint">Nepředpokládat žádný roaming v rámci EU</string>
     <string name="title_advanced_roaming_hint">Hlavičky zpráv budou během roamingu stahovány vždy. Použijte nastavení svého zařízení pro zakázání internetu při roamingu.</string>
     <string name="title_advanced_browse_hint">Načte další zprávy při posouvání dolů</string>
+    <string name="title_advanced_date_hint">Zprávy jsou seskupovány podle data, pouze pokud jsou řazeny dle času</string>
     <string name="title_advanced_threading_hint">Seskupit související zprávy</string>
     <string name="title_advanced_name_email_hint">Při vypnutí se zobrazí pouze jména, pokud budou k dispozici</string>
     <string name="title_advanced_preview_hint">K dispozici pouze pokud byl stažen text zprávy</string>
@@ -536,6 +542,7 @@
     <string name="title_attachment_keywords">příloha,přílohy,příloze,přílohu,přiložené,přiloženém,přiložený,přiložená,připojené,připojeném,připojený,připojená</string>
     <string name="title_attachment_reminder">Měl jste v úmyslu přidat přílohu?</string>
     <string name="title_attachments_missing">Nebyly staženy všechny přílohy</string>
+    <string name="title_send_dialog_hint">Tento dialog bude i nadále dostupný skrze tříbodové rozbalovací menu na panelu akcí</string>
     <string name="title_draft_deleted">Koncept zahozen</string>
     <string name="title_draft_saved">Koncept uložen</string>
     <string name="title_ask_send_via">Odeslat zprávu na %1$s přes %2$s?</string>

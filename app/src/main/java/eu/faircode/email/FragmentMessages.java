@@ -69,6 +69,7 @@ import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -161,6 +162,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private ImageButton ibHintSwipe;
     private ImageButton ibHintSelect;
     private TextView tvNoEmail;
+    private TextView tvNoEmailHint;
     private FixedRecyclerView rvMessage;
     private View vwAnchor;
     private SeekBar sbThread;
@@ -357,6 +359,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         ibHintSwipe = view.findViewById(R.id.ibHintSwipe);
         ibHintSelect = view.findViewById(R.id.ibHintSelect);
         tvNoEmail = view.findViewById(R.id.tvNoEmail);
+        tvNoEmailHint = view.findViewById(R.id.tvNoEmailHint);
         rvMessage = view.findViewById(R.id.rvMessage);
         vwAnchor = view.findViewById(R.id.vwAnchor);
         sbThread = view.findViewById(R.id.sbThread);
@@ -644,6 +647,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         bottom_navigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                boolean reversed = prefs.getBoolean("reversed", false);
+
                 switch (menuItem.getItemId()) {
                     case R.id.action_delete:
                         onActionMove(EntityFolder.TRASH);
@@ -658,11 +663,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         return true;
 
                     case R.id.action_prev:
-                        navigate(previous, true);
+                        navigate(reversed ? next : previous, true);
                         return true;
 
                     case R.id.action_next:
-                        navigate(next, false);
+                        navigate(reversed ? previous : next, false);
                         return true;
 
                     default:
@@ -885,6 +890,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             view.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.lightColorBackground_cards));
 
         tvNoEmail.setVisibility(View.GONE);
+        tvNoEmailHint.setVisibility(View.GONE);
         sbThread.setVisibility(View.GONE);
         ibDown.setVisibility(View.GONE);
         ibUp.setVisibility(View.GONE);
@@ -947,8 +953,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 final SwipeListener swipeListener = new SwipeListener(getContext(), new SwipeListener.ISwipeListener() {
                     @Override
                     public boolean onSwipeRight() {
-                        boolean rtl = prefs.getBoolean("swipe_reversed", false);
-                        Long go = (rtl ? next : previous);
+                        boolean reversed = prefs.getBoolean("reversed", false);
+                        Long go = (reversed ? next : previous);
 
                         if (go == null) {
                             Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_right);
@@ -961,8 +967,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     public boolean onSwipeLeft() {
-                        boolean rtl = prefs.getBoolean("swipe_reversed", false);
-                        Long go = (rtl ? previous : next);
+                        boolean reversed = prefs.getBoolean("reversed", false);
+                        Long go = (reversed ? previous : next);
 
                         if (go == null) {
                             Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
@@ -1206,7 +1212,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if ("expanded".equals(name)) {
                 // Collapse other messages
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                boolean expand_one = prefs.getBoolean("expand_one", false);
+                boolean expand_one = prefs.getBoolean("expand_one", true);
                 if (expand_one) {
                     for (Long other : new ArrayList<>(values.get(name)))
                         if (!other.equals(id)) {
@@ -2907,7 +2913,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public void onLoading() {
             loading = true;
             pbWait.setVisibility(View.VISIBLE);
-            tvNoEmail.setVisibility(View.GONE);
+            if (viewType == AdapterMessage.ViewType.SEARCH) {
+                tvNoEmail.setVisibility(View.GONE);
+                tvNoEmailHint.setVisibility(View.GONE);
+            }
         }
 
         @Override
@@ -2917,7 +2926,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (initialized && SimpleTask.getCount() == 0)
                 pbWait.setVisibility(View.GONE);
 
-            tvNoEmail.setVisibility(fetched == 0 ? View.VISIBLE : View.GONE);
+            boolean none = (fetched == 0);
+            tvNoEmail.setVisibility(none ? View.VISIBLE : View.GONE);
+            tvNoEmail.setVisibility(none && filterActive() ? View.VISIBLE : View.GONE);
         }
 
         @Override
@@ -2975,8 +2986,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (!loading && SimpleTask.getCount() == 0)
                 pbWait.setVisibility(View.GONE);
 
-            if (viewType != AdapterMessage.ViewType.SEARCH)
-                tvNoEmail.setVisibility(messages.size() == 0 && !loading ? View.VISIBLE : View.GONE);
+            if (viewType != AdapterMessage.ViewType.SEARCH) {
+                boolean none = (messages.size() == 0 && !loading);
+                tvNoEmail.setVisibility(none ? View.VISIBLE : View.GONE);
+                tvNoEmailHint.setVisibility(none && filterActive() ? View.VISIBLE : View.GONE);
+            }
             grpReady.setVisibility(View.VISIBLE);
         }
     };
@@ -3477,6 +3491,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Collections.sort(displays, collator);
 
         return TextUtils.join(", ", displays);
+    }
+
+    private boolean filterActive() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean filter_seen = prefs.getBoolean("filter_seen", false);
+        boolean filter_unflagged = prefs.getBoolean("filter_unflagged", false);
+        return (filter_seen || filter_unflagged);
     }
 
     private ActivityBase.IBackPressedListener onBackPressedListener = new ActivityBase.IBackPressedListener() {
@@ -3981,13 +4002,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 Log.i("PGP result=" + result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR));
                 switch (result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR)) {
                     case OpenPgpApi.RESULT_CODE_SUCCESS:
+                        EntityMessage message = db.message().getMessage(id);
+                        if (message == null)
+                            return null;
+
                         if (inline) {
                             try {
                                 db.beginTransaction();
 
                                 // Write decrypted body
-                                EntityMessage m = db.message().getMessage(id);
-                                Helper.writeText(m.getFile(context),
+                                Helper.writeText(message.getFile(context),
                                         decrypted.toString().replace("\0", ""));
 
                                 db.message().setMessageStored(id, new Date().getTime());
@@ -4010,11 +4034,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 db.beginTransaction();
 
                                 // Write decrypted body
-                                EntityMessage m = db.message().getMessage(id);
                                 String html = parts.getHtml(context);
                                 if (html != null)
                                     html = html.replace("\0", "");
-                                Helper.writeText(m.getFile(context), html);
+                                Helper.writeText(message.getFile(context), html);
 
                                 // Remove previously decrypted attachments
                                 for (EntityAttachment local : attachments)
@@ -4058,7 +4081,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         break;
 
                     case OpenPgpApi.RESULT_CODE_USER_INTERACTION_REQUIRED:
-                        message = id;
+                        FragmentMessages.this.message = id;
                         return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                     case OpenPgpApi.RESULT_CODE_ERROR:
@@ -4671,14 +4694,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
-            final Button btnInfo = dview.findViewById(R.id.btnInfo);
-            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
+            Button btnInfo = dview.findViewById(R.id.btnInfo);
+            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
             btnInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Helper.viewFAQ(getContext(), 104);
+                }
+            });
+
+            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    prefs.edit().putBoolean("crash_reports_asked", isChecked).apply();
                 }
             });
 
@@ -4689,20 +4720,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         public void onClick(DialogInterface dialog, int which) {
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                             prefs.edit().putBoolean("crash_reports", true).apply();
-                            if (cbNotAgain.isChecked())
-                                prefs.edit().putBoolean("crash_reports_asked", true).apply();
                             Log.setCrashReporting(true);
                         }
                     })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (cbNotAgain.isChecked()) {
-                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                                prefs.edit().putBoolean("crash_reports_asked", true).apply();
-                            }
-                        }
-                    })
+                    .setNegativeButton(android.R.string.no, null)
                     .create();
         }
     }
