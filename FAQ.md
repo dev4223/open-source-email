@@ -69,7 +69,7 @@ Related questions:
 * ~~Themes~~ (a grey light and dark theme were added because this is what most people seems to want)
 * ~~Any day time condition~~ (any day doesn't really fit into the from/to date/time condition)
 * ~~Send as attachment~~
-* ~~Widget for selected account~~ (the unified inbox is / can be composed of selected folders already, so I see no real need for this complication)
+* ~~Widget for selected account~~
 * ~~Remind to attach files~~
 * ~~Select domains to show images for~~ (this will be too complicated to use)
 * Search for settings
@@ -233,6 +233,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(131) Can you change the direction for swiping to previous/next message?](#user-content-faq131)
 * [(132) Why are new message notifications silent?](#user-content-faq132)
 * [(133) Why is ActiveSync not supported?](#user-content-faq133)
+* [(134) Can you add deleting local messages?](#user-content-faq134)
 
 [I have another question.](#user-content-support)
 
@@ -2074,6 +2075,7 @@ So, basically the only thing I can do, is give some advice:
 * Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases
 
 You can also try to clear the cache of the Play store app via the Android apps settings.
+Restarting the device might be necessary to let the Play store recognize the purchase correctly.
 
 Note that:
 
@@ -2253,6 +2255,16 @@ The Microsoft Exchange ActiveSync protocol [is patented](https://en.wikipedia.or
 For this reason you won't find many, if any, other email clients supporting ActiveSync.
 
 <br />
+
+<a name="faq134"></a>
+**(134) Can you add deleting local messages?**
+
+Since locally deleted messages would be downloaded again on the next sync it is not possible to permanently delete local messages.
+
+As an alternative you can snooze messages, which will hide messages for a selected time.
+
+<br />
+
 
 ## Support
 
