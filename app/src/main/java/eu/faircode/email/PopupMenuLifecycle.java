@@ -30,12 +30,12 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
 
 public class PopupMenuLifecycle extends PopupMenu implements LifecycleObserver {
-    private LifecycleOwner owner;
 
     public PopupMenuLifecycle(@NonNull Context context, LifecycleOwner owner, @NonNull View anchor) {
         super(context, anchor);
-        this.owner = owner;
         Log.i("Instantiate " + this);
+
+        owner.getLifecycle().addObserver(this);
     }
 
     @Override
@@ -52,6 +52,5 @@ public class PopupMenuLifecycle extends PopupMenu implements LifecycleObserver {
     public void onDestroy() {
         Log.i("Destroy " + this);
         this.dismiss();
-        owner = null;
     }
 }

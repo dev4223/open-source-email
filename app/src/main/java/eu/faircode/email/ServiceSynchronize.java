@@ -78,6 +78,8 @@ import javax.mail.event.MessageCountEvent;
 import javax.mail.event.StoreEvent;
 import javax.mail.event.StoreListener;
 
+import me.leolin.shortcutbadger.ShortcutBadger;
+
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public class ServiceSynchronize extends ServiceBase {
@@ -142,6 +144,29 @@ public class ServiceSynchronize extends ServiceBase {
                 }
 
                 lastStats = stats;
+            }
+        });
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+        db.message().liveUnseen().observe(this, new Observer<TupleMessageStats>() {
+            private Integer lastUnseen = null;
+
+            @Override
+            public void onChanged(TupleMessageStats stats) {
+                if (stats == null)
+                    stats = new TupleMessageStats();
+
+                boolean unseen_ignored = prefs.getBoolean("unseen_ignored", false);
+                Integer unseen = (unseen_ignored ? stats.notifying : stats.unseen);
+                if (unseen == null)
+                    unseen = 0;
+
+                if (lastUnseen == null || !lastUnseen.equals(unseen)) {
+                    Log.i("Stats " + stats);
+                    lastUnseen = unseen;
+                    setUnseen(unseen);
+                }
             }
         });
 
@@ -264,7 +289,7 @@ public class ServiceSynchronize extends ServiceBase {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(onNetworkCallback);
 
-        Core.notifyReset(this);
+        setUnseen(null);
 
         try {
             stopForeground(true);
@@ -379,6 +404,22 @@ public class ServiceSynchronize extends ServiceBase {
             builder.setSubText(getString(R.string.title_notification_waiting));
 
         return builder;
+    }
+
+    private void setUnseen(Integer unseen) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean badge = prefs.getBoolean("badge", true);
+
+        Widget.update(this, unseen);
+
+        try {
+            if (unseen == null || !badge)
+                ShortcutBadger.removeCount(this);
+            else
+                ShortcutBadger.applyCount(this, unseen);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     private void onAlarm() {

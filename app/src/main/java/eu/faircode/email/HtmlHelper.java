@@ -159,27 +159,40 @@ public class HtmlHelper {
 
         // Pre formatted text
         for (Element pre : document.select("pre")) {
-            String[] lines = pre.html().split("\\r?\\n");
-            for (int i = 0; i < lines.length; i++) {
-                if (!"-- ".equals(lines[i])) {
+            Element div = document.createElement("div");
+
+            for (TextNode tnode : pre.textNodes()) {
+                String[] lines = tnode.getWholeText().split("\\r?\\n");
+                for (String line : lines) {
+                    line = Html.escapeHtml(line);
+
                     StringBuilder sb = new StringBuilder();
-                    int len = lines[i].length();
-                    for (int j = 0; j < len; j++) {
-                        char kar = lines[i].charAt(j);
-                        if (kar == ' ' && j + 1 < len && lines[i].charAt(j + 1) == ' ')
-                            sb.append("&nbsp;");
-                        else
-                            sb.append(kar);
+                    if ("-- ".equals(line))
+                        sb.append(line);
+                    else {
+                        int len = line.length();
+                        for (int j = 0; j < len; j++) {
+                            char kar = line.charAt(j);
+                            if (kar == ' ' && j + 1 < len && line.charAt(j + 1) == ' ')
+                                sb.append("&nbsp;");
+                            else
+                                sb.append(kar);
+                        }
                     }
-                    lines[i] = sb.toString();
+
+                    Element span = document.createElement("span");
+                    span.html(sb.toString());
+                    div.appendChild(span);
+                    div.appendElement("br");
+                    Log.i("span html=" + span.html());
                 }
             }
-            pre.html(TextUtils.join("<br>", lines));
-            pre.tagName("div");
+
+            pre.replaceWith(div);
         }
 
         // Code
-        document.select("code").tagName("div");
+        document.select("code").tagName("strong");
 
         // Lines
         for (Element hr : document.select("hr")) {
@@ -327,7 +340,7 @@ public class HtmlHelper {
             public void head(Node node, int depth) {
                 if (links < MAX_AUTO_LINK && node instanceof TextNode) {
                     TextNode tnode = (TextNode) node;
-                    String text = tnode.text();
+                    String text = tnode.getWholeText();
 
                     Matcher matcher = pattern.matcher(text);
                     if (matcher.find()) {

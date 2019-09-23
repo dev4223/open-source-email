@@ -19,12 +19,28 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-public class TupleAccountSwipes {
-    public long id;
-    public Long swipe_left;
-    public String left_type;
-    public String left_name;
-    public Long swipe_right;
-    public String right_type;
-    public String right_name;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.Objects;
+
+public class TupleMessageStats {
+    public Integer unseen;
+    public Integer notifying;
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj instanceof TupleMessageStats) {
+            TupleMessageStats other = (TupleMessageStats) obj;
+            return (Objects.equals(this.unseen, other.unseen) &&
+                    Objects.equals(this.notifying, other.notifying));
+        } else
+            return false;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "unseen=" + unseen + " notify=" + notifying;
+    }
 }

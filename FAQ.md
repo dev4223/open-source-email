@@ -234,6 +234,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(132) Why are new message notifications silent?](#user-content-faq132)
 * [(133) Why is ActiveSync not supported?](#user-content-faq133)
 * [(134) Can you add deleting local messages?](#user-content-faq134)
+* [(135) Why are trashed messages and drafts shown in conversations?](#user-content-faq135)
 
 [I have another question.](#user-content-support)
 
@@ -703,6 +704,9 @@ The error *... Connection closed by peer ...* might be caused by a not updated E
 see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
 
 The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
+
+The error *... Failed to load IMAP envelope ...* is caused by a bug in the IMAP server of your provider.
+One or more messages could not be retrieved due to an unrecoverable error in the IMAP protocol.
 
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
@@ -1950,11 +1954,11 @@ However, not all servers support IMAP keywords and besides that there are no sta
 <br />
 
 <a name="faq108"></a>
-**(108) Can you add permanently delete messages from any folder?**
+**~~(108) Can you add permanently delete messages from any folder?~~**
 
-When you delete messages from a folder the messages will be moved to the trash folder, so you have a chance to restore the messages.
-You can permanently delete messages from the trash folder.
-Permanently delete messages from other folders would defeat the purpose of the trash folder, so this will not be added.
+~~When you delete messages from a folder the messages will be moved to the trash folder, so you have a chance to restore the messages.~~
+~~You can permanently delete messages from the trash folder.~~
+~~Permanently delete messages from other folders would defeat the purpose of the trash folder, so this will not be added.~~
 
 <br />
 
@@ -2263,6 +2267,20 @@ For this reason you won't find many, if any, other email clients supporting Acti
 Since locally deleted messages would be downloaded again on the next sync it is not possible to permanently delete local messages.
 
 As an alternative you can snooze messages, which will hide messages for a selected time.
+
+<br />
+
+<a name="faq135"></a>
+**(135) Why are trashed messages and drafts shown in conversations?**
+
+Individual messages will rarely be trashed and mostly this happens by accident.
+Showing trashed messages in conversations makes it easier to find them back.
+
+You can permanently delete a message using the message three-dots *delete* menu, which will remove the message from the conversation.
+Note that this irreversible.
+
+Similarly, drafts are shown in conversations to find them back in the context where they belong.
+It is easy to read through the received messages before continuing to write the draft later.
 
 <br />
 

@@ -1008,7 +1008,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             //tvFrom.setText(info.getDisplayName(name_email));
         }
 
-        private void bindExpanded(final TupleMessageEx message, boolean scroll) {
+        private void bindExpanded(final TupleMessageEx message, final boolean scroll) {
             DB db = DB.getInstance(context);
 
             boolean show_addresses = !properties.getValue("addresses", message.id);
@@ -1155,26 +1155,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Attachments
             bindAttachments(message, properties.getAttachments(message.id));
-            cowner.recreate();
-            db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
-                private int lastInlineImages = 0;
-
-                @Override
-                public void onChanged(@Nullable List<EntityAttachment> attachments) {
-                    bindAttachments(message, attachments);
-
-                    int inlineImages = 0;
-                    if (attachments != null)
-                        for (EntityAttachment attachment : attachments)
-                            if (attachment.available && attachment.isInline() && attachment.isImage())
-                                inlineImages++;
-
-                    if (inlineImages != lastInlineImages) {
-                        lastInlineImages = inlineImages;
-                        loadText(message, false);
-                    }
-                }
-            });
 
             // Setup actions
             Bundle sargs = new Bundle();
@@ -1257,12 +1237,32 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBody.setMovementMethod(null);
             tvBody.setVisibility(View.VISIBLE);
 
-            if (scroll && body != null) {
-                properties.scrollTo(getAdapterPosition());
-                scroll = false;
-            }
+            cowner.recreate();
 
-            loadText(message, scroll);
+            loadText(message);
+
+            db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
+                private int lastInlineImages = 0;
+
+                @Override
+                public void onChanged(@Nullable List<EntityAttachment> attachments) {
+                    bindAttachments(message, attachments);
+
+                    int inlineImages = 0;
+                    if (attachments != null)
+                        for (EntityAttachment attachment : attachments)
+                            if (attachment.available && attachment.isInline() && attachment.isImage())
+                                inlineImages++;
+
+                    if (inlineImages != lastInlineImages) {
+                        lastInlineImages = inlineImages;
+                        loadText(message);
+                    }
+
+                    if (scroll)
+                        properties.scrollTo(getAdapterPosition());
+                }
+            });
         }
 
         private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments) {
@@ -1868,14 +1868,24 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return null;
 
                     EntityFolder folder = db.folder().getFolder(message.folder);
+                    if (folder == null)
+                        return null;
 
-                    boolean outgoing;
-                    if (message.identity == null || message.from == null || message.from.length == 0)
-                        outgoing = EntityFolder.isOutgoing(folder.type);
-                    else {
-                        String from = ((InternetAddress) message.from[0]).getAddress();
-                        EntityIdentity identity = db.identity().getIdentity(message.identity);
-                        outgoing = MessageHelper.canonicalAddress(identity.email).equals(MessageHelper.canonicalAddress(from));
+                    boolean outgoing = EntityFolder.isOutgoing(folder.type);
+
+                    if (message.identity != null) {
+                        Address[] senders = (message.reply == null || message.reply.length == 0 ? message.from : message.reply);
+                        if (senders != null && senders.length > 0) {
+                            EntityIdentity identity = db.identity().getIdentity(message.identity);
+                            if (identity == null)
+                                return null;
+
+                            for (Address sender : senders)
+                                if (MessageHelper.similarAddress(sender, identity.email)) {
+                                    outgoing = true;
+                                    break;
+                                }
+                        }
                     }
 
                     return (outgoing ? message.to : message.from);
@@ -1883,6 +1893,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onExecuted(Bundle args, Address[] addresses) {
+                    if (addresses == null || addresses.length == 0)
+                        return;
+
                     String query = ((InternetAddress) addresses[0]).getAddress();
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     lbm.sendBroadcast(
@@ -2168,7 +2181,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibImages.setVisibility(View.GONE);
 
-            loadText(message, false);
+            loadText(message);
 
             // Download inline images
             Bundle args = new Bundle();
@@ -2238,8 +2251,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (amessage == null || !amessage.id.equals(message.id))
                         return;
 
-                    String via = (identity == null ? null : MessageHelper.canonicalAddress(identity.email));
-                    Address[] recipients = message.getAllRecipients(via);
+                    Address[] recipients = message.getAllRecipients(identity == null ? null : identity.email);
 
                     View anchor = bnvActions.findViewById(R.id.action_reply);
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
@@ -2464,7 +2476,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(message.uid != null && !message.folderReadOnly);
 
             popupMenu.getMenu().findItem(R.id.menu_copy).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(debug);
 
             popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(message.uid != null && !message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(hasJunk && !EntityFolder.JUNK.equals(message.folderType));
@@ -2509,7 +2520,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             onActionMove(message, true);
                             return true;
                         case R.id.menu_delete:
-                            // For emergencies
                             onMenuDelete(message);
                             return true;
                         case R.id.menu_junk:
@@ -2553,7 +2563,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.show();
         }
 
-        private void loadText(TupleMessageEx message, boolean scroll) {
+        private void loadText(TupleMessageEx message) {
             if (message.content) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 if (message.from != null)
@@ -2570,7 +2580,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 Bundle args = new Bundle();
                 args.putSerializable("message", message);
-                args.putBoolean("scroll", scroll);
                 args.putBoolean("show_images", show_images);
                 args.putBoolean("show_quotes", show_quotes);
                 args.putInt("zoom", zoom);
@@ -2690,7 +2699,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!show_expanded)
                     return;
 
-                boolean scroll = args.getBoolean("scroll");
                 boolean has_images = args.getBoolean("has_images");
                 boolean show_images = properties.getValue("images", message.id);
 
@@ -2701,9 +2709,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvBody.setTextIsSelectable(false);
                 tvBody.setTextIsSelectable(true);
                 tvBody.setMovementMethod(new TouchHandler(message));
-
-                if (scroll)
-                    properties.scrollTo(getAdapterPosition());
 
                 pbBody.setVisibility(View.GONE);
 
@@ -2783,7 +2788,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     DynamicDrawableSpan[] ddss = buffer.getSpans(off, off, DynamicDrawableSpan.class);
                     if (ddss.length > 0) {
                         properties.setValue("quotes", message.id, true);
-                        loadText(message, false);
+                        loadText(message);
                     }
                 }
 
@@ -2893,24 +2898,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuDelete(final TupleMessageEx message) {
-            Bundle args = new Bundle();
-            args.putLong("id", message.id);
+            Bundle aargs = new Bundle();
+            aargs.putString("question", context.getString(R.string.title_ask_delete));
+            aargs.putLong("id", message.id);
 
-            new SimpleTask<Void>() {
-                @Override
-                protected Void onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    db.message().deleteMessage(id);
-                    return null;
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
-                }
-            }.execute(context, owner, args, "message:delete");
+            FragmentDialogAsk ask = new FragmentDialogAsk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_DELETE);
+            ask.show(parentFragment.getFragmentManager(), "message:delete");
         }
 
         private void onMenuJunk(final TupleMessageEx message) {
@@ -3636,7 +3631,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     @Override
-    public void onViewRecycled(@NonNull ViewHolder holder) {
+    public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
         holder.cowner.stop();
         holder.powner.recreate();
     }

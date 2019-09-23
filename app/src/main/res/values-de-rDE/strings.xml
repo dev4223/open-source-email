@@ -106,6 +106,9 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_quick_smtp">SMTP-Server zum Senden von Nachrichten</string>
     <string name="title_setup_go">Los</string>
     <string name="title_setup_wizard">Assistent</string>
+    <string name="title_setup_other">Anderer Anbieter</string>
+    <string name="title_setup_gmail_rationale">Bitte erteilen Sie die Berechtigung, ein Konto auszuwählen und Ihren Namen zu lesen</string>
+    <string name="title_setup_select_account">Konto wählen</string>
     <string name="title_setup_instructions">Einrichtungsanleitung</string>
     <string name="title_setup_no_settings">Keine Einstellungen für Domain „%1$s” gefunden</string>
     <string name="title_setup_quick_success">Ein Konto und eine Identität wurden erfolgreich hinzugefügt</string>
@@ -222,7 +225,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_seekbar">Zeige relative Gesprächsposition mit einem Punkt an</string>
     <string name="title_advanced_actionbar">Navigationsleiste in Konversationen anzeigen</string>
     <string name="title_advanced_pull_refresh">Zum Aktualisieren nach unten ziehen</string>
-    <string name="title_advanced_autoscroll">Nach oben blättern, um neue Nachrichten abzurufen</string>
+    <string name="title_advanced_autoscroll">Nach oben scrollen, wenn Sie neue Nachrichten erhalten</string>
     <string name="title_advanced_swipenav">Wische nach links/rechts, um zum nächsten/vorherigen Gespräch zu gehen</string>
     <string name="title_advanced_reversed">Navigationsrichtung umkehren</string>
     <string name="title_advanced_double_tap">Doppelt antippen, um die Nachricht als gelesen bzw. ungelesen zu kennzeichnen</string>
@@ -278,7 +281,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgeholt. Sie können die Roaming-Einstellung des Geräts verwenden, um das Internet während des Roaming zu deaktivieren.</string>
-    <string name="title_advanced_browse_hint">Durch herunterscrollen weitere E-Mails laden</string>
+    <string name="title_advanced_browse_hint">Durch Herunterscrollen weitere E-Mails laden</string>
     <string name="title_advanced_date_hint">Nachrichten werden nur nach Datum gruppiert, wenn sie nach Zeit sortiert sind</string>
     <string name="title_advanced_threading_hint">E-Mails gruppieren, die miteinander verwandt sind</string>
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
@@ -355,8 +358,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_pop_support">Das POP3-Protokoll unterstützt nur das Herunterladen und Löschen von Nachrichten. Es wird also nicht möglich sein, Nachrichten als Favoriten zu markieren, Nachrichten zu verschieben, etc. POP3 wird mehr Akku-Leistung als IMAP verwenden. Daher erwägen Sie, das IMAP-Protokoll zu verwenden, wann immer möglich.</string>
     <string name="title_activesync_support">ActiveSync wird nicht unterstützt</string>
     <string name="title_oauth_support">OAuth wird nicht unterstützt</string>
-    <string name="title_authorize">Autorisieren</string>
-    <string name="title_authorizing">Konto autorisieren &#8230;</string>
     <string name="title_synchronize_now">Jetzt synchronisieren</string>
     <string name="title_synchronize_all">Alle Nachrichten synchronisieren</string>
     <string name="title_synchronize_enabled">Synchronisieren</string>
@@ -580,6 +581,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_rule_enabled">Aktiviert</string>
     <string name="title_rule_stop">Regeln nach der Ausführung dieser Regel beenden</string>
     <string name="title_rule_sender">Absender enthält</string>
+    <string name="title_rule_sender_known">Absender ist in den Kontakten</string>
     <string name="title_rule_recipient">Empfänger enthält</string>
     <string name="title_rule_subject">Betreff enthält</string>
     <string name="title_rule_header">Kopfzeile enthält</string>
