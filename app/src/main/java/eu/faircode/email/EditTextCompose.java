@@ -19,10 +19,13 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Spanned;
 import android.util.AttributeSet;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -33,7 +36,8 @@ import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 
 public class EditTextCompose extends AppCompatEditText {
-    private IInputContentListener listener = null;
+    private ISelection selectionListener = null;
+    private IInputContentListener inputContentListener = null;
 
     public EditTextCompose(Context context) {
         super(context);
@@ -48,12 +52,49 @@ public class EditTextCompose extends AppCompatEditText {
     }
 
     @Override
+    protected void onSelectionChanged(int selStart, int selEnd) {
+        super.onSelectionChanged(selStart, selEnd);
+        if (selectionListener != null)
+            selectionListener.onSelected(hasSelection());
+    }
+
+    @Override
     public boolean onTextContextMenuItem(int id) {
         try {
-            if (id == android.R.id.paste && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                return super.onTextContextMenuItem(android.R.id.pasteAsPlainText);
-            else
-                return super.onTextContextMenuItem(id);
+            if (id == android.R.id.paste) {
+                Context context = getContext();
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard.hasPrimaryClip()) {
+                    ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
+
+                    String html = item.coerceToHtmlText(context);
+                    html = HtmlHelper.sanitize(context, html, true, false);
+                    Spanned paste = HtmlHelper.fromHtml(html);
+
+                    int start = getSelectionStart();
+                    int end = getSelectionEnd();
+
+                    if (start < 0)
+                        start = 0;
+                    if (end < 0)
+                        end = 0;
+
+                    if (start > end) {
+                        int tmp = start;
+                        start = end;
+                        end = tmp;
+                    }
+
+                    if (start == end)
+                        getText().insert(start, paste);
+                    else
+                        getText().replace(start, end, paste);
+
+                    return true;
+                }
+            }
+
+            return super.onTextContextMenuItem(id);
         } catch (Throwable ex) {
             /*
                 java.lang.RuntimeException: PARAGRAPH span must start at paragraph boundary
@@ -84,14 +125,14 @@ public class EditTextCompose extends AppCompatEditText {
             public boolean onCommitContent(InputContentInfoCompat info, int flags, Bundle opts) {
                 Log.i("Uri=" + info.getContentUri());
                 try {
-                    if (listener == null)
+                    if (inputContentListener == null)
                         throw new IllegalArgumentException("InputContent listener not set");
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 &&
                             (flags & InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION) != 0)
                         info.requestPermission();
 
-                    listener.onInputContent(info.getContentUri());
+                    inputContentListener.onInputContent(info.getContentUri());
                     return true;
                 } catch (Throwable ex) {
                     Log.w(ex);
@@ -102,10 +143,18 @@ public class EditTextCompose extends AppCompatEditText {
     }
 
     void setInputContentListener(IInputContentListener listener) {
-        this.listener = listener;
+        this.inputContentListener = listener;
     }
 
     interface IInputContentListener {
         void onInputContent(Uri uri);
+    }
+
+    void setSelectionListener(ISelection listener) {
+        this.selectionListener = listener;
+    }
+
+    interface ISelection {
+        void onSelected(boolean selection);
     }
 }

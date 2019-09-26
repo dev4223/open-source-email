@@ -32,7 +32,6 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,6 +41,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -161,8 +161,7 @@ public class FragmentSetup extends FragmentBase {
             public void onClick(View v) {
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), btnQuick);
 
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_gmail, 1, R.string.title_setup_gmail)
-                        .setEnabled(Helper.hasValidFingerprint(getContext()));
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_gmail, 1, R.string.title_setup_gmail);
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_other, 2, R.string.title_setup_other);
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -171,7 +170,10 @@ public class FragmentSetup extends FragmentBase {
                         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
                         switch (item.getItemId()) {
                             case R.string.title_setup_gmail:
-                                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_GMAIL));
+                                if (Helper.hasValidFingerprint(getContext()))
+                                    lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_GMAIL));
+                                else
+                                    ToastEx.makeText(getContext(), R.string.title_setup_gmail_support, Toast.LENGTH_LONG).show();
                                 return true;
                             case R.string.title_setup_other:
                                 lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_SETUP));
@@ -377,12 +379,13 @@ public class FragmentSetup extends FragmentBase {
         super.onResume();
 
         // Doze
-        boolean ignoring = true;
+        Boolean ignoring = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             if (intent.resolveActivity(getContext().getPackageManager()) != null) {
-                PowerManager pm = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
-                ignoring = (pm != null && pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID));
+                ignoring = Helper.isIgnoringOptimizations(getContext());
+                if (ignoring == null)
+                    ignoring = true;
             }
         }
 

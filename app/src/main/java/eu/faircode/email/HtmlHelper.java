@@ -24,6 +24,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.ImageDecoder;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
@@ -44,6 +45,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.ColorUtils;
 import androidx.core.text.HtmlCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.preference.PreferenceManager;
@@ -71,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -82,6 +85,7 @@ import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE;
 public class HtmlHelper {
     static final int PREVIEW_SIZE = 250; // characters
 
+    private static final float MIN_LUMINANCE = 0.5f;
     private static final int MAX_AUTO_LINK = 250;
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
 
@@ -93,7 +97,7 @@ public class HtmlHelper {
     private static final ExecutorService executor =
             Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
 
-    static String sanitize(Context context, String html, boolean show_images) {
+    static String sanitize(Context context, String html, boolean text_color, boolean show_images) {
         Document parsed = Jsoup.parse(html);
 
         // <html xmlns:v="urn:schemas-microsoft-com:vml"
@@ -132,14 +136,109 @@ public class HtmlHelper {
         }
 
         Whitelist whitelist = Whitelist.relaxed()
-                .addTags("hr", "abbr", "big")
+                .addTags("hr", "abbr", "big", "font")
                 .removeTags("col", "colgroup", "thead", "tbody")
                 .removeAttributes("table", "width")
                 .removeAttributes("td", "colspan", "rowspan", "width")
                 .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
                 .addProtocols("img", "src", "data");
+        if (text_color)
+            whitelist
+                    .addAttributes(":all", "style")
+                    .addAttributes("font", "color");
+
         final Document document = new Cleaner(whitelist).clean(parsed);
+
+        boolean dark = Helper.isDarkTheme(context);
+
+        // Font
+        for (Element font : document.select("font")) {
+            String color = font.attr("color");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                font.removeAttr("color");
+            font.removeAttr("face");
+            font.attr("style", "color:" + color + ";");
+            font.tagName("span");
+        }
+
+        // Sanitize span styles
+        for (Element span : document.select("*")) {
+            String style = span.attr("style");
+            if (!TextUtils.isEmpty(style)) {
+                StringBuilder sb = new StringBuilder();
+
+                String[] params = style.split(";");
+                for (String param : params) {
+                    String[] kv = param.split(":");
+                    if (kv.length == 2)
+                        switch (kv[0].trim().toLowerCase(Locale.ROOT)) {
+                            case "color":
+                                String c = kv[1]
+                                        .toLowerCase(Locale.ROOT)
+                                        .replace(" ", "")
+                                        .replace("inherit", "")
+                                        .replace("initial", "")
+                                        .replace("windowtext", "")
+                                        .replace("transparent", "")
+                                        .replace("!important", "");
+
+                                Integer color = null;
+                                try {
+                                    if (TextUtils.isEmpty(c))
+                                        ; // Do nothing
+                                    else if (c.startsWith("#"))
+                                        color = Integer.decode(c) | 0xFF000000;
+                                    else if (c.startsWith("rgb")) {
+                                        int s = c.indexOf("(");
+                                        int e = c.indexOf(")");
+                                        if (s > 0 && e > s) {
+                                            String[] rgb = c.substring(s + 1, e).split(",");
+                                            if (rgb.length == 3)
+                                                color = Color.rgb(
+                                                        Integer.parseInt(rgb[0]),
+                                                        Integer.parseInt(rgb[1]),
+                                                        Integer.parseInt(rgb[2])
+                                                );
+                                        }
+                                    } else if (c.equals("orange"))
+                                        color = 0Xffa500; // CSS Level 2
+                                    else
+                                        color = Color.parseColor(c);
+                                } catch (Throwable ex) {
+                                    Log.e("Color=" + c);
+                                }
+
+                                if (color != null) {
+                                    float lum = (float) ColorUtils.calculateLuminance(color);
+                                    if (dark ? lum < MIN_LUMINANCE : lum > 1 - MIN_LUMINANCE)
+                                        color = ColorUtils.blendARGB(color,
+                                                dark ? Color.WHITE : Color.BLACK,
+                                                dark ? MIN_LUMINANCE - lum : lum - (1 - MIN_LUMINANCE));
+                                    c = String.format("#%06x", color & 0xFFFFFF);
+                                    sb.append("color:").append(c).append(";");
+
+                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+                                        span.attr("color", c);
+                                }
+                                break;
+
+                            case "background":
+                            case "background-color":
+                                break;
+
+                            case "line-through":
+                                sb.append(param).append(";");
+                                break;
+                        }
+                }
+
+                if (sb.length() == 0)
+                    span.removeAttr("style");
+                else
+                    span.attr("style", sb.toString());
+            }
+        }
 
         // Remove new lines without surrounding content
         for (Element br : document.select("br"))
@@ -159,33 +258,28 @@ public class HtmlHelper {
 
         // Pre formatted text
         for (Element pre : document.select("pre")) {
-            Element div = document.createElement("div");
+            Element div = document.createElement("font");
+            div.attr("face", "monospace");
 
-            for (TextNode tnode : pre.textNodes()) {
-                String[] lines = tnode.getWholeText().split("\\r?\\n");
-                for (String line : lines) {
-                    line = Html.escapeHtml(line);
+            String[] lines = pre.wholeText().split("\\r?\\n");
+            for (String line : lines) {
+                line = Html.escapeHtml(line);
 
-                    StringBuilder sb = new StringBuilder();
-                    if ("-- ".equals(line))
-                        sb.append(line);
-                    else {
-                        int len = line.length();
-                        for (int j = 0; j < len; j++) {
-                            char kar = line.charAt(j);
-                            if (kar == ' ' && j + 1 < len && line.charAt(j + 1) == ' ')
-                                sb.append("&nbsp;");
-                            else
-                                sb.append(kar);
-                        }
-                    }
-
-                    Element span = document.createElement("span");
-                    span.html(sb.toString());
-                    div.appendChild(span);
-                    div.appendElement("br");
-                    Log.i("span html=" + span.html());
+                StringBuilder sb = new StringBuilder();
+                int len = line.length();
+                for (int j = 0; j < len; j++) {
+                    char kar = line.charAt(j);
+                    if (kar == ' ' &&
+                            j + 1 < len && line.charAt(j + 1) == ' ')
+                        sb.append("&nbsp;");
+                    else
+                        sb.append(kar);
                 }
+
+                Element span = document.createElement("span");
+                span.html(sb.toString());
+                div.appendChild(span);
+                div.appendElement("br");
             }
 
             pre.replaceWith(div);
@@ -403,6 +497,11 @@ public class HtmlHelper {
 
         for (Element div : document.select("div"))
             div.tagName("span");
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
+            for (Element span : document.select("span"))
+                if (!TextUtils.isEmpty(span.attr("color")))
+                    span.tagName("font");
 
         Element body = document.body();
         return (body == null ? "" : body.html());
@@ -828,8 +927,8 @@ public class HtmlHelper {
             if (params.length > 0) {
                 List<String> viewport = new ArrayList<>();
                 for (String param : params)
-                    if (!param.toLowerCase().contains("maximum-scale") &&
-                            !param.toLowerCase().contains("user-scalable"))
+                    if (!param.toLowerCase(Locale.ROOT).contains("maximum-scale") &&
+                            !param.toLowerCase(Locale.ROOT).contains("user-scalable"))
                         viewport.add(param.trim());
 
                 if (viewport.size() == 0)
@@ -907,7 +1006,7 @@ public class HtmlHelper {
             }
         }
 
-        return doc.outerHtml();
+        return doc.html();
     }
 
     public static class AnnotatedSource {

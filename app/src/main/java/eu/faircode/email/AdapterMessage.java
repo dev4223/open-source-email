@@ -44,6 +44,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.text.Editable;
@@ -127,6 +128,7 @@ import org.jsoup.nodes.Element;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -137,8 +139,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -995,8 +999,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0
                     ? message.color == null || !ActivityBilling.isPro(context)
                     ? colorAccent : message.color : textColorSecondary));
-            ibFlagged.setVisibility(flags && !message.folderReadOnly ? View.VISIBLE : View.GONE);
             ibFlagged.setEnabled(message.uid != null);
+
+            if (flags)
+                ibFlagged.setVisibility(message.folderReadOnly || message.accountPop ? View.INVISIBLE : View.VISIBLE);
+            else
+                ibFlagged.setVisibility(View.GONE);
         }
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
@@ -1270,6 +1278,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 attachments = new ArrayList<>();
             properties.setAttachments(message.id, attachments);
 
+            boolean iencrypted = properties.getValue("iencrypted", message.id);
             boolean show_inline = properties.getValue("inline", message.id);
             Log.i("Show inline=" + show_inline);
 
@@ -1320,7 +1329,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnDownloadAttachments.setVisibility(download && suitable ? View.VISIBLE : View.GONE);
             tvNoInternetAttachments.setVisibility(downloading && !suitable ? View.VISIBLE : View.GONE);
 
-            ibDecrypt.setVisibility(is_encrypted ? View.VISIBLE : View.GONE);
+            ibDecrypt.setVisibility(iencrypted || is_encrypted ? View.VISIBLE : View.GONE);
 
             cbInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -1672,18 +1681,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else {
                         Bundle args = new Bundle();
                         args.putLong("id", message.id);
+                        args.putBoolean("pop", message.accountPop);
 
                         new SimpleTask<Void>() {
                             @Override
                             protected Void onExecute(Context context, Bundle args) {
                                 long id = args.getLong("id");
+                                boolean pop = args.getBoolean("pop");
 
                                 DB db = DB.getInstance(context);
                                 try {
                                     db.beginTransaction();
 
                                     EntityMessage message = db.message().getMessage(id);
-                                    if (message != null) {
+                                    if (message == null)
+                                        return null;
+
+                                    if (pop)
+                                        EntityOperation.queue(context, message, EntityOperation.SEEN, !message.ui_seen);
+                                    else {
                                         List<EntityMessage> messages = db.message().getMessagesByThread(
                                                 message.account, message.thread, threading ? null : id, message.ui_seen ? message.folder : null);
                                         for (EntityMessage threaded : messages)
@@ -1874,14 +1890,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean outgoing = EntityFolder.isOutgoing(folder.type);
 
                     if (message.identity != null) {
-                        Address[] senders = (message.reply == null || message.reply.length == 0 ? message.from : message.reply);
-                        if (senders != null && senders.length > 0) {
+                        if (message.from != null && message.from.length > 0) {
                             EntityIdentity identity = db.identity().getIdentity(message.identity);
                             if (identity == null)
                                 return null;
 
-                            for (Address sender : senders)
-                                if (MessageHelper.similarAddress(sender, identity.email)) {
+                            for (Address sender : message.from)
+                                if (identity.similarAddress(sender)) {
                                     outgoing = true;
                                     break;
                                 }
@@ -1915,7 +1930,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onNotifyContact(final TupleMessageEx message) {
             final NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             final InternetAddress from = (InternetAddress) message.from[0];
-            final String channelId = "notification." + from.getAddress().toLowerCase();
+            final String channelId = "notification." + from.getAddress().toLowerCase(Locale.ROOT);
 
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibAddContact);
             NotificationChannel channel = nm.getNotificationChannel(channelId);
@@ -2232,30 +2247,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putSerializable("message", message);
 
-            new SimpleTask<EntityIdentity>() {
+            new SimpleTask<List<TupleIdentityEx>>() {
                 @Override
-                protected EntityIdentity onExecute(Context context, Bundle args) {
-                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    if (message.identity == null)
-                        return null;
-
+                protected List<TupleIdentityEx> onExecute(Context context, Bundle args) {
                     DB db = DB.getInstance(context);
-                    return db.identity().getIdentity(message.identity);
+                    return db.identity().getComposableIdentities(null);
                 }
 
                 @Override
-                protected void onExecuted(Bundle args, EntityIdentity identity) {
+                protected void onExecuted(Bundle args, List<TupleIdentityEx> identities) {
                     TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
 
                     TupleMessageEx amessage = getMessage();
                     if (amessage == null || !amessage.id.equals(message.id))
                         return;
 
-                    Address[] recipients = message.getAllRecipients(identity == null ? null : identity.email);
+                    Address[] recipients = message.getAllRecipients(identities);
 
                     View anchor = bnvActions.findViewById(R.id.action_reply);
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
-                    popupMenu.inflate(R.menu.menu_reply);
+                    popupMenu.inflate(R.menu.popup_reply);
                     popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients.length > 0);
                     popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(message.list_post != null);
                     popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(message.receipt_to != null);
@@ -2467,7 +2478,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             View anchor = bnvActions.findViewById(R.id.action_more);
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
-            popupMenu.inflate(R.menu.menu_message);
+            popupMenu.inflate(R.menu.popup_message_more);
 
             popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
 
@@ -2496,9 +2507,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
 
-            popupMenu.getMenu().findItem(R.id.menu_decrypt).setEnabled(
-                    message.content && message.to != null && message.to.length > 0);
-
             popupMenu.getMenu().findItem(R.id.menu_resync).setEnabled(message.uid != null);
 
             popupMenu.getMenu().findItem(R.id.menu_create_rule).setEnabled(!message.accountPop);
@@ -2524,9 +2532,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_junk:
                             onMenuJunk(message);
-                            return true;
-                        case R.id.menu_decrypt:
-                            onActionDecrypt(message);
                             return true;
                         case R.id.menu_resync:
                             onMenuResync(message);
@@ -2595,6 +2600,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean show_quotes = args.getBoolean("show_quotes");
                 int zoom = args.getInt("zoom");
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean text_color = prefs.getBoolean("text_color", true);
+                boolean inline = prefs.getBoolean("inline_images", false);
+
                 if (message == null || !message.content)
                     return null;
 
@@ -2605,9 +2614,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 String body = Helper.readText(file);
                 Document document = Jsoup.parse(body);
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean inline = prefs.getBoolean("inline_images", false);
+                // Check for inline encryption
+                int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
+                int end = body.indexOf(Helper.PGP_END_MESSAGE);
+                args.putBoolean("iencrypted", begin >= 0 && begin < end);
 
+                // Check for images
                 boolean has_images = false;
                 for (Element img : document.select("img")) {
                     if (inline) {
@@ -2623,17 +2635,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
                 args.putBoolean("has_images", has_images);
 
+                // Collapse quotes
                 if (!show_quotes) {
                     for (Element quote : document.select("blockquote"))
                         quote.html("&#8230;");
                     body = document.html();
                 }
 
-                String html = HtmlHelper.sanitize(context, body, show_images);
+                // Cleanup message
+                String html = HtmlHelper.sanitize(context, body, text_color, show_images);
                 if (debug) {
                     Document format = Jsoup.parse(html);
                     format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
-                    String[] lines = format.outerHtml().split("\\r?\\n");
+                    String[] lines = format.html().split("\\r?\\n");
                     for (int i = 0; i < lines.length; i++)
                         lines[i] = Html.escapeHtml(lines[i]);
                     html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
@@ -2653,17 +2667,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 }, null);
 
+                // Replace quote spans
                 SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
                 QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
                 for (QuoteSpan quoteSpan : quoteSpans) {
                     builder.setSpan(
-                            new StyledQuoteSpan(colorPrimary),
+                            new StyledQuoteSpan(context, colorPrimary),
                             builder.getSpanStart(quoteSpan),
                             builder.getSpanEnd(quoteSpan),
                             builder.getSpanFlags(quoteSpan));
                     builder.removeSpan(quoteSpan);
                 }
 
+                // Make collapsed quotes clickable
                 if (!show_quotes) {
                     final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
 
@@ -2690,6 +2706,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             protected void onExecuted(Bundle args, SpannableStringBuilder body) {
                 TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                 properties.setBody(message.id, body);
+                properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
 
                 TupleMessageEx amessage = getMessage();
                 if (amessage == null || !amessage.id.equals(message.id))
@@ -3263,6 +3280,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         });
 
+        try {
+            // https://issuetracker.google.com/issues/135628748
+            Handler handler = new Handler(Looper.getMainLooper());
+            Field mMainThreadExecutor = this.differ.getClass().getDeclaredField("mMainThreadExecutor");
+            mMainThreadExecutor.setAccessible(true);
+            mMainThreadExecutor.set(this.differ, new Executor() {
+                @Override
+                public void execute(Runnable command) {
+                    try {
+                        handler.post(command);
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                }
+            });
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+
         owner.getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
@@ -3735,7 +3771,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean changed = false;
                 builder.clearQuery();
                 for (String key : uri.getQueryParameterNames())
-                    if (PARANOID_QUERY.contains(key.toLowerCase()))
+                    if (PARANOID_QUERY.contains(key.toLowerCase(Locale.ROOT)))
                         changed = true;
                     else if (!TextUtils.isEmpty(key))
                         for (String value : uri.getQueryParameters(key)) {
@@ -3758,10 +3794,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final TextView tvHost = view.findViewById(R.id.tvHost);
             final Group grpOwner = view.findViewById(R.id.grpOwner);
 
-            tvTitle.setText(title);
-            tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
-
-            cbSecure.setVisibility(View.GONE);
             etLink.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -3772,27 +3804,35 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                public void afterTextChanged(Editable text) {
-                    Uri uri = Uri.parse(text.toString());
-                    cbSecure.setVisibility(!uri.isOpaque() &&
-                            ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                            ? View.VISIBLE : View.GONE);
+                public void afterTextChanged(Editable editable) {
+                    Uri uri = Uri.parse(editable.toString());
+
+                    boolean secure = (!uri.isOpaque() &&
+                            "https".equals(uri.getScheme()));
+                    boolean hyperlink = (!uri.isOpaque() &&
+                            ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())));
+
+                    cbSecure.setTag(secure);
+                    cbSecure.setChecked(secure);
+
+                    cbSecure.setText(
+                            secure ? R.string.title_link_secured : R.string.title_secure_link);
+                    cbSecure.setTextColor(Helper.resolveColor(getContext(),
+                            secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
+                    cbSecure.setTypeface(
+                            secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+
+                    cbSecure.setVisibility(hyperlink ? View.VISIBLE : View.GONE);
                 }
             });
-            etLink.setText(uri.toString());
-
-            boolean secure = "https".equals(uri.getScheme());
-            cbSecure.setChecked(secure);
-            cbSecure.setText(
-                    secure ? R.string.title_link_secured : R.string.title_secure_link);
-            cbSecure.setTextColor(Helper.resolveColor(getContext(),
-                    secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
-            cbSecure.setTypeface(
-                    secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
 
             cbSecure.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                    boolean tag = (Boolean) compoundButton.getTag();
+                    if (tag == checked)
+                        return;
+
                     Uri uri = Uri.parse(etLink.getText().toString());
                     Uri.Builder builder = uri.buildUpon();
 
@@ -3805,13 +3845,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
 
                     etLink.setText(builder.build().toString());
-
-                    cbSecure.setText(
-                            checked ? R.string.title_link_secured : R.string.title_secure_link);
-                    cbSecure.setTextColor(Helper.resolveColor(getContext(),
-                            checked ? android.R.attr.textColorSecondary : R.attr.colorWarning));
-                    cbSecure.setTypeface(
-                            checked ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
                 }
             });
 
@@ -3873,6 +3906,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }.execute(FragmentDialogLink.this, args, "link:owner");
                 }
             });
+
+            tvTitle.setText(title);
+            tvTitle.setVisibility(TextUtils.isEmpty(title) ? View.GONE : View.VISIBLE);
+            etLink.setText(uri.toString());
 
             return new AlertDialog.Builder(getContext())
                     .setView(view)
@@ -4229,7 +4266,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 return;
                             }
 
-                            String keyword = Helper.sanitizeKeyword(etKeyword.getText().toString());
+                            String keyword = MessageHelper.sanitizeKeyword(etKeyword.getText().toString());
                             if (!TextUtils.isEmpty(keyword)) {
                                 Bundle args = new Bundle();
                                 args.putLong("id", id);

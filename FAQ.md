@@ -179,7 +179,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(77) Why are messages sometimes shown with a small delay?](#user-content-faq77)
 * [(78) How do I use schedules?](#user-content-faq78)
 * [(79) How do I use synchronize on demand (manual)?](#user-content-faq79)
-* [(80) How can I fix 'Unable to load BODYSTRUCTURE'?](#user-content-faq80)
+* [~~(80) How can I fix 'Unable to load BODYSTRUCTURE'?~~](#user-content-faq80)
 * [~~(81) Can you make the background of the original message dark in the dark theme?~~](#user-content-faq81)
 * [(82) What is a tracking image?](#user-content-faq82)
 * [(83) What does 'User is authenticated but not connected' mean?](#user-content-faq83)
@@ -235,6 +235,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(133) Why is ActiveSync not supported?](#user-content-faq133)
 * [(134) Can you add deleting local messages?](#user-content-faq134)
 * [(135) Why are trashed messages and drafts shown in conversations?](#user-content-faq135)
+* [(136) How can I delete an account/identity/folder?](#user-content-faq136)
 
 [I have another question.](#user-content-support)
 
@@ -298,6 +299,9 @@ In practice this means that the status bar notification doesn't take space in th
 
 You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power.
 See [here](#user-content-faq39) for more details about battery usage.
+
+Android 8 Oreo might also shows a status bar notification with the text *Apps are running in the background*.
+Please see [here](https://www.reddit.com/r/Android/comments/7vw7l4/psa_turn_off_background_apps_notification/) about how you can disable this notification.
 
 Some people suggested to use [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging/) (FCM) instead of an Android service with a status bar notification,
 but this would require email providers to send FCM messages or a central server where all messages are collected sending FCM messages.
@@ -513,9 +517,10 @@ So, unless your provider can enable this extension, you cannot use FairEmail for
 **(12) How does encryption/decryption work?**
 
 First of all you need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/).
+
 To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
-To decrypt a received message, open the message and tap the padlock icon just below the grey message action bar.
-If the message is inline encrypted (not advised), select the menu *Decrypt* in the message 'more' three dots menu.
+
+To decrypt a received message, open the message and just tap the padlock icon just below the grey message action bar.
 
 The first time you send an encrypted message you might be asked for a sign key.
 FairEmail will automatically store the sign key ID in the selected identity for the next time.
@@ -705,8 +710,14 @@ see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/)
 
 The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
-The error *... Failed to load IMAP envelope ...* is caused by a bug in the IMAP server of your provider.
-One or more messages could not be retrieved due to an unrecoverable error in the IMAP protocol.
+The error *... Invalid credentials ...* for a Gmail account which was added with the quick setup wizard
+might be caused by having removed the selected account from your device or by having revoked account (contact) permissions from FairEmail.
+Account permissions are required to periodically refresh the [OAuth](https://developers.google.com/gmail/imap/xoauth2-protocol) token
+(a kind of password used to login to your Gmail account).
+Just start the wizard (but do not select an account) to grant the required permissions again.
+
+The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported.
+FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.
 
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
@@ -1560,10 +1571,15 @@ You can also automate turning synchronization on and off by sending these comman
 Sending these commands will automatically turn scheduling off.
 
 It is also possible to just enable/disable one account, for example the account with the name *Gmail*:
-
 ```
 (adb shell) am startservice -a eu.faircode.email.ENABLE --es account Gmail
 (adb shell) am startservice -a eu.faircode.email.DISABLE --es account Gmail
+```
+
+If you just want to automate checking for new messages, you can do this:
+
+```
+(adb shell) adb shell am startservice -a eu.faircode.email.POLL
 ```
 
 You can automatically send commands with for example [Tasker](https://tasker.joaoapps.com/userguide/en/intents.html):
@@ -1617,12 +1633,12 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 <br />
 
 <a name="faq80"></a>
-**(80) How can I fix 'Unable to load BODYSTRUCTURE' ?**
+**~~(80) How can I fix 'Unable to load BODYSTRUCTURE' ?~~**
 
-The error message *Unable to load BODYSTRUCTURE* is caused by bugs in the email server,
-see [here](https://javaee.github.io/javamail/FAQ#imapserverbug) for more details.
+~~The error message *Unable to load BODYSTRUCTURE* is caused by bugs in the email server,~~
+~~see [here](https://javaee.github.io/javamail/FAQ#imapserverbug) for more details.~~
 
-FairEmail already tries to workaround these bugs, but if this fail you'll need to ask for support from your provider.
+~~FairEmail already tries to workaround these bugs, but if this fail you'll need to ask for support from your provider.~~
 
 <br />
 
@@ -2284,6 +2300,18 @@ It is easy to read through the received messages before continuing to write the 
 
 <br />
 
+<a name="faq136"></a>
+**(136) How can I delete an account/identity/folder?**
+
+Deleting an account/identity/folder is a little bit hidden to prevent accidents.
+
+* Account: Setup > Step 1 > Manage > Tap account
+* Identity: Setup > Step 2 > Manage > Tap identity
+* Folder: Long press the folder in the folder list > Edit properties
+
+In the three-dots overflow menu at the top right there is an item to delete the account/identity/folder.
+
+<br />
 
 ## Support
 

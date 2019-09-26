@@ -40,6 +40,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
+import android.os.PowerManager;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.format.DateUtils;
@@ -92,7 +93,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -112,7 +112,11 @@ public class Helper {
     static final int NOTIFICATION_UPDATE = 4;
 
     static final float LOW_LIGHT = 0.6f;
+
     static final int BUFFER_SIZE = 8192; // Same as in Files class
+
+    static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
+    static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
 
     static final String FAQ_URI = "https://github.com/M66B/FairEmail/blob/master/FAQ.md";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
@@ -173,6 +177,20 @@ public class Helper {
     static boolean canPrint(Context context) {
         PackageManager pm = context.getPackageManager();
         return pm.hasSystemFeature(PackageManager.FEATURE_PRINTING);
+    }
+
+    static Boolean isIgnoringOptimizations(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm == null)
+                return null;
+            return pm.isIgnoringBatteryOptimizations(BuildConfig.APPLICATION_ID);
+        }
+        return null;
+    }
+
+    static boolean isPlayStoreInstall() {
+        return BuildConfig.PLAY_STORE_RELEASE;
     }
 
     // View
@@ -393,7 +411,7 @@ public class Helper {
 
     static String localizeFolderType(Context context, String type) {
         int resid = context.getResources().getIdentifier(
-                "title_folder_" + type.toLowerCase(),
+                "title_folder_" + type.toLowerCase(Locale.ROOT),
                 "string",
                 context.getPackageName());
         return (resid > 0 ? context.getString(resid) : type);
@@ -516,6 +534,20 @@ public class Helper {
                         }
                     })
                     .create();
+        }
+    }
+
+    static void linkPro(final TextView tv) {
+        if (ActivityBilling.isPro(tv.getContext()) && !BuildConfig.DEBUG)
+            hide(tv);
+        else {
+            tv.getPaint().setUnderlineText(true);
+            tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    tv.getContext().startActivity(new Intent(tv.getContext(), ActivityBilling.class));
+                }
+            });
         }
     }
 
@@ -793,49 +825,6 @@ public class Helper {
 
     // Miscellaneous
 
-    static String sanitizeKeyword(String keyword) {
-        // https://tools.ietf.org/html/rfc3501
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < keyword.length(); i++) {
-            // flag-keyword    = atom
-            // atom            = 1*ATOM-CHAR
-            // ATOM-CHAR       = <any CHAR except atom-specials>
-            char kar = keyword.charAt(i);
-            // atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards / quoted-specials / resp-specials
-            if (kar == '(' || kar == ')' || kar == '{' || kar == ' ' || Character.isISOControl(kar))
-                continue;
-            // list-wildcards  = "%" / "*"
-            if (kar == '%' || kar == '*')
-                continue;
-            // quoted-specials = DQUOTE / "\"
-            if (kar == '"' || kar == '\\')
-                continue;
-            // resp-specials   = "]"
-            if (kar == ']')
-                continue;
-            sb.append(kar);
-        }
-        return sb.toString();
-    }
-
-    static boolean isPlayStoreInstall() {
-        return BuildConfig.PLAY_STORE_RELEASE;
-    }
-
-    static void linkPro(final TextView tv) {
-        if (ActivityBilling.isPro(tv.getContext()) && !BuildConfig.DEBUG)
-            hide(tv);
-        else {
-            tv.getPaint().setUnderlineText(true);
-            tv.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    tv.getContext().startActivity(new Intent(tv.getContext(), ActivityBilling.class));
-                }
-            });
-        }
-    }
-
     static <T> List<List<T>> chunkList(List<T> list, int size) {
         List<List<T>> result = new ArrayList<>(list.size() / size);
         for (int i = 0; i < list.size(); i += size)
@@ -847,14 +836,6 @@ public class Helper {
         long[] result = new long[list.size()];
         for (int i = 0; i < list.size(); i++)
             result[i] = list.get(i);
-        return result;
-    }
-
-    static long[] toLongArray(Set<Long> set) {
-        long[] result = new long[set.size()];
-        int i = 0;
-        for (Long value : set)
-            result[i++] = value;
         return result;
     }
 

@@ -108,6 +108,7 @@
     <string name="title_setup_go">Utfør</string>
     <string name="title_setup_wizard">Veiviser</string>
     <string name="title_setup_other">Annen leverandør</string>
+    <string name="title_setup_gmail_support">Å autorisere Google kontoer fungerer bare i offisielle versjoner fordi Android sjekker appens signatur</string>
     <string name="title_setup_gmail_rationale">Gi tillatelser til å velge en konto og lese navnet ditt</string>
     <string name="title_setup_select_account">Velg konto</string>
     <string name="title_setup_instructions">Oppsett instruksjoner</string>
@@ -198,7 +199,6 @@
     <string name="title_advanced_roaming">Laste ned meldinger og vedlegg under roaming</string>
     <string name="title_advanced_rlah">Roam som hjemme</string>
     <string name="title_advanced_manage_connectivity">Administrer tilkobling</string>
-    <string name="title_advanced_browse">Bla gjennom meldinger på serveren</string>
     <string name="title_advanced_startup">Vis på startskjermen</string>
     <string name="title_advanced_cards">Vis kort</string>
     <string name="title_advanced_date_header">Gruppere etter dato</string>
@@ -220,8 +220,9 @@
     <string name="title_advanced_attachments_alt">Vis vedlegg etter meldingsteksten</string>
     <string name="title_advanced_contrast">Bruk høy kontrast for meldingstekst</string>
     <string name="title_advanced_monospaced">Bruk monospaced skrift for meldingstekst</string>
-    <string name="title_advanced_images_inline">Vis automatisk innebygde bilder</string>
+    <string name="title_advanced_text_color">Vis tekstfarger</string>
     <string name="title_advanced_collapse_quotes">Kollapse sitert tekst</string>
+    <string name="title_advanced_images_inline">Vis automatisk innebygde bilder</string>
     <string name="title_advanced_remote_content">Vis automatisk fjerninnhold når du ser på originale meldinger</string>
     <string name="title_advanced_seekbar">Vis relativ samtaleposisjon med en prikk</string>
     <string name="title_advanced_actionbar">Vis samtale handlingslinje</string>
@@ -230,7 +231,6 @@
     <string name="title_advanced_swipenav">Sveip til venstre/høyre for å gå til neste/forrige samtale</string>
     <string name="title_advanced_reversed">Omvendt navigasjonsretning</string>
     <string name="title_advanced_double_tap">Dobbeltklikk for å markere meldingen lest/ulest</string>
-    <string name="title_advanced_expand_read">Merk meldinger som er lest når de utvides</string>
     <string name="title_advanced_autoexpand">Utvid automatisk meldinger</string>
     <string name="title_advanced_expand_one">Utvid bare en melding om gangen</string>
     <string name="title_advanced_collapse">Skjul meldinger i samtaler på \'tilbake\'</string>
@@ -250,6 +250,7 @@
     <string name="title_advanced_notify_action_reply_direct">Direkte svar</string>
     <string name="title_advanced_notify_action_flag">Stjerne</string>
     <string name="title_advanced_notify_action_seen">Les</string>
+    <string name="title_advanced_notify_action_snooze">Utsett</string>
     <string name="title_advanced_notify_remove">Fjern varsel om ny melding når du trykker på varslingen</string>
     <string name="title_advanced_biometrics_notify">Vis varselinnhold når du bruker biometrisk godkjenning</string>
     <string name="title_advanced_light">Bruk meldingslys</string>
@@ -272,7 +273,7 @@
     <string name="title_advanced_poll_hint">Synkronisering med jevne mellomrom vil sammenligne lokale og eksterne meldinger hver gang, noe som er en kostbar operasjon som muligens resulterer i ekstra batteribruk, spesielt når det er mange meldinger å synkronisere. Alltid synkronisering vil unngå dette ved kontinuerlig overvåking for endringer.</string>
     <string name="title_advanced_schedule_hint">Trykk på en tid for å angi en tid</string>
     <string name="title_advanced_check_mx">Sjekk avsenderens e-postadresser når meldinger synkroniseres</string>
-    <string name="title_advanced_unseen_hint">Noen leverandører støtter ikke dette ordentlig, noe som for eksempel kan føre til at alle meldinger blir synkronisert</string>
+    <string name="title_advanced_unseen_hint">Noen leverandører støtter ikke dette ordentlig, noe som kan føre til synkronisering av ingen eller alle meldinger</string>
     <string name="title_advanced_sync_kept_hint">Dette vil overføre ekstra data og bruke ekstra batteristrøm, spesielt hvis det er lagret mange meldinger på enheten</string>
     <string name="title_advanced_sync_folders_hint">Deaktivering av dette vil redusere data og batteribruk noe, men deaktiverer også oppdateringen av listen over mapper</string>
     <string name="title_advanced_sync_delay_hint">Dette vil redusere synkroniseringen av meldinger</string>
@@ -303,6 +304,7 @@
     <string name="title_identity_email">Din e-postadresse</string>
     <string name="title_identity_color_hint">Identitetsfarger har forrang fremfor kontofarger</string>
     <string name="title_advanced_sender">Tillat redigering av avsenderadresse</string>
+    <string name="title_advanced_sender_regex">Regex for å matche redigerte adresser</string>
     <string name="title_identity_reply_to">Svar til adressen</string>
     <string name="title_identity_encrypt">Krypter som standard</string>
     <string name="title_identity_use_ip_hint">I tilfelle \'ugyldig hilsen\', \'krever gyldig adresse\' eller en lignende feil, prøv å endre denne innstillingen</string>
@@ -334,6 +336,7 @@
     <string name="title_use_ip">Bruk lokal IP-adresse i stedet for vertsnavn</string>
     <string name="title_primary_account">Primær (standardkonto)</string>
     <string name="title_primary_identity">Primær (standardidentitet)</string>
+    <string name="title_leave_on_server">Legg igjen meldingene på serveren</string>
     <string name="title_keep_alive_interval">Holde i live/avstemming intervall (minutter)</string>
     <string name="title_check">Sjekk</string>
     <string name="title_no_name">Navn mangler</string>
@@ -356,10 +359,12 @@
     <string name="title_identity_delete">Slett denne identiteten permanent?</string>
     <string name="title_edit_html">Rediger som HTML</string>
     <string name="title_last_connected">Sist tilkoblet: %1$s</string>
-    <string name="title_pop_support">POP3 - protokollen støtter bare nedlasting og sletting av meldinger. Så det vil ikke være mulig å merke melding som favoritt, flytte meldinger osv. POP3 vil bruke mer batterikraft enn IMAP. Vurder derfor å bruke IMAP - protokollen når det er mulig.</string>
+    <string name="title_pop_support">POP3-protokollen støtter bare nedlasting og sletting av meldinger fra innboksen. POP3 kan ikke merke meldinger som er lest, flytte meldinger, etc. POP3 vil bruke mer batteristrøm og data enn IMAP. Så vurder å bruke IMAP-protokollen når det er mulig.</string>
     <string name="title_activesync_support">ActiveSync støttes ikke</string>
     <string name="title_oauth_support">OAuth støttes ikke</string>
     <string name="title_review">Anmeldelse</string>
+    <string name="title_advanced_browse">Bla gjennom meldinger på serveren</string>
+    <string name="title_advanced_expand_read">Merk meldinger som er lest når de utvides</string>
     <string name="title_synchronize_now">Synkroniser nå</string>
     <string name="title_synchronize_all">Synkroniser alle meldinger</string>
     <string name="title_synchronize_enabled">Synkroniser</string>
@@ -497,6 +502,7 @@
     <string name="title_discard">Forkast</string>
     <string name="title_save">Lagre</string>
     <string name="title_send">Send</string>
+    <string name="title_send_via">Send via</string>
     <string name="title_send_with_options">Send &#8230;</string>
     <string name="title_send_at">Sender &#8230;</string>
     <string name="title_no_server">Ingen server funnet på \'%1$s\'</string>
@@ -569,6 +575,7 @@
     <string name="title_answer_template_email">$email$ vil bli erstattet med avsenderens e-postadresse</string>
     <string name="title_rule_seen">Merk som lest</string>
     <string name="title_rule_unseen">Merk som ulest</string>
+    <string name="title_rule_ignore">Undertrykke varsling</string>
     <string name="title_rule_snooze">Utsett</string>
     <string name="title_rule_flag">Legg til stjerne</string>
     <string name="title_rule_move">Flytt</string>
@@ -734,6 +741,8 @@
     <string name="title_now">Nå</string>
     <string name="title_after">Etter %1$s</string>
     <string name="title_reset">Tilbakestill</string>
+    <string name="title_minutes">Minutter</string>
+    <string name="title_dismiss">Avvis</string>
     <string name="title_icalendar_accept">Godta</string>
     <string name="title_icalendar_decline">Avslå</string>
     <string name="title_icalendar_maybe">Kanskje</string>

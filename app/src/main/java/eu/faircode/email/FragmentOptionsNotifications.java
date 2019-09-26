@@ -28,6 +28,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -37,6 +39,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,11 +58,14 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     private SwitchCompat swUnseenIgnored;
     private SwitchCompat swNotifyPreview;
     private CheckBox cbNotifyActionTrash;
+    private CheckBox cbNotifyActionJunk;
     private CheckBox cbNotifyActionArchive;
     private CheckBox cbNotifyActionReply;
     private CheckBox cbNotifyActionReplyDirect;
     private CheckBox cbNotifyActionFlag;
     private CheckBox cbNotifyActionSeen;
+    private CheckBox cbNotifyActionSnooze;
+    private EditText etNotifyActionSnooze;
     private TextView tvNotifyActionsPro;
     private SwitchCompat swNotifyRemove;
     private SwitchCompat swBiometricsNotify;
@@ -74,7 +80,8 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
     private final static String[] RESET_OPTIONS = new String[]{
             "badge", "unseen_ignored",
-            "notify_preview", "notify_trash", "notify_archive", "notify_reply", "notify_reply_direct", "notify_flag", "notify_seen", "notify_remove",
+            "notify_preview", "notify_trash", "notify_junk", "notify_archive", "notify_reply", "notify_reply_direct", "notify_flag",
+            "notify_seen", "notify_snooze", "notify_snooze_duration", "notify_remove",
             "biometrics_notify",
             "light", "sound", "alert_once"
     };
@@ -93,11 +100,14 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swUnseenIgnored = view.findViewById(R.id.swUnseenIgnored);
         swNotifyPreview = view.findViewById(R.id.swNotifyPreview);
         cbNotifyActionTrash = view.findViewById(R.id.cbNotifyActionTrash);
+        cbNotifyActionJunk = view.findViewById(R.id.cbNotifyActionJunk);
         cbNotifyActionArchive = view.findViewById(R.id.cbNotifyActionArchive);
         cbNotifyActionReply = view.findViewById(R.id.cbNotifyActionReply);
         cbNotifyActionReplyDirect = view.findViewById(R.id.cbNotifyActionReplyDirect);
         cbNotifyActionFlag = view.findViewById(R.id.cbNotifyActionFlag);
         cbNotifyActionSeen = view.findViewById(R.id.cbNotifyActionSeen);
+        cbNotifyActionSnooze = view.findViewById(R.id.cbNotifyActionSnooze);
+        etNotifyActionSnooze = view.findViewById(R.id.etNotifyActionSnooze);
         tvNotifyActionsPro = view.findViewById(R.id.tvNotifyActionsPro);
         swNotifyRemove = view.findViewById(R.id.swNotifyRemove);
         swBiometricsNotify = view.findViewById(R.id.swBiometricsNotify);
@@ -147,6 +157,13 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             }
         });
 
+        cbNotifyActionJunk.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                prefs.edit().putBoolean("notify_junk", checked).apply();
+            }
+        });
+
         cbNotifyActionArchive.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
@@ -179,6 +196,32 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
                 prefs.edit().putBoolean("notify_seen", checked).apply();
+            }
+        });
+
+        cbNotifyActionSnooze.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean checked) {
+                prefs.edit().putBoolean("notify_snooze", checked).apply();
+            }
+        });
+
+        etNotifyActionSnooze.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                try {
+                    int minutes = Integer.parseInt(editable.toString());
+                    prefs.edit().putInt("notify_snooze_duration", minutes).apply();
+                } catch (NumberFormatException ex) {
+                }
             }
         });
 
@@ -304,17 +347,23 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
 
         cbNotifyActionTrash.setChecked(prefs.getBoolean("notify_trash", true) || !pro);
+        cbNotifyActionJunk.setChecked(prefs.getBoolean("notify_junk", false) && pro);
         cbNotifyActionArchive.setChecked(prefs.getBoolean("notify_archive", true) || !pro);
         cbNotifyActionReply.setChecked(prefs.getBoolean("notify_reply", false) && pro);
         cbNotifyActionReplyDirect.setChecked(prefs.getBoolean("notify_reply_direct", false) && pro);
         cbNotifyActionFlag.setChecked(prefs.getBoolean("notify_flag", false) && pro);
         cbNotifyActionSeen.setChecked(prefs.getBoolean("notify_seen", true) || !pro);
+        cbNotifyActionSnooze.setChecked(prefs.getBoolean("notify_snooze", false) || !pro);
+        etNotifyActionSnooze.setText(Integer.toString(prefs.getInt("notify_snooze_duration", 60)));
 
         cbNotifyActionTrash.setEnabled(pro);
+        cbNotifyActionJunk.setEnabled(pro);
         cbNotifyActionArchive.setEnabled(pro);
         cbNotifyActionReply.setEnabled(pro);
+        cbNotifyActionReplyDirect.setEnabled(pro);
         cbNotifyActionFlag.setEnabled(pro);
         cbNotifyActionSeen.setEnabled(pro);
+        cbNotifyActionSnooze.setEnabled(pro);
 
         swNotifyRemove.setChecked(prefs.getBoolean("notify_remove", true));
         swBiometricsNotify.setChecked(prefs.getBoolean("biometrics_notify", false));

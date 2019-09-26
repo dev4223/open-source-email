@@ -96,6 +96,7 @@
     <string name="title_setup_go">转到</string>
     <string name="title_setup_wizard">向导</string>
     <string name="title_setup_other">其他邮件服务提供商</string>
+    <string name="title_setup_gmail_support">授权谷歌帐户只能用于官方版本，因为Android检查应用签名</string>
     <string name="title_setup_gmail_rationale">请授予权限来选择一个帐户并读取您的姓名</string>
     <string name="title_setup_select_account">选择账户</string>
     <string name="title_setup_instructions">设置指南</string>
@@ -186,7 +187,6 @@
     <string name="title_advanced_roaming">漫游时下载消息和附件</string>
     <string name="title_advanced_rlah">像在国内那样漫游</string>
     <string name="title_advanced_manage_connectivity">管理连接</string>
-    <string name="title_advanced_browse">浏览服务器上的消息</string>
     <string name="title_advanced_startup">在启动屏幕上显示</string>
     <string name="title_advanced_cards">展示卡片</string>
     <string name="title_advanced_date_header">按日期分组</string>
@@ -208,8 +208,9 @@
     <string name="title_advanced_attachments_alt">在消息文本后显示附件</string>
     <string name="title_advanced_contrast">对消息文本使用高对比度颜色</string>
     <string name="title_advanced_monospaced">对邮件文本使用单间距字体</string>
-    <string name="title_advanced_images_inline">自动显示内联图像</string>
+    <string name="title_advanced_text_color">显示文本颜色</string>
     <string name="title_advanced_collapse_quotes">折叠引用的文本</string>
+    <string name="title_advanced_images_inline">自动显示内联图像</string>
     <string name="title_advanced_remote_content">查看原始消息时自动显示远程内容</string>
     <string name="title_advanced_seekbar">用一个点显示相对对话位置</string>
     <string name="title_advanced_actionbar">显示对话操作栏</string>
@@ -218,7 +219,6 @@
     <string name="title_advanced_swipenav">向左/右滑动来前往下一个/上一个邮件会话</string>
     <string name="title_advanced_reversed">翻转导航方向</string>
     <string name="title_advanced_double_tap">双击标记消息已读/未读</string>
-    <string name="title_advanced_expand_read">将展开的消息标记为已读</string>
     <string name="title_advanced_autoexpand">自动伸展消息</string>
     <string name="title_advanced_expand_one">每次仅展开一个消息</string>
     <string name="title_advanced_collapse">按返回键折叠对话中的邮件</string>
@@ -238,6 +238,7 @@
     <string name="title_advanced_notify_action_reply_direct">直接回复</string>
     <string name="title_advanced_notify_action_flag">标星</string>
     <string name="title_advanced_notify_action_seen">已读</string>
+    <string name="title_advanced_notify_action_snooze">延后</string>
     <string name="title_advanced_notify_remove">点击通知时移除新的消息通知</string>
     <string name="title_advanced_biometrics_notify">使用生物认证时显示通知内容</string>
     <string name="title_advanced_light">使用指示灯</string>
@@ -260,7 +261,7 @@
     <string name="title_advanced_poll_hint">定期同步将每次都比较本地和远程消息，这是一个昂贵的操作，可能导致额外的电池使用，特别是在有很多消息要同步的时候。始终同步将通过持续比较变化以避免发生上述情形。</string>
     <string name="title_advanced_schedule_hint">点击“时间”选项来设置时间</string>
     <string name="title_advanced_check_mx">同步消息时检查发送者电子邮件地址</string>
-    <string name="title_advanced_unseen_hint">一些提供商未正确支持支持该功能，这可能导致同步所有信息。</string>
+    <string name="title_advanced_unseen_hint">一些邮件服务提供商未恰当地支持该功能，这可能导致同步所有消息或一条消息也不同步</string>
     <string name="title_advanced_sync_kept_hint">这将传输额外数据，消耗额外的电池电量，特别是如果有许多消息存储在设备上</string>
     <string name="title_advanced_sync_folders_hint">禁用此功能会降低数据和电池使用量，但也会禁用更新文件夹列表</string>
     <string name="title_advanced_sync_delay_hint">这将减缓同步消息的速度</string>
@@ -291,6 +292,7 @@
     <string name="title_identity_email">电子邮件地址</string>
     <string name="title_identity_color_hint">身份颜色优先于帐户颜色</string>
     <string name="title_advanced_sender">允许编辑发件人地址</string>
+    <string name="title_advanced_sender_regex">正则表达式匹配编辑的地址</string>
     <string name="title_identity_reply_to">回复地址</string>
     <string name="title_identity_encrypt">默认加密</string>
     <string name="title_identity_use_ip_hint">如果遇到“无效问候”，“需要有效的地址”或类似错误，请尝试更改此设置</string>
@@ -322,6 +324,7 @@
     <string name="title_use_ip">使用本地IP地址而非主机名</string>
     <string name="title_primary_account">默认账户</string>
     <string name="title_primary_identity">默认身份</string>
+    <string name="title_leave_on_server">把消息留在服务器上</string>
     <string name="title_keep_alive_interval">保持激活/轮询时间间隔(分钟)</string>
     <string name="title_check">检查</string>
     <string name="title_no_name">缺少名称</string>
@@ -344,10 +347,12 @@
     <string name="title_identity_delete">确定永久删除这个身份吗？</string>
     <string name="title_edit_html">以 html 格式编辑</string>
     <string name="title_last_connected">上次连接%1$s前</string>
-    <string name="title_pop_support">POP3协议仅支持下载和删除消息。因此，无法收藏信息，移动消息等。POP3比IMAP 更耗电。因此，请尽可能使用 IMAP 协议。</string>
+    <string name="title_pop_support">POP3协议支持仅从收件箱下载并删除消息。POP3无法标记消息已读、移动消息等。相比IMAP协议，POP3消耗的电量和数流量都更多。因此，尽可能考虑使用 IMAP 协议。</string>
     <string name="title_activesync_support">不支持ActiveSync</string>
     <string name="title_oauth_support">不支持OAuth</string>
     <string name="title_review">查看</string>
+    <string name="title_advanced_browse">浏览服务器上的消息</string>
+    <string name="title_advanced_expand_read">将展开的消息标记为已读</string>
     <string name="title_synchronize_now">现在同步</string>
     <string name="title_synchronize_all">同步所有消息</string>
     <string name="title_synchronize_enabled">同步</string>
@@ -557,6 +562,7 @@
     <string name="title_answer_template_email">$email$ 将被发件人的邮件地址取代</string>
     <string name="title_rule_seen">标记为已读</string>
     <string name="title_rule_unseen">标记为未读</string>
+    <string name="title_rule_ignore">禁止通知</string>
     <string name="title_rule_snooze">延后</string>
     <string name="title_rule_flag">添加星标</string>
     <string name="title_rule_move">移动</string>
@@ -722,6 +728,8 @@
     <string name="title_now">现在</string>
     <string name="title_after">%1$s之后</string>
     <string name="title_reset">重置</string>
+    <string name="title_minutes">分钟</string>
+    <string name="title_dismiss">忽略</string>
     <string name="title_icalendar_accept">接受</string>
     <string name="title_icalendar_decline">拒绝</string>
     <string name="title_icalendar_maybe">待定</string>

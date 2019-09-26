@@ -84,10 +84,9 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public class ServiceSynchronize extends ServiceBase {
     private ConnectionHelper.NetworkState networkState = new ConnectionHelper.NetworkState();
-    private Core.State state;
+    private Core.State state = null;
     private int lastStartId = -1;
     private boolean started = false;
-    private boolean stopped = false;
     private int queued = 0;
     private long lastLost = 0;
     private TupleAccountStats lastStats = new TupleAccountStats();
@@ -104,6 +103,7 @@ public class ServiceSynchronize extends ServiceBase {
     private static final int BACKOFF_ERROR_AFTER = 16; // seconds
     private static final long ONESHOT_DURATION = 90 * 1000L; // milliseconds
     private static final long STOP_DELAY = 5000L; // milliseconds
+    private static final long CHECK_ALIVE_INTERVAL = 19 * 60 * 1000L; // milliseconds
 
     static final int PI_ALARM = 1;
     static final int PI_ONESHOT = 2;
@@ -147,9 +147,9 @@ public class ServiceSynchronize extends ServiceBase {
             }
         });
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        db.message().liveUnseen().observe(this, new Observer<TupleMessageStats>() {
+        db.message().liveUnseenWidget().observe(this, new Observer<TupleMessageStats>() {
             private Integer lastUnseen = null;
 
             @Override
@@ -281,15 +281,17 @@ public class ServiceSynchronize extends ServiceBase {
     public void onDestroy() {
         EntityLog.log(this, "Service destroy");
 
-        if (!stopped)
-            Log.e("Service destroy without stop");
-
         unregisterReceiver(onScreenOff);
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(onNetworkCallback);
 
         setUnseen(null);
+
+        if (state != null && state.isRunning()) {
+            Log.e("Destroy while monitor running ignoring=" + Helper.isIgnoringOptimizations(this));
+            state.stop();
+        }
 
         try {
             stopForeground(true);
@@ -327,7 +329,6 @@ public class ServiceSynchronize extends ServiceBase {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         lastStartId = startId;
-        stopped = false;
         String action = (intent == null ? null : intent.getAction());
         Log.i("Service command intent=" + intent + " action=" + action);
         Log.logExtras(intent);
@@ -545,10 +546,8 @@ public class ServiceSynchronize extends ServiceBase {
                                 Thread.sleep(STOP_DELAY);
                             } catch (InterruptedException ignored) {
                             }
-                            if (queued == 0 && !isEnabled()) {
-                                stopped = true;
+                            if (queued == 0 && !isEnabled())
                                 stopService(lastStartId);
-                            }
                         }
 
                         wl.release();
@@ -569,6 +568,13 @@ public class ServiceSynchronize extends ServiceBase {
 
     private void start(final boolean sync) {
         EntityLog.log(this, "Main start");
+
+        final Thread main = Thread.currentThread();
+
+        if (state != null && state.isRunning()) {
+            Log.e("Monitor running ignoring=" + Helper.isIgnoringOptimizations(this));
+            state.stop();
+        }
 
         state = new Core.State(networkState);
         state.runnable(new Runnable() {
@@ -624,7 +630,12 @@ public class ServiceSynchronize extends ServiceBase {
 
                     try {
                         wl.release();
-                        state.acquire();
+                        while (!state.acquire(CHECK_ALIVE_INTERVAL)) {
+                            if (!main.isAlive()) {
+                                Log.e("Main thread died");
+                                state.stop();
+                            }
+                        }
                     } catch (InterruptedException ex) {
                         Log.w("main wait " + ex.toString());
                     } finally {
@@ -701,6 +712,8 @@ public class ServiceSynchronize extends ServiceBase {
                 final MailService iservice = new MailService(
                         this, account.getProtocol(), account.realm, account.insecure, debug);
                 iservice.setPartialFetch(account.partial_fetch);
+                if (account.pop)
+                    iservice.setLeaveOnServer(account.browse);
 
                 final Map<EntityFolder, IMAPFolder> mapFolders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
@@ -1170,8 +1183,7 @@ public class ServiceSynchronize extends ServiceBase {
                         try {
                             unregisterReceiver(alarm);
                         } catch (IllegalArgumentException ex) {
-                            Log.w(account.name, new IllegalStateException("Killed", ex));
-                            reload(ServiceSynchronize.this, "killed");
+                            Log.e(ex);
                         }
                     }
 
@@ -1270,8 +1282,7 @@ public class ServiceSynchronize extends ServiceBase {
                                 try {
                                     unregisterReceiver(alarm);
                                 } catch (IllegalArgumentException ex) {
-                                    Log.w(account.name, new IllegalStateException("Killed", ex));
-                                    reload(ServiceSynchronize.this, "killed");
+                                    Log.e(ex);
                                 }
                             }
                         }

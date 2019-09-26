@@ -19,6 +19,8 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -29,6 +31,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
+
+import javax.mail.Address;
+import javax.mail.internet.InternetAddress;
 
 import static androidx.room.ForeignKey.CASCADE;
 
@@ -79,6 +85,7 @@ public class EntityIdentity {
     public Boolean primary;
     @NonNull
     public Boolean sender_extra = false;
+    public String sender_extra_regex;
     public String replyto;
     public String bcc;
     @NonNull
@@ -90,7 +97,7 @@ public class EntityIdentity {
     @NonNull
     public Boolean read_receipt = false;
     @NonNull
-    public Boolean store_sent = false;
+    public Boolean store_sent = false; // obsolete
     public Long sent_folder = null; // obsolete
     public Long sign_key = null; // OpenPGP
     public Boolean tbd;
@@ -100,6 +107,45 @@ public class EntityIdentity {
 
     String getProtocol() {
         return (starttls ? "smtp" : "smtps");
+    }
+
+    boolean sameAddress(Address address) {
+        String other = ((InternetAddress) address).getAddress();
+        if (other == null)
+            return false;
+
+        return other.equalsIgnoreCase(email);
+    }
+
+    boolean similarAddress(Address address) {
+        String other = ((InternetAddress) address).getAddress();
+        if (other == null)
+            return false;
+
+        if (!other.contains("@") || !email.contains("@"))
+            return false;
+
+        String[] cother = other.split("@");
+        String[] cemail = email.split("@");
+
+        if (cother.length != 2 || cemail.length != 2)
+            return false;
+
+        // Domain
+        if (!cother[1].equalsIgnoreCase(cemail[1]))
+            return false;
+
+        // User
+        if (TextUtils.isEmpty(sender_extra_regex)) {
+            String user = (cother[0].contains("+") ? cother[0].split("\\+")[0] : cother[0]);
+            if (user.equalsIgnoreCase(cemail[0]))
+                return true;
+        } else {
+            if (Pattern.matches(sender_extra_regex, cother[0]))
+                return true;
+        }
+
+        return false;
     }
 
     public JSONObject toJSON() throws JSONException {
@@ -126,16 +172,22 @@ public class EntityIdentity {
         json.put("synchronize", synchronize);
         json.put("primary", primary);
         json.put("sender_extra", sender_extra);
+        json.put("sender_extra_regex", sender_extra_regex);
 
         json.put("replyto", replyto);
         json.put("bcc", bcc);
 
+        // not plain_only
         json.put("encrypt", encrypt);
         json.put("delivery_receipt", delivery_receipt);
         json.put("read_receipt", read_receipt);
-        json.put("store_sent", store_sent);
+        // not store_sent
+        // not sent_folder
+        // not sign_key
+        // not tbd
         // not state
         // not error
+        // not last_connected
         return json;
     }
 
@@ -167,6 +219,8 @@ public class EntityIdentity {
         identity.primary = json.getBoolean("primary");
         if (json.has("sender_extra"))
             identity.sender_extra = json.getBoolean("sender_extra");
+        if (json.has("sender_extra_regex"))
+            identity.sender_extra_regex = json.getString("sender_extra_regex");
 
         if (json.has("replyto") && !json.isNull("replyto"))
             identity.replyto = json.getString("replyto");
@@ -179,9 +233,6 @@ public class EntityIdentity {
             identity.delivery_receipt = json.getBoolean("delivery_receipt");
         if (json.has("read_receipt"))
             identity.read_receipt = json.getBoolean("read_receipt");
-
-        if (json.has("store_sent"))
-            identity.store_sent = json.getBoolean("store_sent");
 
         return identity;
     }
@@ -208,12 +259,12 @@ public class EntityIdentity {
                     this.synchronize.equals(other.synchronize) &&
                     this.primary.equals(other.primary) &&
                     this.sender_extra.equals(sender_extra) &&
+                    Objects.equals(this.sender_extra_regex, other.sender_extra_regex) &&
                     Objects.equals(this.replyto, other.replyto) &&
                     Objects.equals(this.bcc, other.bcc) &&
                     this.encrypt.equals(other.encrypt) &&
                     this.delivery_receipt.equals(other.delivery_receipt) &&
                     this.read_receipt.equals(other.read_receipt) &&
-                    this.store_sent.equals(other.store_sent) &&
                     Objects.equals(this.tbd, other.tbd) &&
                     Objects.equals(this.state, other.state) &&
                     Objects.equals(this.error, other.error) &&

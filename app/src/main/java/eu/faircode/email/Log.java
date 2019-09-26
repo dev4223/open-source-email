@@ -47,6 +47,7 @@ import com.bugsnag.android.BeforeNotify;
 import com.bugsnag.android.BeforeSend;
 import com.bugsnag.android.BreadcrumbType;
 import com.bugsnag.android.Bugsnag;
+import com.bugsnag.android.Callback;
 import com.bugsnag.android.Client;
 import com.bugsnag.android.Error;
 import com.bugsnag.android.Report;
@@ -70,6 +71,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +107,16 @@ public class Log {
     }
 
     public static int e(String msg) {
+        if (BuildConfig.BETA_RELEASE) {
+            List<StackTraceElement> ss = new ArrayList<>(Arrays.asList(new Throwable().getStackTrace()));
+            ss.remove(0);
+            Bugsnag.notify("Internal error", msg, ss.toArray(new StackTraceElement[0]), new Callback() {
+                @Override
+                public void beforeNotify(@NonNull Report report) {
+                    report.getError().setSeverity(Severity.ERROR);
+                }
+            });
+        }
         return android.util.Log.e(TAG, msg);
     }
 
@@ -281,6 +293,7 @@ public class Log {
             public boolean run(@NonNull Error error) {
                 error.addToTab("extra", "installer", installer == null ? "-" : installer);
                 error.addToTab("extra", "fingerprint", fingerprint);
+                error.addToTab("extra", "thread", Thread.currentThread().getId());
                 error.addToTab("extra", "free", Log.getFreeMemMb());
 
                 String theme = prefs.getString("theme", "light");
@@ -394,7 +407,8 @@ public class Log {
         if (ex.getMessage() != null &&
                 (ex.getMessage().startsWith("Bad notification posted") ||
                         ex.getMessage().contains("ActivityRecord not found") ||
-                        ex.getMessage().startsWith("Unable to create layer")))
+                        ex.getMessage().startsWith("Unable to create layer") ||
+                        ex.getMessage().startsWith("Context.startForegroundService")))
             return false;
 
         if (ex instanceof TimeoutException &&
@@ -439,10 +453,7 @@ public class Log {
             sb.append(ex.toString()).append("\n").append(android.util.Log.getStackTraceString(ex));
         if (log != null)
             sb.append(log);
-        String body = "<div>" +
-                TextUtils.htmlEncode(sb.toString())
-                        .replaceAll("\\r?\\n", "<br>") +
-                "</div>";
+        String body = "<pre>" + TextUtils.htmlEncode(sb.toString()) + "</pre>";
 
         EntityMessage draft;
 
@@ -450,24 +461,17 @@ public class Log {
         try {
             db.beginTransaction();
 
-            EntityFolder drafts = db.folder().getPrimaryDrafts();
-            if (drafts == null)
-                throw new IllegalArgumentException(context.getString(R.string.title_no_primary_drafts));
+            List<TupleIdentityEx> identities = db.identity().getComposableIdentities(null);
+            if (identities == null || identities.size() == 0)
+                throw new IllegalArgumentException(context.getString(R.string.title_no_identities));
 
-            List<EntityIdentity> identities = db.identity().getIdentities(drafts.account);
-            EntityIdentity primary = null;
-            for (EntityIdentity identity : identities) {
-                if (identity.primary) {
-                    primary = identity;
-                    break;
-                } else if (primary == null)
-                    primary = identity;
-            }
+            EntityIdentity identity = identities.get(0);
+            EntityFolder drafts = db.folder().getFolderByType(identity.account, EntityFolder.DRAFTS);
 
             draft = new EntityMessage();
             draft.account = drafts.account;
             draft.folder = drafts.id;
-            draft.identity = (primary == null ? null : primary.id);
+            draft.identity = identity.id;
             draft.msgid = EntityMessage.generateMessageId();
             draft.thread = draft.msgid;
             draft.to = new Address[]{myAddress()};

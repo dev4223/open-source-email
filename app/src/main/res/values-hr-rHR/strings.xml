@@ -119,6 +119,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_setup_wizard">Asistent</string>
     <string name="title_setup_other">Drugi davatelj usluga</string>
     <string name="title_setup_gmail_rationale">Molimo dajte dopuštenje za izbor računa i čitanje vašeg imena</string>
+    <string name="title_setup_select_account">Odaberi račun</string>
     <string name="title_setup_instructions">Upute za postavljanje</string>
     <string name="title_setup_no_settings">Nije pronađena nijedna postavka za domenu \'%1$s\'</string>
     <string name="title_setup_quick_success">Račun i identitet uspješno su dodani</string>
@@ -207,7 +208,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_roaming">Download messages and attachments while roaming</string>
     <string name="title_advanced_rlah">Roaming kao kod kuće</string>
     <string name="title_advanced_manage_connectivity">Upravljanje povezivanjem</string>
-    <string name="title_advanced_browse">Browse messages on the server</string>
     <string name="title_advanced_startup">Prikaži na početnom zaslonu</string>
     <string name="title_advanced_cards">Prikaži kartice</string>
     <string name="title_advanced_date_header">Grupiraj po datumu</string>
@@ -229,8 +229,8 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_attachments_alt">Prikažite privitke nakon teksta poruke</string>
     <string name="title_advanced_contrast">Koristi visoki kontrast za tekst poruke</string>
     <string name="title_advanced_monospaced">Upotrijebiti font u jednolikim razmjerima za tekst poruke</string>
-    <string name="title_advanced_images_inline">Automatski prikaz uključenih slika</string>
     <string name="title_advanced_collapse_quotes">Sažmi citirani tekst</string>
+    <string name="title_advanced_images_inline">Automatski prikaz uključenih slika</string>
     <string name="title_advanced_remote_content">Automatsko prikazivanje udaljenog sadržaja pri pregledavanju izvornih poruka</string>
     <string name="title_advanced_seekbar">Prikaži relativni položaj razgovora s točkom</string>
     <string name="title_advanced_actionbar">Prikaži traku s akcijama razgovora</string>
@@ -239,7 +239,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_swipenav">Prijeđite prstom ulijevo / udesno da biste prešli na sljedeći / prethodni razgovor</string>
     <string name="title_advanced_reversed">Obrnuti smjer navigacije</string>
     <string name="title_advanced_double_tap">Dvaput dodirnite da biste označili poruku pročitanu / nepročitanu</string>
-    <string name="title_advanced_expand_read">Označi poruke pročitanima pri širenju</string>
     <string name="title_advanced_autoexpand">Automatski proširite poruke</string>
     <string name="title_advanced_expand_one">Proširiti samo jednu poruku istodobno</string>
     <string name="title_advanced_collapse">Sažmi poruke u razgovorima na \"natrag\"</string>
@@ -281,7 +280,6 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_advanced_poll_hint">Periodično sinkroniziranje će svaki put usporediti lokalne i udaljene poruke, što je skupa operacija koja može rezultirati dodatnom potrošnjom baterije, pogotovo ako postoji puno poruka za sinkronizaciju. Uvijek sinkroniziranje će ovo izbjeći neprekidnim nadgledanjem isključivo promjena.</string>
     <string name="title_advanced_schedule_hint">Dodirnite vrijeme za postavljanje vremena</string>
     <string name="title_advanced_check_mx">Provjerite adrese pošiljatelja pri sinkronizaciji poruka</string>
-    <string name="title_advanced_unseen_hint">Neki pružatelji usluga to ne podržavaju ispravno, što može, na primjer, rezultirati sinkronizacijom svih poruka</string>
     <string name="title_advanced_sync_kept_hint">To će prenijeti dodatne podatke i potrošiti dodatnu snagu baterije, posebno ako je na uređaju spremljeno puno poruka</string>
     <string name="title_advanced_sync_folders_hint">Onemogućavanjem će se nešto smanjiti korištenje podataka i baterija, ali će se onemogućiti i ažuriranje popisa mapa</string>
     <string name="title_advanced_sync_delay_hint">Ovo će usporiti sinkronizaciju poruka</string>
@@ -365,9 +363,11 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_identity_delete">Želite li trajno izbrisati ovaj identitet?</string>
     <string name="title_edit_html">Uredi kao HTML</string>
     <string name="title_last_connected">Posljednje povezivanje: %1$s</string>
-    <string name="title_pop_support">POP3 protokol podržava samo preuzimanje i brisanje poruka. Dakle, neće biti moguće označiti poruke kao omiljene, premjestiti poruke itd. POP3 će trošiti više snage baterije od IMAP-a. Stoga razmislite o uporabi IMAP protokola kad god je to moguće.</string>
     <string name="title_activesync_support">ActiveSync nije podržan</string>
     <string name="title_oauth_support">OAuth nije podržan</string>
+    <string name="title_review">Recenzija</string>
+    <string name="title_advanced_browse">Browse messages on the server</string>
+    <string name="title_advanced_expand_read">Označi poruke pročitanima pri širenju</string>
     <string name="title_synchronize_now">Sinkroniziraj sada</string>
     <string name="title_synchronize_all">Sinkroniziraj sve poruke</string>
     <string name="title_synchronize_enabled">Sinkroniziraj</string>
@@ -577,6 +577,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_answer_template_email">$email$ bit će zamijenjen adresom pošiljatelja e-pošte</string>
     <string name="title_rule_seen">Označi pročitano</string>
     <string name="title_rule_unseen">Označi nepročitano</string>
+    <string name="title_rule_ignore">Potisni obavijest</string>
     <string name="title_rule_snooze">Utišaj</string>
     <string name="title_rule_flag">Dodaj zvjezdicu</string>
     <string name="title_rule_move">Premjesti</string>
@@ -590,6 +591,7 @@ Ako je potrebno, računi i identiteti (aliasi) mogu se postaviti i ručno.    </
     <string name="title_rule_enabled">Omogućeno</string>
     <string name="title_rule_stop">Zaustavite pravila obrade nakon izvršavanja ovog pravila</string>
     <string name="title_rule_sender">Pošiljatelj sadrži</string>
+    <string name="title_rule_sender_known">Pošiljatelj je kontakt</string>
     <string name="title_rule_recipient">Primatelj sadrži</string>
     <string name="title_rule_subject">Predmet sadrži</string>
     <string name="title_rule_header">Zaglavlje sadrži</string>

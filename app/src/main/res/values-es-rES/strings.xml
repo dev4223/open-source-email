@@ -108,6 +108,7 @@
     <string name="title_setup_go">Comenzar</string>
     <string name="title_setup_wizard">Asistente</string>
     <string name="title_setup_other">Otro proveedor</string>
+    <string name="title_setup_gmail_support">La autorización de cuentas de Google sólo funcionará en versiones oficiales ya que Android comprueba la firma de la aplicación</string>
     <string name="title_setup_gmail_rationale">Por favor, conceda permisos para seleccionar una cuenta y leer su nombre</string>
     <string name="title_setup_select_account">Seleccionar cuenta</string>
     <string name="title_setup_instructions">Instrucciones de configuración</string>
@@ -198,7 +199,6 @@
     <string name="title_advanced_roaming">Descargar mensajes y adjuntos en itinerancia</string>
     <string name="title_advanced_rlah">Itinerancia como en casa</string>
     <string name="title_advanced_manage_connectivity">Administrar conectividad</string>
-    <string name="title_advanced_browse">Explorar mensajes en el servidor</string>
     <string name="title_advanced_startup">Mostrar en pantalla de inicio</string>
     <string name="title_advanced_cards">Mostrar tarjetas</string>
     <string name="title_advanced_date_header">Agrupar por fecha</string>
@@ -220,8 +220,9 @@
     <string name="title_advanced_attachments_alt">Mostrar adjuntos después del texto del mensaje</string>
     <string name="title_advanced_contrast">Utilizar contraste alto para el texto del mensaje</string>
     <string name="title_advanced_monospaced">Usar fuente monoespaciada para texto de mensaje</string>
-    <string name="title_advanced_images_inline">Mostrar imágenes embebidas automáticamente</string>
+    <string name="title_advanced_text_color">Mostrar colores de texto</string>
     <string name="title_advanced_collapse_quotes">Colapsar texto citado</string>
+    <string name="title_advanced_images_inline">Mostrar imágenes embebidas automáticamente</string>
     <string name="title_advanced_remote_content">Mostrar contenido remoto automáticamente al visualizar mensajes originales</string>
     <string name="title_advanced_seekbar">Mostrar posición relativa de conversación con un punto</string>
     <string name="title_advanced_actionbar">Mostrar barra de acción de conversación</string>
@@ -230,7 +231,6 @@
     <string name="title_advanced_swipenav">Deslice a la izquierda/derecha para ir a la siguiente/anterior conversación</string>
     <string name="title_advanced_reversed">Invertir la dirección de navegación</string>
     <string name="title_advanced_double_tap">Doble toque para marcar mensaje leído/no leído</string>
-    <string name="title_advanced_expand_read">Marcar mensajes leídos al expandir</string>
     <string name="title_advanced_autoexpand">Expandir mensajes automáticamente</string>
     <string name="title_advanced_expand_one">Expandir sólo un mensaje a la vez</string>
     <string name="title_advanced_collapse">Contraer mensajes en conversaciones al ir \'atrás\'</string>
@@ -250,6 +250,7 @@
     <string name="title_advanced_notify_action_reply_direct">Responder</string>
     <string name="title_advanced_notify_action_flag">Destacar</string>
     <string name="title_advanced_notify_action_seen">Leer</string>
+    <string name="title_advanced_notify_action_snooze">Posponer</string>
     <string name="title_advanced_notify_remove">Eliminar notificación de nuevos mensajes al pulsar en la notificación</string>
     <string name="title_advanced_biometrics_notify">Mostrar contenido de notificación al usar autenticación biométrica</string>
     <string name="title_advanced_light">Usar luz de notificación</string>
@@ -272,7 +273,7 @@
     <string name="title_advanced_poll_hint">Sincronizar periódicamente comparará mensajes locales y remotos cada vez, lo que es una operación costosa posiblemente resultante en un uso extra de la batería, especialmente cuando hay muchos mensajes para sincronizar. Siempre sincronizar evitará esto mediante un seguimiento continuo de los cambios solamente.</string>
     <string name="title_advanced_schedule_hint">Toque en una hora para establecer una hora</string>
     <string name="title_advanced_check_mx">Compruebe las direcciones de correo electrónico de remitentes al sincronizar mensajes</string>
-    <string name="title_advanced_unseen_hint">Algunos proveedores no soportan esto correctamente, lo que puede resultar, por ejemplo, en que todos los mensajes se sincronicen</string>
+    <string name="title_advanced_unseen_hint">Algunos proveedores no soportan esto correctamente, lo que puede causar la sincronización de ninguno o todos los mensajes</string>
     <string name="title_advanced_sync_kept_hint">Esto transferirá datos adicionales y consumirá energía adicional de batería, especialmente si hay muchos mensajes almacenados en el dispositivo</string>
     <string name="title_advanced_sync_folders_hint">Desactivar esto reducirá el uso de datos y batería, pero también desactivará la actualización de la lista de carpetas</string>
     <string name="title_advanced_sync_delay_hint">Esto ralentizará la sincronización de mensajes</string>
@@ -303,6 +304,7 @@
     <string name="title_identity_email">Su dirección de correo electrónico</string>
     <string name="title_identity_color_hint">Los colores de identidad tienen prioridad sobre los colores de cuenta</string>
     <string name="title_advanced_sender">Permitir editar dirección del remitente</string>
+    <string name="title_advanced_sender_regex">Expresión regular que coincida con las direcciones editadas</string>
     <string name="title_identity_reply_to">Responder a la dirección</string>
     <string name="title_identity_encrypt">Encriptar por defecto</string>
     <string name="title_identity_use_ip_hint">En caso de \'saludo inválido\', \'requiere dirección válida\' o un error similar, intente cambiar esta configuración</string>
@@ -334,6 +336,7 @@
     <string name="title_use_ip">Usar dirección IP local en lugar de nombre de dominio</string>
     <string name="title_primary_account">Primaria (cuenta predeterminada)</string>
     <string name="title_primary_identity">Primaria (identidad predeterminada)</string>
+    <string name="title_leave_on_server">Dejar mensajes en el servidor</string>
     <string name="title_keep_alive_interval">Intervalo de comprobación (minutos)</string>
     <string name="title_check">Verificar</string>
     <string name="title_no_name">Falta nombre</string>
@@ -356,10 +359,12 @@
     <string name="title_identity_delete">¿Eliminar esta identidad permanentemente?</string>
     <string name="title_edit_html">Editar como HTML</string>
     <string name="title_last_connected">Última conexión: %1$s</string>
-    <string name="title_pop_support">El protocolo POP3 sólo permite descargar y eliminar mensajes. Por lo tanto, no será posible marcar mensajes como favoritos, mover mensajes, etc. POP3 utilizará más batería que IMAP. Por lo tanto, considere usar el protocolo IMAP siempre que sea posible.</string>
+    <string name="title_pop_support">El protocolo POP3 soporta descargar y eliminar mensajes de la bandeja de entrada únicamente. POP3 no puede marcar mensajes como leídos, mover mensajes, etc. POP3 utilizará más batería y datos que IMAP. Por lo tanto considera utilizar el protocolo IMAP cuando sea posible.</string>
     <string name="title_activesync_support">ActiveSync no es compatible</string>
     <string name="title_oauth_support">OAuth no está soportado</string>
     <string name="title_review">Revisar</string>
+    <string name="title_advanced_browse">Explorar mensajes en el servidor</string>
+    <string name="title_advanced_expand_read">Marcar mensajes leídos al expandir</string>
     <string name="title_synchronize_now">Sincronizar ahora</string>
     <string name="title_synchronize_all">Sincronizar todos los mensajes</string>
     <string name="title_synchronize_enabled">Sincronizar</string>
@@ -497,6 +502,7 @@
     <string name="title_discard">Descartar</string>
     <string name="title_save">Guardar</string>
     <string name="title_send">Enviar</string>
+    <string name="title_send_via">Enviar vía</string>
     <string name="title_send_with_options">Enviar &#8230;</string>
     <string name="title_send_at">Enviar a &#8230;</string>
     <string name="title_no_server">No se encontró ningún servidor en \'%1$s\'</string>
@@ -569,6 +575,7 @@
     <string name="title_answer_template_email">$email$ será reemplazado por la dirección de correo electrónico del remitente</string>
     <string name="title_rule_seen">Marcar como leído</string>
     <string name="title_rule_unseen">Marcar como no leído</string>
+    <string name="title_rule_ignore">Suprimir notificación</string>
     <string name="title_rule_snooze">Posponer</string>
     <string name="title_rule_flag">Destacar</string>
     <string name="title_rule_move">Mover</string>
@@ -582,6 +589,7 @@
     <string name="title_rule_enabled">Activada</string>
     <string name="title_rule_stop">Detener procesamiento de reglas después de ejecutar esta regla</string>
     <string name="title_rule_sender">Remitente contiene</string>
+    <string name="title_rule_sender_known">El remitente es un contacto</string>
     <string name="title_rule_recipient">El destinatario contiene</string>
     <string name="title_rule_subject">Asunto contiene</string>
     <string name="title_rule_header">Encabezado contiene</string>
@@ -733,6 +741,8 @@
     <string name="title_now">Ahora</string>
     <string name="title_after">Después de %1$s</string>
     <string name="title_reset">Restablecer</string>
+    <string name="title_minutes">Minutos</string>
+    <string name="title_dismiss">Descartar</string>
     <string name="title_icalendar_accept">Aceptar</string>
     <string name="title_icalendar_decline">Rechazar</string>
     <string name="title_icalendar_maybe">Tal vez</string>

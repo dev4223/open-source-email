@@ -33,11 +33,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 class Identicon {
+    private static final float MIN_LUMINANCE = 0.33f;
+
     static Bitmap icon(@NonNull String email, int size, int pixels, boolean dark) {
         byte[] hash = getHash(email);
 
         int color = Color.argb(255, hash[0], hash[1], hash[2]);
-        color = ColorUtils.blendARGB(color, dark ? Color.WHITE : Color.BLACK, 0.2f);
+        color = ColorUtils.blendARGB(color,
+                dark ? Color.WHITE : Color.BLACK, MIN_LUMINANCE);
 
         Paint paint = new Paint();
         paint.setColor(color);
@@ -76,16 +79,16 @@ class Identicon {
         byte[] hash = getHash(email);
 
         int color = Color.argb(255, hash[0], hash[1], hash[2]);
-        color = ColorUtils.blendARGB(color, dark ? Color.WHITE : Color.BLACK, 0.3f);
+        color = ColorUtils.blendARGB(color, dark ? Color.WHITE : Color.BLACK, MIN_LUMINANCE);
 
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(color);
 
-        float y = (299 * Color.red(color) + 587 * Color.green(color) + 114 * Color.blue(color)) / 1000f;
+        double lum = ColorUtils.calculateLuminance(color);
 
         Paint paint = new Paint();
-        paint.setColor(y < 128 ? Color.WHITE : Color.BLACK);
+        paint.setColor(lum < 0.5 ? Color.WHITE : Color.BLACK);
         paint.setTextSize(size / 2f);
         paint.setTypeface(Typeface.DEFAULT_BOLD);
 

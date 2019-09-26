@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.MailTo;
 import android.net.Uri;
+import android.text.Html;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
@@ -49,6 +50,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -592,6 +594,8 @@ public class MessageHelper {
             if (list != null && list.startsWith("NO"))
                 return null;
 
+            String link = null;
+            String mailto = null;
             for (String entry : list.split(",")) {
                 entry = entry.trim();
                 int lt = entry.indexOf("<");
@@ -600,11 +604,17 @@ public class MessageHelper {
                     String unsubscribe = entry.substring(lt + 1, gt);
                     Uri uri = Uri.parse(unsubscribe);
                     String scheme = uri.getScheme();
-                    if ("mailto".equals(scheme) ||
-                            "http".equals(scheme) || "https".equals(scheme))
-                        return unsubscribe;
+                    if (mailto == null && "mailto".equals(scheme))
+                        mailto = unsubscribe;
+                    if (link == null && ("http".equals(scheme) || "https".equals(scheme)))
+                        link = unsubscribe;
                 }
             }
+
+            if (link != null)
+                return link;
+            if (mailto != null)
+                return mailto;
 
             Log.w(new IllegalArgumentException("List-Unsubscribe: " + list));
             return null;
@@ -711,37 +721,6 @@ public class MessageHelper {
                 formatted.add(addresses[i].toString());
         }
         return TextUtils.join(", ", formatted);
-    }
-
-    static boolean sameAddress(Address address1, String email2) {
-        String email1 = ((InternetAddress) address1).getAddress();
-        if (email1 == null)
-            return false;
-
-        return email1.equalsIgnoreCase(email2);
-    }
-
-    static boolean similarAddress(Address address1, String email2) {
-        String email1 = ((InternetAddress) address1).getAddress();
-        if (email1 == null)
-            return false;
-
-        if (!email1.contains("@") || !email2.contains("@"))
-            return false;
-
-        String[] e1 = email1.split("@");
-        String[] e2 = email2.split("@");
-
-        if (e1.length != 2 || e2.length != 2)
-            return false;
-
-        // Domain
-        if (!e1[1].equalsIgnoreCase(e2[1]))
-            return false;
-
-        String user1 = (e1[0].contains("+") ? e1[0].split("\\+")[0] : e1[0]);
-
-        return user1.equalsIgnoreCase(e2[0]);
     }
 
     static String decodeMime(String text) {
@@ -903,15 +882,19 @@ public class MessageHelper {
                 if (charset != null) {
                     charset = charset.replace("\"", "");
                     if ("ASCII".equals(charset.toUpperCase()))
-                        charset = "us-ascii";
+                        charset = "US-ASCII";
                 }
 
                 if (TextUtils.isEmpty(charset) || "US-ASCII".equals(charset.toUpperCase())) {
                     // The first 127 characters are the same as in US-ASCII
                     result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
                 } else {
-                    if ("US-ASCII".equals(Charset.forName(charset).name()))
+                    // See UnknownCharsetProvider class
+                    if ("US-ASCII".equals(Charset.forName(charset).name())) {
+                        Log.w("Unsupported encoding charset=" + charset);
                         warnings.add(context.getString(R.string.title_no_charset, charset));
+                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
+                    }
                 }
             } catch (ParseException ex) {
                 Log.w(ex);
@@ -921,8 +904,59 @@ public class MessageHelper {
             // Prevent Jsoup throwing an exception
             result = result.replace("\0", "");
 
-            if (part.isMimeType("text/plain"))
-                result = "<pre>" + TextUtils.htmlEncode(result) + "</pre>";
+            if (part.isMimeType("text/plain")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("<span>");
+
+                int level = 0;
+                String[] lines = result.split("\\r?\\n");
+                for (String line : lines) {
+                    // Opening quotes
+                    int tlevel = 0;
+                    while (line.startsWith(">")) {
+                        tlevel++;
+                        if (tlevel > level)
+                            sb.append("<blockquote>");
+
+                        line = line.substring(1); // >
+
+                        if (line.startsWith(" "))
+                            line = line.substring(1);
+                    }
+
+                    // Closing quotes
+                    for (int i = 0; i < level - tlevel; i++)
+                        sb.append("</blockquote>");
+                    level = tlevel;
+
+                    // Show as-is
+                    line = Html.escapeHtml(line);
+
+                    // Non breaking spaces
+                    boolean start = true;
+                    int len = line.length();
+                    for (int j = 0; j < len; j++) {
+                        char kar = line.charAt(j);
+                        if (kar == ' ' &&
+                                (start || j + 1 < len && line.charAt(j + 1) == ' '))
+                            sb.append("&nbsp;");
+                        else {
+                            start = false;
+                            sb.append(kar);
+                        }
+                    }
+
+                    sb.append("<br>");
+                }
+
+                // Closing quotes
+                for (int i = 0; i < level; i++)
+                    sb.append("</blockquote>");
+
+                sb.append("</span>");
+
+                result = sb.toString();
+            }
 
             return result;
         }
@@ -1072,31 +1106,13 @@ public class MessageHelper {
         EntityAttachment attachment;
     }
 
-    MessageParts getMessageParts() throws IOException, FolderClosedException {
+    MessageParts getMessageParts() throws IOException, MessagingException {
         MessageParts parts = new MessageParts();
-
-        MimeMessage cmessage = imessage;
-        try {
-            // Load body structure
-            cmessage.getContentID();
-        } catch (MessagingException ex) {
-            // https://javaee.github.io/javamail/FAQ#imapserverbug
-            if ("Unable to load BODYSTRUCTURE".equals(ex.getMessage())) {
-                Log.w(ex);
-                parts.warnings.add(Helper.formatThrowable(ex, false));
-                try {
-                    cmessage = new MimeMessage(imessage);
-                } catch (MessagingException ignored) {
-                }
-            }
-        }
-
-        getMessageParts(cmessage, parts, false);
-
+        getMessageParts(imessage, parts, false);
         return parts;
     }
 
-    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException, FolderClosedException {
+    private void getMessageParts(Part part, MessageParts parts, boolean pgp) throws IOException, MessagingException {
         try {
             if (BuildConfig.DEBUG)
                 Log.i("Part class=" + part.getClass() + " type=" + part.getContentType());
@@ -1118,7 +1134,7 @@ public class MessageHelper {
 
                         try {
                             ContentType ct = new ContentType(cpart.getContentType());
-                            if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase())) {
+                            if ("application/pgp-encrypted".equals(ct.getBaseType().toLowerCase(Locale.ROOT))) {
                                 pgp = true;
                                 continue;
                             }
@@ -1139,7 +1155,7 @@ public class MessageHelper {
                 try {
                     disposition = part.getDisposition();
                     if (disposition != null)
-                        disposition = disposition.toLowerCase();
+                        disposition = disposition.toLowerCase(Locale.ROOT);
                 } catch (MessagingException ex) {
                     Log.w(ex);
                     parts.warnings.add(Helper.formatThrowable(ex, false));
@@ -1195,7 +1211,7 @@ public class MessageHelper {
 
                     apart.attachment = new EntityAttachment();
                     apart.attachment.name = apart.filename;
-                    apart.attachment.type = ct.getBaseType().toLowerCase();
+                    apart.attachment.type = ct.getBaseType().toLowerCase(Locale.ROOT);
                     apart.attachment.disposition = apart.disposition;
                     apart.attachment.size = (long) apart.part.getSize();
                     apart.attachment.cid = (cid == null || cid.length == 0 ? null : MimeUtility.unfold(cid[0]));
@@ -1209,9 +1225,10 @@ public class MessageHelper {
                     if (!apart.pgp) {
                         String extension = Helper.getExtension(apart.attachment.name);
                         if (extension != null &&
-                                ("pdf".equals(extension.toLowerCase()) ||
+                                ("pdf".equals(extension.toLowerCase(Locale.ROOT)) ||
                                         "application/octet-stream".equals(apart.attachment.type))) {
-                            String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+                            String type = MimeTypeMap.getSingleton()
+                                    .getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
                             if (type != null) {
                                 if (!type.equals(apart.attachment.type))
                                     Log.w("Guessing file=" + apart.attachment.name + " type=" + type);
@@ -1237,9 +1254,41 @@ public class MessageHelper {
         } catch (FolderClosedException ex) {
             throw ex;
         } catch (MessagingException ex) {
+            if (retryRaw(ex))
+                throw ex;
             Log.w(ex);
             parts.warnings.add(Helper.formatThrowable(ex, false));
         }
+    }
+
+    static boolean retryRaw(MessagingException ex) {
+        return ("Failed to load IMAP envelope".equals(ex.getMessage()) ||
+                "Unable to load BODYSTRUCTURE".equals(ex.getMessage()));
+    }
+
+    static String sanitizeKeyword(String keyword) {
+        // https://tools.ietf.org/html/rfc3501
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < keyword.length(); i++) {
+            // flag-keyword    = atom
+            // atom            = 1*ATOM-CHAR
+            // ATOM-CHAR       = <any CHAR except atom-specials>
+            char kar = keyword.charAt(i);
+            // atom-specials   = "(" / ")" / "{" / SP / CTL / list-wildcards / quoted-specials / resp-specials
+            if (kar == '(' || kar == ')' || kar == '{' || kar == ' ' || Character.isISOControl(kar))
+                continue;
+            // list-wildcards  = "%" / "*"
+            if (kar == '%' || kar == '*')
+                continue;
+            // quoted-specials = DQUOTE / "\"
+            if (kar == '"' || kar == '\\')
+                continue;
+            // resp-specials   = "]"
+            if (kar == ']')
+                continue;
+            sb.append(kar);
+        }
+        return sb.toString();
     }
 
     static boolean equal(Address[] a1, Address[] a2) {

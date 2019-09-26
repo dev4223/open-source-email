@@ -120,6 +120,7 @@
     <string name="title_setup_wizard">Asistent</string>
     <string name="title_setup_other">Alt furnizor</string>
     <string name="title_setup_gmail_rationale">Vă rugăm să acordați permisiunea de a selecta un cont și a vă citi numele</string>
+    <string name="title_setup_select_account">Selectare cont</string>
     <string name="title_setup_instructions">Instrucțiuni de configurare</string>
     <string name="title_setup_no_settings">Nu s-au găsit setări pentru domeniul \'%1$s\'</string>
     <string name="title_setup_quick_success">Un cont şi o identitate au fost adăugate cu succes</string>
@@ -208,7 +209,6 @@
     <string name="title_advanced_roaming">Descărcarea mesajelor și a atașamentelor prin conexiuni roaming</string>
     <string name="title_advanced_rlah">Consideră roamingul ca național</string>
     <string name="title_advanced_manage_connectivity">Gestionare conexiuni</string>
-    <string name="title_advanced_browse">Răsfoiește mesajele de pe server</string>
     <string name="title_advanced_startup">Arată pe ecranul de start</string>
     <string name="title_advanced_cards">Arată carduri</string>
     <string name="title_advanced_date_header">Grupare după dată</string>
@@ -230,8 +230,9 @@
     <string name="title_advanced_attachments_alt">Arată atașamentele după textul mesajului</string>
     <string name="title_advanced_contrast">Folosește contrast ridicat pentru text</string>
     <string name="title_advanced_monospaced">Folosește fontul proporțional pentru textul mesajului</string>
-    <string name="title_advanced_images_inline">Arată automat imaginile integrate</string>
+    <string name="title_advanced_text_color">Arată culori text</string>
     <string name="title_advanced_collapse_quotes">Restrânge textul citat</string>
+    <string name="title_advanced_images_inline">Arată automat imaginile integrate</string>
     <string name="title_advanced_remote_content">Arată automat conținutul găzduit pe servere la vizualizarea mesajului original</string>
     <string name="title_advanced_seekbar">Arată poziția relativă în conversație cu un punct</string>
     <string name="title_advanced_actionbar">Arată bara de acțiuni pentru conversație</string>
@@ -240,7 +241,6 @@
     <string name="title_advanced_swipenav">Glisați stânga/dreapta pentru a merge la conversația următoare/anterioară</string>
     <string name="title_advanced_reversed">Inversează direcția de navigare</string>
     <string name="title_advanced_double_tap">Atingeți de două ori pentru a marca mesajul ca ne/citit</string>
-    <string name="title_advanced_expand_read">Marchează mesajele ca citite la extindere</string>
     <string name="title_advanced_autoexpand">Extinde mesajele automat</string>
     <string name="title_advanced_expand_one">Extinde doar câte un mesaj odată</string>
     <string name="title_advanced_collapse">Pliază mesajele din discuție când se apasă \'înapoi\'</string>
@@ -260,6 +260,7 @@
     <string name="title_advanced_notify_action_reply_direct">Răspuns</string>
     <string name="title_advanced_notify_action_flag">Stea</string>
     <string name="title_advanced_notify_action_seen">Citit</string>
+    <string name="title_advanced_notify_action_snooze">Amână</string>
     <string name="title_advanced_notify_remove">Elimina notificarea de mesaj nou dacă se atinge</string>
     <string name="title_advanced_biometrics_notify">Arată conținutul notificării atunci când se utilizează autentificarea biometrică</string>
     <string name="title_advanced_light">Folosire LED de notificare</string>
@@ -282,7 +283,6 @@
     <string name="title_advanced_poll_hint">Sincronizarea periodică va compara mesajele locale cu cele de pe server de fiecare dată, aceasta este o operațiune costisitoare ce va rezulta într-un consum ridicat al bateriei, mai ales atunci când sunt multe mesaje de sincronizat. Modul de sincronizare permanent evită asta prin monitorizarea continuă a schimbărilor.</string>
     <string name="title_advanced_schedule_hint">Atingeţi data pentru a seta un timp</string>
     <string name="title_advanced_check_mx">Verifică adresa expeditorului la sincronizarea mesajelor</string>
-    <string name="title_advanced_unseen_hint">Unii furnizori nu suportă aceasta în mod corect, și asta, de exemplu, poate duce la sincronizarea tuturor mesajelor</string>
     <string name="title_advanced_sync_kept_hint">Această opțiune va consuma date și baterie în plus, mai ales dacă sunt multe mesaje păstrate pe dispozitiv</string>
     <string name="title_advanced_sync_folders_hint">Dezactivând aceasta se va reduce utilizarea datelor și a bateriei, dar se va dezactiva și actualizarea listei de dosare</string>
     <string name="title_advanced_sync_delay_hint">Această opțiune va încetini viteza de sincronizare a mesajelor</string>
@@ -313,6 +313,7 @@
     <string name="title_identity_email">Adresa dvs. de e-mail</string>
     <string name="title_identity_color_hint">Culorile de identitate au întâietate în fața culorilor contului</string>
     <string name="title_advanced_sender">Permite editarea adresei expeditorului</string>
+    <string name="title_advanced_sender_regex">Regex pentru găsirea adresei editate</string>
     <string name="title_identity_reply_to">Răspuns la adresa</string>
     <string name="title_identity_encrypt">Criptare în mod implicit</string>
     <string name="title_identity_use_ip_hint">În cazul în care apare erori de tipul \'invalid greeting\', \'requires valid address\' sau similare, încercați să schimbați această setare</string>
@@ -344,6 +345,7 @@
     <string name="title_use_ip">Folosește adresa IP în loc de numele gazdei</string>
     <string name="title_primary_account">Primară (identitatea implicită)</string>
     <string name="title_primary_identity">Primară (identitatea implicită)</string>
+    <string name="title_leave_on_server">Păstrează mesajele pe server</string>
     <string name="title_keep_alive_interval">Interval menținere conexiune/verificare periodică (minute)</string>
     <string name="title_check">Verificare</string>
     <string name="title_no_name">Lipsește numele</string>
@@ -366,8 +368,12 @@
     <string name="title_identity_delete">Ștergeți definitiv această identitate?</string>
     <string name="title_edit_html">Editează ca HTML</string>
     <string name="title_last_connected">Ultima conectare: %1$s</string>
+    <string name="title_pop_support">Protocolul POP3 acceptă descărcarea și ștergerea mesajelor numai din căsuța de mesaje primite. POP3 nu poate marca mesajele drept citite, nu poate muta mesajele etc. POP3 va consuma mai multă baterie și date decât IMAP. Deci, luați în considerare utilizarea protocolului IMAP ori de câte ori este posibil.</string>
     <string name="title_activesync_support">ActiveSync nu este suportat</string>
     <string name="title_oauth_support">OAuth nu este suportat</string>
+    <string name="title_review">Revizuire</string>
+    <string name="title_advanced_browse">Răsfoiește mesajele de pe server</string>
+    <string name="title_advanced_expand_read">Marchează mesajele ca citite la extindere</string>
     <string name="title_synchronize_now">Sincronizează acum</string>
     <string name="title_synchronize_all">Sincronizează toate mesajele</string>
     <string name="title_synchronize_enabled">Sincronizare</string>
@@ -577,6 +583,7 @@
     <string name="title_answer_template_email">$email$ va fi înlocuit cu adresa de e-mail a expeditorului</string>
     <string name="title_rule_seen">Marcare ca citit</string>
     <string name="title_rule_unseen">Marcare ca necitit</string>
+    <string name="title_rule_ignore">Suprimă notificare</string>
     <string name="title_rule_snooze">Amână</string>
     <string name="title_rule_flag">Adaugă stea</string>
     <string name="title_rule_move">Mută</string>
@@ -590,6 +597,7 @@
     <string name="title_rule_enabled">Activată</string>
     <string name="title_rule_stop">Oprește procesarea regulilor după ce se execută acesta</string>
     <string name="title_rule_sender">Expeditorul conține</string>
+    <string name="title_rule_sender_known">Expeditorul este un contact</string>
     <string name="title_rule_recipient">Destinatarul conține</string>
     <string name="title_rule_subject">Subiectul conține</string>
     <string name="title_rule_header">Antetul conține</string>
@@ -741,6 +749,7 @@
     <string name="title_now">Acum</string>
     <string name="title_after">După %1$s</string>
     <string name="title_reset">Resetare</string>
+    <string name="title_minutes">Minute</string>
     <string name="title_icalendar_accept">Acceptă</string>
     <string name="title_icalendar_decline">Refuză</string>
     <string name="title_icalendar_maybe">Poate</string>
@@ -749,6 +758,10 @@
     <string name="title_pro_list">Lista de caracteristici Pro</string>
     <string name="title_pro_purchase">Cumpără</string>
     <string name="title_pro_once">Doar o dată</string>
+    <string name="title_pro_info">        Dezvoltarea FairEmail a durat literalmente mii de ore și în ciuda acestui fapt majoritatea caracteristicilor se pot folosi gratuit.
+        Pentru a face FairEmail sustenabil pe termen lung, unele caracteristici avansate sau ce țin de comoditate nu se pot folosi gratuit.
+        FairEmail arată un mic mesaj care să vă reamintească de asta, care se poate ascunde dacă achiziționați caracteristicile Pro.
+    </string>
     <string name="title_pro_hint">Cumpărarea caracteristicilor Pro vă va permite să utilizați toate caracteristicile actuale cât și cele viitoare, și ajută la dezvoltarea acestei aplicații</string>
     <string name="title_pro_price">Vizitați <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">acestă pagină</a> pentru a afla despre prețurile caracteristicilor Pro</string>
     <string name="title_pro_pending">Achiziție în așteptare</string>
@@ -766,6 +779,8 @@
     <string name="title_search_special_unseen">necitit</string>
     <string name="title_search_special_flagged">stea</string>
     <string name="title_search_special_snoozed">amanat</string>
+    <string name="title_widget_account">Cont</string>
+    <string name="title_widget_account_all">Toate</string>
     <string name="title_widget_unseen">Numai mesajele necitite</string>
     <string name="title_widget_flagged">Numai mesajele cu stea</string>
     <string-array name="pollIntervalNames">

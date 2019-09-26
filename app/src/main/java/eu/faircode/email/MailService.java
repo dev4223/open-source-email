@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -65,7 +66,7 @@ public class MailService implements AutoCloseable {
         properties.put("mail.event.scope", "folder");
         properties.put("mail.event.executor", executor);
 
-        String checkserveridentity = Boolean.toString(!insecure).toLowerCase();
+        String checkserveridentity = Boolean.toString(!insecure).toLowerCase(Locale.ROOT);
 
         if ("pop3".equals(protocol) || "pop3s".equals(protocol)) {
             this.debug = true;
@@ -83,8 +84,6 @@ public class MailService implements AutoCloseable {
             properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
             properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT)); // one thread overhead
             properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
-
-            properties.put("mail." + protocol + ".rsetbeforequit", "true");
 
         } else if ("imap".equals(protocol) || "imaps".equals(protocol)) {
             // https://javaee.github.io/javamail/docs/api/com/sun/mail/imap/package-summary.html#properties
@@ -157,6 +156,10 @@ public class MailService implements AutoCloseable {
         properties.put("mail." + protocol + ".separatestoreconnection", "true");
     }
 
+    void setLeaveOnServer(boolean keep) {
+        properties.put("mail." + protocol + ".rsetbeforequit", Boolean.toString(keep));
+    }
+
     public void connect(EntityAccount account) throws MessagingException {
         String password = connect(account.host, account.port, account.auth_type, account.user, account.password);
         if (password != null) {
@@ -198,16 +201,16 @@ public class MailService implements AutoCloseable {
                             am.invalidateAuthToken(type, password);
                             String token = am.blockingGetAuthToken(account, getAuthTokenType(type), true);
                             if (token == null)
-                                throw new IllegalArgumentException("no token");
+                                throw new IllegalArgumentException("No token on refresh");
 
                             _connect(context, host, port, user, token);
                             return token;
                         }
 
-                    throw new IllegalArgumentException("no account");
-                } catch (Throwable ex1) {
+                    throw new IllegalArgumentException("Account not found");
+                } catch (Exception ex1) {
                     Log.e(ex1);
-                    throw ex;
+                    throw new AuthenticationFailedException(ex.getMessage(), ex1);
                 }
             else
                 throw ex;

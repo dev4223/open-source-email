@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -55,6 +56,7 @@ import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.UIDFolder;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.mail.search.AndTerm;
 import javax.mail.search.BodyTerm;
 import javax.mail.search.ComparisonTerm;
@@ -172,7 +174,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         try {
             db.beginTransaction();
 
-            String find = (TextUtils.isEmpty(query) ? null : query.toLowerCase());
+            String find = (TextUtils.isEmpty(query) ? null : query.toLowerCase(Locale.ROOT));
             for (int i = state.index; i < state.messages.size() && found < pageSize && !state.destroyed; i++) {
                 state.index = i + 1;
 
@@ -204,17 +206,17 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         for (Address address : addresses) {
                             String email = ((InternetAddress) address).getAddress();
                             String name = ((InternetAddress) address).getPersonal();
-                            if (email != null && email.toLowerCase().contains(find) ||
-                                    name != null && name.toLowerCase().contains(find))
+                            if (email != null && email.toLowerCase(Locale.ROOT).contains(find) ||
+                                    name != null && name.toLowerCase(Locale.ROOT).contains(find))
                                 match = true;
                         }
 
                         if (!match && message.subject != null)
-                            match = message.subject.toLowerCase().contains(find);
+                            match = message.subject.toLowerCase(Locale.ROOT).contains(find);
 
                         if (!match && message.keywords != null && message.keywords.length > 0)
                             for (String keyword : message.keywords)
-                                if (keyword.toLowerCase().contains(find)) {
+                                if (keyword.toLowerCase(Locale.ROOT).contains(find)) {
                                     match = true;
                                     break;
                                 }
@@ -222,7 +224,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         if (!match && message.content) {
                             try {
                                 String body = Helper.readText(message.getFile(context));
-                                match = body.toLowerCase().contains(find);
+                                match = body.toLowerCase(Locale.ROOT).contains(find);
                             } catch (IOException ex) {
                                 Log.e(ex);
                             }
@@ -405,11 +407,10 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
                                     if (keywords)
                                         term = new OrTerm(term, new FlagTerm(
-                                                new Flags(Helper.sanitizeKeyword(search)), true));
+                                                new Flags(MessageHelper.sanitizeKeyword(search)), true));
 
                                     return state.ifolder.search(term);
                                 }
-
                             } catch (MessagingException ex) {
                                 Log.e(ex);
                                 return ex;
@@ -465,7 +466,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         if (message == null) {
                             message = Core.synchronizeMessage(context,
                                     account, browsable,
-                                    state.ifolder, (IMAPMessage) isub[j],
+                                    state.ifolder, (MimeMessage) isub[j],
                                     true, true,
                                     rules, null);
                             found++;

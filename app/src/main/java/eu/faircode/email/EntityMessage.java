@@ -162,33 +162,31 @@ public class EntityMessage implements Serializable {
         return "<" + UUID.randomUUID() + "@localhost" + '>';
     }
 
-    boolean replySelf(String via) {
-        if (via == null)
-            return false;
-
-        Address[] senders = (reply == null || reply.length == 0 ? from : reply);
-        if (senders != null)
-            for (Address sender : senders)
-                if (MessageHelper.similarAddress(sender, via))
-                    return true;
+    boolean replySelf(List<TupleIdentityEx> identities) {
+        if (identities != null && from != null)
+            for (Address sender : from)
+                for (TupleIdentityEx identity : identities)
+                    if (identity.similarAddress(sender))
+                        return true;
 
         return false;
     }
 
-    Address[] getAllRecipients(String via) {
+    Address[] getAllRecipients(List<TupleIdentityEx> identities) {
         List<Address> addresses = new ArrayList<>();
 
-        if (to != null && !replySelf(via))
+        if (to != null && !replySelf(identities))
             addresses.addAll(Arrays.asList(to));
 
         if (cc != null)
             addresses.addAll(Arrays.asList(cc));
 
         // Filter self
-        if (via != null)
+        if (identities != null)
             for (Address address : new ArrayList<>(addresses))
-                if (MessageHelper.similarAddress(address, via))
-                    addresses.remove(address);
+                for (TupleIdentityEx identity : identities)
+                    if (identity.similarAddress(address))
+                        addresses.remove(address);
 
         return addresses.toArray(new Address[0]);
     }
@@ -227,8 +225,8 @@ public class EntityMessage implements Serializable {
 
     static void snooze(Context context, long id, Long wakeup) {
         Intent snoozed = new Intent(context, ServiceUI.class);
-        snoozed.setAction("snooze:" + id);
-        PendingIntent pi = PendingIntent.getService(context, ServiceUI.PI_SNOOZED, snoozed, PendingIntent.FLAG_UPDATE_CURRENT);
+        snoozed.setAction("wakeup:" + id);
+        PendingIntent pi = PendingIntent.getService(context, ServiceUI.PI_WAKEUP, snoozed, PendingIntent.FLAG_UPDATE_CURRENT);
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (wakeup == null) {
