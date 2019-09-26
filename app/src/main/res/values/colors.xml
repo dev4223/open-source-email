@@ -11,7 +11,7 @@
     <!-- colorAccentDark orig: #c68400 -->
     <color name="colorAccentDark">#FFE50A3E</color>
 
-    <color name="colorError">#DD178F</color>
+    <color name="colorError">#CDDC39</color>
 
     <!-- Light blue 900 -->
     <!-- darkPrimary orig: #01579b -->
