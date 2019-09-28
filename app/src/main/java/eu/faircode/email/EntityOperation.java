@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -34,7 +35,6 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -146,7 +146,7 @@ public class EntityOperation {
 
                 if (!EntityFolder.ARCHIVE.equals(source.type) ||
                         EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type))
-                    db.message().setMessageUiHide(message.id, new Date().getTime());
+                    db.message().setMessageUiHide(message.id, true);
 
                 if (message.ui_snoozed != null &&
                         (EntityFolder.ARCHIVE.equals(target.type) || EntityFolder.TRASH.equals(target.type))) {
@@ -154,18 +154,10 @@ public class EntityOperation {
                     EntityMessage.snooze(context, message.id, null);
                 }
 
-                Calendar cal_keep = Calendar.getInstance();
-                cal_keep.add(Calendar.DAY_OF_MONTH, -target.keep_days);
-                cal_keep.set(Calendar.HOUR_OF_DAY, 0);
-                cal_keep.set(Calendar.MINUTE, 0);
-                cal_keep.set(Calendar.SECOND, 0);
-                cal_keep.set(Calendar.MILLISECOND, 0);
-
                 // Create copy without uid in target folder
                 // Message with same msgid can be in archive
                 if (message.uid != null &&
-                        target.synchronize &&
-                        message.received > cal_keep.getTimeInMillis() &&
+                        !TextUtils.isEmpty(message.msgid) &&
                         db.message().countMessageByMsgId(target.id, message.msgid) == 0) {
                     File msource = message.getFile(context);
 
@@ -173,9 +165,10 @@ public class EntityOperation {
                     long id = message.id;
                     Long identity = message.identity;
                     long uid = message.uid;
+                    int notifying = message.notifying;
                     boolean seen = message.seen;
                     boolean ui_seen = message.ui_seen;
-                    Long ui_hide = message.ui_hide;
+                    Boolean ui_hide = message.ui_hide;
                     boolean ui_browsed = message.ui_browsed;
                     String error = message.error;
 
@@ -184,11 +177,12 @@ public class EntityOperation {
                     message.folder = target.id;
                     message.identity = null;
                     message.uid = null;
+                    message.notifying = 0;
                     if (autoread) {
                         message.seen = true;
                         message.ui_seen = true;
                     }
-                    message.ui_hide = 0L;
+                    message.ui_hide = false;
                     message.ui_browsed = false;
                     message.error = null;
                     message.id = db.message().insertMessage(message);
@@ -200,6 +194,7 @@ public class EntityOperation {
                     message.folder = source.id;
                     message.identity = identity;
                     message.uid = uid;
+                    message.notifying = notifying;
                     message.seen = seen;
                     message.ui_seen = ui_seen;
                     message.ui_hide = ui_hide;
@@ -227,7 +222,7 @@ public class EntityOperation {
                         name = RAW;
 
             } else if (DELETE.equals(name))
-                db.message().setMessageUiHide(message.id, Long.MAX_VALUE);
+                db.message().setMessageUiHide(message.id, true);
 
         } catch (JSONException ex) {
             Log.e(ex);

@@ -19,8 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -54,44 +52,34 @@ public class EntityAnswer implements Serializable {
     @NonNull
     public String text;
 
-    static String getAnswerText(Context context, long id, Address[] from) {
-        DB db = DB.getInstance(context);
-        EntityAnswer answer = db.answer().getAnswer(id);
-        if (answer == null)
-            return null;
-
-        return getAnswerText(answer, from);
+    String getText(Address[] address) {
+        return replacePlaceholders(text, address);
     }
 
-    static String getAnswerText(EntityAnswer answer, Address[] from) {
-        String name = null;
+    static String replacePlaceholders(String text, Address[] address) {
+        String fullName = null;
         String email = null;
-        String first = null;
-        String last = null;
-        if (from != null && from.length > 0) {
-            name = ((InternetAddress) from[0]).getPersonal();
-            email = ((InternetAddress) from[0]).getAddress();
+        if (address != null && address.length > 0) {
+            fullName = ((InternetAddress) address[0]).getPersonal();
+            email = ((InternetAddress) address[0]).getAddress();
         }
-        if (name != null) {
-            name = name.trim();
-            int c = name.lastIndexOf(",");
-            if (c < 0) {
-                first = name;
-                last = name;
-            } else {
-                first = name.substring(c + 1).trim();
-                last = name.substring(0, c).trim();
+
+        String first = fullName;
+        String last = null;
+        if (fullName != null) {
+            fullName = fullName.trim();
+            int c = fullName.lastIndexOf(",");
+            if (c < 0)
+                c = fullName.lastIndexOf(" ");
+            if (c > 0) {
+                first = fullName.substring(0, c).trim();
+                last = fullName.substring(c + 1).trim();
             }
         }
 
-        return replacePlaceholders(answer.text, name, first, last, email);
-    }
-
-    static String replacePlaceholders(
-            String text, String fullName, String firstName, String lastName, String email) {
         text = text.replace("$name$", fullName == null ? "" : fullName);
-        text = text.replace("$firstname$", firstName == null ? "" : firstName);
-        text = text.replace("$lastname$", lastName == null ? "" : lastName);
+        text = text.replace("$firstname$", first == null ? "" : first);
+        text = text.replace("$lastname$", last == null ? "" : last);
         text = text.replace("$email$", email == null ? "" : email);
 
         return text;

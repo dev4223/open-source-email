@@ -66,14 +66,13 @@ import android.view.animation.TranslateAnimation;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -1649,7 +1648,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading && thread ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             result.add(new MessageTarget(threaded, account, target));
-                            db.message().setMessageUiHide(threaded.id, new Date().getTime());
+                            db.message().setMessageUiHide(threaded.id, true);
                             // Prevent new message notification on undo
                             db.message().setMessageUiIgnored(threaded.id, true);
                         }
@@ -3024,7 +3023,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         // Mark duplicates
         Map<String, List<TupleMessageEx>> duplicates = new HashMap<>();
         for (TupleMessageEx message : messages)
-            if (message != null && message.msgid != null) {
+            if (message != null && !TextUtils.isEmpty(message.msgid)) {
                 if (!duplicates.containsKey(message.msgid))
                     duplicates.put(message.msgid, new ArrayList<TupleMessageEx>());
                 duplicates.get(message.msgid).add(message);
@@ -3434,7 +3433,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             ArrayList<MessageTarget> result = args.getParcelableArrayList("result");
                             for (MessageTarget target : result) {
                                 Log.i("Move undo id=" + target.id);
-                                db.message().setMessageUiHide(target.id, 0L);
+                                db.message().setMessageUiHide(target.id, false);
                             }
 
                             db.setTransactionSuccessful();
@@ -3478,7 +3477,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                             for (MessageTarget target : result) {
                                 EntityMessage message = db.message().getMessage(target.id);
-                                if (message == null || message.ui_hide == 0)
+                                if (message == null || !message.ui_hide)
                                     continue;
 
                                 Log.i("Move id=" + id + " target=" + target.folder.name);
@@ -4455,7 +4454,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     List<Long> ids = db.message().getMessageByFolder(folder);
                     for (Long id : ids) {
                         EntityMessage message = db.message().getMessage(id);
-                        if (message.msgid != null || message.uid != null)
+                        if (message.uid != null || !TextUtils.isEmpty(message.msgid))
                             EntityOperation.queue(context, message, EntityOperation.DELETE);
                     }
 
@@ -4642,27 +4641,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_identity, null);
-            ListView lvIdentity = dview.findViewById(R.id.lvIdentity);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-            Button btnFix = dview.findViewById(R.id.btnFix);
-            Group grpIdentities = dview.findViewById(R.id.grpIdentities);
-            Group grpNoIdentities = dview.findViewById(R.id.grpNoIdentities);
-            ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
-
-            lvIdentity.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    TupleIdentityEx identity = (TupleIdentityEx) lvIdentity.getAdapter().getItem(position);
-
-                    startActivity(new Intent(getContext(), ActivityCompose.class)
-                            .putExtra("action", "new")
-                            .putExtra("account", identity.account)
-                            .putExtra("identity", identity.id)
-                    );
-
-                    dismiss();
-                }
-            });
+            final Spinner spIdentity = dview.findViewById(R.id.spIdentity);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+            final Button btnFix = dview.findViewById(R.id.btnFix);
+            final Group grpIdentities = dview.findViewById(R.id.grpIdentities);
+            final Group grpNoIdentities = dview.findViewById(R.id.grpNoIdentities);
+            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
 
             cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -4677,7 +4661,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 public void onClick(View v) {
                     startActivity(new Intent(getContext(), ActivitySetup.class));
                     getActivity().finish();
-
                     dismiss();
                 }
             });
@@ -4705,7 +4688,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 @Override
                 protected void onExecuted(Bundle args, List<TupleIdentityEx> identities) {
                     AdapterIdentitySelect iadapter = new AdapterIdentitySelect(getContext(), identities);
-                    lvIdentity.setAdapter(iadapter);
+                    spIdentity.setAdapter(iadapter);
 
                     grpIdentities.setVisibility(identities.size() > 0 ? View.VISIBLE : View.GONE);
                     grpNoIdentities.setVisibility(identities.size() > 0 ? View.GONE : View.VISIBLE);
@@ -4719,6 +4702,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            TupleIdentityEx identity = (TupleIdentityEx) spIdentity.getSelectedItem();
+                            if (identity != null)
+                                startActivity(new Intent(getContext(), ActivityCompose.class)
+                                        .putExtra("action", "new")
+                                        .putExtra("account", identity.account)
+                                        .putExtra("identity", identity.id)
+                                );
+                        }
+                    })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }

@@ -58,20 +58,13 @@ import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.text.Editable;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.StyleSpan;
-import android.text.style.URLSpan;
-import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -89,7 +82,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.MultiAutoCompleteTextView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -153,7 +145,9 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
+import static android.widget.AdapterView.INVALID_POSITION;
 
 public class FragmentCompose extends FragmentBase {
     private enum State {NONE, LOADING, LOADED}
@@ -1076,106 +1070,14 @@ public class FragmentCompose extends FragmentBase {
     private boolean onActionStyle(int action) {
         Log.i("Style action=" + action);
 
-        try {
-            int start = etBody.getSelectionStart();
-            int end = etBody.getSelectionEnd();
-
-            if (start < 0)
-                start = 0;
-            if (end < 0)
-                end = 0;
-
-            if (start > end) {
-                int tmp = start;
-                start = end;
-                end = tmp;
-            }
-
-            SpannableString ss = new SpannableString(etBody.getText());
-
-            switch (action) {
-                case R.id.menu_bold:
-                case R.id.menu_italic: {
-                    int style = (action == R.id.menu_bold ? Typeface.BOLD : Typeface.ITALIC);
-                    boolean has = false;
-                    for (StyleSpan span : ss.getSpans(start, end, StyleSpan.class))
-                        if (span.getStyle() == style) {
-                            has = true;
-                            ss.removeSpan(span);
-                        }
-
-                    if (!has)
-                        ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                    etBody.setText(ss);
-                    etBody.setSelection(start, end);
-
-                    return true;
-                }
-
-                case R.id.menu_underline: {
-                    boolean has = false;
-                    for (UnderlineSpan span : ss.getSpans(start, end, UnderlineSpan.class)) {
-                        has = true;
-                        ss.removeSpan(span);
-                    }
-
-                    if (!has)
-                        ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                    etBody.setText(ss);
-                    etBody.setSelection(start, end);
-
-                    return true;
-                }
-
-                case R.id.menu_size: {
-                    RelativeSizeSpan[] spans = ss.getSpans(start, end, RelativeSizeSpan.class);
-                    float size = (spans.length > 0 ? spans[0].getSizeChange() : 1.0f);
-
-                    // Match small/big
-                    if (size == 0.8f)
-                        size = 1.0f;
-                    else if (size == 1.0)
-                        size = 1.25f;
-                    else
-                        size = 0.8f;
-
-                    for (RelativeSizeSpan span : spans)
-                        ss.removeSpan(span);
-
-                    if (size != 1.0f)
-                        ss.setSpan(new RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                    etBody.setText(ss);
-                    etBody.setSelection(start, end);
-
-                    return true;
-                }
-
-                case R.id.menu_color: {
-                    Bundle args = new Bundle();
-                    args.putInt("start", start);
-                    args.putInt("end", end);
-
-                    ForegroundColorSpan[] spans = ss.getSpans(start, end, ForegroundColorSpan.class);
-                    int color = (spans.length > 0 ? spans[0].getForegroundColor() : Color.TRANSPARENT);
-
-                    FragmentDialogColor fragment = new FragmentDialogColor();
-                    fragment.initialize(R.string.title_style_color, color, args, getContext());
-                    fragment.setTargetFragment(FragmentCompose.this, REQUEST_COLOR);
-                    fragment.show(getFragmentManager(), "account:color");
-
-                    return true;
-                }
-
-                default:
-                    return false;
-            }
-        } catch (Throwable ex) {
-            Log.e(ex);
-            return false;
-        }
+        if (action == R.id.menu_color) {
+            FragmentDialogColor fragment = new FragmentDialogColor();
+            fragment.initialize(R.string.title_style_color, Color.TRANSPARENT, new Bundle(), getContext());
+            fragment.setTargetFragment(FragmentCompose.this, REQUEST_COLOR);
+            fragment.show(getFragmentManager(), "account:color");
+            return true;
+        } else
+            return StyleHelper.apply(action, etBody);
     }
 
     private void onActionRecordAudio() {
@@ -1333,10 +1235,6 @@ public class FragmentCompose extends FragmentBase {
                         onPgp(data);
                     }
                     break;
-                case REQUEST_COLOR:
-                    if (resultCode == RESULT_OK && data != null)
-                        onColorSelected(data.getBundleExtra("args"));
-                    break;
                 case REQUEST_REF_DELETE:
                     if (resultCode == RESULT_OK)
                         onReferenceDeleteConfirmed();
@@ -1352,6 +1250,10 @@ public class FragmentCompose extends FragmentBase {
                 case REQUEST_ANSWER:
                     if (resultCode == RESULT_OK && data != null)
                         onAnswerSelected(data.getBundleExtra("args"));
+                    break;
+                case REQUEST_COLOR:
+                    if (resultCode == RESULT_OK && data != null)
+                        onColorSelected(data.getBundleExtra("args"));
                     break;
                 case REQUEST_LINK:
                     if (resultCode == RESULT_OK && data != null)
@@ -1728,20 +1630,6 @@ public class FragmentCompose extends FragmentBase {
         }.execute(this, args, "compose:encrypt");
     }
 
-    private void onColorSelected(Bundle args) {
-        int color = args.getInt("color");
-        int start = args.getInt("start");
-        int end = args.getInt("end");
-
-        SpannableString ss = new SpannableString(etBody.getText());
-        for (ForegroundColorSpan span : ss.getSpans(start, end, ForegroundColorSpan.class))
-            ss.removeSpan(span);
-        ss.setSpan(new ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        etBody.setText(ss);
-        etBody.setSelection(start, end);
-    }
-
     private void onContactGroupSelected(Bundle args) {
         if (args.getInt("target") > 0)
             grpAddresses.setVisibility(View.VISIBLE);
@@ -1839,49 +1727,28 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onAnswerSelected(Bundle args) {
-        String text = args.getString("answer");
+        String answer = args.getString("answer");
+
+        InternetAddress[] to = null;
+        try {
+            to = InternetAddress.parse(etTo.getText().toString());
+        } catch (AddressException ignored) {
+        }
+
+        String text = EntityAnswer.replacePlaceholders(answer, to);
+
         Spanned spanned = HtmlHelper.fromHtml(text);
         etBody.getText().insert(etBody.getSelectionStart(), spanned);
     }
 
+    private void onColorSelected(Bundle args) {
+        int color = args.getInt("color");
+        StyleHelper.apply(R.id.menu_color, etBody, color);
+    }
+
     private void onLinkSelected(Bundle args) {
         String link = args.getString("link");
-
-        int start = etBody.getSelectionStart();
-        int end = etBody.getSelectionEnd();
-
-        if (start < 0)
-            start = 0;
-        if (end < 0)
-            end = 0;
-
-        if (start > end) {
-            int tmp = start;
-            start = end;
-            end = tmp;
-        }
-
-        if (start == end) {
-            etBody.setText(etBody.getText().insert(start, link));
-            end = start + link.length();
-        }
-
-        SpannableString ss = new SpannableString(etBody.getText());
-
-        List<Object> spans = new ArrayList<>();
-        for (Object span : ss.getSpans(start, end, Object.class)) {
-            if (!(span instanceof URLSpan))
-                spans.add(span);
-            ss.removeSpan(span);
-        }
-
-        ss.setSpan(new URLSpan(link), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        for (Object span : spans)
-            ss.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        etBody.setText(ss);
-        etBody.setSelection(end, end);
+        StyleHelper.apply(R.id.menu_link, etBody, link);
     }
 
     private void onActionDiscardConfirmed() {
@@ -2158,7 +2025,7 @@ public class FragmentCompose extends FragmentBase {
                     throw new IllegalStateException(getString(R.string.title_no_identities));
 
                 data.draft = db.message().getMessage(id);
-                if (data.draft == null || data.draft.ui_hide != 0) {
+                if (data.draft == null || data.draft.ui_hide) {
                     // New draft
                     if ("edit".equals(action))
                         throw new MessageRemovedException("Draft for edit was deleted hide=" + (data.draft != null));
@@ -2203,7 +2070,7 @@ public class FragmentCompose extends FragmentBase {
                             EntityAnswer a = db.answer().getAnswer(answer);
                             if (a != null) {
                                 data.draft.subject = a.name;
-                                body = EntityAnswer.getAnswerText(a, null) + body;
+                                body = a.getText(null) + body;
                             }
                         }
                     } else {
@@ -2281,8 +2148,12 @@ public class FragmentCompose extends FragmentBase {
                             data.draft.subject = status + ": " + ref.subject;
 
                         data.draft.plain_only = ref.plain_only;
-                        if (answer > 0)
-                            body = EntityAnswer.getAnswerText(context, answer, data.draft.to) + body;
+
+                        if (answer > 0) {
+                            EntityAnswer a = db.answer().getAnswer(answer);
+                            if (a != null)
+                                body = a.getText(data.draft.to) + body;
+                        }
                     }
 
                     if (plain_only)
@@ -2615,7 +2486,7 @@ public class FragmentCompose extends FragmentBase {
                 @Override
                 public void onChanged(EntityMessage draft) {
                     // Draft was deleted
-                    if (draft == null || draft.ui_hide != 0)
+                    if (draft == null || draft.ui_hide)
                         finish();
                     else {
                         Log.i("Draft content=" + draft.content);
@@ -2708,7 +2579,7 @@ public class FragmentCompose extends FragmentBase {
                 EntityIdentity identity = db.identity().getIdentity(iid);
 
                 // Draft deleted by server
-                if (draft == null || draft.ui_hide != 0)
+                if (draft == null || draft.ui_hide)
                     throw new MessageRemovedException("Draft for action was deleted hide=" + (draft != null));
 
                 Log.i("Load action id=" + draft.id + " action=" + getActionName(action));
@@ -2737,7 +2608,7 @@ public class FragmentCompose extends FragmentBase {
                         Long uid = draft.uid;
                         String msgid = draft.msgid;
                         boolean content = draft.content;
-                        long ui_hide = draft.ui_hide;
+                        Boolean ui_hide = draft.ui_hide;
 
                         // To prevent violating constraints
                         draft.uid = null;
@@ -2749,7 +2620,7 @@ public class FragmentCompose extends FragmentBase {
                         draft.uid = uid;
                         draft.msgid = msgid;
                         draft.content = false;
-                        draft.ui_hide = new Date().getTime();
+                        draft.ui_hide = true;
                         draft.id = db.message().insertMessage(draft);
                         EntityOperation.queue(context, draft, EntityOperation.DELETE);
 
@@ -3014,7 +2885,7 @@ public class FragmentCompose extends FragmentBase {
                         draft.id = null;
                         draft.folder = db.folder().getOutbox().id;
                         draft.uid = null;
-                        draft.ui_hide = 0L;
+                        draft.ui_hide = false;
                         draft.id = db.message().insertMessage(draft);
                         Helper.writeText(draft.getFile(context), body);
                         if (refDraftFile.exists()) {
@@ -3464,7 +3335,7 @@ public class FragmentCompose extends FragmentBase {
             final long working = getArguments().getLong("working");
 
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_contact_group, null);
-            final ListView lvGroup = dview.findViewById(R.id.lvGroup);
+            final Spinner spGroup = dview.findViewById(R.id.spGroup);
             final Spinner spTarget = dview.findViewById(R.id.spTarget);
 
             Cursor groups = getContext().getContentResolver().query(
@@ -3480,39 +3351,37 @@ public class FragmentCompose extends FragmentBase {
                     ContactsContract.Groups.TITLE
             );
 
-            final SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+            SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                     getContext(),
                     R.layout.spinner_item1_dropdown,
                     groups,
                     new String[]{ContactsContract.Groups.TITLE},
                     new int[]{android.R.id.text1},
                     0);
+            spGroup.setAdapter(adapter);
 
-            lvGroup.setAdapter(adapter);
-
-            final AlertDialog dialog = new AlertDialog.Builder(getContext())
+            return new AlertDialog.Builder(getContext())
                     .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            int target = spTarget.getSelectedItemPosition();
+                            Cursor cursor = (Cursor) spGroup.getSelectedItem();
+                            if (target != INVALID_POSITION && cursor != null) {
+                                long group = cursor.getLong(0);
+
+                                Bundle args = getArguments();
+                                args.putLong("id", working);
+                                args.putInt("target", target);
+                                args.putLong("group", group);
+
+                                sendResult(RESULT_OK);
+                            } else
+                                sendResult(RESULT_CANCELED);
+                        }
+                    })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
-
-            lvGroup.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    int target = spTarget.getSelectedItemPosition();
-                    Cursor cursor = (Cursor) adapter.getItem(position);
-                    long group = cursor.getLong(0);
-
-                    Bundle args = getArguments();
-                    args.putLong("id", working);
-                    args.putInt("target", target);
-                    args.putLong("group", group);
-
-                    sendResult(Activity.RESULT_OK);
-                    dismiss();
-                }
-            });
-
-            return dialog;
         }
     }
 
@@ -3548,66 +3417,8 @@ public class FragmentCompose extends FragmentBase {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             EntityAnswer answer = adapter.getItem(which);
-                            String text = EntityAnswer.replacePlaceholders(
-                                    answer.text, null, null, null, null);
+                            getArguments().putString("answer", answer.text);
 
-                            getArguments().putString("answer", text);
-
-                            sendResult(RESULT_OK);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .create();
-        }
-    }
-
-    public static class FragmentDialogLink extends FragmentDialogBase {
-        private EditText etLink;
-
-        @Override
-        public void onSaveInstanceState(@NonNull Bundle outState) {
-            outState.putString("fair:link", etLink.getText().toString());
-            super.onSaveInstanceState(outState);
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            Uri uri = getArguments().getParcelable("uri");
-
-            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_insert_link, null);
-            etLink = view.findViewById(R.id.etLink);
-            final TextView tvInsecure = view.findViewById(R.id.tvInsecure);
-
-            etLink.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {
-                    Uri uri = Uri.parse(editable.toString());
-                    tvInsecure.setVisibility(!uri.isOpaque() &&
-                            "http".equals(uri.getScheme()) ? View.VISIBLE : View.GONE);
-                }
-            });
-
-            if (savedInstanceState == null)
-                etLink.setText(uri == null ? "https://" : uri.toString());
-            else
-                etLink.setText(savedInstanceState.getString("fair:link"));
-
-            return new AlertDialog.Builder(getContext())
-                    .setView(view)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String link = etLink.getText().toString();
-                            getArguments().putString("link", link);
                             sendResult(RESULT_OK);
                         }
                     })
