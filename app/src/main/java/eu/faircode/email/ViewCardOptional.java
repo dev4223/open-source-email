@@ -33,15 +33,19 @@ import androidx.preference.PreferenceManager;
 public class ViewCardOptional extends CardView {
     public ViewCardOptional(@NonNull Context context) {
         super(context);
+        setCardBackgroundColor(Color.TRANSPARENT);
     }
 
     public ViewCardOptional(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        setCardBackgroundColor(Color.TRANSPARENT);
     }
 
     public ViewCardOptional(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        setCardBackgroundColor(Color.TRANSPARENT);
     }
+
 
     @Override
     protected void onAttachedToWindow() {
@@ -50,6 +54,7 @@ public class ViewCardOptional extends CardView {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         boolean cards = prefs.getBoolean("cards", true);
         boolean compact = prefs.getBoolean("compact", false);
+
         if (cards) {
             // dev4223: was dp: 6
             int dp6 = Helper.dp2pixels(getContext(), 1);
@@ -61,14 +66,22 @@ public class ViewCardOptional extends CardView {
 
             setRadius(dp6);
             setElevation(compact ? dp6 / 2f : dp6);
-            setCardBackgroundColor(color);
 
             // dev4223: was getChildAt(0).setPadding(dp6, dp6, dp6, dp6);
             getChildAt(0).setPadding(0, 0, 0, 0);
         } else {
             setRadius(0);
             setElevation(0);
-            setCardBackgroundColor(Color.TRANSPARENT);
         }
+    }
+
+    @Override
+    public void setCardBackgroundColor(int color) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean cards = prefs.getBoolean("cards", true);
+        if (cards && color == Color.TRANSPARENT)
+            color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
+
+        super.setCardBackgroundColor(color);
     }
 }

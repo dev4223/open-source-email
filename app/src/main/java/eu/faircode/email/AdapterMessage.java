@@ -96,6 +96,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.FileProvider;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.Lifecycle;
@@ -195,6 +196,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private String subject_ellipsize;
 
     private boolean flags;
+    private boolean flags_background;
     private boolean preview;
     private boolean preview_italic;
     private boolean attachments_alt;
@@ -241,7 +243,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View.OnLongClickListener,
             View.OnTouchListener,
             BottomNavigationView.OnNavigationItemSelectedListener {
-        private View card;
+        private ViewCardOptional card;
         private View view;
 
         private View vwColor;
@@ -850,7 +852,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (debug) {
                 String text = "error=" + error +
                         "\nuid=" + message.uid + " id=" + message.id + " " + DTF.format(new Date(message.received)) +
-                        "\n" + (message.ui_hide == 0 ? "" : "HIDDEN ") +
+                        "\n" + (message.ui_hide ? "HIDDEN " : "") +
                         "seen=" + message.seen + "/" + message.ui_seen +
                         " unseen=" + message.unseen +
                         " ignored=" + message.ui_ignored +
@@ -994,15 +996,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindFlagged(TupleMessageEx message) {
+            boolean pro = ActivityBilling.isPro(context);
+            if (!pro)
+                message.color = null;
+
             int flagged = (message.count - message.unflagged);
             ibFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-            ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0
-                    ? message.color == null || !ActivityBilling.isPro(context)
-                    ? colorAccent : message.color : textColorSecondary));
-            ibFlagged.setEnabled(message.uid != null);
+
+            if (flags_background) {
+                if (message.color == null)
+                    card.setCardBackgroundColor(Color.TRANSPARENT);
+                else
+                    card.setCardBackgroundColor(ColorUtils.setAlphaComponent(message.color, 127));
+            } else {
+                card.setCardBackgroundColor(Color.TRANSPARENT);
+                if (message.color == null)
+                    ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
+                else
+                    ibFlagged.setImageTintList(ColorStateList.valueOf(message.color));
+            }
+
+            ibFlagged.setEnabled(message.uid != null || message.accountPop);
 
             if (flags)
-                ibFlagged.setVisibility(message.folderReadOnly || message.accountPop ? View.INVISIBLE : View.VISIBLE);
+                ibFlagged.setVisibility(message.folderReadOnly ? View.INVISIBLE : View.VISIBLE);
             else
                 ibFlagged.setVisibility(View.GONE);
         }
@@ -1207,7 +1224,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     if (!message.folderReadOnly) {
                         bnvActions.getMenu().findItem(R.id.action_delete).setVisible(
-                                (delete ? message.uid != null || message.msgid != null : message.uid != null));
+                                (delete ? message.uid != null || !TextUtils.isEmpty(message.msgid) : message.uid != null));
                         bnvActions.getMenu().findItem(R.id.action_delete).setTitle(
                                 delete ? R.string.title_delete : R.string.title_trash);
 
@@ -1845,10 +1862,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (message == null)
                             return null;
 
-                        List<EntityMessage> messages = db.message().getMessagesByThread(
-                                message.account, message.thread, threading && thread ? null : id, null);
-                        for (EntityMessage threaded : messages)
-                            EntityOperation.queue(context, threaded, EntityOperation.FLAG, flagged);
+                        EntityAccount account = db.account().getAccount(message.account);
+                        if (account == null)
+                            return null;
+
+                        if (account.pop)
+                            EntityOperation.queue(context, message, EntityOperation.FLAG, flagged);
+                        else {
+                            List<EntityMessage> messages = db.message().getMessagesByThread(
+                                    message.account, message.thread, threading && thread ? null : id, null);
+                            for (EntityMessage threaded : messages)
+                                EntityOperation.queue(context, threaded, EntityOperation.FLAG, flagged);
+                        }
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1902,6 +1927,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 }
                         }
                     }
+
+                    if (outgoing && message.reply != null &&
+                            MessageHelper.equal(message.from, message.to))
+                        return message.reply;
 
                     return (outgoing ? message.to : message.from);
                 }
@@ -2484,9 +2513,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_unseen).setTitle(message.ui_seen ? R.string.title_unseen : R.string.title_seen);
             popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(message.uid != null && !message.folderReadOnly);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setVisible(!message.accountPop);
+
+            popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(
+                    (message.uid != null && !message.folderReadOnly) || message.accountPop);
 
             popupMenu.getMenu().findItem(R.id.menu_copy).setEnabled(message.uid != null && !message.folderReadOnly);
+            popupMenu.getMenu().findItem(R.id.menu_copy).setVisible(!message.accountPop);
+
+            popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(!message.accountPop);
+
+            popupMenu.getMenu().findItem(R.id.menu_resync).setEnabled(message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_resync).setVisible(!message.accountPop);
+
+            popupMenu.getMenu().findItem(R.id.menu_create_rule).setVisible(!message.accountPop);
+
+            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
+            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setVisible(!message.accountPop);
 
             popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(message.uid != null && !message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(hasJunk && !EntityFolder.JUNK.equals(message.folderType));
@@ -2497,6 +2540,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setChecked(show_headers);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_show_headers).setVisible(!message.accountPop);
 
             popupMenu.getMenu().findItem(R.id.menu_raw_download).setEnabled(
                     message.uid != null && (message.raw == null || !message.raw));
@@ -2505,11 +2549,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_raw_send).setEnabled(
                     message.uid != null && (message.raw != null && message.raw));
 
-            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
-
-            popupMenu.getMenu().findItem(R.id.menu_resync).setEnabled(message.uid != null);
-
-            popupMenu.getMenu().findItem(R.id.menu_create_rule).setEnabled(!message.accountPop);
+            popupMenu.getMenu().findItem(R.id.menu_raw_download).setVisible(!message.accountPop);
+            popupMenu.getMenu().findItem(R.id.menu_raw_save).setVisible(!message.accountPop);
+            popupMenu.getMenu().findItem(R.id.menu_raw_send).setVisible(!message.accountPop);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -3257,6 +3299,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
         this.flags = prefs.getBoolean("flags", true);
+        this.flags_background = prefs.getBoolean("flags_background", false);
         this.preview = prefs.getBoolean("preview", false);
         this.preview_italic = prefs.getBoolean("preview_italic", true);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);

@@ -143,7 +143,7 @@ public class EntityMessage implements Serializable {
     @NonNull
     public Boolean ui_flagged = false;
     @NonNull
-    public Long ui_hide = 0L;
+    public Boolean ui_hide = false;
     @NonNull
     public Boolean ui_found = false;
     @NonNull
@@ -163,8 +163,9 @@ public class EntityMessage implements Serializable {
     }
 
     boolean replySelf(List<TupleIdentityEx> identities) {
-        if (identities != null && from != null)
-            for (Address sender : from)
+        Address[] senders = (reply == null || reply.length == 0 ? from : reply);
+        if (identities != null && senders != null)
+            for (Address sender : senders)
                 for (TupleIdentityEx identity : identities)
                     if (identity.similarAddress(sender))
                         return true;
