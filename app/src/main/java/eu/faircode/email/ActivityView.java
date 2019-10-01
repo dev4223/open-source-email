@@ -320,6 +320,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }).setExternal(true));
 
+        if (Helper.isPlayStoreInstall())
+            extra.add(new NavMenuItem(R.drawable.baseline_bug_report_24, R.string.menu_test, new Runnable() {
+                @Override
+                public void run() {
+                    drawerLayout.closeDrawer(drawerContainer);
+                    onMenuTest();
+                }
+            }).setExternal(true));
+
         extra.add(new NavMenuItem(R.drawable.baseline_account_box_24, R.string.menu_privacy, new Runnable() {
             @Override
             public void run() {
@@ -895,6 +904,10 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentLegend()).addToBackStack("legend");
         fragmentTransaction.commit();
+    }
+
+    private void onMenuTest() {
+        Helper.view(this, Uri.parse(Helper.TEST_URI), false);
     }
 
     private void onMenuFAQ() {

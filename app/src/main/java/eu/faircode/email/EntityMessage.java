@@ -23,6 +23,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -77,6 +78,10 @@ import static androidx.room.ForeignKey.SET_NULL;
 public class EntityMessage implements Serializable {
     static final String TABLE_NAME = "message";
 
+    static final Integer PRIORITIY_LOW = 0;
+    static final Integer PRIORITIY_NORMAL = 1;
+    static final Integer PRIORITIY_HIGH = 2;
+
     @PrimaryKey(autoGenerate = true)
     public Long id;
     @NonNull
@@ -93,6 +98,8 @@ public class EntityMessage implements Serializable {
     public String deliveredto;
     public String inreplyto;
     public String thread; // compose = null
+    public Integer priority;
+    public Boolean receipt; // is receipt
     public Boolean receipt_request;
     public Address[] receipt_to;
     public Boolean dkim;
@@ -112,6 +119,7 @@ public class EntityMessage implements Serializable {
     public Boolean raw;
     public String subject;
     public Long size;
+    public Long total;
     @NonNull
     public Integer attachments = 0; // performance
     @NonNull
@@ -235,7 +243,10 @@ public class EntityMessage implements Serializable {
             am.cancel(pi);
         } else {
             Log.i("Set snooze id=" + id + " wakeup=" + new Date(wakeup));
-            am.set(AlarmManager.RTC_WAKEUP, wakeup, pi);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+                am.set(AlarmManager.RTC_WAKEUP, wakeup, pi);
+            else
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, wakeup, pi);
         }
     }
 
@@ -252,6 +263,8 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.deliveredto, other.deliveredto) &&
                     Objects.equals(this.inreplyto, other.inreplyto) &&
                     Objects.equals(this.thread, other.thread) &&
+                    Objects.equals(this.priority, other.priority) &&
+                    Objects.equals(this.receipt, other.receipt) &&
                     Objects.equals(this.receipt_request, other.receipt_request) &&
                     MessageHelper.equal(this.receipt_to, other.receipt_to) &&
                     Objects.equals(this.dkim, other.dkim) &&
@@ -270,6 +283,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.raw, other.raw) &&
                     Objects.equals(this.subject, other.subject) &&
                     Objects.equals(this.size, other.size) &&
+                    Objects.equals(this.total, other.total) &&
                     Objects.equals(this.attachments, other.attachments) &&
                     this.content == other.content &&
                     Objects.equals(this.plain_only, other.plain_only) &&

@@ -255,8 +255,11 @@ The following Android permissions are needed:
 * Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 * Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
-* Optional: *find accounts on the device* (GET_ACCOUNTS): to use [OAuth](https://en.wikipedia.org/wiki/OAuth) instead of passwords
-* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to use OAuth instead of passwords (not used/needed on later Android versions)
+* Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
+* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not used/needed on later Android versions)
+
+[Optional permissions](https://developer.android.com/training/permissions/requesting) are supported on Android 6 Marshmallow and later only.
+On earlier Android versions you will be asked to grant the optional permissions on installing FairEmail.
 
 The following permissions are needed to show the count of unread messages as a badge (see also [this FAQ](#user-content-faq106)):
 
@@ -696,7 +699,13 @@ but such apps cannot be updated anymore and recent Android versions will show a 
 **(22) What does account/folder error ... mean?**
 
 FairEmail does not hide errors like similar apps often do, so it is easier to diagnose problems.
-Also, FairEmail will always retry again later, so transient errors will automatically be solved.
+
+FairEmail will automatically try to connect again after a delay.
+This delay will be doubled after each failed attempt to prevent draining the battery and to prevent from being locked out permanently.
+
+There are general errors and errors specific to Gmail accounts (see below).
+
+**General errors**
 
 The errors *... Couldn't connect to host ...*, *... Connection refused ...* or *... Network unreachable ...*
 mean that FairEmail was not able to connect to the email server.
@@ -711,12 +720,6 @@ The error *... Connection closed by peer ...* might be caused by a not updated E
 see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
 
 The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
-
-The error *... Invalid credentials ...* for a Gmail account which was added with the quick setup wizard
-might be caused by having removed the selected account from your device or by having revoked account (contact) permissions from FairEmail.
-Account permissions are required to periodically refresh the [OAuth](https://developers.google.com/gmail/imap/xoauth2-protocol) token
-(a kind of password used to login to your Gmail account).
-Just start the wizard (but do not select an account) to grant the required permissions again.
 
 The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported.
 FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.
@@ -737,8 +740,22 @@ Sometimes you can workaround this by using another SMTP port. See the documentat
 
 If you are using a VPN, the VPN provider might block the connection because it is too aggressively trying to prevent spam.
 
-FairEmail will automatically try to connect again after a delay.
-This delay will be doubled after each failed attempt to prevent draining the battery and to prevent from being locked out permanently.
+**Gmail errors**
+
+The authorization of Gmail accounts setup with the quick wizard needs to be periodically refreshed
+via the [Android account manager](https://developer.android.com/reference/android/accounts/AccountManager).
+This requires contact/account permissions and internet connectivity.
+
+The error *... Authentication failed ... Account not found ...* means that a previously authorized Gmail account was removed from the device.
+
+The errors *... Authentication failed ... No token on refresh ...* means that the Android account manager failed to refresh the authorization of a Gmail account.
+
+The error *... Authentication failed ... Invalid credentials ... network error ...*
+means that the Android account manager was not able to refresh the authorization of a Gmail account due to problems with the internet connection
+
+The error *... Authentication failed ... Invalid credentials ...* could be caused by having revoked the required account/contacts permissions.
+Just start the wizard (but do not select an account) to grant the required permissions again.
+
 
 When in doubt, you can ask for [support](#user-content-support).
 
@@ -1570,19 +1587,21 @@ You can also automate turning synchronization on and off by sending these comman
 (adb shell) am startservice -a eu.faircode.email.DISABLE
 ```
 
-Sending these commands will automatically turn scheduling off.
+Sending these commands will turn scheduling off.
 
-It is also possible to just enable/disable one account, for example the account with the name *Gmail*:
+If you want to automate checking for new messages, you can send this command to FairEmail:
+
+```
+(adb shell) adb shell am startservice -a eu.faircode.email.POLL
+```
+
+It is also possible to enable/disable an account, for example the account with the name *Gmail*:
 ```
 (adb shell) am startservice -a eu.faircode.email.ENABLE --es account Gmail
 (adb shell) am startservice -a eu.faircode.email.DISABLE --es account Gmail
 ```
 
-If you just want to automate checking for new messages, you can do this:
-
-```
-(adb shell) adb shell am startservice -a eu.faircode.email.POLL
-```
+Note that disabling an account will hide the account and all associated folders and messages.
 
 You can automatically send commands with for example [Tasker](https://tasker.joaoapps.com/userguide/en/intents.html):
 
@@ -2004,7 +2023,9 @@ However, not all servers support IMAP keywords and besides that there are no sta
 
 Empty messages and/or corrupt attachments are probably being caused by a bug in the server software.
 Older Microsoft Exchange software is known to cause this problem.
-Mostly you can workaround this by disabling *Partial fetch* in the advanced account settings.
+Mostly you can workaround this by disabling *Partial fetch* in the advanced account settings:
+
+Setup > Step 1 > Manage > Tap account > Tap advanced > Partial fetch > check
 
 After disabling this setting, you can use the message 'more' (three dots) menu to 'resync' empty messages.
 Alternatively, you can *Delete local messages* by long pressing the folder(s) in the folder list and synchronize all messages again.
@@ -2328,7 +2349,7 @@ You can reset all questions set to not to be asked again in the three-dots overf
 Calendar and contact management can better be done in a separate, specialized app
 and is too complex to add to FairEmail, which is in itself already complex enough.
 
-Note that FairEmail does support replying to calendar invites.
+Note that FairEmail does support replying to calendar invites and adding calendar invites to your personal calendar.
 
 Please see here for some open source apps:
 

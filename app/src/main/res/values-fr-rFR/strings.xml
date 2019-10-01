@@ -75,6 +75,7 @@
     <string name="menu_contacts">Contacts locaux</string>
     <string name="menu_setup">Configuration</string>
     <string name="menu_legend">Légende</string>
+    <string name="menu_test">Programme de test</string>
     <string name="menu_faq">Support</string>
     <string name="menu_issue">Signaler un problème</string>
     <string name="menu_attribution">Attribution</string>
@@ -107,6 +108,7 @@
     <string name="title_setup_quick_smtp">Serveur SMTP pour envoyer des messages</string>
     <string name="title_setup_go">Aller</string>
     <string name="title_setup_wizard">Assistant</string>
+    <string name="title_setup_wizard_remark">Faites \'retour\' pour aller à la boîte de réception</string>
     <string name="title_setup_other">Autre fournisseur</string>
     <string name="title_setup_gmail_support">L\'autorisation des comptes Google fonctionnera uniquement dans les versions officielles parce que Android vérifie la signature de l\'application</string>
     <string name="title_setup_gmail_rationale">Veuillez accorder les autorisations pour sélectionner un compte et lire votre nom</string>
@@ -229,20 +231,22 @@
     <string name="title_advanced_actionbar">Afficher la barre d\'action de conversation</string>
     <string name="title_advanced_pull_refresh">Tirer vers le bas pour actualiser</string>
     <string name="title_advanced_autoscroll">Faire défiler vers le haut lors de la réception de nouveaux messages</string>
+    <string name="title_advanced_double_tap">Appuyez deux fois pour marquer le message lu/non lu</string>
     <string name="title_advanced_swipenav">Balayez vers la gauche/droite pour passer à la conversation suivante/précédente</string>
     <string name="title_advanced_reversed">Inverser les directions de navigation</string>
-    <string name="title_advanced_double_tap">Appuyez deux fois pour marquer le message lu/non lu</string>
     <string name="title_advanced_autoexpand">Développer automatiquement les messages</string>
     <string name="title_advanced_expand_one">Développer un seul message à la fois</string>
     <string name="title_advanced_collapse">Replier les messages dans les conversations en appuyant sur « Retour »</string>
     <string name="title_advanced_autoclose">Fermer automatiquement les conversations</string>
     <string name="title_advanced_onclose">Lors de la fermeture d\'une conversation</string>
     <string name="title_advanced_autoread">Marquer automatiquement le message comme lu lors de son déplacement</string>
+    <string name="title_advanced_autounstar">Retirer automatiquement l\'étoile des messages lors de leur déplacement</string>
     <string name="title_advanced_automove">Confirmer le déplacement des messages</string>
     <string name="title_advanced_discard_delete">Lors de la suppression d\'un brouillon, le supprimer définitivement</string>
     <string name="title_advanced_tracking">Reconnaissance automatique et désactivation des images de suivi</string>
     <string name="title_advanced_badge">Afficher l\'icône de lancement avec le nombre de nouveaux messages</string>
     <string name="title_advanced_unseen_ignored">Faire correspondre le nombre de nouveaux messages et le nombre de notifications</string>
+    <string name="title_advanced_notify_summary">Afficher uniquement une notification résumée</string>
     <string name="title_advanced_notify_preview">Afficher l\'aperçu du message dans les notifications</string>
     <string name="title_advanced_notify_actions">Actions de notification</string>
     <string name="title_advanced_notify_action_trash">Supprimer</string>
@@ -261,6 +265,8 @@
     <string name="title_advanced_notify_action_hint">Trois actions au plus seront affichées</string>
     <string name="title_advanced_notify_remove_hint">Les notifications de nouveau message seront toujours supprimées lors de leur balayage et lors du marquage des messages comme lus</string>
     <string name="title_advanced_notify_manage_hint">Appuyez sur le nom du canal \'Notifications\' pour définir le son de notification par défaut, etc</string>
+    <string name="title_advanced_notify_no_grouping">Cette version de Android ne supporte pas le regroupement de notifications</string>
+    <string name="title_advanced_notify_no_channels">Cette version de Android ne supporte pas les canaux de notification</string>
     <string name="title_advanced_double_back">Faire \"Retour\" deux fois pour quitter</string>
     <string name="title_advanced_biometrics_timeout">Délai d\'authentification biométrique</string>
     <string name="title_advanced_english">Forcer la langue anglaise</string>
@@ -309,10 +315,8 @@
     <string name="title_advanced_sender_regex">Regex pour correspondre aux adresses modifiées</string>
     <string name="title_identity_reply_to">Répondre à l\'adresse</string>
     <string name="title_identity_encrypt">Chiffrer par défaut</string>
+    <string name="title_identity_receipt">Demander un accusé de réception/lecture par défaut</string>
     <string name="title_identity_use_ip_hint">En cas de \"connexion invalide\", \"nécessite une adresse valide\" ou une erreur similaire, essayez de modifier ce paramètre</string>
-    <string name="title_identity_read_receipt">Demander une confirmation de lecture</string>
-    <string name="title_identity_delivery_receipt">Demander un accusé de réception</string>
-    <string name="title_identity_receipt_remark">La plupart des fournisseurs ignorent les demandes d\'accusé de réception</string>
     <string name="title_optional">Facultatif</string>
     <string name="title_recommended">Recommandé</string>
     <string name="title_account_linked">Compte associé</string>
@@ -373,6 +377,7 @@
     <string name="title_delete_local">Supprimer les messages locaux</string>
     <string name="title_delete_browsed">Supprimer les messages consultés/recherchés</string>
     <string name="title_empty_trash">Vider la corbeille</string>
+    <string name="title_empty_spam">Vider le dossier de spam</string>
     <string name="title_edit_properties">Éditer les propriétés</string>
     <string name="title_edit_rules">Modifier les règles</string>
     <string name="title_create_channel">Créer un canal de notification</string>
@@ -380,6 +385,7 @@
     <string name="title_delete_channel">Supprimer un canal de notification</string>
     <string name="title_create_sub_folder">Créer un sous-dossier</string>
     <string name="title_empty_trash_ask">Supprimer définitivement tous les messages de la corbeille ?</string>
+    <string name="title_empty_spam_ask">Supprimer définitivement tous les messages indésirables ?</string>
     <string name="title_delete_operation">Supprimer les opérations avec un message d\'erreur ?</string>
     <string name="title_delete_contacts">Supprimer tous les contacts locaux ?</string>
     <string name="title_no_operations">Aucune opération en attente</string>
@@ -417,6 +423,7 @@
     <string name="title_no_folders">Aucun dossier</string>
     <string name="title_no_messages">Aucun message</string>
     <string name="title_filters_active">Un ou plusieurs filtres actifs</string>
+    <string name="title_duplicate_in">Dupliquer dans %1$s</string>
     <string name="title_subject_reply">Re : %1$s</string>
     <string name="title_subject_forward">Tr : %1$s</string>
     <string name="title_seen">Marquer comme lu</string>
@@ -507,6 +514,7 @@
     <string name="title_send_via">Envoyer avec</string>
     <string name="title_send_with_options">Envoyer &#8230;</string>
     <string name="title_send_at">Envoyer à &#8230;</string>
+    <string name="title_send_priority">Priorité</string>
     <string name="title_no_server">Aucun serveur trouvé à \'%1$s\'</string>
     <string name="title_style_bold">Gras</string>
     <string name="title_style_italic">Italique</string>
@@ -525,6 +533,8 @@
     <string name="title_insert_contact_group">Insérer un groupe de contacts</string>
     <string name="title_insert_template">Insérer un modèle</string>
     <string name="title_send_plain_text">Texte brut seulement</string>
+    <string name="title_send_receipt">Demander un accusé de réception/lecture</string>
+    <string name="title_send_receipt_remark">La plupart des fournisseurs et des clients de messagerie ignorent les demandes d\'accusé de réception</string>
     <string name="title_from_missing">Expéditeur manquant</string>
     <string name="title_to_missing">Destinataire manquant</string>
     <string name="title_subject_reminder">L\'objet est vide</string>
@@ -575,6 +585,7 @@
     <string name="title_answer_text">Texte du modèle</string>
     <string name="title_answer_template_name">$name$ sera remplacé par le nom complet de l\'expéditeur</string>
     <string name="title_answer_template_email">$email$ sera remplacé par l\'adresse e-mail de l\'expéditeur</string>
+    <string name="title_rule_noop">Aucune action</string>
     <string name="title_rule_seen">Marquer comme lu</string>
     <string name="title_rule_unseen">Marquer comme non lu</string>
     <string name="title_rule_ignore">Supprimer les notifications</string>
@@ -652,6 +663,7 @@
     <string name="title_legend_thread">Conversation</string>
     <string name="title_legend_zoom">Changer la taille du texte</string>
     <string name="title_legend_draft">A un brouillon</string>
+    <string name="title_legend_priority">A une priorité élevée</string>
     <string name="title_legend_auth">Échec de l\'authentification</string>
     <string name="title_legend_snoozed">Est différé</string>
     <string name="title_legend_browsed">Est parcouru ou recherché</string>
@@ -838,5 +850,10 @@
         <item>Au début</item>
         <item>Au milieu</item>
         <item>À la fin</item>
+    </string-array>
+    <string-array name="priorityNames">
+        <item>Basse</item>
+        <item>Normale</item>
+        <item>Haute</item>
     </string-array>
 </resources>

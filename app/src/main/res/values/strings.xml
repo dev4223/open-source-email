@@ -96,6 +96,7 @@
     <string name="menu_setup">Settings</string>
 
     <string name="menu_legend">Legend</string>
+    <string name="menu_test">Test program</string>
     <string name="menu_faq">Support</string>
     <string name="menu_issue">Report issue</string>
     <string name="menu_attribution">Attribution</string>
@@ -135,6 +136,7 @@
     <string name="title_setup_quick_smtp">SMTP server to send messages</string>
     <string name="title_setup_go">Go</string>
     <string name="title_setup_wizard">Wizard</string>
+    <string name="title_setup_wizard_remark">Go \'back\' to go to the inbox</string>
     <string name="title_setup_gmail" translatable="false">Gmail</string>
     <string name="title_setup_other">Other provider</string>
     <string name="title_setup_gmail_support">Authorizing Google accounts will work in official versions only because Android checks the app signature</string>
@@ -241,6 +243,7 @@
     <string name="title_advanced_date_header">Group by date</string>
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
+    <string name="title_advanced_distinguish_contacts">Distinguish messages of known and unknown contacts</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_generated_icons">Show generated icons</string>
     <string name="title_advanced_identicons">Show identicons</string>
@@ -267,21 +270,23 @@
 
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
     <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
+    <string name="title_advanced_double_tap">Double tap to mark message read/unread</string>
     <string name="title_advanced_swipenav">Swipe left/right to go to next/previous conversation</string>
     <string name="title_advanced_reversed">Reverse navigation direction</string>
-    <string name="title_advanced_double_tap">Double tap to mark message read/unread</string>
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
     <string name="title_advanced_expand_one">Expand only one message at a time</string>
     <string name="title_advanced_collapse">Collapse messages in conversations on \'back\'</string>
     <string name="title_advanced_autoclose">Automatically close conversations</string>
     <string name="title_advanced_onclose">On closing a conversation</string>
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
+    <string name="title_advanced_autounstar">Automatically remove stars from messages on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
     <string name="title_advanced_discard_delete">On discard draft permanently delete draft</string>
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_unseen_ignored">Let the number of new messages match the number of notifications</string>
+    <string name="title_advanced_notify_summary">Show summary notification only</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_notify_actions">Notification actions</string>
     <string name="title_advanced_notify_action_trash">Trash</string>
@@ -302,6 +307,8 @@
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
     <string name="title_advanced_notify_remove_hint">New message notifications will always be removed on being swiped away and on marking messages read</string>
     <string name="title_advanced_notify_manage_hint">Tap on the channel name \'Notifications\' to set the default notification sound, etc</string>
+    <string name="title_advanced_notify_no_grouping">This Android version does not support notification grouping</string>
+    <string name="title_advanced_notify_no_channels">This Android version does not support notification channels</string>
 
     <string name="title_advanced_double_back">Double \'back\' to exit</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
@@ -362,10 +369,8 @@
     <string name="title_advanced_sender_regex">Regex to match edited addresses</string>
     <string name="title_identity_reply_to">Reply to address</string>
     <string name="title_identity_encrypt">Encrypt by default</string>
+    <string name="title_identity_receipt">Request delivery/read receipt by default</string>
     <string name="title_identity_use_ip_hint">In case of \'invalid greeting\', \'requires valid address\' or a similar error, try to change this setting</string>
-    <string name="title_identity_read_receipt">Request read receipt</string>
-    <string name="title_identity_delivery_receipt">Request delivery receipt</string>
-    <string name="title_identity_receipt_remark">Most providers ignore receipt requests</string>
     <string name="title_optional">Optional</string>
     <string name="title_recommended">Recommended</string>
     <string name="title_account_linked">Linked account</string>
@@ -434,6 +439,7 @@
     <string name="title_delete_local">Delete local messages</string>
     <string name="title_delete_browsed">Delete browsed/searched messages</string>
     <string name="title_empty_trash">Empty trash</string>
+    <string name="title_empty_spam">Empty spam</string>
     <string name="title_edit_properties">Edit properties</string>
     <string name="title_edit_rules">Edit rules</string>
     <string name="title_create_channel">Create notification channel</string>
@@ -442,6 +448,7 @@
     <string name="title_create_sub_folder">Create sub folder</string>
 
     <string name="title_empty_trash_ask">Delete all trashed messages permanently?</string>
+    <string name="title_empty_spam_ask">Delete all spam messages permanently?</string>
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
@@ -481,6 +488,7 @@
     <string name="title_no_folders">No folders</string>
     <string name="title_no_messages">No messages</string>
     <string name="title_filters_active">One or more filters active</string>
+    <string name="title_duplicate_in">Duplicate in %1$s</string>
 
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
@@ -577,6 +585,7 @@
     <string name="title_send_via">Send via</string>
     <string name="title_send_with_options">Send &#8230;</string>
     <string name="title_send_at">Send at &#8230;</string>
+    <string name="title_send_priority">Priority</string>
     <string name="title_no_server">No server found at \'%1$s\'</string>
 
     <string name="title_style_bold">Bold</string>
@@ -597,6 +606,8 @@
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
     <string name="title_send_plain_text">Plain text only</string>
+    <string name="title_send_receipt">Request delivery/read receipt</string>
+    <string name="title_send_receipt_remark">Most providers and email clients ignore receipt requests</string>
 
     <string name="title_from_missing">Sender missing</string>
     <string name="title_to_missing">Recipient missing</string>
@@ -657,6 +668,7 @@
     <string name="title_answer_template_name">$name$ will be replaced by the sender full name</string>
     <string name="title_answer_template_email">$email$ will be replaced by the sender email address</string>
 
+    <string name="title_rule_noop">No action</string>
     <string name="title_rule_seen">Mark read</string>
     <string name="title_rule_unseen">Mark unread</string>
     <string name="title_rule_ignore">Suppress notification</string>
@@ -741,6 +753,7 @@
     <string name="title_legend_thread">Conversation</string>
     <string name="title_legend_zoom">Change text size</string>
     <string name="title_legend_draft">Has draft</string>
+    <string name="title_legend_priority">Has high priority</string>
     <string name="title_legend_auth">Authentication failed</string>
     <string name="title_legend_snoozed">Is snoozed</string>
     <string name="title_legend_browsed">Is browsed or searched</string>
@@ -1015,28 +1028,11 @@
         <item>At the end</item>
     </string-array>
 
-    <array name="colorPicker">
-        <item>@color/red</item>
-        <item>@color/pink</item>
-        <item>@color/purple</item>
-        <item>@color/deep_purple</item>
-        <item>@color/indigo</item>
-        <item>@color/blue</item>
-        <item>@color/light_blue</item>
-        <item>@color/cyan</item>
-        <item>@color/teal</item>
-        <item>@color/green</item>
-        <item>@color/light_green</item>
-        <item>@color/lime</item>
-        <item>@color/yellow</item>
-        <item>@color/amber</item>
-        <item>@color/orange</item>
-        <item>@color/deep_orange</item>
-        <item>@color/brown</item>
-        <item>@color/blue_grey</item>
-        <item>@color/grey</item>
-        <item>@color/dark_grey</item>
-    </array>
+    <string-array name="priorityNames">
+        <item>Low</item>
+        <item>Normal</item>
+        <item>High</item>
+    </string-array>
 
     <string name="fingerprint" translatable="false">17BA15C1AF55D925F98B99CEA4375D4CDF4C174B</string>
     <string name="public_key" translatable="false">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtFbxEbzL8u5accPGgBw/XdyiSS5BBE6ZQ9ELpKyJ/OQN+kdYniCAOw3lsQ/GuJScy4Y2HobqbBgLL8GLHG+Yu2EHC9dLjA3v2Mc25vvnfn86BsrpQvz1poN2n+roTBdq09FWbtebJ8m0hDBVmtfRi7RhTKIL4No3kodLhksdnucKjcFheubebWKgpmvbmw7NwuELhaZmyhw8WTtnQ4rZPMhjY1JJZgzwNExXgD7zzg4pJPkuQlfkuRkkvBpHpi3C7VDnYjrBlLHngI4wv3wxQBVwJqlvAT9PmX8dOVnTsWWdJdLQBZVWphuqVY54kjBIovN+o8w03WjsV9QiOQq+XwIDAQAB</string>

@@ -97,6 +97,7 @@
     <string name="menu_contacts">Místní kontakty</string>
     <string name="menu_setup">Nastavení</string>
     <string name="menu_legend">Legenda</string>
+    <string name="menu_test">Testovací program</string>
     <string name="menu_faq">Podpora</string>
     <string name="menu_issue">Nahlásit problém</string>
     <string name="menu_attribution">Zásluhy</string>
@@ -129,6 +130,7 @@
     <string name="title_setup_quick_smtp">SMTP server pro odesílání zpráv</string>
     <string name="title_setup_go">Přejít</string>
     <string name="title_setup_wizard">Průvodce</string>
+    <string name="title_setup_wizard_remark">Jděte \"zpět\" pro přejítí do doručených</string>
     <string name="title_setup_other">Jiný poskytovatel</string>
     <string name="title_setup_gmail_support">Autorizace Google účtů funguje pouze v oficiálních verzích aplikace, neboť Android kontroluje podpis aplikace</string>
     <string name="title_setup_gmail_rationale">Pro zvolení účtu a přečtení vašeho jména prosím udělte oprávnění</string>
@@ -236,6 +238,7 @@
     <string name="title_advanced_subject_italic">Zobrazit předmět kurzívou</string>
     <string name="title_advanced_subject_elipsed">V případě potřeby zestručnit předmět</string>
     <string name="title_advanced_flags">Zobrazit hvězdičky</string>
+    <string name="title_advanced_flags_background">Zobrazit obarvené pozadí namísto obarvených hvězdiček</string>
     <string name="title_advanced_preview">Zobrazit náhled zprávy</string>
     <string name="title_advanced_preview_italic">Zobrazit náhled zprávy kurzívou</string>
     <string name="title_advanced_addresses">Ve výchozím nastavení zobrazit detaily adresy</string>
@@ -250,23 +253,26 @@
     <string name="title_advanced_actionbar">Zobrazit panel akcí konverzací</string>
     <string name="title_advanced_pull_refresh">Aktualizovat tažením dolů</string>
     <string name="title_advanced_autoscroll">Posun na začátek při příjmu nových zpráv</string>
+    <string name="title_advanced_double_tap">Dvojstisk pro označení zprávy jako přečtené/nepřečtené</string>
     <string name="title_advanced_swipenav">Tažením doleva/doprava přejít na předešlou/následující konverzaci</string>
     <string name="title_advanced_reversed">Obrátit směr navigace</string>
-    <string name="title_advanced_double_tap">Dvojstisk pro označení zprávy jako přečtené/nepřečtené</string>
     <string name="title_advanced_autoexpand">Automaticky rozbalovat zprávy</string>
     <string name="title_advanced_expand_one">Rozbalit vždy pouze jednu zprávu</string>
     <string name="title_advanced_collapse">Sbalit zprávy v konverzacích při pohybu zpět</string>
     <string name="title_advanced_autoclose">Automaticky zavírat konverzace</string>
     <string name="title_advanced_onclose">Při zavření konverzace</string>
     <string name="title_advanced_autoread">Automaticky označit zprávy jako přečtené při přesunu</string>
+    <string name="title_advanced_autounstar">Automaticky odebrat zprávám hvězdičku při přesunu</string>
     <string name="title_advanced_automove">Potvrzovat přesun zpráv</string>
     <string name="title_advanced_discard_delete">Při zahození konceptu jej permanentně smazat</string>
     <string name="title_advanced_tracking">Automaticky rozpoznat a zakázat sledovací obrázky</string>
     <string name="title_advanced_badge">Zobrazit počet nových zpráv na ikoně aplikace</string>
     <string name="title_advanced_unseen_ignored">Nechť počet nových zpráv souhlasí s počtem oznámení</string>
+    <string name="title_advanced_notify_summary">Zobrazit pouze souhrnné oznámení</string>
     <string name="title_advanced_notify_preview">Zobrazit náhled zprávy v oznámení</string>
     <string name="title_advanced_notify_actions">Akce oznámení</string>
     <string name="title_advanced_notify_action_trash">Koš</string>
+    <string name="title_advanced_notify_action_junk">Nevyžádané</string>
     <string name="title_advanced_notify_action_archive">Archiv</string>
     <string name="title_advanced_notify_action_reply">Odpověď</string>
     <string name="title_advanced_notify_action_reply_direct">Přímá odpověď</string>
@@ -281,6 +287,8 @@
     <string name="title_advanced_notify_action_hint">Budou zobrazeny nejvýše tři akce</string>
     <string name="title_advanced_notify_remove_hint">Oznámení nových zpráv budou při odtažení prstem a při označení zpráv jako přečtených odebrána vždy</string>
     <string name="title_advanced_notify_manage_hint">Stiskněte název kanálu \"Oznámení\" pro nastavení výchozího zvuku oznámení, atd</string>
+    <string name="title_advanced_notify_no_grouping">Tato verze Androidu nepodporuje seskupování oznámení</string>
+    <string name="title_advanced_notify_no_channels">Tato verze Androidu nepodporuje kanály oznámení</string>
     <string name="title_advanced_double_back">Dvakrát \"zpět\" pro ukončení</string>
     <string name="title_advanced_biometrics_timeout">Vypršení biometrického ověření</string>
     <string name="title_advanced_english">Vynutit anglický jazyk</string>
@@ -329,10 +337,8 @@
     <string name="title_advanced_sender_regex">Regulární výraz, který bude odpovídat upraveným adresám</string>
     <string name="title_identity_reply_to">Odpověď na adresu</string>
     <string name="title_identity_encrypt">Šifrovat jako výchozí</string>
+    <string name="title_identity_receipt">Požadovat potvrzení doručení/přečtení jako výchozí</string>
     <string name="title_identity_use_ip_hint">V případech \"neplatný pozdrav\", \"nutná platná adresa\" či podobné chyby zkuste změnit toto nastavení</string>
-    <string name="title_identity_read_receipt">Požadovat potvrzení o přečtení</string>
-    <string name="title_identity_delivery_receipt">Požadovat potvrzení doručení</string>
-    <string name="title_identity_receipt_remark">Většina poskytovatelů ignoruje žádosti o potvrzení</string>
     <string name="title_optional">Nepovinné</string>
     <string name="title_recommended">Doporučeno</string>
     <string name="title_account_linked">Připojený účet</string>
@@ -393,6 +399,7 @@
     <string name="title_delete_local">Smazat místní zprávy</string>
     <string name="title_delete_browsed">Smazat prohlédnuté/vyhledané zprávy</string>
     <string name="title_empty_trash">Vysypat koš</string>
+    <string name="title_empty_spam">Vyprázdnit nevyžádané</string>
     <string name="title_edit_properties">Upravit vlastnosti</string>
     <string name="title_edit_rules">Upravit pravidla</string>
     <string name="title_create_channel">Vytvořit kanál oznámení</string>
@@ -400,6 +407,7 @@
     <string name="title_delete_channel">Smazat kanál oznámení</string>
     <string name="title_create_sub_folder">Vytvořit podsložku</string>
     <string name="title_empty_trash_ask">Trvale odstranit všechny zprávy v koši?</string>
+    <string name="title_empty_spam_ask">Trvale odstranit všechny nevyžádané zprávy?</string>
     <string name="title_delete_operation">Smazat operace s chybovou hláškou?</string>
     <string name="title_delete_contacts">Smazat všechny místní kontakty?</string>
     <string name="title_no_operations">Žádné probíhající operace</string>
@@ -437,6 +445,7 @@
     <string name="title_no_folders">Žádné složky</string>
     <string name="title_no_messages">Žádné zprávy</string>
     <string name="title_filters_active">Jeden nebo více filtrů aktivních</string>
+    <string name="title_duplicate_in">Duplikát v %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_seen">Označit přečtené</string>
@@ -524,8 +533,10 @@
     <string name="title_discard">Zahodit</string>
     <string name="title_save">Uložit</string>
     <string name="title_send">Odeslat</string>
+    <string name="title_send_via">Odeslat přes</string>
     <string name="title_send_with_options">Odeslat &#8230;</string>
     <string name="title_send_at">Odeslat později &#8230;</string>
+    <string name="title_send_priority">Důležitost</string>
     <string name="title_no_server">Nenalezen žádný server na \'%1$s\'</string>
     <string name="title_style_bold">Tučně</string>
     <string name="title_style_italic">Kurzíva</string>
@@ -544,6 +555,8 @@
     <string name="title_insert_contact_group">Vložit skupinu kontaktů</string>
     <string name="title_insert_template">Vložit šablonu</string>
     <string name="title_send_plain_text">Pouze prostý text</string>
+    <string name="title_send_receipt">Požadovat potvrzení doručení/přečtení</string>
+    <string name="title_send_receipt_remark">Většina poskytovatelů a e-mailových klientů ignoruje žádosti o potvrzení</string>
     <string name="title_from_missing">Chybí odesílatel</string>
     <string name="title_to_missing">Chybí příjemce</string>
     <string name="title_subject_reminder">Chybí předmět</string>
@@ -594,6 +607,7 @@
     <string name="title_answer_text">Text šablony</string>
     <string name="title_answer_template_name">$name$ bude nahrazeno celým jménem odesílatele</string>
     <string name="title_answer_template_email">$email$ bude nahrazeno e-mailovou adresou odesílatele</string>
+    <string name="title_rule_noop">Žádná akce</string>
     <string name="title_rule_seen">Označit přečtené</string>
     <string name="title_rule_unseen">Označit nepřečtené</string>
     <string name="title_rule_ignore">Potlačit oznámení</string>
@@ -671,6 +685,7 @@
     <string name="title_legend_thread">Konverzace</string>
     <string name="title_legend_zoom">Změnit velikost textu</string>
     <string name="title_legend_draft">Má koncept</string>
+    <string name="title_legend_priority">Má vysokou prioritu</string>
     <string name="title_legend_auth">Ověřování selhalo</string>
     <string name="title_legend_snoozed">Je odloženo</string>
     <string name="title_legend_browsed">Je prohlédnuto/vyhledáno</string>
@@ -856,5 +871,10 @@
         <item>Na začátku</item>
         <item>Uprostřed</item>
         <item>Na konci</item>
+    </string-array>
+    <string-array name="priorityNames">
+        <item>Nízká</item>
+        <item>Normální</item>
+        <item>Vysoká</item>
     </string-array>
 </resources>

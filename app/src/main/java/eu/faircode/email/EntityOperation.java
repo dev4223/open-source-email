@@ -92,6 +92,24 @@ public class EntityOperation {
     static final String SEND = "send";
     static final String EXISTS = "exists";
 
+    void cleanup(Context context) {
+        if (EntityOperation.MOVE.equals(name) ||
+                EntityOperation.ADD.equals(name) ||
+                EntityOperation.RAW.equals(name))
+            try {
+                JSONArray jargs = new JSONArray(args);
+                long tmpid = jargs.optLong(2, -1);
+                if (tmpid < 0)
+                    return;
+
+                DB db = DB.getInstance(context);
+                db.message().deleteMessage(tmpid);
+                db.message().setMessageUiHide(message, false);
+            } catch (JSONException ex) {
+                Log.e(ex);
+            }
+    }
+
     static void queue(Context context, EntityMessage message, String name, Object... values) {
         DB db = DB.getInstance(context);
 
@@ -112,10 +130,8 @@ public class EntityOperation {
             } else if (FLAG.equals(name)) {
                 boolean flagged = jargs.getBoolean(0);
                 Integer color = (jargs.length() > 1 && !jargs.isNull(1) ? jargs.getInt(1) : null);
-                for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid)) {
-                    db.message().setMessageUiFlagged(similar.id, flagged);
-                    db.message().setMessageColor(similar.id, flagged ? color : null);
-                }
+                for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid))
+                    db.message().setMessageUiFlagged(similar.id, flagged, flagged ? color : null);
 
             } else if (ANSWERED.equals(name))
                 for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid))
@@ -124,12 +140,12 @@ public class EntityOperation {
             else if (MOVE.equals(name)) {
                 // Parameters:
                 // 0: target folder
-                // 1: auto read
+                // (1: auto read)
+                // 2: temporary message
 
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean autoread = prefs.getBoolean("autoread", false);
-                autoread = (autoread && jargs.optBoolean(1, true));
-                jargs.put(1, autoread);
+                boolean autounflag = prefs.getBoolean("autounflag", false);
 
                 EntityFolder source = db.folder().getFolder(message.folder);
                 EntityFolder target = db.folder().getFolder(jargs.getLong(0));
@@ -139,10 +155,16 @@ public class EntityOperation {
                 EntityLog.log(context, "Move message=" + message.id + ":" + message.subject +
                         " source=" + source.id + ":" + source.name + "" +
                         " target=" + target.id + ":" + target.name +
-                        " autoread=" + autoread);
+                        " auto read=" + autoread + " flag=" + autounflag);
 
-                if (autoread)
-                    db.message().setMessageUiSeen(message.id, true);
+                if (autoread || autounflag)
+                    for (EntityMessage similar : db.message().getMessageByMsgId(message.account, message.msgid)) {
+                        if (autoread)
+                            db.message().setMessageUiSeen(similar.id, true);
+                        if (autounflag)
+                            db.message().setMessageUiFlagged(similar.id, false, null);
+                    }
+
 
                 if (!EntityFolder.ARCHIVE.equals(source.type) ||
                         EntityFolder.TRASH.equals(target.type) || EntityFolder.JUNK.equals(target.type))
@@ -188,6 +210,7 @@ public class EntityOperation {
                     message.id = db.message().insertMessage(message);
                     File mtarget = message.getFile(context);
                     long tmpid = message.id;
+                    jargs.put(2, tmpid);
 
                     message.id = id;
                     message.account = source.account;
@@ -207,7 +230,7 @@ public class EntityOperation {
                         } catch (IOException ex) {
                             Log.e(ex);
                             db.message().setMessageContent(tmpid, false, null, null, null);
-                            db.message().setMessageSize(message.id, null);
+                            db.message().setMessageSize(message.id, null, null);
                         }
 
                     EntityAttachment.copy(context, message.id, tmpid);

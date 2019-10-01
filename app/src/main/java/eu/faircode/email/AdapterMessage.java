@@ -45,6 +45,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.text.Editable;
@@ -155,7 +156,6 @@ import biweekly.parameter.ParticipationStatus;
 import biweekly.property.Attendee;
 import biweekly.property.Method;
 import biweekly.property.Organizer;
-import biweekly.property.Summary;
 import biweekly.util.ICalDate;
 
 import static android.app.Activity.RESULT_OK;
@@ -208,6 +208,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private int answers = -1;
     private boolean gotoTop = false;
+    private boolean firstClick = false;
     private AsyncPagedListDiffer<TupleMessageEx> differ;
     private Map<Long, Integer> keyPosition = new HashMap<>();
     private SelectionTracker<Long> selectionTracker = null;
@@ -254,6 +255,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvSize;
         private TextView tvTime;
         private ImageView ivType;
+        private ImageView ivPriority;
         private ImageView ibAuth;
         private ImageView ibSnoozed;
         private ImageView ivBrowsed;
@@ -327,6 +329,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private Button btnCalendarAccept;
         private Button btnCalendarDecline;
         private Button btnCalendarMaybe;
+        private ImageButton ibCalendar;
         private ContentLoadingProgressBar pbCalendarWait;
 
         private RecyclerView rvImage;
@@ -367,6 +370,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
             ivType = itemView.findViewById(R.id.ivType);
+            ivPriority = itemView.findViewById(R.id.ivPriority);
             ibAuth = itemView.findViewById(R.id.ibAuth);
             ibSnoozed = itemView.findViewById(R.id.ibSnoozed);
             ivBrowsed = itemView.findViewById(R.id.ivBrowsed);
@@ -383,7 +387,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibHelp = itemView.findViewById(R.id.ibHelp);
             pbLoading = itemView.findViewById(R.id.pbLoading);
 
-            if (compact)
+            if (compact && tvSubject != null)
                 if ("start".equals(subject_ellipsize))
                     tvSubject.setEllipsize(TextUtils.TruncateAt.START);
                 else if ("end".equals(subject_ellipsize))
@@ -442,6 +446,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnCalendarAccept = vsBody.findViewById(R.id.btnCalendarAccept);
             btnCalendarDecline = vsBody.findViewById(R.id.btnCalendarDecline);
             btnCalendarMaybe = vsBody.findViewById(R.id.btnCalendarMaybe);
+            ibCalendar = vsBody.findViewById(R.id.ibCalendar);
             pbCalendarWait = vsBody.findViewById(R.id.pbCalendarWait);
 
             rvAttachment = attachments.findViewById(R.id.rvAttachment);
@@ -551,6 +556,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarAccept.setOnClickListener(this);
                 btnCalendarDecline.setOnClickListener(this);
                 btnCalendarMaybe.setOnClickListener(this);
+                ibCalendar.setOnClickListener(this);
 
                 gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     @Override
@@ -602,6 +608,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarAccept.setOnClickListener(null);
                 btnCalendarDecline.setOnClickListener(null);
                 btnCalendarMaybe.setOnClickListener(null);
+                ibCalendar.setOnClickListener(null);
             }
         }
 
@@ -614,6 +621,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setText(null);
             tvTime.setText(null);
             ivType.setVisibility(View.GONE);
+            ivPriority.setVisibility(View.GONE);
             ibAuth.setVisibility(View.GONE);
             ibSnoozed.setVisibility(View.GONE);
             ivBrowsed.setVisibility(View.GONE);
@@ -647,7 +655,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
 
             if (viewType == ViewType.THREAD)
-                view.setVisibility(!filter_duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
+                card.setVisibility(!filter_duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
 
             // Text size
             if (textSize != 0) {
@@ -661,12 +669,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
-                int px = Math.round(TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_PX, textSize * (compact ? 1.5f : 3.0f),
-                        context.getResources().getDisplayMetrics()));
-                if (compact && tvFrom.getMinHeight() != px)
-                    tvFrom.setMinimumHeight(px);
-
+                int px = Math.round(tvFrom.getTextSize() + tvSubject.getTextSize());
                 ViewGroup.LayoutParams lparams = ivAvatar.getLayoutParams();
                 if (lparams.height != px) {
                     lparams.width = px;
@@ -692,6 +695,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivType.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivPriority.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ibAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ibSnoozed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivBrowsed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -787,6 +791,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
                         ? View.VISIBLE : View.GONE);
             }
+
+            ivPriority.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
             ibSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
             ivBrowsed.setVisibility(message.ui_browsed ? View.VISIBLE : View.GONE);
@@ -797,7 +803,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (viewType == ViewType.FOLDER)
                 tvFolder.setText(outbox ? message.identityEmail : message.accountName);
-            else if (type == null) {
+            else if (type == null)
+                tvFolder.setText((compact ? "" : message.accountName + "/") + message.getFolderName(context));
+            else
+                tvFolder.setText(message.accountName + "/" + message.getFolderName(context));
+            
+
+            /*else if (type == null) {
                 String folderName = (message.folderDisplay == null
                         ? Helper.localizeFolderName(context, message.folderName)
                         : message.folderDisplay);
@@ -807,7 +819,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         ? Helper.localizeFolderName(context, message.folderName)
                         : message.folderDisplay);
                 tvFolder.setText(message.accountName + "/" + folderName);
-            }
+            }*/
 
             // dev4223: dont show folder and attachemnt in compact view
             // orig190304: tvFolder.setVisibility(compact && (!threading || viewType == ViewType.FOLDER || (viewType == ViewType.UNIFIED && EntityFolder.INBOX.equals(message.folderType))) ? View.GONE : View.VISIBLE);
@@ -831,7 +843,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             // Starred
-            bindFlagged(message);
+            bindFlagged(message, expanded);
 
             // Message text preview
             tvPreview.setTextColor(contrast ? textColorPrimary : textColorSecondary);
@@ -995,7 +1007,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvNoInternetBody.setVisibility(View.GONE);
         }
 
-        private void bindFlagged(TupleMessageEx message) {
+        private void bindFlagged(TupleMessageEx message, boolean expanded) {
             boolean pro = ActivityBilling.isPro(context);
             if (!pro)
                 message.color = null;
@@ -1003,18 +1015,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int flagged = (message.count - message.unflagged);
             ibFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
 
-            if (flags_background) {
-                if (message.color == null)
-                    card.setCardBackgroundColor(Color.TRANSPARENT);
-                else
-                    card.setCardBackgroundColor(ColorUtils.setAlphaComponent(message.color, 127));
-            } else {
+            if (message.color == null || expanded || !flags_background)
                 card.setCardBackgroundColor(Color.TRANSPARENT);
-                if (message.color == null)
-                    ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
-                else
-                    ibFlagged.setImageTintList(ColorStateList.valueOf(message.color));
-            }
+            else
+                card.setCardBackgroundColor(ColorUtils.setAlphaComponent(message.color, 127));
+
+            if (message.color == null)
+                ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
+            else
+                ibFlagged.setImageTintList(ColorStateList.valueOf(expanded ? message.color : textColorSecondary));
 
             ibFlagged.setEnabled(message.uid != null || message.accountPop);
 
@@ -1139,12 +1148,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
+
             // dev4223: show always
             //tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             //tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             tvSizeExTitle.setVisibility(View.VISIBLE);
             tvSizeEx.setVisibility(View.VISIBLE);
-            tvSizeEx.setText(message.size == null ? null : Helper.humanReadableByteCount(message.size, true));
+            StringBuilder size = new StringBuilder();
+            size
+                    .append(message.size == null ? "-" : Helper.humanReadableByteCount(message.size, true))
+                    .append("/")
+                    .append(message.total == null ? "-" : Helper.humanReadableByteCount(message.total, true));
+            tvSizeEx.setText(size.toString());
 
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
@@ -1419,7 +1434,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     VEvent event = icalendar.getEvents().get(0);
 
-                    Summary summary = event.getSummary();
+                    String summary = event.getSummary() == null ? null : event.getSummary().getValue();
 
                     ICalDate start = event.getDateStart() == null ? null : event.getDateStart().getValue();
                     ICalDate end = event.getDateEnd() == null ? null : event.getDateEnd().getValue();
@@ -1441,7 +1456,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     Organizer organizer = event.getOrganizer();
 
-                    tvCalendarSummary.setText(summary == null ? null : summary.getValue());
+                    tvCalendarSummary.setText(summary);
                     tvCalendarSummary.setVisibility(summary == null ? View.GONE : View.VISIBLE);
 
                     tvCalendarStart.setText(start == null ? null : DTF.format(start.getTime()));
@@ -1477,9 +1492,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putLong("id", message.id);
             args.putInt("action", action);
 
-            new SimpleTask<File>() {
+            new SimpleTask<Object>() {
                 @Override
-                protected File onExecute(Context context, Bundle args) throws Throwable {
+                protected Object onExecute(Context context, Bundle args) throws Throwable {
                     long id = args.getLong("id");
                     int action = args.getInt("action");
 
@@ -1495,6 +1510,44 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             File file = attachment.getFile(context);
                             ICalendar icalendar = Biweekly.parse(file).first();
                             VEvent event = icalendar.getEvents().get(0);
+
+                            if (action == R.id.ibCalendar) {
+                                String summary = event.getSummary() == null ? null : event.getSummary().getValue();
+
+                                ICalDate start = event.getDateStart() == null ? null : event.getDateStart().getValue();
+                                ICalDate end = event.getDateEnd() == null ? null : event.getDateEnd().getValue();
+
+                                String location = event.getLocation() == null ? null : event.getLocation().getValue();
+
+                                List<String> attendee = new ArrayList<>();
+                                for (Attendee a : event.getAttendees()) {
+                                    String email = a.getEmail();
+                                    if (!TextUtils.isEmpty(email))
+                                        attendee.add(email);
+                                }
+
+                                // https://developer.android.com/guide/topics/providers/calendar-provider.html#intent-insert
+                                Intent intent = new Intent(Intent.ACTION_INSERT)
+                                        .setData(CalendarContract.Events.CONTENT_URI)
+                                        .putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+
+                                if (summary != null)
+                                    intent.putExtra(CalendarContract.Events.TITLE, summary);
+
+                                if (start != null)
+                                    intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start.getTime());
+
+                                if (end != null)
+                                    intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end.getTime());
+
+                                if (location != null)
+                                    intent.putExtra(CalendarContract.Events.EVENT_LOCATION, location);
+
+                                if (attendee.size() > 0)
+                                    intent.putExtra(Intent.EXTRA_EMAIL, TextUtils.join(",", attendee));
+
+                                return intent;
+                            }
 
                             // https://tools.ietf.org/html/rfc5546#section-4.2.2
                             VEvent ev = new VEvent();
@@ -1539,26 +1592,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
-                protected void onExecuted(Bundle args, File ics) {
-                    String status = null;
-                    switch (action) {
-                        case R.id.btnCalendarAccept:
-                            status = context.getString(R.string.title_icalendar_accept);
-                            break;
-                        case R.id.btnCalendarDecline:
-                            status = context.getString(R.string.title_icalendar_decline);
-                            break;
-                        case R.id.btnCalendarMaybe:
-                            status = context.getString(R.string.title_icalendar_maybe);
-                            break;
-                    }
+                protected void onExecuted(Bundle args, Object result) {
+                    if (result instanceof File) {
+                        String status = null;
+                        switch (action) {
+                            case R.id.btnCalendarAccept:
+                                status = context.getString(R.string.title_icalendar_accept);
+                                break;
+                            case R.id.btnCalendarDecline:
+                                status = context.getString(R.string.title_icalendar_decline);
+                                break;
+                            case R.id.btnCalendarMaybe:
+                                status = context.getString(R.string.title_icalendar_maybe);
+                                break;
+                        }
 
-                    Intent reply = new Intent(context, ActivityCompose.class)
-                            .putExtra("action", "participation")
-                            .putExtra("reference", args.getLong("id"))
-                            .putExtra("ics", ics)
-                            .putExtra("status", status);
-                    context.startActivity(reply);
+                        Intent reply = new Intent(context, ActivityCompose.class)
+                                .putExtra("action", "participation")
+                                .putExtra("reference", args.getLong("id"))
+                                .putExtra("ics", (File) result)
+                                .putExtra("status", status);
+                        context.startActivity(reply);
+                    } else if (result instanceof Intent) {
+                        context.startActivity((Intent) result);
+                    }
                 }
 
                 @Override
@@ -1575,8 +1632,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             return differ.getItem(pos);
         }
-
-        private boolean firstClick = false;
 
         @Override
         public boolean onTouch(View view, MotionEvent ev) {
@@ -1640,6 +1695,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.btnCalendarAccept:
                     case R.id.btnCalendarDecline:
                     case R.id.btnCalendarMaybe:
+                    case R.id.ibCalendar:
                         onActionCalendar(message, view.getId());
                         break;
                     default:
@@ -1696,6 +1752,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             }
                         }, ViewConfiguration.getDoubleTapTimeout());
                     } else {
+                        message.ui_seen = !message.ui_seen;
+                        message.unseen = (message.ui_seen ? 0 : message.count);
+                        bindTo(message);
+
                         Bundle args = new Bundle();
                         args.putLong("id", message.id);
                         args.putBoolean("pop", message.accountPop);
@@ -1845,7 +1905,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             message.unflagged = message.ui_flagged ? message.count : 0;
             message.ui_flagged = !message.ui_flagged;
-            bindFlagged(message);
+
+            boolean expanded = properties.getValue("expanded", message.id);
+            bindFlagged(message, expanded);
 
             new SimpleTask<Void>() {
                 @Override
@@ -2088,6 +2150,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bindExpanded(message, true);
                 else
                     clearExpanded(message);
+
+                bindFlagged(message, expanded);
             }
         }
 
@@ -2512,8 +2576,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_editasnew).setEnabled(message.content);
 
             popupMenu.getMenu().findItem(R.id.menu_unseen).setTitle(message.ui_seen ? R.string.title_unseen : R.string.title_seen);
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setVisible(!message.accountPop);
+            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(
+                    (message.uid != null && !message.folderReadOnly) || message.accountPop);
 
             popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(
                     (message.uid != null && !message.folderReadOnly) || message.accountPop);
@@ -2945,13 +3009,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuColoredStar(final TupleMessageEx message) {
-            int color = (message.color == null ? Color.TRANSPARENT : message.color);
-
             Bundle args = new Bundle();
             args.putLong("id", message.id);
+            args.putInt("color", message.color == null ? Color.TRANSPARENT : message.color);
+            args.putString("title", context.getString(R.string.title_flag_color));
 
             FragmentDialogColor fragment = new FragmentDialogColor();
-            fragment.initialize(R.string.title_flag_color, color, args, context);
+            fragment.setArguments(args);
             fragment.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_COLOR);
             fragment.show(parentFragment.getFragmentManager(), "message:color");
         }
@@ -3316,7 +3380,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {
             @Override
             public void onCurrentListChanged(@Nullable PagedList<TupleMessageEx> previousList, @Nullable PagedList<TupleMessageEx> currentList) {
-                if (gotoTop) {
+                int prev = (previousList == null ? 0 : previousList.size());
+                int cur = (currentList == null ? 0 : currentList.size());
+                boolean autoscroll =
+                        (prefs.getBoolean("autoscroll", false) ||
+                                viewType == AdapterMessage.ViewType.THREAD);
+
+                if (gotoTop || (autoscroll && cur > prev)) {
                     gotoTop = false;
                     properties.scrollTo(0);
                 }
@@ -3422,6 +3492,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     @Override
     public int getItemViewType(int position) {
+        TupleMessageEx message = differ.getItem(position);
+        if (filter_duplicates && message != null && message.duplicate)
+            return R.layout.item_message_duplicate;
         return (compact ? R.layout.item_message_compact : R.layout.item_message_normal);
     }
 
@@ -3537,6 +3610,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!Objects.equals(prev.size, next.size)) {
                         same = false;
                         Log.i("size changed id=" + next.id);
+                    }
+                    if (!Objects.equals(prev.total, next.total)) {
+                        same = false;
+                        Log.i("total changed id=" + next.id);
                     }
                     if (!Objects.equals(prev.attachments, next.attachments)) {
                         same = false;
@@ -3698,9 +3775,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        TupleMessageEx message = differ.getItem(position);
+        if (filter_duplicates && message != null && message.duplicate) {
+            holder.tvFolder.setText(context.getString(R.string.title_duplicate_in, message.getFolderName(context)));
+            holder.tvFolder.setAlpha(Helper.LOW_LIGHT);
+            return;
+        }
+
         holder.unwire();
 
-        TupleMessageEx message = differ.getItem(position);
         if (message == null || context == null)
             holder.clear();
         else {

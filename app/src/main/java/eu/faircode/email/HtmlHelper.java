@@ -45,7 +45,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.graphics.ColorUtils;
 import androidx.core.text.HtmlCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.preference.PreferenceManager;
@@ -61,6 +60,7 @@ import org.jsoup.safety.Whitelist;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -210,11 +210,7 @@ public class HtmlHelper {
                                 }
 
                                 if (color != null) {
-                                    float lum = (float) ColorUtils.calculateLuminance(color);
-                                    if (dark ? lum < MIN_LUMINANCE : lum > 1 - MIN_LUMINANCE)
-                                        color = ColorUtils.blendARGB(color,
-                                                dark ? Color.WHITE : Color.BLACK,
-                                                dark ? MIN_LUMINANCE - lum : lum - (1 - MIN_LUMINANCE));
+                                    color = Helper.adjustLuminance(color, dark, MIN_LUMINANCE);
                                     c = String.format("#%06x", color & 0xFFFFFF);
                                     sb.append("color:").append(c).append(";");
 
@@ -702,7 +698,7 @@ public class HtmlHelper {
 
                     Log.i("Downloaded image source=" + a.source);
 
-                    try (OutputStream os = new FileOutputStream(file)) {
+                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                         bm.compress(Bitmap.CompressFormat.PNG, 90, os);
                     }
 

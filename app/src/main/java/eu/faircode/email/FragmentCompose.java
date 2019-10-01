@@ -114,6 +114,7 @@ import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -946,7 +947,7 @@ public class FragmentCompose extends FragmentBase {
                 onMenuCompact();
                 return true;
             case R.id.menu_clear:
-                onMenuClear();
+                StyleHelper.apply(R.id.menu_clear, etBody);
                 return true;
             case R.id.menu_contact_group:
                 onMenuContactGroup();
@@ -964,6 +965,16 @@ public class FragmentCompose extends FragmentBase {
 
     private void onMenuAddresses() {
         grpAddresses.setVisibility(grpAddresses.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                if (grpAddresses.getVisibility() == View.GONE)
+                    etSubject.requestFocus();
+                else
+                    etCc.requestFocus();
+            }
+        });
     }
 
     private void onMenuZoom() {
@@ -1013,38 +1024,6 @@ public class FragmentCompose extends FragmentBase {
         bottom_navigation.setLayoutParams(params);
     }
 
-    private void onMenuClear() {
-        int start = etBody.getSelectionStart();
-        int end = etBody.getSelectionEnd();
-
-        if (start < 0)
-            start = 0;
-        if (end < 0)
-            end = 0;
-
-        if (start > end) {
-            int tmp = start;
-            start = end;
-            end = tmp;
-        }
-
-        boolean selected = (start != end);
-        if (start == end) {
-            start = 0;
-            end = etBody.length();
-        }
-
-        SpannableString ss = new SpannableString(etBody.getText());
-
-        for (Object span : ss.getSpans(start, end, Object.class))
-            if (!(span instanceof ImageSpan))
-                ss.removeSpan(span);
-
-        etBody.setText(ss);
-        if (selected)
-            etBody.setSelection(start, end);
-    }
-
     private void onMenuContactGroup() {
         Bundle args = new Bundle();
         args.putLong("working", working);
@@ -1071,8 +1050,12 @@ public class FragmentCompose extends FragmentBase {
         Log.i("Style action=" + action);
 
         if (action == R.id.menu_color) {
+            Bundle args = new Bundle();
+            args.putInt("color", Color.TRANSPARENT);
+            args.putString("title", getString(R.string.title_style_color));
+
             FragmentDialogColor fragment = new FragmentDialogColor();
-            fragment.initialize(R.string.title_style_color, Color.TRANSPARENT, new Bundle(), getContext());
+            fragment.setArguments(args);
             fragment.setTargetFragment(FragmentCompose.this, REQUEST_COLOR);
             fragment.show(getFragmentManager(), "account:color");
             return true;
@@ -1528,8 +1511,8 @@ public class FragmentCompose extends FragmentBase {
                                     Log.i("Writing " + file + " size=" + bytes.length);
                                 try (OutputStream out = new FileOutputStream(file)) {
                                     out.write(bytes);
-                                    db.attachment().setDownloaded(attachment.id, (long) bytes.length);
                                 }
+                                db.attachment().setDownloaded(attachment.id, (long) bytes.length);
 
                                 db.setTransactionSuccessful();
                             } finally {
@@ -1973,7 +1956,7 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     File tmp = File.createTempFile("image", ".resized", context.getCacheDir());
-                    try (OutputStream out = new FileOutputStream(tmp)) {
+                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(tmp))) {
                         resized.compress("image/jpeg".equals(attachment.type)
                                         ? Bitmap.CompressFormat.JPEG
                                         : Bitmap.CompressFormat.PNG,
@@ -2108,7 +2091,7 @@ public class FragmentCompose extends FragmentBase {
                             if ("reply_all".equals(action))
                                 data.draft.cc = ref.getAllRecipients(data.identities);
                             else if ("receipt".equals(action))
-                                data.draft.receipt_request = true;
+                                data.draft.receipt = true;
 
                         } else if ("forward".equals(action) || "editasnew".equals(action))
                             data.draft.thread = data.draft.msgid; // new thread
@@ -2824,11 +2807,11 @@ public class FragmentCompose extends FragmentBase {
                             if (draft.to == null && draft.cc == null && draft.bcc == null)
                                 throw new IllegalArgumentException(context.getString(R.string.title_to_missing));
 
-                            if (identity.plain_only)
-                                db.message().setMessagePlainOnly(draft.id, true);
+                            db.message().setMessagePlainOnly(draft.id, identity.plain_only);
 
-                            if (identity.encrypt)
-                                db.message().setMessageEncrypt(draft.id, true);
+                            db.message().setMessageEncrypt(draft.id, identity.encrypt);
+
+                            db.message().setMessageReceiptRequest(draft.id, identity.delivery_receipt || identity.read_receipt);
 
                             if (TextUtils.isEmpty(draft.subject))
                                 args.putBoolean("remind_subject", true);
@@ -3445,65 +3428,39 @@ public class FragmentCompose extends FragmentBase {
             final int[] sendDelayedValues = getResources().getIntArray(R.array.sendDelayedValues);
             final String[] sendDelayedNames = getResources().getStringArray(R.array.sendDelayedNames);
 
-            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_send, null);
+            final ViewGroup dview = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.dialog_send, null);
+            final TextView tvRemindSubject = dview.findViewById(R.id.tvRemindSubject);
+            final TextView tvRemindAttachment = dview.findViewById(R.id.tvRemindAttachment);
             final TextView tvTo = dview.findViewById(R.id.tvTo);
             final TextView tvVia = dview.findViewById(R.id.tvVia);
             final CheckBox cbPlainOnly = dview.findViewById(R.id.cbPlainOnly);
             final CheckBox cbEncrypt = dview.findViewById(R.id.cbEncrypt);
+            final CheckBox cbReceipt = dview.findViewById(R.id.cbReceipt);
+            final TextView tvReceipt = dview.findViewById(R.id.tvReceipt);
+            final Spinner spPriority = dview.findViewById(R.id.spPriority);
             final TextView tvSendAt = dview.findViewById(R.id.tvSendAt);
             final ImageButton ibSendAt = dview.findViewById(R.id.ibSendAt);
-            final TextView tvRemindSubject = dview.findViewById(R.id.tvRemindSubject);
-            final TextView tvRemindAttachment = dview.findViewById(R.id.tvRemindAttachment);
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
             final TextView tvNotAgain = dview.findViewById(R.id.tvNotAgain);
 
-            tvTo.setText(null);
-            tvVia.setText(null);
-            tvSendAt.setText(null);
             tvRemindSubject.setVisibility(remind_subject ? View.VISIBLE : View.GONE);
             tvRemindAttachment.setVisibility(remind_attachment ? View.VISIBLE : View.GONE);
+            tvTo.setText(null);
+            tvVia.setText(null);
+            tvReceipt.setVisibility(View.GONE);
+            spPriority.setTag(1);
+            spPriority.setSelection(1);
+            tvSendAt.setText(null);
             cbNotAgain.setChecked(!send_dialog);
             cbNotAgain.setVisibility(dialog ? View.VISIBLE : View.GONE);
             tvNotAgain.setVisibility(cbNotAgain.isChecked() && send_dialog ? View.VISIBLE : View.GONE);
+
+            Helper.setViewsEnabled(dview, false);
 
             cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     tvNotAgain.setVisibility(isChecked && send_dialog ? View.VISIBLE : View.GONE);
-                }
-            });
-
-            DB db = DB.getInstance(getContext());
-            db.message().liveMessage(id).observe(getViewLifecycleOwner(), new Observer<TupleMessageEx>() {
-                @Override
-                public void onChanged(TupleMessageEx draft) {
-                    if (draft == null) {
-                        dismiss();
-                        return;
-                    }
-
-                    int plus = (draft.cc == null ? 0 : draft.cc.length) +
-                            (draft.bcc == null ? 0 : draft.bcc.length);
-                    tvTo.setText(MessageHelper.formatAddressesShort(draft.to) + (plus > 0 ? " +" + plus : ""));
-                    tvVia.setText(draft.identityEmail);
-
-                    cbPlainOnly.setChecked(draft.plain_only != null && draft.plain_only);
-                    cbEncrypt.setChecked(draft.encrypt != null && draft.encrypt);
-
-                    if (draft.ui_snoozed == null) {
-                        if (send_delayed == 0)
-                            tvSendAt.setText(getString(R.string.title_now));
-                        else
-                            for (int pos = 0; pos < sendDelayedValues.length; pos++)
-                                if (sendDelayedValues[pos] == send_delayed) {
-                                    tvSendAt.setText(getString(R.string.title_after, sendDelayedNames[pos]));
-                                    break;
-                                }
-                    } else {
-                        DateFormat DTF = Helper.getDateTimeInstance(getContext(), SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
-                        DateFormat D = new SimpleDateFormat("E");
-                        tvSendAt.setText(D.format(draft.ui_snoozed) + " " + DTF.format(draft.ui_snoozed));
-                    }
                 }
             });
 
@@ -3561,6 +3518,76 @@ public class FragmentCompose extends FragmentBase {
                 }
             });
 
+            cbReceipt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                    tvReceipt.setVisibility(checked ? View.VISIBLE : View.GONE);
+
+                    Bundle args = new Bundle();
+                    args.putLong("id", id);
+                    args.putBoolean("receipt", checked);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+                            boolean receipt = args.getBoolean("receipt");
+
+                            DB db = DB.getInstance(context);
+                            db.message().setMessageReceiptRequest(id, receipt);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getFragmentManager(), ex);
+                        }
+                    }.execute(FragmentDialogSend.this, args, "compose:receipt");
+                }
+            });
+
+            spPriority.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    int last = (int) spPriority.getTag();
+                    if (last != position) {
+                        spPriority.setTag(position);
+                        setPriority(position);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    spPriority.setTag(1);
+                    setPriority(1);
+                }
+
+                private void setPriority(int priority) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", id);
+                    args.putInt("priority", priority);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+                            int priority = args.getInt("priority");
+
+                            DB db = DB.getInstance(context);
+                            db.message().setMessagePriority(id, priority);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getFragmentManager(), ex);
+                        }
+                    }.execute(FragmentDialogSend.this, args, "compose:priority");
+                }
+            });
+
             ibSendAt.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -3572,6 +3599,47 @@ public class FragmentCompose extends FragmentBase {
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentDialogSend.this, 1);
                     fragment.show(getFragmentManager(), "send:snooze");
+                }
+            });
+
+            DB db = DB.getInstance(getContext());
+            db.message().liveMessage(id).observe(getViewLifecycleOwner(), new Observer<TupleMessageEx>() {
+                @Override
+                public void onChanged(TupleMessageEx draft) {
+                    if (draft == null) {
+                        dismiss();
+                        return;
+                    }
+
+                    int plus = (draft.cc == null ? 0 : draft.cc.length) +
+                            (draft.bcc == null ? 0 : draft.bcc.length);
+                    tvTo.setText(MessageHelper.formatAddressesShort(draft.to) + (plus > 0 ? " +" + plus : ""));
+                    tvVia.setText(draft.identityEmail);
+
+                    cbPlainOnly.setChecked(draft.plain_only != null && draft.plain_only);
+                    cbEncrypt.setChecked(draft.encrypt != null && draft.encrypt);
+                    cbReceipt.setChecked(draft.receipt_request != null && draft.receipt_request);
+
+                    int priority = (draft.priority == null ? 1 : draft.priority);
+                    spPriority.setTag(priority);
+                    spPriority.setSelection(priority);
+
+                    if (draft.ui_snoozed == null) {
+                        if (send_delayed == 0)
+                            tvSendAt.setText(getString(R.string.title_now));
+                        else
+                            for (int pos = 0; pos < sendDelayedValues.length; pos++)
+                                if (sendDelayedValues[pos] == send_delayed) {
+                                    tvSendAt.setText(getString(R.string.title_after, sendDelayedNames[pos]));
+                                    break;
+                                }
+                    } else {
+                        DateFormat DTF = Helper.getDateTimeInstance(getContext(), SimpleDateFormat.MEDIUM, SimpleDateFormat.SHORT);
+                        DateFormat D = new SimpleDateFormat("E");
+                        tvSendAt.setText(D.format(draft.ui_snoozed) + " " + DTF.format(draft.ui_snoozed));
+                    }
+
+                    Helper.setViewsEnabled(dview, true);
                 }
             });
 

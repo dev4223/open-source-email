@@ -161,16 +161,18 @@ public class ContactInfo {
             }
         }
 
+        boolean identicon = false;
         if (info.bitmap == null) {
             int dp = Helper.dp2pixels(context, 48);
             boolean dark = Helper.isDarkTheme(context);
             boolean generated = prefs.getBoolean("generated_icons", true);
             if (generated) {
                 boolean identicons = prefs.getBoolean("identicons", false);
-                if (identicons)
-                    info.bitmap = Identicon.icon(key, dp, 5, dark);
-                else
-                    info.bitmap = Identicon.letter(key, dp, dark);
+                if (identicons) {
+                    identicon = true;
+                    info.bitmap = IconHelper.generateIdenticon(key, dp, 5, dark);
+                } else
+                    info.bitmap = IconHelper.generateLetterIcon(key, dp, dark);
             }
         }
 
@@ -198,7 +200,7 @@ public class ContactInfo {
             paint.setAntiAlias(true);
             canvas.drawARGB(0, 0, 0, 0);
             paint.setColor(Color.GRAY);
-            if (circular)
+            if (circular && !identicon)
                 canvas.drawOval(new RectF(dest), paint);
             else {
                 float radius = Helper.dp2pixels(context, 3);

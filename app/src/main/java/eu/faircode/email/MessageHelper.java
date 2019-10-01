@@ -46,6 +46,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -119,17 +120,34 @@ public class MessageHelper {
         DB db = DB.getInstance(context);
         MimeMessageEx imessage = new MimeMessageEx(isession, message.msgid);
 
-        if (message.references != null)
-            imessage.addHeader("References", message.references);
-        if (message.inreplyto != null)
-            imessage.addHeader("In-Reply-To", message.inreplyto);
-
-        imessage.addHeader("X-Correlation-ID", message.msgid);
-
+        // Flags
         imessage.setFlag(Flags.Flag.SEEN, message.seen);
         imessage.setFlag(Flags.Flag.FLAGGED, message.flagged);
         imessage.setFlag(Flags.Flag.ANSWERED, message.answered);
 
+        // Priority
+        if (EntityMessage.PRIORITIY_LOW.equals(message.priority)) {
+            // Low
+            imessage.addHeader("Importance", "Low");
+            imessage.addHeader("Priority", "Non-Urgent");
+            imessage.addHeader("X-Priority", "5"); // Lowest
+            imessage.addHeader("X-MSMail-Priority", "Low");
+        } else if (EntityMessage.PRIORITIY_HIGH.equals(message.priority)) {
+            // High
+            imessage.addHeader("Importance", "High");
+            imessage.addHeader("Priority", "Urgent");
+            imessage.addHeader("X-Priority", "1"); // Highest
+            imessage.addHeader("X-MSMail-Priority", "High");
+        }
+
+        // References
+        if (message.references != null)
+            imessage.addHeader("References", message.references);
+        if (message.inreplyto != null)
+            imessage.addHeader("In-Reply-To", message.inreplyto);
+        imessage.addHeader("X-Correlation-ID", message.msgid);
+
+        // Addresses
         if (message.from != null && message.from.length > 0) {
             String email = ((InternetAddress) message.from[0]).getAddress();
             String name = ((InternetAddress) message.from[0]).getPersonal();
@@ -152,6 +170,38 @@ public class MessageHelper {
 
         if (message.subject != null)
             imessage.setSubject(message.subject);
+
+        // Send message
+        if (identity != null) {
+            // Add reply to
+            if (identity.replyto != null)
+                imessage.setReplyTo(InternetAddress.parse(identity.replyto));
+
+            // Add extra bcc
+            if (identity.bcc != null) {
+                List<Address> bcc = new ArrayList<>();
+                Address[] existing = imessage.getRecipients(Message.RecipientType.BCC);
+                if (existing != null)
+                    bcc.addAll(Arrays.asList(existing));
+                bcc.addAll(Arrays.asList(InternetAddress.parse(identity.bcc)));
+                imessage.setRecipients(Message.RecipientType.BCC, bcc.toArray(new Address[0]));
+            }
+
+            // Delivery/read request
+            if (message.receipt_request != null && message.receipt_request) {
+                String to = (identity.replyto == null ? identity.email : identity.replyto);
+
+                // defacto standard
+                imessage.addHeader("Return-Receipt-To", to);
+
+                // https://tools.ietf.org/html/rfc3798
+                imessage.addHeader("Disposition-Notification-To", to);
+            }
+        }
+
+        // Auto answer
+        if (message.unsubscribe != null)
+            imessage.addHeader("List-Unsubscribe", "<" + message.unsubscribe + ">");
 
         MailDateFormat mdf = new MailDateFormat();
         mdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -222,7 +272,7 @@ public class MessageHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean usenet = prefs.getBoolean("usenet_signature", false);
 
-        if (message.receipt_request != null && message.receipt_request) {
+        if (message.receipt != null && message.receipt) {
             // https://www.ietf.org/rfc/rfc3798.txt
             Multipart report = new MimeMultipart("report; report-type=disposition-notification");
 
@@ -454,6 +504,49 @@ public class MessageHelper {
 
         String msgid = getMessageID();
         return (TextUtils.isEmpty(msgid) ? Long.toString(uid) : msgid);
+    }
+
+    Integer getPriority() throws MessagingException {
+        Integer priority = null;
+
+        // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcmail/2bb19f1b-b35e-4966-b1cb-1afd044e83ab
+        String header = imessage.getHeader("Importance", null);
+        if (header == null)
+            header = imessage.getHeader("Priority", null);
+        if (header == null)
+            header = imessage.getHeader("X-Priority", null);
+        if (header == null)
+            header = imessage.getHeader("X-MSMail-Priority", null);
+
+        if (header != null) {
+            int sp = header.indexOf(" ");
+            if (sp >= 0)
+                header = header.substring(0, sp); // "2 (High)"
+        }
+
+        if ("high".equalsIgnoreCase(header) || "urgent".equalsIgnoreCase(header))
+            priority = EntityMessage.PRIORITIY_HIGH;
+        else if ("normal".equalsIgnoreCase(header) || "medium".equalsIgnoreCase(header))
+            priority = EntityMessage.PRIORITIY_NORMAL;
+        else if ("low".equalsIgnoreCase(header) || "non-urgent".equalsIgnoreCase(header))
+            priority = EntityMessage.PRIORITIY_LOW;
+        else if (header != null)
+            try {
+                priority = Integer.parseInt(header);
+                if (priority < 3)
+                    priority = EntityMessage.PRIORITIY_HIGH;
+                else if (priority > 3)
+                    priority = EntityMessage.PRIORITIY_LOW;
+                else
+                    priority = EntityMessage.PRIORITIY_NORMAL;
+            } catch (NumberFormatException ex) {
+                Log.e("priority=" + header);
+            }
+
+        if (EntityMessage.PRIORITIY_NORMAL.equals(priority))
+            priority = null;
+
+        return priority;
     }
 
     boolean getReceiptRequested() throws MessagingException {
@@ -839,6 +932,17 @@ public class MessageHelper {
             if (plain == null && html == null)
                 return null;
             return (html == null);
+        }
+
+        Long getBodySize() throws MessagingException {
+            Part part = (html == null ? plain : html);
+            if (part == null)
+                return null;
+            int size = part.getSize();
+            if (size < 0)
+                return null;
+            else
+                return (long) size;
         }
 
         String getHtml(Context context) throws MessagingException, IOException {

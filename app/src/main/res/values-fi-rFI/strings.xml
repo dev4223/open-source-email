@@ -75,6 +75,7 @@
     <string name="menu_contacts">Paikalliset yhteystiedot</string>
     <string name="menu_setup">Asetukset</string>
     <string name="menu_legend">Selite</string>
+    <string name="menu_test">Testaa ohjelmaa</string>
     <string name="menu_faq">Tuki</string>
     <string name="menu_issue">Ilmoita ongelmasta</string>
     <string name="menu_attribution">Käytettävät teknologiat</string>
@@ -107,6 +108,7 @@
     <string name="title_setup_quick_smtp">SMTP-palvelin viestien lähettämiseen</string>
     <string name="title_setup_go">Aloita</string>
     <string name="title_setup_wizard">Asetusvelho</string>
+    <string name="title_setup_wizard_remark">Mene \'takaisin\' palataksesi saapuneet-kansioon</string>
     <string name="title_setup_other">Muu palveluntarjoaja</string>
     <string name="title_setup_gmail_support">Google-tilien vahvistaminen toimii vain virallisissa versioissa, koska Android tarkistaa sovelluksen allekirjoituksen</string>
     <string name="title_setup_gmail_rationale">Ole hyvä ja myönnä oikeudet, että tili voidaan valita ja nimesi voidaan lukea</string>
@@ -229,20 +231,22 @@
     <string name="title_advanced_actionbar">Näytä keskustelun toimintopalkki</string>
     <string name="title_advanced_pull_refresh">Vedä alas päivittääksesi</string>
     <string name="title_advanced_autoscroll">Vieritä ylös, kun uusi viesti saapuu</string>
+    <string name="title_advanced_double_tap">Tuplanäpäytys merkitsee viestin luetuksi/lukemattomaksi</string>
     <string name="title_advanced_swipenav">Pyyhkäise vasemmalle/oikealle siirtyäksesi seuraavaan/edelliseen keskusteluun</string>
     <string name="title_advanced_reversed">Käänteinen navigointisuunta</string>
-    <string name="title_advanced_double_tap">Tuplanäpäytys merkitsee viestin luetuksi/lukemattomaksi</string>
     <string name="title_advanced_autoexpand">Laajenna viestit automaattisesti</string>
     <string name="title_advanced_expand_one">Laajenna vain yksi viesti kerrallaan</string>
     <string name="title_advanced_collapse">Tiivistä viestit keskusteluissa takaisin-painikkeella</string>
     <string name="title_advanced_autoclose">Sulje keskustelut automaattisesti</string>
     <string name="title_advanced_onclose">Keskustelua suljettaessa</string>
     <string name="title_advanced_autoread">Siirtäessä viestejä merkitse ne luetuiksi</string>
+    <string name="title_advanced_autounstar">Poista tähti viestejä siirrettäessä</string>
     <string name="title_advanced_automove">Vahvista viestien siirto</string>
     <string name="title_advanced_discard_delete">Luonnosta hylättäessä poista se pysyvästi</string>
     <string name="title_advanced_tracking">Tunnista automaattisesti ja poista käytöstä seurantakuvat</string>
     <string name="title_advanced_badge">Näytä käynnistinsovelluksen kuvakkeessa uusien viestien lukumäärä</string>
     <string name="title_advanced_unseen_ignored">Anna uusien viestien lukumäärän täsmätä ilmoitusten lukumäärän kanssa</string>
+    <string name="title_advanced_notify_summary">Näytä vain yhteenvetoilmoitus</string>
     <string name="title_advanced_notify_preview">Näytä viestin esikatselu ilmoituksissa</string>
     <string name="title_advanced_notify_actions">Ilmoituksen toiminnot</string>
     <string name="title_advanced_notify_action_trash">Roskakori</string>
@@ -261,6 +265,8 @@
     <string name="title_advanced_notify_action_hint">Enintään kolme toimintoa näytetään</string>
     <string name="title_advanced_notify_remove_hint">Ilmoitukset uusista viesteistä poistetaan aina pyyhkäisemällä tai merkitsemällä viestit luetuiksi</string>
     <string name="title_advanced_notify_manage_hint">Näpäytä kanavan nimeä \'Ilmoitukset\' asettaaksesi oletusilmoitusäänen yms.</string>
+    <string name="title_advanced_notify_no_grouping">Tämä Android-versio ei tue ilmoitusten ryhmittelyä</string>
+    <string name="title_advanced_notify_no_channels">Tämä Android-versio ei tue ilmoituskanavia</string>
     <string name="title_advanced_double_back">\'Takaisin\' kaksi kertaa sulkee sovelluksen</string>
     <string name="title_advanced_biometrics_timeout">Biometrisen tunnistautumisen aikakatkaisu</string>
     <string name="title_advanced_english">Pakota englannin kieli</string>
@@ -309,10 +315,8 @@
     <string name="title_advanced_sender_regex">Regex muokattavien osoitteiden täsmäämiseen</string>
     <string name="title_identity_reply_to">Vastausosoite</string>
     <string name="title_identity_encrypt">Salaa oletusarvoisesti</string>
+    <string name="title_identity_receipt">Pyydä toimitus-/lukukuittaus oletuksena</string>
     <string name="title_identity_use_ip_hint">Virheilmoituksen ollessa \'invalid greeting\', \'requires valid address\' tai muu samankaltainen yritä muuttaa tätä asetusta</string>
-    <string name="title_identity_read_receipt">Pyydä vastaanottokuittausta</string>
-    <string name="title_identity_delivery_receipt">Pyydä toimituskuittausta</string>
-    <string name="title_identity_receipt_remark">Useimmat palveluntarjoajat ohittavat vastaanottokuittauspyynnöt</string>
     <string name="title_optional">Valinnainen</string>
     <string name="title_recommended">Suositeltu</string>
     <string name="title_account_linked">Linkitetty tili</string>
@@ -373,6 +377,7 @@
     <string name="title_delete_local">Poista paikalliset viestit</string>
     <string name="title_delete_browsed">Poista selatut/haetut viestit</string>
     <string name="title_empty_trash">Tyhjennä roskakori</string>
+    <string name="title_empty_spam">Poista roskapostit</string>
     <string name="title_edit_properties">Muokkaa ominaisuuksia</string>
     <string name="title_edit_rules">Muokkaa sääntöjä</string>
     <string name="title_create_channel">Luo ilmoituskanava</string>
@@ -380,6 +385,7 @@
     <string name="title_delete_channel">Poista ilmoituskanava</string>
     <string name="title_create_sub_folder">Luo alikansio</string>
     <string name="title_empty_trash_ask">Tyhjennetäänkö roskakori pysyvästi?</string>
+    <string name="title_empty_spam_ask">Poistetaanko kaikki roskapostit pysyvästi?</string>
     <string name="title_delete_operation">Poistetaanko toimenpiteet, joille on virheilmoitus?</string>
     <string name="title_delete_contacts">Poistetaanko kaikki paikalliset yhteystiedot?</string>
     <string name="title_no_operations">Ei odottavia toimenpiteitä</string>
@@ -417,6 +423,7 @@
     <string name="title_no_folders">Ei kansioita</string>
     <string name="title_no_messages">Ei viestejä</string>
     <string name="title_filters_active">Yksi tai useampi suodatin aktiivinen</string>
+    <string name="title_duplicate_in">Kopioi kansioon %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_seen">Merkitse luetuksi</string>
@@ -507,6 +514,7 @@
     <string name="title_send_via">Lähetä kautta</string>
     <string name="title_send_with_options">Lähetä &#8230;</string>
     <string name="title_send_at">Lähetysaika &#8230;</string>
+    <string name="title_send_priority">Tärkeysjärjestys</string>
     <string name="title_no_server">Palvelinta ei löytynyt osoitteesta \'%1$s\'</string>
     <string name="title_style_bold">Lihavointi</string>
     <string name="title_style_italic">Kursiivi</string>
@@ -525,6 +533,8 @@
     <string name="title_insert_contact_group">Lisää yhteystietoryhmä</string>
     <string name="title_insert_template">Lisää viestipohja</string>
     <string name="title_send_plain_text">Lähetä muotoilemattomana tekstinä</string>
+    <string name="title_send_receipt">Pyydä toimitus-/lukukuittaus</string>
+    <string name="title_send_receipt_remark">Useimmat palveluntarjoajat ja sähköpostisovellukset jättävät kuittauspyynnöt huomioimatta</string>
     <string name="title_from_missing">Lähettäjä puuttuu</string>
     <string name="title_to_missing">Vastaanottaja puuttuu</string>
     <string name="title_subject_reminder">Aihe puuttuu</string>
@@ -575,6 +585,7 @@
     <string name="title_answer_text">Viestipohjan teksti</string>
     <string name="title_answer_template_name">$name$ korvataan lähettäjän koko nimellä</string>
     <string name="title_answer_template_email">$email$ korvataan lähettäjän sähköpostiosoitteella</string>
+    <string name="title_rule_noop">Ei toimintoa</string>
     <string name="title_rule_seen">Merkitse luetuksi</string>
     <string name="title_rule_unseen">Merkitse lukemattomaksi</string>
     <string name="title_rule_ignore">Vaimenna ilmoitus</string>
@@ -652,6 +663,7 @@
     <string name="title_legend_thread">Keskustelu</string>
     <string name="title_legend_zoom">Muuta tekstin kokoa</string>
     <string name="title_legend_draft">Sisältää luonnoksen</string>
+    <string name="title_legend_priority">Tärkeysjärjestyksessä korkealla</string>
     <string name="title_legend_auth">Tunnistautuminen epäonnistui</string>
     <string name="title_legend_snoozed">Torkutettu</string>
     <string name="title_legend_browsed">Selattu tai haettu</string>
@@ -838,5 +850,10 @@
         <item>Alusta</item>
         <item>Keskeltä</item>
         <item>Lopusta</item>
+    </string-array>
+    <string-array name="priorityNames">
+        <item>Alhainen</item>
+        <item>Tavallinen</item>
+        <item>Korkea</item>
     </string-array>
 </resources>

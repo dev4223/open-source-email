@@ -58,22 +58,23 @@ public class ViewCardOptional extends CardView {
         if (cards) {
             // dev4223: was dp: 6
             int dp6 = Helper.dp2pixels(getContext(), 1);
+            int dp = Helper.dp2pixels(getContext(), compact ? 3 : 6);
             int color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
 
             FrameLayout.LayoutParams lparam = (FrameLayout.LayoutParams) getLayoutParams();
-            lparam.setMargins(dp6, compact ? 0 : dp6, dp6, dp6);
+            lparam.setMargins(dp, dp, dp, dp);
             setLayoutParams(lparam);
 
             setRadius(dp6);
-            setElevation(compact ? dp6 / 2f : dp6);
+            setContentPadding(dp6, dp6, dp6, dp6);
 
+            //setElevation(compact ? dp6 / 2f : dp6);
             // dev4223: was getChildAt(0).setPadding(dp6, dp6, dp6, dp6);
-            getChildAt(0).setPadding(0, 0, 0, 0);
+            //getChildAt(0).setPadding(0, 0, 0, 0);
         } else {
             setRadius(0);
-            setElevation(0);
-        }
-    }
+            setCardElevation(0);
+    	}
 
     @Override
     public void setCardBackgroundColor(int color) {

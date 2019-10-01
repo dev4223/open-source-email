@@ -33,6 +33,7 @@
 
     <color name="colorWidgetForeground">#fff</color>
     <color name="colorWidgetBackground">#7f000000</color>
+    <color name="colorWidgetRead">#ddd</color>
 
     <color name="lightColorUnread">#ffc233</color>
     <color name="lightColorItemSelected">#ccc</color>
