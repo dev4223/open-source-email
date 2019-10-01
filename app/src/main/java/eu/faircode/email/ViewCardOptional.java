@@ -74,7 +74,8 @@ public class ViewCardOptional extends CardView {
         } else {
             setRadius(0);
             setCardElevation(0);
-    	}
+        }
+    }
 
     @Override
     public void setCardBackgroundColor(int color) {
