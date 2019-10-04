@@ -205,6 +205,7 @@
     <string name="title_advanced_date_header">Raggruppa per data</string>
     <string name="title_advanced_threading">Thread di conversazione</string>
     <string name="title_advanced_highlight_unread">Evidenzia i messaggi non letti</string>
+    <string name="title_advanced_distinguish_contacts">Distingui i messaggi tra contatti noti e sconosciuti</string>
     <string name="title_advanced_avatars">Mostra foto del contatto</string>
     <string name="title_advanced_generated_icons">Mostra icone generate</string>
     <string name="title_advanced_identicons">Visualizza identicon</string>
@@ -334,6 +335,7 @@
     <string name="title_custom">Personalizzato</string>
     <string name="title_host">Nome host</string>
     <string name="title_allow_insecure">Permetti connessioni non sicure</string>
+    <string name="title_insecure_remark">Le connessioni non sicure dovrebbero essere consentite solo su reti affidabili e mai su reti pubbliche</string>
     <string name="title_port">Numero porta</string>
     <string name="title_user">Nome utente</string>
     <string name="title_password">Password</string>
@@ -431,6 +433,7 @@
     <string name="title_flag_color">Stella colorata &#8230;</string>
     <string name="title_unflag">Rimuovi stella</string>
     <string name="title_forward">Inoltra</string>
+    <string name="title_new_message">Nuovo messaggio</string>
     <string name="title_editasnew">Modifica come nuovo</string>
     <string name="title_create_rule">Crea regola &#8230;</string>
     <string name="title_share">Condividi</string>
@@ -537,6 +540,7 @@
     <string name="title_from_missing">Mittente mancante</string>
     <string name="title_to_missing">Destinatario mancante</string>
     <string name="title_subject_reminder">Oggetto vuoto</string>
+    <string name="title_text_reminder">Il messaggio è vuoto</string>
     <string name="title_attachment_keywords">allegato,allegato,allegati,inclusi</string>
     <string name="title_attachment_reminder">Intende aggiungere un allegato?</string>
     <string name="title_attachments_missing">Non tutti gli allegati sono stati scaricati</string>

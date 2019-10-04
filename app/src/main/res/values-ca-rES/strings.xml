@@ -206,6 +206,7 @@
     <string name="title_advanced_date_header">Agrupa per data</string>
     <string name="title_advanced_threading">Fil de conversa</string>
     <string name="title_advanced_highlight_unread">Ressalteu els missatges sense llegir</string>
+    <string name="title_advanced_distinguish_contacts">Diferencia els missatges de contactes coneguts i no coneguts</string>
     <string name="title_advanced_avatars">Mostra les fotos dels contactes</string>
     <string name="title_advanced_generated_icons">Mostra les icones generades</string>
     <string name="title_advanced_identicons">Mostra identicons</string>
@@ -292,6 +293,7 @@
     <string name="title_advanced_rlah_hint">Si no se suposa una itinerància a la UE</string>
     <string name="title_advanced_roaming_hint">Les capçaleres de missatges sempre es recuperaran en itinerància. Podeu utilitzar la configuració d\'itinerància del dispositiu per desactivar Internet durant la itinerància de dades.</string>
     <string name="title_advanced_browse_hint">Obteniu més missatges en desplaçar-vos cap avall</string>
+    <string name="title_advanced_layout_hint">Podeu canviar a un disseny més compacte i canviar la mida del text del missatge al menú de la barra d’acció superior de la vista de missatges</string>
     <string name="title_advanced_date_hint">Els missatges només s\'agruparan per data si s\'ordena per ordre temporal</string>
     <string name="title_advanced_threading_hint">Agrupa missatges relacionats entre ells</string>
     <string name="title_advanced_name_email_hint">Quan estigui desactivat només es mostraran noms quan estiguin disponibles</string>
@@ -335,6 +337,7 @@
     <string name="title_custom">Personalitzat</string>
     <string name="title_host">Nom del servidor</string>
     <string name="title_allow_insecure">Permet connexions no segures</string>
+    <string name="title_insecure_remark">Les connexions insegures només s’han de permetre en xarxes de confiança i mai en xarxes públiques</string>
     <string name="title_port">Número de port</string>
     <string name="title_user">Nom d\'usuari</string>
     <string name="title_password">Contrasenya</string>
@@ -402,6 +405,7 @@
     <string name="title_sync_days">Sincronitza els missatges (dies)</string>
     <string name="title_sync_days_remark">Si augmenta aquest valor, augmentarà l’ús de la bateria i de les dades</string>
     <string name="title_keep_days">Mantenir els missatges (Dies)</string>
+    <string name="title_keep_days_remark">Els missatges antics es suprimeixen del dispositiu, però quedaran al servidor</string>
     <string name="title_keep_all">Mantenir tots els missatges</string>
     <string name="title_auto_trash">Moveu automàticament els missatges antics a la paperera</string>
     <string name="title_auto_delete">Eliminar automàticament missatges antics de manera permanent</string>
@@ -432,6 +436,7 @@
     <string name="title_flag_color">Color de l\'estel &#8230;</string>
     <string name="title_unflag">Treure de destacats</string>
     <string name="title_forward">Següent</string>
+    <string name="title_new_message">Missatge nou</string>
     <string name="title_editasnew">Editar com a nou</string>
     <string name="title_create_rule">Crea la regla &#8230;</string>
     <string name="title_share">Compartir</string>
@@ -538,6 +543,7 @@
     <string name="title_from_missing">Falta l\'emissor</string>
     <string name="title_to_missing">Falta el receptor</string>
     <string name="title_subject_reminder">L\'assumpte és buit</string>
+    <string name="title_text_reminder">El missatge és buit</string>
     <string name="title_attachment_keywords">adjunt, fitxer adjunt, fitxers adjunts inclosos</string>
     <string name="title_attachment_reminder">Teníeu la intenció d’afegir un fitxer adjunt?</string>
     <string name="title_attachments_missing">No es descarreguen tots els fitxers adjunts</string>

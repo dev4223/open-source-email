@@ -206,6 +206,7 @@
     <string name="title_advanced_date_header">Op datum groeperen</string>
     <string name="title_advanced_threading">Gesprekken groeperen</string>
     <string name="title_advanced_highlight_unread">Ongelezen berichten markeren</string>
+    <string name="title_advanced_distinguish_contacts">Onderscheid berichten van bekende en onbekende contacten</string>
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
     <string name="title_advanced_generated_icons">Toon gegenereerde iconen</string>
     <string name="title_advanced_identicons">Toon identicons</string>
@@ -292,6 +293,7 @@
     <string name="title_advanced_rlah_hint">Veronderstel geen roaming binnen de EU</string>
     <string name="title_advanced_roaming_hint">Berichtkoppen zullen altijd worden opgehaald bij roaming. Je kunt de roaming-instelling van het apparaat gebruiken om internet uit te schakelen tijdens roaming.</string>
     <string name="title_advanced_browse_hint">Meer berichten ophalen bij het naar beneden scrollen</string>
+    <string name="title_advanced_layout_hint">Overschakelen naar een compactere layout en het wijzigen van de berichttekst grootte kan worden gedaan in het menu van de top actiebalk in het berichtweergave</string>
     <string name="title_advanced_date_hint">Berichten worden alleen op datum gegroepeerd als ze op tijd zijn gesorteerd</string>
     <string name="title_advanced_threading_hint">Groepeer gerelateerde berichten</string>
     <string name="title_advanced_name_email_hint">Indien uitgeschakeld, worden alleen namen weergegeven als deze beschikbaar zijn</string>
@@ -335,6 +337,7 @@
     <string name="title_custom">Aangepast</string>
     <string name="title_host">Hostnaam</string>
     <string name="title_allow_insecure">Onveilige verbindingen toestaan</string>
+    <string name="title_insecure_remark">Onveilige verbindingen mogen alleen worden toegestaan op vertrouwde netwerken en nooit op openbare netwerken</string>
     <string name="title_port">Poortnummer</string>
     <string name="title_user">Gebruikersnaam</string>
     <string name="title_password">Wachtwoord</string>
@@ -402,6 +405,7 @@
     <string name="title_sync_days">Synchroniseren van berichten (dagen)</string>
     <string name="title_sync_days_remark">Een hogere waarde verhoogt het batterij- en dataverbruik</string>
     <string name="title_keep_days">Bewaren van berichten (dagen)</string>
+    <string name="title_keep_days_remark">Oude berichten worden verwijderd van het apparaat, maar blijven op de server</string>
     <string name="title_keep_all">Bewaar alle berichten</string>
     <string name="title_auto_trash">Automatisch oude berichten verplaatsen naar de prullenbak</string>
     <string name="title_auto_delete">Automatisch oude berichten permanent verwijderen</string>
@@ -432,6 +436,7 @@
     <string name="title_flag_color">Gekleurde ster &#8230;</string>
     <string name="title_unflag">Ster verwijderen</string>
     <string name="title_forward">Doorsturen</string>
+    <string name="title_new_message">Nieuw bericht</string>
     <string name="title_editasnew">Bewerken als nieuw</string>
     <string name="title_create_rule">Maak regel &#8230;</string>
     <string name="title_share">Delen</string>
@@ -538,6 +543,7 @@
     <string name="title_from_missing">Zender ontbreekt</string>
     <string name="title_to_missing">Ontvanger ontbreekt</string>
     <string name="title_subject_reminder">Onderwerp is leeg</string>
+    <string name="title_text_reminder">Bericht is leeg</string>
     <string name="title_attachment_keywords">bijlage, bijlagen</string>
     <string name="title_attachment_reminder">Was u van plan een bijlage toe te voegen?</string>
     <string name="title_attachments_missing">Niet alle bijlagen zijn gedownload</string>

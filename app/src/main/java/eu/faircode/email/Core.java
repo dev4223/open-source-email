@@ -57,7 +57,6 @@ import com.sun.mail.util.MessageRemovedIOException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
 import java.io.BufferedInputStream;
@@ -194,7 +193,7 @@ class Core {
                                 case EntityOperation.MOVE:
                                     if (EntityOperation.MOVE.equals(next.name)) {
                                         JSONArray jnext = new JSONArray(next.args);
-                                        // Same target, autoread
+                                        // Same target
                                         if (jargs.getLong(0) == jnext.getLong(0)) {
                                             EntityMessage m = db.message().getMessage(next.message);
                                             if (m != null) {
@@ -781,7 +780,8 @@ class Core {
             }
 
         // Some providers do not support the COPY operation for drafts
-        if (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type)) {
+        boolean draft = (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type));
+        if (draft) {
             Log.i(folder.name + " move from " + folder.type + " to " + target.type);
 
             List<Message> icopies = new ArrayList<>();
@@ -802,21 +802,6 @@ class Core {
                 }
 
                 file.delete();
-
-                // Auto read
-                if (flags.contains(Flags.Flag.SEEN))
-                    icopy.setFlag(Flags.Flag.SEEN, message.ui_seen);
-
-                // Auto unflag
-                if (flags.contains(Flags.Flag.FLAGGED))
-                    icopy.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
-
-                // Answered fix
-                if (flags.contains(Flags.Flag.ANSWERED))
-                    icopy.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
-
-                // Set drafts flag
-                icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
 
                 icopies.add(icopy);
             }
@@ -853,7 +838,7 @@ class Core {
         }
 
         // Fetch appended/copied when needed
-        if (!target.synchronize || !istore.hasCapability("IDLE"))
+        if (draft || !target.synchronize || !istore.hasCapability("IDLE"))
             try {
                 itarget.open(READ_WRITE);
 
@@ -862,9 +847,30 @@ class Core {
                         try {
                             Long uid = findUid(itarget, message.msgid, false);
                             if (uid != null) {
-                                JSONArray fargs = new JSONArray();
-                                fargs.put(uid);
-                                onFetch(context, fargs, target, itarget, state);
+                                if (draft) {
+                                    Message icopy = itarget.getMessageByUID(uid);
+
+                                    // Auto read
+                                    if (flags.contains(Flags.Flag.SEEN))
+                                        icopy.setFlag(Flags.Flag.SEEN, message.ui_seen);
+
+                                    // Auto unflag
+                                    if (flags.contains(Flags.Flag.FLAGGED))
+                                        icopy.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
+
+                                    // Answered fix
+                                    if (flags.contains(Flags.Flag.ANSWERED))
+                                        icopy.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
+
+                                    // Set drafts flag
+                                    icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
+                                }
+
+                                if (!target.synchronize || !istore.hasCapability("IDLE")) {
+                                    JSONArray fargs = new JSONArray();
+                                    fargs.put(uid);
+                                    onFetch(context, fargs, target, itarget, state);
+                                }
                             }
                         } catch (Throwable ex) {
                             Log.w(ex);
@@ -1298,7 +1304,29 @@ class Core {
             }
         }
 
-        Log.i("Updating folder parents=" + parentFolders.size());
+        Log.i("Creating folders parents=" + parentFolders.size());
+        for (String parentName : parentFolders.keySet()) {
+            EntityFolder parent = nameFolder.get(parentName);
+            if (parent == null && parentName != null) {
+                parent = db.folder().getFolderByName(account.id, parentName);
+                if (parent == null) {
+                    parent = new EntityFolder();
+                    parent.account = account.id;
+                    parent.name = parentName;
+                    parent.type = EntityFolder.SYSTEM;
+                    parent.synchronize = false;
+                    parent.subscribed = false;
+                    parent.poll = false;
+                    parent.sync_days = 0;
+                    parent.keep_days = 0;
+                    parent.selectable = false;
+                    parent.id = db.folder().insertFolder(parent);
+                }
+                nameFolder.put(parentName, parent);
+            }
+        }
+
+        Log.i("Updating folders parents=" + parentFolders.size());
         for (String parentName : parentFolders.keySet()) {
             EntityFolder parent = nameFolder.get(parentName);
             for (EntityFolder child : parentFolders.get(parentName))
@@ -2496,7 +2524,7 @@ class Core {
 
     private static void fixAttachments(Context context, long id, String body) {
         DB db = DB.getInstance(context);
-        for (Element element : Jsoup.parse(body).select("img")) {
+        for (Element element : JsoupEx.parse(body).select("img")) {
             String src = element.attr("src");
             if (src.startsWith("cid:")) {
                 EntityAttachment attachment = db.attachment().getAttachment(id, "<" + src.substring(4) + ">");
@@ -2647,6 +2675,7 @@ class Core {
 
         // Android 7+ N https://developer.android.com/training/notify-user/group
         // Android 8+ O https://developer.android.com/training/notify-user/channels
+        // Android 7+ N https://android-developers.googleblog.com/2016/06/notifications-in-android-n.html
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (messages == null || messages.size() == 0 || nm == null)
@@ -2666,6 +2695,7 @@ class Core {
         boolean notify_flag = (prefs.getBoolean("notify_flag", false) && flags && pro);
         boolean notify_seen = (prefs.getBoolean("notify_seen", true) || !pro);
         boolean notify_snooze = (prefs.getBoolean("notify_snooze", false) || !pro);
+        boolean notify_remove = prefs.getBoolean("notify_remove", true);
         boolean light = prefs.getBoolean("light", false);
         String sound = prefs.getString("sound", null);
         boolean alert_once = prefs.getBoolean("alert_once", true);
@@ -2673,13 +2703,14 @@ class Core {
         // Get contact info
         Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
         for (TupleMessageEx message : messages)
-            messageContact.put(message, ContactInfo.get(context, message.from, false));
+            messageContact.put(message, ContactInfo.get(context, message.account, message.from, false));
 
         // Summary notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N || notify_summary) {
             // Build pending intents
-            Intent summary = new Intent(context, ActivityView.class).setAction("unified");
-            PendingIntent piSummary = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, summary, PendingIntent.FLAG_UPDATE_CURRENT);
+            Intent unified = new Intent(context, ActivityView.class)
+                    .setAction("unified" + (notify_remove ? ":" + group : ""));
+            PendingIntent piUnified = PendingIntent.getActivity(context, ActivityView.REQUEST_UNIFIED, unified, PendingIntent.FLAG_UPDATE_CURRENT);
 
             Intent clear = new Intent(context, ServiceUI.class).setAction("clear:" + group);
             PendingIntent piClear = PendingIntent.getService(context, ServiceUI.PI_CLEAR, clear, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -2693,7 +2724,7 @@ class Core {
                     new NotificationCompat.Builder(context, "notification")
                             .setSmallIcon(R.drawable.baseline_email_white_24)
                             .setContentTitle(title)
-                            .setContentIntent(piSummary)
+                            .setContentIntent(piUnified)
                             .setNumber(messages.size())
                             .setShowWhen(false)
                             .setDeleteIntent(piClear)
@@ -2733,23 +2764,26 @@ class Core {
                     .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                     .setPublicVersion(pub);
 
-            if (redacted)
-                builder.setContentText(context.getString(R.string.title_setup_biometrics));
-            else {
-                DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
-                StringBuilder sb = new StringBuilder();
-                for (EntityMessage message : messages) {
-                    sb.append("<strong>").append(messageContact.get(message).getDisplayName(name_email)).append("</strong>");
-                    if (!TextUtils.isEmpty(message.subject))
-                        sb.append(": ").append(message.subject);
-                    sb.append(" ").append(DTF.format(message.received));
-                    sb.append("<br>");
-                }
+            if (notify_preview)
+                if (redacted)
+                    builder.setContentText(context.getString(R.string.title_setup_biometrics));
+                else {
+                    DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+                    StringBuilder sb = new StringBuilder();
+                    for (EntityMessage message : messages) {
+                        sb.append("<strong>").append(messageContact.get(message).getDisplayName(name_email)).append("</strong>");
+                        if (!TextUtils.isEmpty(message.subject))
+                            sb.append(": ").append(message.subject);
+                        sb.append(" ").append(DTF.format(message.received));
+                        sb.append("<br>");
+                    }
 
-                builder.setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(HtmlHelper.fromHtml(sb.toString()))
-                        .setSummaryText(title));
-            }
+                    builder.setContentText(sb.toString());
+
+                    builder.setStyle(new NotificationCompat.BigTextStyle()
+                            .bigText(HtmlHelper.fromHtml(sb.toString()))
+                            .setSummaryText(title));
+                }
 
             notifications.add(builder.build());
         }
@@ -2963,7 +2997,8 @@ class Core {
             }
 
             if (wactions.size() > 0)
-                mbuilder.extend(new NotificationCompat.WearableExtender().addActions(wactions));
+                mbuilder.extend(new NotificationCompat.WearableExtender()
+                        .addActions(wactions));
 
             if (!TextUtils.isEmpty(message.subject))
                 mbuilder.setContentText(message.subject);
@@ -2971,19 +3006,15 @@ class Core {
             if (message.content && notify_preview)
                 try {
                     String body = Helper.readText(message.getFile(context));
+
                     StringBuilder sbm = new StringBuilder();
                     if (!TextUtils.isEmpty(message.subject))
                         sbm.append(message.subject).append("<br>");
-                    String text = Jsoup.parse(body).text();
-                    if (!TextUtils.isEmpty(text)) {
-                        sbm.append("<em>");
-                        if (text.length() > HtmlHelper.PREVIEW_SIZE) {
-                            sbm.append(text.substring(0, HtmlHelper.PREVIEW_SIZE));
-                            sbm.append("…");
-                        } else
-                            sbm.append(text);
-                        sbm.append("</em>");
-                    }
+
+                    String preview = HtmlHelper.getPreview(body);
+                    if (!TextUtils.isEmpty(preview))
+                        sbm.append("<em>").append(preview).append("</em>");
+
                     mbuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(HtmlHelper.fromHtml(sbm.toString())));
                 } catch (IOException ex) {
                     Log.e(ex);

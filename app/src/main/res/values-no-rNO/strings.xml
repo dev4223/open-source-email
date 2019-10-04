@@ -206,6 +206,7 @@
     <string name="title_advanced_date_header">Gruppere etter dato</string>
     <string name="title_advanced_threading">Konversasjonstråder</string>
     <string name="title_advanced_highlight_unread">Merk uleste meldinger</string>
+    <string name="title_advanced_distinguish_contacts">Skille meldinger fra kjente og ukjente kontakter</string>
     <string name="title_advanced_avatars">Vis kontakt bilde</string>
     <string name="title_advanced_generated_icons">Vis genererte ikoner</string>
     <string name="title_advanced_identicons">Vis identicons</string>
@@ -292,6 +293,7 @@
     <string name="title_advanced_rlah_hint">Forutsatt ingen roaming i EU</string>
     <string name="title_advanced_roaming_hint">Meldingsoverskrifter vil alltid bli hentet når du roamer. Du kan bruke enhetens roaming-innstilling for å deaktivere Internett mens du roamer.</string>
     <string name="title_advanced_browse_hint">Hent flere meldinger når du ruller ned</string>
+    <string name="title_advanced_layout_hint">Å bytte til en mer kompakt layout og endre meldingens tekststørrelse kan gjøres i den øverste handlingslinje menyen i meldingsvisningen</string>
     <string name="title_advanced_date_hint">Meldinger grupperes bare etter dato hvis de er sortert etter tid</string>
     <string name="title_advanced_threading_hint">Gruppemeldinger knyttet til hverandre</string>
     <string name="title_advanced_name_email_hint">Når deaktivert, vil bare navn bli vist når det er tilgjengelig</string>
@@ -335,6 +337,7 @@
     <string name="title_custom">Tilpasset</string>
     <string name="title_host">Vertsnavn</string>
     <string name="title_allow_insecure">Tillat usikre forbindelser</string>
+    <string name="title_insecure_remark">Usikre tilkoblinger bør bare være tillatt i pålitelige nettverk og aldri i offentlige nettverk</string>
     <string name="title_port">Portnummer</string>
     <string name="title_user">Brukernavn</string>
     <string name="title_password">Passord</string>
@@ -402,6 +405,7 @@
     <string name="title_sync_days">Synkronisere meldinger (dager)</string>
     <string name="title_sync_days_remark">Ved å øke denne verdien øker batteriet og dataforbruket</string>
     <string name="title_keep_days">Beholde meldinger (dager)</string>
+    <string name="title_keep_days_remark">Gamle meldinger blir fjernet fra enheten, men forblir på serveren</string>
     <string name="title_keep_all">Beholde alle meldinger</string>
     <string name="title_auto_trash">Flytt gamle meldinger automatisk til søppel</string>
     <string name="title_auto_delete">Slett gamle meldinger automatisk permanent</string>
@@ -432,6 +436,7 @@
     <string name="title_flag_color">Farget stjerne &#8230;</string>
     <string name="title_unflag">Fjern stjerne</string>
     <string name="title_forward">Videresend</string>
+    <string name="title_new_message">Ny melding</string>
     <string name="title_editasnew">Rediger som ny</string>
     <string name="title_create_rule">Opprett regel &#8230;</string>
     <string name="title_share">Del</string>
@@ -538,6 +543,7 @@
     <string name="title_from_missing">Avsender mangler</string>
     <string name="title_to_missing">Mottaker mangler</string>
     <string name="title_subject_reminder">Emnet er tomt</string>
+    <string name="title_text_reminder">Meldingen er tom</string>
     <string name="title_attachment_keywords">festet, feste, vedlegg, inkludert</string>
     <string name="title_attachment_reminder">Hadde du tenkt å legge til et vedlegg?</string>
     <string name="title_attachments_missing">Ikke alle vedlegg er lastet ned</string>

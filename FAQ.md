@@ -104,7 +104,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(1) Which permissions are needed and why?](#user-content-faq1)
 * [(2) Why is there a permanent notification shown?](#user-content-faq2)
 * [(3) What are operations and why are they pending?](#user-content-faq3)
-* [(4) How can I use an invalid security certificate / IMAP STARTTLS / an empty password?](#user-content-faq4)
+* [(4) How can I use an invalid security certificate / empty password / plain text connection?](#user-content-faq4)
 * [(5) How can I customize the message view?](#user-content-faq5)
 * [(6) How can I login to Gmail / G suite?](#user-content-faq6)
 * [(7) Why are sent messages not appearing (directly) in the sent folder?](#user-content-faq7)
@@ -345,24 +345,29 @@ See also [this FAQ](#user-content-faq16).
 <br />
 
 <a name="faq4"></a>
-**(4) How can I use an invalid security certificate / IMAP STARTTLS / an empty password?**
+**(4) How can I use an invalid security certificate / empty password / plain text connection?**
 
-Invalid security certificate (*Can't verify identity of server*): you should try to fix this by contacting your provider or by getting a valid security certificate
+*Invalid security certificate* (Can't verify identity of server)
+
+You should try to fix this by contacting your provider or by getting a valid security certificate
 because invalid security certificates are insecure and allow [man-in-the-middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).
 If money is an obstacle, you can get free security certificates from [Let’s Encrypt](https://letsencrypt.org).
 
 Note that older Android versions might not recognize newer certification authorities like Let’s Encrypt causing connections to be considered insecure,
 see also [here](https://developer.android.com/training/articles/security-ssl).
 
-IMAP STARTTLS: the EFF [writes](https://www.eff.org/nl/deeplinks/2018/06/announcing-starttls-everywhere-securing-hop-hop-email-delivery):
-"*Additionally, even if you configure STARTTLS perfectly and use a valid certificate, there’s still no guarantee your communication will be encrypted.*"
+*Empty password*
 
-Empty password: your username is likely easily guessed, so this is very insecure.
+Your username is likely easily guessed, so this is insecure.
 
-If you still want to use an invalid security certificate, IMAP STARTTLS or an empty password,
+*Plain text connection*
+
+Your username and password and all messages will be sent and received unencrypted, which is **very insecure**
+because a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) is very simple on an unecrypted connection.
+
+If you still want to use an invalid security certificate, an empty password or a plain text connection
 you'll need to enable insecure connections in the account and/or identity settings.
-
-Connections without encryption (either SSL or STARTTLS) are not supported because this is very insecure.
+STARTTLS should be selected for plain text connections.
 
 <br />
 
@@ -1077,7 +1082,7 @@ The following information is needed:
 ```
 <provider
 	name="Gmail"
-	link="https://support.google.com/mail/answer/7126229" // setup instructions
+	link="https://support.google.com/mail/answer/7126229" // link to the instructions of the provider
 	type="com.google"> // this is not needed
 	<imap
 		host="imap.gmail.com"
@@ -1087,6 +1092,7 @@ The following information is needed:
 		host="smtp.gmail.com"
 		port="465"
 		starttls="false" />
+</provider>
 ```
 
 The EFF [writes](https://www.eff.org/nl/deeplinks/2018/06/announcing-starttls-everywhere-securing-hop-hop-email-delivery):
@@ -1470,7 +1476,7 @@ You can disable a rule and you can stop processing other rules after a rule has 
 
 All the conditions of a rule need to be true for a filter rule to be executed.
 Conditions are optional, but there needs to be at least one condition.
-You can use multiple rules, possibly with a *stop processing*, for an *or* condition.
+You can use multiple rules, possibly with a *stop processing*, for an *or* or a *not* condition.
 
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression).
 
@@ -1478,20 +1484,21 @@ In the *more* message menu there is an item to create a rule for a received mess
 
 You can select one of these actions to apply to matching messages:
 
+* No action (useful for *not*)
 * Mark as read
 * Mark as unread
+* Suppress notification
 * Snooze
 * Add star
 * Move
-* Copy
+* Copy (Gmail: label)
 * Reply template
-* Automation
+* Automation (Tasker, etc)
 
-Filter rules are applied direct after the message header has been fetched, before the message text has been downloaded,
+Filter rules are applied directly after the message header has been fetched, before the message text has been downloaded,
 so it is not possible to apply filter conditions and actions to the message text.
 Note that large message texts are downloaded on demand on a metered connection to save data.
 
-To debug rules you can long press *Operations* to see logging about the evaluation of rule conditions.
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
 it is not possible to preview which messages would match the rule conditions.
 

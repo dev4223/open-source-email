@@ -154,7 +154,18 @@ public interface DaoMessage {
             " AND (:id IS NULL OR message.id = :id)" +
             " AND (NOT message.ui_hide OR :debug)" +
             " ORDER BY CASE WHEN :ascending THEN message.received ELSE -message.received END" +
-            ", CASE WHEN folder.type = '" + EntityFolder.ARCHIVE + "' THEN 1 ELSE 0 END")
+            ", CASE" +
+            " WHEN folder.type = '" + EntityFolder.INBOX + "' THEN 1" +
+            " WHEN folder.type = '" + EntityFolder.OUTBOX + "' THEN 2" +
+            " WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 3" +
+            " WHEN folder.type = '" + EntityFolder.SENT + "' THEN 4" +
+            " WHEN folder.type = '" + EntityFolder.SYSTEM + "' THEN 5" +
+            " WHEN folder.type = '" + EntityFolder.USER + "' THEN 6" +
+            " WHEN folder.type = '" + EntityFolder.ARCHIVE + "' THEN 7" +
+            " WHEN folder.type = '" + EntityFolder.TRASH + "' THEN 8" +
+            " WHEN folder.type = '" + EntityFolder.JUNK + "' THEN 9" +
+            " ELSE 999 END")
+        // The folder type sort order should match the duplicate algorithm
     DataSource.Factory<Integer, TupleMessageEx> pagedThread(long account, String thread, Long id, boolean ascending, boolean debug);
 
     @Query("SELECT account.name AS accountName" +
@@ -204,8 +215,14 @@ public interface DaoMessage {
             " FROM message" +
             " WHERE (:folder IS NULL OR folder = :folder)" +
             " AND NOT ui_hide" +
+            " AND (:seen IS NULL OR message.ui_seen = :seen)" +
+            " AND (:flagged IS NULL OR message.ui_flagged = :flagged)" +
+            " AND CASE :snoozed" +
+            "  WHEN 0 THEN message.ui_snoozed IS NULL" +
+            "  WHEN 1 THEN message.ui_snoozed IS NOT NULL" +
+            "  ELSE 1 END" + // NULL: true
             " ORDER BY message.received DESC")
-    List<Long> getMessageIdsByFolder(Long folder);
+    List<Long> getMessageIdsByFolder(Long folder, Boolean seen, Boolean flagged, Boolean snoozed);
 
     @Query("SELECT id" +
             " FROM message" +
@@ -351,6 +368,16 @@ public interface DaoMessage {
             " FROM message" +
             " WHERE folder = :folder")
     Long getMessageOldest(long folder);
+
+    @Query("SELECT * FROM message" +
+            " WHERE id = :id" +
+            " AND (`from` LIKE :find COLLATE NOCASE" +
+            " OR `to` LIKE :find COLLATE NOCASE" +
+            " OR `cc` LIKE :find COLLATE NOCASE" +
+            " OR `subject` LIKE :find COLLATE NOCASE" +
+            " OR `keywords` LIKE :find COLLATE NOCASE" +
+            " OR `preview` LIKE :find COLLATE NOCASE)")
+    EntityMessage match(long id, String find);
 
     @Insert
     long insertMessage(EntityMessage message);

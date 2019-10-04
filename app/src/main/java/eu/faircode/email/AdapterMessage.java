@@ -36,6 +36,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimatedImageDrawable;
@@ -123,7 +124,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -184,6 +184,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int textColorSecondary;
     private int colorUnread;
     private int colorSubject;
+    private int colorSeparator;
+
     private boolean hasWebView;
     private boolean contacts;
     private float textSize;
@@ -191,6 +193,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean date;
     private boolean threading;
     private boolean name_email;
+    private boolean distinguish_contacts;
     private boolean subject_top;
     private boolean subject_italic;
     private String subject_ellipsize;
@@ -654,9 +657,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
 
-            if (viewType == ViewType.THREAD)
-                card.setVisibility(!filter_duplicates || !message.duplicate ? View.VISIBLE : View.GONE);
-
             // Text size
             if (textSize != 0) {
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * (message.unseen > 0 ? 1.1f : 1f));
@@ -669,7 +669,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
-                int px = Math.round(tvFrom.getTextSize() + tvSubject.getTextSize());
+                int px = Math.round(
+                        textSize * (message.unseen > 0 ? 1.1f : 1f) +
+                                textSize * 0.9f +
+                                (compact ? 0 : textSize * 0.9f));
                 ViewGroup.LayoutParams lparams = ivAvatar.getLayoutParams();
                 if (lparams.height != px) {
                     lparams.width = px;
@@ -740,8 +743,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCount.setTextColor(colorAccent);
 
             // Account color
-            vwColor.setBackgroundColor(message.accountColor == null ? Color.TRANSPARENT : message.accountColor);
-            vwColor.setVisibility(ActivityBilling.isPro(context) ? View.VISIBLE : View.INVISIBLE);
+            vwColor.setBackgroundColor(message.accountColor == null || !ActivityBilling.isPro(context)
+                    ? colorSeparator : message.accountColor);
 
             // Expander
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
@@ -763,6 +766,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     outgoing = true;
             Address[] addresses = (outgoing ? message.to : message.senders);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
+            tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             Long size = ("size".equals(sort) ? message.totalSize : message.size);
             tvSize.setText(size == null ? null : Helper.humanReadableByteCount(size, true));
             tvSize.setVisibility(size == null || (message.content && !"size".equals(sort)) ? View.GONE : View.VISIBLE);
@@ -882,10 +886,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             // Contact info
-            ContactInfo info = ContactInfo.get(context, addresses, true);
+            ContactInfo info = ContactInfo.get(context, message.account, addresses, true);
             if (info == null) {
                 Bundle aargs = new Bundle();
                 aargs.putLong("id", message.id);
+                aargs.putLong("account", message.account);
                 aargs.putSerializable("addresses", addresses);
 
                 new SimpleTask<ContactInfo>() {
@@ -898,8 +903,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected ContactInfo onExecute(Context context, Bundle args) {
+                        long account = args.getLong("account");
                         Address[] addresses = (Address[]) args.getSerializable("addresses");
-                        return ContactInfo.get(context, addresses, false);
+
+                        return ContactInfo.get(context, account, addresses, false);
                     }
 
                     @Override
@@ -1023,7 +1030,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message.color == null)
                 ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
             else
-                ibFlagged.setImageTintList(ColorStateList.valueOf(expanded ? message.color : textColorSecondary));
+                ibFlagged.setImageTintList(ColorStateList.valueOf(expanded || !flags_background ? message.color : textColorSecondary));
 
             ibFlagged.setEnabled(message.uid != null || message.accountPop);
 
@@ -1039,6 +1046,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivAvatar.setVisibility(View.VISIBLE);
             } else
                 ivAvatar.setVisibility(View.GONE);
+
+            if (distinguish_contacts && info.isKnown())
+                tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             //tvFrom.setText(info.getDisplayName(name_email));
         }
 
@@ -2343,8 +2353,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             new SimpleTask<List<TupleIdentityEx>>() {
                 @Override
                 protected List<TupleIdentityEx> onExecute(Context context, Bundle args) {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                    if (message == null)
+                        return null;
+
                     DB db = DB.getInstance(context);
-                    return db.identity().getComposableIdentities(null);
+                    return db.identity().getComposableIdentities(message.account);
                 }
 
                 @Override
@@ -2355,7 +2369,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (amessage == null || !amessage.id.equals(message.id))
                         return;
 
-                    Address[] recipients = message.getAllRecipients(identities);
+                    final Address[] to =
+                            message.replySelf(identities, message.account)
+                                    ? message.to
+                                    : (message.reply == null || message.reply.length == 0 ? message.from : message.reply);
+
+                    Address[] recipients = message.getAllRecipients(identities, message.account);
 
                     View anchor = bnvActions.findViewById(R.id.action_reply);
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, anchor);
@@ -2364,6 +2383,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(message.list_post != null);
                     popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(message.receipt_to != null);
                     popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !ActivityBilling.isPro(context));
+                    popupMenu.getMenu().findItem(R.id.menu_new_message).setVisible(to != null && to.length > 0);
 
                     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         @Override
@@ -2386,6 +2406,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     return true;
                                 case R.id.menu_forward:
                                     onMenuReply(message, "forward");
+                                    return true;
+                                case R.id.menu_new_message:
+                                    onMenuNew(message, to);
+                                    return true;
                                 default:
                                     return false;
                             }
@@ -2405,6 +2429,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Intent reply = new Intent(context, ActivityCompose.class)
                     .putExtra("action", action)
                     .putExtra("reference", message.id);
+            context.startActivity(reply);
+        }
+
+        private void onMenuNew(TupleMessageEx message, Address[] to) {
+            Intent reply = new Intent(context, ActivityCompose.class)
+                    .putExtra("action", "new")
+                    .putExtra("to", MessageHelper.formatAddresses(to, true, true));
             context.startActivity(reply);
         }
 
@@ -2718,7 +2749,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return null;
 
                 String body = Helper.readText(file);
-                Document document = Jsoup.parse(body);
+                Document document = JsoupEx.parse(body);
 
                 // Check for inline encryption
                 int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
@@ -2751,7 +2782,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 // Cleanup message
                 String html = HtmlHelper.sanitize(context, body, text_color, show_images);
                 if (debug) {
-                    Document format = Jsoup.parse(html);
+                    Document format = JsoupEx.parse(html);
                     format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
                     String[] lines = format.html().split("\\r?\\n");
                     for (int i = 0; i < lines.length; i++)
@@ -3352,6 +3383,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         else
             this.colorUnread = this.textColorPrimary;
 
+        this.colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
+
         this.hasWebView = Helper.hasWebView(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
@@ -3359,6 +3392,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
         this.name_email = prefs.getBoolean("name_email", false);
+        this.distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
         this.subject_top = prefs.getBoolean("subject_top", false);
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
@@ -3380,13 +3414,29 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {
             @Override
             public void onCurrentListChanged(@Nullable PagedList<TupleMessageEx> previousList, @Nullable PagedList<TupleMessageEx> currentList) {
-                int prev = (previousList == null ? 0 : previousList.size());
-                int cur = (currentList == null ? 0 : currentList.size());
                 boolean autoscroll =
-                        (prefs.getBoolean("autoscroll", false) ||
-                                viewType == AdapterMessage.ViewType.THREAD);
+                        (viewType == AdapterMessage.ViewType.THREAD ||
+                                (viewType != ViewType.SEARCH &&
+                                        prefs.getBoolean("autoscroll", false)));
 
-                if (gotoTop || (autoscroll && cur > prev)) {
+                int prev = 0;
+                if (autoscroll && previousList != null)
+                    for (int i = 0; i < previousList.size(); i++) {
+                        TupleMessageEx message = previousList.get(i);
+                        if (message != null && !message.ui_seen)
+                            prev++;
+                    }
+
+                int cur = 0;
+                if (autoscroll && currentList != null)
+                    for (int i = 0; i < currentList.size(); i++) {
+                        TupleMessageEx message = currentList.get(i);
+                        if (message != null && !message.ui_seen)
+                            cur++;
+                    }
+
+                if (gotoTop ||
+                        (previousList != null && currentList != null && cur > prev)) {
                     gotoTop = false;
                     properties.scrollTo(0);
                 }
@@ -3854,6 +3904,92 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         return key;
     }
 
+    private static void setupWebview(
+            @NonNull Context context,
+            @NonNull FragmentManager fm,
+            @NonNull WebView webView,
+            float textSize, boolean show_images) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean inline = prefs.getBoolean("inline_images", false);
+        boolean autocontent = prefs.getBoolean("autocontent", false);
+
+        WebSettings settings = webView.getSettings();
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+
+        settings.setBuiltInZoomControls(true);
+        settings.setDisplayZoomControls(false);
+
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+
+        if (textSize != 0) {
+            settings.setDefaultFontSize(Math.round(textSize));
+            settings.setDefaultFixedFontSize(Math.round(textSize));
+        }
+        boolean monospaced = prefs.getBoolean("monospaced", false);
+        if (monospaced)
+            settings.setStandardFontFamily("monospace");
+
+        settings.setAllowFileAccess(false);
+        settings.setLoadsImagesAutomatically(show_images || inline);
+        settings.setBlockNetworkLoads(!show_images && !autocontent);
+        settings.setBlockNetworkImage(!show_images && !autocontent);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+        webView.setWebViewClient(new WebViewClient() {
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.i("Open url=" + url);
+
+                Uri uri = Uri.parse(url);
+                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                    return false;
+
+                Bundle args = new Bundle();
+                args.putParcelable("uri", uri);
+                args.putString("title", null);
+
+                FragmentDialogLink fragment = new FragmentDialogLink();
+                fragment.setArguments(args);
+                fragment.show(fm, "open:link");
+
+                return true;
+            }
+        });
+
+        webView.setDownloadListener(new DownloadListener() {
+            public void onDownloadStart(
+                    String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+                Log.i("Download url=" + url + " mime type=" + mimetype);
+
+                Uri uri = Uri.parse(url);
+                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                    return;
+
+                Helper.view(context, uri, true);
+            }
+        });
+
+        webView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                WebView.HitTestResult result = ((WebView) view).getHitTestResult();
+                if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
+                        result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                    Log.i("Long press url=" + result.getExtra());
+
+                    Uri uri = Uri.parse(result.getExtra());
+                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                        return false;
+
+                    Helper.view(context, uri, true);
+
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
     interface IProperties {
         void setValue(String name, long id, boolean enabled);
 
@@ -4136,93 +4272,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             float textSize = getArguments().getFloat("text_size");
             boolean show_images = getArguments().getBoolean("show_images");
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            boolean inline = prefs.getBoolean("inline_images", false);
-            boolean autocontent = prefs.getBoolean("autocontent", false);
-
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_webview, null);
             WebView webView = dview.findViewById(R.id.webView);
             ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
 
-            WebSettings settings = webView.getSettings();
-            settings.setUseWideViewPort(true);
-            settings.setLoadWithOverviewMode(true);
-
-            settings.setBuiltInZoomControls(true);
-            settings.setDisplayZoomControls(false);
-
-            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
-
-            if (textSize != 0) {
-                settings.setDefaultFontSize(Math.round(textSize));
-                settings.setDefaultFixedFontSize(Math.round(textSize));
-            }
-            boolean monospaced = prefs.getBoolean("monospaced", false);
-            if (monospaced)
-                settings.setStandardFontFamily("monospace");
-
-            settings.setAllowFileAccess(false);
-            settings.setLoadsImagesAutomatically(show_images || inline);
-            settings.setBlockNetworkLoads(!show_images && !autocontent);
-            settings.setBlockNetworkImage(!show_images && !autocontent);
-            settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-
-            webView.setWebViewClient(new WebViewClient() {
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                    Log.i("Open url=" + url);
-
-                    Uri uri = Uri.parse(url);
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                        return false;
-
-                    FragmentManager manager = getFragmentManager();
-                    if (manager == null)
-                        return false;
-
-                    Bundle args = new Bundle();
-                    args.putParcelable("uri", uri);
-                    args.putString("title", null);
-
-                    FragmentDialogLink fragment = new FragmentDialogLink();
-                    fragment.setArguments(args);
-                    fragment.show(manager, "open:link");
-
-                    return true;
-                }
-            });
-
-            webView.setDownloadListener(new DownloadListener() {
-                public void onDownloadStart(
-                        String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                    Log.i("Download url=" + url + " mime type=" + mimetype);
-
-                    Uri uri = Uri.parse(url);
-                    if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                        return;
-
-                    Helper.view(getContext(), uri, true);
-                }
-            });
-
-            webView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    WebView.HitTestResult result = ((WebView) view).getHitTestResult();
-                    if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                            result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                        Log.i("Long press url=" + result.getExtra());
-
-                        Uri uri = Uri.parse(result.getExtra());
-                        if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                            return false;
-
-                        Helper.view(getContext(), uri, true);
-
-                        return true;
-                    }
-                    return false;
-                }
-            });
+            setupWebview(getContext(), getFragmentManager(), webView, textSize, show_images);
 
             Dialog dialog = new Dialog(getContext(), android.R.style.Theme_Light_NoTitleBar_Fullscreen);
             dialog.setContentView(dview);
@@ -4254,7 +4308,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     String html = Helper.readText(file);
 
-                    Document doc = Jsoup.parse(html);
+                    Document doc = JsoupEx.parse(html);
                     HtmlHelper.removeViewportLimitations(doc);
                     HtmlHelper.embedImages(context, id, doc);
 

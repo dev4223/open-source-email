@@ -205,6 +205,7 @@
     <string name="title_advanced_date_header">Gruppér efter dato</string>
     <string name="title_advanced_threading">Samtaler i tråde</string>
     <string name="title_advanced_highlight_unread">Fremhæv ulæste beskeder</string>
+    <string name="title_advanced_distinguish_contacts">Skeln mellem beskeder fra kendte og ukendte kontakter</string>
     <string name="title_advanced_avatars">Vis kontaktfotos</string>
     <string name="title_advanced_generated_icons">Vis genererede ikoner</string>
     <string name="title_advanced_identicons">Vis identikoner</string>
@@ -291,6 +292,7 @@
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
     <string name="title_advanced_roaming_hint">Beskedoverskrifter hentes altid under roaming. Du kan benytte enhedens roamingindstilling til at deaktivere mobilnetværk under roaming.</string>
     <string name="title_advanced_browse_hint">Hent flere beskeder, når du ruller nedad</string>
+    <string name="title_advanced_layout_hint">Skift til et mere kompakt layout og ændring af beskedtekststørrelse kan ske via den øverste handlingsbjælkemenu fra beskedvisning</string>
     <string name="title_advanced_date_hint">Beskeder grupperes kun efter dato, hvis de er sorteret efter tid</string>
     <string name="title_advanced_threading_hint">Gruppér beskeder relateret til hinanden</string>
     <string name="title_advanced_name_email_hint">Når deaktiveret, vises kun navne, når de er tilgængelige</string>
@@ -334,6 +336,7 @@
     <string name="title_custom">Tilpasset</string>
     <string name="title_host">Værtsnavn</string>
     <string name="title_allow_insecure">Tillad usikre forbindelser</string>
+    <string name="title_insecure_remark">Usikre forbindelser bør kun tillades på betroede netværk og aldrig på offentlige netværk</string>
     <string name="title_port">Portnummer</string>
     <string name="title_user">Brugernavn</string>
     <string name="title_password">Adgangskode</string>
@@ -401,6 +404,7 @@
     <string name="title_sync_days">Beskedsynkronisering (dage)</string>
     <string name="title_sync_days_remark">Øges denne værdi, forøge batteri- og dataforbruget</string>
     <string name="title_keep_days">Behold beskeder (dage)</string>
+    <string name="title_keep_days_remark">Gamle beskeder fjernes fra enheden, men forbliver på serveren</string>
     <string name="title_keep_all">Behold alle beskeder</string>
     <string name="title_auto_trash">Auto-flyt gamle beskeder til Papirkurv</string>
     <string name="title_auto_delete">Auto-slet gamle beskeder permanent</string>
@@ -422,6 +426,7 @@
     <string name="title_no_folders">Ingen mapper</string>
     <string name="title_no_messages">Ingen beskeder</string>
     <string name="title_filters_active">Ét eller flere filtre er aktive</string>
+    <string name="title_duplicate_in">Dublet oprettet i %1$s</string>
     <string name="title_subject_reply">Sv: %1$s</string>
     <string name="title_subject_forward">Vs: %1$s</string>
     <string name="title_seen">Markér som læst</string>
@@ -430,6 +435,7 @@
     <string name="title_flag_color">Farvet stjerne &#8230;</string>
     <string name="title_unflag">Fjern stjerne</string>
     <string name="title_forward">Videresend</string>
+    <string name="title_new_message">Ny besked</string>
     <string name="title_editasnew">Redigér som ny</string>
     <string name="title_create_rule">Opret regel &#8230;</string>
     <string name="title_share">Del</string>
@@ -536,6 +542,7 @@
     <string name="title_from_missing">Afsender mangler</string>
     <string name="title_to_missing">Modtager mangler</string>
     <string name="title_subject_reminder">Emne er tomt</string>
+    <string name="title_text_reminder">Besked er tom</string>
     <string name="title_attachment_keywords">vedhæft,vedhæftet,vedhæftede,vedhæftning,vedhæftninger,vedhæftningen</string>
     <string name="title_attachment_reminder">Ville du tilføje en vedhæftning?</string>
     <string name="title_attachments_missing">Ikke alle vedhæftninger er downloadet</string>

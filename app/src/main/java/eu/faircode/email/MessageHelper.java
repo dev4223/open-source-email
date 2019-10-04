@@ -32,7 +32,6 @@ import androidx.preference.PreferenceManager;
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedReader;
@@ -282,8 +281,18 @@ public class MessageHelper {
             plainPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
             report.addBodyPart(plainPart);
 
+            String from = null;
+            if (message.from != null && message.from.length > 0)
+                from = ((InternetAddress) message.from[0]).getAddress();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Reporting-UA: ").append(BuildConfig.APPLICATION_ID).append("; ").append(BuildConfig.VERSION_NAME).append("\r\n");
+            if (from != null)
+                sb.append("Original-Recipient: rfc822;").append(from).append("\r\n");
+            sb.append("Disposition: manual-action/MDN-sent-manually; displayed").append("\r\n");
+
             BodyPart dnsPart = new MimeBodyPart();
-            dnsPart.setContent("", "message/disposition-notification; name=\"MDNPart2.txt\"");
+            dnsPart.setContent(sb.toString(), "message/disposition-notification; name=\"MDNPart2.txt\"");
             dnsPart.setDisposition(Part.INLINE);
             report.addBodyPart(dnsPart);
 
@@ -300,14 +309,14 @@ public class MessageHelper {
         StringBuilder body = new StringBuilder();
         body.append("<html><body>");
 
-        Document mdoc = Jsoup.parse(Helper.readText(message.getFile(context)));
+        Document mdoc = JsoupEx.parse(Helper.readText(message.getFile(context)));
         if (mdoc.body() != null)
             body.append(mdoc.body().html());
 
         // When sending message
         if (identity != null) {
             if (!TextUtils.isEmpty(identity.signature) && message.signature) {
-                Document sdoc = Jsoup.parse(identity.signature);
+                Document sdoc = JsoupEx.parse(identity.signature);
                 if (sdoc.body() != null) {
                     if (usenet) // https://www.ietf.org/rfc/rfc3676.txt
                         body.append("<span>-- <br></span>");
@@ -524,11 +533,17 @@ public class MessageHelper {
                 header = header.substring(0, sp); // "2 (High)"
         }
 
-        if ("high".equalsIgnoreCase(header) || "urgent".equalsIgnoreCase(header))
+        if ("high".equalsIgnoreCase(header) ||
+                "urgent".equalsIgnoreCase(header) ||
+                "critical".equalsIgnoreCase(header))
             priority = EntityMessage.PRIORITIY_HIGH;
-        else if ("normal".equalsIgnoreCase(header) || "medium".equalsIgnoreCase(header))
+        else if ("normal".equalsIgnoreCase(header) ||
+                "medium".equalsIgnoreCase(header))
             priority = EntityMessage.PRIORITIY_NORMAL;
-        else if ("low".equalsIgnoreCase(header) || "non-urgent".equalsIgnoreCase(header))
+        else if ("low".equalsIgnoreCase(header) ||
+                "non-urgent".equalsIgnoreCase(header) ||
+                "marketing".equalsIgnoreCase(header) ||
+                "bulk".equalsIgnoreCase(header))
             priority = EntityMessage.PRIORITIY_LOW;
         else if (header != null)
             try {
@@ -1006,9 +1021,7 @@ public class MessageHelper {
             }
 
             // Prevent Jsoup throwing an exception
-            result = result.replace("\0", "");
-
-            if (part.isMimeType("text/plain")) {
+            if (part == plain) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("<span>");
 
@@ -1277,17 +1290,29 @@ public class MessageHelper {
                     filename = null;
                 }
 
+                String pct = part.getContentType();
+                if (TextUtils.isEmpty(pct))
+                    pct = "text/plain";
+                ContentType contentType = new ContentType(pct);
+                if (part instanceof MimeMessage) {
+                    String header = ((MimeMessage) part).getHeader("Content-Type", null);
+                    if (!TextUtils.isEmpty(header)) {
+                        ContentType messageContentType = new ContentType(header);
+                        if (!messageContentType.getBaseType().equalsIgnoreCase(contentType.getBaseType())) {
+                            Log.w("Content type message=" + messageContentType + " part=" + contentType);
+                            contentType = messageContentType;
+                        }
+                    }
+                }
+
                 if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
                         TextUtils.isEmpty(filename) &&
-                        ((parts.plain == null && part.isMimeType("text/plain")) ||
-                                (parts.html == null && part.isMimeType("text/html")))) {
-                    if (part.isMimeType("text/plain")) {
-                        if (parts.plain == null)
-                            parts.plain = part;
-                    } else {
-                        if (parts.html == null)
-                            parts.html = part;
-                    }
+                        ((parts.plain == null && "text/plain".equalsIgnoreCase(contentType.getBaseType())) ||
+                                (parts.html == null && "text/html".equalsIgnoreCase(contentType.getBaseType())))) {
+                    if ("text/html".equalsIgnoreCase(contentType.getBaseType()))
+                        parts.html = part;
+                    else
+                        parts.plain = part;
                 } else {
                     AttachmentPart apart = new AttachmentPart();
                     apart.disposition = disposition;

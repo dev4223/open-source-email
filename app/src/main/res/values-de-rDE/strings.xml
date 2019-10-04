@@ -205,6 +205,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_date_header">Nach Datum gruppieren</string>
     <string name="title_advanced_threading">Konversationsansicht</string>
     <string name="title_advanced_highlight_unread">Ungelesene Nachrichten in heller Schrift anzeigen</string>
+    <string name="title_advanced_distinguish_contacts">Unterscheide Nachrichten nach bekannten und unbekannten Kontakten</string>
     <string name="title_advanced_avatars">Kontaktfotos anzeigen</string>
     <string name="title_advanced_generated_icons">Zeige generierte Symbole (Anfangsbuchstaben)</string>
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
@@ -291,6 +292,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgeholt. Sie können die Roaming-Einstellung des Geräts verwenden, um das Internet während des Roaming zu deaktivieren.</string>
     <string name="title_advanced_browse_hint">Durch Herunterscrollen weitere E-Mails laden</string>
+    <string name="title_advanced_layout_hint">Das Wechseln zu einem kompakteren Layout und Ändern der Nachrichtentextgröße kann im oberen Aktionsleisten-Menü in der Nachrichtenansicht vorgenommen werden</string>
     <string name="title_advanced_date_hint">Nachrichten werden nur nach Datum gruppiert, wenn sie nach Zeit sortiert sind</string>
     <string name="title_advanced_threading_hint">E-Mails gruppieren, die miteinander verwandt sind</string>
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
@@ -334,6 +336,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_custom">Benutzerdefiniert</string>
     <string name="title_host">Hostname</string>
     <string name="title_allow_insecure">Unsichere Verbindungen zulassen</string>
+    <string name="title_insecure_remark">Unsichere Verbindungen sollten nur in vertrauenswürdigen Netzwerken und niemals in öffentlichen Netzwerken erlaubt werden</string>
     <string name="title_port">Portnummer</string>
     <string name="title_user">Benutzername</string>
     <string name="title_password">Passwort</string>
@@ -401,6 +404,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_sync_days">Zu synchronisierende E-Mails (Tage)</string>
     <string name="title_sync_days_remark">Eine Erhöhung dieses Werts erhöht den Akkuverbrauch und die Datennutzung</string>
     <string name="title_keep_days">E-Mails aufbewahren (Tage)</string>
+    <string name="title_keep_days_remark">Alte Nachrichten werden vom Gerät entfernt, aber auf dem Server belassen</string>
     <string name="title_keep_all">Alle E-Mails aufbewahren</string>
     <string name="title_auto_trash">Alte Nachrichten automatisch in den Papierkorb verschieben</string>
     <string name="title_auto_delete">Alte Nachrichten automatisch dauerhaft löschen</string>
@@ -432,6 +436,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_flag_color">Farbige Kennzeichnung &#8230;</string>
     <string name="title_unflag">Kennzeichnung entfernen</string>
     <string name="title_forward">Weiterleiten</string>
+    <string name="title_new_message">Neue Nachricht</string>
     <string name="title_editasnew">Als neu bearbeiten</string>
     <string name="title_create_rule">Regel &#8230; erstellen</string>
     <string name="title_share">Teilen</string>
@@ -538,6 +543,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_from_missing">Absender fehlt</string>
     <string name="title_to_missing">Empfänger fehlt</string>
     <string name="title_subject_reminder">Betreff ist leer</string>
+    <string name="title_text_reminder">Nachricht ist leer</string>
     <string name="title_attachment_keywords">angehängt,Anhang,Anhänge,beigefügt,Anlage,Anlagen,anbei</string>
     <string name="title_attachment_reminder">Beabsichtigen Sie einen Anhang hinzuzufügen?</string>
     <string name="title_attachments_missing">Nicht alle Dateianhänge wurden heruntergeladen</string>

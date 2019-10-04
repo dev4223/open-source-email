@@ -206,6 +206,7 @@
     <string name="title_advanced_date_header">Tarihe göre grup</string>
     <string name="title_advanced_threading">İletişim iş parçacığı</string>
     <string name="title_advanced_highlight_unread">Okunmamış iletileri vurgula</string>
+    <string name="title_advanced_distinguish_contacts">Bilinen ve bilinmeyen kişilerin mesajlarını ayır</string>
     <string name="title_advanced_avatars">Kişi fotoğraflarını göster</string>
     <string name="title_advanced_generated_icons">Oluşturulan simgeleri göster</string>
     <string name="title_advanced_identicons">Kimliklerini göster</string>
@@ -292,6 +293,7 @@
     <string name="title_advanced_rlah_hint">AB içinde dolaşımda olmadığını varsayma</string>
     <string name="title_advanced_roaming_hint">Dolaşım halindeyken mesaj başlıkları her zaman alınacaktır. Cihazın dolaşım ayarlarından dolaşım halindeyken interneti devre dışı bırakabilirsiniz.</string>
     <string name="title_advanced_browse_hint">Aşağı doğru kaydırdığında daha çok ileti getirir</string>
+    <string name="title_advanced_layout_hint">Daha kompakt bir yerleşime geçmek ve mesaj metin boyutunu değiştirmek, mesaj görünümündeki üst eylem çubuğu menüsünden yapılabilir</string>
     <string name="title_advanced_date_hint">Eğer zamana göre sıralanmışlarsa mesajlar sadece tarihe göre gruplanacaktır</string>
     <string name="title_advanced_threading_hint">Birbirlerine bağlı grup iletileri</string>
     <string name="title_advanced_name_email_hint">Devre dışı bırakıldığında, yalnızca adlar mevcut olduğunda gösterilecektir</string>
@@ -335,6 +337,7 @@
     <string name="title_custom">Özel</string>
     <string name="title_host">Sunucu adı</string>
     <string name="title_allow_insecure">Güvensiz bağlantılara izin ver</string>
+    <string name="title_insecure_remark">Güvensiz bağlantılara sadece güvenilen ağlarda izin verilmelidir ve halka açık ağlarda asla izin verilmemelidir</string>
     <string name="title_port">Port numarası</string>
     <string name="title_user">Kullanıcı adı</string>
     <string name="title_password">Parola</string>
@@ -402,6 +405,7 @@
     <string name="title_sync_days">İletileri eşzamanla (gün)</string>
     <string name="title_sync_days_remark">Bu değerin artırılması, pil ve veri kullanımını artıracak</string>
     <string name="title_keep_days">İletileri sakla (günler)</string>
+    <string name="title_keep_days_remark">Eski mesajlar cihazdan silinecek, fakat sunucuda kalmaya devam edecektir</string>
     <string name="title_keep_all">Tüm iletileri sakla</string>
     <string name="title_auto_trash">Eski iletileri otomatik olarak çöpe taşı</string>
     <string name="title_auto_delete">Eski iletileri otomatik olarak kalıcı sil</string>
@@ -432,6 +436,7 @@
     <string name="title_flag_color">Renkli yıldız&#8230;</string>
     <string name="title_unflag">Yıldızı Kaldır</string>
     <string name="title_forward">İlet</string>
+    <string name="title_new_message">Yeni ileti</string>
     <string name="title_editasnew">Yeni olarak düzenle</string>
     <string name="title_create_rule">Kural oluştur &#8230;</string>
     <string name="title_share">Paylaş</string>
@@ -538,6 +543,7 @@
     <string name="title_from_missing">Gönderici Eksik</string>
     <string name="title_to_missing">Alıcı eksik</string>
     <string name="title_subject_reminder">Konu boş</string>
+    <string name="title_text_reminder">İleti boş</string>
     <string name="title_attachment_keywords">eklendi,ek,ekler,dahil edildi</string>
     <string name="title_attachment_reminder">Bir ek eklemek niyetinde misiniz?</string>
     <string name="title_attachments_missing">Tüm ekler indirilmedi</string>
