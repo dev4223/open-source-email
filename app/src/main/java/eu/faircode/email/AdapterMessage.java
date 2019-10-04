@@ -1465,8 +1465,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
-                        if (disable_tracking)
+                        if (show_images && disable_tracking)
                             HtmlHelper.removeTrackingPixels(context, document);
+
+                        if (debug) {
+                            Document format = JsoupEx.parse(document.html());
+                            format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
+                            Element pre = document.createElement("pre");
+                            pre.text(format.html());
+                            document.body().appendChild(pre);
+                        }
 
                         return document.html();
                     } else {
