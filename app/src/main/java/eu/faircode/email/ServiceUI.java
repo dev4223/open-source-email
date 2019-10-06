@@ -290,7 +290,7 @@ public class ServiceUI extends IntentService {
 
     private void onSnooze(long id) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int notify_snooze_duration = prefs.getInt("notify_snooze_duration", 60);
+        int notify_snooze_duration = prefs.getInt("default_snooze", 60);
 
         long wakeup = new Date().getTime() + notify_snooze_duration * 60 * 1000L;
 

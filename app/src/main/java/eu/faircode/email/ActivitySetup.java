@@ -1017,7 +1017,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 jchannel.getString("name"),
                 jchannel.getInt("importance"));
 
-        channel.setGroup(jchannel.getString("group"));
+        String group = jchannel.optString("group");
+        if (!TextUtils.isEmpty(group))
+            channel.setGroup(group);
 
         if (jchannel.has("description") && !jchannel.isNull("description"))
             channel.setDescription(jchannel.getString("description"));
@@ -1039,7 +1041,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         return channel;
     }
 
-    private void onViewGmail(Intent intent) {
+    private void onGmail(Intent intent) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new FragmentGmail()).addToBackStack("quick");
         fragmentTransaction.commit();
@@ -1158,7 +1160,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                 String action = intent.getAction();
                 if (ACTION_QUICK_GMAIL.equals(action))
-                    onViewGmail(intent);
+                    onGmail(intent);
                 else if (ACTION_QUICK_SETUP.equals(action))
                     onViewQuickSetup(intent);
                 else if (ACTION_VIEW_ACCOUNTS.equals(action))

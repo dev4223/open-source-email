@@ -232,7 +232,7 @@ class ImageHelper {
             }
 
             // Data URI
-            if (data && (show || inline))
+            if (data && (show || inline || a.tracking))
                 try {
                     Drawable d = getDataDrawable(context, a.source);
                     if (view != null)
@@ -369,7 +369,7 @@ class ImageHelper {
         }
     }
 
-    private static void fitDrawable(Drawable d, AnnotatedSource a, View view) {
+    private static void fitDrawable(final Drawable d, AnnotatedSource a, final View view) {
         Rect bounds = d.getBounds();
         int w = bounds.width();
         int h = bounds.height();
@@ -436,6 +436,7 @@ class ImageHelper {
         private String source;
         private int width = 0;
         private int height = 0;
+        private boolean tracking = false;
 
         // Encapsulate some ugliness
 
@@ -446,24 +447,25 @@ class ImageHelper {
                 int pos = source.substring(0, source.length() - 3).lastIndexOf("###");
                 if (pos > 0) {
                     int x = source.indexOf("x", pos + 3);
-                    if (x > 0)
+                    int s = source.indexOf(":", pos + 3);
+                    if (x > 0 && s > x)
                         try {
                             this.width = Integer.parseInt(source.substring(pos + 3, x));
-                            this.height = Integer.parseInt(source.substring(x + 1, source.length() - 3));
+                            this.height = Integer.parseInt(source.substring(x + 1, s));
+                            this.tracking = Boolean.parseBoolean(source.substring(s + 1, source.length() - 3));
                             this.source = source.substring(0, pos);
                         } catch (NumberFormatException ex) {
                             Log.e(ex);
-                            this.width = 0;
-                            this.height = 0;
                         }
                 }
             }
         }
 
-        AnnotatedSource(String source, int width, int height) {
+        AnnotatedSource(String source, int width, int height, boolean tracking) {
             this.source = source;
             this.width = width;
             this.height = height;
+            this.tracking = tracking;
         }
 
         public String getSource() {
@@ -473,7 +475,7 @@ class ImageHelper {
         String getAnnotated() {
             return (width == 0 && height == 0
                     ? source
-                    : source + "###" + width + "x" + height + "###");
+                    : source + "###" + width + "x" + height + ":" + tracking + "###");
         }
     }
 }

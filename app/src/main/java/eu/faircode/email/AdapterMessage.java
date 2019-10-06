@@ -327,6 +327,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private View wvBody;
         private ContentLoadingProgressBar pbBody;
         private TextView tvNoInternetBody;
+        private ImageButton ibDownloading;
+        private Group grpDownloading;
 
         private TextView tvCalendarSummary;
         private TextView tvCalendarStart;
@@ -487,6 +489,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             wvBody = vsBody.findViewById(R.id.wvBody);
             pbBody = vsBody.findViewById(R.id.pbBody);
             tvNoInternetBody = vsBody.findViewById(R.id.tvNoInternetBody);
+            ibDownloading = vsBody.findViewById(R.id.ibDownloading);
+            grpDownloading = vsBody.findViewById(R.id.grpDownloading);
 
             rvImage = vsBody.findViewById(R.id.rvImage);
             rvImage.setHasFixedSize(false);
@@ -558,6 +562,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibUnsubscribe.setOnClickListener(this);
                 ibDecrypt.setOnClickListener(this);
 
+                ibDownloading.setOnClickListener(this);
+
                 tvBody.setOnTouchListener(this);
                 tvBody.addOnLayoutChangeListener(this);
 
@@ -610,6 +616,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibImages.setOnClickListener(null);
                 ibUnsubscribe.setOnClickListener(null);
                 ibDecrypt.setOnClickListener(null);
+
+                ibDownloading.setOnClickListener(null);
 
                 tvBody.setOnTouchListener(null);
                 tvBody.removeOnLayoutChangeListener(this);
@@ -1016,6 +1024,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             wvBody.setVisibility(View.GONE);
             pbBody.setVisibility(View.GONE);
             tvNoInternetBody.setVisibility(View.GONE);
+            grpDownloading.setVisibility(View.GONE);
         }
 
         private void bindFlagged(TupleMessageEx message, boolean expanded) {
@@ -1095,8 +1104,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 pbHeaders.setVisibility(View.GONE);
                 tvNoInternetHeaders.setVisibility(View.GONE);
             }
-
-            grpAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
 
             bnvActions.setVisibility(View.VISIBLE);
             for (int i = 0; i < bnvActions.getMenu().size(); i++)
@@ -1307,6 +1314,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void bindBody(TupleMessageEx message) {
             tvBody.setText(null);
+            grpDownloading.setVisibility(message.content ? View.GONE : View.VISIBLE);
 
             if (!message.content)
                 return;
@@ -1319,8 +1327,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         properties.setValue("full", message.id, true);
                         properties.setValue("full_asked", message.id, true);
                     }
-                    if (prefs.getBoolean(from + ".show_images", false))
+                    if (prefs.getBoolean(from + ".show_images", false)) {
                         properties.setValue("images", message.id, true);
+                        properties.setValue("images_asked", message.id, true);
+                    }
                 }
 
             int dp60 = Helper.dp2pixels(context, 60);
@@ -1334,6 +1344,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibFull.setEnabled(hasWebView);
             ibFull.setImageResource(show_full ? R.drawable.baseline_fullscreen_exit_24 : R.drawable.baseline_fullscreen_24);
+            ibImages.setImageResource(show_images ? R.drawable.baseline_format_align_justify_24 : R.drawable.baseline_image_24);
 
             if (show_full) {
                 // Create web view
@@ -1489,185 +1500,193 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 wvBody.setVisibility(View.GONE);
             }
 
-            Bundle args = new Bundle();
+            final Bundle args = new Bundle();
             args.putSerializable("message", message);
-            args.putBoolean("show_images", show_images);
             args.putBoolean("show_full", show_full);
+            args.putBoolean("show_images", show_images);
             args.putBoolean("show_quotes", show_quotes);
             args.putInt("zoom", zoom);
 
-            new SimpleTask<Object>() {
+            // Run task after measure
+            new Handler().post(new Runnable() {
                 @Override
-                protected Object onExecute(final Context context, final Bundle args) throws IOException {
-                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    boolean show_full = args.getBoolean("show_full");
-                    boolean show_images = args.getBoolean("show_images");
-                    boolean show_quotes = args.getBoolean("show_quotes");
-                    int zoom = args.getInt("zoom");
+                public void run() {
+                    new SimpleTask<Object>() {
+                        @Override
+                        protected Object onExecute(final Context context, final Bundle args) throws IOException {
+                            TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                            boolean show_full = args.getBoolean("show_full");
+                            boolean show_images = args.getBoolean("show_images");
+                            boolean show_quotes = args.getBoolean("show_quotes");
+                            int zoom = args.getInt("zoom");
 
-                    if (message == null || !message.content)
-                        return null;
+                            if (message == null || !message.content)
+                                return null;
 
-                    File file = message.getFile(context);
-                    if (!file.exists())
-                        return null;
+                            File file = message.getFile(context);
+                            if (!file.exists())
+                                return null;
 
-                    String body = Helper.readText(file);
-                    Document document = JsoupEx.parse(body);
+                            String body = Helper.readText(file);
+                            Document document = JsoupEx.parse(body);
 
-                    // Check for inline encryption
-                    int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
-                    int end = body.indexOf(Helper.PGP_END_MESSAGE);
-                    args.putBoolean("iencrypted", begin >= 0 && begin < end);
+                            // Check for inline encryption
+                            int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
+                            int end = body.indexOf(Helper.PGP_END_MESSAGE);
+                            args.putBoolean("iencrypted", begin >= 0 && begin < end);
 
-                    // Check for images
-                    boolean has_images = false;
-                    for (Element img : document.select("img")) {
-                        if (inline) {
-                            String src = img.attr("src");
-                            if (!src.startsWith("cid:")) {
-                                has_images = true;
-                                break;
+                            // Check for images
+                            boolean has_images = false;
+                            for (Element img : document.select("img")) {
+                                if (inline) {
+                                    String src = img.attr("src");
+                                    if (!src.startsWith("cid:")) {
+                                        has_images = true;
+                                        break;
+                                    }
+                                } else {
+                                    has_images = true;
+                                    break;
+                                }
                             }
-                        } else {
-                            has_images = true;
-                            break;
-                        }
-                    }
-                    args.putBoolean("has_images", has_images);
+                            args.putBoolean("has_images", has_images);
 
-                    if (show_full) {
-                        HtmlHelper.removeViewportLimitations(document);
-                        if (inline || show_images)
-                            HtmlHelper.embedImages(context, message.id, document);
+                            if (show_full) {
+                                HtmlHelper.removeViewportLimitations(document);
+                                if (inline || show_images)
+                                    HtmlHelper.embedInlineImages(context, message.id, document);
 
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
-                        if (show_images && disable_tracking)
-                            HtmlHelper.removeTrackingPixels(context, document);
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                                boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
+                                if (disable_tracking)
+                                    HtmlHelper.removeTrackingPixels(context, document);
 
-                        if (debug) {
-                            Document format = JsoupEx.parse(document.html());
-                            format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
-                            Element pre = document.createElement("pre");
-                            pre.text(format.html());
-                            document.body().appendChild(pre);
-                        }
-
-                        return document.html();
-                    } else {
-                        // Collapse quotes
-                        if (!show_quotes) {
-                            for (Element quote : document.select("blockquote"))
-                                quote.html("&#8230;");
-                            body = document.html();
-                        }
-
-                        // Cleanup message
-                        String html = HtmlHelper.sanitize(context, body, show_images);
-                        if (debug) {
-                            Document format = JsoupEx.parse(html);
-                            format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
-                            String[] lines = format.html().split("\\r?\\n");
-                            for (int i = 0; i < lines.length; i++)
-                                lines[i] = Html.escapeHtml(lines[i]);
-                            html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
-                        }
-
-                        Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
-                            @Override
-                            public Drawable getDrawable(String source) {
-                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, tvBody);
-
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                    if (drawable instanceof AnimatedImageDrawable)
-                                        ((AnimatedImageDrawable) drawable).start();
+                                if (debug) {
+                                    Document format = JsoupEx.parse(document.html());
+                                    format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
+                                    Element pre = document.createElement("pre");
+                                    pre.text(format.html());
+                                    document.body().appendChild(pre);
                                 }
 
-                                return drawable;
+                                return document.html();
+                            } else {
+                                // Collapse quotes
+                                if (!show_quotes) {
+                                    for (Element quote : document.select("blockquote"))
+                                        quote.html("&#8230;");
+                                    body = document.html();
+                                }
+
+                                // Cleanup message
+                                String html = HtmlHelper.sanitize(context, body, show_images);
+                                if (debug) {
+                                    Document format = JsoupEx.parse(html);
+                                    format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
+                                    String[] lines = format.html().split("\\r?\\n");
+                                    for (int i = 0; i < lines.length; i++)
+                                        lines[i] = Html.escapeHtml(lines[i]);
+                                    html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
+                                }
+
+                                Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
+                                    @Override
+                                    public Drawable getDrawable(String source) {
+                                        Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, tvBody);
+
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                            if (drawable instanceof AnimatedImageDrawable)
+                                                ((AnimatedImageDrawable) drawable).start();
+                                        }
+
+                                        return drawable;
+                                    }
+                                }, null);
+
+                                // Replace quote spans
+                                SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
+                                QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
+                                for (QuoteSpan quoteSpan : quoteSpans) {
+                                    builder.setSpan(
+                                            new StyledQuoteSpan(context, colorPrimary),
+                                            builder.getSpanStart(quoteSpan),
+                                            builder.getSpanEnd(quoteSpan),
+                                            builder.getSpanFlags(quoteSpan));
+                                    builder.removeSpan(quoteSpan);
+                                }
+
+                                // Make collapsed quotes clickable
+                                if (!show_quotes) {
+                                    final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
+
+                                    StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
+                                    for (StyledQuoteSpan squote : squotes)
+                                        builder.setSpan(new DynamicDrawableSpan() {
+                                                            @Override
+                                                            public Drawable getDrawable() {
+                                                                Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
+                                                                d.setTint(colorAccent);
+                                                                d.setBounds(0, 0, px, px);
+                                                                return d;
+                                                            }
+                                                        },
+                                                builder.getSpanStart(squote),
+                                                builder.getSpanEnd(squote),
+                                                builder.getSpanFlags(squote));
+                                }
+
+                                return builder;
                             }
-                        }, null);
-
-                        // Replace quote spans
-                        SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
-                        QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
-                        for (QuoteSpan quoteSpan : quoteSpans) {
-                            builder.setSpan(
-                                    new StyledQuoteSpan(context, colorPrimary),
-                                    builder.getSpanStart(quoteSpan),
-                                    builder.getSpanEnd(quoteSpan),
-                                    builder.getSpanFlags(quoteSpan));
-                            builder.removeSpan(quoteSpan);
                         }
 
-                        // Make collapsed quotes clickable
-                        if (!show_quotes) {
-                            final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
+                        @Override
+                        protected void onExecuted(Bundle args, Object result) {
+                            TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                            properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
 
-                            StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
-                            for (StyledQuoteSpan squote : squotes)
-                                builder.setSpan(new DynamicDrawableSpan() {
-                                                    @Override
-                                                    public Drawable getDrawable() {
-                                                        Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
-                                                        d.setTint(colorAccent);
-                                                        d.setBounds(0, 0, px, px);
-                                                        return d;
-                                                    }
-                                                },
-                                        builder.getSpanStart(squote),
-                                        builder.getSpanEnd(squote),
-                                        builder.getSpanFlags(squote));
+                            TupleMessageEx amessage = getMessage();
+                            if (amessage == null || !amessage.id.equals(message.id))
+                                return;
+
+                            boolean show_expanded = properties.getValue("expanded", message.id);
+                            if (!show_expanded)
+                                return;
+
+                            boolean has_images = args.getBoolean("has_images");
+                            boolean show_images = properties.getValue("images", message.id);
+
+                            if (result instanceof Spanned) {
+                                tvBody.setText((Spanned) result);
+                                tvBody.setTextIsSelectable(false);
+                                tvBody.setTextIsSelectable(true);
+                                tvBody.setMovementMethod(new TouchHandler(message));
+                            } else if (result instanceof String)
+                                ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
+                            else
+                                throw new IllegalStateException("Result=" + result);
+
+                            pbBody.setVisibility(View.GONE);
+
+                            // Show attachments/images
+                            cowner.start();
+                            ibImages.setVisibility(has_images ? View.VISIBLE : View.GONE);
                         }
 
-                        return builder;
-                    }
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
+                        }
+                    }.execute(context, owner, args, "message:body");
                 }
-
-                @Override
-                protected void onExecuted(Bundle args, Object result) {
-                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
-
-                    TupleMessageEx amessage = getMessage();
-                    if (amessage == null || !amessage.id.equals(message.id))
-                        return;
-
-                    boolean show_expanded = properties.getValue("expanded", message.id);
-                    if (!show_expanded)
-                        return;
-
-                    boolean has_images = args.getBoolean("has_images");
-                    boolean show_images = properties.getValue("images", message.id);
-
-                    if (result instanceof Spanned) {
-                        tvBody.setText((Spanned) result);
-                        tvBody.setTextIsSelectable(false);
-                        tvBody.setTextIsSelectable(true);
-                        tvBody.setMovementMethod(new TouchHandler(message));
-                    } else if (result instanceof String)
-                        ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
-                    else
-                        throw new IllegalStateException("Result=" + result);
-
-                    pbBody.setVisibility(View.GONE);
-
-                    // Show attachments/images
-                    cowner.start();
-                    ibImages.setVisibility(has_images && !show_images ? View.VISIBLE : View.GONE);
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
-                }
-            }.execute(context, owner, args, "message:body");
+            });
         }
 
         private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments) {
             if (attachments == null)
                 attachments = new ArrayList<>();
             properties.setAttachments(message.id, attachments);
+
+            grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
             boolean iencrypted = properties.getValue("iencrypted", message.id);
             boolean show_inline = properties.getValue("inline", message.id);
@@ -1679,6 +1698,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean save = (attachments.size() > 1);
             boolean downloading = false;
             boolean calendar = false;
+
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
                 boolean inline = (attachment.isInline() && attachment.isImage());
@@ -2058,6 +2078,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         break;
                     case R.id.ibDecrypt:
                         onActionDecrypt(message);
+                        break;
+
+                    case R.id.ibDownloading:
+                        Helper.viewFAQ(context, 15);
                         break;
 
                     case R.id.btnCalendarAccept:
@@ -2536,19 +2560,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             new SimpleTask<Void>() {
                 @Override
                 protected Void onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
+                    long mid = args.getLong("id");
 
                     DB db = DB.getInstance(context);
                     try {
                         db.beginTransaction();
 
-                        EntityMessage msg = db.message().getMessage(id);
-                        if (msg != null)
-                            for (EntityAttachment attachment : db.attachment().getAttachments(message.id))
-                                if (attachment.progress == null && !attachment.available) {
-                                    db.attachment().setProgress(attachment.id, 0);
-                                    EntityOperation.queue(context, msg, EntityOperation.ATTACHMENT, attachment.id);
-                                }
+                        EntityMessage message = db.message().getMessage(mid);
+                        if (message == null || message.uid == null)
+                            return null;
+
+                        for (EntityAttachment attachment : db.attachment().getAttachments(message.id))
+                            if (attachment.progress == null && !attachment.available)
+                                EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -2573,36 +2597,27 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShow(final TupleMessageEx message, boolean full) {
-            if (full) {
-                boolean current = properties.getValue("full", message.id);
-                boolean asked = properties.getValue("full_asked", message.id);
-                if (current || asked) {
-                    if (current) {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        SharedPreferences.Editor editor = prefs.edit();
-                        for (Address address : message.from) {
-                            String from = ((InternetAddress) address).getAddress();
-                            editor.remove(from + ".show_full");
-                        }
-                        editor.apply();
+            boolean current = properties.getValue(full ? "full" : "images", message.id);
+            boolean asked = properties.getValue(full ? "full_asked" : "images_asked", message.id);
+            if (current || asked) {
+                if (current) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    for (Address address : message.from) {
+                        String from = ((InternetAddress) address).getAddress();
+                        editor.remove(from + (full ? ".show_full" : ".show_images"));
                     }
-
-                    properties.setValue("full", message.id, !current);
-                    onShowFullConfirmed(message);
-                    return;
+                    editor.apply();
                 }
+
+                properties.setValue(full ? "full" : "images", message.id, !current);
+                onShowFullConfirmed(message);
+                return;
             }
 
             View dview = LayoutInflater.from(context).inflate(
                     full ? R.layout.dialog_show_full : R.layout.dialog_show_images, null);
             CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-            if (!full) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
-                TextView tvTracking = dview.findViewById(R.id.tvTracking);
-                tvTracking.setVisibility(disable_tracking ? View.VISIBLE : View.GONE);
-            }
 
             if (message.from == null || message.from.length == 0)
                 cbNotAgain.setVisibility(View.GONE);
@@ -2627,20 +2642,37 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
 
+            if (full) {
+                TextView tvDark = dview.findViewById(R.id.tvDark);
+                tvDark.setVisibility(Helper.isDarkTheme(context) ? View.VISIBLE : View.GONE);
+            } else {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
+
+                ImageView ivInfo = dview.findViewById(R.id.ivInfo);
+                Group grpTracking = dview.findViewById(R.id.grpTracking);
+
+                grpTracking.setVisibility(disable_tracking ? View.VISIBLE : View.GONE);
+
+                ivInfo.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Helper.viewFAQ(context, 82);
+                    }
+                });
+            }
+
             // TODO: dialog fragment
             final Dialog dialog = new AlertDialog.Builder(context)
                     .setView(dview)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            if (full) {
-                                properties.setValue("full", message.id, true);
-                                properties.setValue("full_asked", message.id, true);
+                            properties.setValue(full ? "full" : "images", message.id, true);
+                            properties.setValue(full ? "full_asked" : "images_asked", message.id, true);
+                            if (full)
                                 onShowFullConfirmed(message);
-                            } else {
-                                properties.setValue("images", message.id, true);
-                                onShowImagesConfirmed(message);
-                            }
+                            onShowImagesConfirmed(message);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -2667,8 +2699,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowImagesConfirmed(final TupleMessageEx message) {
-            ibImages.setVisibility(View.GONE);
-
             bindBody(message);
 
             // Download inline images
@@ -2686,7 +2716,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                         for (EntityAttachment attachment : attachments)
-                            if (!attachment.available && attachment.isInline() && attachment.isImage())
+                            if (attachment.isInline() && attachment.isImage() &&
+                                    attachment.progress == null && !attachment.available)
                                 EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
 
                         db.setTransactionSuccessful();
@@ -3791,12 +3822,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("thread changed id=" + next.id);
                     }
-                    // receipt_request
+                    if (!Objects.equals(prev.priority, next.priority)) {
+                        same = false;
+                        Log.i("priority changed id=" + next.id);
+                    }
+                    if (!Objects.equals(prev.receipt_request, next.receipt_request)) {
+                        same = false;
+                        Log.i("receipt_request changed id=" + next.id);
+                    }
                     if (!MessageHelper.equal(prev.receipt_to, next.receipt_to)) {
                         same = false;
                         Log.i("receipt_to changed id=" + next.id);
                     }
-
                     if (!Objects.equals(prev.dkim, next.dkim)) {
                         same = false;
                         Log.i("dkim changed id=" + next.id);
@@ -3873,7 +3910,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("content changed id=" + next.id);
                     }
-                    // plain_only
+                    if (!Objects.equals(prev.plain_only, next.plain_only)) {
+                        same = false;
+                        Log.i("plain_only changed id=" + next.id);
+                    }
                     if (!Objects.equals(prev.preview, next.preview)) {
                         same = false;
                         Log.i("preview changed id=" + next.id);
@@ -3902,6 +3942,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("keywords changed id=" + next.id);
                     }
+                    // notifying
                     if (!prev.ui_seen.equals(next.ui_seen)) {
                         same = false;
                         Log.i("ui_seen changed id=" + next.id);
@@ -3947,6 +3988,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                     // last_attempt
 
+                    // accountPop
                     if (!Objects.equals(prev.accountName, next.accountName)) {
                         same = false;
                         Log.i("accountName changed id=" + next.id);
@@ -3956,6 +3998,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Log.i("accountColor changed id=" + next.id);
                     }
                     // accountNotify
+                    // accountAutoSeen
                     if (!prev.folderName.equals(next.folderName)) {
                         same = false;
                         Log.i("folderName changed id=" + next.id);
@@ -3968,6 +4011,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("folderType changed id=" + next.id);
                     }
+                    // folderReadOnly
                     if (!Objects.equals(prev.identityName, next.identityName)) {
                         same = false;
                         Log.i("identityName changed id=" + next.id);
@@ -3980,6 +4024,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("identitySynchronize changed id=" + next.id);
                     }
+                    // senders
                     if (prev.count != next.count) {
                         same = false;
                         Log.i("count changed id=" + next.id);
@@ -3991,10 +4036,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (prev.unflagged != next.unflagged) {
                         same = false;
                         Log.i("unflagged changed id=" + next.id);
-                    }
-                    if (prev.attachments != next.attachments) {
-                        same = false;
-                        Log.i("attachments changed id=" + next.id);
                     }
                     if (prev.drafts != next.drafts) {
                         same = false;
@@ -4384,7 +4425,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             if (!ActivityBilling.isPro(getContext())) {
-                                getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
+                                startActivity(new Intent(getContext(), ActivityBilling.class));
                                 return;
                             }
 
@@ -4461,7 +4502,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             if (!ActivityBilling.isPro(getContext())) {
-                                getContext().startActivity(new Intent(getContext(), ActivityBilling.class));
+                                startActivity(new Intent(getContext(), ActivityBilling.class));
                                 return;
                             }
 

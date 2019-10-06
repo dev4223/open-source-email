@@ -73,7 +73,7 @@ public class EmailProvider {
     enum UserType {LOCAL, EMAIL}
 
     private static final int DNS_TIMEOUT = 5 * 1000; // milliseconds
-    private static final int ISPDB_TIMEOUT = 20 * 1000; // milliseconds
+    private static final int ISPDB_TIMEOUT = 15 * 1000; // milliseconds
 
     private static final ExecutorService executor =
             Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
@@ -160,10 +160,12 @@ public class EmailProvider {
     static EmailProvider fromDomain(Context context, String domain, Discover discover) throws IOException {
         List<EmailProvider> providers = loadProfiles(context);
         for (EmailProvider provider : providers)
-            if (provider.domain != null && provider.domain.contains(domain.toLowerCase(Locale.ROOT))) {
-                Log.i("Provider from domain=" + domain);
-                return provider;
-            }
+            if (provider.domain != null)
+                for (String d : provider.domain)
+                    if (domain.toLowerCase(Locale.ROOT).matches(d)) {
+                        Log.i("Provider from domain=" + domain + " (" + d + ")");
+                        return provider;
+                    }
 
         EmailProvider autoconfig = _fromDomain(context, domain.toLowerCase(Locale.ROOT), discover);
 
@@ -210,174 +212,205 @@ public class EmailProvider {
     private static EmailProvider fromISPDB(Context context, String domain) throws IOException, XmlPullParserException {
         EmailProvider provider = new EmailProvider(domain);
 
-        // https://wiki.mozilla.org/Thunderbird:Autoconfiguration:ConfigFileFormat
-        URL url = new URL("https://autoconfig.thunderbird.net/v1.1/" + domain);
-        Log.i("Fetching " + url);
+        // https://wiki.mozilla.org/Thunderbird:Autoconfiguration
+        HttpURLConnection request;
+        try {
+            URL url = new URL("https://autoconfig." + domain + "/mail/config-v1.1.xml?emailaddress=someone@" + domain);
+            Log.i("Fetching " + url);
 
-        HttpURLConnection request = (HttpURLConnection) url.openConnection();
-        request.setReadTimeout(ISPDB_TIMEOUT);
-        request.setConnectTimeout(ISPDB_TIMEOUT);
-        request.setRequestMethod("GET");
-        request.setDoInput(true);
-        request.connect();
+            request = (HttpURLConnection) url.openConnection();
+            request.setReadTimeout(ISPDB_TIMEOUT);
+            request.setConnectTimeout(ISPDB_TIMEOUT);
+            request.setRequestMethod("GET");
+            request.setDoInput(true);
+            request.connect();
+        } catch (IOException ex1) {
+            try {
+                Log.w(ex1.getMessage());
 
-        // https://developer.android.com/reference/org/xmlpull/v1/XmlPullParser
-        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        XmlPullParser xml = factory.newPullParser();
-        xml.setInput(new InputStreamReader(request.getInputStream()));
+                URL url = new URL("https://" + domain + "/.well-known/autoconfig/mail/config-v1.1.xml");
+                Log.i("Fetching " + url);
 
-        boolean imap = false;
-        boolean smtp = false;
-        String href = null;
-        String title = null;
-        int eventType = xml.getEventType();
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-            if (eventType == XmlPullParser.START_TAG) {
-                String name = xml.getName();
-                if ("displayShortName".equals(name)) {
-                    // <displayShortName>GMail</displayShortName>
-                    eventType = xml.next();
-                    if (eventType == XmlPullParser.TEXT) {
-                        String display = xml.getText();
-                        Log.i("Name=" + display);
-                        provider.name = display;
-                    }
-                    continue;
+                request = (HttpURLConnection) url.openConnection();
+                request.setReadTimeout(ISPDB_TIMEOUT);
+                request.setConnectTimeout(ISPDB_TIMEOUT);
+                request.setRequestMethod("GET");
+                request.setDoInput(true);
+                request.connect();
+            } catch (IOException ex2) {
+                Log.w(ex2.getMessage());
 
-                } else if ("incomingServer".equals(name)) {
-                    // <incomingServer type="imap">
-                    //   <hostname>imap.gmail.com</hostname>
-                    //   <port>993</port>
-                    //   <socketType>SSL</socketType>
-                    //   <username>%EMAILADDRESS%</username>
-                    //   <authentication>OAuth2</authentication>
-                    //   <authentication>password-cleartext</authentication>
-                    // </incomingServer>
-                    imap = "imap".equals(xml.getAttributeValue(null, "type"));
+                URL url = new URL("https://autoconfig.thunderbird.net/v1.1/" + domain);
+                Log.i("Fetching " + url);
 
-                } else if ("outgoingServer".equals(name)) {
-                    // <outgoingServer type="smtp">
-                    //   <hostname>smtp.gmail.com</hostname>
-                    //   <port>465</port>
-                    //   <socketType>SSL</socketType>
-                    //   <username>%EMAILADDRESS%</username>
-                    //   <authentication>OAuth2</authentication>
-                    //   <authentication>password-cleartext</authentication>
-                    // </outgoingServer>
-                    smtp = "smtp".equals(xml.getAttributeValue(null, "type"));
-
-                } else if ("hostname".equals(name)) {
-                    eventType = xml.next();
-                    if (eventType == XmlPullParser.TEXT) {
-                        String host = xml.getText();
-                        Log.i("Host=" + host);
-                        if (imap)
-                            provider.imap.host = host;
-                        else if (smtp)
-                            provider.smtp.host = host;
-                    }
-                    continue;
-
-                } else if ("port".equals(name)) {
-                    eventType = xml.next();
-                    if (eventType == XmlPullParser.TEXT) {
-                        String port = xml.getText();
-                        Log.i("Port=" + port);
-                        if (imap) {
-                            provider.imap.port = Integer.parseInt(port);
-                            provider.imap.starttls = (provider.imap.port == 143);
-                        } else if (smtp) {
-                            provider.smtp.port = Integer.parseInt(port);
-                            provider.smtp.starttls = (provider.smtp.port == 587);
-                        }
-                    }
-                    continue;
-
-                } else if ("socketType".equals(name)) {
-                    eventType = xml.next();
-                    if (eventType == XmlPullParser.TEXT) {
-                        String socket = xml.getText();
-                        Log.i("Socket=" + socket);
-                        if ("SSL".equals(socket)) {
-                            if (imap)
-                                provider.imap.starttls = false;
-                            else if (smtp)
-                                provider.smtp.starttls = false;
-                        } else if ("STARTTLS".equals(socket)) {
-                            if (imap)
-                                provider.imap.starttls = true;
-                            else if (smtp)
-                                provider.smtp.starttls = true;
-                        } else
-                            Log.w("Unknown socket type=" + socket);
-                    }
-                    continue;
-
-                } else if ("username".equals(name)) {
-                    eventType = xml.next();
-                    if (eventType == XmlPullParser.TEXT) {
-                        String username = xml.getText();
-                        Log.i("Username=" + username);
-                        if ("%EMAILADDRESS%".equals(username))
-                            provider.user = UserType.EMAIL;
-                        else if ("%EMAILLOCALPART%".equals(username))
-                            provider.user = UserType.LOCAL;
-                        else
-                            Log.w("Unknown username type=" + username);
-                    }
-                    continue;
-
-                } else if ("enable".equals(name)) {
-                    // <enable visiturl="https://mail.google.com/mail/?ui=2&shva=1#settings/fwdandpop">
-                    //   <instruction>You need to enable IMAP access</instruction>
-                    // </enable>
-                    href = xml.getAttributeValue(null, "visiturl");
-                    title = null;
-
-                } else if ("documentation".equals(name)) {
-                    // <documentation url="http://mail.google.com/support/bin/answer.py?answer=13273">
-                    //   <descr>How to enable IMAP/POP3 in GMail</descr>
-                    // </documentation>
-                    href = xml.getAttributeValue(null, "url");
-                    title = null;
-
-                } else if ("instruction".equals(name) || "descr".equals(name)) {
-                    if (href != null) {
-                        eventType = xml.next();
-                        if (eventType == XmlPullParser.TEXT) {
-                            if (title == null)
-                                title = "";
-                            else
-                                title += "<br>";
-                            title += xml.getText();
-                        }
-                        continue;
-                    }
-                }
-
-            } else if (eventType == XmlPullParser.END_TAG) {
-                String name = xml.getName();
-                if ("incomingServer".equals(name))
-                    imap = false;
-
-                else if ("outgoingServer".equals(name))
-                    smtp = false;
-
-                else if ("enable".equals(name) || "documentation".equals(name)) {
-                    if (href != null) {
-                        if (title == null)
-                            title = href;
-                        addDocumentation(provider, href, title);
-                        href = null;
-                        title = null;
-                    }
-                }
+                request = (HttpURLConnection) url.openConnection();
+                request.setReadTimeout(ISPDB_TIMEOUT);
+                request.setConnectTimeout(ISPDB_TIMEOUT);
+                request.setRequestMethod("GET");
+                request.setDoInput(true);
+                request.connect();
             }
-
-            eventType = xml.next();
         }
 
-        request.disconnect();
+        try {
+            // https://developer.android.com/reference/org/xmlpull/v1/XmlPullParser
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xml = factory.newPullParser();
+            xml.setInput(new InputStreamReader(request.getInputStream()));
+
+            boolean imap = false;
+            boolean smtp = false;
+            String href = null;
+            String title = null;
+            int eventType = xml.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG) {
+                    String name = xml.getName();
+                    if ("displayShortName".equals(name)) {
+                        // <displayShortName>GMail</displayShortName>
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT) {
+                            String display = xml.getText();
+                            Log.i("Name=" + display);
+                            provider.name = display;
+                        }
+                        continue;
+
+                    } else if ("incomingServer".equals(name)) {
+                        // <incomingServer type="imap">
+                        //   <hostname>imap.gmail.com</hostname>
+                        //   <port>993</port>
+                        //   <socketType>SSL</socketType>
+                        //   <username>%EMAILADDRESS%</username>
+                        //   <authentication>OAuth2</authentication>
+                        //   <authentication>password-cleartext</authentication>
+                        // </incomingServer>
+                        imap = "imap".equals(xml.getAttributeValue(null, "type"));
+
+                    } else if ("outgoingServer".equals(name)) {
+                        // <outgoingServer type="smtp">
+                        //   <hostname>smtp.gmail.com</hostname>
+                        //   <port>465</port>
+                        //   <socketType>SSL</socketType>
+                        //   <username>%EMAILADDRESS%</username>
+                        //   <authentication>OAuth2</authentication>
+                        //   <authentication>password-cleartext</authentication>
+                        // </outgoingServer>
+                        smtp = "smtp".equals(xml.getAttributeValue(null, "type"));
+
+                    } else if ("hostname".equals(name)) {
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT) {
+                            String host = xml.getText();
+                            Log.i("Host=" + host);
+                            if (imap)
+                                provider.imap.host = host;
+                            else if (smtp)
+                                provider.smtp.host = host;
+                        }
+                        continue;
+
+                    } else if ("port".equals(name)) {
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT) {
+                            String port = xml.getText();
+                            Log.i("Port=" + port);
+                            if (imap) {
+                                provider.imap.port = Integer.parseInt(port);
+                                provider.imap.starttls = (provider.imap.port == 143);
+                            } else if (smtp) {
+                                provider.smtp.port = Integer.parseInt(port);
+                                provider.smtp.starttls = (provider.smtp.port == 587);
+                            }
+                        }
+                        continue;
+
+                    } else if ("socketType".equals(name)) {
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT) {
+                            String socket = xml.getText();
+                            Log.i("Socket=" + socket);
+                            if ("SSL".equals(socket)) {
+                                if (imap)
+                                    provider.imap.starttls = false;
+                                else if (smtp)
+                                    provider.smtp.starttls = false;
+                            } else if ("STARTTLS".equals(socket)) {
+                                if (imap)
+                                    provider.imap.starttls = true;
+                                else if (smtp)
+                                    provider.smtp.starttls = true;
+                            } else
+                                Log.w("Unknown socket type=" + socket);
+                        }
+                        continue;
+
+                    } else if ("username".equals(name)) {
+                        eventType = xml.next();
+                        if (eventType == XmlPullParser.TEXT) {
+                            String username = xml.getText();
+                            Log.i("Username=" + username);
+                            if ("%EMAILADDRESS%".equals(username))
+                                provider.user = UserType.EMAIL;
+                            else if ("%EMAILLOCALPART%".equals(username))
+                                provider.user = UserType.LOCAL;
+                            else
+                                Log.w("Unknown username type=" + username);
+                        }
+                        continue;
+
+                    } else if ("enable".equals(name)) {
+                        // <enable visiturl="https://mail.google.com/mail/?ui=2&shva=1#settings/fwdandpop">
+                        //   <instruction>You need to enable IMAP access</instruction>
+                        // </enable>
+                        href = xml.getAttributeValue(null, "visiturl");
+                        title = null;
+
+                    } else if ("documentation".equals(name)) {
+                        // <documentation url="http://mail.google.com/support/bin/answer.py?answer=13273">
+                        //   <descr>How to enable IMAP/POP3 in GMail</descr>
+                        // </documentation>
+                        href = xml.getAttributeValue(null, "url");
+                        title = null;
+
+                    } else if ("instruction".equals(name) || "descr".equals(name)) {
+                        if (href != null) {
+                            eventType = xml.next();
+                            if (eventType == XmlPullParser.TEXT) {
+                                if (title == null)
+                                    title = "";
+                                else
+                                    title += "<br>";
+                                title += xml.getText();
+                            }
+                            continue;
+                        }
+                    }
+
+                } else if (eventType == XmlPullParser.END_TAG) {
+                    String name = xml.getName();
+                    if ("incomingServer".equals(name))
+                        imap = false;
+
+                    else if ("outgoingServer".equals(name))
+                        smtp = false;
+
+                    else if ("enable".equals(name) || "documentation".equals(name)) {
+                        if (href != null) {
+                            if (title == null)
+                                title = href;
+                            addDocumentation(provider, href, title);
+                            href = null;
+                            title = null;
+                        }
+                    }
+                }
+
+                eventType = xml.next();
+            }
+        } finally {
+            request.disconnect();
+        }
 
         Log.i("imap=" + provider.imap.host + ":" + provider.imap.port + ":" + provider.imap.starttls);
         Log.i("smtp=" + provider.smtp.host + ":" + provider.smtp.port + ":" + provider.smtp.starttls);

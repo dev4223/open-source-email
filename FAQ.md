@@ -607,7 +607,7 @@ The message text will keep loading if there is no connection to the account, see
 You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons)
 and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
 
-In the advanced settings you can set the maximum size for automatically downloading of messages on metered connections.
+In the receive settings you can set the maximum size for automatically downloading of messages on metered connections.
 
 Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are too.
 
@@ -1690,10 +1690,11 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 Please see [here](https://en.wikipedia.org/wiki/Web_beacon) about what a tracking image exactly is.
 In short tracking images keep track if you opened a message.
 
-FairEmail automatically recognizes images with a surface of less than or equal to 25 pixels as tracking images.
-FairEmail automatically removes the link of such images, which makes such images appear as broken, and adds a remark about this below the image.
+FairEmail will in most cases automatically recognize tracking images and replace them by this icon:
 
-Automatic recognition of tracking images can be disabled in the behavior settings.
+![External image](https://raw.githubusercontent.com/google/material-design-icons/master/maps/1x_web/ic_my_location_black_48dp.png)
+
+Automatic recognition of tracking images can be disabled in the privacy settings.
 
 <br />
 
@@ -2053,9 +2054,8 @@ Disabling *Partial fetch* will result in more memory usage.
 OAuth is supported for Gmail via the quick setup wizard.
 The Android account manager will be used to fetch and refresh OAuth tokens for the selected account.
 
-Outlook and Hotmail do not properly support OAuth for IMAP/SMTP connections.
-[MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-android) is supported for business accounts only
-and requires embedding a client secret in the app, which is not a good idea for an open source app.
+Outlook and Hotmail do not support OAuth for IMAP/SMTP connections:
+"*[We don't support OAuth for IMAP access to Office 365 and we have no plans to do so as](https://stackoverflow.com/a/29747829/1794097)*"
 
 <br />
 
@@ -2264,6 +2264,8 @@ so you cannot use FairEmail to access Tutanota.
 <a name="faq130"></a>
 **(130) What does message error ... mean?**
 
+A series of lines with orangish or red texts with technical information means that debug mode was enabled in the miscellaneous settings.
+
 The warning *No server found at ...* means that there was no email server registered at the indicated domain name.
 Replying to the message might not be possible and might result in an error.
 This could indicate a falsified email address and/or spam.
@@ -2352,7 +2354,7 @@ In the three-dots overflow menu at the top right there is an item to delete the 
 <a name="faq137"></a>
 **(137) How can I reset 'Don't ask again'?**
 
-You can reset all questions set to not to be asked again in the three-dots overflow menu of the miscellaneous settings.
+You can reset all questions set to be not asked again in the miscellaneous settings.
 
 <br />
 

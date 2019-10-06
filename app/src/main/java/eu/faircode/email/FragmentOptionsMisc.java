@@ -22,10 +22,11 @@ package eu.faircode.email;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Paint;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +50,7 @@ import androidx.preference.PreferenceManager;
 
 public class FragmentOptionsMisc extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swDoubleBack;
+    private EditText etDefaultSnooze;
     private Spinner spBiometricsTimeout;
     private SwitchCompat swEnglish;
     private SwitchCompat swWatchdog;
@@ -56,6 +59,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvExperimentsHint;
     private SwitchCompat swCrashReports;
     private SwitchCompat swDebug;
+    private Button btnReset;
     private Button btnCleanup;
 
     private TextView tvProcessors;
@@ -66,7 +70,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpDebug;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "double_back", "biometrics_timeout", "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
+            "double_back", "default_snooze", "biometrics_timeout", "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -86,6 +90,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         // Get controls
 
         swDoubleBack = view.findViewById(R.id.swDoubleBack);
+        etDefaultSnooze = view.findViewById(R.id.etDefaultSnooze);
         spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         swEnglish = view.findViewById(R.id.swEnglish);
         swWatchdog = view.findViewById(R.id.swWatchdog);
@@ -94,6 +99,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvExperimentsHint = view.findViewById(R.id.tvExperimentsHint);
         swCrashReports = view.findViewById(R.id.swCrashReports);
         swDebug = view.findViewById(R.id.swDebug);
+        btnReset = view.findViewById(R.id.btnReset);
         btnCleanup = view.findViewById(R.id.btnCleanup);
 
         tvProcessors = view.findViewById(R.id.tvProcessors);
@@ -113,6 +119,25 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("double_back", checked).apply();
+            }
+        });
+
+        etDefaultSnooze.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                try {
+                    int minutes = Integer.parseInt(editable.toString());
+                    prefs.edit().putInt("default_snooze", minutes).apply();
+                } catch (NumberFormatException ex) {
+                }
             }
         });
 
@@ -191,6 +216,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onResetQuestions();
+            }
+        });
+
         btnCleanup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -222,7 +254,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_options_misc, menu);
+        inflater.inflate(R.menu.menu_options, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -231,9 +263,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         switch (item.getItemId()) {
             case R.id.menu_default:
                 onMenuDefault();
-                return true;
-            case R.id.menu_reset_questions:
-                onMenuResetQuestions();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -249,7 +278,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
     }
 
-    private void onMenuResetQuestions() {
+    private void onResetQuestions() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = prefs.edit();
         for (String option : RESET_QUESTIONS)
@@ -292,6 +321,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         swDoubleBack.setChecked(prefs.getBoolean("double_back", true));
+        etDefaultSnooze.setText(Integer.toString(prefs.getInt("default_snooze", 60)));
 
         int biometrics_timeout = prefs.getInt("biometrics_timeout", 2);
         int[] biometricTimeoutValues = getResources().getIntArray(R.array.biometricsTimeoutValues);
@@ -326,12 +356,5 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvLastCleanup.setText(
                 getString(R.string.title_advanced_last_cleanup,
                         time < 0 ? "-" : DTF.format(time)));
-    }
-
-    private void restart() {
-        Intent intent = new Intent(getContext(), ActivityMain.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        Runtime.getRuntime().exit(0);
     }
 }

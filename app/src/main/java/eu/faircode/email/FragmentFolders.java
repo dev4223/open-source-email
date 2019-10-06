@@ -90,7 +90,7 @@ public class FragmentFolders extends FragmentBase {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         cards = prefs.getBoolean("cards", true);
-        compact = prefs.getBoolean("compact_folders", true);
+        compact = prefs.getBoolean("compact_folders", false);
 
         setTitle(R.string.page_folders);
     }
@@ -360,7 +360,7 @@ public class FragmentFolders extends FragmentBase {
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            getContext().startActivity(
+                            startActivity(
                                     new Intent(getContext(), ActivitySetup.class)
                                             .putExtra("tab", "connection"));
                         }
