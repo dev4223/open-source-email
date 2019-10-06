@@ -166,6 +166,13 @@ public class ApplicationEx extends Application {
         } else if (version < 741)
             editor.remove("send_dialog");
 
+        else if (version < 751) {
+            if (prefs.contains("notify_snooze_duration")) {
+                editor.putInt("default_snooze", prefs.getInt("notify_snooze_duration", 60));
+                editor.remove("notify_snooze_duration");
+            }
+        }
+
         if (BuildConfig.DEBUG && false) {
             editor.remove("app_support");
             editor.remove("notify_archive");
