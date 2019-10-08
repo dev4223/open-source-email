@@ -184,6 +184,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int textColorSecondary;
     private int colorUnread;
     private int colorSubject;
+    private int colorRead;
     private int colorSeparator;
 
     private boolean hasWebView;
@@ -671,6 +672,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
 
+            boolean outgoing = false;
+            if (viewType != ViewType.THREAD)
+                if (EntityFolder.isOutgoing(message.folderType))
+                    outgoing = true;
+                else if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
+                        message.identityEmail != null &&
+                        message.from != null && message.from.length == 1 &&
+                        message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
+                    outgoing = true;
+
             // Text size
             if (textSize != 0) {
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * (message.unseen > 0 ? 1.1f : 1f));
@@ -743,7 +754,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             //tvCount.setTypeface(typeface);
             tvCount.setTypeface(Typeface.DEFAULT_BOLD);
 
-            int colorUnseen = (message.unseen > 0 ? colorUnread : textColorSecondary);
+            int colorUnseen = (message.unseen > 0 ? colorUnread : colorRead);
             // dev4223: subject in unseen-color
             tvSubject.setTextColor(colorUnseen);
             // dev4223: from in new color
@@ -769,15 +780,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibExpander.setVisibility(View.GONE);
 
             // Line 1
-            boolean outgoing = false;
-            if (viewType != ViewType.THREAD)
-                if (EntityFolder.isOutgoing(message.folderType))
-                    outgoing = true;
-                else if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
-                        message.identityEmail != null &&
-                        message.from != null && message.from.length == 1 &&
-                        message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
-                    outgoing = true;
             Address[] addresses = (outgoing ? message.to : message.senders);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
@@ -1493,7 +1495,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
                 tvBody.setMinHeight(height);
 
-                tvBody.setTextColor(contrast ? textColorPrimary : textColorSecondary);
+                tvBody.setTextColor(contrast ? textColorPrimary : colorRead);
                 tvBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
 
                 tvBody.setVisibility(View.VISIBLE);
@@ -3608,10 +3610,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean highlight_unread = prefs.getBoolean("highlight_unread", false);
 
-        if (highlight_unread)
-            this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
-        else
-            this.colorUnread = this.textColorPrimary;
+        this.colorUnread = Helper.resolveColor(context, highlight_unread ? R.attr.colorUnreadHighlight : R.attr.colorUnread);
+        this.colorRead = Helper.resolveColor(context, R.attr.colorRead);
 
         this.colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
 
@@ -3681,12 +3681,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             mMainThreadExecutor.setAccessible(true);
             mMainThreadExecutor.set(this.differ, new Executor() {
                 @Override
-                public void execute(Runnable command) {
-                    try {
-                        handler.post(command);
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                    }
+                public void execute(final Runnable command) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                command.run();
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+                    });
                 }
             });
         } catch (Throwable ex) {
@@ -4070,7 +4075,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         if (filter_duplicates && message != null && message.duplicate) {
             holder.tvFolder.setText(context.getString(R.string.title_duplicate_in, message.getFolderName(context)));
             holder.tvFolder.setTypeface(message.unseen > 0 ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            holder.tvFolder.setTextColor(message.unseen > 0 ? colorUnread : textColorSecondary);
+            holder.tvFolder.setTextColor(message.unseen > 0 ? colorUnread : colorRead);
             holder.tvFolder.setAlpha(Helper.LOW_LIGHT);
             return;
         }

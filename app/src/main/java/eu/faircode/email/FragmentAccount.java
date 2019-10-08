@@ -1432,7 +1432,7 @@ public class FragmentAccount extends FragmentBase {
 
             EntityFolder snooze = new EntityFolder();
             snooze.id = SWIPE_ACTION_SNOOZE;
-            snooze.name = getString(R.string.title_snooze);
+            snooze.name = getString(R.string.title_snooze_now);
             folders.add(snooze);
 
             folders.addAll(_folders);

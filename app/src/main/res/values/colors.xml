@@ -8,10 +8,18 @@
     <color name="colorAccent">#ffb300</color>
     <color name="colorPrimaryLight">#35afea</color>
     <color name="colorAccentLight">#ffc233</color>
-    <!-- colorAccentDark orig: #c68400 -->
+    <!-- colorAccentDark orig: #c68400 -->colorReadLight
     <color name="colorAccentDark">#FFE50A3E</color>
 
     <color name="colorError">#CDDC39</color>
+
+    <color name="colorReadLight">#b3000000</color>
+    <color name="colorUnreadLight">#ff000000</color>
+
+    <!-- White 38%  secondary_text_material_dark -->
+    <color name="colorReadDark">#ffffffff</color>
+    <!-- White 87%  primary_text_default_material_dark -->
+    <color name="colorUnreadDark">#ffffffff</color>
 
     <!-- Light blue 900 -->
     <!-- darkPrimary orig: #01579b -->

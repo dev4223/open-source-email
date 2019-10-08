@@ -270,6 +270,7 @@
     <string name="title_advanced_notify_no_grouping">Tämä Android-versio ei tue ilmoitusten ryhmittelyä</string>
     <string name="title_advanced_notify_no_channels">Tämä Android-versio ei tue ilmoituskanavia</string>
     <string name="title_advanced_double_back">\'Takaisin\' kaksi kertaa sulkee sovelluksen</string>
+    <string name="title_advanced_default_snooze">Torkutuksen oletusaika</string>
     <string name="title_advanced_biometrics_timeout">Biometrisen tunnistautumisen aikakatkaisu</string>
     <string name="title_advanced_english">Pakota englannin kieli</string>
     <string name="title_advanced_watchdog">Tarkista toistuvasti, että FairEmail on edelleen aktiivinen</string>
@@ -365,6 +366,7 @@
     <string name="title_no_sync">Synkronointivirheitä alkaen %1$s</string>
     <string name="title_identity_required">Viestien lähettämiseen tarvitaan identiteetti</string>
     <string name="title_drafts_required">Viestien lähettämiseen tarvitaan luonnoskansio</string>
+    <string name="title_hide_remark">Viestit voi piilottaa torkuttamalla</string>
     <string name="title_account_delete">Poistetaanko tämä tili pysyvästi?</string>
     <string name="title_identity_delete">Poistetaanko tämä identiteetti pysyvästi?</string>
     <string name="title_edit_html">Muokkaa HTML-muodossa</string>
@@ -763,8 +765,10 @@
     <string name="title_now">Nyt</string>
     <string name="title_after">%1$s päästä</string>
     <string name="title_reset">Palauta oletukset</string>
+    <string name="title_hours">Tuntia</string>
     <string name="title_minutes">Minuuttia</string>
     <string name="title_dismiss">Hylkää</string>
+    <string name="title_snooze_now">Torkuta</string>
     <string name="title_icalendar_accept">Hyväksy</string>
     <string name="title_icalendar_decline">Hylkää</string>
     <string name="title_icalendar_maybe">Ehkä</string>

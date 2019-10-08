@@ -1910,7 +1910,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void onActionSnooze(TupleMessageEx message) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        long duration = prefs.getInt("default_snooze", 60) * 60 * 1000L;
+
+        long duration = prefs.getInt("default_snooze", 1) * 3600 * 1000L;
 
         Bundle args = new Bundle();
         args.putLong("account", message.account);

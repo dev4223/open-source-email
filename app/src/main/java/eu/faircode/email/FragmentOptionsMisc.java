@@ -134,9 +134,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void afterTextChanged(Editable editable) {
                 try {
-                    int minutes = Integer.parseInt(editable.toString());
-                    prefs.edit().putInt("default_snooze", minutes).apply();
-                } catch (NumberFormatException ex) {
+                    int hours = Integer.parseInt(editable.toString());
+                    prefs.edit().putInt("default_snooze", hours).apply();
+                } catch (NumberFormatException ignored) {
+
                 }
             }
         });
@@ -311,6 +312,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
 
             @Override
+            protected void onExecuted(Bundle args, Void data) {
+                ServiceSynchronize.reschedule(getContext());
+            }
+
+            @Override
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getFragmentManager(), ex);
             }
@@ -321,7 +327,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
         swDoubleBack.setChecked(prefs.getBoolean("double_back", true));
-        etDefaultSnooze.setText(Integer.toString(prefs.getInt("default_snooze", 60)));
+        etDefaultSnooze.setText(Integer.toString(prefs.getInt("default_snooze", 1)));
 
         int biometrics_timeout = prefs.getInt("biometrics_timeout", 2);
         int[] biometricTimeoutValues = getResources().getIntArray(R.array.biometricsTimeoutValues);

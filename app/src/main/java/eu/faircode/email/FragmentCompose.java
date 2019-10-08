@@ -1248,11 +1248,8 @@ public class FragmentCompose extends FragmentBase {
                             onAddMedia(data);
                     break;
                 case REQUEST_ENCRYPT:
-                    if (resultCode == RESULT_OK && data != null) {
-                        if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
-                            Log.logExtras(data);
+                    if (resultCode == RESULT_OK && data != null)
                         onPgp(data);
-                    }
                     break;
                 case REQUEST_REF_DELETE:
                     if (resultCode == RESULT_OK)
@@ -1489,21 +1486,13 @@ public class FragmentCompose extends FragmentBase {
                         OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction()))
                     encrypted = new ByteArrayOutputStream();
 
-                if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE) {
-                    Log.i("Execute " + data);
-                    Log.logExtras(data);
-                }
-
                 // Encrypt message
+                Log.i("Executing " + data.getAction());
                 OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
                 Intent result = api.executeApi(data, decrypted, encrypted);
 
-                if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE) {
-                    Log.i("Result " + result);
-                    Log.logExtras(result);
-                }
-
                 int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
+                Log.i("Result action=" + data.getAction() + " code=" + resultCode);
                 switch (resultCode) {
                     case OpenPgpApi.RESULT_CODE_SUCCESS:
                         // Attach encrypted data / signature
@@ -1543,8 +1532,7 @@ public class FragmentCompose extends FragmentBase {
                                     bytes = encrypted.toByteArray();
 
                                 File file = attachment.getFile(context);
-                                if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
-                                    Log.i("Writing " + file + " size=" + bytes.length);
+                                Log.i("Writing " + file + " size=" + bytes.length);
                                 try (OutputStream out = new FileOutputStream(file)) {
                                     out.write(bytes);
                                 }
@@ -1557,8 +1545,7 @@ public class FragmentCompose extends FragmentBase {
 
                         if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction())) {
                             pgpKeyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
-                            if (BuildConfig.DEBUG || BuildConfig.BETA_RELEASE)
-                                Log.i("Keys=" + pgpKeyIds.length);
+                            Log.i("Keys=" + pgpKeyIds.length);
 
                             // Send without encryption
                             if (pgpKeyIds.length == 0)
@@ -1570,7 +1557,7 @@ public class FragmentCompose extends FragmentBase {
                             intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                             return intent;
                         } else if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
-                            if (identity != null && identity.sign_key != null) {
+                            if (identity.sign_key != null) {
                                 // Encrypt message
                                 Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
                                 intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
@@ -1583,8 +1570,7 @@ public class FragmentCompose extends FragmentBase {
                             }
                         } else if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
                             pgpSignKeyId = result.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, -1);
-                            if (identity != null)
-                                db.identity().setIdentitySignKey(identity.id, pgpSignKeyId);
+                            db.identity().setIdentitySignKey(identity.id, pgpSignKeyId);
 
                             // Encrypt message
                             Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
@@ -1606,8 +1592,7 @@ public class FragmentCompose extends FragmentBase {
                         return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                     case OpenPgpApi.RESULT_CODE_ERROR:
-                        if (identity != null)
-                            db.identity().setIdentitySignKey(identity.id, null);
+                        db.identity().setIdentitySignKey(identity.id, null);
                         OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
                         if (error == null)
                             throw new IllegalArgumentException("Unknown error");
@@ -1621,6 +1606,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Object result) {
+                Log.i("Result= " + result);
                 if (result == null)
                     onAction(R.id.action_send);
                 else if (result instanceof Intent) {
@@ -2192,9 +2178,15 @@ public class FragmentCompose extends FragmentBase {
                     long aid = args.getLong("account", -1);
                     long iid = args.getLong("identity", -1);
 
+                    if (aid < 0 && ref != null)
+                        aid = ref.account;
+                    if (iid < 0 && ref != null && ref.identity != null)
+                        iid = ref.identity;
+
                     if (iid >= 0)
                         for (EntityIdentity identity : data.identities)
                             if (identity.id.equals(iid)) {
+                                Log.i("Selected requested identity=" + iid);
                                 selected = identity;
                                 break;
                             }
@@ -2207,6 +2199,7 @@ public class FragmentCompose extends FragmentBase {
                                             identity.sameAddress(sender)) {
                                         from = sender;
                                         selected = identity;
+                                        Log.i("Selected same account/identity");
                                         break;
                                     }
 
@@ -2217,6 +2210,7 @@ public class FragmentCompose extends FragmentBase {
                                             identity.similarAddress(sender)) {
                                         from = sender;
                                         selected = identity;
+                                        Log.i("Selected similar account/identity");
                                         break;
                                     }
 
@@ -2226,6 +2220,7 @@ public class FragmentCompose extends FragmentBase {
                                     if (identity.sameAddress(sender)) {
                                         from = sender;
                                         selected = identity;
+                                        Log.i("Selected same */identity");
                                         break;
                                     }
 
@@ -2235,6 +2230,7 @@ public class FragmentCompose extends FragmentBase {
                                     if (identity.similarAddress(sender)) {
                                         from = sender;
                                         selected = identity;
+                                        Log.i("Selected similer */identity");
                                         break;
                                     }
                     }
@@ -2243,6 +2239,7 @@ public class FragmentCompose extends FragmentBase {
                         for (EntityIdentity identity : data.identities)
                             if (identity.account.equals(aid) && identity.primary) {
                                 selected = identity;
+                                Log.i("Selected primary account/identity");
                                 break;
                             }
 
@@ -2250,18 +2247,21 @@ public class FragmentCompose extends FragmentBase {
                         for (EntityIdentity identity : data.identities)
                             if (identity.account.equals(aid)) {
                                 selected = identity;
+                                Log.i("Selected account/identity");
                                 break;
                             }
 
                     if (selected == null)
                         for (EntityIdentity identity : data.identities)
                             if (identity.primary) {
+                                Log.i("Selected primary */identity");
                                 selected = identity;
                                 break;
                             }
 
                     if (selected == null)
                         for (EntityIdentity identity : data.identities) {
+                            Log.i("Selected */identity");
                             selected = identity;
                             break;
                         }
@@ -3657,10 +3657,8 @@ public class FragmentCompose extends FragmentBase {
             db.message().liveMessage(id).observe(getViewLifecycleOwner(), new Observer<TupleMessageEx>() {
                 @Override
                 public void onChanged(TupleMessageEx draft) {
-                    if (draft == null) {
-                        dismiss();
+                    if (draft == null)
                         return;
-                    }
 
                     int plus = (draft.cc == null ? 0 : draft.cc.length) +
                             (draft.bcc == null ? 0 : draft.bcc.length);

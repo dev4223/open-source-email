@@ -184,8 +184,8 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 tvName.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
 
             if (listener == null) {
-                vwColor.setBackgroundColor(folder.accountColor == null ? Color.TRANSPARENT : folder.accountColor);
-                vwColor.setVisibility(account < 0 && ActivityBilling.isPro(context) ? View.VISIBLE : View.GONE);
+                vwColor.setBackgroundColor(folder.color == null ? Color.TRANSPARENT : folder.color);
+                vwColor.setVisibility(ActivityBilling.isPro(context) ? View.VISIBLE : View.GONE);
 
                 if (folder.sync_state == null || "requested".equals(folder.sync_state)) {
                     if (folder.executing > 0)
@@ -717,11 +717,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
 
         boolean highlight_unread = prefs.getBoolean("highlight_unread", false);
-
-        if (highlight_unread)
-            this.colorUnread = Helper.resolveColor(context, R.attr.colorUnread);
-        else
-            this.colorUnread = this.textColorPrimary;
+        this.colorUnread = Helper.resolveColor(context, highlight_unread ? R.attr.colorUnreadHighlight : android.R.attr.textColorPrimary);
 
         setHasStableIds(true);
 

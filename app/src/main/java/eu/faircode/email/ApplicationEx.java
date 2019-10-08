@@ -168,7 +168,9 @@ public class ApplicationEx extends Application {
 
         else if (version < 751) {
             if (prefs.contains("notify_snooze_duration")) {
-                editor.putInt("default_snooze", prefs.getInt("notify_snooze_duration", 60));
+                int minutes = prefs.getInt("notify_snooze_duration", 60);
+                int hours = (int) Math.ceil(minutes / 60.0);
+                editor.putInt("default_snooze", hours);
                 editor.remove("notify_snooze_duration");
             }
         }

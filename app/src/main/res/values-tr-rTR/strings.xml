@@ -270,6 +270,7 @@
     <string name="title_advanced_notify_no_grouping">Bu Android versiyonu bildirim gruplamayı desteklememektedir</string>
     <string name="title_advanced_notify_no_channels">Bu Android versiyonu bildirim kanallarını desteklememektedir</string>
     <string name="title_advanced_double_back">Çıkmak için geri tuşuna 2 defa basın</string>
+    <string name="title_advanced_default_snooze">Varsayılan erteleme süresi</string>
     <string name="title_advanced_biometrics_timeout">Biyometrik doğrulama süresi bitti</string>
     <string name="title_advanced_english">İngilizce Diline Zorla</string>
     <string name="title_advanced_watchdog">Düzenli aralıklarla FairEmail hala etkin mi diye kontrol et</string>
@@ -365,6 +366,7 @@
     <string name="title_no_sync">%1$s\'den beri eşzamanlama hataları</string>
     <string name="title_identity_required">İleti göndermek için bir kimlik gerekli</string>
     <string name="title_drafts_required">İleti göndermek için taslaklar klasörü gerekir</string>
+    <string name="title_hide_remark">Mesajlar erteleme yoluyla gizlenebilir</string>
     <string name="title_account_delete">Bu hesap kalıcı olarak silinsin mi?</string>
     <string name="title_identity_delete">Bu kimlik kalıcı olarak silinsin mi?</string>
     <string name="title_edit_html">HTML olarak düzenle</string>
@@ -763,8 +765,10 @@
     <string name="title_now">Şimdi</string>
     <string name="title_after">%1$s\'den sonra</string>
     <string name="title_reset">Sıfırlama</string>
+    <string name="title_hours">Saatler</string>
     <string name="title_minutes">Dakikalar</string>
     <string name="title_dismiss">Reddet</string>
+    <string name="title_snooze_now">Ertele</string>
     <string name="title_icalendar_accept">Kabul</string>
     <string name="title_icalendar_decline">Reddet</string>
     <string name="title_icalendar_maybe">Olabilir</string>
