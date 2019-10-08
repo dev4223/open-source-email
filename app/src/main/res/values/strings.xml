@@ -303,7 +303,7 @@
     <string name="title_advanced_alert_once" translatable="false">MIUI notification sound workaround</string>
 
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
-    <string name="title_advanced_recents">Hide from screen with recent apps</string>
+    <string name="title_advanced_recents">Hide FairEmail from screen with recent apps</string>
 
     <string name="title_advanced_badge_hint">Only available on supported launchers</string>
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
@@ -369,7 +369,7 @@
     <string name="title_select">Select &#8230;</string>
     <string name="title_identity_name">Your name</string>
     <string name="title_identity_email">Your email address</string>
-    <string name="title_identity_color_hint">Identity colors take precedence over account colors</string>
+    <string name="title_identity_color_hint">Identity colors take precedence over folder and account colors</string>
     <string name="title_advanced_sender">Allow editing sender address</string>
     <string name="title_advanced_sender_regex">Regex to match edited addresses</string>
     <string name="title_identity_reply_to">Reply to address</string>
@@ -571,7 +571,6 @@
     <string name="title_ask_show_image">Showing images can leak privacy sensitive information</string>
     <string name="title_ask_show_image_hint">Images recognized as tracking images will not be shown</string>
     <string name="title_ask_delete_ref">Delete replied/forwarded message text? This cannot be undone.</string>
-    <string name="title_ask_edit_ref">Edit reformatted replied/forwarded message text?</string>
     <string name="title_ask_sync_all">Synchronize all messages in %1$s?</string>
     <string name="title_ask_delete_local">Delete local messages? Messages will remain on the remote server.</string>
     <string name="title_ask_help">Help improve FairEmail</string>
@@ -616,6 +615,8 @@
     <string name="title_media_toolbar">Media toolbar</string>
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
+    <string name="title_edit_plain_text">Edit as plain text</string>
+    <string name="title_edit_formatted_text">Edit as reformatted text</string>
     <string name="title_send_plain_text">Plain text only</string>
     <string name="title_send_receipt">Request delivery/read receipt</string>
     <string name="title_send_receipt_remark">Most providers and email clients ignore receipt requests</string>

@@ -318,6 +318,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvNoInternetAttachments;
 
         private BottomNavigationView bnvActions;
+        private Group grpActions;
 
         private ImageButton ibFull;
         private ImageButton ibImages;
@@ -480,6 +481,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 lparam.height = dp36;
                 bnvActions.setLayoutParams(lparam);
             }
+            grpActions = vsBody.findViewById(R.id.grpActions);
 
             ibFull = vsBody.findViewById(R.id.ibFull);
             ibImages = vsBody.findViewById(R.id.ibImages);
@@ -1016,6 +1018,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvNoInternetAttachments.setVisibility(View.GONE);
 
             bnvActions.setVisibility(View.GONE);
+            grpActions.setVisibility(View.GONE);
 
             ibFull.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
@@ -1031,23 +1034,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void bindFlagged(TupleMessageEx message, boolean expanded) {
             boolean pro = ActivityBilling.isPro(context);
-            if (!pro)
-                message.color = null;
-
             int flagged = (message.count - message.unflagged);
+            int color = (message.color == null || !pro ? colorAccent : message.color);
+
             ibFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-
-            if (message.color == null || expanded || !flags_background)
-                card.setCardBackgroundColor(Color.TRANSPARENT);
-            else
-                card.setCardBackgroundColor(ColorUtils.setAlphaComponent(message.color, 127));
-
-            if (message.color == null)
-                ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? colorAccent : textColorSecondary));
-            else
-                ibFlagged.setImageTintList(ColorStateList.valueOf(expanded || !flags_background ? message.color : textColorSecondary));
-
+            ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? color : textColorSecondary));
             ibFlagged.setEnabled(message.uid != null || message.accountPop);
+
+            card.setCardBackgroundColor(
+                    flags_background && flagged > 0 && !expanded
+                            ? ColorUtils.setAlphaComponent(color, 127) : Color.TRANSPARENT);
 
             if (flags)
                 ibFlagged.setVisibility(message.folderReadOnly ? View.INVISIBLE : View.VISIBLE);
@@ -1107,7 +1103,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvNoInternetHeaders.setVisibility(View.GONE);
             }
 
-            bnvActions.setVisibility(View.VISIBLE);
+            grpActions.setVisibility(View.VISIBLE);
             for (int i = 0; i < bnvActions.getMenu().size(); i++)
                 bnvActions.getMenu().getItem(i).setVisible(false);
 
@@ -1458,7 +1454,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 WebSettings settings = webView.getSettings();
-                settings.setUseWideViewPort(false);
+                settings.setUseWideViewPort(true);
                 settings.setLoadWithOverviewMode(true);
 
                 settings.setBuiltInZoomControls(true);
@@ -1480,8 +1476,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 settings.setBlockNetworkImage(!show_images);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-                if (size != 0)
-                    webView.setInitialScale(Math.round(size * 100));
+                webView.setInitialScale(size == 0 ? 1 : Math.round(size * 100));
                 wvBody.setMinimumHeight(height);
                 if (position != null) {
                     wvBody.setScrollX(position.first);
@@ -1509,178 +1504,172 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putBoolean("show_quotes", show_quotes);
             args.putInt("zoom", zoom);
 
-            // Run task after measure
-            new Handler().post(new Runnable() {
+            new SimpleTask<Object>() {
                 @Override
-                public void run() {
-                    new SimpleTask<Object>() {
-                        @Override
-                        protected Object onExecute(final Context context, final Bundle args) throws IOException {
-                            TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                            boolean show_full = args.getBoolean("show_full");
-                            boolean show_images = args.getBoolean("show_images");
-                            boolean show_quotes = args.getBoolean("show_quotes");
-                            int zoom = args.getInt("zoom");
+                protected Object onExecute(final Context context, final Bundle args) throws IOException {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                    boolean show_full = args.getBoolean("show_full");
+                    boolean show_images = args.getBoolean("show_images");
+                    boolean show_quotes = args.getBoolean("show_quotes");
+                    int zoom = args.getInt("zoom");
 
-                            if (message == null || !message.content)
-                                return null;
+                    if (message == null || !message.content)
+                        return null;
 
-                            File file = message.getFile(context);
-                            if (!file.exists())
-                                return null;
+                    File file = message.getFile(context);
+                    if (!file.exists())
+                        return null;
 
-                            String body = Helper.readText(file);
-                            Document document = JsoupEx.parse(body);
+                    String body = Helper.readText(file);
+                    Document document = JsoupEx.parse(body);
 
-                            // Check for inline encryption
-                            int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
-                            int end = body.indexOf(Helper.PGP_END_MESSAGE);
-                            args.putBoolean("iencrypted", begin >= 0 && begin < end);
+                    // Check for inline encryption
+                    int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
+                    int end = body.indexOf(Helper.PGP_END_MESSAGE);
+                    args.putBoolean("iencrypted", begin >= 0 && begin < end);
 
-                            // Check for images
-                            boolean has_images = false;
-                            for (Element img : document.select("img")) {
-                                if (inline) {
-                                    String src = img.attr("src");
-                                    if (!src.startsWith("cid:")) {
-                                        has_images = true;
-                                        break;
-                                    }
-                                } else {
-                                    has_images = true;
-                                    break;
-                                }
+                    // Check for images
+                    boolean has_images = false;
+                    for (Element img : document.select("img")) {
+                        if (inline) {
+                            String src = img.attr("src");
+                            if (!src.startsWith("cid:")) {
+                                has_images = true;
+                                break;
                             }
-                            args.putBoolean("has_images", has_images);
+                        } else {
+                            has_images = true;
+                            break;
+                        }
+                    }
+                    args.putBoolean("has_images", has_images);
 
-                            if (show_full) {
-                                HtmlHelper.removeViewportLimitations(document);
-                                if (inline || show_images)
-                                    HtmlHelper.embedInlineImages(context, message.id, document);
+                    if (show_full) {
+                        HtmlHelper.setViewport(document);
+                        if (inline || show_images)
+                            HtmlHelper.embedInlineImages(context, message.id, document);
 
-                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                                boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
-                                if (disable_tracking)
-                                    HtmlHelper.removeTrackingPixels(context, document);
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                        boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
+                        if (disable_tracking)
+                            HtmlHelper.removeTrackingPixels(context, document);
 
-                                if (debug) {
-                                    Document format = JsoupEx.parse(document.html());
-                                    format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
-                                    Element pre = document.createElement("pre");
-                                    pre.text(format.html());
-                                    document.body().appendChild(pre);
+                        if (debug) {
+                            Document format = JsoupEx.parse(document.html());
+                            format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
+                            Element pre = document.createElement("pre");
+                            pre.text(format.html());
+                            document.body().appendChild(pre);
+                        }
+
+                        return document.html();
+                    } else {
+                        // Collapse quotes
+                        if (!show_quotes) {
+                            for (Element quote : document.select("blockquote"))
+                                quote.html("&#8230;");
+                            body = document.html();
+                        }
+
+                        // Cleanup message
+                        String html = HtmlHelper.sanitize(context, body, show_images);
+                        if (debug) {
+                            Document format = JsoupEx.parse(html);
+                            format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
+                            String[] lines = format.html().split("\\r?\\n");
+                            for (int i = 0; i < lines.length; i++)
+                                lines[i] = Html.escapeHtml(lines[i]);
+                            html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
+                        }
+
+                        Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
+                            @Override
+                            public Drawable getDrawable(String source) {
+                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, tvBody);
+
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                    if (drawable instanceof AnimatedImageDrawable)
+                                        ((AnimatedImageDrawable) drawable).start();
                                 }
 
-                                return document.html();
-                            } else {
-                                // Collapse quotes
-                                if (!show_quotes) {
-                                    for (Element quote : document.select("blockquote"))
-                                        quote.html("&#8230;");
-                                    body = document.html();
-                                }
-
-                                // Cleanup message
-                                String html = HtmlHelper.sanitize(context, body, show_images);
-                                if (debug) {
-                                    Document format = JsoupEx.parse(html);
-                                    format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
-                                    String[] lines = format.html().split("\\r?\\n");
-                                    for (int i = 0; i < lines.length; i++)
-                                        lines[i] = Html.escapeHtml(lines[i]);
-                                    html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
-                                }
-
-                                Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
-                                    @Override
-                                    public Drawable getDrawable(String source) {
-                                        Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, tvBody);
-
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                            if (drawable instanceof AnimatedImageDrawable)
-                                                ((AnimatedImageDrawable) drawable).start();
-                                        }
-
-                                        return drawable;
-                                    }
-                                }, null);
-
-                                // Replace quote spans
-                                SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
-                                QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
-                                for (QuoteSpan quoteSpan : quoteSpans) {
-                                    builder.setSpan(
-                                            new StyledQuoteSpan(context, colorPrimary),
-                                            builder.getSpanStart(quoteSpan),
-                                            builder.getSpanEnd(quoteSpan),
-                                            builder.getSpanFlags(quoteSpan));
-                                    builder.removeSpan(quoteSpan);
-                                }
-
-                                // Make collapsed quotes clickable
-                                if (!show_quotes) {
-                                    final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
-
-                                    StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
-                                    for (StyledQuoteSpan squote : squotes)
-                                        builder.setSpan(new DynamicDrawableSpan() {
-                                                            @Override
-                                                            public Drawable getDrawable() {
-                                                                Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
-                                                                d.setTint(colorAccent);
-                                                                d.setBounds(0, 0, px, px);
-                                                                return d;
-                                                            }
-                                                        },
-                                                builder.getSpanStart(squote),
-                                                builder.getSpanEnd(squote),
-                                                builder.getSpanFlags(squote));
-                                }
-
-                                return builder;
+                                return drawable;
                             }
+                        }, null);
+
+                        // Replace quote spans
+                        SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
+                        QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
+                        for (QuoteSpan quoteSpan : quoteSpans) {
+                            builder.setSpan(
+                                    new StyledQuoteSpan(context, colorPrimary),
+                                    builder.getSpanStart(quoteSpan),
+                                    builder.getSpanEnd(quoteSpan),
+                                    builder.getSpanFlags(quoteSpan));
+                            builder.removeSpan(quoteSpan);
                         }
 
-                        @Override
-                        protected void onExecuted(Bundle args, Object result) {
-                            TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                            properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
+                        // Make collapsed quotes clickable
+                        if (!show_quotes) {
+                            final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
 
-                            TupleMessageEx amessage = getMessage();
-                            if (amessage == null || !amessage.id.equals(message.id))
-                                return;
-
-                            boolean show_expanded = properties.getValue("expanded", message.id);
-                            if (!show_expanded)
-                                return;
-
-                            boolean has_images = args.getBoolean("has_images");
-                            boolean show_images = properties.getValue("images", message.id);
-
-                            if (result instanceof Spanned) {
-                                tvBody.setText((Spanned) result);
-                                tvBody.setTextIsSelectable(false);
-                                tvBody.setTextIsSelectable(true);
-                                tvBody.setMovementMethod(new TouchHandler(message));
-                            } else if (result instanceof String)
-                                ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
-                            else
-                                throw new IllegalStateException("Result=" + result);
-
-                            pbBody.setVisibility(View.GONE);
-
-                            // Show attachments/images
-                            cowner.start();
-                            ibImages.setVisibility(has_images ? View.VISIBLE : View.GONE);
+                            StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
+                            for (StyledQuoteSpan squote : squotes)
+                                builder.setSpan(new DynamicDrawableSpan() {
+                                                    @Override
+                                                    public Drawable getDrawable() {
+                                                        Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
+                                                        d.setTint(colorAccent);
+                                                        d.setBounds(0, 0, px, px);
+                                                        return d;
+                                                    }
+                                                },
+                                        builder.getSpanStart(squote),
+                                        builder.getSpanEnd(squote),
+                                        builder.getSpanFlags(squote));
                         }
 
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
-                        }
-                    }.execute(context, owner, args, "message:body");
+                        return builder;
+                    }
                 }
-            });
+
+                @Override
+                protected void onExecuted(Bundle args, Object result) {
+                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
+                    properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
+
+                    TupleMessageEx amessage = getMessage();
+                    if (amessage == null || !amessage.id.equals(message.id))
+                        return;
+
+                    boolean show_expanded = properties.getValue("expanded", message.id);
+                    if (!show_expanded)
+                        return;
+
+                    boolean has_images = args.getBoolean("has_images");
+                    boolean show_images = properties.getValue("images", message.id);
+
+                    if (result instanceof Spanned) {
+                        tvBody.setText((Spanned) result);
+                        tvBody.setTextIsSelectable(false);
+                        tvBody.setTextIsSelectable(true);
+                        tvBody.setMovementMethod(new TouchHandler(message));
+                    } else if (result instanceof String)
+                        ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
+                    else
+                        throw new IllegalStateException("Result=" + result);
+
+                    pbBody.setVisibility(View.GONE);
+
+                    // Show attachments/images
+                    cowner.start();
+                    ibImages.setVisibility(has_images ? View.VISIBLE : View.GONE);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
+                }
+            }.execute(context, owner, args, "message:body");
         }
 
         private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments) {

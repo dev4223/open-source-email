@@ -42,9 +42,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LevelListDrawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -54,18 +52,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.LocaleList;
-import android.os.Looper;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.Html;
-import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -90,6 +85,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.FileProvider;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
@@ -223,12 +219,11 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_ENCRYPT = 8;
     private static final int REQUEST_COLOR = 9;
     private static final int REQUEST_REF_DELETE = 10;
-    private static final int REQUEST_REF_EDIT = 11;
-    private static final int REQUEST_CONTACT_GROUP = 12;
-    private static final int REQUEST_ANSWER = 13;
-    private static final int REQUEST_LINK = 14;
-    private static final int REQUEST_DISCARD = 15;
-    private static final int REQUEST_SEND = 16;
+    private static final int REQUEST_CONTACT_GROUP = 11;
+    private static final int REQUEST_ANSWER = 12;
+    private static final int REQUEST_LINK = 13;
+    private static final int REQUEST_DISCARD = 14;
+    private static final int REQUEST_SEND = 15;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -680,86 +675,98 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onReferenceEdit() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (prefs.getBoolean("edit_ref_confirmed", false)) {
-            onReferenceEditConfirmed();
-            return;
-        }
+        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), ibReferenceEdit);
 
-        Bundle args = new Bundle();
-        args.putString("question", getString(R.string.title_ask_edit_ref));
-        args.putString("notagain", "edit_ref_confirmed");
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_plain_text, 1, R.string.title_edit_plain_text);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_formatted_text, 2, R.string.title_edit_formatted_text);
 
-        FragmentDialogAsk fragment = new FragmentDialogAsk();
-        fragment.setArguments(args);
-        fragment.setTargetFragment(this, REQUEST_REF_EDIT);
-        fragment.show(getFragmentManager(), "compose:refedit");
-    }
-
-    private void onReferenceEditConfirmed() {
-        Bundle args = new Bundle();
-        args.putLong("id", working);
-        args.putString("body", HtmlHelper.toHtml(etBody.getText()));
-
-        new SimpleTask<EntityMessage>() {
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
-            protected void onPreExecute(Bundle args) {
-                ibReferenceDelete.setEnabled(false);
-                ibReferenceEdit.setEnabled(false);
-            }
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.string.title_edit_plain_text:
+                        convertRef(true);
+                        return true;
 
-            @Override
-            protected void onPostExecute(Bundle args) {
-                ibReferenceDelete.setEnabled(true);
-                ibReferenceEdit.setEnabled(true);
-            }
+                    case R.string.title_edit_formatted_text:
+                        convertRef(false);
+                        return true;
 
-            @Override
-            protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
-                String body = args.getString("body");
-
-                DB db = DB.getInstance(context);
-                EntityMessage draft = db.message().getMessage(id);
-                if (draft == null || !draft.content)
-                    throw new IllegalArgumentException(context.getString(R.string.title_no_body));
-
-                File file = draft.getFile(context);
-                File refFile = draft.getRefFile(context);
-
-                String ref = Helper.readText(refFile);
-                String plain = HtmlHelper.getText(ref);
-                String html = "<p>" + plain.replaceAll("\\r?\\n", "<br>") + "</p>";
-
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
-                    out.write(body);
-                    out.write(html);
+                    default:
+                        return false;
                 }
-
-                refFile.delete();
-
-                draft.plain_only = true;
-                draft.revision = null;
-                draft.revisions = null;
-
-                db.message().setMessagePlainOnly(draft.id, true);
-                db.message().setMessageRevision(draft.id, null);
-                db.message().setMessageRevisions(draft.id, null);
-
-                return draft;
             }
 
-            @Override
-            protected void onExecuted(Bundle args, EntityMessage draft) {
-                getActivity().invalidateOptionsMenu();
-                showDraft(draft);
-            }
+            private void convertRef(boolean plain) {
+                Bundle args = new Bundle();
+                args.putLong("id", working);
+                args.putString("body", HtmlHelper.toHtml(etBody.getText()));
 
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                new SimpleTask<EntityMessage>() {
+                    @Override
+                    protected void onPreExecute(Bundle args) {
+                        ibReferenceDelete.setEnabled(false);
+                        ibReferenceEdit.setEnabled(false);
+                    }
+
+                    @Override
+                    protected void onPostExecute(Bundle args) {
+                        ibReferenceDelete.setEnabled(true);
+                        ibReferenceEdit.setEnabled(true);
+                    }
+
+                    @Override
+                    protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+                        long id = args.getLong("id");
+                        String body = args.getString("body");
+
+                        DB db = DB.getInstance(context);
+                        EntityMessage draft = db.message().getMessage(id);
+                        if (draft == null || !draft.content)
+                            throw new IllegalArgumentException(context.getString(R.string.title_no_body));
+
+
+                        File file = draft.getFile(context);
+                        File refFile = draft.getRefFile(context);
+
+                        String html;
+                        String ref = Helper.readText(refFile);
+                        if (plain) {
+                            String plain = HtmlHelper.getText(ref);
+                            html = "<p>" + plain.replaceAll("\\r?\\n", "<br>") + "</p>";
+                        } else
+                            html = HtmlHelper.sanitize(context, ref, true);
+
+                        try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
+                            out.write(body);
+                            out.write(html);
+                        }
+
+                        refFile.delete();
+
+                        draft.revision = null;
+                        draft.revisions = null;
+
+                        db.message().setMessageRevision(draft.id, null);
+                        db.message().setMessageRevisions(draft.id, null);
+
+                        return draft;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityMessage draft) {
+                        showDraft(draft);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Helper.unexpectedError(getFragmentManager(), ex);
+                    }
+                }.execute(FragmentCompose.this, args, "compose:convert");
             }
-        }.execute(this, args, "compose:refedit");
+        });
+
+        popupMenu.show();
     }
 
     private void onReferenceImages() {
@@ -1255,10 +1262,6 @@ public class FragmentCompose extends FragmentBase {
                     if (resultCode == RESULT_OK)
                         onReferenceDeleteConfirmed();
                     break;
-                case REQUEST_REF_EDIT:
-                    if (resultCode == RESULT_OK)
-                        onReferenceEditConfirmed();
-                    break;
                 case REQUEST_CONTACT_GROUP:
                     if (resultCode == RESULT_OK && data != null)
                         onContactGroupSelected(data.getBundleExtra("args"));
@@ -1378,34 +1381,48 @@ public class FragmentCompose extends FragmentBase {
         }.execute(this, args, "compose:picked");
     }
 
-    private void onAddAttachment(Uri uri, final boolean image) {
+    private void onAddAttachment(Uri uri, boolean image) {
         Bundle args = new Bundle();
         args.putLong("id", working);
         args.putParcelable("uri", uri);
+        args.putBoolean("image", image);
+        args.putCharSequence("body", etBody.getText());
+        args.putInt("start", etBody.getSelectionStart());
 
-        new SimpleTask<EntityAttachment>() {
+        new SimpleTask<Spanned>() {
             @Override
-            protected EntityAttachment onExecute(Context context, Bundle args) throws IOException {
-                Long id = args.getLong("id");
+            protected Spanned onExecute(Context context, Bundle args) throws IOException {
+                long id = args.getLong("id");
                 Uri uri = args.getParcelable("uri");
-                return addAttachment(context, id, uri, image);
+                boolean image = args.getBoolean("image");
+                CharSequence body = args.getCharSequence("body");
+                int start = args.getInt("start");
+
+                EntityAttachment attachment = addAttachment(context, id, uri, image);
+
+                File file = attachment.getFile(context);
+                Drawable d = Drawable.createFromPath(file.getAbsolutePath());
+                d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+
+                Uri cid = Uri.parse("cid:" + BuildConfig.APPLICATION_ID + "." + attachment.id);
+
+                SpannableStringBuilder s = new SpannableStringBuilder(body);
+                s.insert(start, " ");
+                ImageSpan is = new ImageSpan(context, cid, ImageSpan.ALIGN_BASELINE);
+                s.setSpan(is, start, start + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                return HtmlHelper.fromHtml(HtmlHelper.toHtml(s), new Html.ImageGetter() {
+                    @Override
+                    public Drawable getDrawable(String source) {
+                        return ImageHelper.decodeImage(context, id, source, true, etBody);
+                    }
+                }, null);
             }
 
             @Override
-            protected void onExecuted(Bundle args, final EntityAttachment attachment) {
-                if (image) {
-                    File file = attachment.getFile(getContext());
-                    Drawable d = Drawable.createFromPath(file.getAbsolutePath());
-                    d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-
-                    int start = etBody.getSelectionStart();
-                    etBody.getText().insert(start, " ");
-                    SpannableString s = new SpannableString(etBody.getText());
-                    ImageSpan is = new ImageSpan(getContext(), Uri.parse("cid:" + BuildConfig.APPLICATION_ID + "." + attachment.id), ImageSpan.ALIGN_BASELINE);
-                    s.setSpan(is, start, start + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    String html = HtmlHelper.toHtml(s);
-                    etBody.setText(HtmlHelper.fromHtml(html, cidGetter, null));
-                }
+            protected void onExecuted(Bundle args, final Spanned body) {
+                etBody.setText(body);
+                etBody.setSelection(args.getInt("start"));
 
                 // Save text & update remote draft
                 onAction(R.id.action_save);
@@ -1920,7 +1937,7 @@ public class FragmentCompose extends FragmentBase {
 
             db.attachment().setDownloaded(attachment.id, size);
 
-            if ("eu.faircode.email".equals(uri.getAuthority())) {
+            if (BuildConfig.APPLICATION_ID.equals(uri.getAuthority())) {
                 // content://eu.faircode.email/photo/nnn.jpg
                 File tmp = new File(context.getCacheDir(), uri.getPath());
                 Log.i("Deleting " + tmp);
@@ -3121,7 +3138,12 @@ public class FragmentCompose extends FragmentBase {
                     throw new IllegalArgumentException(context.getString(R.string.title_no_body));
 
                 String body = Helper.readText(draft.getFile(context));
-                Spanned spannedBody = HtmlHelper.fromHtml(body, cidGetter, null);
+                Spanned spannedBody = HtmlHelper.fromHtml(body, new Html.ImageGetter() {
+                    @Override
+                    public Drawable getDrawable(String source) {
+                        return ImageHelper.decodeImage(context, id, source, true, etBody);
+                    }
+                }, null);
 
                 SpannableStringBuilder bodyBuilder = new SpannableStringBuilder(spannedBody);
                 QuoteSpan[] bodySpans = bodyBuilder.getSpans(0, bodyBuilder.length(), QuoteSpan.class);
@@ -3223,95 +3245,6 @@ public class FragmentCompose extends FragmentBase {
             }
         }.execute(this, args, "compose:show");
     }
-
-    private Html.ImageGetter cidGetter = new Html.ImageGetter() {
-        @Override
-        public Drawable getDrawable(final String source) {
-            Log.i("Loading source=" + source);
-            final LevelListDrawable lld = new LevelListDrawable();
-
-            Resources res = getContext().getResources();
-            int px = Helper.dp2pixels(getContext(), 48);
-
-            // Level 0: broken image
-            Drawable broken = res.getDrawable(R.drawable.baseline_broken_image_24, getContext().getTheme());
-            broken.setBounds(0, 0, px, px);
-            lld.addLevel(0, 0, broken);
-
-            // Level 1: place holder
-            Drawable placeholder = res.getDrawable(R.drawable.baseline_image_24, getContext().getTheme());
-            placeholder.setBounds(0, 0, px, px);
-            lld.addLevel(1, 1, placeholder);
-
-            lld.setBounds(0, 0, px, px);
-
-            if (source != null && source.startsWith("cid:")) {
-                lld.setLevel(1); // placeholder
-
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Bundle args = new Bundle();
-                        args.putLong("id", working);
-                        args.putString("cid", "<" + source.substring(4) + ">");
-                        args.putInt("scaleToPixels", res.getDisplayMetrics().widthPixels);
-
-                        new SimpleTask<Bitmap>() {
-                            @Override
-                            protected Bitmap onExecute(Context context, Bundle args) {
-                                long id = args.getLong("id");
-                                String cid = args.getString("cid");
-                                int scaleToPixels = args.getInt("scaleToPixels");
-
-                                DB db = DB.getInstance(context);
-                                EntityAttachment attachment = db.attachment().getAttachment(id, cid);
-                                if (attachment == null)
-                                    return null;
-
-                                File file = attachment.getFile(context);
-                                return Helper.decodeImage(file, scaleToPixels);
-                            }
-
-                            @Override
-                            protected void onExecuted(Bundle args, Bitmap bm) {
-                                if (bm == null)
-                                    lld.setLevel(0); // broken
-                                else {
-                                    Drawable image = new BitmapDrawable(res, bm);
-
-                                    DisplayMetrics dm = res.getDisplayMetrics();
-                                    image.setBounds(0, 0,
-                                            Math.round(bm.getWidth() * dm.density),
-                                            Math.round(bm.getHeight() * dm.density));
-
-                                    lld.addLevel(2, 2, image);
-                                    lld.setLevel(2); // image
-
-                                    float scale = 1.0f;
-                                    float width = etBody.getWidth();
-                                    if (image.getIntrinsicWidth() > width)
-                                        scale = width / image.getIntrinsicWidth();
-
-                                    lld.setBounds(0, 0,
-                                            Math.round(image.getIntrinsicWidth() * scale),
-                                            Math.round(image.getIntrinsicHeight() * scale));
-                                }
-                                etBody.requestLayout();
-                            }
-
-                            @Override
-                            protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getFragmentManager(), ex);
-                            }
-                        }.execute(FragmentCompose.this, args, "compose:cid:" + source);
-                    }
-                });
-            } else
-                lld.setLevel(1); // image place holder
-
-            return lld;
-        }
-    };
 
     private AdapterView.OnItemSelectedListener identitySelected = new AdapterView.OnItemSelectedListener() {
         @Override
@@ -3657,8 +3590,10 @@ public class FragmentCompose extends FragmentBase {
             db.message().liveMessage(id).observe(getViewLifecycleOwner(), new Observer<TupleMessageEx>() {
                 @Override
                 public void onChanged(TupleMessageEx draft) {
-                    if (draft == null)
+                    if (draft == null) {
+                        dismiss();
                         return;
+                    }
 
                     int plus = (draft.cc == null ? 0 : draft.cc.length) +
                             (draft.bcc == null ? 0 : draft.bcc.length);
@@ -3727,7 +3662,7 @@ public class FragmentCompose extends FragmentBase {
                     @Override
                     protected Void onExecute(Context context, Bundle args) {
                         long id = args.getLong("id");
-                        Long wakeup = args.getLong("wakeup");
+                        long wakeup = args.getLong("wakeup");
 
                         DB db = DB.getInstance(context);
                         db.message().setMessageSnoozed(id, wakeup < 0 ? null : wakeup);
