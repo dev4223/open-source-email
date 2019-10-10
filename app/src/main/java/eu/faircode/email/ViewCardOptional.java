@@ -60,13 +60,8 @@ public class ViewCardOptional extends CardView {
             boolean compact = prefs.getBoolean("compact", false);
 
 	        if (cards) {
-	            // dev4223: was dp: 6
-	            int dp6 = Helper.dp2pixels(getContext(), 1);
-	            int dp = Helper.dp2pixels(getContext(), compact ? 3 : 6);
-	            int color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
-
-	            setRadius(dp6);
-            	setContentPadding(dp6, dp6, dp6, dp6);
+	            // dev4223: was: 3 : 6
+	            int dp = Helper.dp2pixels(getContext(), compact ? 1 : 2);
 
                 ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
                 lparam.setMargins(dp, dp, dp, dp);
