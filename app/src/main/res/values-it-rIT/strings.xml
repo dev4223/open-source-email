@@ -205,6 +205,7 @@
     <string name="title_advanced_cards">Mostra carte</string>
     <string name="title_advanced_date_header">Raggruppa per data</string>
     <string name="title_advanced_threading">Thread di conversazione</string>
+    <string name="title_advanced_bubble">Mostra conversazioni in stile messaggistica</string>
     <string name="title_advanced_highlight_unread">Evidenzia i messaggi non letti</string>
     <string name="title_advanced_distinguish_contacts">Distingui i messaggi tra contatti noti e sconosciuti</string>
     <string name="title_advanced_avatars">Mostra foto del contatto</string>
@@ -235,8 +236,10 @@
     <string name="title_advanced_swipenav">Scorri a sinistra/destra per andare alla conversazione successiva/precedente</string>
     <string name="title_advanced_reversed">Inverti direzione di navigazione</string>
     <string name="title_advanced_autoexpand">Espandi automaticamente i messaggi</string>
+    <string name="title_advanced_expand_all">Espandi automaticamente tutti i messaggi letti</string>
     <string name="title_advanced_expand_one">Espandi solo un messaggio alla volta</string>
-    <string name="title_advanced_collapse">Raggruppa i messaggi in conversazioni premendo \'indietro\'</string>
+    <string name="title_advanced_collapse_single">Comprimi un singolo messaggio in una conversazione premendo \'indietro\'</string>
+    <string name="title_advanced_collapse_multiple">Comprimi più messaggi in una conversazione premendo \'indietro\'</string>
     <string name="title_advanced_autoclose">Chiudi automaticamente le conversazioni</string>
     <string name="title_advanced_onclose">Alla chiusura di una conversazione</string>
     <string name="title_advanced_autoread">Contrassegna automaticamente il messaggio come letto sul messaggio in movimento</string>
@@ -301,7 +304,6 @@
     <string name="title_advanced_preview_hint">Disponibile solo quando è stato scaricato il testo del messaggio</string>
     <string name="title_advanced_inline_hint">Le immagini in linea sono incluse nel messaggio</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando c\'è un solo messaggio o solo un messaggio da leggere in una conversazione</string>
-    <string name="title_advanced_autocollapse_hint">Più messaggi estesi verranno sempre chiusi con \'indietro\'</string>
     <string name="title_advanced_autoclose_hint">Chiudi automaticamente le conversazioni raggruppate quando tutti i messaggi sono archiviati, inviati o cestinati</string>
     <string name="title_advanced_sender_hint">La maggior parte dei fornitori non consente indirizzi mittente modificati</string>
     <string name="title_advanced_subscribed_only_hint">Abilitando questa opzione verranno eliminate tutte le cartelle locali senza abbonamento</string>
@@ -313,6 +315,7 @@
     <string name="title_select">Seleziona &#8230;</string>
     <string name="title_identity_name">Il tuo nome</string>
     <string name="title_identity_email">Il tuo indirizzo email</string>
+    <string name="title_identity_color_hint">I colori dell\'identità hanno precedenza sui colori di cartella e account</string>
     <string name="title_advanced_sender">Consenti la modifica dell\'indirizzo mittente</string>
     <string name="title_advanced_sender_regex">Regex per abbinare gli indirizzi modificati</string>
     <string name="title_identity_reply_to">Rispondi all\'indirizzo</string>
@@ -483,6 +486,7 @@
     <string name="title_no_connection">La sincronizzazione verrà eseguita alla prossima connessione dell\'account</string>
     <string name="title_no_folder">La cartella non esiste</string>
     <string name="title_no_format">Verrà incluso Il messaggio originale ricevuto</string>
+    <string name="title_no_image">L\'immagine potrebbe non essere decodificata</string>
     <string name="title_accross_remark">I messaggi spostati tra gli account verranno scaricati di nuovo causando un ulteriore utilizzo dei dati</string>
     <string name="title_raw_saved">Messaggio non elaborato salvato</string>
     <string name="title_attachment_saved">Allegato salvato</string>
@@ -498,7 +502,6 @@
     <string name="title_ask_show_image">Mostrare le immagini rende possibile una fuga di informazioni personali sensibili</string>
     <string name="title_ask_show_image_hint">Le immagini riconosciute come immagini di tracciamento non verranno mostrate</string>
     <string name="title_ask_delete_ref">Elimina testo del messaggio risposto/inoltrato? Questo non può essere annullato.</string>
-    <string name="title_ask_edit_ref">Modificare il testo del messaggio inviato/inoltrato riformattato?</string>
     <string name="title_ask_sync_all">Sincronizza tutti i messaggi in %1$s?</string>
     <string name="title_ask_delete_local">Elimina i messaggi locali? I messaggi rimarranno sul server remoto.</string>
     <string name="title_ask_help">Aiuta a migliorare FairEmail</string>
@@ -540,6 +543,8 @@
     <string name="title_media_toolbar">Barra strumenti media</string>
     <string name="title_insert_contact_group">Inserisci gruppo di contatto</string>
     <string name="title_insert_template">Inserisci modello</string>
+    <string name="title_edit_plain_text">Modifica come testo semplice</string>
+    <string name="title_edit_formatted_text">Modifica come testo riformattato</string>
     <string name="title_send_plain_text">Solo testo semplice</string>
     <string name="title_send_receipt">Richiedi ricevuta di consegna/lettura</string>
     <string name="title_send_receipt_remark">La maggior parte dei provider e dei client di posta elettronica ignora le richieste di ricevuta</string>
@@ -600,6 +605,7 @@
     <string name="title_rule_ignore">Sopprimi notifica</string>
     <string name="title_rule_snooze">Posticipa</string>
     <string name="title_rule_flag">Aggiungi ai preferiti</string>
+    <string name="title_rule_keyword">Aggiungi parola chiave</string>
     <string name="title_rule_move">Muovi</string>
     <string name="title_rule_copy">Copia (etichetta)</string>
     <string name="title_rule_answer">Rispondi</string>

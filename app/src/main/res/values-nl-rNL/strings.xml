@@ -206,6 +206,7 @@
     <string name="title_advanced_cards">Toon kaarten</string>
     <string name="title_advanced_date_header">Op datum groeperen</string>
     <string name="title_advanced_threading">Gesprekken groeperen</string>
+    <string name="title_advanced_bubble">Show conversations in messaging style</string>
     <string name="title_advanced_highlight_unread">Ongelezen berichten markeren</string>
     <string name="title_advanced_distinguish_contacts">Onderscheid berichten van bekende en onbekende contacten</string>
     <string name="title_advanced_avatars">Toon foto\'s contacten</string>
@@ -236,8 +237,10 @@
     <string name="title_advanced_swipenav">Veeg links/rechts om naar het volgende/vorige gesprek te gaan</string>
     <string name="title_advanced_reversed">Keer navigatierichting om</string>
     <string name="title_advanced_autoexpand">Berichten automatisch uitvouwen</string>
+    <string name="title_advanced_expand_all">Gelezen berichten automatisch uitvouwen</string>
     <string name="title_advanced_expand_one">Vouw slechts één bericht per keer uit</string>
-    <string name="title_advanced_collapse">Berichten in gesprekken samenvouwen bij \'terug\'</string>
+    <string name="title_advanced_collapse_single">Eén bericht in een gesprek bij \'terug\' samenvouwen</string>
+    <string name="title_advanced_collapse_multiple">Meerdere berichten in een gesprek bij \'terug\' samenvouwen</string>
     <string name="title_advanced_autoclose">Gesprekken automatisch sluiten</string>
     <string name="title_advanced_onclose">Bij het sluiten van een gesprek</string>
     <string name="title_advanced_autoread">Markeer berichten automatisch als gelezen bij het verplaatsen van berichten</string>
@@ -302,7 +305,6 @@
     <string name="title_advanced_preview_hint">Alleen beschikbaar wanneer de berichttekst werd gedownload</string>
     <string name="title_advanced_inline_hint">Inline afbeeldingen zijn afbeeldingen opgenomen in het bericht</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
-    <string name="title_advanced_autocollapse_hint">Meerdere uitgevouwen berichten worden altijd gesloten bij \'terug\'</string>
     <string name="title_advanced_autoclose_hint">Gesprekken automatisch sluiten wanneer alle berichten zijn gearchiveerd, verzonden of weggegooid</string>
     <string name="title_advanced_sender_hint">De meeste providers staan gemodificeerde verzendadressen niet toe</string>
     <string name="title_advanced_subscribed_only_hint">Dit inschakelen zal alle lokale mappen zonder abonnement verwijderen</string>
@@ -485,6 +487,7 @@
     <string name="title_no_connection">Synchronisatie zal worden uitgevoerd bij de volgende accountverbinding</string>
     <string name="title_no_folder">Map bestaat niet</string>
     <string name="title_no_format">Het oorspronkelijke ontvangen bericht zal worden opgenomen</string>
+    <string name="title_no_image">Afbeelding kon niet gedecodeerd worden</string>
     <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra dataverbruik</string>
     <string name="title_raw_saved">Ruw bericht opgeslagen</string>
     <string name="title_attachment_saved">Bijlage opgeslagen</string>
@@ -500,7 +503,6 @@
     <string name="title_ask_show_image">Afbeeldingen tonen kan privacy gevoelige informatie lekken</string>
     <string name="title_ask_show_image_hint">Afbeeldingen die als tracking-afbeeldingen zijn herkend, worden niet getoond</string>
     <string name="title_ask_delete_ref">Verwijder beantwoorde/doorgestuurde berichttekst? Dit kan niet ongedaan worden gemaakt.</string>
-    <string name="title_ask_edit_ref">Bewerk opnieuw geformatteerde beantwoorde/doorgestuurde berichttekst?</string>
     <string name="title_ask_sync_all">Alle berichten in %1$s synchroniseren?</string>
     <string name="title_ask_delete_local">Lokale berichten verwijderen? Berichten blijven op de externe server.</string>
     <string name="title_ask_help">Help FairEmail te verbeteren</string>
@@ -542,6 +544,8 @@
     <string name="title_media_toolbar">Media werkbalk</string>
     <string name="title_insert_contact_group">Contactgroep toevoegen</string>
     <string name="title_insert_template">Sjabloon invoegen</string>
+    <string name="title_edit_plain_text">Bewerk als platte tekst</string>
+    <string name="title_edit_formatted_text">Bewerk als geformatteerde tekst</string>
     <string name="title_send_plain_text">Alleen platte tekst</string>
     <string name="title_send_receipt">Vraag ontvangst/leesbevestiging</string>
     <string name="title_send_receipt_remark">De meeste aanbieders en e-mail clients negeren bevestigingsverzoeken</string>
@@ -602,6 +606,7 @@
     <string name="title_rule_ignore">Melding onderdrukken</string>
     <string name="title_rule_snooze">Sluimeren</string>
     <string name="title_rule_flag">Ster toevoegen</string>
+    <string name="title_rule_keyword">Sleutelwoord toevoegen</string>
     <string name="title_rule_move">Verplaatsen</string>
     <string name="title_rule_copy">Kopiëren (label)</string>
     <string name="title_rule_answer">Beantwoorden</string>

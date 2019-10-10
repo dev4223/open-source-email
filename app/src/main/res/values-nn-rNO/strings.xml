@@ -206,6 +206,7 @@
     <string name="title_advanced_cards">Vis kort</string>
     <string name="title_advanced_date_header">Gruppere etter dato</string>
     <string name="title_advanced_threading">Konversasjonstråder</string>
+    <string name="title_advanced_bubble">Vis samtaler i meldingsstil</string>
     <string name="title_advanced_highlight_unread">Merk uleste meldinger</string>
     <string name="title_advanced_distinguish_contacts">Skille meldinger fra kjente og ukjente kontakter</string>
     <string name="title_advanced_avatars">Vis kontakt bilde</string>
@@ -236,8 +237,10 @@
     <string name="title_advanced_swipenav">Sveip til venstre/høyre for å gå til neste/forrige samtale</string>
     <string name="title_advanced_reversed">Omvendt navigasjonsretning</string>
     <string name="title_advanced_autoexpand">Utvid automatisk meldinger</string>
+    <string name="title_advanced_expand_all">Utvid alle leste meldinger automatisk</string>
     <string name="title_advanced_expand_one">Utvid bare en melding om gangen</string>
-    <string name="title_advanced_collapse">Skjul meldinger i samtaler på \'tilbake\'</string>
+    <string name="title_advanced_collapse_single">Skjul enkeltmelding i en samtale med \'tilbake\'</string>
+    <string name="title_advanced_collapse_multiple">Skjul flere meldinger i en samtale med \'tilbake\'</string>
     <string name="title_advanced_autoclose">Lukk samtaler automatisk</string>
     <string name="title_advanced_onclose">Når du avslutter en samtale</string>
     <string name="title_advanced_autoread">Merk automatisk meldinger som leste ved flytting</string>
@@ -302,7 +305,6 @@
     <string name="title_advanced_preview_hint">Kun tilgjengelig når meldingstekst ble lastet ned</string>
     <string name="title_advanced_inline_hint">Innebygde bilder er bilder som er inkludert i meldingen</string>
     <string name="title_advanced_autoexpand_hint">Åpne automatisk melding når det bare er én melding eller bare en ulest melding i en samtale</string>
-    <string name="title_advanced_autocollapse_hint">Flere utvidede meldinger vil alltid bli lukket ved \'tilbake\'</string>
     <string name="title_advanced_autoclose_hint">Lukk samtaler automatisk når alle meldinger arkiveres, sendes eller kastet</string>
     <string name="title_advanced_sender_hint">De fleste leverandører tillater ikke endret avsender adresser</string>
     <string name="title_advanced_subscribed_only_hint">Aktivering av dette vil slette alle lokale mapper uten abonnement</string>
@@ -485,6 +487,7 @@
     <string name="title_no_connection">Synkronisering vil bli utført på neste kontoforbindelse</string>
     <string name="title_no_folder">Mappe eksisterer ikke</string>
     <string name="title_no_format">Den opprinnelig mottatte meldingen vil bli inkludert</string>
+    <string name="title_no_image">Bildet kunne ikke dekodes</string>
     <string name="title_accross_remark">Meldinger som er flyttet over kontoer, lastes ned igjen, noe som resulterer i ekstra databruk</string>
     <string name="title_raw_saved">Rå melding lagret</string>
     <string name="title_attachment_saved">Vedlegg lagret</string>
@@ -500,7 +503,6 @@
     <string name="title_ask_show_image">Å vise bilder kan lekke sensitiv informasjon</string>
     <string name="title_ask_show_image_hint">Bilder som blir gjenkjent som sporingsbilder, vises ikke</string>
     <string name="title_ask_delete_ref">Vil du slette svart/videresendt meldingstekst? Dette kan ikke angres.</string>
-    <string name="title_ask_edit_ref">Redigere omformatert svar/videresendt meldingstekst?</string>
     <string name="title_ask_sync_all">Synkroniser alle meldinger i %1$s?</string>
     <string name="title_ask_delete_local">Slett lokale meldinger? Meldinger vil forbli på den eksterne serveren.</string>
     <string name="title_ask_help">Hjelp til å forbedre FairEmail</string>
@@ -542,6 +544,8 @@
     <string name="title_media_toolbar">Media verktøylinje</string>
     <string name="title_insert_contact_group">Sett inn kontaktgruppe</string>
     <string name="title_insert_template">Sett inn mal</string>
+    <string name="title_edit_plain_text">Rediger som ren tekst</string>
+    <string name="title_edit_formatted_text">Rediger som omformatert tekst</string>
     <string name="title_send_plain_text">Bare vanlig tekst</string>
     <string name="title_send_receipt">Be om levert/lest kvittering</string>
     <string name="title_send_receipt_remark">De fleste tilbydere og e-post klienter ignorerer kvitterings forespørsler</string>
@@ -602,6 +606,7 @@
     <string name="title_rule_ignore">Undertrykke varsling</string>
     <string name="title_rule_snooze">Utsett</string>
     <string name="title_rule_flag">Legg til stjerne</string>
+    <string name="title_rule_keyword">Legg til nøkkelord</string>
     <string name="title_rule_move">Flytt</string>
     <string name="title_rule_copy">Kopier (etikett)</string>
     <string name="title_rule_answer">Svar</string>

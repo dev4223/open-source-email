@@ -228,6 +228,7 @@
     <string name="title_advanced_cards">Zobrazit karty</string>
     <string name="title_advanced_date_header">Seskupit podle data</string>
     <string name="title_advanced_threading">Vlákna konverzací</string>
+    <string name="title_advanced_bubble">Zobrazit konverzace stylem rychlých zpráv</string>
     <string name="title_advanced_highlight_unread">Zvýraznit nepřečtené zprávy</string>
     <string name="title_advanced_distinguish_contacts">Odlišit zprávy známých a neznámých kontaktů</string>
     <string name="title_advanced_avatars">Zobrazit fotografie kontaktů</string>
@@ -258,8 +259,10 @@
     <string name="title_advanced_swipenav">Tažením doleva/doprava přejít na předešlou/následující konverzaci</string>
     <string name="title_advanced_reversed">Obrátit směr navigace</string>
     <string name="title_advanced_autoexpand">Automaticky rozbalovat zprávy</string>
+    <string name="title_advanced_expand_all">Automaticky rozbalovat všechny přečtené zprávy</string>
     <string name="title_advanced_expand_one">Rozbalit vždy pouze jednu zprávu</string>
-    <string name="title_advanced_collapse">Sbalit zprávy v konverzacích při pohybu zpět</string>
+    <string name="title_advanced_collapse_single">Sbalit jednu zprávu v konverzaci při navigaci \"zpět\"</string>
+    <string name="title_advanced_collapse_multiple">Sbalit vícero zpráv v konverzaci při navigaci \"zpět\"</string>
     <string name="title_advanced_autoclose">Automaticky zavírat konverzace</string>
     <string name="title_advanced_onclose">Při zavření konverzace</string>
     <string name="title_advanced_autoread">Automaticky označit zprávy jako přečtené při přesunu</string>
@@ -324,7 +327,6 @@
     <string name="title_advanced_preview_hint">K dispozici pouze pokud byl stažen text zprávy</string>
     <string name="title_advanced_inline_hint">Vložené obrázky jsou obrázky, které jsou součástí zprávy</string>
     <string name="title_advanced_autoexpand_hint">Automaticky otevřít zprávu, pokud je v konverzaci pouze jediná zpráva nebo jediná nepřečtená</string>
-    <string name="title_advanced_autocollapse_hint">Vícero rozbalených zpráv bude vždy sbaleno při pohybu zpět</string>
     <string name="title_advanced_autoclose_hint">Automaticky zavřít konverzace, když jsou všechny zprávy archivovány, odeslány nebo v koši</string>
     <string name="title_advanced_sender_hint">Většina poskytovatelů nepovoluje pozměněné adresy odesílatele</string>
     <string name="title_advanced_subscribed_only_hint">Povolení této volby vymaže všechny místní složky bez přihlášeného odběru</string>
@@ -336,6 +338,7 @@
     <string name="title_select">Vybrat &#8230;</string>
     <string name="title_identity_name">Vaše jméno</string>
     <string name="title_identity_email">Vaše e-mailová adresa</string>
+    <string name="title_identity_color_hint">Barvy identit mají přednost před barvami složek a účtů</string>
     <string name="title_advanced_sender">Umožnit úpravu adresy odesílatele</string>
     <string name="title_advanced_sender_regex">Regulární výraz, který bude odpovídat upraveným adresám</string>
     <string name="title_identity_reply_to">Odpověď na adresu</string>
@@ -506,6 +509,7 @@
     <string name="title_no_connection">Synchronizace bude provedena při příštím připojení k účtu</string>
     <string name="title_no_folder">Složka neexistuje</string>
     <string name="title_no_format">Původní zpráva bude zahrnuta</string>
+    <string name="title_no_image">Obrázek nemohl být dekódován</string>
     <string name="title_accross_remark">Zprávy přesunuté napříč účty budou opětovně staženy, což povede ke spotřebě dat navíc</string>
     <string name="title_raw_saved">Zdrojová zpráva uložena</string>
     <string name="title_attachment_saved">Příloha uložena</string>
@@ -521,7 +525,6 @@
     <string name="title_ask_show_image">Zobrazením obrázků může dojít k úniku citlivých informací</string>
     <string name="title_ask_show_image_hint">Obrázky rozpoznané jako sledovací nebudou zobrazeny</string>
     <string name="title_ask_delete_ref">Smazat text odpovídané/přeposílané zprávy? Tuto akci nelze vrátit zpět.</string>
-    <string name="title_ask_edit_ref">Upravit přeformátovaný text odpovídané/přeposílané zprávy?</string>
     <string name="title_ask_sync_all">Synchronizovat všechny zprávy v %1$s?</string>
     <string name="title_ask_delete_local">Smazat místní zprávy? Zprávy zůstanou na vzdáleném serveru.</string>
     <string name="title_ask_help">Pomozte vylepšit FairEmail</string>
@@ -563,6 +566,8 @@
     <string name="title_media_toolbar">Panel médií</string>
     <string name="title_insert_contact_group">Vložit skupinu kontaktů</string>
     <string name="title_insert_template">Vložit šablonu</string>
+    <string name="title_edit_plain_text">Upravit jako prostý text</string>
+    <string name="title_edit_formatted_text">Upravit jako přeformátovaný text</string>
     <string name="title_send_plain_text">Pouze prostý text</string>
     <string name="title_send_receipt">Požadovat potvrzení doručení/přečtení</string>
     <string name="title_send_receipt_remark">Většina poskytovatelů a e-mailových klientů ignoruje žádosti o potvrzení</string>
@@ -623,6 +628,7 @@
     <string name="title_rule_ignore">Potlačit oznámení</string>
     <string name="title_rule_snooze">Odložit</string>
     <string name="title_rule_flag">Přidat hvězdičku</string>
+    <string name="title_rule_keyword">Přidat klíčové slovo</string>
     <string name="title_rule_move">Přesunout</string>
     <string name="title_rule_copy">Kopírovat (štítek)</string>
     <string name="title_rule_answer">Odpovědět</string>

@@ -763,6 +763,9 @@ class Core {
 
         // Get arguments
         long id = jargs.getLong(0);
+        boolean seen = jargs.optBoolean(1);
+        boolean unflag = jargs.optBoolean(3);
+
         Flags flags = ifolder.getPermanentFlags();
 
         // Get target folder
@@ -774,13 +777,14 @@ class Core {
         // Get source messages
         Map<Message, EntityMessage> map = new HashMap<>();
         for (EntityMessage message : messages)
-            try {
-                Message imessage = ifolder.getMessageByUID(message.uid);
-                if (imessage != null)
-                    map.put(imessage, message);
-            } catch (MessagingException ex) {
-                Log.w(ex);
-            }
+            if (message.uid != null)
+                try {
+                    Message imessage = ifolder.getMessageByUID(message.uid);
+                    if (imessage != null)
+                        map.put(imessage, message);
+                } catch (MessagingException ex) {
+                    Log.w(ex);
+                }
 
         // Some providers do not support the COPY operation for drafts
         boolean draft = (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type));
@@ -812,19 +816,15 @@ class Core {
             itarget.appendMessages(icopies.toArray(new Message[0]));
         } else {
             for (Message imessage : map.keySet()) {
-                EntityMessage message = map.get(imessage);
+                Log.i("Move seen=" + seen + " unflag=" + unflag);
 
-                // Auto read
-                if (flags.contains(Flags.Flag.SEEN))
-                    imessage.setFlag(Flags.Flag.SEEN, message.ui_seen);
+                // Mark read
+                if (seen && flags.contains(Flags.Flag.SEEN))
+                    imessage.setFlag(Flags.Flag.SEEN, true);
 
-                // Auto unflag
-                if (flags.contains(Flags.Flag.FLAGGED))
-                    imessage.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
-
-                // Answered fix
-                if (flags.contains(Flags.Flag.ANSWERED))
-                    imessage.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
+                // Remove star
+                if (unflag && flags.contains(Flags.Flag.FLAGGED))
+                    imessage.setFlag(Flags.Flag.FLAGGED, false);
             }
 
             ifolder.copyMessages(map.keySet().toArray(new Message[0]), itarget);
@@ -853,17 +853,13 @@ class Core {
                                 if (draft) {
                                     Message icopy = itarget.getMessageByUID(uid);
 
-                                    // Auto read
-                                    if (flags.contains(Flags.Flag.SEEN))
-                                        icopy.setFlag(Flags.Flag.SEEN, message.ui_seen);
+                                    // Mark read
+                                    if (seen && flags.contains(Flags.Flag.SEEN))
+                                        icopy.setFlag(Flags.Flag.SEEN, true);
 
-                                    // Auto unflag
-                                    if (flags.contains(Flags.Flag.FLAGGED))
-                                        icopy.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
-
-                                    // Answered fix
-                                    if (flags.contains(Flags.Flag.ANSWERED))
-                                        icopy.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
+                                    // Remove star
+                                    if (unflag && flags.contains(Flags.Flag.FLAGGED))
+                                        icopy.setFlag(Flags.Flag.FLAGGED, false);
 
                                     // Set drafts flag
                                     icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
@@ -925,7 +921,7 @@ class Core {
 
                 EntityMessage message = synchronizeMessage(context, account, folder, istore, ifolder, imessage, false, download, rules, state);
                 if (download && message != null)
-                    downloadMessage(context, folder, ifolder, imessage, message.id, state);
+                    downloadMessage(context, account, folder, istore, ifolder, imessage, message.id, state);
             } finally {
                 ((IMAPMessage) imessage).invalidateHeaders();
             }
@@ -1910,7 +1906,8 @@ class Core {
                             if (ids[from + j] != null)
                                 downloadMessage(
                                         context,
-                                        folder, ifolder,
+                                        account, folder,
+                                        istore, ifolder,
                                         (MimeMessage) isub[j], ids[from + j], state);
                         } catch (FolderClosedException ex) {
                             throw ex;
@@ -2145,23 +2142,7 @@ class Core {
                 }
 
             if (message.total != null && message.total == 0)
-                try {
-                    if (istore.hasCapability("ID")) {
-                        Map<String, String> id = new LinkedHashMap<>();
-                        id.put("name", context.getString(R.string.app_name));
-                        id.put("version", BuildConfig.VERSION_NAME);
-                        Map<String, String> sid = istore.id(id);
-                        if (sid != null) {
-                            StringBuilder sb = new StringBuilder();
-                            for (String key : sid.keySet())
-                                sb.append(" ").append(key).append("=").append(sid.get(key));
-                            Log.e("Empty message" + sb.toString());
-                        }
-                    } else
-                        Log.e("Empty message " + account.host);
-                } catch (Throwable ex) {
-                    Log.w(ex);
-                }
+                reportEmptyMessage(context, account, istore);
 
             try {
                 db.beginTransaction();
@@ -2188,6 +2169,8 @@ class Core {
                 crumb.put("message", uid + ":" + message.uid);
                 crumb.put("what", ex.getMessage());
                 Log.breadcrumb("insert", crumb);
+
+                return null;
             } finally {
                 db.endTransaction();
             }
@@ -2218,7 +2201,10 @@ class Core {
                     Log.i(folder.name + " inline downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    if (!TextUtils.isEmpty(body))
+                    Long size = parts.getBodySize();
+                    if (TextUtils.isEmpty(body) && size != null && size > 0)
+                        reportEmptyMessage(context, account, istore);
+                    else
                         fixAttachments(context, message.id, body);
                 }
             }
@@ -2476,7 +2462,8 @@ class Core {
 
     private static void downloadMessage(
             Context context,
-            EntityFolder folder, IMAPFolder ifolder,
+            EntityAccount account, EntityFolder folder,
+            IMAPStore istore, IMAPFolder ifolder,
             MimeMessage imessage, long id, State state) throws MessagingException, IOException {
         if (state.getNetworkState().isRoaming())
             return;
@@ -2538,7 +2525,10 @@ class Core {
                     Log.i(folder.name + " downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    if (!TextUtils.isEmpty(body))
+                    Long size = parts.getBodySize();
+                    if (TextUtils.isEmpty(body) && size != null && size > 0)
+                        reportEmptyMessage(context, account, istore);
+                    else
                         fixAttachments(context, message.id, body);
                 }
             }
@@ -2553,6 +2543,26 @@ class Core {
                             Log.e(folder.name, ex);
                             db.attachment().setError(attachment.id, Helper.formatThrowable(ex, false));
                         }
+        }
+    }
+
+    private static void reportEmptyMessage(Context context, EntityAccount account, IMAPStore istore) {
+        try {
+            if (istore.hasCapability("ID")) {
+                Map<String, String> id = new LinkedHashMap<>();
+                id.put("name", context.getString(R.string.app_name));
+                id.put("version", BuildConfig.VERSION_NAME);
+                Map<String, String> sid = istore.id(id);
+                if (sid != null) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String key : sid.keySet())
+                        sb.append(" ").append(key).append("=").append(sid.get(key));
+                    Log.e("Empty message" + sb.toString());
+                }
+            } else
+                Log.e("Empty message " + account.host);
+        } catch (Throwable ex) {
+            Log.w(ex);
         }
     }
 

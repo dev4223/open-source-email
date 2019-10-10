@@ -145,6 +145,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -193,6 +194,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private boolean date;
     private boolean threading;
+    private boolean bubble;
+    private boolean avatars;
     private boolean name_email;
     private boolean distinguish_contacts;
     private boolean subject_top;
@@ -224,6 +227,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private DateFormat TF;
     private DateFormat DTF;
 
+    private static final ExecutorService executor =
+            Helper.getBackgroundExecutor(2, "differ");
+
     // https://github.com/newhouse/url-tracking-stripper
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             "utm_source",
@@ -250,8 +256,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View.OnTouchListener,
             View.OnLayoutChangeListener,
             BottomNavigationView.OnNavigationItemSelectedListener {
+        private ImageView ivAvatarStart;
         private ViewCardOptional card;
         private View view;
+        private ImageView ivAvatarEnd;
 
         private View vwColor;
         private ImageButton ibExpander;
@@ -369,8 +377,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         ViewHolder(final View itemView) {
             super(itemView);
 
+            ivAvatarStart = itemView.findViewById(R.id.ivAvatarStart);
             card = itemView.findViewById(R.id.card);
             view = itemView.findViewById(R.id.clItem);
+            ivAvatarEnd = itemView.findViewById(R.id.ivAvatarEnd);
 
             vwColor = itemView.findViewById(R.id.vwColor);
             ibExpander = itemView.findViewById(R.id.ibExpander);
@@ -397,13 +407,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibHelp = itemView.findViewById(R.id.ibHelp);
             pbLoading = itemView.findViewById(R.id.pbLoading);
 
-            if (compact && tvSubject != null)
-                if ("start".equals(subject_ellipsize))
-                    tvSubject.setEllipsize(TextUtils.TruncateAt.START);
-                else if ("end".equals(subject_ellipsize))
-                    tvSubject.setEllipsize(TextUtils.TruncateAt.END);
-                else
-                    tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+            if (tvSubject != null) {
+                tvSubject.setTextColor(colorRead);
+
+                if (compact)
+                    if ("start".equals(subject_ellipsize))
+                        tvSubject.setEllipsize(TextUtils.TruncateAt.START);
+                    else if ("end".equals(subject_ellipsize))
+                        tvSubject.setEllipsize(TextUtils.TruncateAt.END);
+                    else
+                        tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
+            }
         }
 
         private void ensureExpanded() {
@@ -633,6 +647,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void clear() {
+            ivAvatarStart.setVisibility(View.GONE);
+            ivAvatarEnd.setVisibility(View.GONE);
             vwColor.setVisibility(View.GONE);
             ibExpander.setVisibility(View.GONE);
             ibFlagged.setVisibility(View.GONE);
@@ -673,16 +689,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
+            boolean outgoing = isOutgoing(message);
+            Address[] addresses = (outgoing ? message.to : message.senders);
+            boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
 
-            boolean outgoing = false;
-            if (viewType != ViewType.THREAD)
-                if (EntityFolder.isOutgoing(message.folderType))
-                    outgoing = true;
-                else if (!EntityFolder.ARCHIVE.equals(message.folderType) &&
-                        message.identityEmail != null &&
-                        message.from != null && message.from.length == 1 &&
-                        message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
-                    outgoing = true;
+            if (viewType == ViewType.THREAD) {
+                ivAvatarStart.setVisibility(outgoing && bubble ? View.INVISIBLE : View.GONE);
+                ivAvatarEnd.setVisibility(outgoing || !bubble ? View.GONE : View.INVISIBLE);
+                ivAvatar.setVisibility(bubble || !avatars ? View.GONE : View.INVISIBLE);
+                outgoing = false;
+            } else {
+                ivAvatarStart.setVisibility(View.GONE);
+                ivAvatarEnd.setVisibility(View.GONE);
+                ivAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
+            }
 
             // Text size
             if (textSize != 0) {
@@ -761,28 +781,39 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubject.setTextColor(colorUnseen);
             // dev4223: from in new color
             int colorUnseenFrom = (message.unseen > 0 ? colorUnread : colorSubject);
-            if (viewType == ViewType.THREAD)
-                tvFrom.setTextColor(colorUnseen);
-            else
-                tvFrom.setTextColor(colorUnseenFrom);
-            tvSize.setTextColor(colorUnseen);
-            tvTime.setTextColor(colorUnseen);
+            
+            if (tvFrom.getTag() == null || (int) tvFrom.getTag() != colorUnseen) {
+                tvFrom.setTag(colorUnseen);
+	            if (viewType == ViewType.THREAD)
+	                tvFrom.setTextColor(colorUnseen);
+	            else
+	                tvFrom.setTextColor(colorUnseenFrom);
+	            tvSize.setTextColor(colorUnseen);
+	            tvTime.setTextColor(colorUnseen);
+            }
             tvCount.setTextColor(colorAccent);
 
             // Account color
-            vwColor.setBackgroundColor(message.accountColor == null || !ActivityBilling.isPro(context)
-                    ? colorSeparator : message.accountColor);
+            int colorBackground =
+                    (message.accountColor == null || !ActivityBilling.isPro(context)
+                            ? colorSeparator : message.accountColor);
+            vwColor.setVisibility(View.VISIBLE);
+            if (vwColor.getTag() == null || (int) vwColor.getTag() != colorBackground) {
+                vwColor.setTag(colorBackground);
+                vwColor.setBackgroundColor(colorBackground);
+            }
 
             // Expander
-            boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
-            ibExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
+            if (ibExpander.getTag() == null || (boolean) ibExpander.getTag() != expanded) {
+                ibExpander.setTag(expanded);
+                ibExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
+            }
             if (viewType == ViewType.THREAD)
                 ibExpander.setVisibility(EntityFolder.DRAFTS.equals(message.folderType) ? View.INVISIBLE : View.VISIBLE);
             else
                 ibExpander.setVisibility(View.GONE);
 
             // Line 1
-            Address[] addresses = (outgoing ? message.to : message.senders);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             Long size = ("size".equals(sort) ? message.totalSize : message.size);
@@ -802,16 +833,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             Boolean.FALSE.equals(message.mx));
 
             // Line 3
+            int icon;
             if (outgoing && !EntityFolder.SENT.equals(message.folderType)) {
-                ivType.setImageResource(EntityFolder.getIcon(EntityFolder.SENT));
+                icon = EntityFolder.getIcon(EntityFolder.SENT);
                 ivType.setVisibility(View.VISIBLE);
             } else {
-                ivType.setImageResource(message.drafts > 0
+                icon = (message.drafts > 0
                         ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
                 ivType.setVisibility(message.drafts > 0 ||
                         (viewType == ViewType.UNIFIED && type == null && !inbox) ||
                         (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
                         ? View.VISIBLE : View.GONE);
+            }
+            if (ivType.getTag() == null || (int) ivType.getTag() != icon) {
+                ivType.setTag(icon);
+                ivType.setImageResource(icon);
             }
 
             ivPriority.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
@@ -868,7 +904,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             bindFlagged(message, expanded);
 
             // Message text preview
-            tvPreview.setTextColor(contrast ? textColorPrimary : textColorSecondary);
+            int textColor = (contrast ? textColorPrimary : textColorSecondary);
+            if (tvPreview.getTag() == null || (int) tvPreview.getTag() != textColor) {
+                tvPreview.setTag(textColor);
+                tvPreview.setTextColor(textColor);
+            }
             tvPreview.setTypeface(
                     monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT,
                     preview_italic ? Typeface.ITALIC : Typeface.NORMAL);
@@ -912,13 +952,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 aargs.putSerializable("addresses", addresses);
 
                 new SimpleTask<ContactInfo>() {
-                    @Override
-                    protected void onPreExecute(Bundle args) {
-                        //Address[] addresses = (Address[]) args.getSerializable("addresses");
-                        ivAvatar.setVisibility(View.GONE);
-                        //tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
-                    }
-
                     @Override
                     protected ContactInfo onExecute(Context context, Bundle args) {
                         long account = args.getLong("account");
@@ -1052,15 +1085,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
-            if (info.hasPhoto()) {
-                ivAvatar.setImageBitmap(info.getPhotoBitmap());
-                ivAvatar.setVisibility(View.VISIBLE);
-            } else
-                ivAvatar.setVisibility(View.GONE);
+            if (bubble && viewType == ViewType.THREAD) {
+                boolean outgoing = isOutgoing(message);
+                if (outgoing) {
+                    if (info.hasPhoto())
+                        ivAvatarStart.setImageBitmap(info.getPhotoBitmap());
+                    else
+                        ivAvatarStart.setImageResource(R.drawable.baseline_person_24);
+                    ivAvatarStart.setVisibility(View.VISIBLE);
+                } else {
+                    if (info.hasPhoto())
+                        ivAvatarEnd.setImageBitmap(info.getPhotoBitmap());
+                    else
+                        ivAvatarEnd.setImageResource(R.drawable.baseline_person_24);
+                    ivAvatarEnd.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (info.hasPhoto()) {
+                    ivAvatar.setImageBitmap(info.getPhotoBitmap());
+                    ivAvatar.setVisibility(View.VISIBLE);
+                }
+            }
 
             if (distinguish_contacts && info.isKnown())
                 tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-            //tvFrom.setText(info.getDisplayName(name_email));
         }
 
         private void bindExpanded(final TupleMessageEx message, final boolean scroll) {
@@ -1646,7 +1694,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return;
 
                     boolean has_images = args.getBoolean("has_images");
-                    boolean show_images = properties.getValue("images", message.id);
 
                     if (result instanceof Spanned) {
                         tvBody.setText((Spanned) result);
@@ -1655,7 +1702,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         tvBody.setMovementMethod(new TouchHandler(message));
                     } else if (result instanceof String)
                         ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
-                    else
+                    else if (result == null) {
+                        boolean show_full = args.getBoolean("show_full");
+                        if (show_full)
+                            ((WebView) wvBody).loadDataWithBaseURL(null, "", "text/html", "UTF-8", null);
+                        else
+                            tvBody.setText(null);
+                    } else
                         throw new IllegalStateException("Result=" + result);
 
                     pbBody.setVisibility(View.GONE);
@@ -1993,6 +2046,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:participation");
+        }
+
+        private boolean isOutgoing(TupleMessageEx message) {
+            if (EntityFolder.isOutgoing(message.folderType))
+                return true;
+            else if ((viewType == ViewType.THREAD || !EntityFolder.ARCHIVE.equals(message.folderType)) &&
+                    message.identityEmail != null &&
+                    message.from != null && message.from.length == 1 &&
+                    message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
+                return true;
+            return false;
         }
 
         private TupleMessageEx getMessage() {
@@ -3608,8 +3672,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
 
+        boolean contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
+        boolean avatars = prefs.getBoolean("avatars", true);
+        boolean generated = prefs.getBoolean("generated_icons", true);
+
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
+        this.bubble = prefs.getBoolean("bubble", false);
+        this.avatars = (contacts && avatars) || generated;
         this.name_email = prefs.getBoolean("name_email", false);
         this.distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
         this.subject_top = prefs.getBoolean("subject_top", false);
@@ -3629,6 +3699,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         debug = prefs.getBoolean("debug", false);
 
         AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(DIFF_CALLBACK)
+                .setBackgroundThreadExecutor(executor)
                 .build();
         this.differ = new AsyncPagedListDiffer<>(new AdapterListUpdateCallback(this), config);
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {
@@ -3643,7 +3714,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && previousList != null)
                     for (int i = 0; i < previousList.size(); i++) {
                         TupleMessageEx message = previousList.get(i);
-                        if (message != null && !message.ui_seen)
+                        if (message != null && !message.ui_seen && !message.ui_ignored)
                             prev++;
                     }
 
@@ -3651,7 +3722,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && currentList != null)
                     for (int i = 0; i < currentList.size(); i++) {
                         TupleMessageEx message = currentList.get(i);
-                        if (message != null && !message.ui_seen)
+                        if (message != null && !message.ui_seen && !message.ui_ignored)
                             cur++;
                     }
 

@@ -1216,8 +1216,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if ("expanded".equals(name)) {
                 // Collapse other messages
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                boolean expand_all = prefs.getBoolean("expand_all", false);
                 boolean expand_one = prefs.getBoolean("expand_one", true);
-                if (expand_one) {
+                if (!expand_all && expand_one) {
                     for (Long other : new ArrayList<>(values.get(name)))
                         if (!other.equals(id)) {
                             values.get(name).remove(other);
@@ -3163,6 +3164,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     iProperties.setValue("expanded", expand.id, true);
                 }
+
+                boolean expand_all = prefs.getBoolean("expand_all", false);
+                if (expand_all)
+                    for (TupleMessageEx message : messages)
+                        if (message != null && message.ui_seen)
+                            iProperties.setValue("expanded", message.id, true);
             }
         } else {
             if (autoCloseCount > 0 && (autoclose || onclose != null)) {
@@ -3602,8 +3609,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             int count = (values.containsKey("expanded") ? values.get("expanded").size() : 0);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            boolean collapse = prefs.getBoolean("collapse", false);
-            if ((count == 1 && collapse) || count > 1) {
+            boolean collapse_single = prefs.getBoolean("collapse_single", false);
+            boolean collapse_multiple = prefs.getBoolean("collapse_multiple", true);
+            if ((collapse_single && count == 1) || (collapse_multiple && count > 1)) {
                 values.get("expanded").clear();
                 updateExpanded();
                 adapter.notifyDataSetChanged();

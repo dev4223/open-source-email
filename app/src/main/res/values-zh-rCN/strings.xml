@@ -194,6 +194,7 @@
     <string name="title_advanced_cards">展示卡片</string>
     <string name="title_advanced_date_header">按日期分组</string>
     <string name="title_advanced_threading">会话线程</string>
+    <string name="title_advanced_bubble">以消息样式中显示对话</string>
     <string name="title_advanced_highlight_unread">高亮未读消息</string>
     <string name="title_advanced_distinguish_contacts">区分已知和未知的联系人的信息</string>
     <string name="title_advanced_avatars">显示联系人头像</string>
@@ -225,7 +226,8 @@
     <string name="title_advanced_reversed">翻转导航方向</string>
     <string name="title_advanced_autoexpand">自动伸展消息</string>
     <string name="title_advanced_expand_one">每次仅展开一个消息</string>
-    <string name="title_advanced_collapse">按返回键折叠对话中的邮件</string>
+    <string name="title_advanced_collapse_single">按返回键折叠对话中的单封邮件</string>
+    <string name="title_advanced_collapse_multiple">按返回键折叠对话中的多封邮件</string>
     <string name="title_advanced_autoclose">自动关闭对话</string>
     <string name="title_advanced_onclose">关闭对话时</string>
     <string name="title_advanced_autoread">将移动的邮件自动标记为已读</string>
@@ -290,7 +292,6 @@
     <string name="title_advanced_preview_hint">只有当消息文本下载时才可用</string>
     <string name="title_advanced_inline_hint">内联图像是邮件中包含的图像</string>
     <string name="title_advanced_autoexpand_hint">当对话中只有一条消息或只是一条未读消息时，自动打开该消息</string>
-    <string name="title_advanced_autocollapse_hint">App将在您按下“返回”键时关闭多条展开的消息</string>
     <string name="title_advanced_autoclose_hint">在所有邮件存档、发送或丢弃时自动关闭对话线程</string>
     <string name="title_advanced_sender_hint">大多数提供商不允许修改发件人地址</string>
     <string name="title_advanced_subscribed_only_hint">启用此功能将删除所有未订阅的本地文件夹</string>
@@ -302,6 +303,7 @@
     <string name="title_select">选择 &#8230;</string>
     <string name="title_identity_name">姓名</string>
     <string name="title_identity_email">电子邮件地址</string>
+    <string name="title_identity_color_hint">身份颜色优先于文件夹和帐户颜色</string>
     <string name="title_advanced_sender">允许编辑发件人地址</string>
     <string name="title_advanced_sender_regex">正则表达式匹配编辑的地址</string>
     <string name="title_identity_reply_to">回复地址</string>
@@ -472,6 +474,7 @@
     <string name="title_no_connection">将在下次账户连接时进行同步</string>
     <string name="title_no_folder">文件夹不存在</string>
     <string name="title_no_format">将包含最初收到的消息</string>
+    <string name="title_no_image">无法解码图像</string>
     <string name="title_accross_remark">App会再次下载在不同账户间移动的消息，这将导致额外的数据使用</string>
     <string name="title_raw_saved">原始消息已保存</string>
     <string name="title_attachment_saved">附件已保存</string>
@@ -487,7 +490,6 @@
     <string name="title_ask_show_image">显示图像可能会泄露隐私敏感信息</string>
     <string name="title_ask_show_image_hint">不会显示被识别为跟踪图像的图片</string>
     <string name="title_ask_delete_ref">删除回复/转发的消息文本？此操作无法撤销。</string>
-    <string name="title_ask_edit_ref">编辑格式已更改的回复/转发消息文本？</string>
     <string name="title_ask_sync_all">同步所有在%1$s里的消息 ？</string>
     <string name="title_ask_delete_local">删除本地消息？消息将保留在远程服务器上</string>
     <string name="title_ask_help">帮助改进FairEmail</string>
@@ -529,6 +531,8 @@
     <string name="title_media_toolbar">媒体工具栏</string>
     <string name="title_insert_contact_group">插入联系人组</string>
     <string name="title_insert_template">插入模板</string>
+    <string name="title_edit_plain_text">以纯文本形式编辑</string>
+    <string name="title_edit_formatted_text">以格式化文本形式编辑</string>
     <string name="title_send_plain_text">仅纯文本</string>
     <string name="title_send_receipt">请求送达／已读回执</string>
     <string name="title_send_receipt_remark">大多数供应商和电子邮件客户都忽略回执请求</string>
@@ -589,6 +593,7 @@
     <string name="title_rule_ignore">禁止通知</string>
     <string name="title_rule_snooze">延后</string>
     <string name="title_rule_flag">添加星标</string>
+    <string name="title_rule_keyword">添加关键字</string>
     <string name="title_rule_move">移动</string>
     <string name="title_rule_copy">复制（标签）</string>
     <string name="title_rule_answer">回复</string>

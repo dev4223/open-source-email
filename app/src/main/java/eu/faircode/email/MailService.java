@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Folder;
@@ -40,7 +39,7 @@ public class MailService implements AutoCloseable {
     private Session isession;
     private Service iservice;
 
-    private ExecutorService executor = Executors.newCachedThreadPool(Helper.backgroundThreadFactory);
+    private ExecutorService executor = Helper.getBackgroundExecutor(0, "mail");
 
     static final int AUTH_TYPE_PASSWORD = 1;
     static final int AUTH_TYPE_GMAIL = 2;
@@ -142,8 +141,11 @@ public class MailService implements AutoCloseable {
     }
 
     void setPartialFetch(boolean enabled) {
-        if (!enabled)
-            properties.put("mail." + protocol + ".partialfetch", "false");
+        properties.put("mail." + protocol + ".partialfetch", Boolean.toString(enabled));
+    }
+
+    void setIgnoreBodyStructureSize(boolean enabled) {
+        properties.put("mail." + protocol + ".ignorebodystructuresize", Boolean.toString(enabled));
     }
 
     void setUseIp(boolean enabled) {

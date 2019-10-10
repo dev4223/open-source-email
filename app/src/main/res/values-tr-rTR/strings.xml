@@ -206,6 +206,7 @@
     <string name="title_advanced_cards">Kartları göster</string>
     <string name="title_advanced_date_header">Tarihe göre grup</string>
     <string name="title_advanced_threading">İletişim iş parçacığı</string>
+    <string name="title_advanced_bubble">Sohbetleri mesajlaşma tarzında göster</string>
     <string name="title_advanced_highlight_unread">Okunmamış iletileri vurgula</string>
     <string name="title_advanced_distinguish_contacts">Bilinen ve bilinmeyen kişilerin mesajlarını ayır</string>
     <string name="title_advanced_avatars">Kişi fotoğraflarını göster</string>
@@ -236,8 +237,10 @@
     <string name="title_advanced_swipenav">Sonraki / önceki sohbete gitmek için sola / sağa kaydırın</string>
     <string name="title_advanced_reversed">Gezinti yönünü tersine çevir</string>
     <string name="title_advanced_autoexpand">İletileri otomatik olarak aç </string>
+    <string name="title_advanced_expand_all">Tüm okunmuş mesajları otomatik olarak aç</string>
     <string name="title_advanced_expand_one">Bir kerede yalnızca bir mesaj genişlet</string>
-    <string name="title_advanced_collapse">Konuşmalardaki mesajları \'geri\' seçeneğinde daralt</string>
+    <string name="title_advanced_collapse_single">Bir konuşmadaki tek bir mesajı \'geri\' seçeneğinde daralt</string>
+    <string name="title_advanced_collapse_multiple">Bir konuşmadaki birden fazla mesajı \'geri\' seçeneğinde daralt</string>
     <string name="title_advanced_autoclose">İletişimleri otomatik olarak kapat</string>
     <string name="title_advanced_onclose">Bir konuşmayı kapatırken</string>
     <string name="title_advanced_autoread">İleti taşındığında otomatik olarak okundu diye işaretle</string>
@@ -302,7 +305,6 @@
     <string name="title_advanced_preview_hint">Yalnızca ileti metni indirildiğinde kullanılabilir</string>
     <string name="title_advanced_inline_hint">Satıriçi resimler mesajın içine eklenen resimlerdir</string>
     <string name="title_advanced_autoexpand_hint">Bir sohbette yalnızca bir ileti veya yalnızca bir okunmamış ileti olduğunda iletiyi otomatik olarak aç</string>
-    <string name="title_advanced_autocollapse_hint">Çoklu genişletilmiş mesajlar her zaman \'geri\' komutuyla kapatılacak</string>
     <string name="title_advanced_autoclose_hint">Tüm iletiler arşivlendiğinde veya çöpe gittiğinde bu iletişim kutusunu otomatik olarak kapat</string>
     <string name="title_advanced_sender_hint">Çoğu sağlayıcı değiştirilmiş gönderici adreslerine izin vermiyor</string>
     <string name="title_advanced_subscribed_only_hint">Bunu etkinleştirmek aboneliği olmayan tüm yerel klasörleri siler</string>
@@ -485,6 +487,7 @@
     <string name="title_no_connection">Eşitleme sonraki hesap bağlantı üzerinde gerçekleştir</string>
     <string name="title_no_folder">Klasör yok</string>
     <string name="title_no_format">Alınan özgün iletiye eklenecek</string>
+    <string name="title_no_image">Görselin kodu çözülemedi</string>
     <string name="title_accross_remark">Hesaplar arasında taşınan iletiler daha fazla veri kullanımıyla sonuçlanacak şekilde tekrar indirilecek</string>
     <string name="title_raw_saved">Ham ileti kaydedildi</string>
     <string name="title_attachment_saved">Ek kaydedildi</string>
@@ -500,7 +503,6 @@
     <string name="title_ask_show_image">Resimlerin gösterilmesi gizliliğe duyarlı bilgilerin sızmasına neden olabilir</string>
     <string name="title_ask_show_image_hint">İzleme resimleri olarak tanınan resimler gösterilmeyecektir</string>
     <string name="title_ask_delete_ref">Yanıtlanan/iletilen ileti metni silinsin mi? Bu geri alınamaz.</string>
-    <string name="title_ask_edit_ref">Yeniden biçimlendirilmiş yanıtlanmış/iletilmiş ileti metni düzenlensin mi?</string>
     <string name="title_ask_sync_all">%1$s\'deki tüm iletiler eşzamanlandı mı?</string>
     <string name="title_ask_delete_local">Yerel iletiler silinsin mi? İletiler uzak sunucuda kalacaktır.</string>
     <string name="title_ask_help">FairEmail\'in geliştirilmesine yardımcı olun</string>
@@ -542,6 +544,8 @@
     <string name="title_media_toolbar">Medya araç çubuğu</string>
     <string name="title_insert_contact_group">Kişi grubuna ekle</string>
     <string name="title_insert_template">Kalıp ekle</string>
+    <string name="title_edit_plain_text">Düz metin olarak düzenle</string>
+    <string name="title_edit_formatted_text">Yeniden biçimlendirilmiş metin olarak düzenle</string>
     <string name="title_send_plain_text">Yalnızca düz metin</string>
     <string name="title_send_receipt">İletildi/okundu bilgisi iste</string>
     <string name="title_send_receipt_remark">Çoğu sağlayıcı ve e-posta istemcisi alındı isteklerini yok saymaktadır</string>
@@ -602,6 +606,7 @@
     <string name="title_rule_ignore">Bildirimi gizle</string>
     <string name="title_rule_snooze">Erteleme</string>
     <string name="title_rule_flag">Yıldız Ekle</string>
+    <string name="title_rule_keyword">Anahtar sözcük ekle</string>
     <string name="title_rule_move">Taşı</string>
     <string name="title_rule_copy">Kopyala (etiket)</string>
     <string name="title_rule_answer">Yanıtla</string>

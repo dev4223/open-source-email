@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -58,7 +57,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 108,
+        version = 109,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -98,7 +97,8 @@ public abstract class DB extends RoomDatabase {
     public abstract DaoLog log();
 
     private static DB sInstance;
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+    private static final ExecutorService executor =
+            Helper.getBackgroundExecutor(1, "query");
 
     private static final String DB_NAME = "fairemail";
     private static final long VACUUM_INTERVAL = 24 * 3600 * 1000L;
@@ -1061,6 +1061,13 @@ public abstract class DB extends RoomDatabase {
                     public void migrate(@NonNull SupportSQLiteDatabase db) {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `folder` ADD COLUMN `color` INTEGER");
+                    }
+                })
+                .addMigrations(new Migration(108, 109) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `ignore_size` INTEGER NOT NULL DEFAULT 0");
                     }
                 })
                 .build();

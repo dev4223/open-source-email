@@ -206,6 +206,7 @@
     <string name="title_advanced_cards">Näytä kortit</string>
     <string name="title_advanced_date_header">Ryhmittely päivämäärän mukaan</string>
     <string name="title_advanced_threading">Keskustelujen ketjuttaminen</string>
+    <string name="title_advanced_bubble">Näytä keskustelut viestittelytyylisinä</string>
     <string name="title_advanced_highlight_unread">Korosta lukemattomat viestit</string>
     <string name="title_advanced_distinguish_contacts">Erottele tunnettujen ja tuntemattomien kontaktien viestit</string>
     <string name="title_advanced_avatars">Näytä yhteystietojen kuvat</string>
@@ -236,8 +237,10 @@
     <string name="title_advanced_swipenav">Pyyhkäise vasemmalle/oikealle siirtyäksesi seuraavaan/edelliseen keskusteluun</string>
     <string name="title_advanced_reversed">Käänteinen navigointisuunta</string>
     <string name="title_advanced_autoexpand">Laajenna viestit automaattisesti</string>
+    <string name="title_advanced_expand_all">Laajenna kaikki luetut viestit automaattisesti</string>
     <string name="title_advanced_expand_one">Laajenna vain yksi viesti kerrallaan</string>
-    <string name="title_advanced_collapse">Tiivistä viestit keskusteluissa takaisin-painikkeella</string>
+    <string name="title_advanced_collapse_single">Tiivistä yksittäinen viesti keskustelussa menemällä \'takaisin\'</string>
+    <string name="title_advanced_collapse_multiple">Tiivistä useampi viesti keskustelussa menemällä \'takaisin\'</string>
     <string name="title_advanced_autoclose">Sulje keskustelut automaattisesti</string>
     <string name="title_advanced_onclose">Keskustelua suljettaessa</string>
     <string name="title_advanced_autoread">Siirtäessä viestejä merkitse ne luetuiksi</string>
@@ -302,7 +305,6 @@
     <string name="title_advanced_preview_hint">Saatavilla vain, kun viestin teksti on ladattu</string>
     <string name="title_advanced_inline_hint">Tekstiin upotetut kuvat ovat viestin tekstin joukossa olevat kuvat</string>
     <string name="title_advanced_autoexpand_hint">Avaa viesti automaattisesti, kun keskustelussa on vain yksi viesti tai vain yksi on lukematon</string>
-    <string name="title_advanced_autocollapse_hint">Monta laajennettua viestiä suljetaan aina takaisin-painikkeella</string>
     <string name="title_advanced_autoclose_hint">Sulje keskustelut, kun kaikki viestit on arkistoitu, lähetetty tai siirretty roskakoriin</string>
     <string name="title_advanced_sender_hint">Useimmat palveluntarjoajat eivät salli muokattuja lähetysosotteita</string>
     <string name="title_advanced_subscribed_only_hint">Tämän käyttöönotto poistaa kaikki paikalliset kansiot, joita ei ole tilattu</string>
@@ -314,6 +316,7 @@
     <string name="title_select">Valitse &#8230;</string>
     <string name="title_identity_name">Nimesi</string>
     <string name="title_identity_email">Sähköpostiosoitteesi</string>
+    <string name="title_identity_color_hint">Identiteettien värit ovat etusijalla ennen kansioiden ja tilien värejä</string>
     <string name="title_advanced_sender">Salli lähetysosoitteen muokkaaminen</string>
     <string name="title_advanced_sender_regex">Regex muokattavien osoitteiden täsmäämiseen</string>
     <string name="title_identity_reply_to">Vastausosoite</string>
@@ -484,6 +487,7 @@
     <string name="title_no_connection">Synkronoidaan, kun yhteys tiliin on muodostettu</string>
     <string name="title_no_folder">Kansiota ei ole</string>
     <string name="title_no_format">Alkuperäinen vastaanotettu viesti sisällytetään</string>
+    <string name="title_no_image">Kuvan koodauksen purku epäonnistui</string>
     <string name="title_accross_remark">Tilien välillä siirretyt viestit ladataan uudelleen, mikä lisää datan käyttöä</string>
     <string name="title_raw_saved">Raakaviesti tallennettu</string>
     <string name="title_attachment_saved">Liite tallennettu</string>
@@ -499,7 +503,6 @@
     <string name="title_ask_show_image">Kuvien näyttäminen voi vuotaa yksityisyyden kannalta haitallisia tietoja</string>
     <string name="title_ask_show_image_hint">Seurantakuviksi tunnistettuja kuvia ei näytetä</string>
     <string name="title_ask_delete_ref">Poista vastattu/edelleenlähetetty viestiteksti? Tätä ei voi perua.</string>
-    <string name="title_ask_edit_ref">Muokkaa uudelleenmuotoiltua vastatun/edelleenlähetetyn viestin tekstiä?</string>
     <string name="title_ask_sync_all">Synkronoi kaikki viestit kansiossa %1$s?</string>
     <string name="title_ask_delete_local">Poistetaanko paikalliset viestit? Viestit säilyvät palvelimella.</string>
     <string name="title_ask_help">Auta parantamaan FairEmailia</string>
@@ -541,6 +544,8 @@
     <string name="title_media_toolbar">Mediatyökalupalkki</string>
     <string name="title_insert_contact_group">Lisää yhteystietoryhmä</string>
     <string name="title_insert_template">Lisää viestipohja</string>
+    <string name="title_edit_plain_text">Muokkaa pelkkänä tekstinä</string>
+    <string name="title_edit_formatted_text">Muokkaa uudelleenmuotoiltuna tekstinä</string>
     <string name="title_send_plain_text">Lähetä muotoilemattomana tekstinä</string>
     <string name="title_send_receipt">Pyydä toimitus-/lukukuittaus</string>
     <string name="title_send_receipt_remark">Useimmat palveluntarjoajat ja sähköpostisovellukset jättävät kuittauspyynnöt huomioimatta</string>
@@ -601,6 +606,7 @@
     <string name="title_rule_ignore">Vaimenna ilmoitus</string>
     <string name="title_rule_snooze">Torkuta</string>
     <string name="title_rule_flag">Lisää tähti</string>
+    <string name="title_rule_keyword">Lisää avainsana</string>
     <string name="title_rule_move">Siirrä</string>
     <string name="title_rule_copy">Kopioi (lisää tunniste)</string>
     <string name="title_rule_answer">Vastaa</string>

@@ -23,7 +23,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.util.AttributeSet;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,44 +46,54 @@ public class ViewCardOptional extends CardView {
         setCardBackgroundColor(Color.TRANSPARENT);
     }
 
+    private boolean initialized = false;
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean cards = prefs.getBoolean("cards", true);
-        boolean compact = prefs.getBoolean("compact", false);
+        if (!initialized) {
+            initialized = true;
 
-        if (cards) {
-            // dev4223: was dp: 6
-            int dp6 = Helper.dp2pixels(getContext(), 1);
-            int dp = Helper.dp2pixels(getContext(), compact ? 3 : 6);
-            int color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean cards = prefs.getBoolean("cards", true);
+            boolean compact = prefs.getBoolean("compact", false);
 
-            FrameLayout.LayoutParams lparam = (FrameLayout.LayoutParams) getLayoutParams();
-            lparam.setMargins(dp, dp, dp, dp);
-            setLayoutParams(lparam);
+	        if (cards) {
+	            // dev4223: was dp: 6
+	            int dp6 = Helper.dp2pixels(getContext(), 1);
+	            int dp = Helper.dp2pixels(getContext(), compact ? 3 : 6);
+	            int color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
 
-            setRadius(dp6);
-            setContentPadding(dp6, dp6, dp6, dp6);
+	            setRadius(dp6);
+            	setContentPadding(dp6, dp6, dp6, dp6);
 
-            //setElevation(compact ? dp6 / 2f : dp6);
-            // dev4223: was getChildAt(0).setPadding(dp6, dp6, dp6, dp6);
-            //getChildAt(0).setPadding(0, 0, 0, 0);
-        } else {
-            setRadius(0);
+                ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
+                lparam.setMargins(dp, dp, dp, dp);
+                setLayoutParams(lparam);
+
+                setRadius(dp);
+                setContentPadding(dp, dp, dp, dp);
+            } else
+                setRadius(0);
+
             setCardElevation(0);
         }
     }
 
+    private Integer color = null;
+
     @Override
     public void setCardBackgroundColor(int color) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean cards = prefs.getBoolean("cards", true);
-        if (cards && color == Color.TRANSPARENT)
-            color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
+        if (this.color == null || this.color != color) {
+            this.color = color;
 
-        super.setCardBackgroundColor(color);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean cards = prefs.getBoolean("cards", true);
+            if (cards && color == Color.TRANSPARENT)
+                color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
+
+            super.setCardBackgroundColor(color);
+        }
     }
 }

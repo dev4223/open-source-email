@@ -57,21 +57,17 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 class ImageHelper {
-    private static final float MIN_LUMINANCE = 0.33f;
-
     private static final ExecutorService executor =
-            Executors.newSingleThreadExecutor(Helper.backgroundThreadFactory);
+            Helper.getBackgroundExecutor(1, "image");
 
     static Bitmap generateIdenticon(@NonNull String email, int size, int pixels, boolean dark) {
         byte[] hash = getHash(email);
 
-        int color = Color.argb(255, hash[0], hash[1], hash[2]);
-        color = Helper.adjustLuminance(color, dark, MIN_LUMINANCE);
+        int color = Color.HSVToColor(new float[]{Math.abs(email.hashCode()) % 360, 0.5f, 1});
 
         Paint paint = new Paint();
         paint.setColor(color);
@@ -107,10 +103,7 @@ class ImageHelper {
         if (text == null)
             return null;
 
-        byte[] hash = getHash(email);
-
-        int color = Color.argb(255, hash[0], hash[1], hash[2]);
-        color = Helper.adjustLuminance(color, dark, MIN_LUMINANCE);
+        int color = Color.HSVToColor(new float[]{Math.abs(email.hashCode()) % 360, 0.5f, 1});
 
         Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);

@@ -206,6 +206,7 @@
     <string name="title_advanced_cards">Mostra les targetes</string>
     <string name="title_advanced_date_header">Agrupa per data</string>
     <string name="title_advanced_threading">Fil de conversa</string>
+    <string name="title_advanced_bubble">Mostra les converses amb estil de missatgeria</string>
     <string name="title_advanced_highlight_unread">Ressalteu els missatges sense llegir</string>
     <string name="title_advanced_distinguish_contacts">Diferencia els missatges de contactes coneguts i no coneguts</string>
     <string name="title_advanced_avatars">Mostra les fotos dels contactes</string>
@@ -237,7 +238,8 @@
     <string name="title_advanced_reversed">Capgirar el sentit de navegació</string>
     <string name="title_advanced_autoexpand">Ampliar automàticament els missatges</string>
     <string name="title_advanced_expand_one">Expandir només un missatge alhora</string>
-    <string name="title_advanced_collapse">Contraure missatges a les converses a la \"part posterior\"</string>
+    <string name="title_advanced_collapse_single">Contraure un únic missatge a les conversa a la \"part posterior\"</string>
+    <string name="title_advanced_collapse_multiple">Contraure multiple missatges a les converses a la \"part posterior\"</string>
     <string name="title_advanced_autoclose">Tanca automàticament les converses</string>
     <string name="title_advanced_onclose">En tancar una conversa</string>
     <string name="title_advanced_autoread">Automàticament marca els missatges llegits en missatges moguts</string>
@@ -302,7 +304,6 @@
     <string name="title_advanced_preview_hint">Només disponible quan s\'ha descarregat el text del missatge</string>
     <string name="title_advanced_inline_hint">Les imatges en línia són imatges incloses al missatge</string>
     <string name="title_advanced_autoexpand_hint">Obre automàticament un missatge quan només hi ha un missatge o només un missatge sense llegir en una conversa</string>
-    <string name="title_advanced_autocollapse_hint">Diversos missatges ampliats sempre es tancaran a la part posterior \"enrere\"</string>
     <string name="title_advanced_autoclose_hint">Tanqueu automàticament les converses quan tots els missatges s’arxiven, s’envien o s’esborren</string>
     <string name="title_advanced_sender_hint">La majoria de proveïdors no permeten adreces d\'emissor modificades</string>
     <string name="title_advanced_subscribed_only_hint">Si ho activeu, suprimireu totes les carpetes locals sense subscripció</string>
@@ -485,6 +486,7 @@
     <string name="title_no_connection">La sincronització es realitzarà a la connexió del compte següent</string>
     <string name="title_no_folder">La carpeta no existeix</string>
     <string name="title_no_format">S\'inclourà el missatge rebut originalment</string>
+    <string name="title_no_image">La imatge no s\'ha pogut descodificar</string>
     <string name="title_accross_remark">Els missatges transmesos pels comptes es descarregaran de nou i es produirà un ús addicional de dades</string>
     <string name="title_raw_saved">S\'ha desat el missatge sense format</string>
     <string name="title_attachment_saved">Fitxer adjunt desat</string>
@@ -500,7 +502,6 @@
     <string name="title_ask_show_image">Si es mostra imatges, es pot filtrar informació sensible a la privadesa</string>
     <string name="title_ask_show_image_hint">Les imatges reconegudes com a imatges de seguiment no es mostraran</string>
     <string name="title_ask_delete_ref">Voleu suprimir el text del missatge resposta/reenviat? Això no es pot desfer.</string>
-    <string name="title_ask_edit_ref">Edita el format d\'un text de missatge resposta/reenviat?</string>
     <string name="title_ask_sync_all">Sincronitza tots els missatges a %1$s?</string>
     <string name="title_ask_delete_local">Voleu eliminar els missatges locals? Els missatges continuaran al servidor remot.</string>
     <string name="title_ask_help">Ajuda a millorar FairEmail</string>
@@ -542,6 +543,8 @@
     <string name="title_media_toolbar">Barra d\'eines multimèdia</string>
     <string name="title_insert_contact_group">Introdueixi la informació de grup</string>
     <string name="title_insert_template">Inserta plantilla</string>
+    <string name="title_edit_plain_text">Editar en text pla</string>
+    <string name="title_edit_formatted_text">Editar com a text amb format</string>
     <string name="title_send_plain_text">Només text pla</string>
     <string name="title_send_receipt">Sol·liciteu el lliurament/llegida del rebut</string>
     <string name="title_send_receipt_remark">La majoria de proveïdors i clients de correu electrònic ignoren les sol·licituds de recepció</string>
@@ -602,6 +605,7 @@
     <string name="title_rule_ignore">Elimina les notificacions</string>
     <string name="title_rule_snooze">Posposa</string>
     <string name="title_rule_flag">Afegeix a destacats</string>
+    <string name="title_rule_keyword">Afegeix paraula clau</string>
     <string name="title_rule_move">Mou</string>
     <string name="title_rule_copy">Copia (etiqueta)</string>
     <string name="title_rule_answer">Respon</string>

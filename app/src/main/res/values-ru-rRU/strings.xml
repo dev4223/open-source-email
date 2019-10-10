@@ -228,6 +228,7 @@
     <string name="title_advanced_cards">\"Карточная\" компоновка</string>
     <string name="title_advanced_date_header">Группировать по дате</string>
     <string name="title_advanced_threading">Связанные диалоги</string>
+    <string name="title_advanced_bubble">Показывать диалоги в стиле сообщений</string>
     <string name="title_advanced_highlight_unread">Выделять непрочитанные сообщения</string>
     <string name="title_advanced_distinguish_contacts">Разделять сообщения от известных и неизвестных контактов</string>
     <string name="title_advanced_avatars">Показывать фотографии контакта</string>
@@ -250,7 +251,7 @@
     <string name="title_advanced_text_color">Показывать цвета текста</string>
     <string name="title_advanced_collapse_quotes">Свернуть цитируемый текст</string>
     <string name="title_advanced_images_inline">Автоматически показывать встроенные изображения</string>
-    <string name="title_advanced_seekbar">Показывать относительное положение диалога с точкой</string>
+    <string name="title_advanced_seekbar">Показывать относительное положение диалога точкой</string>
     <string name="title_advanced_actionbar">Показывать панель управления диалогами</string>
     <string name="title_advanced_pull_refresh">Потянуть вниз для обновления</string>
     <string name="title_advanced_autoscroll">Прокрутить к началу списка при получении новых сообщений</string>
@@ -258,8 +259,10 @@
     <string name="title_advanced_swipenav">Смахивание влево/вправо для перехода к следующему/предыдущему диалогу</string>
     <string name="title_advanced_reversed">Обратное направление навигации</string>
     <string name="title_advanced_autoexpand">Автоматически разворачивать сообщения</string>
+    <string name="title_advanced_expand_all">Автоматически разворачивать все прочитанные сообщения</string>
     <string name="title_advanced_expand_one">Разворачивать только одно сообщение за раз</string>
-    <string name="title_advanced_collapse">Сворачивать сообщения в диалоге при нажатии кнопки \"Назад\"</string>
+    <string name="title_advanced_collapse_single">Сворачивать одиночное сообщение в диалоге при нажатии кнопки \"Назад\"</string>
+    <string name="title_advanced_collapse_multiple">Сворачивать несколько сообщений в диалоге при нажатии кнопки \"Назад\"</string>
     <string name="title_advanced_autoclose">Автоматически закрывать диалоги</string>
     <string name="title_advanced_onclose">При закрытии диалога</string>
     <string name="title_advanced_autoread">Автоматически помечать сообщения прочитанными при перемещении</string>
@@ -324,7 +327,6 @@
     <string name="title_advanced_preview_hint">Доступно, только если был загружен текст сообщения</string>
     <string name="title_advanced_inline_hint">Встроенные изображения - это изображения, вложенные в сообщение</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
-    <string name="title_advanced_autocollapse_hint">Несколько развёрнутых сообщений всегда будут закрыты кнопкой \"Назад\"</string>
     <string name="title_advanced_autoclose_hint">Автоматически закрывать диалог, если все сообщения удалены, отправлены или помещены в архив</string>
     <string name="title_advanced_sender_hint">Большинство провайдеров не разрешают изменять адреса отправителей</string>
     <string name="title_advanced_subscribed_only_hint">Включение этого режима удалит все локальные папки без подписки</string>
@@ -336,6 +338,7 @@
     <string name="title_select">Выбор&#8230;</string>
     <string name="title_identity_name">Ваше имя</string>
     <string name="title_identity_email">Ваш адрес электронной почты</string>
+    <string name="title_identity_color_hint">Цвета идентификаторов имеют приоритет над цветами папок учётных записей</string>
     <string name="title_advanced_sender">Разрешить редактирование адреса отправителя</string>
     <string name="title_advanced_sender_regex">Регулярное выражение для сопоставления отредактированных адресов</string>
     <string name="title_identity_reply_to">Обратный адрес</string>
@@ -506,6 +509,7 @@
     <string name="title_no_connection">Будет синхронизировано при следующем подключении к учётной записи</string>
     <string name="title_no_folder">Папка не существует</string>
     <string name="title_no_format">Оригинальное сообщение будет включено</string>
+    <string name="title_no_image">Изображение не может быть декодировано</string>
     <string name="title_accross_remark">Сообщения, перемещаемые между учётными записями, будут загружены заново, порождая дополнительный трафик</string>
     <string name="title_raw_saved">Оригинал сообщения сохранён</string>
     <string name="title_attachment_saved">Вложение сохранено</string>
@@ -521,7 +525,6 @@
     <string name="title_ask_show_image">Отображение изображений может привести к утечке конфиденциальной информации</string>
     <string name="title_ask_show_image_hint">Изображения, распознанные как отслеживающие, не будут показаны</string>
     <string name="title_ask_delete_ref">Удалить цитируемый в ответе/пересылаемый текст сообщения? Это действие не может быть отменено.</string>
-    <string name="title_ask_edit_ref">Редактировать текст исходного/пересылаемого сообщения?</string>
     <string name="title_ask_sync_all">Синхронизировать все сообщения в %1$s?</string>
     <string name="title_ask_delete_local">Удалить локальные сообщения? Сообщения останутся на удалённом сервере.</string>
     <string name="title_ask_help">Помогите улучшить FairEmail</string>
@@ -563,6 +566,8 @@
     <string name="title_media_toolbar">Панель медиа</string>
     <string name="title_insert_contact_group">Добавить группу контактов</string>
     <string name="title_insert_template">Вставить шаблон</string>
+    <string name="title_edit_plain_text">Редактировать как простой текст</string>
+    <string name="title_edit_formatted_text">Редактировать как исходный текст</string>
     <string name="title_send_plain_text">Только простой текст</string>
     <string name="title_send_receipt">Запросить уведомление о доставке/прочтении</string>
     <string name="title_send_receipt_remark">Большинство провайдеров и клиентов электронной почты игнорируют запросы о доставке</string>
@@ -623,6 +628,7 @@
     <string name="title_rule_ignore">Подавить уведомление</string>
     <string name="title_rule_snooze">Отложить</string>
     <string name="title_rule_flag">В избранное</string>
+    <string name="title_rule_keyword">Добавить ключ (слово)</string>
     <string name="title_rule_move">Переместить</string>
     <string name="title_rule_copy">Копировать (пометить)</string>
     <string name="title_rule_answer">Ответить</string>
@@ -786,7 +792,7 @@
     <string name="title_now">Сейчас</string>
     <string name="title_after">После %1$s</string>
     <string name="title_reset">Сброс</string>
-    <string name="title_hours">Часы</string>
+    <string name="title_hours">час.</string>
     <string name="title_minutes">мин.</string>
     <string name="title_dismiss">Отклонить</string>
     <string name="title_snooze_now">Отложить</string>
