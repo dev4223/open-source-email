@@ -238,6 +238,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(136) How can I delete an account/identity/folder?](#user-content-faq136)
 * [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
 * [(138) Can you add calendar / contact management?](#user-content-faq138)
+* [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
 
 [I have another question.](#user-content-support)
 
@@ -578,6 +579,8 @@ about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-si
 You can start searching for messages on sender, recipient, subject, keyword or message text by using the magnify glass in the action bar of a folder.
 You can also search from any app by select *Search email* in the copy/paste popup menu.
 
+Searching in the unified inbox will search in all folders, searching in a folder will search in that folder only.
+
 Messages will be searched on the device first (all accounts, all folders).
 There will be an action button with a search again icon at the bottom to search on the server.
 When the search was started in a specific folder,
@@ -795,8 +798,10 @@ Possible causes are:
 * The previous connection was terminated abruptly for example by abruptly losing internet connectivity, for example when turning on flight mode
 
 If only FairEmail is connecting to the email server, first try to wait half an hour to see if the problem resolves itself,
-else enable the folder setting '*Poll instead of synchronize*' for some folders.
+else enable the folder setting *Poll instead of synchronize* for some folders (long press folder in the folder list > Edit properties).
 The poll interval can be configured in the account settings.
+
+You also might want to disable *Browse messages on the server* in the advanced account settings (Setup > Step 1 > Manage > Tap account > Advanced).
 
 The maximum number of simultaneous folder connections for Gmail is 15,
 so you can synchronize at most 15 folders simultaneously on *all* your devices at the same time.
@@ -2387,6 +2392,19 @@ Developing, maintaining and supporting my current apps already take most of my s
 so adding yet another app is not really possible.
 
 <br />
+
+<a name="faq139"></a>
+**(139) How do I fix 'User is authenticated but not connected'?**
+
+In fact this Microsoft Exchange specific error is an incorrect error message caused by a bug in older Exchange server software.
+
+The error *User is authenticated but not connected* might occur if:
+
+* The account password was changed: changing it in FairEmail too should fix the problem
+* There are too many simultaneous connections: see [this FAQ](#user-content-faq23) for more information and a workaround
+
+<br />
+
 
 ## Support
 

@@ -79,10 +79,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.webkit.DownloadListener;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -284,7 +281,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvPreview;
         private TextView tvError;
         private ImageButton ibHelp;
-        private ContentLoadingProgressBar pbLoading;
 
         private View vsBody;
 
@@ -405,7 +401,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivThread = itemView.findViewById(R.id.ivThread);
             tvError = itemView.findViewById(R.id.tvError);
             ibHelp = itemView.findViewById(R.id.ibHelp);
-            pbLoading = itemView.findViewById(R.id.pbLoading);
 
             if (tvSubject != null) {
                 tvSubject.setTextColor(colorRead);
@@ -672,7 +667,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvPreview.setVisibility(View.GONE);
             tvError.setVisibility(View.GONE);
             ibHelp.setVisibility(View.GONE);
-            pbLoading.setVisibility(View.VISIBLE);
 
             clearExpanded(null);
 
@@ -685,19 +679,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         @SuppressLint("WrongConstant")
         private void bindTo(final TupleMessageEx message) {
-            pbLoading.setVisibility(View.GONE);
-
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
             boolean outgoing = isOutgoing(message);
-            Address[] addresses = (outgoing ? message.to : message.senders);
+            Address[] addresses = (outgoing && viewType != ViewType.THREAD ? message.to : message.senders);
             boolean expanded = (viewType == ViewType.THREAD && properties.getValue("expanded", message.id));
 
             if (viewType == ViewType.THREAD) {
                 ivAvatarStart.setVisibility(outgoing && bubble ? View.INVISIBLE : View.GONE);
                 ivAvatarEnd.setVisibility(outgoing || !bubble ? View.GONE : View.INVISIBLE);
                 ivAvatar.setVisibility(bubble || !avatars ? View.GONE : View.INVISIBLE);
-                outgoing = false;
             } else {
                 ivAvatarStart.setVisibility(View.GONE);
                 ivAvatarEnd.setVisibility(View.GONE);
@@ -833,18 +824,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             Boolean.FALSE.equals(message.mx));
 
             // Line 3
-            int icon;
-            if (outgoing && !EntityFolder.SENT.equals(message.folderType)) {
-                icon = EntityFolder.getIcon(EntityFolder.SENT);
-                ivType.setVisibility(View.VISIBLE);
-            } else {
-                icon = (message.drafts > 0
-                        ? R.drawable.baseline_edit_24 : EntityFolder.getIcon(message.folderType));
-                ivType.setVisibility(message.drafts > 0 ||
-                        (viewType == ViewType.UNIFIED && type == null && !inbox) ||
-                        (viewType == ViewType.THREAD && EntityFolder.SENT.equals(message.folderType))
-                        ? View.VISIBLE : View.GONE);
-            }
+            int icon = (message.drafts > 0
+                    ? R.drawable.baseline_edit_24
+                    : EntityFolder.getIcon(outgoing ? EntityFolder.SENT : message.folderType));
+            ivType.setVisibility(message.drafts > 0 ||
+                    (viewType == ViewType.UNIFIED && type == null && !inbox) ||
+                    (viewType == ViewType.FOLDER && outgoing && !EntityFolder.SENT.equals(message.folderType)) ||
+                    (viewType == ViewType.THREAD && (outgoing || EntityFolder.SENT.equals(message.folderType))) ||
+                    viewType == ViewType.SEARCH
+                    ? View.VISIBLE : View.GONE);
             if (ivType.getTag() == null || (int) ivType.getTag() != icon) {
                 ivType.setTag(icon);
                 ivType.setImageResource(icon);
@@ -1379,12 +1367,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 }
 
-            int dp60 = Helper.dp2pixels(context, 60);
             boolean show_full = properties.getValue("full", message.id);
             boolean show_images = properties.getValue("images", message.id);
             boolean show_quotes = (properties.getValue("quotes", message.id) || !collapse_quotes);
             float size = properties.getSize(message.id, show_full ? 0 : textSize);
-            int height = properties.getHeight(message.id, dp60);
+            int height = properties.getHeight(message.id, 0);
             Pair<Integer, Integer> position = properties.getPosition(message.id);
             Log.i("Bind size=" + size + " height=" + height);
 
@@ -1394,30 +1381,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (show_full) {
                 // Create web view
-                WebView webView;
+                WebViewEx webView;
                 if (wvBody instanceof WebView)
-                    webView = (WebView) wvBody;
+                    webView = (WebViewEx) wvBody;
                 else {
-                    webView = new WebView(context) {
-                        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-                            if (height > dp60)
-                                super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.AT_MOST));
-                            else
-                                super.onMeasure(widthMeasureSpec, heightMeasureSpec); // Unspecified
-
-                            int mh = getMeasuredHeight();
-                            Log.i("Measured height=" + mh);
-                            if (mh == 0)
-                                setMeasuredDimension(getMeasuredWidth(), height);
-                        }
-
-                        @Override
-                        protected void onSizeChanged(int w, int h, int ow, int oh) {
-                            super.onSizeChanged(w, h, ow, oh);
-                            Log.i("Size changed height=" + h);
-                            properties.setHeight(message.id, h);
-                        }
-                    };
+                    webView = new WebViewEx(context);
 
                     webView.setId(wvBody.getId());
 
@@ -1428,115 +1396,58 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             wvBody.getPaddingLeft(), wvBody.getPaddingTop(),
                             wvBody.getPaddingRight(), wvBody.getPaddingBottom());
 
-                    webView.setVerticalScrollBarEnabled(false);
-                    webView.setOnTouchListener(ViewHolder.this);
-
-                    webView.setWebViewClient(new WebViewClient() {
-                        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                            Log.i("Open url=" + url);
-
-                            Uri uri = Uri.parse(url);
-                            if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                                return false;
-
-                            Bundle args = new Bundle();
-                            args.putParcelable("uri", uri);
-                            args.putString("title", null);
-
-                            FragmentDialogLink fragment = new FragmentDialogLink();
-                            fragment.setArguments(args);
-                            fragment.show(parentFragment.getFragmentManager(), "open:link");
-
-                            return true;
-                        }
-
-                        @Override
-                        public void onScaleChanged(WebView view, float oldScale, float newScale) {
-                            Log.i("Changed scale=" + newScale);
-                            properties.setSize(message.id, newScale);
-                        }
-                    });
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                        webView.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                            @Override
-                            public void onScrollChange(View v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
-                                properties.setPosition(message.id, new Pair<Integer, Integer>(scrollX, scrollY));
-                            }
-                        });
-
-                    webView.setDownloadListener(new DownloadListener() {
-                        public void onDownloadStart(
-                                String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
-                            Log.i("Download url=" + url + " mime type=" + mimetype);
-
-                            Uri uri = Uri.parse(url);
-                            if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                                return;
-
-                            Helper.view(context, uri, true);
-                        }
-                    });
-
-                    webView.setOnLongClickListener(new View.OnLongClickListener() {
-                        @Override
-                        public boolean onLongClick(View view) {
-                            WebView.HitTestResult result = ((WebView) view).getHitTestResult();
-                            if (result.getType() == WebView.HitTestResult.IMAGE_TYPE ||
-                                    result.getType() == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
-                                Log.i("Long press url=" + result.getExtra());
-
-                                Uri uri = Uri.parse(result.getExtra());
-                                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                                    return false;
-
-                                Helper.view(context, uri, true);
-
-                                return true;
-                            }
-                            return false;
-                        }
-                    });
-
                     wvBody = webView;
                 }
 
-                WebSettings settings = webView.getSettings();
-                settings.setUseWideViewPort(true);
-                settings.setLoadWithOverviewMode(true);
+                int dp60 = Helper.dp2pixels(context, 60);
+                webView.setMinimumHeight(height == 0 ? dp60 : height);
 
-                settings.setBuiltInZoomControls(true);
-                settings.setDisplayZoomControls(false);
+                webView.init(
+                        height, size, position,
+                        textSize, monospaced,
+                        show_images, inline,
+                        new WebViewEx.IWebView() {
+                            @Override
+                            public void onSizeChanged(int w, int h, int ow, int oh) {
+                                properties.setHeight(message.id, h);
+                            }
 
-                settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+                            @Override
+                            public void onScaleChanged(float newScale) {
+                                properties.setSize(message.id, newScale);
+                            }
 
-                if (textSize != 0) {
-                    int dp = Helper.pixels2dp(context, textSize);
-                    settings.setDefaultFontSize(Math.round(dp));
-                    settings.setDefaultFixedFontSize(Math.round(dp));
-                }
-                if (monospaced)
-                    settings.setStandardFontFamily("monospace");
+                            @Override
+                            public void onScrollChange(int scrollX, int scrollY) {
+                                properties.setPosition(message.id, new Pair<Integer, Integer>(scrollX, scrollY));
+                            }
 
-                settings.setAllowFileAccess(false);
-                settings.setLoadsImagesAutomatically(show_images || inline);
-                settings.setBlockNetworkLoads(!show_images);
-                settings.setBlockNetworkImage(!show_images);
-                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+                            @Override
+                            public boolean onOpenLink(String url) {
+                                Uri uri = Uri.parse(url);
+                                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                                    return false;
 
-                webView.setInitialScale(size == 0 ? 1 : Math.round(size * 100));
-                wvBody.setMinimumHeight(height);
-                if (position != null) {
-                    wvBody.setScrollX(position.first);
-                    wvBody.setScrollY(position.second);
-                }
+                                Bundle args = new Bundle();
+                                args.putParcelable("uri", uri);
+                                args.putString("title", null);
+
+                                FragmentDialogLink fragment = new FragmentDialogLink();
+                                fragment.setArguments(args);
+                                fragment.show(parentFragment.getFragmentManager(), "open:link");
+
+                                return true;
+                            }
+                        });
+                webView.setOnTouchListener(ViewHolder.this);
 
                 tvBody.setVisibility(View.GONE);
                 wvBody.setVisibility(View.VISIBLE);
             } else {
+                tvBody.setMinHeight(height);
+
                 if (size != 0)
                     tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
-                tvBody.setMinHeight(height);
 
                 tvBody.setTextColor(contrast ? textColorPrimary : colorRead);
                 tvBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
@@ -2051,12 +1962,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private boolean isOutgoing(TupleMessageEx message) {
             if (EntityFolder.isOutgoing(message.folderType))
                 return true;
-            else if ((viewType == ViewType.THREAD || !EntityFolder.ARCHIVE.equals(message.folderType)) &&
-                    message.identityEmail != null &&
-                    message.from != null && message.from.length == 1 &&
-                    message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()))
-                return true;
-            return false;
+            else
+                return (message.identityEmail != null &&
+                        message.from != null && message.from.length == 1 &&
+                        message.identityEmail.equals(((InternetAddress) message.from[0]).getAddress()));
         }
 
         private TupleMessageEx getMessage() {
@@ -3837,14 +3746,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     @Override
-    public int getItemViewType(int position) {
-        TupleMessageEx message = differ.getItem(position);
-        if (filter_duplicates && message != null && message.duplicate)
-            return R.layout.item_message_duplicate;
-        return (compact ? R.layout.item_message_compact : R.layout.item_message_normal);
-    }
-
-    @Override
     public int getItemCount() {
         return differ.getItemCount();
     }
@@ -4124,6 +4025,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             };
 
     @Override
+    public int getItemViewType(int position) {
+        TupleMessageEx message = differ.getItem(position);
+
+        if (message == null || context == null)
+            return R.layout.item_message_placeholder;
+
+        if (filter_duplicates && message.duplicate)
+            return R.layout.item_message_duplicate;
+
+        return (compact ? R.layout.item_message_compact : R.layout.item_message_normal);
+    }
+
+    @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new ViewHolder(inflater.inflate(viewType, parent, false));
@@ -4132,7 +4046,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         TupleMessageEx message = differ.getItem(position);
-        if (filter_duplicates && message != null && message.duplicate) {
+
+        if (message == null || context == null)
+            return;
+
+        if (filter_duplicates && message.duplicate) {
             holder.tvFolder.setText(context.getString(R.string.title_duplicate_in, message.getFolderName(context)));
             holder.tvFolder.setTypeface(message.unseen > 0 ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
             holder.tvFolder.setTextColor(message.unseen > 0 ? colorUnread : colorRead);
@@ -4141,19 +4059,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         holder.unwire();
-
-        if (message == null || context == null)
-            holder.clear();
-        else {
-            holder.bindTo(message);
-            holder.wire();
-        }
+        holder.bindTo(message);
+        holder.wire();
     }
 
     @Override
     public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
-        if (holder.wvBody instanceof WebView)
-            ((WebView) holder.wvBody).loadDataWithBaseURL(null, "", "text/html", "UTF-8", null);
         holder.cowner.stop();
         holder.powner.recreate();
     }

@@ -337,6 +337,7 @@
     <string name="title_account_right">Pyyhkäisy oikealle</string>
     <string name="title_domain">Verkkotunnus</string>
     <string name="title_autoconfig">Hae asetukset</string>
+    <string name="title_aliases">Aliakset</string>
     <string name="title_provider">Palveluntarjoaja</string>
     <string name="title_custom">Mukautettu</string>
     <string name="title_host">Verkko-osoite</string>
@@ -377,6 +378,7 @@
     <string name="title_activesync_support">ActiveSync ei ole tuettu</string>
     <string name="title_oauth_support">OAuth ei ole tuettu</string>
     <string name="title_review">Tarkista</string>
+    <string name="title_hint_alias">Pitkä painallus näyttää vaihtoehdot, kuten kopioinnin aliasten luomiseksi</string>
     <string name="title_advanced_browse">Selaa palvelimella olevia viestejä</string>
     <string name="title_advanced_expand_read">Merkitse viestit luetuiksi laajennettaessa</string>
     <string name="title_synchronize_now">Synkronoi nyt</string>
@@ -774,6 +776,7 @@
     <string name="title_minutes">Minuuttia</string>
     <string name="title_dismiss">Hylkää</string>
     <string name="title_snooze_now">Torkuta</string>
+    <string name="title_loading">Ladataan &#8230;</string>
     <string name="title_icalendar_accept">Hyväksy</string>
     <string name="title_icalendar_decline">Hylkää</string>
     <string name="title_icalendar_maybe">Ehkä</string>
