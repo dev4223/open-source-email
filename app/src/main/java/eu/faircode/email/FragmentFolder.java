@@ -137,7 +137,7 @@ public class FragmentFolder extends FragmentBase {
                 FragmentDialogColor fragment = new FragmentDialogColor();
                 fragment.setArguments(args);
                 fragment.setTargetFragment(FragmentFolder.this, REQUEST_COLOR);
-                fragment.show(getFragmentManager(), "account:color");
+                fragment.show(getParentFragmentManager(), "account:color");
             }
         });
 
@@ -253,7 +253,7 @@ public class FragmentFolder extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "folder:get");
     }
@@ -283,7 +283,7 @@ public class FragmentFolder extends FragmentBase {
                         });
                         onSave(false);
                     } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                        getFragmentManager().popBackStack();
+                        getParentFragmentManager().popBackStack();
                     break;
 
                 case REQUEST_DELETE_FOLDER:
@@ -326,7 +326,7 @@ public class FragmentFolder extends FragmentBase {
         FragmentDialogAsk ask = new FragmentDialogAsk();
         ask.setArguments(aargs);
         ask.setTargetFragment(FragmentFolder.this, REQUEST_DELETE_FOLDER);
-        ask.show(getFragmentManager(), "folder:delete");
+        ask.show(getParentFragmentManager(), "folder:delete");
     }
 
     private void onSave(boolean should) {
@@ -416,6 +416,8 @@ public class FragmentFolder extends FragmentBase {
                             return true;
                         if (!Objects.equals(folder.display, display))
                             return true;
+                        if (!Objects.equals(folder.color, color))
+                            return true;
                         if (!Objects.equals(folder.unified, unified))
                             return true;
                         if (!Objects.equals(folder.navigation, navigation))
@@ -473,6 +475,7 @@ public class FragmentFolder extends FragmentBase {
                         create.download = download;
                         create.sync_days = sync_days;
                         create.keep_days = keep_days;
+                        create.auto_delete = auto_delete;
                         create.tbc = true;
                         db.folder().insertFolder(create);
                     } else {
@@ -518,9 +521,9 @@ public class FragmentFolder extends FragmentBase {
                     FragmentDialogAsk ask = new FragmentDialogAsk();
                     ask.setArguments(aargs);
                     ask.setTargetFragment(FragmentFolder.this, REQUEST_SAVE_CHANGES);
-                    ask.show(getFragmentManager(), "folder:save");
+                    ask.show(getParentFragmentManager(), "folder:save");
                 } else if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                    getFragmentManager().popBackStack();
+                    getParentFragmentManager().popBackStack();
             }
 
             @Override
@@ -528,7 +531,7 @@ public class FragmentFolder extends FragmentBase {
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "folder:save");
     }
@@ -561,7 +564,7 @@ public class FragmentFolder extends FragmentBase {
             @Override
             protected void onExecuted(Bundle args, Void data) {
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                    getFragmentManager().popBackStack();
+                    getParentFragmentManager().popBackStack();
             }
 
             @Override
@@ -572,7 +575,7 @@ public class FragmentFolder extends FragmentBase {
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "folder:delete");
     }

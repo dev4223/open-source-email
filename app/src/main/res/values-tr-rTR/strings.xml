@@ -206,13 +206,15 @@
     <string name="title_advanced_cards">Kartları göster</string>
     <string name="title_advanced_date_header">Tarihe göre grup</string>
     <string name="title_advanced_threading">İletişim iş parçacığı</string>
-    <string name="title_advanced_bubble">Sohbetleri mesajlaşma tarzında göster</string>
+    <string name="title_advanced_indentation">Sohbetlerde alınan/gönderilen mesajları sola/sağa girintile</string>
     <string name="title_advanced_highlight_unread">Okunmamış iletileri vurgula</string>
     <string name="title_advanced_distinguish_contacts">Bilinen ve bilinmeyen kişilerin mesajlarını ayır</string>
     <string name="title_advanced_avatars">Kişi fotoğraflarını göster</string>
     <string name="title_advanced_generated_icons">Oluşturulan simgeleri göster</string>
     <string name="title_advanced_identicons">Kimliklerini göster</string>
     <string name="title_advanced_circular">Yuvarlak simgeleri göster</string>
+    <string name="title_advanced_color_saturation">Renk doygunluğu</string>
+    <string name="title_advanced_color_value">Parlaklık</string>
     <string name="title_advanced_name_email">Adları ve e-posta adreslarini göster</string>
     <string name="title_advanced_authentication">Alıcı sunucu iletinin kimliğini doğrulayamadığında bir uyarı göster</string>
     <string name="title_advanced_subject_top">Gönderenin üzerinde konuyu göster</string>
@@ -239,8 +241,7 @@
     <string name="title_advanced_autoexpand">İletileri otomatik olarak aç </string>
     <string name="title_advanced_expand_all">Tüm okunmuş mesajları otomatik olarak aç</string>
     <string name="title_advanced_expand_one">Bir kerede yalnızca bir mesaj genişlet</string>
-    <string name="title_advanced_collapse_single">Bir konuşmadaki tek bir mesajı \'geri\' seçeneğinde daralt</string>
-    <string name="title_advanced_collapse_multiple">Bir konuşmadaki birden fazla mesajı \'geri\' seçeneğinde daralt</string>
+    <string name="title_advanced_collapse_multiple">Birden fazla mesaj içeren sohbetlerdeki mesajları \'geri\' seçeneğinde daralt</string>
     <string name="title_advanced_autoclose">İletişimleri otomatik olarak kapat</string>
     <string name="title_advanced_onclose">Bir konuşmayı kapatırken</string>
     <string name="title_advanced_autoread">İleti taşındığında otomatik olarak okundu diye işaretle</string>
@@ -369,7 +370,6 @@
     <string name="title_no_sync">%1$s\'den beri eşzamanlama hataları</string>
     <string name="title_identity_required">İleti göndermek için bir kimlik gerekli</string>
     <string name="title_drafts_required">İleti göndermek için taslaklar klasörü gerekir</string>
-    <string name="title_hide_remark">Mesajlar erteleme yoluyla gizlenebilir</string>
     <string name="title_account_delete">Bu hesap kalıcı olarak silinsin mi?</string>
     <string name="title_identity_delete">Bu kimlik kalıcı olarak silinsin mi?</string>
     <string name="title_edit_html">HTML olarak düzenle</string>
@@ -439,6 +439,8 @@
     <string name="title_subject_forward">İlet: %1$s</string>
     <string name="title_seen">Okundu olarak işaretle</string>
     <string name="title_unseen">Okunmadı olarak işaretle</string>
+    <string name="title_hide">Gizle</string>
+    <string name="title_unhide">Göster</string>
     <string name="title_flag">Yıldız Ekle</string>
     <string name="title_flag_color">Renkli yıldız&#8230;</string>
     <string name="title_unflag">Yıldızı Kaldır</string>
@@ -582,12 +584,12 @@
     <string name="title_sort_on_sender">Gönderen</string>
     <string name="title_sort_on_subject">Konu</string>
     <string name="title_sort_on_size">Boyut</string>
-    <string name="title_sort_on_snoozed">Ertelendi</string>
+    <string name="title_sort_on_hidden">Gizli</string>
     <string name="title_sort_ascending">Önce en eski</string>
     <string name="title_filter">Filtreleme</string>
     <string name="title_filter_seen">Oku</string>
     <string name="title_filter_unflagged">Yıldızlı Olmayan</string>
-    <string name="title_filter_snoozed">Ertelendi</string>
+    <string name="title_filter_hidden">Gizli</string>
     <string name="title_filter_duplicates">Çift kopyalar</string>
     <string name="title_compact">Derlitoplu görünüm</string>
     <string name="title_zoom">Metin boyutu</string>
@@ -605,6 +607,7 @@
     <string name="title_rule_noop">Eylem yok</string>
     <string name="title_rule_seen">Okundu olarak işaretle</string>
     <string name="title_rule_unseen">Okunmadı olarak işaretle</string>
+    <string name="title_rule_hide">Gizle</string>
     <string name="title_rule_ignore">Bildirimi gizle</string>
     <string name="title_rule_snooze">Erteleme</string>
     <string name="title_rule_flag">Yıldız Ekle</string>
@@ -738,6 +741,7 @@
     <string name="title_hint_sync">Mesajların indirilmesi, sağlayıcının hızına, internet bağlantısına ve cihazın hızına ve mesaj sayısına bağlı olarak biraz zaman alabilir. Mesajları indirirken uygulama daha yavaş yanıt verebilir.</string>
     <string name="title_hint_contact_actions">Seçenekler için uzun basın</string>
     <string name="title_open_link">Bağlantıyı aç</string>
+    <string name="title_different_link">Başlık ve link adresi farklı</string>
     <string name="title_secure_link">Bağlantıyı güvenli hale getir</string>
     <string name="title_link_secured">Bağlantı güvenli</string>
     <string name="title_sanitize_link">İzleme etkenlerini kaldır</string>

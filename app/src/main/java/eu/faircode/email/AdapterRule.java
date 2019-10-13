@@ -130,6 +130,9 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     case EntityRule.TYPE_UNSEEN:
                         tvAction.setText(R.string.title_rule_unseen);
                         break;
+                    case EntityRule.TYPE_HIDE:
+                        tvAction.setText(R.string.title_rule_hide);
+                        break;
                     case EntityRule.TYPE_IGNORE:
                         tvAction.setText(R.string.title_rule_ignore);
                         break;
@@ -241,7 +244,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
+                            Helper.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "rule:enable");
                 }
@@ -296,7 +299,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(parentFragment.getFragmentManager(), ex);
+                            Helper.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                         }
                     }.execute(context, owner, args, "rule:execute");
                 }
@@ -311,7 +314,7 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> {
                     FragmentDialogFolder fragment = new FragmentDialogFolder();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(parentFragment, FragmentRules.REQUEST_MOVE);
-                    fragment.show(parentFragment.getFragmentManager(), "rule:move");
+                    fragment.show(parentFragment.getParentFragmentManager(), "rule:move");
                 }
 
                 private void onActionCopy() {

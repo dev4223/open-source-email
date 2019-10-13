@@ -205,13 +205,15 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_cards">Karten anzeigen</string>
     <string name="title_advanced_date_header">Nach Datum gruppieren</string>
     <string name="title_advanced_threading">Konversationsansicht</string>
-    <string name="title_advanced_bubble">Unterhaltungen im Nachrichtenmodus anzeigen</string>
+    <string name="title_advanced_indentation">Links/Rechts-Einrückung von empfangenen/gesendeten Nachrichten in Unterhaltungen</string>
     <string name="title_advanced_highlight_unread">Ungelesene Nachrichten in heller Schrift anzeigen</string>
     <string name="title_advanced_distinguish_contacts">Unterscheide Nachrichten nach bekannten und unbekannten Kontakten</string>
     <string name="title_advanced_avatars">Kontaktfotos anzeigen</string>
     <string name="title_advanced_generated_icons">Zeige generierte Symbole (Anfangsbuchstaben)</string>
     <string name="title_advanced_identicons">Identicons als Kontaktbilder anzeigen</string>
     <string name="title_advanced_circular">Runde Symbole benutzen</string>
+    <string name="title_advanced_color_saturation">Sättigung</string>
+    <string name="title_advanced_color_value">Helligkeit</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
     <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
     <string name="title_advanced_subject_top">Zeige Betreff oberhalb des Absenders</string>
@@ -238,8 +240,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_autoexpand">Nachrichten automatisch erweitern</string>
     <string name="title_advanced_expand_all">Alle gelesenen Nachrichten automatisch erweitern</string>
     <string name="title_advanced_expand_one">Nur eine Nachricht zu jeder Zeit erweitern</string>
-    <string name="title_advanced_collapse_single">Einzelne Nachricht in einer Unterhaltung auf \'Zurück\' zusammenklappen</string>
-    <string name="title_advanced_collapse_multiple">Mehrere Nachrichten in einer Unterhaltung auf \'Zurück\' zusammenklappen</string>
+    <string name="title_advanced_collapse_multiple">Nachrichten in einer Unterhaltung mit mehreren Nachrichten auf \'zurück\' zusammenklappen</string>
     <string name="title_advanced_autoclose">Konversationen automatisch schließen</string>
     <string name="title_advanced_onclose">Beim Schließen einer Unterhaltung</string>
     <string name="title_advanced_autoread">Nachrichten beim Verschieben automatisch als gelesen kennzeichnen</string>
@@ -368,7 +369,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_no_sync">Synchronisationsfehler seit %1$s</string>
     <string name="title_identity_required">Für das Senden von Nachrichten ist das Erstellen einer Identität erforderlich</string>
     <string name="title_drafts_required">Ein Entwürfe-Ordner ist erforderlich, um Nachrichten zu senden</string>
-    <string name="title_hide_remark">Nachrichten können versteckt werden, indem man sie zurückstellt</string>
     <string name="title_account_delete">Möchten Sie dieses Konto unwiderruflich löschen?</string>
     <string name="title_identity_delete">Möchten Sie diese Identität unwiderruflich löschen?</string>
     <string name="title_edit_html">Als HTML bearbeiten</string>
@@ -439,6 +439,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_seen">Als gelesen kennzeichnen</string>
     <string name="title_unseen">Als ungelesen kennzeichnen</string>
+    <string name="title_hide">Verbergen</string>
+    <string name="title_unhide">Anzeigen</string>
     <string name="title_flag">Kennzeichnen</string>
     <string name="title_flag_color">Farbige Kennzeichnung &#8230;</string>
     <string name="title_unflag">Kennzeichnung entfernen</string>
@@ -582,12 +584,12 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_sort_on_sender">Absender</string>
     <string name="title_sort_on_subject">Betreff</string>
     <string name="title_sort_on_size">Größe</string>
-    <string name="title_sort_on_snoozed">Zurückgestellt</string>
+    <string name="title_sort_on_hidden">Verborgen</string>
     <string name="title_sort_ascending">Älteste zuerst</string>
     <string name="title_filter">Ausfiltern</string>
     <string name="title_filter_seen">Gelesen</string>
     <string name="title_filter_unflagged">Nicht markiert</string>
-    <string name="title_filter_snoozed">Zurückgestellt</string>
+    <string name="title_filter_hidden">Verborgen</string>
     <string name="title_filter_duplicates">Duplikate</string>
     <string name="title_compact">Kompaktansicht</string>
     <string name="title_zoom">Schriftgröße</string>
@@ -605,6 +607,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_rule_noop">Keine Aktion</string>
     <string name="title_rule_seen">Als gelesen kennzeichnen</string>
     <string name="title_rule_unseen">Als ungelesen kennzeichnen</string>
+    <string name="title_rule_hide">Verbergen</string>
     <string name="title_rule_ignore">Benachrichtigungen unterdrücken</string>
     <string name="title_rule_snooze">Zurückstellen</string>
     <string name="title_rule_flag">Kennzeichnung hinzufügen</string>
@@ -738,6 +741,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_hint_sync">Das Herunterladen von E-Mails kann einige Zeit in Anspruch nehmen, abhängig von der Geschwindigkeit des Providers, der Internetverbindung, des Gerätes und von der Anzahl der E-Mails. Beim Herunterladen der E-Mails kann die App träge reagieren.</string>
     <string name="title_hint_contact_actions">Gedrückt halten für weitere Optionen</string>
     <string name="title_open_link">Link öffnen</string>
+    <string name="title_different_link">Titel und Link-Ziel sind unterschiedlich</string>
     <string name="title_secure_link">Link sicher gestalten</string>
     <string name="title_link_secured">Dieser Link ist sicher</string>
     <string name="title_sanitize_link">Tracking-Parameter entfernen</string>

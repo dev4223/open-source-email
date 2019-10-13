@@ -20,7 +20,9 @@ package eu.faircode.email;
 */
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,7 +33,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -48,12 +52,17 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swCards;
     private SwitchCompat swDate;
     private SwitchCompat swThreading;
-    private SwitchCompat swBubble;
+    private SwitchCompat swIndentation;
     private SwitchCompat swHighlightUnread;
     private SwitchCompat swAvatars;
     private SwitchCompat swGeneratedIcons;
     private SwitchCompat swIdenticons;
     private SwitchCompat swCircular;
+    private ImageView ivRed;
+    private ImageView ivGreen;
+    private ImageView ivBlue;
+    private SeekBar sbSaturation;
+    private SeekBar sbBrightness;
     private SwitchCompat swNameEmail;
     private SwitchCompat swDistinguishContacts;
     private SwitchCompat swAuthentication;
@@ -76,8 +85,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "theme", "startup", "cards", "date", "threading", "bubble", "highlight_unread",
-            "avatars", "generated_icons", "identicons", "circular", "name_email", "distinguish_contacts", "authentication",
+            "theme", "startup", "cards", "date", "threading", "indentation", "highlight_unread",
+            "avatars", "generated_icons", "identicons", "circular", "saturation", "brightness",
+            "name_email", "distinguish_contacts", "authentication",
             "subject_top", "subject_italic", "subject_ellipsize",
             "flags", "flags_background", "preview", "preview_italic", "addresses", "attachments_alt",
             "contrast", "monospaced", "text_color",
@@ -99,12 +109,17 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swCards = view.findViewById(R.id.swCards);
         swDate = view.findViewById(R.id.swDate);
         swThreading = view.findViewById(R.id.swThreading);
-        swBubble = view.findViewById(R.id.swBubble);
+        swIndentation = view.findViewById(R.id.swIndentation);
         swHighlightUnread = view.findViewById(R.id.swHighlightUnread);
         swAvatars = view.findViewById(R.id.swAvatars);
         swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
         swIdenticons = view.findViewById(R.id.swIdenticons);
         swCircular = view.findViewById(R.id.swCircular);
+        ivRed = view.findViewById(R.id.ivRed);
+        ivGreen = view.findViewById(R.id.ivGreen);
+        ivBlue = view.findViewById(R.id.ivBlue);
+        sbSaturation = view.findViewById(R.id.sbSaturation);
+        sbBrightness = view.findViewById(R.id.sbBrightness);
         swNameEmail = view.findViewById(R.id.swNameEmail);
         swDistinguishContacts = view.findViewById(R.id.swDistinguishContacts);
         swAuthentication = view.findViewById(R.id.swAuthentication);
@@ -134,7 +149,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         btnTheme.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new FragmentDialogTheme().show(getFragmentManager(), "setup:theme");
+                new FragmentDialogTheme().show(getParentFragmentManager(), "setup:theme");
             }
         });
 
@@ -173,10 +188,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
-        swBubble.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swIndentation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("bubble", checked).apply();
+                prefs.edit().putBoolean("indentation", checked).apply();
             }
         });
 
@@ -200,6 +215,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("generated_icons", checked).apply();
                 swIdenticons.setEnabled(checked);
+                sbSaturation.setEnabled(swGeneratedIcons.isChecked());
+                sbBrightness.setEnabled(swGeneratedIcons.isChecked());
                 ContactInfo.clearCache();
             }
         });
@@ -216,7 +233,46 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("circular", checked).apply();
+                updateColor();
                 ContactInfo.clearCache();
+            }
+        });
+
+        sbSaturation.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                prefs.edit().putInt("saturation", progress).apply();
+                updateColor();
+                ContactInfo.clearCache();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+        });
+
+        sbBrightness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                prefs.edit().putInt("brightness", progress).apply();
+                updateColor();
+                ContactInfo.clearCache();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Do nothing
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Do nothing
             }
         });
 
@@ -419,13 +475,17 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swCards.setChecked(prefs.getBoolean("cards", true));
         swDate.setChecked(prefs.getBoolean("date", true));
         swThreading.setChecked(prefs.getBoolean("threading", true));
-        swBubble.setChecked(prefs.getBoolean("bubble", false));
+        swIndentation.setChecked(prefs.getBoolean("indentation", true));
         swHighlightUnread.setChecked(prefs.getBoolean("highlight_unread", false));
         swAvatars.setChecked(prefs.getBoolean("avatars", true));
         swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
         swIdenticons.setChecked(prefs.getBoolean("identicons", false));
         swIdenticons.setEnabled(swGeneratedIcons.isChecked());
         swCircular.setChecked(prefs.getBoolean("circular", true));
+        sbSaturation.setProgress(prefs.getInt("saturation", 100));
+        sbSaturation.setEnabled(swGeneratedIcons.isChecked());
+        sbBrightness.setProgress(prefs.getInt("brightness", 100));
+        sbBrightness.setEnabled(swGeneratedIcons.isChecked());
         swNameEmail.setChecked(prefs.getBoolean("name_email", false));
         swDistinguishContacts.setChecked(prefs.getBoolean("distinguish_contacts", false));
         swAuthentication.setChecked(prefs.getBoolean("authentication", true));
@@ -454,6 +514,39 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swImagesInline.setChecked(prefs.getBoolean("inline_images", false));
         swSeekbar.setChecked(prefs.getBoolean("seekbar", false));
         swActionbar.setChecked(prefs.getBoolean("actionbar", true));
+
+        updateColor();
+    }
+
+    private void updateColor() {
+        Context context = getContext();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean identicons = prefs.getBoolean("identicons", false);
+        boolean circular = prefs.getBoolean("circular", true);
+
+        int size = Helper.dp2pixels(context, 36);
+        byte[] hash = ImageHelper.getHash("test@example.com");
+        Integer radius = (circular && !identicons ? null : Helper.dp2pixels(context, 3));
+
+        Bitmap red = identicons
+                ? ImageHelper.generateIdenticon(hash, 0f, size, 5, context)
+                : ImageHelper.generateLetterIcon("A", 0f, size, context);
+
+        Bitmap green = identicons
+                ? ImageHelper.generateIdenticon(hash, 120f, size, 5, context)
+                : ImageHelper.generateLetterIcon("B", 120f, size, context);
+
+        Bitmap blue = identicons
+                ? ImageHelper.generateIdenticon(hash, 240f, size, 5, context)
+                : ImageHelper.generateLetterIcon("C", 240f, size, context);
+
+        red = ImageHelper.makeCircular(red, radius);
+        green = ImageHelper.makeCircular(green, radius);
+        blue = ImageHelper.makeCircular(blue, radius);
+
+        ivRed.setImageBitmap(red);
+        ivGreen.setImageBitmap(green);
+        ivBlue.setImageBitmap(blue);
     }
 
     public static class FragmentDialogTheme extends FragmentDialogBase {
@@ -493,6 +586,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedId) {
                     getActivity().getIntent().putExtra("tab", "display");
+
+                    ContactInfo.clearCache();
 
                     switch (checkedId) {
                         case R.id.rbThemeLight:

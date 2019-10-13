@@ -31,52 +31,56 @@ import androidx.cardview.widget.CardView;
 import androidx.preference.PreferenceManager;
 
 public class ViewCardOptional extends CardView {
+    private boolean cards;
+    private boolean compact;
+    private boolean threading;
+    private boolean indentation;
+    private int margin;
+    private int ident;
+    private Integer color = null;
+
     public ViewCardOptional(@NonNull Context context) {
         super(context);
-        setCardBackgroundColor(Color.TRANSPARENT);
+        init(context);
     }
 
     public ViewCardOptional(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        setCardBackgroundColor(Color.TRANSPARENT);
+        init(context);
     }
 
     public ViewCardOptional(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        cards = prefs.getBoolean("cards", true);
+        compact = prefs.getBoolean("compact", false);
+        threading = prefs.getBoolean("threading", true);
+        indentation = prefs.getBoolean("indentation", true);
+
+        // dev4223: was: '3 : 6' and '12 + (compact ? 3 : 6)'
+        margin = Helper.dp2pixels(context, compact ? 1 : 2);
+        ident = Helper.dp2pixels(context, 6 + (compact ? 1 : 2));
+
+        setRadius(cards ? margin : 0);
+        setCardElevation(0);
         setCardBackgroundColor(Color.TRANSPARENT);
     }
 
-    private boolean initialized = false;
-
     @Override
     protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-
-        if (!initialized) {
-            initialized = true;
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            boolean cards = prefs.getBoolean("cards", true);
-            boolean compact = prefs.getBoolean("compact", false);
-
-	        if (cards) {
-	            // dev4223: was: 3 : 6
-	            int dp = Helper.dp2pixels(getContext(), compact ? 1 : 2);
-
-                ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
-                lparam.setMargins(dp, dp, dp, dp);
-                setLayoutParams(lparam);
-
-                setRadius(dp);
-                setContentPadding(dp, dp, dp, dp);
-            } else
-                setRadius(0);
-
-            setCardElevation(0);
+        if (cards) {
+            ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
+            lparam.setMargins(margin, margin, margin, margin);
+            setLayoutParams(lparam);
+            setContentPadding(margin, margin, margin, margin);
         }
-    }
 
-    private Integer color = null;
+        super.onAttachedToWindow();
+    }
 
     @Override
     public void setCardBackgroundColor(int color) {
@@ -89,6 +93,15 @@ public class ViewCardOptional extends CardView {
                 color = Helper.resolveColor(getContext(), R.attr.colorCardBackground);
 
             super.setCardBackgroundColor(color);
+        }
+    }
+
+    public void setOutgoing(boolean outgoing) {
+        if (cards && threading && indentation) {
+            ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) getLayoutParams();
+            lparam.setMarginStart(outgoing ? margin : ident);
+            lparam.setMarginEnd(outgoing ? ident : margin);
+            setLayoutParams(lparam);
         }
     }
 }

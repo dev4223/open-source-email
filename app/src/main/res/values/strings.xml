@@ -243,13 +243,15 @@
     <string name="title_advanced_cards">Show cards</string>
     <string name="title_advanced_date_header">Group by date</string>
     <string name="title_advanced_threading">Conversation threading</string>
-    <string name="title_advanced_bubble">Show conversations in messaging style</string>
+    <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
     <string name="title_advanced_distinguish_contacts">Distinguish messages from known and unknown contacts</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_generated_icons">Show generated icons</string>
     <string name="title_advanced_identicons">Show identicons</string>
     <string name="title_advanced_circular">Show round icons</string>
+    <string name="title_advanced_color_saturation">Saturation</string>
+    <string name="title_advanced_color_value">Brightness</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_authentication">Show a warning when the receiving server could not authenticate the message</string>
     <string name="title_advanced_subject_top">Show subject above sender</string>
@@ -277,8 +279,7 @@
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
     <string name="title_advanced_expand_all">Automatically expand all read messages</string>
     <string name="title_advanced_expand_one">Expand only one message at a time</string>
-    <string name="title_advanced_collapse_single">Collapse single message in a conversation on \'back\'</string>
-    <string name="title_advanced_collapse_multiple">Collapse multiple messages in a conversation on \'back\'</string>
+    <string name="title_advanced_collapse_multiple">Collapse messages in a conversation with multiple messages on \'back\'</string>
     <string name="title_advanced_autoclose">Automatically close conversations</string>
     <string name="title_advanced_onclose">On closing a conversation</string>
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
@@ -431,7 +432,6 @@
     <string name="title_no_sync">Synchronization errors since %1$s</string>
     <string name="title_identity_required">An identity is required to send messages</string>
     <string name="title_drafts_required">A drafts folder is required to send messages</string>
-    <string name="title_hide_remark">Messages can be hidden by snoozing messages</string>
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>
@@ -508,6 +508,8 @@
 
     <string name="title_seen">Mark read</string>
     <string name="title_unseen">Mark unread</string>
+    <string name="title_hide">Hide</string>
+    <string name="title_unhide">Show</string>
     <string name="title_flag">Add star</string>
     <string name="title_flag_color">Colored star &#8230;</string>
     <string name="title_unflag">Remove star</string>
@@ -662,13 +664,13 @@
     <string name="title_sort_on_sender">Sender</string>
     <string name="title_sort_on_subject">Subject</string>
     <string name="title_sort_on_size">Size</string>
-    <string name="title_sort_on_snoozed">Snoozed</string>
+    <string name="title_sort_on_hidden">Hidden</string>
     <string name="title_sort_ascending">Oldest first</string>
 
     <string name="title_filter">Filter out</string>
     <string name="title_filter_seen">Read</string>
     <string name="title_filter_unflagged">Unstarred</string>
-    <string name="title_filter_snoozed">Snoozed</string>
+    <string name="title_filter_hidden">Hidden</string>
     <string name="title_filter_duplicates">Duplicates</string>
 
     <string name="title_compact">Compact view</string>
@@ -690,6 +692,7 @@
     <string name="title_rule_noop">No action</string>
     <string name="title_rule_seen">Mark read</string>
     <string name="title_rule_unseen">Mark unread</string>
+    <string name="title_rule_hide">Hide</string>
     <string name="title_rule_ignore">Suppress notification</string>
     <string name="title_rule_snooze">Snooze</string>
     <string name="title_rule_flag">Add star</string>
@@ -835,6 +838,7 @@
     <string name="title_hint_contact_actions">Long press for options</string>
 
     <string name="title_open_link">Open link</string>
+    <string name="title_different_link">The title and the link address are different</string>
     <string name="title_secure_link">Make connection secure</string>
     <string name="title_link_secured">Connection is secure</string>
     <string name="title_sanitize_link">Remove tracking parameters</string>

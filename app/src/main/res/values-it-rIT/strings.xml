@@ -205,13 +205,15 @@
     <string name="title_advanced_cards">Mostra carte</string>
     <string name="title_advanced_date_header">Raggruppa per data</string>
     <string name="title_advanced_threading">Thread di conversazione</string>
-    <string name="title_advanced_bubble">Mostra conversazioni in stile messaggistica</string>
+    <string name="title_advanced_indentation">Messaggi ricevuti/inviati con rientro a sinistra/destra nelle conversazioni</string>
     <string name="title_advanced_highlight_unread">Evidenzia i messaggi non letti</string>
     <string name="title_advanced_distinguish_contacts">Distingui i messaggi tra contatti noti e sconosciuti</string>
     <string name="title_advanced_avatars">Mostra foto dei contatti</string>
     <string name="title_advanced_generated_icons">Mostra icone generate</string>
     <string name="title_advanced_identicons">Visualizza identicon</string>
     <string name="title_advanced_circular">Mostra icone rotonde</string>
+    <string name="title_advanced_color_saturation">Saturazione</string>
+    <string name="title_advanced_color_value">Luminosità</string>
     <string name="title_advanced_name_email">Mostra nomi e indirizzi email</string>
     <string name="title_advanced_authentication">Mostra un avviso quando il server ricevente non può autenticare il messaggio</string>
     <string name="title_advanced_subject_top">Mostra oggetto sopra il mittente</string>
@@ -238,8 +240,7 @@
     <string name="title_advanced_autoexpand">Espandi automaticamente i messaggi</string>
     <string name="title_advanced_expand_all">Espandi automaticamente tutti i messaggi letti</string>
     <string name="title_advanced_expand_one">Espandi solo un messaggio alla volta</string>
-    <string name="title_advanced_collapse_single">Comprimi un singolo messaggio in una conversazione premendo \'indietro\'</string>
-    <string name="title_advanced_collapse_multiple">Comprimi più messaggi in una conversazione premendo \'indietro\'</string>
+    <string name="title_advanced_collapse_multiple">Comprimi i messaggi in una conversazione con più messaggi premendo \'indietro\'</string>
     <string name="title_advanced_autoclose">Chiudi automaticamente le conversazioni</string>
     <string name="title_advanced_onclose">Alla chiusura di una conversazione</string>
     <string name="title_advanced_autoread">Contrassegna automaticamente il messaggio come letto sul messaggio in movimento</string>
@@ -368,7 +369,6 @@
     <string name="title_no_sync">Errori di sincronizzazione da %1$s</string>
     <string name="title_identity_required">È necessaria un\'identità per inviare messaggi</string>
     <string name="title_drafts_required">Per inviare messaggi è necessaria una cartella bozze</string>
-    <string name="title_hide_remark">I messaggi possono essere nascosti posticipando i messaggi</string>
     <string name="title_account_delete">Eliminare questo account permanentemente?</string>
     <string name="title_identity_delete">Eliminare questa identità permanentemente?</string>
     <string name="title_edit_html">Modifica come HTML</string>
@@ -438,6 +438,8 @@
     <string name="title_subject_forward">Fwd: %1$s</string>
     <string name="title_seen">Segna come letto</string>
     <string name="title_unseen">Segna come non letto</string>
+    <string name="title_hide">Nascondi</string>
+    <string name="title_unhide">Mostra</string>
     <string name="title_flag">Aggiungi stella</string>
     <string name="title_flag_color">Stella colorata &#8230;</string>
     <string name="title_unflag">Rimuovi stella</string>
@@ -581,12 +583,12 @@
     <string name="title_sort_on_sender">Mittente</string>
     <string name="title_sort_on_subject">Soggetto</string>
     <string name="title_sort_on_size">Dimensioni</string>
-    <string name="title_sort_on_snoozed">Posticipato</string>
+    <string name="title_sort_on_hidden">Nascosto</string>
     <string name="title_sort_ascending">Prima i più vecchi</string>
     <string name="title_filter">Filtra</string>
     <string name="title_filter_seen">Leggi</string>
     <string name="title_filter_unflagged">Senza stella</string>
-    <string name="title_filter_snoozed">Posticipato</string>
+    <string name="title_filter_hidden">Nascosto</string>
     <string name="title_filter_duplicates">Duplicati</string>
     <string name="title_compact">Vista compatta</string>
     <string name="title_zoom">Dimensione testo</string>
@@ -604,6 +606,7 @@
     <string name="title_rule_noop">Nessuna azione</string>
     <string name="title_rule_seen">Segna come letto</string>
     <string name="title_rule_unseen">Segna come non letto</string>
+    <string name="title_rule_hide">Nascondi</string>
     <string name="title_rule_ignore">Sopprimi notifica</string>
     <string name="title_rule_snooze">Posticipa</string>
     <string name="title_rule_flag">Aggiungi ai preferiti</string>
@@ -737,6 +740,7 @@
     <string name="title_hint_sync">Scaricare i messaggi può richiedere molto tempo, a seconda della velocità del provider, della connessione internet e del dispositivo e dal numero di messaggi. Durante il download l\'app potrebbe funzionare più lentamente.</string>
     <string name="title_hint_contact_actions">Tieni premuto per le opzioni</string>
     <string name="title_open_link">Apri collegamento</string>
+    <string name="title_different_link">Il titolo del link e l\'indirizzo sono diversi</string>
     <string name="title_secure_link">Rendi il link sicuro</string>
     <string name="title_link_secured">Il link è sicuro</string>
     <string name="title_sanitize_link">Rimuovi i parametri di tracciamento</string>

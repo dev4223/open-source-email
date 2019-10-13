@@ -89,7 +89,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.paging.PagedList;
 import androidx.preference.PreferenceManager;
@@ -517,8 +517,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (pos == RecyclerView.NO_POSITION)
                     return null;
 
-                TupleMessageEx prev = (pos > 0 ? adapter.getCurrentList().get(pos - 1) : null);
-                TupleMessageEx message = adapter.getCurrentList().get(pos);
+                TupleMessageEx prev = adapter.getItemAtPosition(pos - 1);
+                TupleMessageEx message = adapter.getItemAtPosition(pos);
                 if (pos > 0 && prev == null)
                     return null;
                 if (message == null)
@@ -711,7 +711,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:move");
             }
@@ -727,7 +727,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 FragmentDialogDuration fragment = new FragmentDialogDuration();
                 fragment.setArguments(args);
                 fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
-                fragment.show(getFragmentManager(), "message:snooze");
+                fragment.show(getParentFragmentManager(), "message:snooze");
             }
         });
 
@@ -760,7 +760,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     FragmentDialogIdentity fragment = new FragmentDialogIdentity();
                     fragment.setArguments(args);
-                    fragment.show(getFragmentManager(), "messages:identities");
+                    fragment.show(getParentFragmentManager(), "messages:identities");
                 }
             }
         });
@@ -799,7 +799,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:drafts");
 
@@ -857,7 +857,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     FragmentDialogFolder fragment = new FragmentDialogFolder();
                                     fragment.setArguments(args);
                                     fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_SEARCH);
-                                    fragment.show(getFragmentManager(), "messages:search");
+                                    fragment.show(getParentFragmentManager(), "messages:search");
 
                                     return true;
                                 }
@@ -868,11 +868,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getFragmentManager(), ex);
+                            Helper.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentMessages.this, args, "messages:search");
                 } else
-                    search(getContext(), getViewLifecycleOwner(), getFragmentManager(), folder, true, query);
+                    search(getContext(), getViewLifecycleOwner(), getParentFragmentManager(), folder, true, query);
             }
         });
 
@@ -919,7 +919,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fabError.hide();
 
         if (viewType == AdapterMessage.ViewType.THREAD) {
-            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
             model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 @Override
                 public void onPrevious(boolean exists, Long id) {
@@ -1196,7 +1196,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:refresh");
     }
@@ -1337,7 +1337,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "messages:move");
         }
@@ -1434,6 +1434,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 icon = (message.ui_seen ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
             else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
                 icon = (message.ui_snoozed == null ? R.drawable.baseline_timelapse_24 : R.drawable.baseline_timer_off_24);
+            else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
+                icon = (message.ui_snoozed == null ? R.drawable.baseline_visibility_off_24 :
+                        (message.ui_snoozed == Long.MAX_VALUE
+                                ? R.drawable.baseline_visibility_24 : R.drawable.baseline_timer_off_24));
             else
                 icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
             Drawable d = getResources().getDrawable(icon, getContext().getTheme()).mutate();
@@ -1496,6 +1500,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 onActionSeenSelection(!message.ui_seen, message.id);
             else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
                 onActionSnooze(message);
+            else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
+                onActionHide(message);
             else
                 swipeFolder(message, action);
         }
@@ -1541,8 +1547,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
 
             popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 2, R.string.title_snooze);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 3, R.string.title_flag_color);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 4, R.string.title_move);
+
+            if (message.ui_snoozed == null)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 3, R.string.title_hide);
+            else if (message.ui_snoozed == Long.MAX_VALUE)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 3, R.string.title_unhide);
+
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 4, R.string.title_flag_color);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 5, R.string.title_move);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -1556,6 +1568,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             return true;
                         case R.string.title_snooze:
                             onMenuSnooze();
+                            return true;
+                        case R.string.title_hide:
+                        case R.string.title_unhide:
+                            onActionHide(message);
                             return true;
                         case R.string.title_flag_color:
                             onMenuColor();
@@ -1579,7 +1595,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     FragmentDialogDuration fragment = new FragmentDialogDuration();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
-                    fragment.show(getFragmentManager(), "message:snooze");
+                    fragment.show(getParentFragmentManager(), "message:snooze");
                 }
 
                 private void onMenuColor() {
@@ -1591,7 +1607,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     FragmentDialogColor fragment = new FragmentDialogColor();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGE_COLOR);
-                    fragment.show(getFragmentManager(), "message:color");
+                    fragment.show(getParentFragmentManager(), "message:color");
                 }
 
                 private void onMenuMove() {
@@ -1606,7 +1622,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     FragmentDialogFolder fragment = new FragmentDialogFolder();
                     fragment.setArguments(args);
                     fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_MOVE);
-                    fragment.show(getFragmentManager(), "message:move");
+                    fragment.show(getParentFragmentManager(), "message:move");
                 }
             });
 
@@ -1669,7 +1685,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (ex instanceof IllegalArgumentException)
                         Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                     else
-                        Helper.unexpectedError(getFragmentManager(), ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "messages:swipe");
         }
@@ -1848,7 +1864,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:more");
     }
@@ -1904,7 +1920,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:seen");
     }
@@ -1929,6 +1945,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         onSnooze(args);
     }
 
+    private void onActionHide(TupleMessageEx message) {
+        Bundle args = new Bundle();
+        args.putLong("account", message.account);
+        args.putString("thread", message.thread);
+        args.putLong("id", message.id);
+        args.putLong("duration", message.ui_snoozed == null ? Long.MAX_VALUE : 0);
+        args.putLong("time", message.ui_snoozed == null ? Long.MAX_VALUE : 0);
+
+        onSnooze(args);
+    }
+
     private void onActionSnoozeSelection() {
         Bundle args = new Bundle();
         args.putString("title", getString(R.string.title_snooze));
@@ -1936,7 +1963,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogDuration fragment = new FragmentDialogDuration();
         fragment.setArguments(args);
         fragment.setTargetFragment(this, REQUEST_MESSAGES_SNOOZE);
-        fragment.show(getFragmentManager(), "messages:snooze");
+        fragment.show(getParentFragmentManager(), "messages:snooze");
     }
 
     private void onActionFlagSelection(boolean flagged, Integer color) {
@@ -1981,7 +2008,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:flag");
     }
@@ -1994,7 +2021,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogColor fragment = new FragmentDialogColor();
         fragment.setArguments(args);
         fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_COLOR);
-        fragment.show(getFragmentManager(), "messages:color");
+        fragment.show(getParentFragmentManager(), "messages:color");
     }
 
     private void onActionDeleteSelection() {
@@ -2041,12 +2068,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 FragmentDialogAsk ask = new FragmentDialogAsk();
                 ask.setArguments(aargs);
                 ask.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_DELETE);
-                ask.show(getFragmentManager(), "messages:delete");
+                ask.show(getParentFragmentManager(), "messages:delete");
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:delete:ask");
     }
@@ -2061,7 +2088,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogAsk ask = new FragmentDialogAsk();
         ask.setArguments(aargs);
         ask.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_JUNK);
-        ask.show(getFragmentManager(), "messages:junk");
+        ask.show(getParentFragmentManager(), "messages:junk");
     }
 
     private void onActionMoveSelection(final String type) {
@@ -2115,7 +2142,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -2129,7 +2156,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogFolder fragment = new FragmentDialogFolder();
         fragment.setArguments(args);
         fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_MESSAGES_MOVE);
-        fragment.show(getFragmentManager(), "messages:move");
+        fragment.show(getParentFragmentManager(), "messages:move");
     }
 
     private void onActionMoveSelection(long target) {
@@ -2179,7 +2206,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -2518,7 +2545,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 @Override
                 public void onClick(View v) {
                     snackbar.dismiss();
-                    new FragmentDialogReporting().show(getFragmentManager(), "reporting");
+                    new FragmentDialogReporting().show(getParentFragmentManager(), "reporting");
                 }
             });
 
@@ -2541,7 +2568,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onSearch(String query) {
                 FragmentMessages.search(
-                        getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                        getContext(), getViewLifecycleOwner(), getParentFragmentManager(),
                         folder, false, query);
             }
         });
@@ -2560,7 +2587,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 FragmentDialogAccount fragment = new FragmentDialogAccount();
                 fragment.setArguments(new Bundle());
                 fragment.setTargetFragment(FragmentMessages.this, REQUEST_ACCOUNT);
-                fragment.show(getFragmentManager(), "messages:accounts");
+                fragment.show(getParentFragmentManager(), "messages:accounts");
                 return true;
             }
         });
@@ -2649,7 +2676,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         ibSeen.setImageResource(filter_seen ? R.drawable.baseline_drafts_24 : R.drawable.baseline_mail_24);
         ibUnflagged.setImageResource(filter_unflagged ? R.drawable.baseline_star_border_24 : R.drawable.baseline_star_24);
-        ibSnoozed.setImageResource(filter_snoozed ? R.drawable.baseline_timelapse_24 : R.drawable.baseline_timer_off_24);
+        ibSnoozed.setImageResource(filter_snoozed ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
 
         ibSeen.setVisibility(experiments && folder ? View.VISIBLE : View.GONE);
         ibUnflagged.setVisibility(experiments && folder ? View.VISIBLE : View.GONE);
@@ -2752,7 +2779,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void onMenuFolders(long account) {
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-            getFragmentManager().popBackStack("unified", 0);
+            getParentFragmentManager().popBackStack("unified", 0);
 
         Bundle args = new Bundle();
         args.putLong("account", account);
@@ -2760,7 +2787,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentFolders fragment = new FragmentFolders();
         fragment.setArguments(args);
 
-        FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("folders");
         fragmentTransaction.commit();
     }
@@ -2838,7 +2865,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onMenuSelectAll() {
-        ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+        ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
         model.getIds(getContext(), getViewLifecycleOwner(), new Observer<List<Long>>() {
             @Override
             public void onChanged(List<Long> ids) {
@@ -2868,7 +2895,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogAsk ask = new FragmentDialogAsk();
         ask.setArguments(aargs);
         ask.setTargetFragment(this, FragmentMessages.REQUEST_EMPTY_FOLDER);
-        ask.show(getFragmentManager(), "messages:empty");
+        ask.show(getParentFragmentManager(), "messages:empty");
     }
 
     private void onMenuForceSync() {
@@ -2926,7 +2953,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void loadMessages(final boolean top) {
         if (viewType == AdapterMessage.ViewType.THREAD && onclose != null) {
-            ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+            ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
             model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 boolean once = false;
 
@@ -2972,7 +2999,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "search:reset");
         } else
@@ -2983,7 +3010,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (top)
             adapter.gotoTop();
 
-        ViewModelMessages model = ViewModelProviders.of(getActivity()).get(ViewModelMessages.class);
+        ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
 
         ViewModelMessages.Model vmodel = model.getModel(
                 getContext(), getViewLifecycleOwner(),
@@ -3030,7 +3057,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     FragmentDialogError fragment = new FragmentDialogError();
                     fragment.setArguments(args);
-                    fragment.show(getFragmentManager(), "boundary:error");
+                    fragment.show(getParentFragmentManager(), "boundary:error");
                 }
         }
     };
@@ -3259,7 +3286,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.setLog(false).execute(this, args, "messages:navigation");
         }
@@ -3341,7 +3368,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.setLog(false).execute(this, args, "messages:expand");
     }
@@ -3380,7 +3407,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
 
                 if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
-                    getFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                    getParentFragmentManager().popBackStack("thread", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
                 getArguments().putBoolean("fade", true);
                 getArguments().putBoolean("left", left);
@@ -3400,7 +3427,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 int res = (pane ? R.id.content_pane : R.id.content_frame);
                 if (getActivity() != null && getActivity().findViewById(res) != null) {
-                    FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                    FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
                     fragmentTransaction.replace(res, fragment).addToBackStack("thread");
                     fragmentTransaction.commit();
                 }
@@ -3408,7 +3435,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:navigate");
     }
@@ -3433,7 +3460,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         FragmentDialogAsk ask = new FragmentDialogAsk();
         ask.setArguments(aargs);
         ask.setTargetFragment(FragmentMessages.this, REQUEST_ASKED_MOVE);
-        ask.show(getFragmentManager(), "messages:move");
+        ask.show(getParentFragmentManager(), "messages:move");
     }
 
     private void moveAskConfirmed(ArrayList<MessageTarget> result) {
@@ -3474,7 +3501,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -3519,7 +3546,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:undo");
             }
@@ -3607,11 +3634,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return true;
             }
 
-            int count = (values.containsKey("expanded") ? values.get("expanded").size() : 0);
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            boolean collapse_single = prefs.getBoolean("collapse_single", false);
             boolean collapse_multiple = prefs.getBoolean("collapse_multiple", true);
-            if ((collapse_single && count == 1) || (collapse_multiple && count > 1)) {
+
+            int count = 0;
+            for (int i = 0; i < adapter.getItemCount(); i++) {
+                TupleMessageEx message = adapter.getItemAtPosition(i);
+                if (message != null && !message.duplicate)
+                    count++;
+            }
+
+            int expanded = (values.containsKey("expanded") ? values.get("expanded").size() : 0);
+            if (collapse_multiple && expanded > 0 && count > 1) {
                 values.get("expanded").clear();
                 updateExpanded();
                 adapter.notifyDataSetChanged();
@@ -3758,7 +3792,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (resultCode == RESULT_OK && data != null) {
                         Bundle args = data.getBundleExtra("args");
                         search(
-                                getContext(), getViewLifecycleOwner(), getFragmentManager(),
+                                getContext(), getViewLifecycleOwner(), getParentFragmentManager(),
                                 args.getLong("folder"), true, args.getString("query"));
                     }
                     break;
@@ -3847,7 +3881,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "raw:save");
     }
@@ -4015,7 +4049,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 REQUEST_DECRYPT,
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
-                        Helper.unexpectedError(getFragmentManager(), ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
                     }
             }
 
@@ -4024,7 +4058,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "decrypt");
     }
@@ -4080,7 +4114,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:delete");
     }
@@ -4115,7 +4149,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:delete:execute");
     }
@@ -4150,7 +4184,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:junk");
     }
@@ -4171,7 +4205,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             FragmentDialogAsk ask = new FragmentDialogAsk();
             ask.setArguments(aargs);
             ask.setTargetFragment(FragmentMessages.this, REQUEST_ASKED_MOVE_ACROSS);
-            ask.show(getFragmentManager(), "messages:move:across");
+            ask.show(getParentFragmentManager(), "messages:move:across");
         } else
             moveAskConfirmed(result);
     }
@@ -4208,7 +4242,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:color");
     }
@@ -4236,8 +4270,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             account, thread, threading ? null : id, null);
                     for (EntityMessage threaded : messages) {
                         db.message().setMessageSnoozed(threaded.id, wakeup);
-                        EntityMessage.snooze(context, threaded.id, wakeup);
                         EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
+                        EntityMessage.snooze(context, threaded.id, wakeup);
                     }
 
                     db.setTransactionSuccessful();
@@ -4256,7 +4290,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:snooze");
     }
@@ -4310,7 +4344,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:snooze");
     }
@@ -4364,7 +4398,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:move");
     }
@@ -4500,7 +4534,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, pargs, "message:print");
     }
@@ -4540,7 +4574,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getFragmentManager(), ex);
+                Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "folder:delete");
     }
@@ -4690,7 +4724,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "messages:accounts");
 
@@ -4785,7 +4819,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getFragmentManager(), ex);
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "identity:select");
 
