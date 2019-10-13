@@ -741,6 +741,10 @@ class Core {
                 Log.i(folder.name + " appended uid=" + message.uid);
                 db.message().setMessageUid(message.id, message.uid);
 
+                EntityIdentity identity = matchIdentity(context, folder, message);
+                message.identity = (identity == null ? null : identity.id);
+                db.message().setMessageIdentity(message.id, message.identity);
+
                 List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
                 runRules(context, imessage, message, rules);
                 updateContactInfo(context, folder, message);
@@ -2151,7 +2155,8 @@ class Core {
                 Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);
 
                 int sequence = 1;
-                for (EntityAttachment attachment : parts.getAttachments()) {
+                List<EntityAttachment> attachments = parts.getAttachments();
+                for (EntityAttachment attachment : attachments) {
                     Log.i(folder.name + " attachment seq=" + sequence + " " + attachment);
                     attachment.message = message.id;
                     attachment.sequence = sequence++;
@@ -2331,6 +2336,8 @@ class Core {
                 addresses.addAll(Arrays.asList(message.to));
             if (message.cc != null)
                 addresses.addAll(Arrays.asList(message.cc));
+            if (message.bcc != null)
+                addresses.addAll(Arrays.asList(message.bcc));
             if (message.from != null)
                 addresses.addAll(Arrays.asList(message.from));
         }
@@ -2353,6 +2360,7 @@ class Core {
     }
 
     private static void runRules(Context context, Message imessage, EntityMessage message, List<EntityRule> rules) {
+
         if (!ActivityBilling.isPro(context))
             return;
 
@@ -3049,27 +3057,24 @@ class Core {
 
             if (message.content && notify_preview)
                 try {
-                    String body = Helper.readText(message.getFile(context));
-                    String preview = HtmlHelper.getPreview(body);
-
-                    String summary =
-                            (TextUtils.isEmpty(message.subject) ? "" : message.subject) +
-                                    " - " +
-                                    (TextUtils.isEmpty(preview) ? "" : preview);
-
-                    // Wearable
-                    mbuilder.setContentText(summary);
-
                     StringBuilder sbm = new StringBuilder();
                     if (!TextUtils.isEmpty(message.subject))
                         sbm.append(message.subject).append("<br>");
 
+                    String body = Helper.readText(message.getFile(context));
+                    String preview = HtmlHelper.getPreview(body);
                     if (!TextUtils.isEmpty(preview))
                         sbm.append("<em>").append(preview).append("</em>");
 
-                    mbuilder.setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText(HtmlHelper.fromHtml(sbm.toString()))
-                            .setSummaryText(summary));
+                    NotificationCompat.BigTextStyle bigText = new NotificationCompat.BigTextStyle()
+                            .bigText(HtmlHelper.fromHtml(sbm.toString()));
+
+                    if (!TextUtils.isEmpty(message.subject)) {
+                        bigText.setSummaryText(message.subject);
+                        mbuilder.setContentText(message.subject); // Wearable
+                    }
+
+                    mbuilder.setStyle(bigText);
                 } catch (IOException ex) {
                     Log.e(ex);
                     mbuilder.setStyle(new NotificationCompat.BigTextStyle()
