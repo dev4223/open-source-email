@@ -1849,7 +1849,7 @@ class Core {
                                 istore, ifolder, (MimeMessage) isub[j],
                                 false, download,
                                 rules, state);
-                        ids[from + j] = message.id;
+                        ids[from + j] = (message == null ? null : message.id);
                     } catch (MessageRemovedException ex) {
                         Log.w(folder.name, ex);
                     } catch (FolderClosedException ex) {
@@ -2266,7 +2266,9 @@ class Core {
                         " keywords=" + TextUtils.join(" ", keywords));
             }
 
-            if (message.ui_hide && message.ui_snoozed == null &&
+            if (message.ui_hide &&
+                    message.ui_snoozed == null &&
+                    (message.ui_busy == null || message.ui_busy < new Date().getTime()) &&
                     db.operation().getOperationCount(folder.id, message.id) == 0) {
                 update = true;
                 message.ui_hide = false;
