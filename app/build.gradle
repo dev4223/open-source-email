@@ -13,12 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 774
-        versionName "1.774"
+        versionCode 775
+        versionName "1.775"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        buildConfigField "String", "RELEASE_NAME", "\"Xuanhanosaurus\""
+        buildConfigField "String", "RELEASE_NAME", "\"Yurgovuchia\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -173,7 +173,7 @@ dependencies {
 
     def core_version = "1.2.0-beta01"
     def appcompat_version = "1.1.0"
-    def fragment_version = "1.2.0-beta01"
+    def fragment_version = "1.2.0-beta02"
     def recyclerview_version = "1.1.0-beta05"
     def coordinatorlayout_version = "1.1.0-beta01"
     def constraintlayout_version = "2.0.0-beta2"
