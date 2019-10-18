@@ -43,6 +43,7 @@ Related questions:
 * The folder selector sometimes shows no folders for yet unknown reasons.
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
 * Encryption with [YubiKey](https://www.yubico.com/) results into an infinite loop. FairEmail follows the latest version of the [OpenKeychain API](https://github.com/open-keychain/openpgp-api), so this is likely being caused by an external bug.
+* Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 
 ## Planned features
 
@@ -241,6 +242,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
 * [(138) Can you add calendar / contact management?](#user-content-faq138)
 * [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
+* [(140) Can message previews be sent to my wearable?](#user-content-faq140)
 
 [I have another question.](#user-content-support)
 
@@ -638,7 +640,7 @@ Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are 
 Possible causes of messages not being synchronized (sent or received) are:
 
 * The account or folder(s) are not set to synchronize
-* The number of days to synchronize is set to low
+* The number of days to synchronize is set too low
 * There is no usable internet connection
 * The email server is temporarily not available
 * Android stopped the synchronization service
@@ -1100,6 +1102,15 @@ See also [this FAQ](#user-content-faq4).
 
 The error '*Handshake failed ... SSLV3_ALERT_ILLEGAL_PARAMETER*' is either caused by a bug in the SSL protocol implementation
 or by a too short DH key on the email server and can unfortunately not be fixed by FairEmail.
+
+The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO*' might be caused by the provider still using RC4,
+which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
+
+Android 8 Oreo and later [do not support](https://developer.android.com/about/versions/oreo/android-8.0-changes#security-all) SSLv3 anymore.
+
+There is no way to workaround lacking RC4 and SSLv3 support because it has completely been removed from Android (which should say something).
+
+You can use [this website](https://ssl-tools.net/mailservers) to check for SSL/TLS problems of IMAP/SMTP servers.
 
 <br />
 
@@ -2432,6 +2443,21 @@ The error *User is authenticated but not connected* might occur if:
 
 <br />
 
+<a name="faq1140"></a>
+**(140) Can message previews be sent to my wearable?**
+
+FairEmail fetches a message in two steps:
+
+1. Fetch message headers
+1. Fetch message text and attachments
+
+Directly after the first step new messages will be notified.
+However, only until after the second step the message text will be available.
+FairEmail updates exiting notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
+Since there is no guarantee that the message text will be fetched directly after the message header, it is not possible to send message previews to a wearable.
+
+
+<br />
 
 ## Support
 

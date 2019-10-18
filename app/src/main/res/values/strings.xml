@@ -160,6 +160,7 @@
     <string name="title_setup_doze_remark">To continuously receive email (optional)</string>
     <string name="title_setup_doze_instructions">In the next dialog, select \"All apps\" at the top, select this app and select and confirm \"Don\'t optimize\"</string>
     <string name="title_setup_doze_battery">High battery usage?</string>
+    <string name="title_setup_doze_stopped">Sync stopped?</string>
     <string name="title_setup_data">Data saver is enabled</string>
     <string name="title_setup_inbox">Go to messages</string>
     <string name="title_setup_to_do">To do</string>
@@ -589,6 +590,7 @@
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
+    <string name="title_expand_warning">Expanding this message will download %1$s</string>
     <string name="title_download_message">Downloading &#8230;</string>
 
     <string name="title_compose">Compose</string>
@@ -600,6 +602,7 @@
     <string name="title_via_identity">Via:</string>
     <string name="title_received">Received:</string>
     <string name="title_size">Size:</string>
+    <string name="title_folder">Folder:</string>
     <string name="title_subject">Subject:</string>
     <string name="title_body_hint">Your message</string>
     <string name="title_discard">Discard</string>
