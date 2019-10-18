@@ -1212,7 +1212,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else
                 tvSubjectEx.setTypeface(Typeface.DEFAULT);
 
-            // dev4223: show always or not?
             tvFolderExTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvFolderEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvFolderEx.setText(tvFolder.getText());
