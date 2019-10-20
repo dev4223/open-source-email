@@ -21,12 +21,14 @@
     <!-- White 87%  primary_text_default_material_dark -->
     <color name="colorUnreadDark">#ffffffff</color>
 
-    <!-- Light blue 900 -->
-    <!-- darkPrimary orig: #01579b -->
+    <!-- Grey 800 -->
+    <!-- darkPrimary orig: #424242 -->
     <color name="darkPrimary">#003254</color>
-    <!-- darkPrimaryDark orig: #002f6c -->
+    <!-- darkPrimaryDark orig: #1b1b1b -->
     <color name="darkPrimaryDark">#001F2A</color>
     <color name="blackPrimaryLight">#005783</color>
+    <!-- darkPrimaryLight orig: #6d6d6d -->
+    <color name="darkPrimaryLight">#005783</color>
     <!-- blackAccent orig: #b27d00 -->
     <color name="blackAccent">#FFE50A3E</color>
     <color name="blackColorSubject">#dfdfdf</color>

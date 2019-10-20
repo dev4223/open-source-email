@@ -31,11 +31,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.NumberPicker;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,9 +44,6 @@ import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
 public class FragmentOptionsMisc extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
-    private SwitchCompat swDoubleBack;
-    private NumberPicker npDefaultSnooze;
-    private Spinner spBiometricsTimeout;
     private SwitchCompat swEnglish;
     private SwitchCompat swWatchdog;
     private SwitchCompat swUpdates;
@@ -62,19 +56,20 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private TextView tvProcessors;
     private TextView tvMemoryClass;
+    private TextView tvStorageSpace;
     private TextView tvLastCleanup;
     private TextView tvUuid;
 
     private Group grpDebug;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "double_back", "default_snooze", "biometrics_timeout", "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
+            "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
             "welcome", "crash_reports_asked",
-            "show_html_confirmed", "print_html_confirmed",
-            "identities_asked", "edit_ref_confirmed", "delete_ref_confirmed"
+            "print_html_confirmed",
+            "identities_asked", "delete_ref_confirmed", "send_dialog"
     };
 
     @Override
@@ -87,9 +82,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         // Get controls
 
-        swDoubleBack = view.findViewById(R.id.swDoubleBack);
-        npDefaultSnooze = view.findViewById(R.id.npDefaultSnooze);
-        spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         swEnglish = view.findViewById(R.id.swEnglish);
         swWatchdog = view.findViewById(R.id.swWatchdog);
         swUpdates = view.findViewById(R.id.swUpdates);
@@ -102,47 +94,17 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         tvProcessors = view.findViewById(R.id.tvProcessors);
         tvMemoryClass = view.findViewById(R.id.tvMemoryClass);
+        tvStorageSpace = view.findViewById(R.id.tvStorageSpace);
         tvLastCleanup = view.findViewById(R.id.tvLastCleanup);
         tvUuid = view.findViewById(R.id.tvUuid);
 
         grpDebug = view.findViewById(R.id.grpDebug);
-
-        npDefaultSnooze.setMinValue(1);
-        npDefaultSnooze.setMaxValue(999);
 
         setOptions();
 
         // Wire controls
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-
-        swDoubleBack.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("double_back", checked).apply();
-            }
-        });
-
-        npDefaultSnooze.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            @Override
-
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                prefs.edit().putInt("default_snooze", newVal).apply();
-            }
-        });
-
-        spBiometricsTimeout.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                int[] values = getResources().getIntArray(R.array.biometricsTimeoutValues);
-                prefs.edit().putInt("biometrics_timeout", values[position]).apply();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                prefs.edit().remove("biometrics_timeout").apply();
-            }
-        });
 
         swEnglish.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -315,17 +277,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private void setOptions() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
-        swDoubleBack.setChecked(prefs.getBoolean("double_back", true));
-        npDefaultSnooze.setValue(prefs.getInt("default_snooze", 1));
-
-        int biometrics_timeout = prefs.getInt("biometrics_timeout", 2);
-        int[] biometricTimeoutValues = getResources().getIntArray(R.array.biometricsTimeoutValues);
-        for (int pos = 0; pos < biometricTimeoutValues.length; pos++)
-            if (biometricTimeoutValues[pos] == biometrics_timeout) {
-                spBiometricsTimeout.setSelection(pos);
-                break;
-            }
-
         swEnglish.setChecked(prefs.getBoolean("english", false));
         swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
@@ -341,6 +292,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         ActivityManager am = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
         int class_mb = am.getMemoryClass();
         tvMemoryClass.setText(getString(R.string.title_advanced_memory_class, class_mb + " MB"));
+
+        tvStorageSpace.setText(getString(R.string.title_advanced_storage_space,
+                Helper.humanReadableByteCount(Helper.getStorageSpace(), true)));
+
         tvUuid.setText(prefs.getString("uuid", null));
 
         grpDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);

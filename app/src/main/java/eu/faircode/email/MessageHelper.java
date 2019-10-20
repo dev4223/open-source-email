@@ -25,7 +25,6 @@ import android.net.MailTo;
 import android.net.Uri;
 import android.text.Html;
 import android.text.TextUtils;
-import android.webkit.MimeTypeMap;
 
 import androidx.preference.PreferenceManager;
 
@@ -179,10 +178,25 @@ public class MessageHelper {
             // Add extra bcc
             if (identity.bcc != null) {
                 List<Address> bcc = new ArrayList<>();
+
                 Address[] existing = imessage.getRecipients(Message.RecipientType.BCC);
                 if (existing != null)
                     bcc.addAll(Arrays.asList(existing));
-                bcc.addAll(Arrays.asList(InternetAddress.parse(identity.bcc)));
+
+                Address[] all = imessage.getAllRecipients();
+                Address[] abccs = InternetAddress.parse(identity.bcc);
+                for (Address abcc : abccs) {
+                    boolean found = false;
+                    if (all != null)
+                        for (Address a : all)
+                            if (equalEmail(a, abcc)) {
+                                found = true;
+                                break;
+                            }
+                    if (!found)
+                        bcc.add(abcc);
+                }
+
                 imessage.setRecipients(Message.RecipientType.BCC, bcc.toArray(new Address[0]));
             }
 
@@ -542,7 +556,8 @@ public class MessageHelper {
                 "yes".equalsIgnoreCase(header))
             priority = EntityMessage.PRIORITIY_HIGH;
         else if ("normal".equalsIgnoreCase(header) ||
-                "medium".equalsIgnoreCase(header))
+                "medium".equalsIgnoreCase(header) ||
+                "med".equalsIgnoreCase(header))
             priority = EntityMessage.PRIORITIY_NORMAL;
         else if ("low".equalsIgnoreCase(header) ||
                 "non-urgent".equalsIgnoreCase(header) ||
@@ -1351,26 +1366,9 @@ public class MessageHelper {
                     apart.attachment.cid = (cid == null || cid.length == 0 ? null : MimeUtility.unfold(cid[0]));
                     apart.attachment.encryption = (apart.pgp ? EntityAttachment.PGP_MESSAGE : null);
 
-                    if ("text/calendar".equalsIgnoreCase(apart.attachment.type) && TextUtils.isEmpty(apart.attachment.name))
+                    if ("text/calendar".equalsIgnoreCase(apart.attachment.type) &&
+                            TextUtils.isEmpty(apart.attachment.name))
                         apart.attachment.name = "invite.ics";
-
-                    // Try to guess a better content type
-                    // For example, sometimes PDF files are sent as application/octet-stream
-                    if (!apart.pgp) {
-                        String extension = Helper.getExtension(apart.attachment.name);
-                        if (extension != null) {
-                            if ("application/zip".equals(apart.attachment.type) ||
-                                    "application/octet-stream".equals(apart.attachment.type)) {
-                                String type = MimeTypeMap.getSingleton()
-                                        .getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
-                                if (type != null) {
-                                    if (!type.equals(apart.attachment.type))
-                                        Log.w("Guessing file=" + apart.attachment.name + " type=" + type);
-                                    apart.attachment.type = type;
-                                }
-                            }
-                        }
-                    }
 
                     if (apart.attachment.size <= 0)
                         apart.attachment.size = null;
@@ -1424,6 +1422,16 @@ public class MessageHelper {
             sb.append(kar);
         }
         return sb.toString();
+    }
+
+    static boolean equalEmail(Address a1, Address a2) {
+        String email1 = ((InternetAddress) a1).getAddress();
+        String email2 = ((InternetAddress) a2).getAddress();
+        if (email1 != null)
+            email1 = email1.toLowerCase();
+        if (email2 != null)
+            email2 = email2.toLowerCase();
+        return Objects.equals(email1, email2);
     }
 
     static boolean equal(Address[] a1, Address[] a2) {

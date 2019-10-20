@@ -202,6 +202,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean flags_background;
     private boolean preview;
     private boolean preview_italic;
+    private int preview_lines;
     private boolean attachments_alt;
     private boolean contrast;
     private boolean monospaced;
@@ -296,7 +297,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvBccTitle;
         private TextView tvIdentityTitle;
         private TextView tvSizeExTitle;
-        private TextView tvFolderExTitle;
 
         private TextView tvFromEx;
         private TextView tvTo;
@@ -306,7 +306,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvIdentity;
         private TextView tvTimeEx;
         private TextView tvSizeEx;
-        private TextView tvFolderEx;
 
         private TextView tvSubjectEx;
         private TextView tvFlags;
@@ -441,7 +440,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle = vsBody.findViewById(R.id.tvBccTitle);
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
             tvSizeExTitle = vsBody.findViewById(R.id.tvSizeExTitle);
-            tvFolderExTitle = vsBody.findViewById(R.id.tvFolderExTitle);
 
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
             tvTo = vsBody.findViewById(R.id.tvTo);
@@ -452,7 +450,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvTimeEx = vsBody.findViewById(R.id.tvTimeEx);
             tvSizeEx = vsBody.findViewById(R.id.tvSizeEx);
 
-            tvFolderEx = vsBody.findViewById(R.id.tvFolderEx);
             tvSubjectEx = vsBody.findViewById(R.id.tvSubjectEx);
             tvFlags = vsBody.findViewById(R.id.tvFlags);
             tvKeywords = vsBody.findViewById(R.id.tvKeywords);
@@ -837,8 +834,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (viewType == ViewType.FOLDER)
                 tvFolder.setText(outbox ? message.identityEmail : message.accountName);
-            else if (type == null)
-                tvFolder.setText((compact ? "" : message.accountName + "/") + message.getFolderName(context));
+            else if (viewType == ViewType.THREAD || viewType == ViewType.SEARCH)
+                tvFolder.setText(message.getFolderName(context));
             else
                 tvFolder.setText(message.accountName + "/" + message.getFolderName(context));
 
@@ -887,6 +884,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (tvPreview.getTag() == null || (int) tvPreview.getTag() != textColor) {
                 tvPreview.setTag(textColor);
                 tvPreview.setTextColor(textColor);
+                tvPreview.setMaxLines(preview_lines);
             }
             tvPreview.setTypeface(
                     monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT,
@@ -1006,7 +1004,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle.setVisibility(View.GONE);
             tvIdentityTitle.setVisibility(View.GONE);
             tvSizeExTitle.setVisibility(View.GONE);
-            tvFolderExTitle.setVisibility(View.GONE);
 
             tvFromEx.setVisibility(View.GONE);
             tvTo.setVisibility(View.GONE);
@@ -1016,7 +1013,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity.setVisibility(View.GONE);
             tvTimeEx.setVisibility(View.GONE);
             tvSizeEx.setVisibility(View.GONE);
-            tvFolderEx.setVisibility(View.GONE);
             tvSubjectEx.setVisibility(View.GONE);
             tvFlags.setVisibility(View.GONE);
             tvKeywords.setVisibility(View.GONE);
@@ -1203,9 +1199,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .append(message.total == null ? "-" : Helper.humanReadableByteCount(message.total, true));
             tvSizeEx.setText(size.toString());
 
+<<<<<<< HEAD
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSubjectEx.setVisibility(View.VISIBLE);
+=======
+            tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+>>>>>>> upstream/master
             tvSubjectEx.setText(message.subject);
             if (subject_italic)
                 tvSubjectEx.setTypeface(Typeface.DEFAULT, Typeface.ITALIC);
@@ -2499,6 +2499,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean expanded = !properties.getValue("expanded", message.id);
                 properties.setValue("expanded", message.id, expanded);
 
+                ibExpander.setTag(expanded);
                 ibExpander.setImageLevel(expanded ? 0 /* less*/ : 1 /* more */);
 
                 if (expanded)
@@ -2508,6 +2509,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 bindFlagged(message, expanded);
                 bindExpandWarning(message, expanded);
+
+                // Needed for expand one
+                properties.scrollTo(getAdapterPosition());
             }
         }
 
@@ -3639,6 +3643,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.flags_background = prefs.getBoolean("flags_background", false);
         this.preview = prefs.getBoolean("preview", false);
         this.preview_italic = prefs.getBoolean("preview_italic", true);
+        this.preview_lines = prefs.getInt("preview_lines", 2);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
         this.contrast = prefs.getBoolean("contrast", false);
         this.monospaced = prefs.getBoolean("monospaced", false);

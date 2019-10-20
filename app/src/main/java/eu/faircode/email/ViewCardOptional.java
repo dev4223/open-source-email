@@ -32,9 +32,9 @@ import androidx.preference.PreferenceManager;
 
 public class ViewCardOptional extends CardView {
     private boolean cards;
+    private boolean indentation;
     private boolean compact;
     private boolean threading;
-    private boolean indentation;
     private int margin;
     private int ident;
     private Integer color = null;
@@ -57,9 +57,9 @@ public class ViewCardOptional extends CardView {
     private void init(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         cards = prefs.getBoolean("cards", true);
+        indentation = prefs.getBoolean("indentation", false);
         compact = prefs.getBoolean("compact", false);
         threading = prefs.getBoolean("threading", true);
-        indentation = prefs.getBoolean("indentation", false);
 
         // dev4223: was: '3 : 6' and '12 + (compact ? 3 : 6)'
         margin = Helper.dp2pixels(context, compact ? 1 : 2);

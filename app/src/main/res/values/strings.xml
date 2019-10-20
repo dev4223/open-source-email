@@ -138,6 +138,7 @@
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_remark">Go \'back\' to go to the inbox</string>
     <string name="title_setup_gmail" translatable="false">Gmail</string>
+    <string name="title_setup_outlook" translatable="false">Outlook</string>
     <string name="title_setup_other">Other provider</string>
     <string name="title_setup_gmail_support">Authorizing Google accounts will work in official versions only because Android checks the app signature</string>
     <string name="title_setup_gmail_rationale">Please grant permissions to select an account and read your name</string>
@@ -241,6 +242,7 @@
     <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_manage_connectivity">Manage connectivity</string>
 
+    <string name="title_advanced_landscape">Use two columns in landscape mode</string>
     <string name="title_advanced_startup">Show on start screen</string>
     <string name="title_advanced_cards">Show cards</string>
     <string name="title_advanced_date_header">Group by date</string>
@@ -264,6 +266,7 @@
     <string name="title_advanced_flags_background">Show colored background instead of colored stars</string>
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_preview_italic">Show message preview in italics</string>
+    <string name="title_advanced_preview_lines">Number of preview lines</string>
     <string name="title_advanced_addresses">Show address details by default</string>
     <string name="title_advanced_attachments_alt">Show attachments after the message text</string>
     <string name="title_advanced_contrast">Use high contrast for message text</string>
@@ -274,6 +277,7 @@
     <string name="title_advanced_seekbar">Show relative conversation position with a dot</string>
     <string name="title_advanced_actionbar">Show conversation action bar</string>
 
+    <string name="title_advanced_double_back">Double \'back\' to exit</string>
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
     <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
     <string name="title_advanced_double_tap">Double tap to mark message read/unread</string>
@@ -289,6 +293,7 @@
     <string name="title_advanced_autounstar">Automatically remove stars from messages on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
     <string name="title_advanced_discard_delete">On discard draft permanently delete draft</string>
+    <string name="title_advanced_default_snooze">Default snooze time</string>
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_unseen_ignored">Let the number of new messages match the number of notifications</string>
@@ -312,6 +317,8 @@
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
     <string name="title_advanced_recents">Hide FairEmail from screen with recent apps</string>
+    <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
+    <string name="title_advanced_pin">PIN</string>
 
     <string name="title_advanced_badge_hint">Only available on supported launchers</string>
     <string name="title_advanced_notify_action_hint">At most three actions will be shown</string>
@@ -320,9 +327,6 @@
     <string name="title_advanced_notify_no_grouping">This Android version does not support notification grouping</string>
     <string name="title_advanced_notify_no_channels">This Android version does not support notification channels</string>
 
-    <string name="title_advanced_double_back">Double \'back\' to exit</string>
-    <string name="title_advanced_default_snooze">Default snooze time</string>
-    <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
@@ -332,6 +336,7 @@
     <string name="title_advanced_cleanup">Cleanup</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
+    <string name="title_advanced_storage_space" translatable="false">Storage space: %1$s</string>
     <string name="title_advanced_last_cleanup" translatable="false">Last cleanup: %1$s</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
@@ -366,6 +371,7 @@
     <string name="title_advanced_sender_hint">Most providers do not allow modified sender addresses</string>
 
     <string name="title_advanced_display_hidden_hint">This can result in odd looking and double texts</string>
+    <string name="title_advanced_display_pin_hint">A PIN takes precedence over biometrics authentication</string>
 
     <string name="title_advanced_subscribed_only_hint">Enabling this will delete all local folders without subscription</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
@@ -421,6 +427,7 @@
     <string name="title_keep_alive_interval">Keep-alive/poll interval (minutes)</string>
     <string name="title_partial_fetch" translatable="false">Partial fetch</string>
     <string name="title_ignore_size" translatable="false">Ignore bodystructure size</string>
+    <string name="title_related_identity">Add related identity</string>
     <string name="title_check">Check</string>
     <string name="title_no_name">Name missing</string>
     <string name="title_no_email">Email address missing</string>
@@ -474,6 +481,7 @@
     <string name="title_folder_name">Folder name</string>
     <string name="title_display_name">Display name</string>
     <string name="title_show_folders">Show hidden folders</string>
+    <string name="title_apply_to_all">Apply to all &#8230;</string>
     <string name="title_hide_folder">Hide folder</string>
     <string name="title_unified_folder">Show in unified inbox</string>
     <string name="title_navigation_folder">Show in navigation menu</string>
@@ -502,6 +510,7 @@
     <string name="title_folder_sent">Sent</string>
     <string name="title_folder_system">System</string>
     <string name="title_folder_user">User</string>
+    <string name="title_folder_user_only">User folders only</string>
     <string name="title_folder_primary">Folders primary account</string>
     <string name="title_folders_unified">Unified inbox folders</string>
     <string name="title_no_folders">No folders</string>
@@ -602,7 +611,6 @@
     <string name="title_via_identity">Via:</string>
     <string name="title_received">Received:</string>
     <string name="title_size">Size:</string>
-    <string name="title_folder">Folder:</string>
     <string name="title_subject">Subject:</string>
     <string name="title_body_hint">Your message</string>
     <string name="title_discard">Discard</string>
@@ -1067,6 +1075,13 @@
         <item>Low</item>
         <item>Normal</item>
         <item>High</item>
+    </string-array>
+
+    <string-array name="linesNames">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 
     <string name="fingerprint" translatable="false">17BA15C1AF55D925F98B99CEA4375D4CDF4C174B</string>

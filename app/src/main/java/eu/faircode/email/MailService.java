@@ -45,7 +45,9 @@ public class MailService implements AutoCloseable {
 
     static final int AUTH_TYPE_PASSWORD = 1;
     static final int AUTH_TYPE_GMAIL = 2;
+    static final int AUTH_TYPE_OUTLOOK = 3;
 
+    private final static int CHECK_TIMEOUT = 15 * 1000; // milliseconds
     private final static int CONNECT_TIMEOUT = 20 * 1000; // milliseconds
     private final static int WRITE_TIMEOUT = 60 * 1000; // milliseconds
     private final static int READ_TIMEOUT = 60 * 1000; // milliseconds
@@ -57,7 +59,7 @@ public class MailService implements AutoCloseable {
     private MailService() {
     }
 
-    MailService(Context context, String protocol, String realm, boolean insecure, boolean debug) throws NoSuchProviderException {
+    MailService(Context context, String protocol, String realm, boolean insecure, boolean check, boolean debug) throws NoSuchProviderException {
         this.context = context.getApplicationContext();
         this.protocol = protocol;
         this.debug = debug;
@@ -69,6 +71,11 @@ public class MailService implements AutoCloseable {
 
         properties.put("mail." + protocol + ".sasl.realm", realm == null ? "" : realm);
         properties.put("mail." + protocol + ".auth.ntlm.domain", realm == null ? "" : realm);
+
+        // TODO: make timeouts configurable?
+        properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(check ? CHECK_TIMEOUT : CONNECT_TIMEOUT));
+        properties.put("mail." + protocol + ".writetimeout", Integer.toString(check ? CHECK_TIMEOUT : WRITE_TIMEOUT)); // one thread overhead
+        properties.put("mail." + protocol + ".timeout", Integer.toString(check ? CHECK_TIMEOUT : READ_TIMEOUT));
 
         if (debug && BuildConfig.DEBUG)
             properties.put("mail.debug.auth", "true");
@@ -85,11 +92,6 @@ public class MailService implements AutoCloseable {
             properties.put("mail.pop3.starttls.enable", "true");
             properties.put("mail.pop3.starttls.required", Boolean.toString(!insecure));
 
-            // TODO: make timeouts configurable?
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
-            properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT)); // one thread overhead
-            properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
-
         } else if ("imap".equals(protocol) || "imaps".equals(protocol)) {
             // https://javaee.github.io/javamail/docs/api/com/sun/mail/imap/package-summary.html#properties
             properties.put("mail." + protocol + ".ssl.checkserveridentity", Boolean.toString(!insecure));
@@ -99,11 +101,6 @@ public class MailService implements AutoCloseable {
 
             properties.put("mail.imap.starttls.enable", "true");
             properties.put("mail.imap.starttls.required", Boolean.toString(!insecure));
-
-            // TODO: make timeouts configurable?
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
-            properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT)); // one thread overhead
-            properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
 
             properties.put("mail." + protocol + ".connectionpool.debug", "true");
             properties.put("mail." + protocol + ".connectionpoolsize", "2");
@@ -134,10 +131,6 @@ public class MailService implements AutoCloseable {
             properties.put("mail.smtp.starttls.required", Boolean.toString(!insecure));
 
             properties.put("mail." + protocol + ".auth", "true");
-
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
-            properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT)); // one thread overhead
-            properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
 
         } else
             throw new NoSuchProviderException(protocol);
@@ -183,7 +176,7 @@ public class MailService implements AutoCloseable {
 
     public String connect(String host, int port, int auth, String user, String password) throws MessagingException {
         try {
-            if (auth == AUTH_TYPE_GMAIL)
+            if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OUTLOOK)
                 properties.put("mail." + protocol + ".auth.mechanisms", "XOAUTH2");
 
             //if (BuildConfig.DEBUG)

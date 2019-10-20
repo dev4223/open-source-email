@@ -66,6 +66,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -285,14 +286,61 @@ public class FragmentCompose extends FragmentBase {
         // Wire controls
         spIdentity.setOnItemSelectedListener(identitySelected);
 
+        View.OnTouchListener onTouchListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                EditText et = (EditText) v;
+                int sstart = et.getSelectionStart();
+                int send = et.getSelectionEnd();
+
+                if (sstart == send && event.getAction() == MotionEvent.ACTION_DOWN) {
+                    float x = event.getX() + et.getScrollX();
+                    float y = event.getY() + et.getScrollY();
+                    int pos = et.getOffsetForPosition(x, y);
+                    if (pos >= 0)
+                        et.setSelection(pos);
+                }
+
+                return false;
+            }
+        };
+
+        View.OnLongClickListener longClickListener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                EditText et = (EditText) v;
+                int sstart = et.getSelectionStart();
+                int send = et.getSelectionEnd();
+                String text = et.getText().toString();
+
+                if (send < 0 || send > sstart)
+                    return false;
+
+                int ecomma = text.indexOf(',', sstart);
+                if (ecomma < 0)
+                    return false;
+
+                int scomma = text.substring(0, ecomma).lastIndexOf(',');
+                scomma = (scomma < 0 ? 0 : scomma + 1);
+                et.setSelection(scomma, ecomma + 1);
+                return false;
+            }
+        };
+
         etTo.setMaxLines(Integer.MAX_VALUE);
         etTo.setHorizontallyScrolling(false);
+        etTo.setOnTouchListener(onTouchListener);
+        etTo.setOnLongClickListener(longClickListener);
 
         etCc.setMaxLines(Integer.MAX_VALUE);
         etCc.setHorizontallyScrolling(false);
+        etCc.setOnTouchListener(onTouchListener);
+        etCc.setOnLongClickListener(longClickListener);
 
         etBcc.setMaxLines(Integer.MAX_VALUE);
         etBcc.setHorizontallyScrolling(false);
+        etBcc.setOnTouchListener(onTouchListener);
+        etBcc.setOnLongClickListener(longClickListener);
 
         etSubject.setMaxLines(Integer.MAX_VALUE);
         etSubject.setHorizontallyScrolling(false);
@@ -1623,10 +1671,10 @@ public class FragmentCompose extends FragmentBase {
                     case OpenPgpApi.RESULT_CODE_ERROR:
                         db.identity().setIdentitySignKey(identity.id, null);
                         OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
-                        if (error == null)
-                            throw new IllegalArgumentException("Unknown error");
-                        else
-                            throw new IllegalArgumentException(error.getMessage() + " (" + error.getErrorId() + ")");
+                        throw new IllegalArgumentException(
+                                "OpenPgp" +
+                                        " error " + (error == null ? "?" : error.getErrorId()) +
+                                        ": " + (error == null ? "?" : error.getMessage()));
 
                     default:
                         throw new IllegalArgumentException("Unknown result code=" + resultCode);

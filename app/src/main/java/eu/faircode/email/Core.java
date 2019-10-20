@@ -1280,7 +1280,7 @@ class Core {
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.synchronize = false;
                         folder.subscribed = subscribed;
-                        folder.poll = ("imap.gmail.com".equals(account.host));
+                        folder.poll = account.shouldPoll();
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                         folder.selectable = selectable;
@@ -1902,6 +1902,7 @@ class Core {
                     crumb.put("start", Integer.toString(from));
                     crumb.put("end", Integer.toString(i));
                     crumb.put("free", Integer.toString(free));
+                    crumb.put("partial", Boolean.toString(account.partial_fetch));
                     Log.breadcrumb("download", crumb);
                     Log.i("Download " + from + ".." + i + " free=" + free);
 

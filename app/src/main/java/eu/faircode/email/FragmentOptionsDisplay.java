@@ -22,6 +22,7 @@ package eu.faircode.email;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -48,6 +49,7 @@ import androidx.preference.PreferenceManager;
 
 public class FragmentOptionsDisplay extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private Button btnTheme;
+    private SwitchCompat swLandscape;
     private Spinner spStartup;
     private SwitchCompat swCards;
     private SwitchCompat swDate;
@@ -74,6 +76,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swFlagsBackground;
     private SwitchCompat swPreview;
     private SwitchCompat swPreviewItalic;
+    private Spinner spPreviewLines;
     private SwitchCompat swAddresses;
     private SwitchCompat swAttachmentsAlt;
 
@@ -86,11 +89,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "theme", "startup", "cards", "date", "threading", "indentation", "highlight_unread",
+            "theme", "landscape", "startup", "cards", "indentation", "date", "threading", "highlight_unread",
             "avatars", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
             "name_email", "distinguish_contacts", "authentication",
             "subject_top", "subject_italic", "subject_ellipsize",
-            "flags", "flags_background", "preview", "preview_italic", "addresses", "attachments_alt",
+            "flags", "flags_background", "preview", "preview_italic", "preview_lines", "addresses", "attachments_alt",
             "contrast", "monospaced", "text_color",
             "inline_images", "collapse_quotes", "seekbar", "actionbar",
     };
@@ -106,11 +109,12 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         // Get controls
 
         btnTheme = view.findViewById(R.id.btnTheme);
+        swLandscape = view.findViewById(R.id.swLandscape);
         spStartup = view.findViewById(R.id.spStartup);
         swCards = view.findViewById(R.id.swCards);
+        swIndentation = view.findViewById(R.id.swIndentation);
         swDate = view.findViewById(R.id.swDate);
         swThreading = view.findViewById(R.id.swThreading);
-        swIndentation = view.findViewById(R.id.swIndentation);
         swHighlightUnread = view.findViewById(R.id.swHighlightUnread);
         swAvatars = view.findViewById(R.id.swAvatars);
         swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
@@ -132,6 +136,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swFlagsBackground = view.findViewById(R.id.swFlagsBackground);
         swPreview = view.findViewById(R.id.swPreview);
         swPreviewItalic = view.findViewById(R.id.swPreviewItalic);
+        spPreviewLines = view.findViewById(R.id.spPreviewLines);
         swAddresses = view.findViewById(R.id.swAddresses);
         swAttachmentsAlt = view.findViewById(R.id.swAttachmentsAlt);
         swContrast = view.findViewById(R.id.swContrast);
@@ -155,6 +160,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        swLandscape.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("landscape", checked).apply();
+            }
+        });
+
         spStartup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
@@ -172,6 +184,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("cards", checked).apply();
+                swIndentation.setEnabled(checked);
+            }
+        });
+
+        swIndentation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("indentation", checked).apply();
             }
         });
 
@@ -187,13 +207,6 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("threading", checked).apply();
                 WidgetUnified.update(getContext());
-            }
-        });
-
-        swIndentation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("indentation", checked).apply();
             }
         });
 
@@ -367,6 +380,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("preview", checked).apply();
                 swPreviewItalic.setEnabled(checked);
+                spPreviewLines.setEnabled(checked);
             }
         });
 
@@ -374,6 +388,18 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("preview_italic", checked).apply();
+            }
+        });
+
+        spPreviewLines.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                prefs.edit().putInt("preview_lines", position + 1).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("preview_lines").apply();
             }
         });
 
@@ -486,6 +512,12 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private void setOptions() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
+        boolean normal = getResources().getConfiguration()
+                .isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
+
+        swLandscape.setChecked(prefs.getBoolean("landscape", true));
+        swLandscape.setEnabled(normal);
+
         String startup = prefs.getString("startup", "unified");
         String[] startupValues = getResources().getStringArray(R.array.startupValues);
         for (int pos = 0; pos < startupValues.length; pos++)
@@ -495,9 +527,10 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
 
         swCards.setChecked(prefs.getBoolean("cards", true));
+        swIndentation.setChecked(prefs.getBoolean("indentation", false));
+        swIndentation.setEnabled(swCards.isChecked());
         swDate.setChecked(prefs.getBoolean("date", true));
         swThreading.setChecked(prefs.getBoolean("threading", true));
-        swIndentation.setChecked(prefs.getBoolean("indentation", false));
         swHighlightUnread.setChecked(prefs.getBoolean("highlight_unread", false));
         swAvatars.setChecked(prefs.getBoolean("avatars", true));
         swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
@@ -531,6 +564,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swPreview.setChecked(prefs.getBoolean("preview", false));
         swPreviewItalic.setChecked(prefs.getBoolean("preview_italic", true));
         swPreviewItalic.setEnabled(swPreview.isChecked());
+        spPreviewLines.setSelection(prefs.getInt("preview_lines", 2) - 1);
+        spPreviewLines.setEnabled(swPreview.isChecked());
         swAddresses.setChecked(prefs.getBoolean("addresses", false));
         swAttachmentsAlt.setChecked(prefs.getBoolean("attachments_alt", false));
         swContrast.setChecked(prefs.getBoolean("contrast", false));

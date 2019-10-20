@@ -42,7 +42,7 @@ Related questions:
 * A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * The folder selector sometimes shows no folders for yet unknown reasons.
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
-* Encryption with [YubiKey](https://www.yubico.com/) results into an infinite loop. FairEmail follows the latest version of the [OpenKeychain API](https://github.com/open-keychain/openpgp-api), so this is likely being caused by an external bug.
+* Encryption with YubiKey results into an infinite loop. Since looking into several log files didn't reveal the problem: sponsor me a [Yubikey 5 NFC](https://www.yubico.com/product/yubikey-5-nfc) so I can reproduce the problem.
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 
 ## Planned features
@@ -217,7 +217,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(112) Which email provider do you recommend?](#user-content-faq112)
 * [(113) How does biometric authentication work?](#user-content-faq113)
 * [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
-* [(115) Can you add email address chips?](#user-content-faq114)
+* [(115) Can you add email address chips?](#user-content-faq115)
 * [~~(116) How can I show images in messages from trusted senders by default?~~](#user-content-faq116)
 * [(117) Can you help me restore my purchase?](#user-content-faq117)
 * [(118) What does 'Remove tracking parameters' exactly?](#user-content-faq118)
@@ -228,7 +228,7 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(123) What does 'force sync'?](#user-content-faq123)
 * [(124) Why do I get 'Message too large or too complex to display'?](#user-content-faq124)
 * [(125) What are the current experimental features?](#user-content-faq125)
-* [(126) What does 'User is authenticated but not connected' mean?](#user-content-faq126)
+* [(126) Can message previews be sent to my wearable?](#user-content-faq126)
 * [(127) How can I fix 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
 * [(128) How can I reset asked questions, for example to show images?](#user-content-faq128)
 * [(129) Are ProtonMail, Tutanota supported?](#user-content-faq129)
@@ -242,7 +242,6 @@ FairEmail follows all the best practices for an email client as decribed in [thi
 * [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
 * [(138) Can you add calendar / contact management?](#user-content-faq138)
 * [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
-* [(140) Can message previews be sent to my wearable?](#user-content-faq140)
 
 [I have another question.](#user-content-support)
 
@@ -733,7 +732,7 @@ There are general errors and errors specific to Gmail accounts (see below).
 
 **General errors**
 
-The error *... Authentication failed ...* likely means your username or password was incorrect.
+The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means your username or password was incorrect.
 Some providers expect as username just *username* and others your full email address *username@example.com*.
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
 for example by allowing to logging from certain networks / IP addresses only.
@@ -2281,10 +2280,17 @@ The current experimental features are:
 <br />
 
 <a name="faq126"></a>
-**(126) What does 'User is authenticated but not connected' mean?**
+**(126) Can message previews be sent to my wearable?**
 
-The message *User is authenticated but not connected* is caused by a bug in older versions of Microsoft's Exchange server.
-This message in fact means that the password was invalid, likely because it was changed.
+FairEmail fetches a message in two steps:
+
+1. Fetch message headers
+1. Fetch message text and attachments
+
+Directly after the first step new messages will be notified.
+However, only until after the second step the message text will be available.
+FairEmail updates exiting notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
+Since there is no guarantee that the message text will be fetched directly after the message header, it is not possible to send message previews to a wearable.
 
 <br />
 
@@ -2443,25 +2449,14 @@ The error *User is authenticated but not connected* might occur if:
 
 <br />
 
-<a name="faq1140"></a>
-**(140) Can message previews be sent to my wearable?**
-
-FairEmail fetches a message in two steps:
-
-1. Fetch message headers
-1. Fetch message text and attachments
-
-Directly after the first step new messages will be notified.
-However, only until after the second step the message text will be available.
-FairEmail updates exiting notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
-Since there is no guarantee that the message text will be fetched directly after the message header, it is not possible to send message previews to a wearable.
-
-
-<br />
-
 ## Support
 
-If you have another question, want to request a feature or report a bug, you can use [this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168).
-Registration is free.
+Requested features should:
 
-If you are a supporter of the project, you can get limited personal support by using [this form](https://contact.faircode.eu/?product=fairemailsupport).
+* be useful to most people
+* not complicate the usage of FairEmail
+* fit within the philosophy of FairEmail (privacy friendly, security minded)
+
+Features not fulfilling these requirements will likely be rejected.
+
+If you have another question, want to request a feature or report a bug, please use *Report issue* in the main navigation/hamburger menu of the app.

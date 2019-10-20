@@ -68,7 +68,7 @@ import static androidx.core.text.HtmlCompat.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_CONSECUTIVE;
 
 public class HtmlHelper {
-    private static final int PREVIEW_SIZE = 250; // characters
+    private static final int PREVIEW_SIZE = 500; // characters
 
     private static final float MIN_LUMINANCE = 0.5f;
     private static final int MAX_AUTO_LINK = 250;
@@ -80,6 +80,16 @@ public class HtmlHelper {
             "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li"));
 
     static String sanitize(Context context, String html, boolean show_images) {
+        try {
+            return _sanitize(context, html, show_images);
+        } catch (Throwable ex) {
+            // OutOfMemoryError
+            Log.e(ex);
+            return Helper.formatThrowable(ex);
+        }
+    }
+
+    private static String _sanitize(Context context, String html, boolean show_images) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean text_color = prefs.getBoolean("text_color", true);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
@@ -197,7 +207,7 @@ public class HtmlHelper {
                                     Log.e("Color=" + c);
                                 }
 
-                                if (color != null) {
+                                if (color != null && !(dark && color == Color.BLACK)) {
                                     color = Helper.adjustLuminance(color, dark, MIN_LUMINANCE);
                                     c = String.format("#%06x", color & 0xFFFFFF);
                                     sb.append("color:").append(c).append(";");
@@ -356,19 +366,17 @@ public class HtmlHelper {
             String src = img.attr("src");
             String tracking = img.attr("tracking");
 
-            if (!show_images) {
-                if (!TextUtils.isEmpty(alt)) {
+            if (!show_images && !TextUtils.isEmpty(alt))
+                if (TextUtils.isEmpty(tracking))
+                    img.appendText(" " + alt + " ");
+                else {
                     img.append("&nbsp;");
-                    if (TextUtils.isEmpty(tracking))
-                        img.appendText(alt);
-                    else {
-                        Element a = document.createElement("a");
-                        a.attr("href", tracking);
-                        a.text(alt);
-                        img.appendChild(a);
-                    }
+                    Element a = document.createElement("a");
+                    a.attr("href", tracking);
+                    a.text(alt);
+                    img.appendChild(a);
+                    img.appendText(" ");
                 }
-            }
 
             // Annotate source with width and height
             if (!TextUtils.isEmpty(src)) {

@@ -273,6 +273,7 @@
         app:barrierDirection="end"
         app:constraint_referenced_ids="tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvFolderExTitle" />
 
+
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"
         android:layout_width="0dp"
