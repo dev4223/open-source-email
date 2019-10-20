@@ -1199,22 +1199,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .append(message.total == null ? "-" : Helper.humanReadableByteCount(message.total, true));
             tvSizeEx.setText(size.toString());
 
-<<<<<<< HEAD
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSubjectEx.setVisibility(View.VISIBLE);
-=======
-            tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
->>>>>>> upstream/master
             tvSubjectEx.setText(message.subject);
             if (subject_italic)
                 tvSubjectEx.setTypeface(Typeface.DEFAULT, Typeface.ITALIC);
             else
                 tvSubjectEx.setTypeface(Typeface.DEFAULT);
-
-            tvFolderExTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            tvFolderEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            tvFolderEx.setText(tvFolder.getText());
 
             // Flags
             tvFlags.setText(debug ? message.flags : null);
