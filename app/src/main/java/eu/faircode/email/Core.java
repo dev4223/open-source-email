@@ -42,6 +42,7 @@ import androidx.preference.PreferenceManager;
 import com.sun.mail.iap.BadCommandException;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
+import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
@@ -1711,9 +1712,16 @@ class Core {
                 // This is done outside of JavaMail to prevent changed notifications
                 if (!ifolder.isOpen())
                     throw new FolderClosedException(ifolder, "UID FETCH");
+
                 MessagingException ex = (MessagingException) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                     @Override
                     public Object doCommand(IMAPProtocol protocol) {
+                        try {
+                            protocol.select(folder.name);
+                        } catch (ProtocolException ex) {
+                            return new MessagingException("UID FETCH", ex);
+                        }
+
                         // Build ranges
                         List<Pair<Long, Long>> ranges = new ArrayList<>();
                         long first = -1;
@@ -2603,6 +2611,7 @@ class Core {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean notify_summary = prefs.getBoolean("notify_summary", false);
+        boolean wearable_preview = prefs.getBoolean("wearable_preview", true);
         boolean biometrics = prefs.getBoolean("biometrics", false);
         boolean biometric_notify = prefs.getBoolean("biometrics_notify", false);
         boolean pro = ActivityBilling.isPro(context);
@@ -2717,8 +2726,14 @@ class Core {
             for (NotificationCompat.Builder builder : notifications) {
                 long id = builder.getExtras().getLong("id", 0);
                 if ((id == 0 && add.size() + remove.size() > 0) || add.contains(id)) {
-                    if (update.contains(id))
-                        builder.setLocalOnly(true);
+                    if (id == 0) {
+                        if (!notify_summary)
+                            builder.setLocalOnly(true);
+                    } else {
+                        if (wearable_preview ? id < 0 : update.contains(id))
+                            builder.setLocalOnly(true);
+                    }
+
                     String tag = "unseen." + group + "." + Math.abs(id);
                     Notification notification = builder.build();
                     Log.i("Notifying tag=" + tag + " id=" + id +
@@ -2749,6 +2764,7 @@ class Core {
         boolean name_email = prefs.getBoolean("name_email", false);
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
+        boolean wearable_preview = prefs.getBoolean("wearable_preview", true);
         boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
         boolean notify_junk = (prefs.getBoolean("notify_junk", false) && pro);
         boolean notify_archive = (prefs.getBoolean("notify_archive", true) || !pro);
@@ -2840,9 +2856,10 @@ class Core {
                         sb.append("<br>");
                     }
 
-                    // Wearable should ignore summary notification
+                    // Wearables
                     builder.setContentText(title);
 
+                    // Device
                     builder.setStyle(new NotificationCompat.BigTextStyle()
                             .bigText(HtmlHelper.fromHtml(sb.toString()))
                             .setSummaryText(title));
@@ -2859,8 +2876,9 @@ class Core {
             ContactInfo info = messageContact.get(message);
 
             // Build arguments
+            long id = (message.content ? message.id : -message.id);
             Bundle args = new Bundle();
-            args.putLong("id", message.content ? message.id : -message.id);
+            args.putLong("id", id);
 
             // Build pending intents
             Intent thread = new Intent(context, ActivityView.class);
@@ -3059,37 +3077,35 @@ class Core {
                 wactions.add(actionSnooze.build());
             }
 
-            if (wactions.size() > 0)
-                mbuilder.extend(new NotificationCompat.WearableExtender()
-                        .addActions(wactions));
-
-            if (message.content && notify_preview)
-                try {
-                    StringBuilder sbm = new StringBuilder();
-                    if (!TextUtils.isEmpty(message.subject))
-                        sbm.append(message.subject).append("<br>");
-
-                    String body = Helper.readText(message.getFile(context));
-                    String preview = HtmlHelper.getPreview(body);
-                    if (!TextUtils.isEmpty(preview))
-                        sbm.append("<em>").append(preview).append("</em>");
-
-                    NotificationCompat.BigTextStyle bigText = new NotificationCompat.BigTextStyle()
-                            .bigText(HtmlHelper.fromHtml(sbm.toString()));
-
-                    if (!TextUtils.isEmpty(message.subject)) {
-                        bigText.setSummaryText(message.subject);
-                        mbuilder.setContentText(message.subject); // Wearable
-                    }
-
-                    mbuilder.setStyle(bigText);
-                } catch (IOException ex) {
-                    Log.e(ex);
-                    mbuilder.setStyle(new NotificationCompat.BigTextStyle()
-                            .bigText(ex.toString())
-                            .setSummaryText(Helper.formatThrowable(ex)));
+            if (message.content && notify_preview) {
+                // Wearables
+                StringBuilder sb = new StringBuilder();
+                if (!TextUtils.isEmpty(message.subject))
+                    sb.append(message.subject);
+                if (wearable_preview) {
+                    if (sb.length() != 0)
+                        sb.append(" - ");
+                    if (!TextUtils.isEmpty(message.preview))
+                        sb.append(message.preview);
                 }
-            else {
+                if (sb.length() > 0)
+                    mbuilder.setContentText(sb.toString());
+
+                // Device
+                StringBuilder sbm = new StringBuilder();
+                if (!TextUtils.isEmpty(message.subject))
+                    sbm.append(message.subject).append("<br>");
+
+                if (!TextUtils.isEmpty(message.preview))
+                    sbm.append("<em>").append(message.preview).append("</em>");
+
+                NotificationCompat.BigTextStyle bigText = new NotificationCompat.BigTextStyle()
+                        .bigText(HtmlHelper.fromHtml(sbm.toString()));
+                if (!TextUtils.isEmpty(message.subject))
+                    bigText.setSummaryText(message.subject);
+
+                mbuilder.setStyle(bigText);
+            } else {
                 if (!TextUtils.isEmpty(message.subject))
                     mbuilder.setContentText(message.subject);
             }
@@ -3104,6 +3120,13 @@ class Core {
                 mbuilder.setColor(message.accountColor);
                 mbuilder.setColorized(true);
             }
+
+            // https://developer.android.com/training/wearables/notifications
+            // https://developer.android.com/reference/android/app/Notification.WearableExtender
+            mbuilder.extend(new NotificationCompat.WearableExtender()
+                    .addActions(wactions)
+                    .setDismissalId(BuildConfig.APPLICATION_ID + ":" + id)
+                    .setBridgeTag(id < 0 ? "header" : "body"));
 
             notifications.add(mbuilder);
         }

@@ -172,7 +172,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
+
     private boolean suitable;
+    private boolean unmetered;
 
     private int dp36;
     private int colorPrimary;
@@ -260,8 +262,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibExpander;
         private ImageView ibFlagged;
         private ImageView ivAvatar;
-        private ImageView ivPriority;
         private ImageView ibAuth;
+        private ImageView ivPriorityHigh;
+        private ImageView ivPriorityLow;
         private TextView tvFrom;
         private TextView tvSize;
         private TextView tvTime;
@@ -380,8 +383,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibExpander = itemView.findViewById(R.id.ibExpander);
             ibFlagged = itemView.findViewById(R.id.ibFlagged);
             ivAvatar = itemView.findViewById(R.id.ivAvatar);
-            ivPriority = itemView.findViewById(R.id.ivPriority);
             ibAuth = itemView.findViewById(R.id.ibAuth);
+            ivPriorityHigh = itemView.findViewById(R.id.ivPriorityHigh);
+            ivPriorityLow = itemView.findViewById(R.id.ivPriorityLow);
             tvFrom = itemView.findViewById(subject_top ? R.id.tvSubject : R.id.tvFrom);
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
@@ -646,8 +650,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibExpander.setVisibility(View.GONE);
             ibFlagged.setVisibility(View.GONE);
             ivAvatar.setVisibility(View.GONE);
-            ivPriority.setVisibility(View.GONE);
             ibAuth.setVisibility(View.GONE);
+            ivPriorityHigh.setVisibility(View.GONE);
+            ivPriorityLow.setVisibility(View.GONE);
             tvFrom.setText(null);
             tvSize.setText(null);
             tvTime.setText(null);
@@ -696,6 +701,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 1.0f);
                 else
                     tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
+                tvFolder.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
                 int px = Math.round(
@@ -723,8 +729,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean dim = (message.duplicate || EntityFolder.TRASH.equals(message.folderType));
                 ibFlagged.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAvatar.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
-                ivPriority.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ibAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivPriorityHigh.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivPriorityLow.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvFrom.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -796,8 +803,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
 
             // Line 1
-            ivPriority.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
+            ivPriorityHigh.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
+            ivPriorityLow.setVisibility(EntityMessage.PRIORITIY_LOW.equals(message.priority) ? View.VISIBLE : View.GONE);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             tvSize.setText(message.totalSize == null ? null : Helper.humanReadableByteCount(message.totalSize, true));
@@ -1077,13 +1085,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindExpandWarning(TupleMessageEx message, boolean expanded) {
-            tvExpand.setText(
-                    message.size == null ? null : context.getString(R.string.title_expand_warning,
-                            Helper.humanReadableByteCount(message.size, true)));
-            tvExpand.setVisibility(
-                    viewType == ViewType.THREAD && !expanded &&
-                            message.size != null && !message.content && message.uid != null
-                            ? View.VISIBLE : View.GONE);
+            if (viewType != ViewType.THREAD || expanded || message.content || message.uid == null || unmetered)
+                tvExpand.setVisibility(View.GONE);
+            else {
+                tvExpand.setText(context.getString(R.string.title_expand_warning,
+                        message.size == null ? "?" : Helper.humanReadableByteCount(message.size, true)));
+                tvExpand.setVisibility(View.VISIBLE);
+            }
         }
 
         private void bindExpanded(final TupleMessageEx message, final boolean scroll) {
@@ -3594,10 +3602,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         this.context = parentFragment.getContext();
         this.owner = parentFragment.getViewLifecycleOwner();
-        this.suitable = ConnectionHelper.getNetworkState(context).isSuitable();
         this.inflater = LayoutInflater.from(context);
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
         this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
+
+        ConnectionHelper.NetworkState state = ConnectionHelper.getNetworkState(context);
+        this.suitable = state.isSuitable();
+        this.unmetered = state.isUnmetered();
 
         this.dp36 = Helper.dp2pixels(context, 36);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
@@ -3771,9 +3782,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void checkInternet() {
-        boolean suitable = ConnectionHelper.getNetworkState(context).isSuitable();
-        if (this.suitable != suitable) {
-            this.suitable = suitable;
+        ConnectionHelper.NetworkState state = ConnectionHelper.getNetworkState(context);
+        if (this.suitable != state.isSuitable() || this.unmetered != state.isUnmetered()) {
+            this.suitable = state.isSuitable();
+            this.unmetered = state.isUnmetered();
             notifyDataSetChanged();
         }
     }

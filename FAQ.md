@@ -44,6 +44,7 @@ Related questions:
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
 * Encryption with YubiKey results into an infinite loop. Since looking into several log files didn't reveal the problem: sponsor me a [Yubikey 5 NFC](https://www.yubico.com/product/yubikey-5-nfc) so I can reproduce the problem.
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
+* A preview of the message text doesn't (always) appear on a Pebble, a Samsung watch and possibly other wearables because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignorerd. However, message preview texts do appear on a Mi band 3 used with [GadgetBridge](https://gadgetbridge.org/).
 
 ## Planned features
 
@@ -2290,7 +2291,11 @@ FairEmail fetches a message in two steps:
 Directly after the first step new messages will be notified.
 However, only until after the second step the message text will be available.
 FairEmail updates exiting notifications with a preview of the message text, but unfortunately wearable notifications cannot be updated.
-Since there is no guarantee that the message text will be fetched directly after the message header, it is not possible to send message previews to a wearable.
+
+Since there is no guarantee that a message text will always be fetched directly after a message header,
+it is not possible to guarantee that a new message notification with a preview text will always be sent to a wearable.
+If you think this is good enough, you can enable the notification option *Only send notifications with a message preview to wearables*.
+It is a good idea to review the connection setting *Automatically download messages and attachments on a metered connection up to ...* as well.
 
 <br />
 

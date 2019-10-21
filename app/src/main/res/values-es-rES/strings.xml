@@ -228,6 +228,7 @@
     <string name="title_advanced_flags_background">Mostrar fondo coloreado en lugar de estrellas de color</string>
     <string name="title_advanced_preview">Mostrar vista previa de mensajes</string>
     <string name="title_advanced_preview_italic">Mostrar vista previa de mensaje en cursiva</string>
+    <string name="title_advanced_preview_lines">Número de líneas de vista previa</string>
     <string name="title_advanced_addresses">Mostrar detalles de dirección por defecto</string>
     <string name="title_advanced_attachments_alt">Mostrar adjuntos después del texto del mensaje</string>
     <string name="title_advanced_contrast">Utilizar contraste alto para el texto del mensaje</string>
@@ -268,6 +269,7 @@
     <string name="title_advanced_notify_action_seen">Leer</string>
     <string name="title_advanced_notify_action_snooze">Posponer</string>
     <string name="title_advanced_notify_remove">Eliminar notificación de nuevos mensajes al pulsar en la notificación</string>
+    <string name="title_advanced_wearable_preview">Sólo enviar notificaciones con vista previa de mensaje a dispositivos \"llevables\" (wearable)</string>
     <string name="title_advanced_biometrics_notify">Mostrar contenido de notificación al usar autenticación biométrica</string>
     <string name="title_advanced_light">Usar luz de notificación</string>
     <string name="title_advanced_sound">Seleccionar sonido de notificación</string>
@@ -310,11 +312,13 @@
     <string name="title_advanced_threading_hint">Agrupar mensajes relacionados entre sí</string>
     <string name="title_advanced_name_email_hint">Si está desactivado, solo se mostrarán los nombres cuando estén disponibles</string>
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
+    <string name="title_advanced_wearable_hint">Las notificaciones sólo se envian a dispositivos llevables (wearable) luego de que el texto del mensaje haya sido descargado</string>
     <string name="title_advanced_inline_hint">Las imágenes embebidas son imágenes incluídas en el mensaje</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
     <string name="title_advanced_autoclose_hint">Cerrar automáticamente hilos de conversación cuando todos los mensajes son archivados, enviados o eliminados</string>
     <string name="title_advanced_sender_hint">La mayoría de los proveedores no permiten direcciones de remitente modificadas</string>
     <string name="title_advanced_display_hidden_hint">Esto puede resultar en textos dobles o de apariencia extraña</string>
+    <string name="title_advanced_display_pin_hint">Un PIN tiene prioridad sobre la autenticación biométrica</string>
     <string name="title_advanced_subscribed_only_hint">Activar esto eliminará todas las carpetas locales sin suscripción</string>
     <string name="title_advanced_english_hint">Esto reiniciará la app</string>
     <string name="title_advanced_experiments_hint">Lista de características experimentales actuales</string>
@@ -438,6 +442,7 @@
     <string name="title_folder_sent">Enviados</string>
     <string name="title_folder_system">Sistema</string>
     <string name="title_folder_user">Usuario</string>
+    <string name="title_folder_user_only">Sólo carpetas de usuario</string>
     <string name="title_folder_primary">Cuenta primaria de carpetas</string>
     <string name="title_folders_unified">Carpetas de bandeja de entrada unificada</string>
     <string name="title_no_folders">No hay carpetas</string>
@@ -696,6 +701,7 @@
     <string name="title_legend_zoom">Cambiar tamaño del texto</string>
     <string name="title_legend_draft">Tiene borrador</string>
     <string name="title_legend_priority">Tiene prioridad alta</string>
+    <string name="title_legend_priority_low">Tiene prioridad baja</string>
     <string name="title_legend_auth">Error de autenticación</string>
     <string name="title_legend_snoozed">Está postergado</string>
     <string name="title_legend_browsed">Está navegado o buscado</string>
@@ -890,5 +896,11 @@
         <item>Baja</item>
         <item>Normal</item>
         <item>Alta</item>
+    </string-array>
+    <string-array name="linesNames">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 </resources>
