@@ -44,7 +44,7 @@ Related questions:
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
 * Encryption with YubiKey results into an infinite loop. Since looking into several log files didn't reveal the problem: sponsor me a [Yubikey 5 NFC](https://www.yubico.com/product/yubikey-5-nfc) so I can reproduce the problem.
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
-* A preview of the message text doesn't (always) appear on a Pebble, a Samsung watch and possibly other wearables because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignorerd. However, message preview texts do appear on a Mi band 3 used with [GadgetBridge](https://gadgetbridge.org/).
+* A preview of the message text doesn't (always) appear on a Samsung watch because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. However, message preview texts are known to appear correctly on a Pebble 2, a Fitbit Charge 3 and a Mi band 3. See also [this FAQ](#user-content-faq126).
 
 ## Planned features
 
@@ -75,8 +75,8 @@ Related questions:
 * ~~Remind to attach files~~
 * ~~Select domains to show images for~~ (this will be too complicated to use)
 * ~~Unified starred messages view~~ (there is already a special search for this)
+* ~~Notification move action~~
 * Search for settings
-* Notification move action
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -91,17 +91,18 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 Since FairEmail is meant to be privacy friendly, the following will not be added:
 
 * Opening links without confirmation
-* Showing original messages without confirmation, see also [this FAQ](#user-content-faq35)
+* Showing images and original messages without confirmation, see also [this FAQ](#user-content-faq35)
 * Direct file/folder access: for security/privacy reasons (other) apps should use the [Storage Access Framework](https://developer.android.com/guide/topics/providers/document-provider), see also [this FAQ](#user-content-faq49)
 
 Confirmation is just one tap, which is just a small price for better privacy.
+You can show images and original messages by default for trusted senders on a case-by-case basis by checking *Do not ask this again for ...*.
 Note that your contacts could unknowingly send malicious messages if they got infected with malware.
 
 Stripped and reformatted messages are often better readable than original messages because the margins are removed, and font colors and sizes are standardized.
 
 FairEmail does not allow other apps access to your messages and attachments without your approval.
 
-FairEmail follows all the best practices for an email client as decribed in [this EFF article](https://www.eff.org/deeplinks/2019/01/stop-tracking-my-emails).
+FairEmail follows all the best practices for an email client as described in [this EFF article](https://www.eff.org/deeplinks/2019/01/stop-tracking-my-emails).
 
 ## Frequently Asked Questions
 
@@ -604,6 +605,14 @@ Searching local messages is case insensitive and on partial text.
 The message text of local messages will not be searched if the message text was not downloaded yet.
 Searching on the server might be case sensitive or case insensitive and might be on partial text or whole words, depending on the provider.
 
+Searching through a large number of messages is not very fast because of two limitations:
+
+* [sqlite](https://www.sqlite.org/), the database engine of Android has a record size limit, preventing message texts from being stored in the database
+* Android apps get only limited memory to work with, even if the device has plenty memory available
+
+This means that searching for a message text requires that files containing the message texts need to be opened one by one
+to check if the searched text is contained in the file, which is a relative expensive process.
+
 Searching messages on the device is a free feature, searching messages on the server is a pro feature.
 
 <br />
@@ -1025,7 +1034,7 @@ It is inevitable that synchronizing messages will use battery power because it r
 Reconnecting to an email server will use extra battery power, so an unstable internet connection will result in extra battery usage.
 In this case you might want to synchronize periodically, for example each hour, instead of continuously.
 Note that polling frequently (more than every 30-60 minutes) will likely use more battery power than synchronizing always
-because connection to the server and comparing the local and remotes messages are expensive operations.
+because connecting to the server and comparing the local and remotes messages are expensive operations.
 
 Most of the battery usage, not considering viewing messages, is due to synchronization (receiving and sending) of messages.
 So, to reduce the battery usage, set the number of days to synchronize message for to a lower value,

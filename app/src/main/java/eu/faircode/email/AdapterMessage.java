@@ -261,15 +261,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private View vwColor;
         private ImageButton ibExpander;
         private ImageView ibFlagged;
-        private ImageView ivAvatar;
-        private ImageView ibAuth;
+        private ImageButton ibAvatar;
+        private ImageButton ibAuth;
         private ImageView ivPriorityHigh;
         private ImageView ivPriorityLow;
         private TextView tvFrom;
         private TextView tvSize;
         private TextView tvTime;
         private ImageView ivType;
-        private ImageView ibSnoozed;
+        private ImageButton ibSnoozed;
         private ImageView ivAnswered;
         private ImageView ivAttachments;
         private TextView tvSubject;
@@ -382,7 +382,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             vwColor = itemView.findViewById(R.id.vwColor);
             ibExpander = itemView.findViewById(R.id.ibExpander);
             ibFlagged = itemView.findViewById(R.id.ibFlagged);
-            ivAvatar = itemView.findViewById(R.id.ivAvatar);
+            ibAvatar = itemView.findViewById(R.id.ibAvatar);
             ibAuth = itemView.findViewById(R.id.ibAuth);
             ivPriorityHigh = itemView.findViewById(R.id.ivPriorityHigh);
             ivPriorityLow = itemView.findViewById(R.id.ivPriorityLow);
@@ -555,6 +555,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             });
             view.setOnKeyListener(this);
 
+            ibAvatar.setOnClickListener(this);
             ibAuth.setOnClickListener(this);
             ibSnoozed.setOnClickListener(this);
             ibFlagged.setOnClickListener(this);
@@ -610,6 +611,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             touch.setOnClickListener(null);
             view.setOnKeyListener(null);
 
+            ibAvatar.setOnClickListener(null);
             ibAuth.setOnClickListener(null);
             ibSnoozed.setOnClickListener(null);
             ibFlagged.setOnClickListener(null);
@@ -649,7 +651,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             vwColor.setVisibility(View.GONE);
             ibExpander.setVisibility(View.GONE);
             ibFlagged.setVisibility(View.GONE);
-            ivAvatar.setVisibility(View.GONE);
+            ibAvatar.setVisibility(View.GONE);
             ibAuth.setVisibility(View.GONE);
             ivPriorityHigh.setVisibility(View.GONE);
             ivPriorityLow.setVisibility(View.GONE);
@@ -708,11 +710,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         textSize * (message.unseen > 0 ? 1.1f : 1f) +
                                 textSize * 0.9f +
                                 (compact ? 0 : textSize * 0.9f));
-                ViewGroup.LayoutParams lparams = ivAvatar.getLayoutParams();
+                ViewGroup.LayoutParams lparams = ibAvatar.getLayoutParams();
                 if (lparams.height != px) {
                     lparams.width = px;
                     lparams.height = px;
-                    ivAvatar.requestLayout();
+                    ibAvatar.requestLayout();
                 }
             }
 
@@ -728,7 +730,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (viewType == ViewType.THREAD) {
                 boolean dim = (message.duplicate || EntityFolder.TRASH.equals(message.folderType));
                 ibFlagged.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
-                ivAvatar.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ibAvatar.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ibAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityHigh.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityLow.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -800,7 +802,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibExpander.setVisibility(View.GONE);
 
             // Photo
-            ivAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
+            ibAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
 
             // Line 1
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
@@ -1075,10 +1077,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
             if (info.hasPhoto()) {
-                ivAvatar.setImageBitmap(info.getPhotoBitmap());
-                ivAvatar.setVisibility(View.VISIBLE);
+                ibAvatar.setImageBitmap(info.getPhotoBitmap());
+                ibAvatar.setVisibility(View.VISIBLE);
             } else
-                ivAvatar.setVisibility(View.GONE);
+                ibAvatar.setVisibility(View.GONE);
+
+            Uri lookupUri = info.getLookupUri();
+            ibAvatar.setTag(lookupUri);
+            ibAvatar.setEnabled(lookupUri != null);
 
             if (distinguish_contacts && info.isKnown())
                 tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -1666,7 +1672,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     save = false;
                 if (attachment.progress != null)
                     downloading = true;
-                if (show_inline || !inline)
+
+                if (show_inline || !inline || !attachment.available)
                     a.add(attachment);
 
                 if (attachment.available && "text/calendar".equals(attachment.type)) {
@@ -2003,7 +2010,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message == null)
                 return;
 
-            if (view.getId() == R.id.ibAuth)
+            if (view.getId() == R.id.ibAvatar)
+                onViewContact(message);
+            else if (view.getId() == R.id.ibAuth)
                 onShowAuth(message);
             else if (view.getId() == R.id.ibSnoozed)
                 onShowSnoozed(message);
@@ -2214,6 +2223,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 return true;
             } else
                 return false;
+        }
+
+        private void onViewContact(TupleMessageEx message) {
+            Uri lookupUri = (Uri) ibAvatar.getTag();
+            if (lookupUri != null) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, lookupUri);
+                if (intent.resolveActivity(context.getPackageManager()) != null)
+                    context.startActivity(intent);
+            }
         }
 
         private void onShowAuth(TupleMessageEx message) {
@@ -3672,7 +3690,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && previousList != null)
                     for (int i = 0; i < previousList.size(); i++) {
                         TupleMessageEx message = previousList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored)
+                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
                             prev++;
                     }
 
@@ -3680,7 +3698,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && currentList != null)
                     for (int i = 0; i < currentList.size(); i++) {
                         TupleMessageEx message = currentList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored)
+                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
                             cur++;
                     }
 

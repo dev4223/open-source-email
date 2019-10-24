@@ -122,6 +122,8 @@ public class FragmentAccount extends FragmentBase {
     private Spinner spLeft;
     private Spinner spRight;
 
+    private Spinner spMove;
+
     private Button btnSave;
     private ContentLoadingProgressBar pbSave;
     private CheckBox cbIdentity;
@@ -150,6 +152,7 @@ public class FragmentAccount extends FragmentBase {
     static final Long SWIPE_ACTION_SEEN = -2L;
     static final Long SWIPE_ACTION_SNOOZE = -3L;
     static final Long SWIPE_ACTION_HIDE = -4L;
+    static final Long SWIPE_ACTION_MOVE = -5L;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -217,6 +220,7 @@ public class FragmentAccount extends FragmentBase {
         spJunk = view.findViewById(R.id.spJunk);
         spLeft = view.findViewById(R.id.spLeft);
         spRight = view.findViewById(R.id.spRight);
+        spMove = view.findViewById(R.id.spMove);
 
         btnSave = view.findViewById(R.id.btnSave);
         pbSave = view.findViewById(R.id.pbSave);
@@ -405,6 +409,8 @@ public class FragmentAccount extends FragmentBase {
 
         spLeft.setAdapter(adapterSwipe);
         spRight.setAdapter(adapterSwipe);
+
+        spMove.setAdapter(adapter);
 
         // Initialize
         Helper.setViewsEnabled(view, false);
@@ -668,6 +674,7 @@ public class FragmentAccount extends FragmentBase {
         EntityFolder junk = (EntityFolder) spJunk.getSelectedItem();
         EntityFolder left = (EntityFolder) spLeft.getSelectedItem();
         EntityFolder right = (EntityFolder) spRight.getSelectedItem();
+        EntityFolder move = (EntityFolder) spMove.getSelectedItem();
 
         if (drafts != null && drafts.id != null && drafts.id == 0L)
             drafts = null;
@@ -684,6 +691,9 @@ public class FragmentAccount extends FragmentBase {
             left = null;
         if (right != null && right.id != null && right.id == 0L)
             right = null;
+
+        if (move != null && move.id != null && move.id == 0L)
+            move = null;
 
         Bundle args = new Bundle();
         args.putLong("id", id);
@@ -716,6 +726,7 @@ public class FragmentAccount extends FragmentBase {
         args.putSerializable("junk", junk);
         args.putSerializable("left", left);
         args.putSerializable("right", right);
+        args.putSerializable("move", move);
 
         args.putBoolean("should", should);
 
@@ -772,6 +783,7 @@ public class FragmentAccount extends FragmentBase {
                 EntityFolder junk = (EntityFolder) args.getSerializable("junk");
                 EntityFolder left = (EntityFolder) args.getSerializable("left");
                 EntityFolder right = (EntityFolder) args.getSerializable("right");
+                EntityFolder move = (EntityFolder) args.getSerializable("move");
 
                 boolean pro = ActivityBilling.isPro(context);
                 boolean should = args.getBoolean("should");
@@ -870,6 +882,9 @@ public class FragmentAccount extends FragmentBase {
                     if (!Objects.equals(account.swipe_left, left == null ? null : left.id))
                         return true;
                     if (!Objects.equals(account.swipe_right, right == null ? null : right.id))
+                        return true;
+
+                    if (!Objects.equals(account.move_to, move == null ? null : move.id))
                         return true;
 
                     if (account.error != null)
@@ -1045,6 +1060,19 @@ public class FragmentAccount extends FragmentBase {
                         }
                     }
 
+                    if (move != null && !(move.id != null && move.id < 0)) {
+                        boolean found = false;
+                        for (EntityFolder folder : folders)
+                            if (move.name.equals(folder.name)) {
+                                found = true;
+                                break;
+                            }
+                        if (!found) {
+                            move.type = EntityFolder.USER;
+                            folders.add(move);
+                        }
+                    }
+
                     db.folder().setFoldersUser(account.id);
 
                     for (EntityFolder folder : folders) {
@@ -1061,6 +1089,7 @@ public class FragmentAccount extends FragmentBase {
 
                     account.swipe_left = (left == null ? null : left.id);
                     account.swipe_right = (right == null ? null : right.id);
+                    account.move_to = (move == null ? null : move.id);
                     db.account().updateAccount(account);
 
                     db.setTransactionSuccessful();
@@ -1441,6 +1470,10 @@ public class FragmentAccount extends FragmentBase {
                     spTrash.setSelection(pos);
                 else if (EntityFolder.JUNK.equals(folder.type))
                     spJunk.setSelection(pos);
+
+                if (account != null &&
+                        account.move_to != null && account.move_to.equals(folder.id))
+                    spMove.setSelection(pos);
             }
         }
 
@@ -1471,6 +1504,11 @@ public class FragmentAccount extends FragmentBase {
             hide.id = SWIPE_ACTION_HIDE;
             hide.name = getString(R.string.title_hide);
             folders.add(hide);
+
+            EntityFolder move = new EntityFolder();
+            move.id = SWIPE_ACTION_MOVE;
+            move.name = getString(R.string.title_move);
+            folders.add(move);
 
             folders.addAll(_folders);
 

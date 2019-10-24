@@ -15,9 +15,9 @@
 ![GitHub release](https://img.shields.io/github/release/M66B/FairEmail.svg)
 ![GitHub commits since tagged version](https://img.shields.io/github/commits-since/M66B/FairEmail/0.1.svg)
 
-*Open source, privacy friendly email app for Android*
+*Fully featured, open source, privacy friendly email app for Android*
 
-This open source, privacy friendly email app might be for you if you value your privacy.
+FairEmail might be for you if you value your privacy.
 
 ***
 
@@ -36,6 +36,7 @@ This open source, privacy friendly email app might be for you if you value your 
 
 ## Main features
 
+* Fully featured
 * 100 % [open source](https://github.com/M66B/FairEmail/blob/master/LICENSE)
 * [Privacy friendly](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md)
 * Multiple accounts

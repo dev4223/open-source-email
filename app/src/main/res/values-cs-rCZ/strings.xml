@@ -225,6 +225,7 @@
     <string name="title_advanced_download">Automaticky stahovat zprávy a přílohy na účtovaném připojení až do velikosti</string>
     <string name="title_advanced_roaming">Stahovat zprávy a přílohy během roamingu</string>
     <string name="title_advanced_rlah">Roaming jako doma (RLAH)</string>
+    <string name="title_advanced_socks">Použít SOCKS proxy</string>
     <string name="title_advanced_manage_connectivity">Spravovat připojení</string>
     <string name="title_advanced_landscape">Použít dva sloupce v režimu na šířku</string>
     <string name="title_advanced_startup">Zobrazit na úvodní obrazovce</string>
@@ -285,12 +286,14 @@
     <string name="title_advanced_notify_action_trash">Koš</string>
     <string name="title_advanced_notify_action_junk">Nevyžádané</string>
     <string name="title_advanced_notify_action_archive">Archiv</string>
+    <string name="title_advanced_notify_action_move">Přesunout</string>
     <string name="title_advanced_notify_action_reply">Odpověď</string>
     <string name="title_advanced_notify_action_reply_direct">Přímá odpověď</string>
     <string name="title_advanced_notify_action_flag">Hvězdička</string>
     <string name="title_advanced_notify_action_seen">Přečteno</string>
     <string name="title_advanced_notify_action_snooze">Odložit</string>
     <string name="title_advanced_notify_remove">Odebrat oznámení nové zprávy při stisku oznámení</string>
+    <string name="title_advanced_wearable_preview">Do nositelného zařízení posílat pouze oznámení s náhledem zprávy</string>
     <string name="title_advanced_biometrics_notify">Zobrazit obsah oznámení při používání biometrického ověření</string>
     <string name="title_advanced_light">Použít oznamovací LED</string>
     <string name="title_advanced_sound">Vybrat zvuk oznámení</string>
@@ -299,12 +302,6 @@
     <string name="title_advanced_recents">Skrýt z obrazovky s posledními aplikacemi</string>
     <string name="title_advanced_biometrics_timeout">Vypršení biometrického ověření</string>
     <string name="title_advanced_pin">PIN</string>
-    <string name="title_advanced_badge_hint">K dispozici pouze v podporovaných spouštěčích aplikací</string>
-    <string name="title_advanced_notify_action_hint">Budou zobrazeny nejvýše tři akce</string>
-    <string name="title_advanced_notify_remove_hint">Oznámení nových zpráv budou při odtažení prstem a při označení zpráv jako přečtených odebrána vždy</string>
-    <string name="title_advanced_notify_manage_hint">Stiskněte název kanálu \"Oznámení\" pro nastavení výchozího zvuku oznámení, atd</string>
-    <string name="title_advanced_notify_no_grouping">Tato verze Androidu nepodporuje seskupování oznámení</string>
-    <string name="title_advanced_notify_no_channels">Tato verze Androidu nepodporuje kanály oznámení</string>
     <string name="title_advanced_english">Vynutit anglický jazyk</string>
     <string name="title_advanced_watchdog">Pravidelně kontrolovat, zda je FairEmail stále aktivní</string>
     <string name="title_advanced_updates">Kontrolovat aktualizace</string>
@@ -339,6 +336,13 @@
     <string name="title_advanced_sender_hint">Většina poskytovatelů nepovoluje pozměněné adresy odesílatele</string>
     <string name="title_advanced_display_hidden_hint">Může mít za následek neobvykle vypadající a zdvojené texty</string>
     <string name="title_advanced_display_pin_hint">PIN má přednost před biometrickým ověřením</string>
+    <string name="title_advanced_badge_hint">K dispozici pouze v podporovaných spouštěčích aplikací</string>
+    <string name="title_advanced_notify_action_hint">Budou zobrazeny nejvýše tři akce</string>
+    <string name="title_advanced_notify_remove_hint">Oznámení nových zpráv budou při odtažení prstem a při označení zpráv jako přečtených odebrána vždy</string>
+    <string name="title_advanced_notify_manage_hint">Stiskněte název kanálu \"Oznámení\" pro nastavení výchozího zvuku oznámení, atd</string>
+    <string name="title_advanced_wearable_hint">Oznámení jsou do nositelného zařízení odeslány teprve po stažení textu zprávy</string>
+    <string name="title_advanced_notify_no_grouping">Tato verze Androidu nepodporuje seskupování oznámení</string>
+    <string name="title_advanced_notify_no_channels">Tato verze Androidu nepodporuje kanály oznámení</string>
     <string name="title_advanced_subscribed_only_hint">Povolení této volby vymaže všechny místní složky bez přihlášeného odběru</string>
     <string name="title_advanced_english_hint">Restartuje aplikaci</string>
     <string name="title_advanced_experiments_hint">Seznam aktuálních experimentálních funkcí</string>
@@ -526,6 +530,7 @@
     <string name="title_no_folder">Složka neexistuje</string>
     <string name="title_no_format">Původní zpráva bude zahrnuta</string>
     <string name="title_no_image">Obrázek nemohl být dekódován</string>
+    <string name="title_unused_inline">Nepoužité vložené obrázky budou při uložení/odeslání odebrány</string>
     <string name="title_accross_remark">Zprávy přesunuté napříč účty budou opětovně staženy, což povede ke spotřebě dat navíc</string>
     <string name="title_raw_saved">Zdrojová zpráva uložena</string>
     <string name="title_attachment_saved">Příloha uložena</string>
@@ -721,6 +726,7 @@
     <string name="title_legend_zoom">Změnit velikost textu</string>
     <string name="title_legend_draft">Má koncept</string>
     <string name="title_legend_priority">Má vysokou prioritu</string>
+    <string name="title_legend_priority_low">Má nízkou prioritu</string>
     <string name="title_legend_auth">Ověřování selhalo</string>
     <string name="title_legend_snoozed">Je odloženo</string>
     <string name="title_legend_browsed">Je prohlédnuto/vyhledáno</string>
@@ -817,6 +823,7 @@
     <string name="title_dismiss">Zavřít</string>
     <string name="title_snooze_now">Odložit</string>
     <string name="title_loading">Načítání &#8230;</string>
+    <string name="title_set">Nastavit</string>
     <string name="title_icalendar_accept">Přijmout</string>
     <string name="title_icalendar_decline">Odmítnout</string>
     <string name="title_icalendar_maybe">Nezávazně</string>

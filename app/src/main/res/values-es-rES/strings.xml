@@ -203,6 +203,7 @@
     <string name="title_advanced_download">Descargar automáticamente mensajes y adjuntos usando conexión de datos hasta</string>
     <string name="title_advanced_roaming">Descargar mensajes y adjuntos en itinerancia</string>
     <string name="title_advanced_rlah">Itinerancia como en casa</string>
+    <string name="title_advanced_socks">Usar proxy SOCKS</string>
     <string name="title_advanced_manage_connectivity">Administrar conectividad</string>
     <string name="title_advanced_landscape">Usar dos columnas en modo horizontal</string>
     <string name="title_advanced_startup">Mostrar en pantalla de inicio</string>
@@ -263,6 +264,7 @@
     <string name="title_advanced_notify_action_trash">Papelera</string>
     <string name="title_advanced_notify_action_junk">Spam</string>
     <string name="title_advanced_notify_action_archive">Archivar</string>
+    <string name="title_advanced_notify_action_move">Mover</string>
     <string name="title_advanced_notify_action_reply">Responder</string>
     <string name="title_advanced_notify_action_reply_direct">Responder</string>
     <string name="title_advanced_notify_action_flag">Destacar</string>
@@ -278,12 +280,6 @@
     <string name="title_advanced_recents">Ocultar de pantalla con aplicaciones recientes</string>
     <string name="title_advanced_biometrics_timeout">Límite de tiempo para autenticación biométrica</string>
     <string name="title_advanced_pin">PIN</string>
-    <string name="title_advanced_badge_hint">Sólo disponible en lanzadores soportados</string>
-    <string name="title_advanced_notify_action_hint">Máximo 3 acciones mostradas</string>
-    <string name="title_advanced_notify_remove_hint">Las notificaciones de nuevos mensajes siempre serán eliminadas al deslizarlas y al marcar mensajes como leídos</string>
-    <string name="title_advanced_notify_manage_hint">Pulse el nombre del canal \"Notificaciones\" para establecer el sonido de notificación por defecto, etc</string>
-    <string name="title_advanced_notify_no_grouping">Esta versión de Android no es compatible con la agrupación de notificaciones</string>
-    <string name="title_advanced_notify_no_channels">Esta versión de Android no es compatible con canales de notificación</string>
     <string name="title_advanced_english">Forzar idioma inglés</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Buscar actualizaciones</string>
@@ -312,13 +308,20 @@
     <string name="title_advanced_threading_hint">Agrupar mensajes relacionados entre sí</string>
     <string name="title_advanced_name_email_hint">Si está desactivado, solo se mostrarán los nombres cuando estén disponibles</string>
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
-    <string name="title_advanced_wearable_hint">Las notificaciones sólo se envian a dispositivos llevables (wearable) luego de que el texto del mensaje haya sido descargado</string>
     <string name="title_advanced_inline_hint">Las imágenes embebidas son imágenes incluídas en el mensaje</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
     <string name="title_advanced_autoclose_hint">Cerrar automáticamente hilos de conversación cuando todos los mensajes son archivados, enviados o eliminados</string>
     <string name="title_advanced_sender_hint">La mayoría de los proveedores no permiten direcciones de remitente modificadas</string>
     <string name="title_advanced_display_hidden_hint">Esto puede resultar en textos dobles o de apariencia extraña</string>
     <string name="title_advanced_display_pin_hint">Un PIN tiene prioridad sobre la autenticación biométrica</string>
+    <string name="title_advanced_badge_hint">Sólo disponible en lanzadores soportados</string>
+    <string name="title_advanced_notify_action_hint">Máximo 3 acciones mostradas</string>
+    <string name="title_advanced_notify_remove_hint">Las notificaciones de nuevos mensajes siempre serán eliminadas al deslizarlas y al marcar mensajes como leídos</string>
+    <string name="title_advanced_notify_manage_hint">Pulse el nombre del canal \"Notificaciones\" para establecer el sonido de notificación por defecto, etc</string>
+    <string name="title_advanced_wearable_hint">Las notificaciones sólo se envian a dispositivos llevables (wearable) luego de que el texto del mensaje haya sido descargado</string>
+    <string name="title_advanced_move_hint">La carpeta destino puede establecerse en la configuración de la cuenta</string>
+    <string name="title_advanced_notify_no_grouping">Esta versión de Android no es compatible con la agrupación de notificaciones</string>
+    <string name="title_advanced_notify_no_channels">Esta versión de Android no es compatible con canales de notificación</string>
     <string name="title_advanced_subscribed_only_hint">Activar esto eliminará todas las carpetas locales sin suscripción</string>
     <string name="title_advanced_english_hint">Esto reiniciará la app</string>
     <string name="title_advanced_experiments_hint">Lista de características experimentales actuales</string>
@@ -347,6 +350,7 @@
     <string name="title_account_notify">Notificaciones separadas</string>
     <string name="title_account_left">Deslizar a la izquierda</string>
     <string name="title_account_right">Deslizar hacia la derecha</string>
+    <string name="title_account_move">Mover por defecto a</string>
     <string name="title_domain">Nombre de dominio</string>
     <string name="title_autoconfig">Obtener ajustes</string>
     <string name="title_aliases">Alias</string>
@@ -506,6 +510,7 @@
     <string name="title_no_folder">La carpeta no existe</string>
     <string name="title_no_format">El mensaje recibido originalmente será incluido</string>
     <string name="title_no_image">La imagen no se pudo decodificar</string>
+    <string name="title_unused_inline">Las imágenes embebidas serán eliminadas al guardar/enviar</string>
     <string name="title_accross_remark">Los mensajes movidos a otras cuentas serán descargados nuevamente causando uso adicional de datos</string>
     <string name="title_raw_saved">Mensaje raw guardado</string>
     <string name="title_attachment_saved">Adjunto guardado</string>
@@ -798,6 +803,7 @@
     <string name="title_dismiss">Descartar</string>
     <string name="title_snooze_now">Posponer</string>
     <string name="title_loading">Cargando &#8230;</string>
+    <string name="title_set">Aplicar</string>
     <string name="title_icalendar_accept">Aceptar</string>
     <string name="title_icalendar_decline">Rechazar</string>
     <string name="title_icalendar_maybe">Tal vez</string>

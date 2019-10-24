@@ -1585,11 +1585,6 @@ class Core {
             boolean sync_kept = prefs.getBoolean("sync_kept", true);
             boolean delete_unseen = prefs.getBoolean("delete_unseen", false);
 
-            if (account.host.toLowerCase(Locale.ROOT).contains("imap.zoho")) {
-                sync_unseen = false;
-                sync_flagged = false;
-            }
-
             Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days +
                     " sync unseen=" + sync_unseen + " flagged=" + sync_flagged +
                     " delete unseen=" + delete_unseen + " kept=" + sync_kept);
@@ -1838,7 +1833,7 @@ class Core {
 
                 for (int j = isub.length - 1; j >= 0 && state.isRunning() && state.isRecoverable(); j--)
                     try {
-                        // Some providers, like Zoho, erroneously return old messages
+                        // Some providers erroneously return old messages
                         if (full.contains(isub[j])) {
                             Date received = isub[j].getReceivedDate();
                             boolean unseen = (sync_unseen && !isub[j].isSet(Flags.Flag.SEEN));
@@ -2768,6 +2763,7 @@ class Core {
         boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
         boolean notify_junk = (prefs.getBoolean("notify_junk", false) && pro);
         boolean notify_archive = (prefs.getBoolean("notify_archive", true) || !pro);
+        boolean notify_move = (prefs.getBoolean("notify_move", false) && pro);
         boolean notify_reply = (prefs.getBoolean("notify_reply", false) && pro);
         boolean notify_reply_direct = (prefs.getBoolean("notify_reply_direct", false) && pro);
         boolean notify_flag = (prefs.getBoolean("notify_flag", false) && flags && pro);
@@ -2808,7 +2804,8 @@ class Core {
                             .setDeleteIntent(piClear)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_STATUS)
-                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                            .setAllowSystemGeneratedContextualActions(false);
 
             if (notify_summary) {
                 builder.setOnlyAlertOnce(new_messages == 0);
@@ -2990,6 +2987,27 @@ class Core {
                 mbuilder.addAction(actionArchive.build());
 
                 wactions.add(actionArchive.build());
+            }
+
+            if (notify_move) {
+                EntityAccount account = db.account().getAccount(message.account);
+                if (account != null && account.move_to != null) {
+                    EntityFolder folder = db.folder().getFolder(account.move_to);
+                    if (folder != null) {
+                        Intent move = new Intent(context, ServiceUI.class)
+                                .setAction("move:" + message.id)
+                                .putExtra("group", group);
+                        PendingIntent piMove = PendingIntent.getService(context, ServiceUI.PI_MOVE, move, PendingIntent.FLAG_UPDATE_CURRENT);
+                        NotificationCompat.Action.Builder actionMove = new NotificationCompat.Action.Builder(
+                                R.drawable.baseline_folder_24,
+                                folder.getDisplayName(context),
+                                piMove)
+                                .setAllowGeneratedReplies(false);
+                        mbuilder.addAction(actionMove.build());
+
+                        wactions.add(actionMove.build());
+                    }
+                }
             }
 
             if (notify_reply && message.content &&
