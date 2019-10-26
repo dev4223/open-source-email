@@ -15,7 +15,9 @@
 ![GitHub release](https://img.shields.io/github/release/M66B/FairEmail.svg)
 ![GitHub commits since tagged version](https://img.shields.io/github/commits-since/M66B/FairEmail/0.1.svg)
 
-*Fully featured, open source, privacy friendly email app for Android*
+*Fully featured, open source, privacy oriented email app for Android*
+
+FairEmail is easy to setup and works with virtually all email providers, including Gmail, Outlook and Yahoo!
 
 FairEmail might be for you if you value your privacy.
 
@@ -38,18 +40,17 @@ FairEmail might be for you if you value your privacy.
 
 * Fully featured
 * 100 % [open source](https://github.com/M66B/FairEmail/blob/master/LICENSE)
-* [Privacy friendly](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md)
-* Multiple accounts
-* Multiple email addresses
+* [Privacy oriented](https://github.com/M66B/FairEmail/blob/master/PRIVACY.md)
+* Unlimited accounts
+* Unlimited email addresses
 * Unified inbox
-* Flat [conversation threading](https://en.wikipedia.org/wiki/Conversation_threading)
+* [Conversation threading](https://en.wikipedia.org/wiki/Conversation_threading)
 * Two way synchronization
 * Offline storage and operations
-* Encryption/decryption ([OpenPGP](https://www.openpgp.org/))
 * Battery friendly
 * Low data usage
 * Small (< 10 MB)
-* Material design (including dark theme)
+* Material design (including dark/black theme)
 * Maintained and supported
 
 This app is minimalistic by design, so you can concentrate on reading and writing messages.
@@ -58,31 +59,12 @@ This app starts a foreground service with a low priority status bar notification
 
 ## Privacy features
 
+* Encryption/decryption supported ([OpenPGP](https://www.openpgp.org/))
 * Reformat messages to prevent [phishing](https://en.wikipedia.org/wiki/Phishing)
 * Confirm showing images to prevent tracking
 * Confirm opening links to prevent tracking and phishing
 * Automatically recognize and disable tracking images
 * Warning if messages could not be [authenticated](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq92)
-
-## Pro features
-
-All pro features are convenience or advanced features.
-
-* Account/identity colors
-* Colored stars ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq107))
-* Notification settings (sounds) per account/folder/sender (requires Android 8 Oreo)
-* Configurable notification actions
-* Snooze messages ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq67))
-* Send messages after selected time
-* Synchronization scheduling ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq78))
-* Reply templates
-* Accept/decline calendar invitations
-* Filter rules ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
-* Search on server ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
-* Keyword management
-* Biometric authentication ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq113))
-* Unified inbox widget
-* Export settings
 
 ## Simple
 
@@ -104,8 +86,29 @@ All pro features are convenience or advanced features.
 
 ## Efficient
 
+* Fast and lightweight
 * [IMAP IDLE](https://en.wikipedia.org/wiki/IMAP_IDLE) (push messages) supported
 * Built with latest development tools and libraries
+
+## Pro features
+
+All pro features are convenience or advanced features.
+
+* Account/identity colors
+* Colored stars ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq107))
+* Notification settings (sounds) per account/folder/sender (requires Android 8 Oreo)
+* Configurable notification actions
+* Snooze messages ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq67))
+* Send messages after selected time
+* Synchronization scheduling ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq78))
+* Reply templates
+* Accept/decline calendar invitations
+* Filter rules ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
+* Search on server ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
+* Keyword management
+* Biometric authentication ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq113))
+* Unified inbox widget
+* Export settings
 
 ## Screenshots
 
