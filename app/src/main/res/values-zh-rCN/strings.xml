@@ -168,7 +168,7 @@
     <string name="title_advanced_section_misc">杂项</string>
     <string name="title_advanced_enabled">已启用</string>
     <string name="title_advanced_when">何时</string>
-    <string name="title_advanced_schedule">任务计划</string>
+    <string name="title_advanced_schedule">计划任务</string>
     <string name="title_advanced_unseen">所有未读消息</string>
     <string name="title_advanced_flagged">所有已标星消息</string>
     <string name="title_advanced_delete_unseen">删除旧的未读消息</string>
@@ -259,12 +259,14 @@
     <string name="title_advanced_notify_action_seen">已读</string>
     <string name="title_advanced_notify_action_snooze">打盹</string>
     <string name="title_advanced_notify_remove">点击通知时移除新的消息通知</string>
+    <string name="title_advanced_notify_clear">查看消息列表时移除新消息通知</string>
     <string name="title_advanced_wearable_preview">只向可穿戴设备发送有消息预览的通知</string>
     <string name="title_advanced_biometrics_notify">使用生物认证时显示通知内容</string>
     <string name="title_advanced_light">使用指示灯</string>
     <string name="title_advanced_sound">选择通知提示音</string>
     <string name="title_advanced_tracking">自动识别并禁用跟踪图像</string>
     <string name="title_advanced_display_hidden">显示隐藏消息文本</string>
+    <string name="title_advanced_auto_decrypt">自动解密消息</string>
     <string name="title_advanced_recents">在最近应用隐藏FairEmail</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时时间</string>
     <string name="title_advanced_pin">PIN 码</string>
@@ -275,6 +277,7 @@
     <string name="title_advanced_crash_reports">发送错误报告</string>
     <string name="title_advanced_debug">调试模式</string>
     <string name="title_advanced_cleanup">清理</string>
+    <string name="title_advanced_hint">所有选项都有合理的默认值，只有必要时才应改变</string>
     <string name="title_advanced_enabled_hint">全局禁用或启用邮件接收</string>
     <string name="title_advanced_manual_hint">如果同步功能已禁用，仍然可以通过下拉邮件列表手动同步。这将在限定的时间内同步消息和执行操作。</string>
     <string name="title_advanced_poll_hint">定期同步将每次都比较本地和远程消息，这是有代价的操作(更耗电)，特别是在要同步的消息很多时。而始终同步可通过持续监视变化以避免发生上述情形。</string>
@@ -289,6 +292,7 @@
     <string name="title_advanced_metered_hint">计量连接通常是指移动连接或付费WiFi热点</string>
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>
+    <string name="title_advanced_socks_hint">使用远程代理服务器不安全，因为代理连接未加密</string>
     <string name="title_advanced_roaming_hint">当漫游时，将始终获取消息头。您可以使用设备的漫游设置在漫游时禁用互联网。</string>
     <string name="title_advanced_browse_hint">向下滚动时拉取更多邮件</string>
     <string name="title_advanced_layout_hint">切换到更为紧凑的布局，改变消息文本大小可以在邮件视图中的顶部动作栏菜单中完成</string>
@@ -377,6 +381,7 @@
     <string name="title_account_delete">确定永久删除这个账户吗？</string>
     <string name="title_identity_delete">确定永久删除这个身份吗？</string>
     <string name="title_edit_html">以HTML格式编辑</string>
+    <string name="title_sign_key">签名密钥:%1$s</string>
     <string name="title_last_connected">上次连接%1$s前</string>
     <string name="title_pop_support">POP3协议仅支持从收件箱下载并删除消息。POP3无法标记消息为已读、移动消息等。相比IMAP协议，POP3消耗的电量和数流量都更多。因此，尽可能考虑使用 IMAP 协议。</string>
     <string name="title_activesync_support">不支持ActiveSync</string>
@@ -465,6 +470,7 @@
     <string name="title_show_inline">显示内嵌附件</string>
     <string name="title_download_all">全部下载</string>
     <string name="title_save_all">全部保存</string>
+    <string name="title_save_eml">保存原始消息文件</string>
     <string name="title_trash">回收站</string>
     <string name="title_copy">复制 &#8230;</string>
     <string name="title_copy_to">复制到 &#8230;</string>
@@ -602,6 +608,7 @@
     <string name="title_compact">紧凑视图</string>
     <string name="title_zoom">文本大小</string>
     <string name="title_select_all">选择所有</string>
+    <string name="title_select_found">选中找到的</string>
     <string name="title_force_sync">强制同步</string>
     <string name="title_previous">上一则</string>
     <string name="title_next">下一则</string>
@@ -750,6 +757,7 @@
     <string name="title_hint_message_selection">长按一则消息开始选择多条消息；按住并向上或向下滑动来选择更多消息</string>
     <string name="title_hint_sync">下载邮件可能需要一些时间, 具体取决于提供商的速度、网络连接、设备以及邮件数量。在下载邮件时, 应用的响应速度可能会变慢。</string>
     <string name="title_hint_contact_actions">长按以显示更多选项</string>
+    <string name="title_hint_eml">这是一个原始消息文件内容的摘要。用操作栏中的保存图标保存原始消息以查看所有内容。</string>
     <string name="title_open_link">打开链接</string>
     <string name="title_different_link">标题和链接地址不同</string>
     <string name="title_secure_link">确保链接安全</string>

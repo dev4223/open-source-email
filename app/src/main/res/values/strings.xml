@@ -311,6 +311,7 @@
     <string name="title_advanced_notify_action_seen">Read</string>
     <string name="title_advanced_notify_action_snooze">Snooze</string>
     <string name="title_advanced_notify_remove">Remove new message notification on tapping on notification</string>
+    <string name="title_advanced_notify_clear">Remove new message notifications on viewing message list</string>
     <string name="title_advanced_wearable_preview">Only send notifications with a message preview to wearables</string>
     <string name="title_advanced_biometrics_notify">Show notification content when using biometric authentication</string>
     <string name="title_advanced_light">Use notification light</string>
@@ -319,6 +320,7 @@
 
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
+    <string name="title_advanced_auto_decrypt">Automatically decrypt messages</string>
     <string name="title_advanced_recents">Hide FairEmail from screen with recent apps</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
     <string name="title_advanced_pin">PIN</string>
@@ -334,6 +336,8 @@
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
     <string name="title_advanced_storage_space" translatable="false">Storage space: %1$s</string>
     <string name="title_advanced_last_cleanup" translatable="false">Last cleanup: %1$s</string>
+
+    <string name="title_advanced_hint">All settings have sensible default values, which should only be changed if necessary</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
     <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list. This will synchronize messages and execute operations for a limited time.</string>
@@ -351,6 +355,7 @@
     <string name="title_advanced_metered_hint">Metered connections are generally mobile connections or paid Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Disabling this option will disable receiving and sending messages on mobile internet connections</string>
     <string name="title_advanced_rlah_hint">Assuming no roaming within the EU</string>
+    <string name="title_advanced_socks_hint">Using a remote proxy server is insecure because proxy connections are not encrypted</string>
     <string name="title_advanced_roaming_hint">Messages headers will always be fetched when roaming. You can use the device\'s roaming setting to disable internet while roaming.</string>
 
     <string name="title_advanced_browse_hint">Fetch more messages when scrolling down</string>
@@ -454,6 +459,7 @@
     <string name="title_account_delete">Delete this account permanently?</string>
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>
+    <string name="title_sign_key">Sign key: %1$s</string>
     <string name="title_last_connected">Last connected: %1$s</string>
     <string name="title_pop_support">The POP3 protocol supports downloading and deleting messages from the inbox only. POP3 cannot mark messages as read, move messages, etc. POP3 will use more battery power and data than IMAP. So, consider using the IMAP protocol whenever possible.</string>
     <string name="title_activesync_support">ActiveSync is not supported</string>
@@ -483,6 +489,7 @@
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
+    <string name="title_hint_operations">Deleting operations can result in disappearing messages and synchronization problems</string>
 
     <string name="title_folder_name">Folder name</string>
     <string name="title_display_name">Display name</string>
@@ -549,6 +556,7 @@
     <string name="title_show_inline">Show inline attachments</string>
     <string name="title_download_all">Download all</string>
     <string name="title_save_all">Save all</string>
+    <string name="title_save_eml">Save raw message file</string>
 
     <string name="title_trash">Trash</string>
     <string name="title_copy">Copy &#8230;</string>
@@ -699,6 +707,7 @@
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
     <string name="title_select_all">Select all</string>
+    <string name="title_select_found">Select found</string>
     <string name="title_force_sync">Force sync</string>
 
     <string name="title_previous">Previous</string>
@@ -861,6 +870,7 @@
     <string name="title_hint_message_selection">Long press a message to start selecting multiple messages; Hold and swipe up or down to select more messages</string>
     <string name="title_hint_sync">Downloading messages can take some time, depending on the speed of the provider, internet connection and device and on the number of messages. While downloading messages the app might respond slower.</string>
     <string name="title_hint_contact_actions">Long press for options</string>
+    <string name="title_hint_eml">This is a summary of the content of a raw message file. Save the raw message with the save icon in the action bar to view all content.</string>
 
     <string name="title_open_link">Open link</string>
     <string name="title_different_link">The title and the link address are different</string>

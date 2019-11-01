@@ -269,13 +269,15 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_notify_action_flag">Kennzeichnen</string>
     <string name="title_advanced_notify_action_seen">Gelesen</string>
     <string name="title_advanced_notify_action_snooze">Zurückstellen</string>
-    <string name="title_advanced_notify_remove">Neue Nachricht-Benachrichtigungen beim Tippen auf die Benachrichtigungen entfernen</string>
+    <string name="title_advanced_notify_remove">Neue-Nachricht-Benachrichtigungen beim Tippen auf die Benachrichtigungen entfernen</string>
+    <string name="title_advanced_notify_clear">Neue-Nachrichten-Benachrichtigungen beim Anzeigen der Nachrichtenliste entfernen</string>
     <string name="title_advanced_wearable_preview">Nur Benachrichtigungen mit einer Nachrichtenvorschau an tragbare Gerätschaften senden</string>
     <string name="title_advanced_biometrics_notify">Benachrichtigungsinhalt bei Nutzung der biometrischen Authentifizierung anzeigen</string>
     <string name="title_advanced_light">Benachrichtigungslicht verwenden</string>
     <string name="title_advanced_sound">Benachrichtigungston auswählen</string>
     <string name="title_advanced_tracking">Tracking-Bilder automatisch erkennen und deaktivieren</string>
     <string name="title_advanced_display_hidden">Versteckte Nachrichtentexte anzeigen</string>
+    <string name="title_advanced_auto_decrypt">Nachrichten automatisch entschlüsseln</string>
     <string name="title_advanced_recents">Von Bildschirm mit den zuletzt genutzten Apps ausblenden</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
     <string name="title_advanced_pin">PIN</string>
@@ -286,6 +288,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_crash_reports">Fehlerbericht senden</string>
     <string name="title_advanced_debug">Debugmodus</string>
     <string name="title_advanced_cleanup">Bereinigen</string>
+    <string name="title_advanced_hint">Alle Einstellungen haben vernünftige Standardwerte, die nur dann geändert werden sollten, wenn es tatsächlich auch notwendig ist</string>
     <string name="title_advanced_enabled_hint">Empfang von Nachrichten für alle Konten deaktivieren oder aktivieren</string>
     <string name="title_advanced_manual_hint">Wenn die Synchronisation deaktiviert ist, ist es weiterhin möglich, die Synchronisation manuell durchzuführen, indem Sie die Nachrichtenliste herunterziehen. Dadurch werden Nachrichten synchronisiert und Operationen für eine begrenzte Zeit ausgeführt.</string>
     <string name="title_advanced_poll_hint">Die regelmäßige Synchronisation vergleicht jedes Mal lokale und entfernte Nachrichten, was ein aufwendiger Vorgang ist, der möglicherweise zu einem zusätzlichen Batterieverbrauch führt, besonders wenn es viele zu synchronisierende Nachrichten gibt. Durch die ständige Synchronisation wird dies vermieden, indem man ständig nur auf Änderungen achtet.</string>
@@ -300,6 +303,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_metered_hint">Getaktete Verbindungen sind in der Regel mobile Verbindungen oder bezahlte Wi-Fi Hotspots</string>
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
+    <string name="title_advanced_socks_hint">Die Benutzung eines Remote-Proxy-Servers ist unsicher, da Proxy-Verbindungen nicht verschlüsselt sind</string>
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgeholt. Sie können die Roaming-Einstellung des Geräts verwenden, um das Internet während des Roaming zu deaktivieren.</string>
     <string name="title_advanced_browse_hint">Durch Herunterscrollen weitere E-Mails laden</string>
     <string name="title_advanced_layout_hint">Das Wechseln zu einem kompakteren Layout und Ändern der Nachrichtentextgröße kann im oberen Aktionsleisten-Menü in der Nachrichtenansicht vorgenommen werden</string>
@@ -315,7 +319,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_display_pin_hint">Eine PIN hat Vorrang vor der biometrischen Authentifizierung</string>
     <string name="title_advanced_badge_hint">Nur verfügbar auf unterstützten Launchern</string>
     <string name="title_advanced_notify_action_hint">Es werden maximal drei Aktionen angezeigt</string>
-    <string name="title_advanced_notify_remove_hint">Neue Nachrichten-Benachrichtigungen werden immer entfernt, wenn sie weggewischt werden oder Nachrichten gelesen werden</string>
+    <string name="title_advanced_notify_remove_hint">Neue-Nachrichten-Benachrichtigungen werden immer entfernt, wenn sie weggewischt werden oder Nachrichten gelesen werden</string>
     <string name="title_advanced_notify_manage_hint">„Benachrichtigungen” antippen, um den Standard-Benachrichtigungston usw. einzustellen</string>
     <string name="title_advanced_wearable_hint">Benachrichtigungen werden nur nach dem Download des Nachrichtentextes an einen tragbaren Empfänger gesendet</string>
     <string name="title_advanced_move_hint">Der Zielordner kann in den Kontoeinstellungen konfiguriert werden</string>
@@ -388,6 +392,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_account_delete">Möchten Sie dieses Konto unwiderruflich löschen?</string>
     <string name="title_identity_delete">Möchten Sie diese Identität unwiderruflich löschen?</string>
     <string name="title_edit_html">Als HTML bearbeiten</string>
+    <string name="title_sign_key">Signaturschlüssel: %1$s</string>
     <string name="title_last_connected">Zuletzt verbunden: %1$s</string>
     <string name="title_pop_support">Das POP3-Protokoll unterstützt das Herunterladen und Löschen von Nachrichten nur aus dem Posteingang. POP3 kann Nachrichten nicht markieren, Nachrichten verschieben, etc. POP3 verwendet mehr Akku- und Daten als IMAP. Daher erwägen Sie, das IMAP-Protokoll zu verwenden, wann immer möglich.</string>
     <string name="title_activesync_support">ActiveSync wird nicht unterstützt</string>
@@ -477,6 +482,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_show_inline">Eingebettete Anhänge anzeigen</string>
     <string name="title_download_all">Alle herunterladen</string>
     <string name="title_save_all">Alles speichern</string>
+    <string name="title_save_eml">Rohdaten speichern</string>
     <string name="title_trash">Löschen</string>
     <string name="title_copy">Kopiere &#8230;</string>
     <string name="title_copy_to">Kopieren nach &#8230;</string>
@@ -614,6 +620,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_compact">Kompaktansicht</string>
     <string name="title_zoom">Schriftgröße</string>
     <string name="title_select_all">Alle auswählen</string>
+    <string name="title_select_found">Alle gefundenen Nachrichten auswählen</string>
     <string name="title_force_sync">Synchronisation erzwingen</string>
     <string name="title_previous">Vorherige</string>
     <string name="title_next">Nächste</string>
@@ -762,6 +769,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_hint_message_selection">Um mehrere Nachrichten auszuwählen, drücken Sie zunächst lange auf eine Nachricht, halten und wischen Sie sodann nach oben oder unten, um weitere Nachrichten auszuwählen</string>
     <string name="title_hint_sync">Das Herunterladen von E-Mails kann einige Zeit in Anspruch nehmen, abhängig von der Geschwindigkeit des Providers, der Internetverbindung, des Gerätes und von der Anzahl der E-Mails. Beim Herunterladen der E-Mails kann die App träge reagieren.</string>
     <string name="title_hint_contact_actions">Gedrückt halten für weitere Optionen</string>
+    <string name="title_hint_eml">Dies ist eine Zusammenfassung des Inhalts einer Rohnachrichtendatei. Speichern Sie die Rohnachricht mit dem Speichern-Symbol in der Aktionsleiste, um alle Inhalte anzuzeigen.</string>
     <string name="title_open_link">Link öffnen</string>
     <string name="title_different_link">Titel und Link-Ziel sind unterschiedlich</string>
     <string name="title_secure_link">Link sicher gestalten</string>

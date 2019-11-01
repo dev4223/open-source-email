@@ -148,7 +148,7 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         super.onPause();
 
         if (!this.getClass().equals(ActivityMain.class) && Helper.shouldAuthenticate(this))
-            finish();
+            finishAndRemoveTask();
     }
 
     @Override
@@ -162,8 +162,10 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         Log.i("User interaction");
 
         if (!this.getClass().equals(ActivityMain.class) && Helper.shouldAuthenticate(this)) {
-            finish();
-            startActivity(new Intent(this, ActivityMain.class));
+            finishAndRemoveTask();
+            Intent main = new Intent(this, ActivityMain.class);
+            main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(main);
         }
     }
 
@@ -207,10 +209,11 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
     private void checkAuthentication() {
         if (!this.getClass().equals(ActivityMain.class) && Helper.shouldAuthenticate(this)) {
             Intent intent = getIntent();
-            finish();
-            startActivity(
-                    new Intent(this, ActivityMain.class)
-                            .putExtra("intent", intent));
+            finishAndRemoveTask();
+            Intent main = new Intent(this, ActivityMain.class)
+                    .putExtra("intent", intent);
+            main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(main);
         }
     }
 

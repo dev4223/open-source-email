@@ -281,12 +281,14 @@
     <string name="title_advanced_notify_action_seen">Citit</string>
     <string name="title_advanced_notify_action_snooze">Amână</string>
     <string name="title_advanced_notify_remove">Elimina notificarea de mesaj nou dacă se atinge</string>
+    <string name="title_advanced_notify_clear">Elimină notificările mesajelor noi când se vizualizează lista de mesaje</string>
     <string name="title_advanced_wearable_preview">Trimite la portabile doar notificările cu previzualizare mesaj</string>
     <string name="title_advanced_biometrics_notify">Arată conținutul notificării atunci când se utilizează autentificarea biometrică</string>
     <string name="title_advanced_light">Folosire LED de notificare</string>
     <string name="title_advanced_sound">Selectare sunet de notificare</string>
     <string name="title_advanced_tracking">Detectează și dezactivează în mod automat imaginile folosite la urmărire</string>
     <string name="title_advanced_display_hidden">Arată textul ascuns din mesaj</string>
+    <string name="title_advanced_auto_decrypt">Decriptează automat mesajele</string>
     <string name="title_advanced_recents">Ascunde din ecranul cu aplicații recente</string>
     <string name="title_advanced_biometrics_timeout">Expirare autentificarea biometrică</string>
     <string name="title_advanced_pin">PIN</string>
@@ -297,6 +299,7 @@
     <string name="title_advanced_crash_reports">Trimite rapoarte de eroare</string>
     <string name="title_advanced_debug">Depanare</string>
     <string name="title_advanced_cleanup">Curățare</string>
+    <string name="title_advanced_hint">Setările implicite sunt de bun simț și ar trebui schimbate doar dacă este necesar</string>
     <string name="title_advanced_enabled_hint">Activează sau dezactivează global recepția mesajelor</string>
     <string name="title_advanced_manual_hint">Dacă sincronizarea este dezactivată, este posibilă sincronizarea manuală prin tragerea în jos a listei de mesaje. Astfel se vor sincroniza mesajele și se vor executa operațiile pentru o perioadă limitată de timp.</string>
     <string name="title_advanced_poll_hint">Sincronizarea periodică va compara mesajele locale cu cele de pe server de fiecare dată, aceasta este o operațiune costisitoare ce va rezulta într-un consum ridicat al bateriei, mai ales atunci când sunt multe mesaje de sincronizat. Modul de sincronizare permanent evită asta prin monitorizarea continuă a schimbărilor.</string>
@@ -311,6 +314,7 @@
     <string name="title_advanced_metered_hint">Conexiunile contorizate sunt în general cele mobile sau punctele de acces Wi-Fi cu plată</string>
     <string name="title_advanced_metered_warning">Dezactivarea acestei opțiuni va opri primirea și trimiterea mesajelor pe conexiunile mobile de internet</string>
     <string name="title_advanced_rlah_hint">În zona UE nu se tratează ca roaming</string>
+    <string name="title_advanced_socks_hint">Este nesigură folosirea unui server proxy pentru că aceste conexiuni nu sunt criptate</string>
     <string name="title_advanced_roaming_hint">Antetele mesajelor vor fi mereu descărcate și în roaming. Puteți folosi setările roaming ale dispozitivului pentru a dezactiva internetul atunci când sunteți în roaming.</string>
     <string name="title_advanced_browse_hint">Descarcă mai multe mesaje când se derulează în jos</string>
     <string name="title_advanced_layout_hint">Selectarea unui aspect mai compact și mărimea textului se poate face din meniul paginii de mesaje</string>
@@ -399,6 +403,7 @@
     <string name="title_account_delete">Ștergeți definitiv acest cont?</string>
     <string name="title_identity_delete">Ștergeți definitiv această identitate?</string>
     <string name="title_edit_html">Editează ca HTML</string>
+    <string name="title_sign_key">Cheie semnatură: %1$s</string>
     <string name="title_last_connected">Ultima conectare: %1$s</string>
     <string name="title_pop_support">Protocolul POP3 acceptă descărcarea și ștergerea mesajelor numai din căsuța de mesaje primite. POP3 nu poate marca mesajele drept citite, nu poate muta mesajele etc. POP3 va consuma mai multă baterie și date decât IMAP. Deci, luați în considerare utilizarea protocolului IMAP ori de câte ori este posibil.</string>
     <string name="title_activesync_support">ActiveSync nu este suportat</string>
@@ -487,6 +492,7 @@
     <string name="title_show_inline">Arată atașamentele integrate</string>
     <string name="title_download_all">Descarcă tot</string>
     <string name="title_save_all">Salvează tot</string>
+    <string name="title_save_eml">Salvează mesaj original în fișier</string>
     <string name="title_trash">Gunoi</string>
     <string name="title_copy">Copiere &#8230;</string>
     <string name="title_copy_to">Copiază în &#8230;</string>
@@ -624,6 +630,7 @@
     <string name="title_compact">Vizualizare compactă</string>
     <string name="title_zoom">Mărime text</string>
     <string name="title_select_all">Selectează tot</string>
+    <string name="title_select_found">Selectare găsite</string>
     <string name="title_force_sync">Sincronizare forțată</string>
     <string name="title_previous">Precedent</string>
     <string name="title_next">Următor</string>
@@ -772,6 +779,7 @@
     <string name="title_hint_message_selection">Atingeți lung un mesaj pentru a începe selecția multiplă. Țineți și glisați sus sau jos pentru a selecta mai multe mesaje</string>
     <string name="title_hint_sync">Descărcarea mesajelor poate dura ceva timp, în funcție de viteza furnizorului, conexiunea la internet, de dispozitiv precum și de numărul de mesaje. În timpul descărcării mesajelor aplicația ar putea răspunde mai lent.</string>
     <string name="title_hint_contact_actions">Atingeți lung pentru opțiuni</string>
+    <string name="title_hint_eml">Acesta este sumarul conținutului unui fișier cu mesajul original. Salvați mesajul original folosind iconița de salvare din bara de acțiuni pentru a putea vizualiza tot conținutul.</string>
     <string name="title_open_link">Deschide legătura</string>
     <string name="title_different_link">Titlul legăturii este diferit de adresa legăturii</string>
     <string name="title_secure_link">Securizează adresa</string>

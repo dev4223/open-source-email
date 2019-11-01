@@ -30,6 +30,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.os.BadParcelableException;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.DeadObjectException;
@@ -221,7 +222,10 @@ public class Log {
                     return false;
 
                 Throwable ex = report.getError().getException();
+                return shouldNotify(ex);
+            }
 
+            private boolean shouldNotify(Throwable ex) {
                 if (ex instanceof MessagingException &&
                         (ex.getCause() instanceof IOException ||
                                 ex.getCause() instanceof ProtocolException))
@@ -250,13 +254,10 @@ public class Log {
                     return false;
 
                 // Rate limit
-                int count = prefs.getInt("crash_report_count", 0);
-                count++;
+                int count = prefs.getInt("crash_report_count", 0) + 1;
                 prefs.edit().putInt("crash_report_count", count).apply();
-                if (count > MAX_CRASH_REPORTS)
-                    return false;
 
-                return true;
+                return (count <= MAX_CRASH_REPORTS);
             }
         });
 
@@ -299,6 +300,7 @@ public class Log {
 
                 String theme = prefs.getString("theme", "light");
                 error.addToTab("extra", "theme", theme);
+                error.addToTab("extra", "package", BuildConfig.APPLICATION_ID);
                 return true;
             }
         });
@@ -319,28 +321,33 @@ public class Log {
         if (data == null)
             return result;
 
-        Set<String> keys = data.keySet();
-        for (String key : keys) {
-            Object v = data.get(key);
+        try {
+            Set<String> keys = data.keySet();
+            for (String key : keys) {
+                Object v = data.get(key);
 
-            Object value = v;
-            if (v != null && v.getClass().isArray()) {
-                int length = Array.getLength(v);
-                if (length <= 10) {
-                    String[] elements = new String[length];
-                    for (int i = 0; i < length; i++) {
-                        Object element = Array.get(v, i);
-                        if (element instanceof Long)
-                            elements[i] = "0x" + Long.toHexString((Long) element);
-                        else
-                            elements[i] = (element == null ? null : element.toString());
+                Object value = v;
+                if (v != null && v.getClass().isArray()) {
+                    int length = Array.getLength(v);
+                    if (length <= 10) {
+                        String[] elements = new String[length];
+                        for (int i = 0; i < length; i++) {
+                            Object element = Array.get(v, i);
+                            if (element instanceof Long)
+                                elements[i] = "0x" + Long.toHexString((Long) element);
+                            else
+                                elements[i] = (element == null ? null : element.toString());
+                        }
+                        value = TextUtils.join(",", elements);
                     }
-                    value = TextUtils.join(",", elements);
-                }
-            } else if (v instanceof Long)
-                value = "0x" + Long.toHexString((Long) v);
+                } else if (v instanceof Long)
+                    value = "0x" + Long.toHexString((Long) v);
 
-            result.add(key + "=" + value + (value == null ? "" : " (" + v.getClass().getSimpleName() + ")"));
+                result.add(key + "=" + value + (value == null ? "" : " (" + v.getClass().getSimpleName() + ")"));
+            }
+        } catch (BadParcelableException ex) {
+            // android.os.BadParcelableException: ClassNotFoundException when unmarshalling: ...
+            Log.e(ex);
         }
 
         return result;

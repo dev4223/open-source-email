@@ -234,8 +234,9 @@ public interface DaoMessage {
             "  WHEN 0 THEN message.ui_snoozed IS NULL" +
             "  WHEN 1 THEN message.ui_snoozed IS NOT NULL" +
             "  ELSE 1 END" + // NULL: true
-            " ORDER BY message.received DESC")
-    List<TupleMatch> matchMessages(Long folder, String find, Boolean seen, Boolean flagged, Boolean snoozed);
+            " ORDER BY message.received DESC" +
+            " LIMIT :limit OFFSET :offset")
+    List<TupleMatch> matchMessages(Long folder, String find, Boolean seen, Boolean flagged, Boolean snoozed, int limit, int offset);
 
     @Query("SELECT id" +
             " FROM message" +
@@ -479,8 +480,10 @@ public interface DaoMessage {
     @Query("UPDATE message SET ui_ignored = 1" +
             " WHERE (:account IS NULL OR account = :account)" +
             " AND NOT ui_ignored" +
-            " AND folder IN (SELECT id FROM folder WHERE folder.unified)")
-    int ignoreAll(Long account);
+            " AND folder IN (" +
+            "  SELECT id FROM folder" +
+            "  WHERE (:folder IS NULL AND folder.unified) OR id = :folder)")
+    int ignoreAll(Long account, Long folder);
 
     @Query("UPDATE message SET ui_found = 1" +
             " WHERE account = :account" +

@@ -271,12 +271,14 @@
     <string name="title_advanced_notify_action_seen">Gelezen</string>
     <string name="title_advanced_notify_action_snooze">Sluimeren</string>
     <string name="title_advanced_notify_remove">Verwijder melding van nieuw bericht bij het tikken op melding</string>
+    <string name="title_advanced_notify_clear">Verwijder meldingen van nieuwe berichten bij het bekijken van een berichtenlijst</string>
     <string name="title_advanced_wearable_preview">Stuur alleen meldingen met een berichtvoorbeeld naar wearables</string>
     <string name="title_advanced_biometrics_notify">Toon notificatie inhoud bij het gebruik van biometrische verificatie</string>
     <string name="title_advanced_light">Gebruik meldingslicht</string>
     <string name="title_advanced_sound">Selecteer meldingsgeluid</string>
     <string name="title_advanced_tracking">Automatisch herkennen en uitschakelen van tracking-afbeeldingen</string>
     <string name="title_advanced_display_hidden">Verborgen berichtteksten weergeven</string>
+    <string name="title_advanced_auto_decrypt">Berichten automatisch ontsleutelen</string>
     <string name="title_advanced_recents">Verbergen op het scherm met recente apps</string>
     <string name="title_advanced_biometrics_timeout">Biometrische verificatie verlopen na</string>
     <string name="title_advanced_pin">Pincode</string>
@@ -287,6 +289,7 @@
     <string name="title_advanced_crash_reports">Foutrapporten verzenden</string>
     <string name="title_advanced_debug">Foutopsporing modus</string>
     <string name="title_advanced_cleanup">Opruimen</string>
+    <string name="title_advanced_hint">Alle opties hebben zinnige verstekwaarden en dienen alleen gewijzigd te worden wanneer dat nodig is</string>
     <string name="title_advanced_enabled_hint">Globaal in- of uitschakelen van het ontvangen van berichten</string>
     <string name="title_advanced_manual_hint">Als synchronisatie uitgeschakeld is, is het nog steeds mogelijk om handmatig te synchroniseren door de berichtenlijst naar beneden te trekken. Dit zal berichten synchroniseren en bewerkingen uitvoeren gedurende een beperkte tijd.</string>
     <string name="title_advanced_poll_hint">Periodiek synchroniseren zal elke keer lokale en externe berichten vergelijken, wat een dure operatie is en kan resulteren in extra batterijgebruik, vooral wanneer er veel berichten zijn om te synchroniseren. Altijd synchroniseren vermijdt dit door voortdurend veranderingen te monitoren.</string>
@@ -301,6 +304,7 @@
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Uitschakelen van deze optie zal het ontvangen en verzenden van berichten op mobiele internetverbindingen uitschakelen</string>
     <string name="title_advanced_rlah_hint">Veronderstel geen roaming binnen de EU</string>
+    <string name="title_advanced_socks_hint">Een externe proxy server gebruiken is onveilig omdat proxy verbindingen niet worden versleuteld</string>
     <string name="title_advanced_roaming_hint">Berichtkoppen zullen altijd worden opgehaald bij roaming. Je kunt de roaming-instelling van het apparaat gebruiken om internet uit te schakelen tijdens roaming.</string>
     <string name="title_advanced_browse_hint">Meer berichten ophalen bij het naar beneden scrollen</string>
     <string name="title_advanced_layout_hint">Overschakelen naar een compactere layout en het wijzigen van de berichttekst grootte kan worden gedaan in het menu van de top actiebalk in het berichtweergave</string>
@@ -389,6 +393,7 @@
     <string name="title_account_delete">Verwijder dit account permanent?</string>
     <string name="title_identity_delete">Verwijder deze identiteit permanent?</string>
     <string name="title_edit_html">Bewerk HTML</string>
+    <string name="title_sign_key">Tekensleutel: %1$s</string>
     <string name="title_last_connected">Laatst verbonden: %1$s</string>
     <string name="title_pop_support">Het POP3-protocol ondersteunt alleen het downloaden en verwijderen van berichten uit de inbox. POP3 kan berichten niet markeren als gelezen, berichten verplaatsen, enz. POP3 gebruikt meer batterijvermogen en gegevens dan IMAP. Overweeg daarom het IMAP-protocol waar mogelijk te gebruiken.</string>
     <string name="title_activesync_support">ActiveSync wordt niet ondersteund</string>
@@ -477,6 +482,7 @@
     <string name="title_show_inline">Toon inline bijlagen</string>
     <string name="title_download_all">Alles downloaden</string>
     <string name="title_save_all">Alles opslaan</string>
+    <string name="title_save_eml">Ruw bericht opslaan</string>
     <string name="title_trash">Weggooien</string>
     <string name="title_copy">Kopieer &#8230;</string>
     <string name="title_copy_to">Kopieer naar &#8230;</string>
@@ -614,6 +620,7 @@
     <string name="title_compact">Compacte weergave</string>
     <string name="title_zoom">Tekstgrootte</string>
     <string name="title_select_all">Selecteer alles</string>
+    <string name="title_select_found">Selecteer gevonden</string>
     <string name="title_force_sync">Forceer verversen</string>
     <string name="title_previous">Vorige</string>
     <string name="title_next">Volgende</string>
@@ -762,6 +769,7 @@
     <string name="title_hint_message_selection">Druk lang op een bericht om meerdere berichten te selecteren; Hou vast en veeg omhoog of omlaag om meer berichten te selecteren</string>
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
     <string name="title_hint_contact_actions">Druk lang voor opties</string>
+    <string name="title_hint_eml">Dit is een samenvatting van de inhoud van een ruw berichtbestand. Sla het ruwe bericht op met het \'bewaar\' icoon in de actiebalk om alle inhoud te bekijken.</string>
     <string name="title_open_link">Koppeling openen</string>
     <string name="title_different_link">De titel en het link-adres zijn verschillend</string>
     <string name="title_secure_link">Maak koppeling veilig</string>

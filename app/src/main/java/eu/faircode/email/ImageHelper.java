@@ -50,14 +50,17 @@ import androidx.core.graphics.ColorUtils;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.preference.PreferenceManager;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
@@ -67,6 +70,8 @@ import java.util.concurrent.TimeUnit;
 class ImageHelper {
     private static final ExecutorService executor =
             Helper.getBackgroundExecutor(1, "image");
+
+    private static final int MAX_REDIRECTS = 10;
 
     static Bitmap generateIdenticon(@NonNull String email, int size, int pixels, Context context) {
         byte[] hash = getHash(email);
@@ -345,28 +350,68 @@ class ImageHelper {
                             return;
                         }
 
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        Log.i("Probe " + a.source);
-                        try (InputStream probe = new URL(a.source).openStream()) {
-                            options.inJustDecodeBounds = true;
-                            BitmapFactory.decodeStream(probe, null, options);
-                        }
-
-                        Log.i("Download " + a.source);
                         Bitmap bm;
-                        try (InputStream is = new URL(a.source).openStream()) {
+                        HttpURLConnection urlConnection = null;
+                        try {
+                            int redirects = 0;
+                            URL url = new URL(a.source);
+                            while (true) {
+                                urlConnection = (HttpURLConnection) url.openConnection();
+                                urlConnection.setRequestMethod("GET");
+                                urlConnection.setDoOutput(false);
+                                urlConnection.setInstanceFollowRedirects(true);
+                                urlConnection.connect();
+
+                                int status = urlConnection.getResponseCode();
+
+                                if (status == HttpURLConnection.HTTP_MOVED_PERM ||
+                                        status == HttpURLConnection.HTTP_MOVED_TEMP ||
+                                        status == HttpURLConnection.HTTP_SEE_OTHER ||
+                                        status == 307 /* Temporary redirect */ ||
+                                        status == 308 /* Permanent redirect */) {
+                                    if (++redirects > MAX_REDIRECTS)
+                                        throw new IOException("Too many redirects");
+
+                                    String location = URLDecoder.decode(
+                                            urlConnection.getHeaderField("Location"),
+                                            StandardCharsets.UTF_8.name());
+                                    url = new URL(url, location);
+                                    Log.i("Redirect #" + redirects + " to " + url);
+
+                                    urlConnection.disconnect();
+                                    continue;
+                                }
+
+                                if (status != HttpURLConnection.HTTP_OK)
+                                    throw new IOException("HTTP status=" + status);
+
+                                break;
+                            }
+
+                            BufferedInputStream is = new BufferedInputStream(urlConnection.getInputStream());
+
+                            Log.i("Probe " + a.source);
+                            is.mark(8192);
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inJustDecodeBounds = true;
+                            BitmapFactory.decodeStream(is, null, options);
+
                             int scaleTo = res.getDisplayMetrics().widthPixels;
                             int factor = 1;
                             while (options.outWidth / factor > scaleTo)
                                 factor *= 2;
 
+                            Log.i("Download " + a.source + " factor=" + factor);
+                            is.reset();
                             if (factor > 1) {
-                                Log.i("Download image factor=" + factor);
                                 options.inJustDecodeBounds = false;
                                 options.inSampleSize = factor;
                                 bm = BitmapFactory.decodeStream(is, null, options);
                             } else
                                 bm = BitmapFactory.decodeStream(is);
+                        } finally {
+                            if (urlConnection != null)
+                                urlConnection.disconnect();
                         }
 
                         if (bm == null)

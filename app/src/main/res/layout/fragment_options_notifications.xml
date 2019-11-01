@@ -12,15 +12,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <TextView
+            android:id="@+id/tvAdvancedHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="48dp"
+            android:text="@string/title_advanced_hint"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swBadge"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:checked="true"
             android:text="@string/title_advanced_badge"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvAdvancedHint"
             app:switchPadding="12dp" />
 
         <TextView
@@ -83,6 +96,18 @@
             app:layout_constraintTop_toBottomOf="@id/swNotifyRemove" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swNotifyClear"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:checked="true"
+            android:text="@string/title_advanced_notify_clear"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNotifyRemoveHint"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swNotifyPreview"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -91,7 +116,7 @@
             android:text="@string/title_advanced_notify_preview"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvNotifyRemoveHint"
+            app:layout_constraintTop_toBottomOf="@id/swNotifyClear"
             app:switchPadding="12dp" />
 
         <TextView

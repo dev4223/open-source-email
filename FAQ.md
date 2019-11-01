@@ -550,16 +550,17 @@ First of all you need to install and configure [OpenKeychain](https://f-droid.or
 
 To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
 
-To decrypt a received message, open the message and just tap the padlock icon just below the grey message action bar.
+To decrypt a received message, open the message and just tap the padlock icon just below the message action bar.
 
 The first time you send an encrypted message you might be asked for a sign key.
 FairEmail will automatically store the sign key ID in the selected identity for the next time.
 If you need to reset the sign key, just save the identity to clear the sign key ID again.
+The sign key is visible in the list of identities.
 
 You can enable *Encrypt by default* in the identity settings, which replaces *Send* by *Encrypt and send*.
+You can enable *Automatically decrypt messages* in the privacy settings, but be aware that automatic decryption is not possible if user interaction is required.
 
 FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for other email clients.
-Received messages are not decrypted automatically because of security reasons and because often manual interaction is required.
 
 The decrypted message text and decrypted attachments are stored. If you want to undo this, you can use the *resync* message 'more' menu.
 
@@ -2116,9 +2117,8 @@ Disabling *Partial fetch* will result in more memory usage.
 OAuth is supported for Gmail via the quick setup wizard.
 The Android account manager will be used to fetch and refresh OAuth tokens for the selected account.
 
-Outlook, Live and Hotmail do not support OAuth for IMAP/SMTP connections:
-"*[We don't support OAuth for IMAP access to Office 365 and we have no plans to do so](https://stackoverflow.com/a/29747829/1794097)*".
-So much about open standards ...
+Outlook, Live and Hotmail do not yet support OAuth for IMAP/SMTP connections, but
+"*[We are actively working on OAuth support for IMAP connections to O365 mailboxes. We will make a public announcement once the same is available.](https://stackoverflow.com/a/58072053)*" (September 24, 2019).
 
 <br />
 

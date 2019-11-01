@@ -271,12 +271,14 @@
     <string name="title_advanced_notify_action_seen">Marquer lu</string>
     <string name="title_advanced_notify_action_snooze">Reporter</string>
     <string name="title_advanced_notify_remove">Supprimer la notification de nouveau message en tapant sur la notification</string>
+    <string name="title_advanced_notify_clear">Supprimer les notifications de nouveau message lors de la visualisation de la liste des messages</string>
     <string name="title_advanced_wearable_preview">Envoyer uniquement des notifications avec un aperçu de message aux appareils connectés</string>
     <string name="title_advanced_biometrics_notify">Afficher le contenu de notification lors de l\'utilisation de l\'authentification biométrique</string>
     <string name="title_advanced_light">Utiliser le voyant de notification</string>
     <string name="title_advanced_sound">Sélectionner le son pour les notifications</string>
     <string name="title_advanced_tracking">Reconnaissance automatique et désactivation des images de suivi</string>
     <string name="title_advanced_display_hidden">Afficher les textes de message cachés</string>
+    <string name="title_advanced_auto_decrypt">Déchiffrer automatiquement les messages</string>
     <string name="title_advanced_recents">Masquer FairEmail dans l\'affichage des applications récentes</string>
     <string name="title_advanced_biometrics_timeout">Délai d\'authentification biométrique</string>
     <string name="title_advanced_pin">Code PIN</string>
@@ -287,6 +289,7 @@
     <string name="title_advanced_crash_reports">Envoyer des rapports d\'erreur</string>
     <string name="title_advanced_debug">Débogage</string>
     <string name="title_advanced_cleanup">Nettoyage</string>
+    <string name="title_advanced_hint">Toutes les options ont des valeurs par défaut raisonnables et ne doivent être modifiées que lorsque cela est nécessaire</string>
     <string name="title_advanced_enabled_hint">Désactiver ou activer globalement la réception de messages</string>
     <string name="title_advanced_manual_hint">Si la synchronisation est désactivée, il est toujours possible de synchroniser manuellement en tirant vers le bas la liste des messages. Ceci synchronisera les messages et exécutera les opérations pendant une durée limitée.</string>
     <string name="title_advanced_poll_hint">La synchronisation périodique comparera les messages locaux et distants à chaque fois, ce qui est une opération coûteuse qui peut entraîner une utilisation supplémentaire de la batterie, surtout lorsqu\'il y a beaucoup de messages à synchroniser. La synchronisation en continu évitera cela en surveillant uniquement les changements.</string>
@@ -301,6 +304,7 @@
     <string name="title_advanced_metered_hint">Les connexions limitées sont généralement des connexions mobiles ou des points d\'accès Wi-Fi payants</string>
     <string name="title_advanced_metered_warning">Désactiver cette option désactivera la réception et l\'envoi de messages sur les connexions Internet mobiles</string>
     <string name="title_advanced_rlah_hint">On considère qu\'il n\'y a pas d\'itinérance au sein de l\'UE (roam like at home)</string>
+    <string name="title_advanced_socks_hint">L\'utilisation d\'un serveur proxy distant n\'est pas sécurisée car les connexions proxy ne sont pas chiffrées</string>
     <string name="title_advanced_roaming_hint">Les en-têtes des messages seront toujours récupérés en itinérance. Vous pouvez utiliser le paramètre d\'itinérance de l\'appareil pour désactiver internet pendant l\'itinérance.</string>
     <string name="title_advanced_browse_hint">Télécharger plus de messages en faisant défiler vers le bas</string>
     <string name="title_advanced_layout_hint">Passer à une disposition plus compacte et changer la taille du texte des messages peut être fait dans le menu de la barre d\'action en haut dans la vue message</string>
@@ -389,6 +393,7 @@
     <string name="title_account_delete">Supprimer définitivement ce compte ?</string>
     <string name="title_identity_delete">Supprimer définitivement cette identité ?</string>
     <string name="title_edit_html">Modifier en HTML</string>
+    <string name="title_sign_key">Clé de signature : %1$s</string>
     <string name="title_last_connected">Dernière connexion : %1$s</string>
     <string name="title_pop_support">Le protocole POP3 supporte le téléchargement et la suppression des messages depuis la boîte de réception uniquement. POP3 ne permet pas de marquer les messages lus, de déplacer des messages, etc. POP3 utilisera plus de batterie et de données que IMAP. Par conséquent, envisagez d\'utiliser le protocole IMAP lorsque cela est possible.</string>
     <string name="title_activesync_support">ActiveSync n\'est pas pris en charge</string>
@@ -477,6 +482,7 @@
     <string name="title_show_inline">Afficher les pièces jointes dans le message</string>
     <string name="title_download_all">Télécharger tout</string>
     <string name="title_save_all">Enregistrer tout</string>
+    <string name="title_save_eml">Enregistrer le message brut</string>
     <string name="title_trash">Supprimer</string>
     <string name="title_copy">Copier&#8230;</string>
     <string name="title_copy_to">Copier vers&#8230;</string>
@@ -614,6 +620,7 @@
     <string name="title_compact">Vue compacte</string>
     <string name="title_zoom">Taille du texte</string>
     <string name="title_select_all">Tout sélectionner</string>
+    <string name="title_select_found">Sélection trouvée</string>
     <string name="title_force_sync">Forcer la synchronisation</string>
     <string name="title_previous">Précédent</string>
     <string name="title_next">Suivant</string>
@@ -762,6 +769,7 @@
     <string name="title_hint_message_selection">Appuyez longuement sur un message pour commencer à sélectionner plusieurs messages ; maintenez et faites glisser vers le haut ou vers le bas pour sélectionner plus de messages</string>
     <string name="title_hint_sync">Le téléchargement des messages peut prendre un certain temps selon la vitesse du fournisseur d\'accès, la connexion internet et le périphérique et selon le nombre de messages. Lors du téléchargement des messages, l\'application peut répondre plus lentement.</string>
     <string name="title_hint_contact_actions">Appui long pour les options</string>
+    <string name="title_hint_eml">Ceci est un résumé du contenu d\'un fichier de message brut. Enregistrez le message brut au moyen de l\'icône de sauvegarde dans la barre d\'action pour afficher tout le contenu.</string>
     <string name="title_open_link">Ouvrir le lien</string>
     <string name="title_different_link">Le titre et l\'adresse du lien sont différents</string>
     <string name="title_secure_link">Sécuriser le lien</string>

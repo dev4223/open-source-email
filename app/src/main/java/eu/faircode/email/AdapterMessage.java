@@ -128,6 +128,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -824,7 +825,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ? R.drawable.baseline_edit_24
                     : EntityFolder.getIcon(outgoing ? EntityFolder.SENT : message.folderType));
             ivType.setVisibility(message.drafts > 0 ||
-                    (viewType == ViewType.UNIFIED && type == null && !inbox) ||
+                    (viewType == ViewType.UNIFIED && type == null && (!inbox || outgoing)) ||
                     (viewType == ViewType.FOLDER && outgoing && !EntityFolder.SENT.equals(message.folderType)) ||
                     (viewType == ViewType.THREAD && (outgoing || EntityFolder.SENT.equals(message.folderType))) ||
                     viewType == ViewType.SEARCH
@@ -1490,7 +1491,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     // Check for inline encryption
                     int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
                     int end = body.indexOf(Helper.PGP_END_MESSAGE);
-                    args.putBoolean("iencrypted", begin >= 0 && begin < end);
+                    args.putBoolean("inline_encrypted", begin >= 0 && begin < end);
 
                     // Check for images
                     boolean has_images = false;
@@ -1599,7 +1600,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected void onExecuted(Bundle args, Object result) {
                     TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    properties.setValue("iencrypted", message.id, args.getBoolean("iencrypted"));
+                    properties.setValue("inline_encrypted", message.id, args.getBoolean("inline_encrypted"));
 
                     TupleMessageEx amessage = getMessage();
                     if (amessage == null || !amessage.id.equals(message.id))
@@ -1617,11 +1618,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         tvBody.setTextIsSelectable(true);
                         tvBody.setMovementMethod(new TouchHandler(message));
                     } else if (result instanceof String)
-                        ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", "UTF-8", null);
+                        ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", StandardCharsets.UTF_8.name(), null);
                     else if (result == null) {
                         boolean show_full = args.getBoolean("show_full");
                         if (show_full)
-                            ((WebView) wvBody).loadDataWithBaseURL(null, "", "text/html", "UTF-8", null);
+                            ((WebView) wvBody).loadDataWithBaseURL(null, "", "text/html", StandardCharsets.UTF_8.name(), null);
                         else
                             tvBody.setText(null);
                     } else
@@ -1648,9 +1649,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
-            boolean iencrypted = properties.getValue("iencrypted", message.id);
             boolean show_inline = properties.getValue("inline", message.id);
-            Log.i("Show inline=" + show_inline);
+            boolean inline_encrypted = properties.getValue("inline_encrypted", message.id);
+            Log.i("Show inline=" + show_inline + " encrypted=" + inline_encrypted);
 
             boolean has_inline = false;
             boolean is_encrypted = false;
@@ -1701,7 +1702,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnDownloadAttachments.setVisibility(download && suitable ? View.VISIBLE : View.GONE);
             tvNoInternetAttachments.setVisibility(downloading && !suitable ? View.VISIBLE : View.GONE);
 
-            ibDecrypt.setVisibility(iencrypted || is_encrypted ? View.VISIBLE : View.GONE);
+            ibDecrypt.setVisibility(inline_encrypted || is_encrypted ? View.VISIBLE : View.GONE);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
+            if (auto_decrypt && is_encrypted)
+                onActionDecrypt(message, true);
 
             cbInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -2049,7 +2055,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onActionUnsubscribe(message);
                         break;
                     case R.id.ibDecrypt:
-                        onActionDecrypt(message);
+                        onActionDecrypt(message, false);
                         break;
 
                     case R.id.ibDownloading:
@@ -2726,11 +2732,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             onOpenLink(uri, context.getString(R.string.title_legend_show_unsubscribe));
         }
 
-        private void onActionDecrypt(TupleMessageEx message) {
+        private void onActionDecrypt(TupleMessageEx message, boolean auto) {
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
                     new Intent(FragmentMessages.ACTION_DECRYPT)
-                            .putExtra("id", message.id));
+                            .putExtra("id", message.id)
+                            .putExtra("auto", auto));
         }
 
         private void onActionReplyMenu(TupleMessageEx message) {
@@ -3690,7 +3697,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && previousList != null)
                     for (int i = 0; i < previousList.size(); i++) {
                         TupleMessageEx message = previousList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
+                        if (message != null && !message.ui_seen && !message.duplicate)
                             prev++;
                     }
 
@@ -3698,7 +3705,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && currentList != null)
                     for (int i = 0; i < currentList.size(); i++) {
                         TupleMessageEx message = currentList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
+                        if (message != null && !message.ui_seen && !message.duplicate)
                             cur++;
                     }
 

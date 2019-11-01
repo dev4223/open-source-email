@@ -21,39 +21,47 @@ package eu.faircode.email;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 
 public class FragmentOptionsPrivacy extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swDisableTracking;
     private SwitchCompat swDisplayHidden;
+    private SwitchCompat swAutoDecrypt;
     private SwitchCompat swNoHistory;
+    private Button btnBiometrics;
     private Spinner spBiometricsTimeout;
     private Button btnPin;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "disable_tracking", "display_hidden", "no_history", "biometrics_timeout"
+            "disable_tracking", "display_hidden", "auto_decrypt", "no_history", "biometrics_timeout"
     };
 
     @Override
@@ -68,7 +76,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
         swDisableTracking = view.findViewById(R.id.swDisableTracking);
         swDisplayHidden = view.findViewById(R.id.swDisplayHidden);
+        swAutoDecrypt = view.findViewById(R.id.swAutoDecrypt);
         swNoHistory = view.findViewById(R.id.swNoHistory);
+        btnBiometrics = view.findViewById(R.id.btnBiometrics);
         spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         btnPin = view.findViewById(R.id.btnPin);
 
@@ -92,11 +102,52 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
+        swAutoDecrypt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("auto_decrypt", checked).apply();
+            }
+        });
+
         swNoHistory.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("no_history", checked).commit(); // apply won't work here
                 restart();
+            }
+        });
+
+        btnBiometrics.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final boolean biometrics = prefs.getBoolean("biometrics", false);
+
+                Helper.authenticate(getActivity(), biometrics, new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean pro = ActivityBilling.isPro(getContext());
+                        if (pro) {
+                            prefs.edit().putBoolean("biometrics", !biometrics).apply();
+                            btnBiometrics.setText(biometrics
+                                    ? R.string.title_setup_biometrics_disable
+                                    : R.string.title_setup_biometrics_enable);
+                        } else
+                            startActivity(new Intent(getContext(), ActivityBilling.class));
+                    }
+                }, new Runnable() {
+                    @Override
+                    public void run() {
+                        // Do nothing
+                    }
+                });
+            }
+        });
+
+        btnPin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentDialogPin fragment = new FragmentDialogPin();
+                fragment.show(getParentFragmentManager(), "pin");
             }
         });
 
@@ -110,14 +161,6 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 prefs.edit().remove("biometrics_timeout").apply();
-            }
-        });
-
-        btnPin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FragmentDialogPin fragment = new FragmentDialogPin();
-                fragment.show(getParentFragmentManager(), "pin");
             }
         });
 
@@ -169,6 +212,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
         swDisableTracking.setChecked(prefs.getBoolean("disable_tracking", true));
         swDisplayHidden.setChecked(prefs.getBoolean("display_hidden", false));
+        swAutoDecrypt.setChecked(prefs.getBoolean("auto_decrypt", false));
         swNoHistory.setChecked(prefs.getBoolean("no_history", false));
 
         int biometrics_timeout = prefs.getInt("biometrics_timeout", 2);
@@ -178,6 +222,12 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                 spBiometricsTimeout.setSelection(pos);
                 break;
             }
+
+        boolean biometrics = prefs.getBoolean("biometrics", false);
+        btnBiometrics.setText(biometrics
+                ? R.string.title_setup_biometrics_disable
+                : R.string.title_setup_biometrics_enable);
+        btnBiometrics.setEnabled(Helper.canAuthenticate(getContext()));
     }
 
     public static class FragmentDialogPin extends FragmentDialogBase {
@@ -187,14 +237,7 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_pin_set, null);
             final EditText etPin = dview.findViewById(R.id.etPin);
 
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    etPin.requestFocus();
-                }
-            });
-
-            return new AlertDialog.Builder(getContext())
+            final Dialog dialog = new AlertDialog.Builder(getContext())
                     .setView(dview)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -209,6 +252,41 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                     })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
+
+            etPin.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+                        return true;
+                    } else
+                        return false;
+                }
+            });
+
+            etPin.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus)
+                        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+                }
+            });
+
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    etPin.requestFocus();
+                }
+            });
+
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    etPin.requestFocus();
+                }
+            });
+
+            return dialog;
         }
     }
 }

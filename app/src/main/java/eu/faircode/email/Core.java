@@ -2775,9 +2775,9 @@ class Core {
         boolean alert_once = prefs.getBoolean("alert_once", true);
 
         // Get contact info
-        Map<TupleMessageEx, ContactInfo> messageContact = new HashMap<>();
+        Map<Long, ContactInfo> messageContact = new HashMap<>();
         for (TupleMessageEx message : messages)
-            messageContact.put(message, ContactInfo.get(context, message.account, message.from, false));
+            messageContact.put(message.id, ContactInfo.get(context, message.account, message.from, false));
 
         // Summary notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N || notify_summary) {
@@ -2846,7 +2846,8 @@ class Core {
                     DateFormat DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
                     StringBuilder sb = new StringBuilder();
                     for (EntityMessage message : messages) {
-                        sb.append("<strong>").append(messageContact.get(message).getDisplayName(name_email)).append("</strong>");
+                        ContactInfo info = messageContact.get(message.id);
+                        sb.append("<strong>").append(info.getDisplayName(name_email)).append("</strong>");
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(": ").append(message.subject);
                         sb.append(" ").append(DTF.format(message.received));
@@ -2870,7 +2871,7 @@ class Core {
 
         // Message notifications
         for (TupleMessageEx message : messages) {
-            ContactInfo info = messageContact.get(message);
+            ContactInfo info = messageContact.get(message.id);
 
             // Build arguments
             long id = (message.content ? message.id : -message.id);
@@ -2878,13 +2879,20 @@ class Core {
             args.putLong("id", id);
 
             // Build pending intents
-            Intent thread = new Intent(context, ActivityView.class);
-            thread.setAction("thread:" + message.thread);
-            thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            thread.putExtra("account", message.account);
-            thread.putExtra("id", message.id);
-            PendingIntent piContent = PendingIntent.getActivity(
-                    context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
+            PendingIntent piContent;
+            if (notify_remove) {
+                Intent thread = new Intent(context, ServiceUI.class);
+                thread.setAction("ignore:" + message.id);
+                thread.putExtra("view", true);
+                piContent = PendingIntent.getService(context, ServiceUI.PI_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else {
+                Intent thread = new Intent(context, ActivityView.class);
+                thread.setAction("thread:" + message.thread);
+                thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                thread.putExtra("account", message.account);
+                thread.putExtra("id", message.id);
+                piContent = PendingIntent.getActivity(context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
+            }
 
             Intent ignore = new Intent(context, ServiceUI.class).setAction("ignore:" + message.id);
             PendingIntent piIgnore = PendingIntent.getService(context, ServiceUI.PI_IGNORED, ignore, PendingIntent.FLAG_UPDATE_CURRENT);

@@ -38,6 +38,7 @@ import com.sun.mail.imap.protocol.IMAPResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +77,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     private ExecutorService executor = Helper.getBackgroundExecutor(1, "boundary");
 
     private State state;
+
+    private static final int SEARCH_LIMIT = 1000;
 
     interface IBoundaryCallbackMessages {
         void onLoading();
@@ -163,7 +166,6 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         Boolean seen = null;
         Boolean flagged = null;
         Boolean snoozed = null;
-
         String find = (TextUtils.isEmpty(query) ? null : query.toLowerCase(Locale.ROOT));
         if (find != null && find.startsWith(context.getString(R.string.title_search_special_prefix) + ":")) {
             String special = find.split(":")[1];
@@ -173,48 +175,62 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 flagged = true;
             else if (context.getString(R.string.title_search_special_snoozed).equals(special))
                 snoozed = true;
-
-        }
-
-        if (state.matches == null) {
-            state.matches = db.message().matchMessages(folder, find, seen, flagged, snoozed);
-            Log.i("Boundary device folder=" + folder +
-                    " query=" + query +
-                    " seen=" + seen +
-                    " flagged=" + flagged +
-                    " snoozed=" + snoozed +
-                    " matches=" + state.matches.size());
         }
 
         int found = 0;
         try {
             db.beginTransaction();
 
-            for (int i = state.index; i < state.matches.size() && found < pageSize && !state.destroyed; i++) {
-                state.index = i + 1;
-
-                TupleMatch match = state.matches.get(i);
-
-                if (find == null || seen != null || flagged != null || snoozed != null)
-                    match.matched = true;
-                else {
-                    if (match.matched == null || !match.matched)
-                        try {
-                            File file = EntityMessage.getFile(context, match.id);
-                            if (file.exists()) {
-                                String html = Helper.readText(file);
-                                String text = HtmlHelper.getText(html);
-                                if (text.toLowerCase(Locale.ROOT).contains(find))
-                                    match.matched = true;
-                            }
-                        } catch (IOException ex) {
-                            Log.e(ex);
-                        }
+            while (found < pageSize && !state.destroyed) {
+                if (state.matches == null ||
+                        (state.matches.size() > 0 && state.index >= state.matches.size())) {
+                    state.matches = db.message().matchMessages(
+                            folder,
+                            "%" + find + "%",
+                            seen, flagged, snoozed,
+                            SEARCH_LIMIT, state.offset);
+                    Log.i("Boundary device folder=" + folder +
+                            " query=" + query +
+                            " seen=" + seen +
+                            " flagged=" + flagged +
+                            " snoozed=" + snoozed +
+                            " offset=" + state.offset +
+                            " size=" + state.matches.size());
+                    state.offset += Math.min(state.matches.size(), SEARCH_LIMIT);
+                    state.index = 0;
                 }
 
-                if (match.matched != null && match.matched) {
-                    found++;
-                    db.message().setMessageFound(match.account, match.thread);
+                if (state.matches.size() == 0)
+                    break;
+
+                for (int i = state.index; i < state.matches.size() && found < pageSize && !state.destroyed; i++) {
+                    state.index = i + 1;
+
+                    TupleMatch match = state.matches.get(i);
+
+                    if (find == null || seen != null || flagged != null || snoozed != null)
+                        match.matched = true;
+                    else {
+                        if (match.matched == null || !match.matched)
+                            try {
+                                File file = EntityMessage.getFile(context, match.id);
+                                if (file.exists()) {
+                                    String html = Helper.readText(file);
+                                    if (html.toLowerCase(Locale.ROOT).contains(find)) {
+                                        String text = HtmlHelper.getText(html);
+                                        if (text.toLowerCase(Locale.ROOT).contains(find))
+                                            match.matched = true;
+                                    }
+                                }
+                            } catch (IOException ex) {
+                                Log.e(ex);
+                            }
+                    }
+
+                    if (match.matched != null && match.matched) {
+                        found++;
+                        db.message().setMessageFound(match.account, match.thread);
+                    }
                 }
             }
 
@@ -317,7 +333,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                 } else {
                                     if (!protocol.supportsUtf8()) {
                                         arg.writeAtom("CHARSET");
-                                        arg.writeAtom("UTF-8");
+                                        arg.writeAtom(StandardCharsets.UTF_8.name());
                                     }
                                     if (keywords)
                                         arg.writeAtom("OR");
@@ -514,6 +530,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         boolean destroyed = false;
         boolean error = false;
         int index = 0;
+        int offset = 0;
         List<TupleMatch> matches = null;
 
         MailService iservice = null;
