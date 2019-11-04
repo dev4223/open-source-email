@@ -1145,7 +1145,7 @@ class Core {
             EntityOperation.queue(context, message, EntityOperation.ADD);
         else {
             long uid = ifolder.getUID(imessages[0]);
-            EntityOperation.queue(context, message, EntityOperation.FETCH, uid);
+            EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
         }
     }
 
@@ -2606,7 +2606,7 @@ class Core {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean notify_summary = prefs.getBoolean("notify_summary", false);
-        boolean wearable_preview = prefs.getBoolean("wearable_preview", true);
+        boolean wearable_preview = prefs.getBoolean("wearable_preview", false);
         boolean biometrics = prefs.getBoolean("biometrics", false);
         boolean biometric_notify = prefs.getBoolean("biometrics_notify", false);
         boolean pro = ActivityBilling.isPro(context);
@@ -2759,7 +2759,7 @@ class Core {
         boolean name_email = prefs.getBoolean("name_email", false);
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
-        boolean wearable_preview = prefs.getBoolean("wearable_preview", true);
+        boolean wearable_preview = prefs.getBoolean("wearable_preview", false);
         boolean notify_trash = (prefs.getBoolean("notify_trash", true) || !pro);
         boolean notify_junk = (prefs.getBoolean("notify_junk", false) && pro);
         boolean notify_archive = (prefs.getBoolean("notify_archive", true) || !pro);
@@ -3169,7 +3169,7 @@ class Core {
         }
 
         Uri uri = (sound == null ? null : Uri.parse(sound));
-        if (uri == null || "file".equals(uri.getScheme()))
+        if (uri == null || !"content".equals(uri.getScheme()))
             uri = null;
         Log.i("Notify sound=" + uri);
 

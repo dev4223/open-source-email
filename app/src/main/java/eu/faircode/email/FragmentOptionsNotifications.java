@@ -374,7 +374,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swNotifyRemove.setChecked(prefs.getBoolean("notify_remove", true));
         swNotifyClear.setChecked(prefs.getBoolean("notify_clear", false));
         swNotifyPreview.setChecked(prefs.getBoolean("notify_preview", true));
-        swWearablePreview.setChecked(prefs.getBoolean("wearable_preview", true));
+        swWearablePreview.setChecked(prefs.getBoolean("wearable_preview", false));
 
         cbNotifyActionTrash.setChecked(prefs.getBoolean("notify_trash", true) || !pro);
         cbNotifyActionJunk.setChecked(prefs.getBoolean("notify_junk", false) && pro);
@@ -430,7 +430,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
 
     private void onSelectSound(Uri uri) {
         Log.i("Selected ringtone=" + uri);
-        if (uri != null && "file".equals(uri.getScheme()))
+        if (uri != null && !"content".equals(uri.getScheme()))
             uri = null;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());

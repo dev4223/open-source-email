@@ -278,6 +278,7 @@
     <string name="title_advanced_sound">Valitse ilmoituksen ääni</string>
     <string name="title_advanced_tracking">Tunnista automaattisesti ja poista käytöstä seurantakuvat</string>
     <string name="title_advanced_display_hidden">Näytä piilotetut viestien tekstit</string>
+    <string name="title_advanced_auto_decrypt">Pura viestien salaus automaattisesti</string>
     <string name="title_advanced_recents">Piilota viimeisimmistä sovelluksista</string>
     <string name="title_advanced_biometrics_timeout">Biometrisen tunnistautumisen aikakatkaisu</string>
     <string name="title_advanced_pin">PIN-koodi</string>
@@ -392,6 +393,7 @@
     <string name="title_account_delete">Poistetaanko tämä tili pysyvästi?</string>
     <string name="title_identity_delete">Poistetaanko tämä identiteetti pysyvästi?</string>
     <string name="title_edit_html">Muokkaa HTML-muodossa</string>
+    <string name="title_sign_key">Allekirjoitusavain: %1$s</string>
     <string name="title_last_connected">Viimeksi yhdistetty: %1$s</string>
     <string name="title_pop_support">POP3-protokolla tukee vain viestien latausta ja poistamista. POP3 ei merkitse viestejä luetuksi, siirrä niitä, jne. POP3 käyttää enemmän akkua ja dataa kuin IMAP. Kannattaa harkita IMAP-protokollan käyttöä aina kuin mahdollista.</string>
     <string name="title_activesync_support">ActiveSync ei ole tuettu</string>
@@ -418,6 +420,7 @@
     <string name="title_delete_operation">Poistetaanko toimenpiteet, joille on virheilmoitus?</string>
     <string name="title_delete_contacts">Poistetaanko kaikki paikalliset yhteystiedot?</string>
     <string name="title_no_operations">Ei odottavia toimenpiteitä</string>
+    <string name="title_hint_operations">Toimenpiteiden poisto voi aiheuttaa viestien katoamista ja synkronointiongelmia</string>
     <string name="title_folder_name">Kansion nimi</string>
     <string name="title_display_name">Näyttönimi</string>
     <string name="title_show_folders">Näytä piilotetut kansiot</string>

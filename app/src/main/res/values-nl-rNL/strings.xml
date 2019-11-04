@@ -420,6 +420,7 @@
     <string name="title_delete_operation">Bewerkingen met een foutmelding verwijderen?</string>
     <string name="title_delete_contacts">Verwijder alle lokale contacten?</string>
     <string name="title_no_operations">Geen openstaande bewerkingen</string>
+    <string name="title_hint_operations">Verwijderen van bewerkingen kan leiden tot het verdwijnen van berichten en synchronisatieproblemen</string>
     <string name="title_folder_name">Mapnaam</string>
     <string name="title_display_name">Weergavenaam</string>
     <string name="title_show_folders">Toon verborgen mappen</string>

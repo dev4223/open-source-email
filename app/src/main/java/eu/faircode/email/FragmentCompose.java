@@ -90,6 +90,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.FileProvider;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
@@ -1705,7 +1706,7 @@ public class FragmentCompose extends FragmentBase {
                                             ": " + (error == null ? "?" : error.getMessage()));
 
                         default:
-                            throw new IllegalArgumentException("Unknown result code=" + resultCode);
+                            throw new IllegalStateException("OpenPgp unknown result code=" + resultCode);
                     }
                 } finally {
                     encrypted.delete();
@@ -1735,9 +1736,10 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
+                if (ex instanceof IllegalArgumentException) {
+                    Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
+                } else
                     Helper.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:encrypt");
@@ -1960,7 +1962,7 @@ public class FragmentCompose extends FragmentBase {
                                                   boolean image) throws IOException {
         Log.w("Add attachment uri=" + uri);
 
-        if ("file".equals(uri.getScheme()) &&
+        if (!"content".equals(uri.getScheme()) &&
                 !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             Log.w("Add attachment uri=" + uri);
             throw new SecurityException("Add attachment with file scheme");
@@ -1968,23 +1970,35 @@ public class FragmentCompose extends FragmentBase {
 
         EntityAttachment attachment = new EntityAttachment();
 
-        String name = uri.getLastPathSegment();
-        String s = null;
+        String fname = null;
+        String ftype = null;
+        Long fsize = null;
 
         try {
-            try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int colName = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    int colSize = cursor.getColumnIndex(OpenableColumns.SIZE);
-                    if (colName >= 0)
-                        name = cursor.getString(colName);
-                    if (colSize >= 0)
-                        s = cursor.getString(colSize);
-                }
+            DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
+            if (dfile != null) {
+                fname = dfile.getName();
+                ftype = dfile.getType();
+                fsize = dfile.length();
             }
         } catch (SecurityException ex) {
-            Log.w(ex);
+            Log.e(ex);
         }
+
+        if (TextUtils.isEmpty(fname))
+            fname = uri.getLastPathSegment();
+
+        if (TextUtils.isEmpty(ftype)) {
+            String extension = Helper.getExtension(fname);
+            if (extension != null)
+                ftype = MimeTypeMap.getSingleton()
+                        .getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
+            if (ftype == null)
+                ftype = "application/octet-stream";
+        }
+
+        if (fsize != null && fsize <= 0)
+            fsize = null;
 
         DB db = DB.getInstance(context);
         try {
@@ -1995,17 +2009,10 @@ public class FragmentCompose extends FragmentBase {
 
             attachment.message = draft.id;
             attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
-            attachment.name = name;
-
-            String extension = Helper.getExtension(attachment.name);
-            if (extension != null)
-                attachment.type = MimeTypeMap.getSingleton()
-                        .getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
-            if (attachment.type == null)
-                attachment.type = "application/octet-stream";
+            attachment.name = fname;
+            attachment.type = ftype;
             attachment.disposition = (image ? Part.INLINE : Part.ATTACHMENT);
-
-            attachment.size = (s == null ? null : Long.parseLong(s));
+            attachment.size = fsize;
             attachment.progress = 0;
 
             attachment.id = db.attachment().insertAttachment(attachment);
@@ -2254,6 +2261,12 @@ public class FragmentCompose extends FragmentBase {
                                     data.draft.from = ref.to;
                                     data.draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
                                 }
+
+                                if (data.draft.from != null && data.draft.from.length > 0) {
+                                    String from = ((InternetAddress) data.draft.from[0]).getAddress();
+                                    if (from != null && from.contains("@"))
+                                        data.draft.extra = from.substring(0, from.indexOf("@"));
+                                }
                             }
 
                             if ("reply_all".equals(action))
@@ -2311,7 +2324,6 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     // Select identity matching from address
-                    Address from = null;
                     EntityIdentity selected = null;
                     long aid = args.getLong("account", -1);
                     long iid = args.getLong("identity", -1);
@@ -2326,12 +2338,6 @@ public class FragmentCompose extends FragmentBase {
                             if (identity.id.equals(iid)) {
                                 Log.i("Selected requested identity=" + iid);
                                 selected = identity;
-                                if (data.draft.from != null)
-                                    for (Address sender : data.draft.from)
-                                        if (identity.similarAddress(sender)) {
-                                            from = sender;
-                                            break;
-                                        }
                                 break;
                             }
 
@@ -2341,7 +2347,6 @@ public class FragmentCompose extends FragmentBase {
                                 for (EntityIdentity identity : data.identities)
                                     if (identity.account.equals(aid) &&
                                             identity.sameAddress(sender)) {
-                                        from = sender;
                                         selected = identity;
                                         Log.i("Selected same account/identity");
                                         break;
@@ -2352,7 +2357,6 @@ public class FragmentCompose extends FragmentBase {
                                 for (EntityIdentity identity : data.identities)
                                     if (identity.account.equals(aid) &&
                                             identity.similarAddress(sender)) {
-                                        from = sender;
                                         selected = identity;
                                         Log.i("Selected similar account/identity");
                                         break;
@@ -2362,7 +2366,6 @@ public class FragmentCompose extends FragmentBase {
                             for (Address sender : data.draft.from)
                                 for (EntityIdentity identity : data.identities)
                                     if (identity.sameAddress(sender)) {
-                                        from = sender;
                                         selected = identity;
                                         Log.i("Selected same */identity");
                                         break;
@@ -2372,7 +2375,6 @@ public class FragmentCompose extends FragmentBase {
                             for (Address sender : data.draft.from)
                                 for (EntityIdentity identity : data.identities)
                                     if (identity.similarAddress(sender)) {
-                                        from = sender;
                                         selected = identity;
                                         Log.i("Selected similer */identity");
                                         break;
@@ -2421,12 +2423,6 @@ public class FragmentCompose extends FragmentBase {
                     data.draft.folder = drafts.id;
                     data.draft.identity = selected.id;
                     data.draft.from = new InternetAddress[]{new InternetAddress(selected.email, selected.name)};
-
-                    String extra = (from == null ? selected.email : ((InternetAddress) from).getAddress());
-                    if (extra != null && extra.contains("@"))
-                        data.draft.extra = extra.substring(0, extra.indexOf("@"));
-                    else
-                        data.draft.extra = null;
 
                     data.draft.sender = MessageHelper.getSortKey(data.draft.from);
                     Uri lookupUri = ContactInfo.getLookupUri(context, data.draft.from);
