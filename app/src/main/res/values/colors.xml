@@ -21,6 +21,8 @@
     <!-- White 87%  primary_text_default_material_dark -->
     <color name="colorUnreadDark">#ffffffff</color>
 
+    <color name="colorEncrypt">#ff00d000</color>
+
     <!-- Grey 800 -->
     <!-- darkPrimary orig: #424242 -->
     <color name="darkPrimary">#003254</color>

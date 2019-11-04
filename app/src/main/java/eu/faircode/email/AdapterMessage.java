@@ -2589,11 +2589,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShow(final TupleMessageEx message, boolean full) {
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
             boolean current = properties.getValue(full ? "full" : "images", message.id);
             boolean asked = properties.getValue(full ? "full_asked" : "images_asked", message.id);
             if (current || asked) {
                 if (current) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = prefs.edit();
                     for (Address address : message.from) {
                         String from = ((InternetAddress) address).getAddress();
@@ -2603,13 +2604,28 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 properties.setValue(full ? "full" : "images", message.id, !current);
-                onShowFullConfirmed(message);
+                if (full)
+                    onShowFullConfirmed(message);
+                else
+                    onShowImagesConfirmed(message);
                 return;
             }
 
             View dview = LayoutInflater.from(context).inflate(
                     full ? R.layout.dialog_show_full : R.layout.dialog_show_images, null);
             CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+            CheckBox cbAlwaysImages = dview.findViewById(R.id.cbAlwaysImages);
+
+            if (full) {
+                cbAlwaysImages.setChecked(prefs.getBoolean("html_always_images", false));
+
+                cbAlwaysImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        prefs.edit().putBoolean("html_always_images", isChecked).apply();
+                    }
+                });
+            }
 
             if (message.from == null || message.from.length == 0)
                 cbNotAgain.setVisibility(View.GONE);
@@ -2624,7 +2640,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = prefs.edit();
                     for (Address address : message.from) {
                         String from = ((InternetAddress) address).getAddress();
@@ -2638,7 +2653,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 TextView tvDark = dview.findViewById(R.id.tvDark);
                 tvDark.setVisibility(Helper.isDarkTheme(context) ? View.VISIBLE : View.GONE);
             } else {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                 boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
 
                 ImageView ivInfo = dview.findViewById(R.id.ivInfo);
@@ -2664,7 +2678,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             properties.setValue(full ? "full_asked" : "images_asked", message.id, true);
                             if (full)
                                 onShowFullConfirmed(message);
-                            onShowImagesConfirmed(message);
+                            else
+                                onShowImagesConfirmed(message);
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)
@@ -2684,8 +2699,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowFullConfirmed(final TupleMessageEx message) {
-            properties.setSize(message.id, 0);
-            properties.setHeight(message.id, 0);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean images = prefs.getBoolean("html_always_images", false);
+            if (images) {
+                properties.setValue("images", message.id, true);
+                onShowImagesConfirmed(message);
+            }
+
+            properties.setSize(message.id, null);
+            properties.setHeight(message.id, null);
+            properties.setPosition(message.id, null);
 
             bindBody(message);
         }
@@ -3287,6 +3310,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return null;
 
                         db.message().setMessageSnoozed(message.id, hide ? Long.MAX_VALUE : null);
+                        db.message().setMessageUiIgnored(message.id, true);
                         EntityMessage.snooze(context, message.id, hide ? Long.MAX_VALUE : null);
 
                         db.setTransactionSuccessful();
@@ -4215,11 +4239,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         boolean getValue(String name, long id);
 
-        void setSize(long id, float size);
+        void setSize(long id, Float size);
 
         float getSize(long id, float defaultSize);
 
-        void setHeight(long id, int height);
+        void setHeight(long id, Integer height);
 
         int getHeight(long id, int defaultHeight);
 

@@ -1238,8 +1238,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         @Override
-        public void setSize(long id, float size) {
-            sizes.put(id, size);
+        public void setSize(long id, Float size) {
+            if (size == null)
+                sizes.remove(id);
+            else
+                sizes.put(id, size);
         }
 
         @Override
@@ -1248,8 +1251,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         @Override
-        public void setHeight(long id, int height) {
-            heights.put(id, height);
+        public void setHeight(long id, Integer height) {
+            if (height == null)
+                heights.remove(id);
+            else
+                heights.put(id, height);
         }
 
         @Override
@@ -1258,8 +1264,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         public void setPosition(long id, Pair<Integer, Integer> position) {
-            Log.i("Position=" + position);
-            positions.put(id, position);
+            if (position == null)
+                positions.remove(id);
+            else
+                positions.put(id, position);
         }
 
         public Pair<Integer, Integer> getPosition(long id) {
@@ -2036,6 +2044,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             db.message().setMessageSnoozed(threaded.id, hide ? Long.MAX_VALUE : null);
+                            db.message().setMessageUiIgnored(message.id, true);
                             EntityMessage.snooze(context, threaded.id, hide ? Long.MAX_VALUE : null);
                         }
                     }
@@ -2640,6 +2649,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_folders).setActionView(R.layout.action_button);
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
+        ib.setImageResource(R.drawable.baseline_folder_24);
         ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -4333,7 +4343,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             account, thread, threading ? null : id, null);
                     for (EntityMessage threaded : messages) {
                         db.message().setMessageSnoozed(threaded.id, wakeup);
-                        EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
+                        db.message().setMessageUiIgnored(threaded.id, true);
                         EntityMessage.snooze(context, threaded.id, wakeup);
                     }
 
@@ -4392,8 +4402,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             db.message().setMessageSnoozed(threaded.id, wakeup);
+                            db.message().setMessageUiIgnored(message.id, true);
                             EntityMessage.snooze(context, threaded.id, wakeup);
-                            EntityOperation.queue(context, threaded, EntityOperation.SEEN, true);
                         }
                     }
 
