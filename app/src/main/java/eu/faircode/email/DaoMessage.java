@@ -257,7 +257,12 @@ public interface DaoMessage {
     @Query("SELECT * FROM message" +
             " WHERE account = :account" +
             " AND msgid = :msgid")
-    List<EntityMessage> getMessageByMsgId(long account, String msgid);
+    List<EntityMessage> getMessagesByMsgId(long account, String msgid);
+
+    @Query("SELECT * FROM message" +
+            " WHERE account = :account" +
+            " AND (id = :id OR  msgid = :msgid)")
+    List<EntityMessage> getMessagesBySimilarity(long account, long id, String msgid);
 
     @Query("SELECT COUNT(*) FROM message" +
             " WHERE folder = :folder" +

@@ -43,7 +43,7 @@ Related questions:
 * A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * The folder selector sometimes shows no folders for yet unknown reasons.
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
-* Encryption with YubiKey results into an infinite loop. Since looking into several log files didn't reveal the problem: sponsor me a [Yubikey 5 NFC](https://www.yubico.com/product/yubikey-5-nfc) so I can reproduce the problem.
+* Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 * A preview of the message text doesn't (always) appear on a Samsung watch because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. However, message preview texts are known to appear correctly on a Pebble 2, a Fitbit Charge 3 and a Mi band 3. See also [this FAQ](#user-content-faq126).
 
@@ -766,6 +766,8 @@ see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/)
 
 The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
+The error *... Unexpected end of zlib input stream ...*" means that not all data was received, possibly due to a bad or interrupted connection.
+
 The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported.
 FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.
 
@@ -1462,14 +1464,14 @@ to justify making FairEmail available in the [Google Play Family Library](https:
 **(67) How can I snooze conversations?**
 
 Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*.
-Alternatively, use the *Snooze ...* 'more' menu in the expanded message view.
+Alternatively, in the expanded message view use *Snooze ...* in the message three-dots 'more' menu or the timelapse action in the bottom action bar.
 Select the time the conversation(s) should snooze and confirm by tapping OK.
 The conversations will be hidden for the selected time and shown again afterwards.
 You will receive a new message notification as reminder.
 
 It is also possible to snooze messages with [a rule](#user-content-faq71).
 
-You can show snoozed messages by using the *Snoozed* item in the three dot overflow menu.
+You can show snoozed messages by unchecking *Filter out* > *Hidden* in the three dot overflow menu.
 
 You can tap on the small snooze icon to see until when a conversation is snoozed.
 
@@ -1875,15 +1877,18 @@ This is why texts with dots are sometimes incorrectly recognized as links, which
 
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature
 and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client.
+Servers generally have more memory and computing power, so are much better suited for this task.
+Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client.
 
 Of course you can report messages as spam with FairEmail,
 which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work.
+This can be done automatically with [filter rules](#user-content-faq71) too.
 
 Also, FairEmail can show a small red warning flag
 when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server.
 You can enable/disable [authentication verification](https://en.wikipedia.org/wiki/Email_authentication) in the behavior settings.
 
-FairEmail can show a warning flag too when the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server.
+FairEmail can show a warning flag too if the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server.
 This can be enabled in the receive settings. Be aware that this will slow down synchronization of messages significantly.
 
 If legitimate messages are failing authentication, you should notify the sender because this will result in a high risk of messages ending up in the spam folder.
