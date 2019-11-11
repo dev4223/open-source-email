@@ -226,17 +226,14 @@ public interface DaoMessage {
             " OR `keywords` LIKE :find COLLATE NOCASE" +
             " OR `preview` LIKE :find COLLATE NOCASE) AS matched" +
             " FROM message" +
-            " WHERE (:folder IS NULL OR folder = :folder)" +
-            " AND NOT ui_hide" +
-            " AND (:seen IS NULL OR message.ui_seen = :seen)" +
-            " AND (:flagged IS NULL OR message.ui_flagged = :flagged)" +
-            " AND CASE :snoozed" +
-            "  WHEN 0 THEN message.ui_snoozed IS NULL" +
-            "  WHEN 1 THEN message.ui_snoozed IS NOT NULL" +
-            "  ELSE 1 END" + // NULL: true
-            " ORDER BY message.received DESC" +
+            " WHERE NOT ui_hide" +
+            " AND (:folder IS NULL OR folder = :folder)" +
+            " AND (:seen IS NULL OR ui_seen = :seen)" +
+            " AND (:flagged IS NULL OR ui_flagged = :flagged)" +
+            " AND (:hidden IS NULL OR (CASE WHEN ui_snoozed IS NULL THEN 0 ELSE 1 END) = :hidden)" +
+            " ORDER BY received DESC" +
             " LIMIT :limit OFFSET :offset")
-    List<TupleMatch> matchMessages(Long folder, String find, Boolean seen, Boolean flagged, Boolean snoozed, int limit, int offset);
+    List<TupleMatch> matchMessages(Long folder, String find, Boolean seen, Boolean flagged, Boolean hidden, int limit, int offset);
 
     @Query("SELECT id" +
             " FROM message" +
@@ -244,13 +241,14 @@ public interface DaoMessage {
             " ORDER BY message.received DESC")
     List<Long> getMessageWithContent();
 
-    @Query("SELECT *" +
+    @Query("SELECT message.*" +
             " FROM message" +
+            " LEFT JOIN account ON account.id = message.account" +
             " WHERE account = :account" +
             " AND thread = :thread" +
             " AND (:id IS NULL OR message.id = :id)" +
             " AND (:folder IS NULL OR message.folder = :folder)" +
-            " AND NOT uid IS NULL" +
+            " AND (NOT uid IS NULL OR account.pop)" +
             " AND NOT ui_hide")
     List<EntityMessage> getMessagesByThread(long account, String thread, Long id, Long folder);
 
@@ -489,6 +487,9 @@ public interface DaoMessage {
             "  SELECT id FROM folder" +
             "  WHERE (:folder IS NULL AND folder.unified) OR id = :folder)")
     int ignoreAll(Long account, Long folder);
+
+    @Query("UPDATE message SET ui_found = 1 WHERE id = :id")
+    int setMessageFound(long id);
 
     @Query("UPDATE message SET ui_found = 1" +
             " WHERE account = :account" +

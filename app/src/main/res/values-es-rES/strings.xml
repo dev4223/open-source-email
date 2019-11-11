@@ -193,6 +193,8 @@
     <string name="title_advanced_suggest_sent">Sugerir direcciones encontradas en mensajes enviados</string>
     <string name="title_advanced_suggest_received">Sugerir direcciones encontradas en mensajes recibidos</string>
     <string name="title_advanced_prefix_once">Prefijar el asunto solo una vez al responder o reenviar</string>
+    <string name="title_advanced_extended_reply">Usar encabezado de respuesta/reenvío extendido</string>
+    <string name="title_advanced_quote_reply">Citar texto a responder</string>
     <string name="title_advanced_plain_only">Enviar sólo texto plano por defecto</string>
     <string name="title_advanced_usenet_signature">Convención de firma Usenet</string>
     <string name="title_advanced_autoresize">Redimensionar automáticamente imágenes adjuntas e incrustadas</string>
@@ -278,6 +280,7 @@
     <string name="title_advanced_sound">Seleccionar sonido de notificación</string>
     <string name="title_advanced_tracking">Reconocer y desactivar automáticamente imágenes de rastreo</string>
     <string name="title_advanced_display_hidden">Mostrar textos de mensajes ocultos</string>
+    <string name="title_advanced_openpgp">Proveedor OpenPGP</string>
     <string name="title_advanced_auto_decrypt">Descifrar automáticamente los mensajes</string>
     <string name="title_advanced_recents">Ocultar de pantalla con aplicaciones recientes</string>
     <string name="title_advanced_biometrics_timeout">Límite de tiempo para autenticación biométrica</string>
@@ -314,6 +317,7 @@
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
     <string name="title_advanced_inline_hint">Las imágenes embebidas son imágenes incluídas en el mensaje</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
+    <string name="title_advanced_autoseen_hint">El marcado automático de los mensajes como leídos al expandirlos se puede desactivar en la configuración individual de la cuenta</string>
     <string name="title_advanced_autoclose_hint">Cerrar automáticamente hilos de conversación cuando todos los mensajes son archivados, enviados o eliminados</string>
     <string name="title_advanced_sender_hint">La mayoría de los proveedores no permiten direcciones de remitente modificadas</string>
     <string name="title_advanced_display_hidden_hint">Esto puede resultar en textos dobles o de apariencia extraña</string>
@@ -774,8 +778,8 @@
     <string name="title_hint_eml">Este es un resumen del contenido de un archivo de mensaje crudo. Guarde el mensaje raw con el icono guardar en la barra de acción para ver todo el contenido.</string>
     <string name="title_open_link">Abrir enlace</string>
     <string name="title_different_link">El título y la dirección del enlace son diferentes</string>
-    <string name="title_secure_link">Hacer enlace seguro</string>
-    <string name="title_link_secured">El enlace es seguro</string>
+    <string name="title_secure_link">El tráfico no será cifrado</string>
+    <string name="title_link_https">El tráfico será cifrado</string>
     <string name="title_sanitize_link">Eliminar parámetros de rastreo</string>
     <string name="title_insecure_link">Este enlace es inseguro</string>
     <string name="title_check_owner">Comprobar propietario</string>
@@ -789,6 +793,7 @@
     <string name="title_undo">Deshacer</string>
     <string name="title_redo">Rehacer</string>
     <string name="title_add">Agregar</string>
+    <string name="title_browse">Abrir con</string>
     <string name="title_info">Información</string>
     <string name="title_report">Reportar</string>
     <string name="title_fix">Reparar</string>
@@ -817,6 +822,7 @@
     <string name="title_icalendar_accept">Aceptar</string>
     <string name="title_icalendar_decline">Rechazar</string>
     <string name="title_icalendar_maybe">Tal vez</string>
+    <string name="title_icalendar_calendar">Calendario</string>
     <string name="title_try">Pruebe FairEmail, un cliente de correo electrónico para Android de código abierto y enfocado en la privacidad</string>
     <string name="title_pro_feature">Esta es una característica Pro</string>
     <string name="title_pro_list">Lista de características Pro</string>

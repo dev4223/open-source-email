@@ -193,6 +193,8 @@
     <string name="title_advanced_suggest_sent">Foreslå adresser som er funnet i sendte meldinger</string>
     <string name="title_advanced_suggest_received">Foreslå adresser som er funnet i sendte meldinger</string>
     <string name="title_advanced_prefix_once">Prefiks emne bare en gang på svar eller videresending</string>
+    <string name="title_advanced_extended_reply">Bruk utvidet svar/videresendt overskrift</string>
+    <string name="title_advanced_quote_reply">Sitat svarte tekst</string>
     <string name="title_advanced_plain_only">Send bare vanlig tekst som standard</string>
     <string name="title_advanced_usenet_signature">Usenet signaturkonvensjon</string>
     <string name="title_advanced_autoresize">Endre størrelsen på vedlagte og innebygde bilder automatisk</string>
@@ -278,6 +280,7 @@
     <string name="title_advanced_sound">Velg varslingslyd</string>
     <string name="title_advanced_tracking">Automatisk gjenkjenning og deaktivering av sporingsbilder</string>
     <string name="title_advanced_display_hidden">Vis skjulte meldingstekster</string>
+    <string name="title_advanced_openpgp">OpenPGP-leverandør</string>
     <string name="title_advanced_auto_decrypt">Dekrypter meldinger automatisk</string>
     <string name="title_advanced_recents">Skjul fra skjermen med nylige brukte apper</string>
     <string name="title_advanced_biometrics_timeout">Biometrisk autentisering timeout</string>
@@ -314,6 +317,7 @@
     <string name="title_advanced_preview_hint">Kun tilgjengelig når meldingstekst ble lastet ned</string>
     <string name="title_advanced_inline_hint">Innebygde bilder er bilder som er inkludert i meldingen</string>
     <string name="title_advanced_autoexpand_hint">Åpne automatisk melding når det bare er én melding eller bare en ulest melding i en samtale</string>
+    <string name="title_advanced_autoseen_hint">Automatisk merking av meldinger som lest ved utvidelse, kan deaktiveres i de enkelte kontoinnstillingene</string>
     <string name="title_advanced_autoclose_hint">Lukk samtaler automatisk når alle meldinger arkiveres, sendes eller kastet</string>
     <string name="title_advanced_sender_hint">De fleste leverandører tillater ikke endret avsender adresser</string>
     <string name="title_advanced_display_hidden_hint">Dette kan resultere i merkelige utseende og doble tekster</string>
@@ -774,8 +778,6 @@
     <string name="title_hint_eml">Dette er et sammendrag av innholdet i en rå meldingsfil. Lagre råmeldingen med lagringsikonet i handlingslinjen for å se alt innhold.</string>
     <string name="title_open_link">Åpne link</string>
     <string name="title_different_link">Tittelen og linkadressen er forskjellige</string>
-    <string name="title_secure_link">Gjør koblingen sikker</string>
-    <string name="title_link_secured">Koblingen er sikker</string>
     <string name="title_sanitize_link">Fjern sporingsparametere</string>
     <string name="title_insecure_link">Denne linken er usikker</string>
     <string name="title_check_owner">Sjekk eier</string>
@@ -789,7 +791,7 @@
     <string name="title_undo">Angre</string>
     <string name="title_redo">Gjenta</string>
     <string name="title_add">Legg til</string>
-    <string name="title_browse">Standardapp</string>
+    <string name="title_browse">Åpne med</string>
     <string name="title_info">Info</string>
     <string name="title_report">Rapportere</string>
     <string name="title_fix">Fiks</string>
@@ -818,6 +820,7 @@
     <string name="title_icalendar_accept">Godta</string>
     <string name="title_icalendar_decline">Avslå</string>
     <string name="title_icalendar_maybe">Kanskje</string>
+    <string name="title_icalendar_calendar">Kalender</string>
     <string name="title_try">Prøv FairEmail, en e-postapp for Android med åpen kildekode som respekterer din integritet</string>
     <string name="title_pro_feature">Dette er en Pro-funksjon</string>
     <string name="title_pro_list">Liste over Pro funksjoner</string>

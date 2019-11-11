@@ -380,15 +380,23 @@ public class ServiceUI extends IntentService {
             if (message == null)
                 return;
 
-            db.message().setMessageSnoozed(message.id, null);
-
             EntityFolder folder = db.folder().getFolder(message.folder);
             if (EntityFolder.OUTBOX.equals(folder.type)) {
                 Log.i("Delayed send id=" + message.id);
+                db.message().setMessageSnoozed(message.id, null);
                 EntityOperation.queue(this, message, EntityOperation.SEND);
             } else {
-                if (folder.notify)
+                if (folder.notify) {
+                    // A new message ID is needed for a new (wearable) notification
+                    db.message().deleteMessage(id);
+                    message.id = null;
+                    message.id = db.message().insertMessage(message);
+                    if (message.content)
+                        EntityMessage.getFile(this, id)
+                                .renameTo(message.getFile(this));
+                    db.message().setMessageSnoozed(message.id, null);
                     EntityOperation.queue(this, message, EntityOperation.SEEN, false, false);
+                }
             }
 
             db.setTransactionSuccessful();

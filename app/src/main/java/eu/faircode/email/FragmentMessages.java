@@ -706,7 +706,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                        moveAsk(result);
+                        moveAsk(result, false);
                     }
 
                     @Override
@@ -1336,7 +1336,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                    moveAsk(result);
+                    moveAsk(result, false);
                 }
 
                 @Override
@@ -1378,6 +1378,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             if (EntityFolder.OUTBOX.equals(message.folderType))
                 return 0;
+
+            if (message.accountPop)
+                return makeMovementFlags(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
 
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
             if (swipes == null)
@@ -1428,9 +1431,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (message == null)
                 return;
 
-            TupleAccountSwipes swipes = accountSwipes.get(message.account);
-            if (swipes == null)
-                return;
+            TupleAccountSwipes swipes;
+            if (message.accountPop) {
+                swipes = new TupleAccountSwipes();
+                swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
+                swipes.swipe_left = 0L;
+                swipes.left_type = EntityFolder.TRASH;
+            } else {
+                swipes = accountSwipes.get(message.account);
+                if (swipes == null)
+                    return;
+            }
 
             Long action = (dX > 0 ? swipes.swipe_right : swipes.swipe_left);
             if (action == null)
@@ -1446,6 +1457,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 icon = R.drawable.baseline_list_24;
             else if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
                 icon = (message.ui_seen ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
+            else if (FragmentAccount.SWIPE_ACTION_FLAG.equals(action))
+                icon = (message.ui_flagged ? R.drawable.baseline_star_border_24 : R.drawable.baseline_star_24);
             else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
                 icon = (message.ui_snoozed == null ? R.drawable.baseline_timelapse_24 : R.drawable.baseline_timer_off_24);
             else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
@@ -1502,6 +1515,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return;
             }
 
+            if (message.accountPop)
+                if (direction == ItemTouchHelper.LEFT) {
+                    adapter.notifyItemChanged(pos);
+                    onSwipeDelete(message);
+                } else
+                    onActionSeenSelection(!message.ui_seen, message.id);
+
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
             if (swipes == null) {
                 adapter.notifyDataSetChanged();
@@ -1521,6 +1541,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 onSwipeAsk(message, viewHolder);
             } else if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
                 onActionSeenSelection(!message.ui_seen, message.id);
+            else if (FragmentAccount.SWIPE_ACTION_FLAG.equals(action))
+                onActionFlagSelection(!message.ui_flagged, null, message.id);
             else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
                 onActionSnooze(message);
             else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
@@ -1544,7 +1566,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return null;
 
             TupleMessageEx message = list.get(pos);
-            if (message == null || message.uid == null)
+            if (message == null || (message.uid == null && !message.accountPop))
                 return null;
 
             if (iProperties.getValue("expanded", message.id))
@@ -1569,15 +1591,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             else
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
 
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 2, R.string.title_snooze);
+            if (message.ui_flagged)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, 2, R.string.title_unflag);
+            else
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, 2, R.string.title_flag);
+
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
 
             if (message.ui_snoozed == null)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 3, R.string.title_hide);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 4, R.string.title_hide);
             else if (message.ui_snoozed == Long.MAX_VALUE)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 3, R.string.title_unhide);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 4, R.string.title_unhide);
 
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 4, R.string.title_flag_color);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 5, R.string.title_move);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 5, R.string.title_flag_color);
+            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -1588,6 +1615,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             return true;
                         case R.string.title_unseen:
                             onActionSeenSelection(false, message.id);
+                            return true;
+                        case R.string.title_flag:
+                            onActionFlagSelection(true, null, message.id);
+                            return true;
+                        case R.string.title_unflag:
+                            onActionFlagSelection(false, null, message.id);
                             return true;
                         case R.string.title_snooze:
                             onMenuSnooze();
@@ -1668,7 +1701,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             args.putLong("id", message.id);
             args.putBoolean("thread", viewType != AdapterMessage.ViewType.THREAD);
             args.putLong("target", target);
-            args.putLong("busy", new Date().getTime() + UNDO_TIMEOUT * 2);
 
             new SimpleTask<ArrayList<MessageTarget>>() {
                 @Override
@@ -1676,7 +1708,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     long id = args.getLong("id");
                     boolean thread = args.getBoolean("thread");
                     long tid = args.getLong("target");
-                    long busy = args.getLong("busy");
 
                     ArrayList<MessageTarget> result = new ArrayList<>();
 
@@ -1696,13 +1727,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         EntityAccount account = db.account().getAccount(target.account);
                         List<EntityMessage> messages = db.message().getMessagesByThread(
                                 message.account, message.thread, threading && thread ? null : id, message.folder);
-                        for (EntityMessage threaded : messages) {
+                        for (EntityMessage threaded : messages)
                             result.add(new MessageTarget(threaded, account, target));
-                            db.message().setMessageUiBusy(threaded.id, busy);
-                            db.message().setMessageUiHide(threaded.id, true);
-                            // Prevent new message notification on undo
-                            db.message().setMessageUiIgnored(threaded.id, true);
-                        }
 
                         db.setTransactionSuccessful();
                     } finally {
@@ -1753,11 +1779,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 DB db = DB.getInstance(context);
 
+                boolean pop = false;
                 result.folders = new ArrayList<>();
                 for (long id : ids) {
                     EntityMessage message = db.message().getMessage(id);
                     if (message == null)
                         continue;
+
+                    EntityAccount account = db.account().getAccount(message.account);
+                    if (account == null)
+                        continue;
+                    if (account.pop)
+                        pop = true;
 
                     if (!result.folders.contains(message.folder))
                         result.folders.add(message.folder);
@@ -1784,7 +1817,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     EntityFolder folder = db.folder().getFolder(message.folder);
                     boolean isArchive = EntityFolder.ARCHIVE.equals(folder.type);
-                    boolean isTrash = EntityFolder.TRASH.equals(folder.type);
+                    boolean isTrash = (EntityFolder.TRASH.equals(folder.type) || account.pop);
                     boolean isJunk = EntityFolder.JUNK.equals(folder.type);
                     boolean isDrafts = EntityFolder.DRAFTS.equals(folder.type);
 
@@ -1812,9 +1845,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (result.hasJunk == null) result.hasJunk = false;
 
                 result.accounts = new ArrayList<>();
-                for (EntityAccount account : db.account().getSynchronizingAccounts())
-                    if (!account.pop)
-                        result.accounts.add(account);
+                if (!pop)
+                    for (EntityAccount account : db.account().getSynchronizingAccounts())
+                        if (!account.pop)
+                            result.accounts.add(account);
 
                 return result;
             }
@@ -1883,10 +1917,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 onHideSelection(false);
                                 return true;
                             case R.string.title_flag:
-                                onActionFlagSelection(true, null);
+                                onActionFlagSelection(true, null, null);
                                 return true;
                             case R.string.title_unflag:
-                                onActionFlagSelection(false, null);
+                                onActionFlagSelection(false, null, null);
                                 return true;
                             case R.string.title_flag_color:
                                 onActionFlagColorSelection();
@@ -2066,9 +2100,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "messages:flag");
     }
 
-    private void onActionFlagSelection(boolean flagged, Integer color) {
+    private void onActionFlagSelection(boolean flagged, Integer color, Long id) {
         Bundle args = new Bundle();
-        args.putLongArray("ids", getSelection());
+        args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
         args.putBoolean("flagged", flagged);
         if (color != null)
             args.putInt("color", color);
@@ -2143,10 +2177,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (message == null)
                             continue;
 
+                        EntityAccount account = db.account().getAccount(message.account);
+                        if (account == null)
+                            continue;
+
                         List<EntityMessage> messages = db.message().getMessagesByThread(
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages)
-                            if (message.uid != null)
+                            if (message.uid != null || account.pop)
                                 ids.add(threaded.id);
                     }
 
@@ -2237,7 +2275,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (EntityFolder.JUNK.equals(type))
                     moveAskConfirmed(result);
                 else
-                    moveAsk(result);
+                    moveAsk(result, true);
             }
 
             @Override
@@ -2301,7 +2339,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result);
+                moveAsk(result, true);
             }
 
             @Override
@@ -3492,13 +3530,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "messages:navigate");
     }
 
-    private void moveAsk(final ArrayList<MessageTarget> result) {
+    private void moveAsk(final ArrayList<MessageTarget> result, boolean undo) {
         if (result.size() == 0)
             return;
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         if (prefs.getBoolean("automove", false)) {
-            moveAskConfirmed(result);
+            if (undo)
+                moveUndo(result);
+            else
+                moveAskConfirmed(result);
             return;
         }
 
@@ -3558,98 +3599,127 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "messages:move");
     }
 
-    private void moveUndo(final ArrayList<MessageTarget> result) {
-        // Show undo snackbar
-        final Snackbar snackbar = Snackbar.make(
-                view,
-                getString(R.string.title_moving, getDisplay(result)),
-                Snackbar.LENGTH_INDEFINITE);
-        snackbar.setAction(R.string.title_undo, new View.OnClickListener() {
+    private void moveUndo(ArrayList<MessageTarget> result) {
+        Bundle args = new Bundle();
+        args.putParcelableArrayList("result", result);
+
+        new SimpleTask<ArrayList<MessageTarget>>() {
             @Override
-            public void onClick(View v) {
-                snackbar.dismiss();
-                snackbar.getView().setTag(true);
+            protected ArrayList<MessageTarget> onExecute(Context context, Bundle args) throws Throwable {
+                ArrayList<MessageTarget> result = args.getParcelableArrayList("result");
 
-                Bundle args = new Bundle();
-                args.putParcelableArrayList("result", result);
+                DB db = DB.getInstance(context);
+                long busy = new Date().getTime() + UNDO_TIMEOUT * 2;
+                for (MessageTarget target : result) {
+                    db.message().setMessageUiBusy(target.id, busy);
+                    db.message().setMessageUiHide(target.id, true);
+                    // Prevent new message notification on undo
+                    db.message().setMessageUiIgnored(target.id, true);
+                }
 
-                // Show message again
-                new SimpleTask<Void>() {
+                return result;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, final ArrayList<MessageTarget> result) {
+                // Show undo snackbar
+                final Snackbar snackbar = Snackbar.make(
+                        view,
+                        getString(R.string.title_moving, getDisplay(result)),
+                        Snackbar.LENGTH_INDEFINITE);
+                snackbar.setAction(R.string.title_undo, new View.OnClickListener() {
                     @Override
-                    protected Void onExecute(Context context, Bundle args) {
-                        DB db = DB.getInstance(context);
+                    public void onClick(View v) {
+                        snackbar.dismiss();
+                        snackbar.getView().setTag(true);
 
-                        try {
-                            db.beginTransaction();
+                        Bundle args = new Bundle();
+                        args.putParcelableArrayList("result", result);
 
-                            ArrayList<MessageTarget> result = args.getParcelableArrayList("result");
-                            for (MessageTarget target : result) {
-                                Log.i("Move undo id=" + target.id);
-                                db.message().setMessageUiBusy(target.id, null);
-                                db.message().setMessageUiHide(target.id, false);
+                        // Show message again
+                        new SimpleTask<Void>() {
+                            @Override
+                            protected Void onExecute(Context context, Bundle args) {
+                                ArrayList<MessageTarget> result = args.getParcelableArrayList("result");
+
+                                DB db = DB.getInstance(context);
+                                try {
+                                    db.beginTransaction();
+
+                                    for (MessageTarget target : result) {
+                                        Log.i("Move undo id=" + target.id);
+                                        db.message().setMessageUiBusy(target.id, null);
+                                        db.message().setMessageUiHide(target.id, false);
+                                    }
+
+                                    db.setTransactionSuccessful();
+                                } finally {
+                                    db.endTransaction();
+                                }
+
+                                return null;
                             }
 
-                            db.setTransactionSuccessful();
-                        } finally {
-                            db.endTransaction();
-                        }
-
-                        return null;
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Helper.unexpectedError(getParentFragmentManager(), ex);
+                            }
+                        }.execute(FragmentMessages.this, args, "messages:moveundo");
                     }
+                });
+                snackbar.show();
 
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
-                    }
-                }.execute(FragmentMessages.this, args, "messages:undo");
-            }
-        });
-        snackbar.show();
+                final Context context = getContext().getApplicationContext();
 
-        final Context context = getContext().getApplicationContext();
-
-        // Wait
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.i("Move timeout");
-
-                if (snackbar.getView().getTag() != null)
-                    return;
-
-                // Remove snackbar
-                if (snackbar.isShown())
-                    snackbar.dismiss();
-
-                Thread thread = new Thread(new Runnable() {
+                // Wait
+                new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        DB db = DB.getInstance(context);
-                        try {
-                            db.beginTransaction();
+                        Log.i("Move timeout");
 
-                            for (MessageTarget target : result) {
-                                EntityMessage message = db.message().getMessage(target.id);
-                                if (message == null || !message.ui_hide)
-                                    continue;
+                        if (snackbar.getView().getTag() != null)
+                            return;
 
-                                Log.i("Move id=" + id + " target=" + target.folder.name);
-                                db.message().setMessageUiBusy(target.id, null);
-                                EntityOperation.queue(context, message, EntityOperation.MOVE, target.folder.id);
+                        // Remove snackbar
+                        if (snackbar.isShown())
+                            snackbar.dismiss();
+
+                        Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                DB db = DB.getInstance(context);
+                                try {
+                                    db.beginTransaction();
+
+                                    for (MessageTarget target : result) {
+                                        EntityMessage message = db.message().getMessage(target.id);
+                                        if (message == null || !message.ui_hide)
+                                            continue;
+
+                                        Log.i("Move id=" + id + " target=" + target.folder.name);
+                                        db.message().setMessageUiBusy(target.id, null);
+                                        EntityOperation.queue(context, message, EntityOperation.MOVE, target.folder.id);
+                                    }
+
+                                    db.setTransactionSuccessful();
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                } finally {
+                                    db.endTransaction();
+                                }
                             }
-
-                            db.setTransactionSuccessful();
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                        } finally {
-                            db.endTransaction();
-                        }
+                        }, "messages:movetimeout");
+                        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
+                        thread.start();
                     }
-                }, "messages:timeout");
-                thread.setPriority(THREAD_PRIORITY_BACKGROUND);
-                thread.start();
+                }, UNDO_TIMEOUT);
             }
-        }, UNDO_TIMEOUT);
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Helper.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "messages:movehide");
     }
 
     private String getDisplay(ArrayList<MessageTarget> result) {
@@ -3821,7 +3891,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         }
 
                         Bundle args = data.getBundleExtra("args");
-                        onActionFlagSelection(true, args.getInt("color"));
+                        onActionFlagSelection(true, args.getInt("color"), null);
                     }
                     break;
                 case REQUEST_MESSAGE_SNOOZE:
@@ -4468,7 +4538,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result);
+                moveAsk(result, false);
             }
 
             @Override

@@ -193,6 +193,8 @@
     <string name="title_advanced_suggest_sent">Daha önce gönderilmiş iletilerde bulunan adresleri öner</string>
     <string name="title_advanced_suggest_received">Alınmış iletilerde bulunan adresleri öner</string>
     <string name="title_advanced_prefix_once">Önek konu sadece bir kez yanıtlarken veya yönlendirme</string>
+    <string name="title_advanced_extended_reply">Genişletilmiş cevapla/ilet başlığı kullan</string>
+    <string name="title_advanced_quote_reply">Cevap metnini alıntıla</string>
     <string name="title_advanced_plain_only">Öntanımlı olarak yalnızca düz metin gönder</string>
     <string name="title_advanced_usenet_signature">Kullanıcı ağı imza sözleşmesi</string>
     <string name="title_advanced_autoresize">Ekli ve gömülü görüntüleri otomatik olarak yeniden boyutlandır</string>
@@ -278,6 +280,7 @@
     <string name="title_advanced_sound">Bildirim sesini seçin</string>
     <string name="title_advanced_tracking">İzleme görsellerini otomatik olarak tanı ve devre dışı bırak</string>
     <string name="title_advanced_display_hidden">Gizli mesaj metinlerini göster</string>
+    <string name="title_advanced_openpgp">OpenPGP sağlayıcı</string>
     <string name="title_advanced_auto_decrypt">İletilerin şifrelerini otomatik olarak çöz</string>
     <string name="title_advanced_recents">Son uygulamalar ekranından gizle</string>
     <string name="title_advanced_biometrics_timeout">Biyometrik doğrulama süresi bitti</string>
@@ -314,6 +317,7 @@
     <string name="title_advanced_preview_hint">Yalnızca ileti metni indirildiğinde kullanılabilir</string>
     <string name="title_advanced_inline_hint">Satıriçi resimler mesajın içine eklenen resimlerdir</string>
     <string name="title_advanced_autoexpand_hint">Bir sohbette yalnızca bir ileti veya yalnızca bir okunmamış ileti olduğunda iletiyi otomatik olarak aç</string>
+    <string name="title_advanced_autoseen_hint">Genişletme sırasında okunan mesajları otomatik olarak işaretleme, bireysel hesap ayarlarında devre dışı bırakılabilir</string>
     <string name="title_advanced_autoclose_hint">Tüm iletiler arşivlendiğinde veya çöpe gittiğinde bu iletişim kutusunu otomatik olarak kapat</string>
     <string name="title_advanced_sender_hint">Çoğu sağlayıcı değiştirilmiş gönderici adreslerine izin vermiyor</string>
     <string name="title_advanced_display_hidden_hint">Bu tuhaf görünümlü ve tekrarlanmış metinlere neden olabilir</string>
@@ -774,8 +778,8 @@
     <string name="title_hint_eml">Bu, ham mesaj dosyasının içeriğinin bir özetidir. Tüm içeriği görüntülemek için ham iletiyi işlem çubuğundaki kaydet simgesiyle kaydedin.</string>
     <string name="title_open_link">Bağlantıyı aç</string>
     <string name="title_different_link">Başlık ve link adresi farklı</string>
-    <string name="title_secure_link">Bağlantıyı güvenli hale getir</string>
-    <string name="title_link_secured">Bağlantı güvenli</string>
+    <string name="title_secure_link">Trafik şifrelenmeyecek</string>
+    <string name="title_link_https">Trafik şifrelenecek</string>
     <string name="title_sanitize_link">İzleme etkenlerini kaldır</string>
     <string name="title_insecure_link">Bu bağlantı güvensiz</string>
     <string name="title_check_owner">Sahibini denetle</string>
@@ -789,7 +793,7 @@
     <string name="title_undo">Geri Al</string>
     <string name="title_redo">Yinele</string>
     <string name="title_add">Ekle</string>
-    <string name="title_browse">Varsayılan uygulama</string>
+    <string name="title_browse">Birlikte aç</string>
     <string name="title_info">Bilgi</string>
     <string name="title_report">Rapor Et</string>
     <string name="title_fix">Düzelt</string>
@@ -818,6 +822,7 @@
     <string name="title_icalendar_accept">Kabul</string>
     <string name="title_icalendar_decline">Reddet</string>
     <string name="title_icalendar_maybe">Olabilir</string>
+    <string name="title_icalendar_calendar">Takvim</string>
     <string name="title_try">Android için açık kaynaklı, gizlilik dostu bir e-posta uygulaması olan FairEmail\'i deneyin</string>
     <string name="title_pro_feature">Bu Pro özelliğidir</string>
     <string name="title_pro_list">Pro özelliklerin listesi</string>

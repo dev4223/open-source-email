@@ -230,6 +230,10 @@ public class HtmlHelper {
                                     Log.i("Removing element " + element.tagName());
                                     element.empty();
                                 }
+
+                                if ("inline".equals(value) || "inline-block".equals(value))
+                                    element.attr("inline", "true");
+
                                 break;
                         }
                     }
@@ -243,13 +247,15 @@ public class HtmlHelper {
         }
 
         // Remove new lines without surrounding content
-        for (Element br : document.select("br"))
-            if (br.parent() != null && !hasVisibleContent(br.parent().childNodes()))
-                br.tagName("span");
+        //for (Element br : document.select("br"))
+        //    if (br.parent() != null && !hasVisibleContent(br.parent().childNodes()))
+        //        br.tagName("span");
 
         // Paragraphs
-        for (Element p : document.select("p"))
+        for (Element p : document.select("p")) {
+            p.appendElement("br");
             p.tagName("div");
+        }
 
         // Short quotes
         for (Element q : document.select("q")) {
@@ -472,9 +478,9 @@ public class HtmlHelper {
 
         // Selective new lines
         for (Element div : document.select("div"))
-            if (div.children().select("div").size() == 0 &&
+            if (!Boolean.parseBoolean(div.attr("inline")) &&
+                    div.children().select("div").size() == 0 &&
                     hasVisibleContent(div.childNodes())) {
-                div.appendElement("br");
                 div.appendElement("br");
             }
 
@@ -603,6 +609,15 @@ public class HtmlHelper {
     }
 
     static String getPreview(String body) {
+        try {
+            return _getPreview(body);
+        } catch (OutOfMemoryError ex) {
+            Log.e(ex);
+            return null;
+        }
+    }
+
+    private static String _getPreview(String body) {
         if (body == null)
             return null;
 
@@ -624,7 +639,6 @@ public class HtmlHelper {
             private int qlevel = 0;
             private int tlevel = 0;
             private int plevel = 0;
-            private boolean nl = true;
 
             public void head(Node node, int depth) {
                 if (node instanceof TextNode)
@@ -653,13 +667,15 @@ public class HtmlHelper {
             public void tail(Node node, int depth) {
                 String name = node.nodeName();
                 if ("a".equals(name))
-                    append("[" + node.attr("href") + "] ");
+                    append("[" + node.attr("href") + "]");
                 else if ("img".equals(name))
-                    append("[" + node.attr("src") + "] ");
+                    append("[" + node.attr("src") + "]");
                 else if ("th".equals(name) || "td".equals(name)) {
                     Node next = node.nextSibling();
                     if (next == null || !("th".equals(next.nodeName()) || "td".equals(next.nodeName())))
                         newline();
+                    else
+                        append(" ");
                 } else if ("blockquote".equals(name))
                     qlevel--;
                 else if ("pre".equals(name))
@@ -674,10 +690,7 @@ public class HtmlHelper {
                     newline();
                     tlevel = qlevel;
                 }
-                if (!nl)
-                    sb.append(" ");
                 sb.append(text);
-                nl = false;
             }
 
             private void newline() {
@@ -686,7 +699,6 @@ public class HtmlHelper {
                     sb.append('>');
                 if (qlevel > 0)
                     sb.append(' ');
-                nl = true;
             }
         }, JsoupEx.parse(html));
 

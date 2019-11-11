@@ -3743,7 +3743,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && previousList != null)
                     for (int i = 0; i < previousList.size(); i++) {
                         TupleMessageEx message = previousList.get(i);
-                        if (message != null && !message.ui_seen && !message.duplicate)
+                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
                             prev++;
                     }
 
@@ -3751,7 +3751,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (autoscroll && currentList != null)
                     for (int i = 0; i < currentList.size(); i++) {
                         TupleMessageEx message = currentList.get(i);
-                        if (message != null && !message.ui_seen && !message.duplicate)
+                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
                             cur++;
                     }
 
@@ -4342,7 +4342,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     cbSecure.setChecked(secure);
 
                     cbSecure.setText(
-                            secure ? R.string.title_link_secured : R.string.title_secure_link);
+                            secure ? R.string.title_link_https : R.string.title_link_http);
                     cbSecure.setTextColor(Helper.resolveColor(getContext(),
                             secure ? android.R.attr.textColorSecondary : R.attr.colorWarning));
                     cbSecure.setTypeface(

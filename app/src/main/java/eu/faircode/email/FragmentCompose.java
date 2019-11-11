@@ -112,11 +112,9 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -586,7 +584,7 @@ public class FragmentCompose extends FragmentBase {
         });
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean suggest_sent = prefs.getBoolean("suggest_sent", false);
+        boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
         boolean suggest_received = prefs.getBoolean("suggest_received", false);
 
         cadapter.setFilterQueryProvider(new FilterQueryProvider() {
@@ -754,9 +752,10 @@ public class FragmentCompose extends FragmentBase {
             private void convertRef(boolean plain) {
                 Bundle args = new Bundle();
                 args.putLong("id", working);
+                args.putBoolean("plain", plain);
                 args.putString("body", HtmlHelper.toHtml(etBody.getText()));
 
-                new SimpleTask<EntityMessage>() {
+                new SimpleTask<String>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
                         ibReferenceDelete.setEnabled(false);
@@ -770,46 +769,30 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     @Override
-                    protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+                    protected String onExecute(Context context, Bundle args) throws Throwable {
                         long id = args.getLong("id");
+                        boolean plain = args.getBoolean("plain");
                         String body = args.getString("body");
 
-                        DB db = DB.getInstance(context);
-                        EntityMessage draft = db.message().getMessage(id);
-                        if (draft == null || !draft.content)
-                            throw new IllegalArgumentException(context.getString(R.string.title_no_body));
-
-
-                        File file = draft.getFile(context);
-                        File refFile = draft.getRefFile(context);
-
                         String html;
+                        File refFile = EntityMessage.getRefFile(context, id);
                         String ref = Helper.readText(refFile);
                         if (plain) {
-                            String plain = HtmlHelper.getText(ref);
-                            html = "<p>" + plain.replaceAll("\\r?\\n", "<br>") + "</p>";
+                            String text = HtmlHelper.getText(ref);
+                            html = "<p>" + text.replaceAll("\\r?\\n", "<br>") + "</p>";
                         } else
                             html = HtmlHelper.sanitize(context, ref, true);
-
-                        try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
-                            out.write(body);
-                            out.write(html);
-                        }
-
                         refFile.delete();
 
-                        draft.revision = null;
-                        draft.revisions = null;
-
-                        db.message().setMessageRevision(draft.id, null);
-                        db.message().setMessageRevisions(draft.id, null);
-
-                        return draft;
+                        return body + html;
                     }
 
                     @Override
-                    protected void onExecuted(Bundle args, EntityMessage draft) {
-                        showDraft(draft);
+                    protected void onExecuted(Bundle args, String html) {
+                        Bundle extras = new Bundle();
+                        extras.putString("html", html);
+                        extras.putBoolean("show", true);
+                        onAction(R.id.action_save, extras);
                     }
 
                     @Override
@@ -825,7 +808,9 @@ public class FragmentCompose extends FragmentBase {
 
     private void onReferenceImages() {
         show_images = true;
-        showDraft(working);
+        Bundle extras = new Bundle();
+        extras.putBoolean("show", true);
+        onAction(R.id.action_save, extras);
     }
 
     @Override
@@ -1508,9 +1493,11 @@ public class FragmentCompose extends FragmentBase {
             protected void onExecuted(Bundle args, final Spanned body) {
                 if (body == null)
                     return;
+                int start = args.getInt("start");
 
                 etBody.setText(body);
-                etBody.setSelection(args.getInt("start"));
+                if (start < body.length())
+                    etBody.setSelection(start);
 
                 // Save text & update remote draft
                 onAction(R.id.action_save);
@@ -1951,10 +1938,10 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onAction(int action) {
-        onAction(action, null);
+        onAction(action, new Bundle());
     }
 
-    private void onAction(int action, Bundle extras) {
+    private void onAction(int action, @NonNull Bundle extras) {
         EntityIdentity identity = (EntityIdentity) spIdentity.getSelectedItem();
         if (identity == null)
             throw new IllegalArgumentException(getString(R.string.title_from_missing));
@@ -1972,10 +1959,13 @@ public class FragmentCompose extends FragmentBase {
         args.putString("cc", etCc.getText().toString().trim());
         args.putString("bcc", etBcc.getText().toString().trim());
         args.putString("subject", etSubject.getText().toString().trim());
-        args.putString("body", HtmlHelper.toHtml(etBody.getText()));
+        if (extras.containsKey("html")) {
+            args.putString("body", extras.getString("html"));
+            extras.remove("html");
+        } else
+            args.putString("body", HtmlHelper.toHtml(etBody.getText()));
         args.putBoolean("empty", isEmpty());
-        if (extras != null)
-            args.putBundle("extras", extras);
+        args.putBundle("extras", extras);
 
         Log.i("Run execute id=" + working);
         actionLoader.execute(this, args, "compose:action:" + action);
@@ -2517,14 +2507,46 @@ public class FragmentCompose extends FragmentBase {
                             }
                         }
 
-                        if ("reply".equals(action) || "reply_all".equals(action))
-                            refText = "<blockquote>" + refText + "</blockquote>";
+                        // Build reply header
+                        StringBuilder sb = new StringBuilder();
+                        DateFormat DF = Helper.getDateTimeInstance(context);
+                        boolean extended_reply = prefs.getBoolean("extended_reply", false);
+                        if (extended_reply) {
+                            sb.append("<p>");
+                            if (ref.from != null && ref.from.length > 0)
+                                sb.append("<strong>").append(context.getString(R.string.title_from)).append("</strong> ")
+                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.from)))
+                                        .append("<br>\n");
+                            if (ref.to != null && ref.to.length > 0)
+                                sb.append("<strong>").append(context.getString(R.string.title_to)).append("</strong> ")
+                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.to))).
+                                        append("<br>\n");
+                            if (ref.cc != null && ref.cc.length > 0)
+                                sb.append("<strong>").append(context.getString(R.string.title_cc)).append("</strong> ")
+                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.cc)))
+                                        .append("<br>\n");
+                            sb.append("<strong>").append(context.getString(R.string.title_received)).append("</strong> ")
+                                    .append(Html.escapeHtml(DF.format(ref.received)))
+                                    .append("<br>\n");
+                            sb.append("<strong>").append(context.getString(R.string.title_subject)).append("</strong> ")
+                                    .append(Html.escapeHtml(ref.subject == null ? "" : ref.subject));
+                            sb.append("</p>\n");
+                        } else {
+                            sb.append("<p>");
+                            sb.append(Html.escapeHtml(DF.format(new Date(ref.received)))).append(" ");
+                            sb.append(Html.escapeHtml(MessageHelper.formatAddresses(ref.from))).append(":");
+                            sb.append("</p>\n");
+                        }
 
-                        String refBody = String.format("<p>%s %s:</p>\n%s",
-                                Html.escapeHtml(new Date(ref.received).toString()),
-                                Html.escapeHtml(MessageHelper.formatAddresses(ref.from)),
-                                refText);
-                        Helper.writeText(data.draft.getRefFile(context), refBody);
+                        boolean quote_reply = prefs.getBoolean("quote_reply", true);
+                        boolean quote = (quote_reply && ("reply".equals(action) || "reply_all".equals(action)));
+                        if (quote)
+                            sb.append("<blockquote>");
+                        sb.append(refText);
+                        if (quote)
+                            sb.append("</blockquote>");
+
+                        Helper.writeText(data.draft.getRefFile(context), sb.toString());
                     }
 
                     if ("new".equals(action)) {
@@ -2795,14 +2817,12 @@ public class FragmentCompose extends FragmentBase {
                     else
                         EntityOperation.queue(context, draft, EntityOperation.MOVE, trash.id);
 
-                    if (!empty) {
-                        Handler handler = new Handler(context.getMainLooper());
-                        handler.post(new Runnable() {
-                            public void run() {
-                                ToastEx.makeText(context, R.string.title_draft_deleted, Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
+                    Handler handler = new Handler(context.getMainLooper());
+                    handler.post(new Runnable() {
+                        public void run() {
+                            ToastEx.makeText(context, R.string.title_draft_deleted, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 } else {
                     // Move draft to new account
                     if (draft.account != aid && aid >= 0) {
@@ -2936,6 +2956,35 @@ public class FragmentCompose extends FragmentBase {
                         db.message().updateMessage(draft);
                     }
 
+                    // Save changed draft
+                    File file = draft.getFile(context);
+                    if (!file.exists())
+                        Helper.writeText(file, body);
+                    String previous = Helper.readText(file);
+                    if (!body.equals(previous)) {
+                        dirty = true;
+
+                        if (draft.revisions == null)
+                            draft.revisions = 1;
+                        else
+                            draft.revisions++;
+
+                        if (action != R.id.action_undo && action != R.id.action_redo)
+                            draft.revision = draft.revisions;
+
+                        Helper.writeText(draft.getFile(context), body);
+                        Helper.writeText(draft.getFile(context, draft.revisions), body);
+
+                        db.message().setMessageRevision(draft.id, draft.revision);
+                        db.message().setMessageRevisions(draft.id, draft.revisions);
+
+                        db.message().setMessageContent(draft.id,
+                                true,
+                                draft.plain_only,
+                                HtmlHelper.getPreview(body),
+                                null);
+                    }
+
                     if (action == R.id.action_undo || action == R.id.action_redo) {
                         if (draft.revision != null && draft.revisions != null) {
                             dirty = true;
@@ -2956,32 +3005,6 @@ public class FragmentCompose extends FragmentBase {
                             db.message().setMessageContent(draft.id,
                                     true,
                                     draft.plain_only, // unchanged
-                                    HtmlHelper.getPreview(body),
-                                    null);
-                        }
-                    } else {
-                        File file = draft.getFile(context);
-                        if (!file.exists())
-                            Helper.writeText(file, body);
-                        String previous = Helper.readText(file);
-                        if (!body.equals(previous)) {
-                            dirty = true;
-
-                            if (draft.revisions == null)
-                                draft.revisions = 1;
-                            else
-                                draft.revisions++;
-                            draft.revision = draft.revisions;
-
-                            Helper.writeText(draft.getFile(context), body);
-                            Helper.writeText(draft.getFile(context, draft.revisions), body);
-
-                            db.message().setMessageRevision(draft.id, draft.revision);
-                            db.message().setMessageRevisions(draft.id, draft.revisions);
-
-                            db.message().setMessageContent(draft.id,
-                                    true,
-                                    draft.plain_only,
                                     HtmlHelper.getPreview(body),
                                     null);
                         }
@@ -3159,7 +3182,9 @@ public class FragmentCompose extends FragmentBase {
                 showDraft(draft);
 
             } else if (action == R.id.action_save) {
-                // Do nothing
+                boolean show = args.getBundle("extras").getBoolean("show");
+                if (show)
+                    showDraft(draft);
 
             } else if (action == R.id.action_check) {
                 boolean dialog = args.getBundle("extras").getBoolean("dialog");
@@ -3231,29 +3256,6 @@ public class FragmentCompose extends FragmentBase {
         while (subject.toLowerCase(Locale.ROOT).startsWith(prefix))
             subject = subject.substring(prefix.length()).trim();
         return subject;
-    }
-
-    private void showDraft(long id) {
-        Bundle args = new Bundle();
-        args.putLong("id", id);
-
-        new SimpleTask<EntityMessage>() {
-            @Override
-            protected EntityMessage onExecute(Context context, Bundle args) {
-                long id = args.getLong("id");
-                return DB.getInstance(context).message().getMessage(id);
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityMessage draft) {
-                showDraft(draft);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
-            }
-        }.execute(this, args, "compose:show");
     }
 
     private void showDraft(final EntityMessage draft) {

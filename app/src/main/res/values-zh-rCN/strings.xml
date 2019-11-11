@@ -181,6 +181,8 @@
     <string name="title_advanced_suggest_sent">建议在已发送消息中找到的地址</string>
     <string name="title_advanced_suggest_received">建议在已收到消息中找到的地址</string>
     <string name="title_advanced_prefix_once">答复或抄送邮件时, 主题前的Re或CC只出现一次</string>
+    <string name="title_advanced_extended_reply">使用扩展回复/转发头</string>
+    <string name="title_advanced_quote_reply">引用回复文本</string>
     <string name="title_advanced_plain_only">默认仅发送纯文本</string>
     <string name="title_advanced_usenet_signature">Usenet签名公约（RFC3676）</string>
     <string name="title_advanced_autoresize">自动调整附加和嵌入图片的大小</string>
@@ -266,6 +268,7 @@
     <string name="title_advanced_sound">选择通知提示音</string>
     <string name="title_advanced_tracking">自动识别并禁用跟踪图像</string>
     <string name="title_advanced_display_hidden">显示隐藏消息文本</string>
+    <string name="title_advanced_openpgp">OpenPGP 提供者</string>
     <string name="title_advanced_auto_decrypt">自动解密消息</string>
     <string name="title_advanced_recents">在最近应用隐藏FairEmail</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时时间</string>
@@ -302,6 +305,7 @@
     <string name="title_advanced_preview_hint">只有当消息文本下载时才可用</string>
     <string name="title_advanced_inline_hint">内联图像是邮件中包含的图像</string>
     <string name="title_advanced_autoexpand_hint">当对话中只有一条消息或只是一条未读消息时，自动打开该消息</string>
+    <string name="title_advanced_autoseen_hint">可以在单独的账户设置中禁用展开消息时自动标记消息为已读</string>
     <string name="title_advanced_autoclose_hint">在所有邮件存档、发送或丢弃时自动关闭对话线程</string>
     <string name="title_advanced_sender_hint">大多数提供商不允许修改发件人地址</string>
     <string name="title_advanced_display_hidden_hint">这可能导致古怪的外观和双重文本</string>
@@ -762,8 +766,6 @@
     <string name="title_hint_eml">这是一个原始消息文件内容的摘要。用操作栏中的保存图标保存原始消息以查看所有内容。</string>
     <string name="title_open_link">打开链接</string>
     <string name="title_different_link">标题和链接地址不同</string>
-    <string name="title_secure_link">确保链接安全</string>
-    <string name="title_link_secured">连接安全</string>
     <string name="title_sanitize_link">删除跟踪参数</string>
     <string name="title_insecure_link">此链接不安全</string>
     <string name="title_check_owner">检查所有者</string>
@@ -777,6 +779,7 @@
     <string name="title_undo">撤销</string>
     <string name="title_redo">重做</string>
     <string name="title_add">添加</string>
+    <string name="title_browse">打开方式</string>
     <string name="title_info">信息</string>
     <string name="title_report">报告</string>
     <string name="title_fix">修复</string>
@@ -805,6 +808,7 @@
     <string name="title_icalendar_accept">接受</string>
     <string name="title_icalendar_decline">拒绝</string>
     <string name="title_icalendar_maybe">待定</string>
+    <string name="title_icalendar_calendar">日历</string>
     <string name="title_try">请试下FairEmail吧！一个安卓平台上开源、隐私友好的邮件客户端</string>
     <string name="title_pro_feature">这是专业版功能</string>
     <string name="title_pro_list">专业版功能列表</string>

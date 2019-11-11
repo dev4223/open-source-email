@@ -192,6 +192,8 @@
     <string name="title_advanced_suggest_sent">Foreslå adresser fra sendte beskeder</string>
     <string name="title_advanced_suggest_received">Foreslå adresser fra modtagne beskeder</string>
     <string name="title_advanced_prefix_once">Kun ét emnepræfiks ved svar eller videresendelse</string>
+    <string name="title_advanced_extended_reply">Benyt udvidet svar-/videresendoverskrift</string>
+    <string name="title_advanced_quote_reply">Citat af svartekst</string>
     <string name="title_advanced_plain_only">Send kun simpel tekst som standard</string>
     <string name="title_advanced_usenet_signature">Usenet-signaturkonvention</string>
     <string name="title_advanced_autoresize">Skalér automatisk vedhæftede og indlejrede billeder</string>
@@ -228,6 +230,7 @@
     <string name="title_advanced_flags_background">Vis farvet baggrund i stedet for farvede stjerner</string>
     <string name="title_advanced_preview">Forhåndsvisning af beskeder</string>
     <string name="title_advanced_preview_italic">Vis beskedforhåndsvisning med kursiv</string>
+    <string name="title_advanced_preview_lines">Antal forhåndsvisningslinier</string>
     <string name="title_advanced_addresses">Vis adresseoplysninger som standard</string>
     <string name="title_advanced_attachments_alt">Vis vedhæftninger efter beskedteksten</string>
     <string name="title_advanced_contrast">Benyt høj kontrast til beskedtekst</string>
@@ -276,6 +279,7 @@
     <string name="title_advanced_sound">Vælg notifikationslyd</string>
     <string name="title_advanced_tracking">Genkend og deaktivér automatisk sporingsbilleder</string>
     <string name="title_advanced_display_hidden">Vis skjulte beskedtekster</string>
+    <string name="title_advanced_openpgp">OpenPGP-leverandør</string>
     <string name="title_advanced_auto_decrypt">Auto-dekryptér beskeder</string>
     <string name="title_advanced_recents">Skjul fra skærmen med de seneste apps</string>
     <string name="title_advanced_biometrics_timeout">Biometrisk godkendelse fik timeout</string>
@@ -312,9 +316,11 @@
     <string name="title_advanced_preview_hint">Kun tilgængelig, når beskedtekst er downloadet</string>
     <string name="title_advanced_inline_hint">Inline-billeder er billeder, som er inkluderet i beskeden</string>
     <string name="title_advanced_autoexpand_hint">Åbn automatisk besked, når der kun er én besked eller kun én ulæst besked i en samtale</string>
+    <string name="title_advanced_autoseen_hint">Automarkering af læste beskeder ved udvidelse kan deaktiveres i de individuelle kontoindstillinger</string>
     <string name="title_advanced_autoclose_hint">Luk automatisk samtaler, når alle beskeder arkiveres, sendes eller kasseres</string>
     <string name="title_advanced_sender_hint">De fleste udbydere tillader ikke ændrede afsenderadresser</string>
     <string name="title_advanced_display_hidden_hint">Dette kan resultere i underligt udseende/dobbelte tekster</string>
+    <string name="title_advanced_display_pin_hint">PIN-kode har forrang frem for biometrisk godkendelse</string>
     <string name="title_advanced_badge_hint">Kun tilgængelig i understøttede launchers</string>
     <string name="title_advanced_notify_action_hint">Maksimalt tre handlinger vises</string>
     <string name="title_advanced_notify_remove_hint">Nye beskednotifikationer fjernes altid, når de stryges væk samt ved markering af beskeder som læste</string>
@@ -449,6 +455,7 @@
     <string name="title_folder_sent">Sendt</string>
     <string name="title_folder_system">System</string>
     <string name="title_folder_user">Bruger</string>
+    <string name="title_folder_user_only">Kun brugermapper</string>
     <string name="title_folder_primary">Primærkontomapper</string>
     <string name="title_folders_unified">Saml indbakkemapper</string>
     <string name="title_no_folders">Ingen mapper</string>
@@ -711,6 +718,7 @@
     <string name="title_legend_zoom">Ændr tekststørrelse</string>
     <string name="title_legend_draft">Har kladde</string>
     <string name="title_legend_priority">Har høj prioritet</string>
+    <string name="title_legend_priority_low">Har lav prioritet</string>
     <string name="title_legend_auth">Godkendelse mislykkedes</string>
     <string name="title_legend_snoozed">Er udsat</string>
     <string name="title_legend_browsed">Gennemses eller søges i</string>
@@ -769,8 +777,6 @@
     <string name="title_hint_eml">Dette er en oversigt over indholdet af en råformatsbeskedfil. Gem den rå besked med Gem-ikonet i handlingsbjælken for at se alt indhold.</string>
     <string name="title_open_link">Åbn link</string>
     <string name="title_different_link">Titlen og linkadressen er forskellige</string>
-    <string name="title_secure_link">Gør forbindelse sikker</string>
-    <string name="title_link_secured">Forbindelse er sikker</string>
     <string name="title_sanitize_link">Fjern sporingsparametre</string>
     <string name="title_insecure_link">Dette link er usikkert</string>
     <string name="title_check_owner">Tjek ejer</string>
@@ -784,6 +790,7 @@
     <string name="title_undo">Fortryd</string>
     <string name="title_redo">Annullér fortryd</string>
     <string name="title_add">Tilføj</string>
+    <string name="title_browse">Åbn med</string>
     <string name="title_info">Info</string>
     <string name="title_report">Rapportér</string>
     <string name="title_fix">Ret</string>
@@ -812,6 +819,7 @@
     <string name="title_icalendar_accept">Acceptér</string>
     <string name="title_icalendar_decline">Afvis</string>
     <string name="title_icalendar_maybe">Måske</string>
+    <string name="title_icalendar_calendar">Kalender</string>
     <string name="title_try">Prøv FairEmail - en open source og privatlivsvenlig e-mail app til Android</string>
     <string name="title_pro_feature">Dette er en Pro-funktion</string>
     <string name="title_pro_list">Liste over Pro-funktioner</string>
@@ -906,5 +914,11 @@
         <item>Lav</item>
         <item>Normal</item>
         <item>Høj</item>
+    </string-array>
+    <string-array name="linesNames">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
     </string-array>
 </resources>

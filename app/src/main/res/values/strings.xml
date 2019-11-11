@@ -229,6 +229,8 @@
     <string name="title_advanced_suggest_sent">Suggest addresses found in sent messages</string>
     <string name="title_advanced_suggest_received">Suggest addresses found in received messages</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
+    <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
+    <string name="title_advanced_quote_reply">Quote replied text</string>
     <string name="title_advanced_plain_only">Send plain text only by default</string>
     <string name="title_advanced_usenet_signature">Usenet signature convention</string>
     <string name="title_advanced_autoresize">Automatically resize attached and embedded images</string>
@@ -320,6 +322,7 @@
 
     <string name="title_advanced_tracking">Automatically recognize and disable tracking images</string>
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
+    <string name="title_advanced_openpgp">OpenPGP provider</string>
     <string name="title_advanced_auto_decrypt">Automatically decrypt messages</string>
     <string name="title_advanced_recents">Hide FairEmail from screen with recent apps</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
@@ -368,6 +371,7 @@
     <string name="title_advanced_inline_hint">Inline images are images included in the message</string>
 
     <string name="title_advanced_autoexpand_hint">Automatically open message when there is just one message or just one unread message in a conversation</string>
+    <string name="title_advanced_autoseen_hint">Automatically marking messages read on expanding can be disabled in the individual account settings</string>
     <string name="title_advanced_autoclose_hint">Automatically close conversations when all messages are archived, sent or trashed</string>
     <string name="title_advanced_sender_hint">Most providers do not allow modified sender addresses</string>
 
@@ -875,8 +879,8 @@
 
     <string name="title_open_link">Open link</string>
     <string name="title_different_link">The title and the link address are different</string>
-    <string name="title_secure_link">Make connection secure</string>
-    <string name="title_link_secured">Connection is secure</string>
+    <string name="title_link_http">Traffic will not be encrypted</string>
+    <string name="title_link_https">Traffic will be encrypted</string>
     <string name="title_sanitize_link">Remove tracking parameters</string>
     <string name="title_insecure_link">This link is insecure</string>
     <string name="title_check_owner">Check owner</string>
@@ -920,6 +924,7 @@
     <string name="title_icalendar_accept">Accept</string>
     <string name="title_icalendar_decline">Decline</string>
     <string name="title_icalendar_maybe">Maybe</string>
+    <string name="title_icalendar_calendar">Calendar</string>
 
     <string name="title_try">Try FairEmail, an open source, privacy friendly email app for Android</string>
 

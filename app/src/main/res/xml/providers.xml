@@ -385,4 +385,43 @@
             port="465"
             starttls="false" />
     </provider>
+    <provider
+        name="Telenet"
+        link="https://www2.telenet.be/nl/klantenservice/e-mails-versturen/"
+        useip="false">
+        <imap
+            host="imap.telenet.be"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.telenet.be"
+            port="587"
+            starttls="true" />
+    </provider>
+    <provider
+        name="Mailfence"
+        link="https://mailfence.com/en/faq.jsp"
+        useip="false">
+        <imap
+            host="imap.mailfence.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.mailfence.com"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="Freedom Internet"
+        link="https://www.freedom.nl/support"
+        useip="false">
+        <imap
+            host="imap.freedom.nl"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.freedom.nl"
+            port="465"
+            starttls="false" />
+    </provider>
 </providers>

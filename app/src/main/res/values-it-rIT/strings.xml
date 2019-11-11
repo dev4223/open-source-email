@@ -120,10 +120,10 @@
     <string name="title_setup_grant">Concedi</string>
     <string name="title_setup_account">Imposta account</string>
     <string name="title_setup_account_remark">Per ricevere email</string>
-    <string name="title_setup_account_hint">Per cambiare colore, scorri la cartella di destinazione a sinistra/destra, ecc.</string>
+    <string name="title_setup_account_hint">Per cambiare colore, scorri la cartella di destinazione a sinistra/destra, ecc</string>
     <string name="title_setup_identity">Imposta identità</string>
     <string name="title_setup_identity_remark">Per inviare email</string>
-    <string name="title_setup_identity_hint">Per cambiare nome, colore, firma, ecc.</string>
+    <string name="title_setup_identity_hint">Per cambiare nome, colore, firma, ecc</string>
     <string name="title_setup_permissions">Concedi permessi</string>
     <string name="title_setup_permissions_remark">Per accedere a informazioni di contatto (facoltativo)</string>
     <string name="title_setup_doze">Imposta ottimizzazioni della batteria</string>
@@ -187,11 +187,13 @@
     <string name="title_advanced_sync_folders">Sincronizza elenco cartelle</string>
     <string name="title_advanced_subscriptions">Gestisci abbonamenti cartelle</string>
     <string name="title_advanced_sync_subscribed">Sincronizza solo le cartelle sottoscritte</string>
-    <string name="title_advanced_keyboard">Mostra di default la tastiera</string>
+    <string name="title_advanced_keyboard">Mostra tastiera di default</string>
     <string name="title_advanced_suggest_local">Suggerisci contatti memorizzati localmente</string>
     <string name="title_advanced_suggest_sent">Suggerisci indirizzi trovati nei messaggi inviati</string>
     <string name="title_advanced_suggest_received">Suggerisci indirizzi trovati nei messaggi ricevuti</string>
     <string name="title_advanced_prefix_once">Prefissa l\'oggetto solo una volta per rispondere o inoltrare</string>
+    <string name="title_advanced_extended_reply">Usa intestazione estesa di risposta/inoltro</string>
+    <string name="title_advanced_quote_reply">Cita il testo nella risposta</string>
     <string name="title_advanced_plain_only">Invia in testo semplice per impostazione predefinita</string>
     <string name="title_advanced_usenet_signature">Convenzione firma Usenet</string>
     <string name="title_advanced_autoresize">Ridimensiona automaticamente le immagini allegate e incorporate</string>
@@ -277,6 +279,7 @@
     <string name="title_advanced_sound">Seleziona il suono di notifica</string>
     <string name="title_advanced_tracking">Riconoscere e disabilitare automaticamente le immagini di tracciamento</string>
     <string name="title_advanced_display_hidden">Mostra il testo nascosto del messaggio</string>
+    <string name="title_advanced_openpgp">Provider OpenPGP</string>
     <string name="title_advanced_auto_decrypt">Decodifica automaticamente i messaggi</string>
     <string name="title_advanced_recents">Nascondi dallo schermata con app recenti</string>
     <string name="title_advanced_biometrics_timeout">Timeout autenticazione biometrica</string>
@@ -313,6 +316,7 @@
     <string name="title_advanced_preview_hint">Disponibile solo quando è stato scaricato il testo del messaggio</string>
     <string name="title_advanced_inline_hint">Le immagini in linea sono incluse nel messaggio</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando c\'è un solo messaggio o solo un messaggio da leggere in una conversazione</string>
+    <string name="title_advanced_autoseen_hint">La marcatura automatica dei messaggi letti all\'apertura può essere disabilitata nelle impostazioni dei singoli account</string>
     <string name="title_advanced_autoclose_hint">Chiudi automaticamente le conversazioni raggruppate quando tutti i messaggi sono archiviati, inviati o cestinati</string>
     <string name="title_advanced_sender_hint">La maggior parte dei fornitori non consente indirizzi mittente modificati</string>
     <string name="title_advanced_display_hidden_hint">Ciò può comportare un aspetto strano e doppi testi</string>
@@ -529,7 +533,7 @@
     <string name="title_ask_discard">Eliminare la bozza?</string>
     <string name="title_ask_show_html">Mostrare il messaggio originale rende possibile una fuga di informazioni personali sensibili</string>
     <string name="title_ask_show_html_remark">Non è possibile visualizzare il messaggio originale con uno sfondo scuro perché potrebbe nascondere testi e immagini</string>
-    <string name="title_ask_show_html_images">Mostra sempre le immagini sui messaggi originali</string>
+    <string name="title_ask_show_html_images">Mostra sempre le immagini nella visualizzazione dei messaggi originali</string>
     <string name="title_ask_show_image">Mostrare le immagini rende possibile una fuga di informazioni personali sensibili</string>
     <string name="title_ask_show_image_hint">Le immagini riconosciute come immagini di tracciamento non verranno mostrate</string>
     <string name="title_ask_delete_ref">Elimina testo del messaggio risposto/inoltrato? Questo non può essere annullato.</string>
@@ -773,8 +777,8 @@
     <string name="title_hint_eml">Questo è un riepilogo del contenuto di un file di messaggio grezzo. Salva il messaggio grezzo con l\'icona di salvataggio nella barra azioni per vedere tutto il contenuto.</string>
     <string name="title_open_link">Apri collegamento</string>
     <string name="title_different_link">Il titolo del link e l\'indirizzo sono diversi</string>
-    <string name="title_secure_link">Rendi il link sicuro</string>
-    <string name="title_link_secured">Il link è sicuro</string>
+    <string name="title_secure_link">Il traffico non verrà criptato</string>
+    <string name="title_link_https">Il traffico verrà crittografato</string>
     <string name="title_sanitize_link">Rimuovi i parametri di tracciamento</string>
     <string name="title_insecure_link">Questo link non è sicuro</string>
     <string name="title_check_owner">Controlla proprietario</string>
@@ -788,7 +792,7 @@
     <string name="title_undo">Annulla</string>
     <string name="title_redo">Ripeti</string>
     <string name="title_add">Aggiungi</string>
-    <string name="title_browse">App predefinita</string>
+    <string name="title_browse">Apri con</string>
     <string name="title_info">Info</string>
     <string name="title_report">Report</string>
     <string name="title_fix">Correggi</string>
@@ -817,6 +821,7 @@
     <string name="title_icalendar_accept">Accetta</string>
     <string name="title_icalendar_decline">Rifiuta</string>
     <string name="title_icalendar_maybe">Forse</string>
+    <string name="title_icalendar_calendar">Calendario</string>
     <string name="title_try">Prova FairEmail, un\'app email per Android open source e rispettosa della privacy</string>
     <string name="title_pro_feature">Questa è una funzionalità a pagamento</string>
     <string name="title_pro_list">Elenco delle funzionalità a pagamento</string>

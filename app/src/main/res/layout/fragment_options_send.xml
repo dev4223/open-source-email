@@ -109,6 +109,29 @@
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swExtendedReply"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/title_advanced_extended_reply"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swPrefixOnce"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swQuoteReply"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:checked="true"
+            android:text="@string/title_advanced_quote_reply"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swExtendedReply"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swPlainOnly"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -116,7 +139,7 @@
             android:text="@string/title_advanced_plain_only"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swPrefixOnce"
+            app:layout_constraintTop_toBottomOf="@id/swQuoteReply"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
@@ -161,17 +184,6 @@
             app:layout_constraintTop_toTopOf="@id/spAutoResize" />
 
         <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/swEncrypt"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="@string/title_identity_encrypt"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/spAutoResize"
-            app:switchPadding="12dp" />
-
-        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swReceipt"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -179,7 +191,7 @@
             android:text="@string/title_identity_receipt"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swEncrypt"
+            app:layout_constraintTop_toBottomOf="@id/spAutoResize"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat

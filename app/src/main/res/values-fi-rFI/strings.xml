@@ -193,6 +193,8 @@
     <string name="title_advanced_suggest_sent">Ehdota lähetetyistä viesteistä löytyviä osoitteita</string>
     <string name="title_advanced_suggest_received">Ehdota saapuneista viesteistä löytyviä osoitteita</string>
     <string name="title_advanced_prefix_once">Lisää aiheeseen etuliite vain kerran vastatessa ja edelleenlähetettäessä</string>
+    <string name="title_advanced_extended_reply">Käytä laajennettuja vastaus-/edelleenlähetystunnistetietoja</string>
+    <string name="title_advanced_quote_reply">Lainaa vastattu teksti</string>
     <string name="title_advanced_plain_only">Lähetä muotoilemattomana tekstinä oletuksena</string>
     <string name="title_advanced_usenet_signature">Usenetin allekirjoitustyyli</string>
     <string name="title_advanced_autoresize">Muuta liitettyjen ja upotettujen kuvien koot</string>
@@ -278,6 +280,7 @@
     <string name="title_advanced_sound">Valitse ilmoituksen ääni</string>
     <string name="title_advanced_tracking">Tunnista automaattisesti ja poista käytöstä seurantakuvat</string>
     <string name="title_advanced_display_hidden">Näytä piilotetut viestien tekstit</string>
+    <string name="title_advanced_openpgp">OpenPGP-palveluntarjoaja</string>
     <string name="title_advanced_auto_decrypt">Pura viestien salaus automaattisesti</string>
     <string name="title_advanced_recents">Piilota viimeisimmistä sovelluksista</string>
     <string name="title_advanced_biometrics_timeout">Biometrisen tunnistautumisen aikakatkaisu</string>
@@ -314,6 +317,7 @@
     <string name="title_advanced_preview_hint">Saatavilla vain, kun viestin teksti on ladattu</string>
     <string name="title_advanced_inline_hint">Tekstiin upotetut kuvat ovat viestin tekstin joukossa olevat kuvat</string>
     <string name="title_advanced_autoexpand_hint">Avaa viesti automaattisesti, kun keskustelussa on vain yksi viesti tai vain yksi on lukematon</string>
+    <string name="title_advanced_autoseen_hint">Viestien merkitseminen luetuksi laajennettaessa voidaan kytkeä erikseen pois tilien asetuksissa</string>
     <string name="title_advanced_autoclose_hint">Sulje keskustelut, kun kaikki viestit on arkistoitu, lähetetty tai siirretty roskakoriin</string>
     <string name="title_advanced_sender_hint">Useimmat palveluntarjoajat eivät salli muokattuja lähetysosotteita</string>
     <string name="title_advanced_display_hidden_hint">Tämä voi näyttää omituiselta ja näyttää tekstejä kahteen kertaan</string>
@@ -774,8 +778,8 @@
     <string name="title_hint_eml">Tämä on tiivistelmä raakaviestistä. Tallenna raakaviesti toimintopalkin tallennuskuvakkeesta nähdäksesi koko sisällön.</string>
     <string name="title_open_link">Avaa linkki</string>
     <string name="title_different_link">Verkko-osoite linkin nimessä ei vastaa linkin kohdeosoitetta</string>
-    <string name="title_secure_link">Tee linkistä turvallinen</string>
-    <string name="title_link_secured">Linkki on turvallinen</string>
+    <string name="title_secure_link">Verkkoliikennettä ei salata</string>
+    <string name="title_link_https">Verkkoliikenne salataan</string>
     <string name="title_sanitize_link">Poista seurantaparametrit</string>
     <string name="title_insecure_link">Tämä linkki ei ole turvallinen</string>
     <string name="title_check_owner">Tarkista omistaja</string>
@@ -789,6 +793,7 @@
     <string name="title_undo">Kumoa</string>
     <string name="title_redo">Tee uudelleen</string>
     <string name="title_add">Lisää</string>
+    <string name="title_browse">Avaa sovelluksessa</string>
     <string name="title_info">Lisätietoa</string>
     <string name="title_report">Raportoi</string>
     <string name="title_fix">Korjaa</string>
@@ -804,6 +809,7 @@
     <string name="title_via">Kautta: %1$s</string>
     <string name="title_1hour">1 tunti</string>
     <string name="title_1day">1 päivä</string>
+    <string name="title_1week">1 viikko</string>
     <string name="title_now">Nyt</string>
     <string name="title_after">%1$s päästä</string>
     <string name="title_reset">Palauta oletukset</string>
@@ -816,6 +822,7 @@
     <string name="title_icalendar_accept">Hyväksy</string>
     <string name="title_icalendar_decline">Hylkää</string>
     <string name="title_icalendar_maybe">Ehkä</string>
+    <string name="title_icalendar_calendar">Kalenteri</string>
     <string name="title_try">Kokeile FairEmailia, yksityisyyttä kunnioittavaa avoimen lähdekoodin sähköpostisovellusta Androidille</string>
     <string name="title_pro_feature">Tämä on pro-ominaisuus</string>
     <string name="title_pro_list">Luettelo pro-ominaisuuksista</string>
@@ -841,6 +848,7 @@
     <string name="title_search_special_prefix">erityinen</string>
     <string name="title_search_special_unseen">lukematon</string>
     <string name="title_search_special_flagged">tähdellinen</string>
+    <string name="title_search_special_snoozed">piilotettu</string>
     <string name="title_widget_account">Tili</string>
     <string name="title_widget_account_all">Kaikki</string>
     <string name="title_widget_unseen">Vain lukemattomat viestit</string>

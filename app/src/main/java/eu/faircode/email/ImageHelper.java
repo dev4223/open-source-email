@@ -372,9 +372,11 @@ class ImageHelper {
                                     if (++redirects > MAX_REDIRECTS)
                                         throw new IOException("Too many redirects");
 
-                                    String location = URLDecoder.decode(
-                                            urlConnection.getHeaderField("Location"),
-                                            StandardCharsets.UTF_8.name());
+                                    String header = urlConnection.getHeaderField("Location");
+                                    if (header == null)
+                                        throw new IOException("Location header missing");
+
+                                    String location = URLDecoder.decode(header, StandardCharsets.UTF_8.name());
                                     url = new URL(url, location);
                                     Log.i("Redirect #" + redirects + " to " + url);
 
@@ -391,7 +393,7 @@ class ImageHelper {
                             BufferedInputStream is = new BufferedInputStream(urlConnection.getInputStream());
 
                             Log.i("Probe " + a.source);
-                            is.mark(8192);
+                            is.mark(64 * 1024);
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inJustDecodeBounds = true;
                             BitmapFactory.decodeStream(is, null, options);

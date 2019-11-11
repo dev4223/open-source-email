@@ -293,14 +293,16 @@ public class Log {
 
         final String installer = context.getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
         final boolean fingerprint = Helper.hasValidFingerprint(context);
+        final Boolean ignoringOptimizations = Helper.isIgnoringOptimizations(context);
 
         Bugsnag.beforeNotify(new BeforeNotify() {
             @Override
             public boolean run(@NonNull Error error) {
                 error.addToTab("extra", "installer", installer == null ? "-" : installer);
                 error.addToTab("extra", "fingerprint", fingerprint);
-                error.addToTab("extra", "thread", Thread.currentThread().getId());
+                error.addToTab("extra", "thread", Thread.currentThread().getName() + ":" + Thread.currentThread().getId());
                 error.addToTab("extra", "free", Log.getFreeMemMb());
+                error.addToTab("extra", "optimizing", (ignoringOptimizations != null && !ignoringOptimizations));
 
                 String theme = prefs.getString("theme", "light");
                 error.addToTab("extra", "theme", theme);
@@ -423,6 +425,7 @@ public class Log {
                 (ex.getMessage().startsWith("Bad notification posted") ||
                         ex.getMessage().contains("ActivityRecord not found") ||
                         ex.getMessage().startsWith("Unable to create layer") ||
+                        ex.getMessage().startsWith("Illegal meta data value") ||
                         ex.getMessage().startsWith("Context.startForegroundService")))
             return false;
 

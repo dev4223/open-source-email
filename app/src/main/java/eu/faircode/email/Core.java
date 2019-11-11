@@ -118,7 +118,7 @@ import static javax.mail.Folder.READ_WRITE;
 
 class Core {
     private static final int MAX_NOTIFICATION_COUNT = 100; // per group
-    private static final long AFTER_SEND_DELAY = 10 * 1000L; // milliseconds
+    private static final long AFTER_SEND_DELAY = 15 * 1000L; // milliseconds
     private static final int SYNC_CHUNCK_SIZE = 200;
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
@@ -231,7 +231,7 @@ class Core {
                         if (op.message != null)
                             crumb.put("message", Long.toString(op.message));
                         crumb.put("similar", TextUtils.join(",", sids));
-                        crumb.put("thread", Long.toString(Thread.currentThread().getId()));
+                        crumb.put("thread", Thread.currentThread().getName() + ":" + Thread.currentThread().getId());
                         crumb.put("free", Integer.toString(Log.getFreeMemMb()));
                         Log.breadcrumb("start operation", crumb);
 
@@ -276,7 +276,7 @@ class Core {
                                     break;
 
                                 case EntityOperation.DELETE:
-                                    onDelete(context, jargs, account, folder, message, (POP3Folder) ifolder, state);
+                                    onDelete(context, jargs, account, folder, message, (POP3Folder) ifolder, (POP3Store) istore, state);
                                     break;
 
                                 case EntityOperation.SYNC:
@@ -362,7 +362,7 @@ class Core {
                             }
                         }
 
-                        crumb.put("thread", Long.toString(Thread.currentThread().getId()));
+                        crumb.put("thread", Thread.currentThread().getName() + ":" + Thread.currentThread().getId());
                         crumb.put("free", Integer.toString(Log.getFreeMemMb()));
                         Log.breadcrumb("end operation", crumb);
 
@@ -409,6 +409,7 @@ class Core {
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
+                                ex instanceof SQLiteConstraintException ||
                                 ex.getCause() instanceof BadCommandException ||
                                 ex.getCause() instanceof CommandFailedException) {
                             // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
@@ -489,12 +490,13 @@ class Core {
         if (TextUtils.isEmpty(message.msgid))
             throw new IllegalArgumentException("Message without msgid for " + op.name);
 
-        message.uid = findUid(ifolder, message.msgid, false);
-        if (message.uid == null)
+        Long uid = findUid(ifolder, message.msgid, false);
+        if (uid == null)
             throw new IllegalArgumentException("Message not found for " + op.name);
 
         DB db = DB.getInstance(context);
         db.message().setMessageUid(message.id, message.uid);
+        message.uid = uid;
     }
 
     private static Long findUid(IMAPFolder ifolder, String msgid, boolean purge) throws MessagingException {
@@ -984,18 +986,27 @@ class Core {
         }
     }
 
-    private static void onDelete(Context context, JSONArray jargs, EntityAccount account, EntityFolder folder, EntityMessage message, POP3Folder ifolder, State state) throws MessagingException {
+    private static void onDelete(Context context, JSONArray jargs, EntityAccount account, EntityFolder folder, EntityMessage message, POP3Folder ifolder, POP3Store istore, State state) throws MessagingException {
         // Delete message
         DB db = DB.getInstance(context);
 
         if (!account.browse && EntityFolder.INBOX.equals(folder.type)) {
+            Map<String, String> caps = istore.capabilities();
+
             Message[] imessages = ifolder.getMessages();
             Log.i(folder.name + " POP messages=" + imessages.length);
 
             boolean found = false;
             for (Message imessage : imessages) {
                 MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-                String msgid = helper.getMessageID();
+
+                String msgid;
+                if (caps.containsKey("UIDL"))
+                    msgid = ifolder.getUID(imessage);
+                else
+                    msgid = helper.getMessageID();
+
+                Log.i("POP searching=" + message.msgid + " iterate=" + msgid);
                 if (msgid != null && msgid.equals(message.msgid)) {
                     found = true;
                     Log.i(folder.name + " POP delete=" + msgid);
@@ -1883,7 +1894,8 @@ class Core {
                 }
             } else {
                 // Delete not synchronized messages without uid
-                db.message().deleteOrphans(folder.id);
+                if (!EntityFolder.DRAFTS.equals(folder.type))
+                    db.message().deleteOrphans(folder.id);
             }
 
             int count = ifolder.getMessageCount();
@@ -1968,32 +1980,33 @@ class Core {
             return _synchronizeMessage(context, account, folder, uid, istore, imessage, browsed, download, rules, state);
         } catch (MessagingException ex) {
             // https://javaee.github.io/javamail/FAQ#imapserverbug
-            if (MessageHelper.retryRaw(ex)) try {
-                Log.w(folder.name + " " + ex.getMessage());
+            if (MessageHelper.retryRaw(ex))
+                try {
+                    Log.w(folder.name + " " + ex.getMessage());
 
-                Log.i(folder.name + " fetching raw message uid=" + uid);
-                File file = File.createTempFile("serverbug." + folder.id, "." + uid, context.getCacheDir());
-                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                    imessage.writeTo(os);
+                    Log.i(folder.name + " fetching raw message uid=" + uid);
+                    File file = File.createTempFile("serverbug." + folder.id, "." + uid, context.getCacheDir());
+                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                        imessage.writeTo(os);
+                    }
+
+                    Properties props = MessageHelper.getSessionProperties();
+                    Session isession = Session.getInstance(props, null);
+
+                    Log.i(folder.name + " decoding again uid=" + uid);
+                    try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+                        imessage = new MimeMessageEx(isession, is, imessage);
+                    }
+
+                    file.delete();
+
+                    Log.i(folder.name + " synchronizing again uid=" + uid);
+                    return _synchronizeMessage(context, account, folder, uid, istore, imessage, browsed, download, rules, state);
+                } catch (MessagingException ex1) {
+                    if (MessageHelper.retryRaw(ex1))
+                        Log.e(ex1);
+                    throw ex1;
                 }
-
-                Properties props = MessageHelper.getSessionProperties();
-                Session isession = Session.getInstance(props, null);
-
-                Log.i(folder.name + " decoding again uid=" + uid);
-                try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                    imessage = new MimeMessageEx(isession, is, imessage);
-                }
-
-                file.delete();
-
-                Log.i(folder.name + " synchronizing again uid=" + uid);
-                return _synchronizeMessage(context, account, folder, uid, istore, imessage, browsed, download, rules, state);
-            } catch (MessagingException ex1) {
-                if (MessageHelper.retryRaw(ex1))
-                    Log.e(ex1);
-                throw ex1;
-            }
 
             throw ex;
         }
@@ -2414,7 +2427,7 @@ class Core {
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean suggest_sent = prefs.getBoolean("suggest_sent", false);
+        boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
         boolean suggest_received = prefs.getBoolean("suggest_received", false);
 
         if (type == EntityContact.TYPE_TO && !suggest_sent)

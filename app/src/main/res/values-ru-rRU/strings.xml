@@ -215,6 +215,8 @@
     <string name="title_advanced_suggest_sent">Предлагать адреса, найденные в отправленных сообщениях</string>
     <string name="title_advanced_suggest_received">Предлагать адреса, найденные в полученных сообщениях</string>
     <string name="title_advanced_prefix_once">Добавлять только один префикс темы при ответе или пересылке</string>
+    <string name="title_advanced_extended_reply">Использовать расширенный заголовок для ответа/пересылки</string>
+    <string name="title_advanced_quote_reply">Цитировать текст при ответе</string>
     <string name="title_advanced_plain_only">По умолчанию отправлять простым текстом</string>
     <string name="title_advanced_usenet_signature">Стиль подписи Usenet</string>
     <string name="title_advanced_autoresize">Автоматически изменять размер прикреплённых и встроенных изображений</string>
@@ -300,6 +302,7 @@
     <string name="title_advanced_sound">Выбрать звук уведомления</string>
     <string name="title_advanced_tracking">Автоматически распознавать и отключать отслеживающие изображения</string>
     <string name="title_advanced_display_hidden">Показывать текст скрытых сообщений</string>
+    <string name="title_advanced_openpgp">Провайдер OpenPGP</string>
     <string name="title_advanced_auto_decrypt">Автоматически расшифровывать сообщения</string>
     <string name="title_advanced_recents">Не показывать в недавних приложениях</string>
     <string name="title_advanced_biometrics_timeout">Таймаут биометрической аутентификации</string>
@@ -336,6 +339,7 @@
     <string name="title_advanced_preview_hint">Доступно, только если был загружен текст сообщения</string>
     <string name="title_advanced_inline_hint">Встроенные изображения - это изображения, включённые в сообщение</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
+    <string name="title_advanced_autoseen_hint">Автоматическая пометка сообщений прочитанными при развёртывании может быть отключена в настройках учётной записи</string>
     <string name="title_advanced_autoclose_hint">Автоматически закрывать диалог, если все сообщения удалены, отправлены или помещены в архив</string>
     <string name="title_advanced_sender_hint">Большинство провайдеров не разрешают изменять адреса отправителей</string>
     <string name="title_advanced_display_hidden_hint">Это может вызвать странное отображение и дублирование текста</string>
@@ -561,7 +565,7 @@
     <string name="title_ask_help">Помогите улучшить FairEmail</string>
     <string name="title_ask_reporting">Отправлять отчёты об ошибках?</string>
     <string name="title_reporting_why">Отчёты об ошибках помогут улучшить FairEmail</string>
-    <string name="title_expand_warning">При раскрытии этого сообщения будет загружено %1$s</string>
+    <string name="title_expand_warning">При развёртывании этого сообщения будет загружено %1$s</string>
     <string name="title_download_message">Загрузка&#8230;</string>
     <string name="title_compose">Создать</string>
     <string name="title_from">От:</string>
@@ -796,8 +800,6 @@
     <string name="title_hint_eml">Это обзор содержимого файла оригинального сообщения. Сохраните его с помощью значка \"Сохранить\" на панели действий, чтобы просмотреть содержимое полностью.</string>
     <string name="title_open_link">Открыть ссылку</string>
     <string name="title_different_link">Заголовок и адрес ссылки отличаются</string>
-    <string name="title_secure_link">Сделать ссылку безопасной</string>
-    <string name="title_link_secured">Ссылка безопасна</string>
     <string name="title_sanitize_link">Удалить параметры отслеживания</string>
     <string name="title_insecure_link">Ссылка небезопасна</string>
     <string name="title_check_owner">Проверить владельца</string>
@@ -811,7 +813,7 @@
     <string name="title_undo">Отменить</string>
     <string name="title_redo">Восстановить</string>
     <string name="title_add">Добавить</string>
-    <string name="title_browse">Приложение по умолчанию</string>
+    <string name="title_browse">Открыть с помощью</string>
     <string name="title_info">Информация</string>
     <string name="title_report">Отчёт</string>
     <string name="title_fix">Исправить</string>
@@ -840,6 +842,7 @@
     <string name="title_icalendar_accept">Принять</string>
     <string name="title_icalendar_decline">Отклонить</string>
     <string name="title_icalendar_maybe">Возможно</string>
+    <string name="title_icalendar_calendar">Календарь</string>
     <string name="title_try">Попробуйте FairEmail, приложение с открытым исходным кодом, совместимое с электронной почтой для Android</string>
     <string name="title_pro_feature">Это функция версии Pro</string>
     <string name="title_pro_list">Список функций Pro</string>

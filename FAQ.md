@@ -211,7 +211,7 @@ FairEmail follows all the best practices for an email client as described in [th
 * [(103) How can I record audio?](#user-content-faq103)
 * [(104) What do I need to know about error reporting?](#user-content-faq104)
 * [(105) How does the roam-like-at-home option work?](#user-content-faq105)
-* [(106) Which launchers can show the number of new messages?](#user-content-faq106)
+* [(106) Which launchers can show a badge count with the number of unread messages?](#user-content-faq106)
 * [(107) How do I used colored stars?](#user-content-faq107)
 * [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
 * [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
@@ -1382,15 +1382,14 @@ but even Google's Chrome cannot handle this.
 <a name="faq61"></a>
 **(61) Why are some messages shown dimmed?**
 
-Messages shown dimmed are locally moved messages for which the move is not confirmed by the server yet.
-This can happen when the folder is set to not synchronize, when there is no connection to the server or when the messages are too old to be synchronized.
-Eventually, these messages will be synchronized when the connection to the server is restored or will be deleted if they are too old to be synchronized.
+Messages shown dimmed (grayed) are locally moved messages for which the move is not confirmed by the server yet.
+This can happen when there is no connection to the server or the account (yet).
+These messages will be synchronized after a connection to the server and the account has been made
+or, if this never happens, will be deleted if they are too old to be synchronized.
 
-You can view these messages, but you cannot move these messages again until the previous move has been confirmed by the server.
+You can view these messages, but you cannot move these messages again until the previous move has been confirmed.
 
-Some providers don't keep track of sent messages or you might be using an SMTP server not related to the provider.
-This will result in messages in the sent folder never to be synchronized.
-See [this FAQ](#user-content-faq7) for more information on this.
+Pending [operations](#user-content-faq3) are shown in the operations view accessible from the main navigation menu.
 
 <br />
 
@@ -2049,12 +2048,20 @@ So, you don't have to disable this option if you don't have an EU SIM or are not
 <br />
 
 <a name="faq106"></a>
-**(106) Which launchers can show the number of new messages?**
+**(106) Which launchers can show a badge count with the number of unread messages?**
 
 Please [see here](https://github.com/leolin310148/ShortcutBadger#supported-launchers)
 for a list of launchers which can show the number of new messages.
 
-Note that this needs to be enabled in the advance options (default enabled).
+Note that the notification setting *Show launcher icon with number of new messages* needs to be enabled (default enabled).
+
+Depending on what you want, the notification settings *Let the number of new messages match the number of notifications* needs to be enabled or disabled.
+
+This feature depends on support of your launcher.
+FairEmail merely 'broadcasts' the number of unread messages using the ShortcutBadger library.
+If it doesn't work, this cannot be fixed by changes in FairEmail.
+
+Note that Tesla Unread is [not supported anymore](https://forum.xda-developers.com/android/general/bad-news-tesla-unread-devoloper-t3920415).
 
 <br />
 
@@ -2134,6 +2141,10 @@ Outlook, Live and Hotmail do not yet support OAuth for IMAP/SMTP connections, bu
 Which email provider is best for you depends on your wishes/requirements.
 Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/)
 for a list of privacy oriented email providers with advantages and disadvantages.
+
+Be aware that not all providers support standard email protocols, see [this FAQ](#user-content-faq129) for more information.
+
+Using your own (custom) domain name, which is supported by most email providers, will make it easier to switch to another email provider.
 
 <br />
 
