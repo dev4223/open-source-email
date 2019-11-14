@@ -476,6 +476,9 @@ public class ServiceSynchronize extends ServiceBase {
                 am.set(AlarmManager.RTC_WAKEUP, at, piOneshot);
             else
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, piOneshot);
+
+            if (!started)
+                onReload(true, "oneshot start");
         } else
             onReload(true, "oneshot end");
     }
@@ -675,8 +678,10 @@ public class ServiceSynchronize extends ServiceBase {
     private void stop() {
         EntityLog.log(this, "Main stop");
 
-        state.stop();
-        state.join();
+        if (state != null) {
+            state.stop();
+            state.join();
+        }
 
         EntityLog.log(this, "Main stopped");
 

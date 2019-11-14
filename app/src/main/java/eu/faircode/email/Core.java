@@ -58,7 +58,6 @@ import com.sun.mail.util.MessageRemovedIOException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.jsoup.nodes.Element;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -82,7 +81,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -98,7 +96,6 @@ import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
@@ -1101,9 +1098,6 @@ class Core {
                 parts.isPlainOnly(),
                 HtmlHelper.getPreview(body),
                 parts.getWarnings(message.warning));
-
-        if (!TextUtils.isEmpty(body))
-            fixAttachments(context, message.id, body);
     }
 
     private static void onAttachment(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws JSONException, MessagingException, IOException {
@@ -2223,9 +2217,6 @@ class Core {
                     Log.i(folder.name + " inline downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    if (!TextUtils.isEmpty(body))
-                        fixAttachments(context, message.id, body);
-
                     Long size = parts.getBodySize();
                     if (TextUtils.isEmpty(body) && size != null && size > 0)
                         reportEmptyMessage(context, account, istore);
@@ -2553,9 +2544,6 @@ class Core {
                     Log.i(folder.name + " downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    if (!TextUtils.isEmpty(body))
-                        fixAttachments(context, message.id, body);
-
                     Long size = parts.getBodySize();
                     if (TextUtils.isEmpty(body) && size != null && size > 0)
                         reportEmptyMessage(context, account, istore);
@@ -2595,20 +2583,6 @@ class Core {
         }
     }
 
-    private static void fixAttachments(Context context, long id, String body) {
-        DB db = DB.getInstance(context);
-        for (Element element : JsoupEx.parse(body).select("img")) {
-            String src = element.attr("src");
-            if (src.startsWith("cid:")) {
-                EntityAttachment attachment = db.attachment().getAttachment(id, "<" + src.substring(4) + ">");
-                if (attachment != null && !attachment.isInline()) {
-                    Log.i("Setting attachment type to inline id=" + attachment.id);
-                    db.attachment().setDisposition(attachment.id, Part.INLINE);
-                }
-            }
-        }
-    }
-
     static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<Long, List<Long>> groupNotifying) {
         if (messages == null)
             messages = new ArrayList<>();
@@ -2638,13 +2612,13 @@ class Core {
         // Current
         for (TupleMessageEx message : messages) {
             // Check if notification channel enabled
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O &&
-                    message.notifying == 0 && message.from != null && message.from.length > 0) {
-                InternetAddress from = (InternetAddress) message.from[0];
-                NotificationChannel channel = nm.getNotificationChannel(
-                        "notification." + from.getAddress().toLowerCase(Locale.ROOT));
-                if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE)
-                    continue;
+            if (message.notifying == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && pro) {
+                String channelId = message.getNotificationChannelId();
+                if (channelId != null) {
+                    NotificationChannel channel = nm.getNotificationChannel(channelId);
+                    if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE)
+                        continue;
+                }
             }
 
             long group = (pro && message.accountNotify ? message.account : 0);
@@ -2809,7 +2783,9 @@ class Core {
             // Build notification
             NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(context, "notification")
-                            .setSmallIcon(R.drawable.baseline_email_white_24)
+                            .setSmallIcon(messages.size() > 1
+                                    ? R.drawable.baseline_mail_more_white_24
+                                    : R.drawable.baseline_mail_white_24)
                             .setContentTitle(title)
                             .setContentIntent(piUnified)
                             .setNumber(messages.size())
@@ -2911,30 +2887,28 @@ class Core {
             PendingIntent piIgnore = PendingIntent.getService(context, ServiceUI.PI_IGNORED, ignore, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Get channel name
-            String channelName = null;
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            String channelName = EntityAccount.getNotificationChannelId(0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && pro) {
                 NotificationChannel channel = null;
 
-                if (message.from != null && message.from.length > 0) {
-                    InternetAddress from = (InternetAddress) message.from[0];
-                    channel = nm.getNotificationChannel(
-                            "notification." + from.getAddress().toLowerCase(Locale.ROOT));
-                }
+                String channelId = message.getNotificationChannelId();
+                if (channelId != null)
+                    channel = nm.getNotificationChannel(channelId);
 
                 if (channel == null)
                     channel = nm.getNotificationChannel(EntityFolder.getNotificationChannelId(message.folder));
 
-                if (channel != null)
+                if (channel == null) {
+                    if (message.accountNotify)
+                        channelName = EntityAccount.getNotificationChannelId(message.account);
+                } else
                     channelName = channel.getId();
             }
-            if (channelName == null)
-                channelName = EntityAccount.getNotificationChannelId(
-                        pro && message.accountNotify ? message.account : 0);
 
             NotificationCompat.Builder mbuilder =
                     new NotificationCompat.Builder(context, channelName)
                             .addExtras(args)
-                            .setSmallIcon(R.drawable.baseline_email_white_24)
+                            .setSmallIcon(R.drawable.baseline_mail_white_24)
                             .setContentIntent(piContent)
                             .setWhen(message.received)
                             .setDeleteIntent(piIgnore)
@@ -3287,6 +3261,7 @@ class Core {
         void error(Throwable ex) {
             if (ex instanceof MessagingException &&
                     ("connection failure".equals(ex.getMessage()) ||
+                            "Not connected".equals(ex.getMessage()) || // POP3
                             ex.getCause() instanceof SocketException ||
                             ex.getCause() instanceof ConnectionException))
                 recoverable = false;

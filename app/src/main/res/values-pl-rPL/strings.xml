@@ -128,7 +128,6 @@
     <string name="title_setup_quick_hint">Szybka konfiguracja pobierze informacje o ustawieniach z autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">Serwer IMAP do odbierania wiadomości</string>
     <string name="title_setup_quick_smtp">Serwer SMTP do wysyłania wiadomości</string>
-    <string name="title_setup_go">Idż</string>
     <string name="title_setup_wizard">Kreator</string>
     <string name="title_setup_wizard_remark">Idź \"wstecz\", aby przejść do skrzynki odbiorczej</string>
     <string name="title_setup_other">Inny dostawca</string>
@@ -137,6 +136,7 @@
     <string name="title_setup_select_account">Wybierz konto</string>
     <string name="title_setup_instructions">Instrukcja konfiguracji</string>
     <string name="title_setup_no_settings">Nie ma ustawień dla domeny \'%1$s\'</string>
+    <string name="title_setup_no_system_folders">Nie znaleziono folderu skrzynki odbiorczej lub szkiców</string>
     <string name="title_setup_quick_success">Pomyślnie dodano konto i tożsamość</string>
     <string name="title_setup_quick_failed">Możesz ustawić konto i tożsamość w krokach poniżej</string>
     <string name="title_setup_manage">Zarządzaj</string>
@@ -156,6 +156,7 @@
     <string name="title_setup_doze_stopped">Synchronizacja zatrzymana?</string>
     <string name="title_setup_data">Oszczędzanie danych jest włączone</string>
     <string name="title_setup_inbox">Idź do wiadomości</string>
+    <string name="title_setup_go">Idż</string>
     <string name="title_setup_to_do">Do zrobienia</string>
     <string name="title_setup_done">Gotowe</string>
     <string name="title_setup_export">Eksport ustawień</string>
@@ -169,7 +170,6 @@
     <string name="title_setup_exported">Ustawienia wyeksportowane</string>
     <string name="title_setup_imported">Ustawienia zaimportowane</string>
     <string name="title_setup_import_invalid">Nieprawidłowy plik ustawień</string>
-    <string name="title_setup_notifications">Zarządzaj powiadomieniami</string>
     <string name="title_setup_reorder_accounts">Uporządkuj konta</string>
     <string name="title_setup_reorder_folders">Uporządkuj foldery</string>
     <string name="title_reset_order">Zresetuj kolejność</string>
@@ -215,6 +215,8 @@
     <string name="title_advanced_suggest_sent">Proponuj adresy znalezione w wysłanych wiadomościach</string>
     <string name="title_advanced_suggest_received">Proponuj adresy znalezione w otrzymanych wiadomościach</string>
     <string name="title_advanced_prefix_once">Prefiksuj temat tylko raz przy odpowiedzi lub przesyłaniu dalej</string>
+    <string name="title_advanced_extended_reply">Użyj rozszerzonego nagłówka odpowiedzi/przesyłania dalej</string>
+    <string name="title_advanced_quote_reply">Cytuj tekst odpowiedzi</string>
     <string name="title_advanced_plain_only">Domyślnie wysyłaj czystym tekstem</string>
     <string name="title_advanced_usenet_signature">Konwencja podpisu Usenet</string>
     <string name="title_advanced_autoresize">Automatycznie zmieniaj rozmiar załączonych i osadzonych obrazów</string>
@@ -278,6 +280,9 @@
     <string name="title_advanced_automove">Potwierdź przenoszenie wiadomości</string>
     <string name="title_advanced_discard_delete">Po odrzuceniu wersji roboczej trwale usuń wersję roboczą</string>
     <string name="title_advanced_default_snooze">Domyślny czas odłożenia</string>
+    <string name="title_advanced_notifications">Zarządzaj powiadomieniami</string>
+    <string name="title_advanced_notifications_default">Domyślny kanał</string>
+    <string name="title_advanced_notifications_service">Kanał usługi</string>
     <string name="title_advanced_badge">Pokaż liczbę nowych wiadomości na ikonie launchera</string>
     <string name="title_advanced_unseen_ignored">Niech liczba nowych wiadomości odpowiada liczbie powiadomień</string>
     <string name="title_advanced_notify_summary">Pokaż tylko podsumowanie</string>
@@ -300,6 +305,7 @@
     <string name="title_advanced_sound">Wybierz dźwięk powiadomienia</string>
     <string name="title_advanced_tracking">Automatyczne rozpoznawanie i wyłączanie śledzenia obrazów</string>
     <string name="title_advanced_display_hidden">Wyświetlaj ukryte teksty wiadomości</string>
+    <string name="title_advanced_openpgp">Dostawca OpenPGP</string>
     <string name="title_advanced_auto_decrypt">Automatycznie odszyfruj wiadomości</string>
     <string name="title_advanced_recents">Ukryj na ekranie z ostatnimi aplikacjami</string>
     <string name="title_advanced_biometrics_timeout">Limit czasu uwierzytelniania biometrycznego</string>
@@ -336,6 +342,7 @@
     <string name="title_advanced_preview_hint">Dostępne tylko po pobraniu tekstu wiadomości</string>
     <string name="title_advanced_inline_hint">Obrazy wstawione są obrazami zawartymi w wiadomości</string>
     <string name="title_advanced_autoexpand_hint">Automatycznie otwieraj wiadomość, gdy w rozmowie jest tylko jedna wiadomość lub tylko jedna nieprzeczytana wiadomość</string>
+    <string name="title_advanced_autoseen_hint">Automatyczne oznaczanie wiadomości czytanych podczas rozwijania można wyłączyć w ustawieniach poszczególnych kont</string>
     <string name="title_advanced_autoclose_hint">Automatycznie zamykaj wątki rozmowy po zarchiwizowaniu, wysłaniu lub usunięciu wszystkich wiadomości</string>
     <string name="title_advanced_sender_hint">Większość dostawców nie akceptuje zmodyfikowanych adresów nadawcy</string>
     <string name="title_advanced_display_hidden_hint">Może to powodować dziwne i podwójne teksty</string>
@@ -343,7 +350,9 @@
     <string name="title_advanced_badge_hint">Dostępne tylko na wspieranych launcherach</string>
     <string name="title_advanced_notify_action_hint">Wyświetlone zostaną co najwyżej trzy akcje</string>
     <string name="title_advanced_notify_remove_hint">Powiadomienia o nowych wiadomościach będą zawsze usuwane po przesunięciu i oznaczeniu wiadomości jako przeczytane</string>
-    <string name="title_advanced_notify_manage_hint">Dotknij nazwę kanału \'Powiadomienia\', aby ustawić domyślny dźwięk powiadomienia, itd.</string>
+    <string name="title_advanced_notify_manage_hint">Dotknij nazwę kanału, aby ustawić właściwości kanału</string>
+    <string name="title_advanced_notify_manage_default_hint">Aby ustawić domyślny dźwięk, itp.</string>
+    <string name="title_advanced_notify_manage_service_hint">Aby wyłączyć stałe powiadomienie</string>
     <string name="title_advanced_wearable_hint">Powiadomienia są wysyłane na urządzenie do noszenia tylko po pobraniu treści wiadomości</string>
     <string name="title_advanced_move_hint">Folder docelowy można skonfigurować w ustawieniach konta</string>
     <string name="title_advanced_notify_no_grouping">Ta wersja Androida nie obsługuje grupowania powiadomień</string>
@@ -796,6 +805,8 @@
     <string name="title_hint_eml">To jest podsumowanie zawartości nieprzetworzonego pliku wiadomości. Zapisz nieprzetworzoną wiadomość używając ikony zapisu na pasku akcji, aby wyświetlić całą zawartość.</string>
     <string name="title_open_link">Otwórz link</string>
     <string name="title_different_link">Tytuł i adres linku są różne</string>
+    <string name="title_link_http">Ruch nie będzie szyfrowany</string>
+    <string name="title_link_https">Ruch będzie szyfrowany</string>
     <string name="title_sanitize_link">Usuń parametry śledzenia</string>
     <string name="title_insecure_link">Ten link nie jest bezpieczny</string>
     <string name="title_check_owner">Sprawdź właściciela</string>
@@ -838,6 +849,7 @@
     <string name="title_icalendar_accept">Akceptuj</string>
     <string name="title_icalendar_decline">Odrzuć</string>
     <string name="title_icalendar_maybe">Może</string>
+    <string name="title_icalendar_calendar">Kalendarz</string>
     <string name="title_try">Wypróbuj FairEmail, przyjazna prywatności aplikacja pocztowa dla Android o otwartym kodzie</string>
     <string name="title_pro_feature">Jest to funkcja pro</string>
     <string name="title_pro_list">Lista funkcji pro</string>
@@ -910,6 +922,7 @@ FairEmail wyświetla o tym małą wiadomość przypominającą, która zostanie 
         <item>Małe</item>
         <item>Średnie</item>
         <item>Duże</item>
+        <item>Bardzo duży</item>
     </string-array>
     <string-array name="targetNames">
         <item>Do</item>

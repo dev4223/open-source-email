@@ -128,7 +128,6 @@
     <string name="title_setup_quick_hint">Быстрая настройка считывает информацию о конфигурации с autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">IMAP-сервер для получения сообщений</string>
     <string name="title_setup_quick_smtp">SMTP-сервер для отправки сообщений</string>
-    <string name="title_setup_go">Далее</string>
     <string name="title_setup_wizard">Мастер</string>
     <string name="title_setup_wizard_remark">Переход \"назад\" приводит в папку \"Входящие\"</string>
     <string name="title_setup_other">Другой провайдер</string>
@@ -137,6 +136,7 @@
     <string name="title_setup_select_account">Выбрать учётную запись</string>
     <string name="title_setup_instructions">Инструкция по установке</string>
     <string name="title_setup_no_settings">Не найдено настроек для домена \'%1$s\'</string>
+    <string name="title_setup_no_system_folders">Папка \"Входящие\" или \"Черновики\" не найдена</string>
     <string name="title_setup_quick_success">Учётная запись и идентификатор добавлены успешно</string>
     <string name="title_setup_quick_failed">Вы также можете настроить учётную запись и идентификатор ниже</string>
     <string name="title_setup_manage">Редактировать</string>
@@ -156,6 +156,7 @@
     <string name="title_setup_doze_stopped">Синхронизация останавливается?</string>
     <string name="title_setup_data">Сохранение данных включено</string>
     <string name="title_setup_inbox">Перейти к сообщениям</string>
+    <string name="title_setup_go">Далее</string>
     <string name="title_setup_to_do">Выполнить</string>
     <string name="title_setup_done">Готово</string>
     <string name="title_setup_export">Экспорт настроек</string>
@@ -169,7 +170,6 @@
     <string name="title_setup_exported">Настройки экспортированы</string>
     <string name="title_setup_imported">Настройки импортированы</string>
     <string name="title_setup_import_invalid">Неправильный файл настроек</string>
-    <string name="title_setup_notifications">Настроить уведомления</string>
     <string name="title_setup_reorder_accounts">Упорядочить уч. записи</string>
     <string name="title_setup_reorder_folders">Упорядочить папки</string>
     <string name="title_reset_order">Изменить порядок</string>
@@ -280,6 +280,9 @@
     <string name="title_advanced_automove">Подтверждать перемещение сообщений</string>
     <string name="title_advanced_discard_delete">Удалять черновик навсегда</string>
     <string name="title_advanced_default_snooze">Время повтора по умолчанию</string>
+    <string name="title_advanced_notifications">Настроить уведомления</string>
+    <string name="title_advanced_notifications_default">Канал по умолчанию</string>
+    <string name="title_advanced_notifications_service">Сервисный канал</string>
     <string name="title_advanced_badge">Показывать значок запуска с числом новых сообщений</string>
     <string name="title_advanced_unseen_ignored">Количество уведомлений соответствует количеству новых сообщений</string>
     <string name="title_advanced_notify_summary">Показывать только сводное уведомление</string>
@@ -347,7 +350,9 @@
     <string name="title_advanced_badge_hint">Доступно только на поддерживаемых лаунчерах</string>
     <string name="title_advanced_notify_action_hint">Будут показаны максимум три действия</string>
     <string name="title_advanced_notify_remove_hint">Уведомления о новых о сообщениях всегда будут удаляться при смахивании сообщения и пометке о прочтении</string>
-    <string name="title_advanced_notify_manage_hint">Нажмите на название канала \"Уведомления\" для установки звука уведомлений по умолчанию и т.д.</string>
+    <string name="title_advanced_notify_manage_hint">Нажмите на название канала, чтобы установить свойства канала</string>
+    <string name="title_advanced_notify_manage_default_hint">Для установки звука по умолчанию и т.д.</string>
+    <string name="title_advanced_notify_manage_service_hint">Для отключения постоянного уведомления</string>
     <string name="title_advanced_wearable_hint">Уведомления на носимое устройство отправляются только после загрузки текста сообщения</string>
     <string name="title_advanced_move_hint">Целевая папка может быть указана в настройках учётной записи</string>
     <string name="title_advanced_notify_no_grouping">Эта версия Android не поддерживает группировку уведомлений</string>
@@ -800,6 +805,8 @@
     <string name="title_hint_eml">Это обзор содержимого файла оригинального сообщения. Сохраните его с помощью значка \"Сохранить\" на панели действий, чтобы просмотреть содержимое полностью.</string>
     <string name="title_open_link">Открыть ссылку</string>
     <string name="title_different_link">Заголовок и адрес ссылки отличаются</string>
+    <string name="title_link_http">Трафик не будет зашифрован</string>
+    <string name="title_link_https">Трафик будет зашифрован</string>
     <string name="title_sanitize_link">Удалить параметры отслеживания</string>
     <string name="title_insecure_link">Ссылка небезопасна</string>
     <string name="title_check_owner">Проверить владельца</string>
@@ -813,7 +820,7 @@
     <string name="title_undo">Отменить</string>
     <string name="title_redo">Восстановить</string>
     <string name="title_add">Добавить</string>
-    <string name="title_browse">Открыть с помощью</string>
+    <string name="title_browse">В браузере</string>
     <string name="title_info">Информация</string>
     <string name="title_report">Отчёт</string>
     <string name="title_fix">Исправить</string>
@@ -916,6 +923,7 @@
         <item>Маленький</item>
         <item>Средний</item>
         <item>Большой</item>
+        <item>Очень большой</item>
     </string-array>
     <string-array name="targetNames">
         <item>Кому</item>

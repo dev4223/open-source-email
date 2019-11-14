@@ -105,7 +105,6 @@
     <string name="title_setup_quick_hint">Hurtig opsætningen vil hente opsætningsoplysninger fra autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">IMAP-server til beskedmodtagelse</string>
     <string name="title_setup_quick_smtp">SMTP-server til beskedafsendelse</string>
-    <string name="title_setup_go">Start</string>
     <string name="title_setup_wizard">Guide</string>
     <string name="title_setup_wizard_remark">Returnér til indbakken</string>
     <string name="title_setup_other">Anden udbyder</string>
@@ -114,6 +113,7 @@
     <string name="title_setup_select_account">Vælg konto</string>
     <string name="title_setup_instructions">Opsætningsinstruktioner</string>
     <string name="title_setup_no_settings">Ingen indstillinger fundet for domænet \'%1$s\'</string>
+    <string name="title_setup_no_system_folders">Indbakke- eller Udkastmappe ikke fundet</string>
     <string name="title_setup_quick_success">En konto og identitet er nu blevet tilføjet</string>
     <string name="title_setup_quick_failed">Du kan også prøve at opsætte en konto og identitet nedenfor</string>
     <string name="title_setup_manage">Administrér</string>
@@ -133,6 +133,7 @@
     <string name="title_setup_doze_stopped">Synk stoppet?</string>
     <string name="title_setup_data">Datasparer er aktiveret</string>
     <string name="title_setup_inbox">Gå til beskeder</string>
+    <string name="title_setup_go">Start</string>
     <string name="title_setup_to_do">Resterer</string>
     <string name="title_setup_done">Udført</string>
     <string name="title_setup_export">Eksportindstillinger</string>
@@ -146,7 +147,6 @@
     <string name="title_setup_exported">Indstillinger eksporteret</string>
     <string name="title_setup_imported">Indstillinger importeret</string>
     <string name="title_setup_import_invalid">Ugyldig indstillingsfil</string>
-    <string name="title_setup_notifications">Håndtér notifikationer</string>
     <string name="title_setup_reorder_accounts">Sortering af konti</string>
     <string name="title_setup_reorder_folders">Sortering af mapper</string>
     <string name="title_reset_order">Nulstil rækkefølge</string>
@@ -324,7 +324,6 @@
     <string name="title_advanced_badge_hint">Kun tilgængelig i understøttede launchers</string>
     <string name="title_advanced_notify_action_hint">Maksimalt tre handlinger vises</string>
     <string name="title_advanced_notify_remove_hint">Nye beskednotifikationer fjernes altid, når de stryges væk samt ved markering af beskeder som læste</string>
-    <string name="title_advanced_notify_manage_hint">Tryk på kanalnavnet \'Notifikationer\' for at opsætte standardnotifikationslyd mv.</string>
     <string name="title_advanced_wearable_hint">Notifikationer sendes kun til en wearable, når beskedteksten er blevet downloadet</string>
     <string name="title_advanced_move_hint">Målmappen kan opsættes i kontoindstillingerne</string>
     <string name="title_advanced_notify_no_grouping">Denne Android-version understøtter ikke notifikationsgruppering</string>
@@ -777,6 +776,8 @@
     <string name="title_hint_eml">Dette er en oversigt over indholdet af en råformatsbeskedfil. Gem den rå besked med Gem-ikonet i handlingsbjælken for at se alt indhold.</string>
     <string name="title_open_link">Åbn link</string>
     <string name="title_different_link">Titlen og linkadressen er forskellige</string>
+    <string name="title_link_http">Trafik bliver ikke krypteret</string>
+    <string name="title_link_https">Trafik bliver krypteret</string>
     <string name="title_sanitize_link">Fjern sporingsparametre</string>
     <string name="title_insecure_link">Dette link er usikkert</string>
     <string name="title_check_owner">Tjek ejer</string>
@@ -892,6 +893,7 @@
         <item>Lille</item>
         <item>Mellem</item>
         <item>Stor</item>
+        <item>Extra large</item>
     </string-array>
     <string-array name="targetNames">
         <item>Til</item>

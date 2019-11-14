@@ -81,7 +81,7 @@
     <string name="menu_attribution">Attribuzione</string>
     <string name="menu_privacy">Privacy</string>
     <string name="menu_about">Al riguardo</string>
-    <string name="menu_pro">Funzionalità Pro</string>
+    <string name="menu_pro">Funzionalità versione Pro</string>
     <string name="menu_invite">Invita</string>
     <string name="menu_rate">Valuta questa app</string>
     <string name="menu_other">Altre app</string>
@@ -105,7 +105,6 @@
     <string name="title_setup_quick_hint">La configurazione rapida recupererà le informazioni di configurazione da autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">Server IMAP per ricevere messaggi</string>
     <string name="title_setup_quick_smtp">Server SMTP per inviare messaggi</string>
-    <string name="title_setup_go">Vai</string>
     <string name="title_setup_wizard">Procedura Guidata</string>
     <string name="title_setup_wizard_remark">Vai \'indietro\' per andare alla casella di posta in arrivo</string>
     <string name="title_setup_other">Altro provider</string>
@@ -114,6 +113,7 @@
     <string name="title_setup_select_account">Seleziona account</string>
     <string name="title_setup_instructions">Istruzioni di configurazione</string>
     <string name="title_setup_no_settings">Nessuna impostazione trovata per il dominio \'%1$s\'</string>
+    <string name="title_setup_no_system_folders">Cartella in arrivo o bozza non trovata</string>
     <string name="title_setup_quick_success">Un account e un\'identità sono stati aggiunti con successo</string>
     <string name="title_setup_quick_failed">Puoi provare a configurare un account e un\'identità anche qui sotto</string>
     <string name="title_setup_manage">Gestisci</string>
@@ -133,6 +133,7 @@
     <string name="title_setup_doze_stopped">Sincronizzazione interrotta?</string>
     <string name="title_setup_data">Risparmio dati attivato</string>
     <string name="title_setup_inbox">Vai ai messaggi</string>
+    <string name="title_setup_go">Vai</string>
     <string name="title_setup_to_do">Da fare</string>
     <string name="title_setup_done">Fine</string>
     <string name="title_setup_export">Esporta impostazioni</string>
@@ -146,7 +147,6 @@
     <string name="title_setup_exported">Impostazioni esportate</string>
     <string name="title_setup_imported">Impostazioni importate</string>
     <string name="title_setup_import_invalid">File di impostazioni non valido</string>
-    <string name="title_setup_notifications">Gestione notifiche</string>
     <string name="title_setup_reorder_accounts">Ordine degli account</string>
     <string name="title_setup_reorder_folders">Ordina cartelle</string>
     <string name="title_reset_order">Resetta ordine</string>
@@ -257,6 +257,9 @@
     <string name="title_advanced_automove">Conferma i messaggi in movimento</string>
     <string name="title_advanced_discard_delete">In caso la bozza venga scartata, eliminala definitivamente</string>
     <string name="title_advanced_default_snooze">Tempo di rinvio predefinito</string>
+    <string name="title_advanced_notifications">Gestisci notifiche</string>
+    <string name="title_advanced_notifications_default">Canale predefinito</string>
+    <string name="title_advanced_notifications_service">Servizio canale</string>
     <string name="title_advanced_badge">Mostra icona launcher con numero di nuovi messaggi</string>
     <string name="title_advanced_unseen_ignored">Lascia che il numero di nuovi messaggi corrisponda al numero di notifiche</string>
     <string name="title_advanced_notify_summary">Mostra solo le notifiche di riepilogo</string>
@@ -324,7 +327,9 @@
     <string name="title_advanced_badge_hint">Disponibile solo sui launcher supportati</string>
     <string name="title_advanced_notify_action_hint">Verranno mostrate al massimo tre azioni</string>
     <string name="title_advanced_notify_remove_hint">Le notifiche di nuovo messaggio verranno sempre rimosse quando vengono eliminate via scorrimento e quando i messaggi vengono contrassegnati come letti</string>
-    <string name="title_advanced_notify_manage_hint">Tocca il nome del canale \'Notifiche\' per impostare il suono di notifica predefinito, ecc</string>
+    <string name="title_advanced_notify_manage_hint">Tocca il nome del canale per impostare le proprietà del canale</string>
+    <string name="title_advanced_notify_manage_default_hint">Per impostare il suono predefinito, ecc</string>
+    <string name="title_advanced_notify_manage_service_hint">Per disattivare la notifica permanente</string>
     <string name="title_advanced_wearable_hint">Le notifiche sono inviate solo a un indossabile dopo che il testo del messaggio è stato scaricato</string>
     <string name="title_advanced_move_hint">La cartella di destinazione può essere configurata nelle impostazioni dell\'account</string>
     <string name="title_advanced_notify_no_grouping">Questa versione Android non supporta il raggruppamento di notifiche</string>
@@ -777,7 +782,7 @@
     <string name="title_hint_eml">Questo è un riepilogo del contenuto di un file di messaggio grezzo. Salva il messaggio grezzo con l\'icona di salvataggio nella barra azioni per vedere tutto il contenuto.</string>
     <string name="title_open_link">Apri collegamento</string>
     <string name="title_different_link">Il titolo del link e l\'indirizzo sono diversi</string>
-    <string name="title_secure_link">Il traffico non verrà criptato</string>
+    <string name="title_link_http">Il traffico non verrà criptato</string>
     <string name="title_link_https">Il traffico verrà crittografato</string>
     <string name="title_sanitize_link">Rimuovi i parametri di tracciamento</string>
     <string name="title_insecure_link">Questo link non è sicuro</string>
@@ -895,6 +900,7 @@
         <item>Piccolo</item>
         <item>Medio</item>
         <item>Grande</item>
+        <item>Molto grande</item>
     </string-array>
     <string-array name="targetNames">
         <item>A</item>
