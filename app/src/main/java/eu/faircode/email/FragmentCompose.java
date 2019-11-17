@@ -191,6 +191,7 @@ public class FragmentCompose extends FragmentBase {
     private boolean encrypt = false;
     private boolean media = true;
     private boolean compact = false;
+    private int zoom = 0;
 
     private long working = -1;
     private State state = State.NONE;
@@ -235,6 +236,7 @@ public class FragmentCompose extends FragmentBase {
         monospaced = prefs.getBoolean("monospaced", false);
         media = prefs.getBoolean("compose_media", true);
         compact = prefs.getBoolean("compose_compact", false);
+        zoom = prefs.getInt("compose_zoom", compact ? 0 : 1);
 
         setTitle(R.string.page_compose);
         setSubtitle(getResources().getQuantityString(R.plurals.page_message, 1));
@@ -781,8 +783,7 @@ public class FragmentCompose extends FragmentBase {
                             String text = HtmlHelper.getText(ref);
                             html = "<p>" + text.replaceAll("\\r?\\n", "<br>") + "</p>";
                         } else
-                            html = HtmlHelper.sanitize(context, ref, true);
-                        refFile.delete();
+                            html = HtmlHelper.sanitize(context, ref, true, false);
 
                         return body + html;
                     }
@@ -1071,22 +1072,13 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuZoom() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean compact = prefs.getBoolean("compact", false);
-        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
         zoom = ++zoom % 3;
-        prefs.edit().putInt("zoom", zoom).apply();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putInt("compose_zoom", zoom).apply();
         setZoom();
     }
 
     private void setZoom() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        boolean compact = prefs.getBoolean("compact", false);
-        int zoom = prefs.getInt("zoom", compact ? 0 : 1);
-        setZoom(zoom);
-    }
-
-    private void setZoom(int zoom) {
         float textSize = Helper.getTextSize(getContext(), zoom);
         if (textSize != 0) {
             etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
@@ -1484,7 +1476,7 @@ public class FragmentCompose extends FragmentBase {
                 return HtmlHelper.fromHtml(HtmlHelper.toHtml(s), new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        return ImageHelper.decodeImage(context, id, source, true, etBody);
+                        return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
                     }
                 }, null);
             }
@@ -1959,11 +1951,7 @@ public class FragmentCompose extends FragmentBase {
         args.putString("cc", etCc.getText().toString().trim());
         args.putString("bcc", etBcc.getText().toString().trim());
         args.putString("subject", etSubject.getText().toString().trim());
-        if (extras.containsKey("html")) {
-            args.putString("body", extras.getString("html"));
-            extras.remove("html");
-        } else
-            args.putString("body", HtmlHelper.toHtml(etBody.getText()));
+        args.putString("body", HtmlHelper.toHtml(etBody.getText()));
         args.putBoolean("empty", isEmpty());
         args.putBundle("extras", extras);
 
@@ -2120,14 +2108,14 @@ public class FragmentCompose extends FragmentBase {
 
             Matrix rotation = ("image/jpeg".equals(attachment.type) ? ImageHelper.getImageRotation(file) : null);
             Log.i("Image type=" + attachment.type + " rotation=" + rotation);
-
             if (factor > 1 || rotation != null) {
                 options.inJustDecodeBounds = false;
                 options.inSampleSize = factor;
 
+                Log.i("Image target size=" + resize + " factor=" + factor + " source=" + options.outWidth + "x" + options.outHeight);
                 Bitmap resized = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
                 if (resized != null) {
-                    Log.i("Image target size=" + resized.getWidth() + "x" + resized.getHeight() + " rotation=" + rotation);
+                    Log.i("Image result size=" + resized.getWidth() + "x" + resized.getHeight() + " rotation=" + rotation);
 
                     if (rotation != null) {
                         Bitmap rotated = Bitmap.createBitmap(resized, 0, 0, resized.getWidth(), resized.getHeight(), rotation, true);
@@ -2235,7 +2223,7 @@ public class FragmentCompose extends FragmentBase {
                         data.draft.subject = args.getString("subject", "");
                         body = args.getString("body", "");
                         if (!TextUtils.isEmpty(body))
-                            body = HtmlHelper.sanitize(context, body, false);
+                            body = HtmlHelper.sanitize(context, body, false, false);
 
                         if (answer > 0) {
                             EntityAnswer a = db.answer().getAnswer(answer);
@@ -2309,7 +2297,7 @@ public class FragmentCompose extends FragmentBase {
                             data.draft.subject = ref.subject;
                             if (ref.content) {
                                 String html = Helper.readText(ref.getFile(context));
-                                body = HtmlHelper.sanitize(context, html, true);
+                                body = HtmlHelper.sanitize(context, html, true, false);
                             }
                         } else if ("list".equals(action)) {
                             data.draft.subject = ref.subject;
@@ -2444,6 +2432,9 @@ public class FragmentCompose extends FragmentBase {
                     data.draft.received = new Date().getTime();
                     data.draft.seen = true;
                     data.draft.ui_seen = true;
+
+                    data.draft.revision = 1;
+                    data.draft.revisions = 1;
 
                     data.draft.id = db.message().insertMessage(data.draft);
                     Helper.writeText(data.draft.getFile(context), body);
@@ -2590,13 +2581,21 @@ public class FragmentCompose extends FragmentBase {
                             }
                     }
 
+                    // Create initial revision
+                    EntityRevision revision = new EntityRevision();
+                    revision.message = data.draft.id;
+                    revision.sequence = data.draft.revision;
+                    revision.reference = data.draft.getRefFile(context).exists();
+                    db.revision().insertRevision(revision);
+                    Helper.writeText(data.draft.getFile(context, data.draft.revision), body);
+
                     if (data.draft.encrypt == null || !data.draft.encrypt)
                         EntityOperation.queue(context, data.draft, EntityOperation.ADD);
                 } else {
                     if (data.draft.content) {
                         File file = data.draft.getFile(context);
                         String html = Helper.readText(file);
-                        html = HtmlHelper.sanitize(context, html, true);
+                        html = HtmlHelper.sanitize(context, html, true, false);
                         Helper.writeText(file, html);
                     } else {
                         if (data.draft.uid == null)
@@ -2791,6 +2790,7 @@ public class FragmentCompose extends FragmentBase {
             String subject = args.getString("subject");
             String body = args.getString("body");
             boolean empty = args.getBoolean("empty");
+            Bundle extras = args.getBundle("extras");
 
             EntityMessage draft;
 
@@ -2956,38 +2956,9 @@ public class FragmentCompose extends FragmentBase {
                         db.message().updateMessage(draft);
                     }
 
-                    // Save changed draft
-                    File file = draft.getFile(context);
-                    if (!file.exists())
-                        Helper.writeText(file, body);
-                    String previous = Helper.readText(file);
-                    if (!body.equals(previous)) {
-                        dirty = true;
-
-                        if (draft.revisions == null)
-                            draft.revisions = 1;
-                        else
-                            draft.revisions++;
-
-                        if (action != R.id.action_undo && action != R.id.action_redo)
-                            draft.revision = draft.revisions;
-
-                        Helper.writeText(draft.getFile(context), body);
-                        Helper.writeText(draft.getFile(context, draft.revisions), body);
-
-                        db.message().setMessageRevision(draft.id, draft.revision);
-                        db.message().setMessageRevisions(draft.id, draft.revisions);
-
-                        db.message().setMessageContent(draft.id,
-                                true,
-                                draft.plain_only,
-                                HtmlHelper.getPreview(body),
-                                null);
-                    }
-
                     if (action == R.id.action_undo || action == R.id.action_redo) {
                         if (draft.revision != null && draft.revisions != null) {
-                            dirty = true;
+                            Helper.writeText(draft.getFile(context, draft.revision), body);
 
                             if (action == R.id.action_undo) {
                                 if (draft.revision > 1)
@@ -2997,42 +2968,64 @@ public class FragmentCompose extends FragmentBase {
                                     draft.revision++;
                             }
 
+                            // Restore revision
+                            Log.i("Restoring revision=" + draft.revision);
                             body = Helper.readText(draft.getFile(context, draft.revision));
-                            Helper.writeText(draft.getFile(context), body);
+                        }
+                    } else {
+                        String previous = Helper.readText(draft.getFile(context));
+                        if ((body != null && !body.equals(previous)) ||
+                                (extras != null && extras.containsKey("html"))) {
+                            dirty = true;
 
-                            db.message().setMessageRevision(draft.id, draft.revision);
+                            // Get revision info
+                            boolean reference;
+                            if (extras != null && extras.containsKey("html")) {
+                                reference = false;
+                                body = extras.getString("html");
+                            } else {
+                                File refFile = EntityMessage.getRefFile(context, draft.id);
+                                if (draft.revision == null)
+                                    reference = refFile.exists();
+                                else {
+                                    EntityRevision revision = db.revision().getRevision(draft.id, draft.revision);
+                                    reference = (revision == null ? refFile.exists() : revision.reference);
+                                }
+                            }
 
-                            db.message().setMessageContent(draft.id,
-                                    true,
-                                    draft.plain_only, // unchanged
-                                    HtmlHelper.getPreview(body),
-                                    null);
+                            // Create new revision
+                            if (draft.revisions == null)
+                                draft.revisions = 1;
+                            else
+                                draft.revisions++;
+                            draft.revision = draft.revisions;
+
+                            Log.i("Creating revision sequence=" + draft.revision + " reference=" + reference);
+                            EntityRevision revision = new EntityRevision();
+                            revision.message = draft.id;
+                            revision.sequence = draft.revision;
+                            revision.reference = reference;
+                            db.revision().insertRevision(revision);
+
+                            Helper.writeText(draft.getFile(context, draft.revision), body);
                         }
                     }
+
+                    Helper.writeText(draft.getFile(context), body);
+
+                    db.message().setMessageContent(draft.id,
+                            true,
+                            draft.plain_only, // unchanged
+                            HtmlHelper.getPreview(body),
+                            null);
+
+                    db.message().setMessageRevision(draft.id, draft.revision);
+                    db.message().setMessageRevisions(draft.id, draft.revisions);
 
                     if (dirty) {
                         draft.received = new Date().getTime();
                         db.message().setMessageReceived(draft.id, draft.received);
                     }
-
-                    // Remove unused inline images
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(body);
-                    File rfile = draft.getRefFile(context);
-                    if (rfile.exists())
-                        sb.append(Helper.readText(rfile));
-                    List<String> cids = new ArrayList<>();
-                    for (Element element : JsoupEx.parse(sb.toString()).select("img")) {
-                        String src = element.attr("src");
-                        if (src.startsWith("cid:"))
-                            cids.add("<" + src.substring(4) + ">");
-                    }
-
-                    for (EntityAttachment attachment : new ArrayList<>(attachments))
-                        if (attachment.isInline() && !cids.contains(attachment.cid)) {
-                            Log.i("Removing unused inline attachment cid=" + attachment.cid);
-                            db.attachment().deleteAttachment(attachment.id);
-                        }
 
                     // Execute action
                     if (action == R.id.action_save ||
@@ -3100,6 +3093,25 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                     } else if (action == R.id.action_send) {
+                        // Remove unused inline images
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(body);
+                        File rfile = draft.getRefFile(context);
+                        if (rfile.exists())
+                            sb.append(Helper.readText(rfile));
+                        List<String> cids = new ArrayList<>();
+                        for (Element element : JsoupEx.parse(sb.toString()).select("img")) {
+                            String src = element.attr("src");
+                            if (src.startsWith("cid:"))
+                                cids.add("<" + src.substring(4) + ">");
+                        }
+
+                        for (EntityAttachment attachment : new ArrayList<>(attachments))
+                            if (attachment.isInline() && !cids.contains(attachment.cid)) {
+                                Log.i("Removing unused inline attachment cid=" + attachment.cid);
+                                db.attachment().deleteAttachment(attachment.id);
+                            }
+
                         // Delete draft (cannot move to outbox)
                         EntityOperation.queue(context, draft, EntityOperation.DELETE);
 
@@ -3296,7 +3308,7 @@ public class FragmentCompose extends FragmentBase {
                 Spanned spannedBody = HtmlHelper.fromHtml(body, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        return ImageHelper.decodeImage(context, id, source, true, etBody);
+                        return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
                     }
                 }, null);
 
@@ -3315,13 +3327,16 @@ public class FragmentCompose extends FragmentBase {
 
                 Spanned spannedRef = null;
                 File refFile = draft.getRefFile(context);
-                if (refFile.exists()) {
-                    String quote = HtmlHelper.sanitize(context, Helper.readText(refFile), show_images);
+                EntityRevision revision = db.revision().getRevision(draft.id, draft.revision == null ? 0 : draft.revision);
+                Log.i("Viewing revision=" + (revision == null ? null : revision.sequence) +
+                        " reference=" + (revision == null ? null : revision.reference));
+                if (revision == null ? refFile.exists() : revision.reference) {
+                    String quote = HtmlHelper.sanitize(context, Helper.readText(refFile), show_images, false);
                     Spanned spannedQuote = HtmlHelper.fromHtml(quote,
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
-                                    return ImageHelper.decodeImage(context, id, source, show_images, tvReference);
+                                    return ImageHelper.decodeImage(context, id, source, show_images, zoom, tvReference);
                                 }
                             },
                             null);

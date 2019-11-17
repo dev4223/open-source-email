@@ -73,6 +73,7 @@ public class FragmentQuickSetup extends FragmentBase {
     private ContentLoadingProgressBar pbSave;
 
     private Group grpSetup;
+    private Group grpError;
 
     @Override
     @Nullable
@@ -101,6 +102,7 @@ public class FragmentQuickSetup extends FragmentBase {
         pbSave = view.findViewById(R.id.pbSave);
 
         grpSetup = view.findViewById(R.id.grpSetup);
+        grpError = view.findViewById(R.id.grpError);
 
         // Wire controls
 
@@ -149,12 +151,12 @@ public class FragmentQuickSetup extends FragmentBase {
         // Initialize
         pbCheck.setVisibility(View.GONE);
         pbSave.setVisibility(View.GONE);
-        tvError.setVisibility(View.GONE);
         btnHelp.setVisibility(View.GONE);
         btnSupport.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
         tvInstructions.setMovementMethod(LinkMovementMethod.getInstance());
         grpSetup.setVisibility(View.GONE);
+        grpError.setVisibility(View.GONE);
 
         return view;
     }
@@ -200,7 +202,7 @@ public class FragmentQuickSetup extends FragmentBase {
                 Helper.setViewsEnabled(view, false);
                 pbCheck.setVisibility(check ? View.VISIBLE : View.GONE);
                 pbSave.setVisibility(check ? View.GONE : View.VISIBLE);
-                tvError.setVisibility(View.GONE);
+                grpError.setVisibility(View.GONE);
                 btnHelp.setVisibility(View.GONE);
                 btnSupport.setVisibility(View.GONE);
                 tvInstructions.setVisibility(View.GONE);
@@ -230,15 +232,17 @@ public class FragmentQuickSetup extends FragmentBase {
                 if (TextUtils.isEmpty(password))
                     throw new IllegalArgumentException(context.getString(R.string.title_no_password));
 
-                String[] dparts = email.split("@");
-                EmailProvider provider = EmailProvider.fromDomain(context, dparts[1], EmailProvider.Discover.ALL);
+                EmailProvider provider = EmailProvider.fromEmail(context, email, EmailProvider.Discover.ALL);
 
                 if (provider.link != null)
                     args.putString("link", provider.link);
                 if (provider.documentation != null)
                     args.putString("documentation", provider.documentation.toString());
 
-                String user = (provider.user == EmailProvider.UserType.EMAIL ? email : dparts[0]);
+                int at = email.indexOf('@');
+                String username = email.substring(0, at);
+
+                String user = (provider.user == EmailProvider.UserType.EMAIL ? email : username);
                 Log.i("User type=" + provider.user + " name=" + user);
 
                 boolean empty;
@@ -249,9 +253,9 @@ public class FragmentQuickSetup extends FragmentBase {
                     try {
                         iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_PASSWORD, user, password);
                     } catch (AuthenticationFailedException ex) {
-                        if (user.contains("@")) {
+                        if (!user.equals(username)) {
                             Log.w(ex);
-                            user = dparts[0];
+                            user = username;
                             Log.i("Retry with user=" + user);
                             iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_PASSWORD, user, password);
                         } else
@@ -374,7 +378,7 @@ public class FragmentQuickSetup extends FragmentBase {
 
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException) {
                     tvError.setText(ex.getMessage());
-                    tvError.setVisibility(View.VISIBLE);
+                    grpError.setVisibility(View.VISIBLE);
 
                     new Handler().post(new Runnable() {
                         @Override
@@ -384,7 +388,7 @@ public class FragmentQuickSetup extends FragmentBase {
                     });
                 } else {
                     tvError.setText(Helper.formatThrowable(ex, false));
-                    tvError.setVisibility(View.VISIBLE);
+                    grpError.setVisibility(View.VISIBLE);
 
                     if (args.containsKey("link")) {
                         Uri uri = Uri.parse(args.getString("link"));

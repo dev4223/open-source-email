@@ -50,7 +50,8 @@ public interface DaoMessage {
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
-            ", SUM(CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END) AS drafts" +
+            ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
+            ", SUM(message.encrypt = 1) AS encrypted" +
             ", COUNT(DISTINCT CASE WHEN message.msgid IS NULL THEN message.id ELSE message.msgid END) AS visible" +
             ", SUM(message.total) AS totalSize" +
             ", MAX(CASE WHEN" +
@@ -99,7 +100,8 @@ public interface DaoMessage {
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
-            ", SUM(CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END) AS drafts" +
+            ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
+            ", SUM(message.encrypt = 1) AS encrypted" +
             ", COUNT(DISTINCT CASE WHEN message.msgid IS NULL THEN message.id ELSE message.msgid END) AS visible" +
             ", SUM(message.total) AS totalSize" +
             ", MAX(CASE WHEN folder.id = :folder THEN message.received ELSE 0 END) AS dummy" +
@@ -142,7 +144,8 @@ public interface DaoMessage {
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
-            ", CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END AS drafts" +
+            ", (folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
+            ", (message.encrypt = 1) AS encrypted" +
             ", 1 AS visible" +
             ", message.total AS totalSize" +
             " FROM message" +
@@ -231,9 +234,13 @@ public interface DaoMessage {
             " AND (:seen IS NULL OR ui_seen = :seen)" +
             " AND (:flagged IS NULL OR ui_flagged = :flagged)" +
             " AND (:hidden IS NULL OR (CASE WHEN ui_snoozed IS NULL THEN 0 ELSE 1 END) = :hidden)" +
+            " AND (:encrypted IS NULL OR encrypt = 1)" +
             " ORDER BY received DESC" +
             " LIMIT :limit OFFSET :offset")
-    List<TupleMatch> matchMessages(Long folder, String find, Boolean seen, Boolean flagged, Boolean hidden, int limit, int offset);
+    List<TupleMatch> matchMessages(
+            Long folder, String find,
+            Boolean seen, Boolean flagged, Boolean hidden, Boolean encrypted,
+            int limit, int offset);
 
     @Query("SELECT id" +
             " FROM message" +
@@ -276,7 +283,8 @@ public interface DaoMessage {
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
             ", CASE WHEN message.ui_flagged THEN 0 ELSE 1 END AS unflagged" +
-            ", CASE WHEN folder.type = '" + EntityFolder.DRAFTS + "' THEN 1 ELSE 0 END AS drafts" +
+            ", (folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
+            ", (message.encrypt = 1) AS encrypted" +
             ", 1 AS visible" +
             ", message.total AS totalSize" +
             " FROM message" +
@@ -310,6 +318,7 @@ public interface DaoMessage {
             ", 1 AS unseen" +
             ", 0 AS unflagged" +
             ", 0 AS drafts" +
+            ", (message.encrypt = 1) AS encrypted" +
             ", 1 AS visible" +
             ", message.total AS totalSize" +
             " FROM message" +
@@ -323,7 +332,8 @@ public interface DaoMessage {
             " ORDER BY message.received")
     LiveData<List<TupleMessageEx>> liveUnseenNotify();
 
-    String widget_unified = "SELECT message.*, account.name AS accountName" +
+    String widget_unified = "SELECT message.*" +
+            ", account.name AS accountName, folder.unified AS folderUnified" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", COUNT(message.id) - SUM(message.ui_flagged) AS unflagged" +
             ", MAX(message.received) AS dummy" +
@@ -331,7 +341,6 @@ public interface DaoMessage {
             " JOIN account ON account.id = message.account" +
             " JOIN folder ON folder.id = message.folder" +
             " WHERE account.`synchronize`" +
-            " AND folder.unified" +
             " AND NOT message.ui_hide" +
             " AND message.ui_snoozed IS NULL" +
             " AND (NOT :unseen OR NOT message.ui_seen)" +

@@ -266,6 +266,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibAuth;
         private ImageView ivPriorityHigh;
         private ImageView ivPriorityLow;
+        private ImageView ivEncrypted;
         private TextView tvFrom;
         private TextView tvSize;
         private TextView tvTime;
@@ -387,6 +388,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAuth = itemView.findViewById(R.id.ibAuth);
             ivPriorityHigh = itemView.findViewById(R.id.ivPriorityHigh);
             ivPriorityLow = itemView.findViewById(R.id.ivPriorityLow);
+            ivEncrypted = itemView.findViewById(R.id.ivEncrypted);
             tvFrom = itemView.findViewById(subject_top ? R.id.tvSubject : R.id.tvFrom);
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
@@ -656,6 +658,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAuth.setVisibility(View.GONE);
             ivPriorityHigh.setVisibility(View.GONE);
             ivPriorityLow.setVisibility(View.GONE);
+            ivEncrypted.setVisibility(View.GONE);
             tvFrom.setText(null);
             tvSize.setText(null);
             tvTime.setText(null);
@@ -686,7 +689,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
             boolean outgoing = isOutgoing(message);
-            Address[] addresses = (outgoing && viewType != ViewType.THREAD ? message.to : message.senders);
+            Address[] addresses = (outgoing && (viewType != ViewType.THREAD || !threading) ? message.to : message.senders);
             boolean authenticated =
                     !(Boolean.FALSE.equals(message.dkim) ||
                             Boolean.FALSE.equals(message.spf) ||
@@ -735,6 +738,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityHigh.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityLow.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivEncrypted.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvFrom.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -809,6 +813,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
             ivPriorityHigh.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
             ivPriorityLow.setVisibility(EntityMessage.PRIORITIY_LOW.equals(message.priority) ? View.VISIBLE : View.GONE);
+            ivEncrypted.setVisibility(message.encrypted > 0 ? View.VISIBLE : View.GONE);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             tvSize.setText(message.totalSize == null ? null : Helper.humanReadableByteCount(message.totalSize, true));
@@ -1473,10 +1478,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected Object onExecute(final Context context, final Bundle args) throws IOException {
                     TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    boolean show_full = args.getBoolean("show_full");
-                    boolean show_images = args.getBoolean("show_images");
-                    boolean show_quotes = args.getBoolean("show_quotes");
-                    int zoom = args.getInt("zoom");
+                    final boolean show_full = args.getBoolean("show_full");
+                    final boolean show_images = args.getBoolean("show_images");
+                    final boolean show_quotes = args.getBoolean("show_quotes");
+                    final int zoom = args.getInt("zoom");
 
                     if (message == null || !message.content)
                         return null;
@@ -1529,15 +1534,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         return document.html();
                     } else {
+                        // Cleanup message
+                        String html = HtmlHelper.sanitize(context, body, show_images, true);
+
                         // Collapse quotes
                         if (!show_quotes) {
-                            for (Element quote : document.select("blockquote"))
+                            Document doc = JsoupEx.parse(html);
+                            for (Element quote : doc.select("blockquote"))
                                 quote.html("&#8230;");
-                            body = document.html();
+                            html = doc.html();
                         }
 
-                        // Cleanup message
-                        String html = HtmlHelper.sanitize(context, body, show_images);
+                        // Add debug info
                         if (debug) {
                             Document format = JsoupEx.parse(html);
                             format.outputSettings().prettyPrint(true).outline(true).indentAmount(1);
@@ -1547,10 +1555,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             html += "<pre>" + TextUtils.join("<br>", lines) + "</pre>";
                         }
 
+                        // Draw images
                         Spanned spanned = HtmlHelper.fromHtml(html, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
-                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, tvBody);
+                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, zoom, tvBody);
 
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                                     if (drawable instanceof AnimatedImageDrawable)
@@ -1562,35 +1571,31 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }, null);
 
                         // Replace quote spans
+                        final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
                         SpannableStringBuilder builder = new SpannableStringBuilder(spanned);
                         QuoteSpan[] quoteSpans = builder.getSpans(0, builder.length(), QuoteSpan.class);
                         for (QuoteSpan quoteSpan : quoteSpans) {
-                            builder.setSpan(
-                                    new StyledQuoteSpan(context, colorPrimary),
-                                    builder.getSpanStart(quoteSpan),
-                                    builder.getSpanEnd(quoteSpan),
-                                    builder.getSpanFlags(quoteSpan));
+                            int s = builder.getSpanStart(quoteSpan);
+                            int e = builder.getSpanEnd(quoteSpan);
+                            Log.i("Quote start=" + s + " end=" + e);
+
                             builder.removeSpan(quoteSpan);
-                        }
 
-                        // Make collapsed quotes clickable
-                        if (!show_quotes) {
-                            final int px = Helper.dp2pixels(context, 24 + (zoom) * 8);
+                            StyledQuoteSpan squote = new StyledQuoteSpan(context, colorPrimary);
+                            builder.setSpan(squote, s, e, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
-                            StyledQuoteSpan[] squotes = builder.getSpans(0, builder.length(), StyledQuoteSpan.class);
-                            for (StyledQuoteSpan squote : squotes)
-                                builder.setSpan(new DynamicDrawableSpan() {
-                                                    @Override
-                                                    public Drawable getDrawable() {
-                                                        Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
-                                                        d.setTint(colorAccent);
-                                                        d.setBounds(0, 0, px, px);
-                                                        return d;
-                                                    }
-                                                },
-                                        builder.getSpanStart(squote),
-                                        builder.getSpanEnd(squote),
-                                        builder.getSpanFlags(squote));
+                            if (!show_quotes)
+                                builder.setSpan(
+                                        new DynamicDrawableSpan() {
+                                            @Override
+                                            public Drawable getDrawable() {
+                                                Drawable d = context.getDrawable(R.drawable.baseline_format_quote_24);
+                                                d.setTint(colorAccent);
+                                                d.setBounds(0, 0, px, px);
+                                                return d;
+                                            }
+                                        },
+                                        s, e, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
                         }
 
                         return builder;
@@ -2385,6 +2390,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     lbm.sendBroadcast(
                             new Intent(ActivityView.ACTION_SEARCH)
+                                    .putExtra("account", -1L)
                                     .putExtra("folder", -1L)
                                     .putExtra("query", query));
                 }
@@ -2497,7 +2503,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Uri lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
 
                         edit.setAction(Intent.ACTION_EDIT);
-                        edit.setDataAndType(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+                        edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
                     } else {
                         edit.setAction(Intent.ACTION_INSERT);
                         edit.setType(ContactsContract.Contacts.CONTENT_TYPE);
@@ -3236,6 +3242,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putLong("id", id);
             args.putString("source", source);
+            args.putInt("zoom", zoom);
 
             FragmentDialogImage fragment = new FragmentDialogImage();
             fragment.setArguments(args);
@@ -4128,6 +4135,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("drafts changed id=" + next.id);
                     }
+                    if (prev.encrypted != next.encrypted) {
+                        same = false;
+                        Log.i("encrypted changed id=" + next.id);
+                    }
                     if (prev.visible != next.visible) {
                         same = false;
                         Log.i("visible changed id=" + next.id);
@@ -4474,7 +4485,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected Drawable onExecute(Context context, Bundle args) throws Throwable {
                     long id = args.getLong("id");
                     String source = args.getString("source");
-                    return ImageHelper.decodeImage(context, id, source, true, null);
+                    int zoom = args.getInt("zoom");
+                    return ImageHelper.decodeImage(context, id, source, true, zoom, null);
                 }
 
                 @Override

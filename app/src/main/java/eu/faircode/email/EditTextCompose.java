@@ -25,7 +25,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.QuoteSpan;
 import android.util.AttributeSet;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -68,8 +70,21 @@ public class EditTextCompose extends AppCompatEditText {
                     ClipData.Item item = clipboard.getPrimaryClip().getItemAt(0);
 
                     String html = item.coerceToHtmlText(context);
-                    html = HtmlHelper.sanitize(context, html, false);
+                    html = HtmlHelper.sanitize(context, html, false, false);
                     Spanned paste = HtmlHelper.fromHtml(html);
+
+                    int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(paste);
+                    QuoteSpan[] spans = ssb.getSpans(0, ssb.length(), QuoteSpan.class);
+                    for (QuoteSpan span : spans) {
+                        ssb.setSpan(
+                                new StyledQuoteSpan(context, colorPrimary),
+                                ssb.getSpanStart(span),
+                                ssb.getSpanEnd(span),
+                                ssb.getSpanFlags(span));
+                        ssb.removeSpan(span);
+                    }
 
                     int start = getSelectionStart();
                     int end = getSelectionEnd();
@@ -86,9 +101,9 @@ public class EditTextCompose extends AppCompatEditText {
                     }
 
                     if (start == end)
-                        getText().insert(start, paste);
+                        getText().insert(start, ssb);
                     else
-                        getText().replace(start, end, paste);
+                        getText().replace(start, end, ssb);
 
                     return true;
                 }

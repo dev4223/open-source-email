@@ -43,6 +43,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Lifecycle;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -51,8 +52,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import java.util.Date;
 
 import static android.app.Activity.RESULT_OK;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 
 public class FragmentPop extends FragmentBase {
     private ViewGroup view;
@@ -77,6 +76,7 @@ public class FragmentPop extends FragmentBase {
     private Button btnSave;
     private ContentLoadingProgressBar pbSave;
     private TextView tvError;
+    private Group grpError;
 
     private ContentLoadingProgressBar pbWait;
 
@@ -125,6 +125,7 @@ public class FragmentPop extends FragmentBase {
         pbSave = view.findViewById(R.id.pbSave);
 
         tvError = view.findViewById(R.id.tvError);
+        grpError = view.findViewById(R.id.grpError);
 
         pbWait = view.findViewById(R.id.pbWait);
 
@@ -162,10 +163,8 @@ public class FragmentPop extends FragmentBase {
         // Initialize
         Helper.setViewsEnabled(view, false);
 
-        tilPassword.setEndIconMode(id < 0 ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
-
         pbSave.setVisibility(View.GONE);
-        tvError.setVisibility(View.GONE);
+        grpError.setVisibility(View.GONE);
 
         return view;
     }
@@ -195,7 +194,7 @@ public class FragmentPop extends FragmentBase {
                 saving = true;
                 getActivity().invalidateOptionsMenu();
                 Helper.setViewsEnabled(view, false);
-                tvError.setVisibility(View.GONE);
+                grpError.setVisibility(View.GONE);
             }
 
             @Override
@@ -398,7 +397,7 @@ public class FragmentPop extends FragmentBase {
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else {
                     tvError.setText(Helper.formatThrowable(ex, false));
-                    tvError.setVisibility(View.VISIBLE);
+                    grpError.setVisibility(View.VISIBLE);
 
                     new Handler().post(new Runnable() {
                         @Override

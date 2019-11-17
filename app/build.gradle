@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 818
-        versionName "1.818"
+        versionCode 820
+        versionName "1.820"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -294,6 +294,7 @@ dependencies {
     implementation "dnsjava:dnsjava:$dnsjava_version"
 
     // https://github.com/open-keychain/openpgp-api
+    // https://mvnrepository.com/artifact/org.sufficientlysecure/openpgp-api
     implementation "org.sufficientlysecure:openpgp-api:$openpgp_version"
 
     // https://www.sqlite.org/changes.html

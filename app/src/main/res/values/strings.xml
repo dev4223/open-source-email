@@ -138,6 +138,7 @@
     <string name="title_setup_wizard_remark">Go \'back\' to go to the inbox</string>
     <string name="title_setup_gmail" translatable="false">Gmail</string>
     <string name="title_setup_outlook" translatable="false">Outlook</string>
+    <string name="title_setup_activesync" translatable="false">Exchange ActiveSync</string>
     <string name="title_setup_other">Other provider</string>
     <string name="title_setup_gmail_support">Authorizing Google accounts will work in official versions only because Android checks the app signature</string>
     <string name="title_setup_gmail_rationale">Please grant permissions to select an account and read your name</string>
@@ -167,6 +168,7 @@
     <string name="title_setup_go">Go</string>
     <string name="title_setup_to_do">To do</string>
     <string name="title_setup_done">Done</string>
+    <string name="title_setup_error">Error</string>
 
     <string name="title_setup_export">Export settings</string>
     <string name="title_setup_import">Import settings</string>
@@ -328,7 +330,7 @@
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
     <string name="title_advanced_openpgp">OpenPGP provider</string>
     <string name="title_advanced_auto_decrypt">Automatically decrypt messages</string>
-    <string name="title_advanced_recents">Hide FairEmail from screen with recent apps</string>
+    <string name="title_advanced_secure">Hide from recent apps screen and prevent taking screenshots</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
     <string name="title_advanced_pin">PIN</string>
 
@@ -472,7 +474,6 @@
     <string name="title_sign_key">Sign key: %1$s</string>
     <string name="title_last_connected">Last connected: %1$s</string>
     <string name="title_pop_support">The POP3 protocol supports downloading and deleting messages from the inbox only. POP3 cannot mark messages as read, move messages, etc. POP3 will use more battery power and data than IMAP. So, consider using the IMAP protocol whenever possible.</string>
-    <string name="title_activesync_support">ActiveSync is not supported</string>
     <string name="title_oauth_support">OAuth is not supported</string>
     <string name="title_review">Review</string>
     <string name="title_hint_alias">Long press for options, like copy to create alias identities</string>
@@ -603,7 +604,8 @@
     <string name="title_no_folder">Folder does not exist</string>
     <string name="title_no_format">The originally received message will be included</string>
     <string name="title_no_image">Image could not be decoded</string>
-    <string name="title_unused_inline">Unused inline images will be removed on save/send</string>
+    <string name="title_no_search">Search on server is not available for this account</string>
+    <string name="title_unused_inline">Unused inline images will be removed on send</string>
     <string name="title_accross_remark">Messages moved across accounts will be downloaded again resulting in extra data usage</string>
     <string name="title_raw_saved">Raw message saved</string>
     <string name="title_attachment_saved">Attachment saved</string>
@@ -690,6 +692,7 @@
     <string name="title_resync">Resync</string>
     <string name="title_no_openpgp">OpenKeychain not found</string>
     <string name="title_not_encrypted">Message is not encrypted</string>
+    <string name="title_reset_sign_key">Reset sign key</string>
 
     <string name="title_signature_none">Message not signed</string>
     <string name="title_signature_valid">Message signature valid</string>
@@ -822,6 +825,7 @@
     <string name="title_legend_draft">Has draft</string>
     <string name="title_legend_priority">Has high priority</string>
     <string name="title_legend_priority_low">Has low priority</string>
+    <string name="title_legend_encrypted">Is encrypted</string>
     <string name="title_legend_auth">Authentication failed</string>
     <string name="title_legend_snoozed">Is snoozed</string>
     <string name="title_legend_browsed">Is browsed or searched</string>
@@ -963,9 +967,15 @@
     <string name="title_search_special_unseen">unread</string>
     <string name="title_search_special_flagged">starred</string>
     <string name="title_search_special_snoozed">hidden</string>
+    <string name="title_search_special_encrypted">encrypted</string>
+
+    <string name="title_widget_title_count">New message count</string>
+    <string name="title_widget_title_list">Message list</string>
 
     <string name="title_widget_account">Account</string>
     <string name="title_widget_account_all">All</string>
+    <string name="title_widget_folder">Folder</string>
+    <string name="title_widget_folder_unified">Unified inbox folders</string>
     <string name="title_widget_unseen">Unread messages only</string>
     <string name="title_widget_flagged">Starred messages only</string>
 
@@ -1064,6 +1074,8 @@
         <item>Extra large</item>
     </string-array>
 
+    <!-- https://en.wikipedia.org/wiki/Display_resolution -->
+    <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <integer-array name="resizeValues" translatable="false">
         <item>1080</item>
         <item>1440</item>

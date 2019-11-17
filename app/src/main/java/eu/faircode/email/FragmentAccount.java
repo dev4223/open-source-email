@@ -68,8 +68,6 @@ import java.util.Objects;
 import javax.mail.Folder;
 
 import static android.app.Activity.RESULT_OK;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
-import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
 
 public class FragmentAccount extends FragmentBase {
     private ViewGroup view;
@@ -81,7 +79,6 @@ public class FragmentAccount extends FragmentBase {
     private Button btnAutoConfig;
     private ContentLoadingProgressBar pbAutoConfig;
 
-    private TextView tvActiveSyncSupport;
     private EditText etHost;
     private RadioGroup rgEncryption;
     private CheckBox cbInsecure;
@@ -138,6 +135,7 @@ public class FragmentAccount extends FragmentBase {
     private Group grpAuthorize;
     private Group grpAdvanced;
     private Group grpFolders;
+    private Group grpError;
 
     private long id = -1;
     private long copy = -1;
@@ -183,7 +181,6 @@ public class FragmentAccount extends FragmentBase {
         btnAutoConfig = view.findViewById(R.id.btnAutoConfig);
         pbAutoConfig = view.findViewById(R.id.pbAutoConfig);
 
-        tvActiveSyncSupport = view.findViewById(R.id.tvActiveSyncSupport);
         etHost = view.findViewById(R.id.etHost);
         etPort = view.findViewById(R.id.etPort);
         rgEncryption = view.findViewById(R.id.rgEncryption);
@@ -238,6 +235,7 @@ public class FragmentAccount extends FragmentBase {
         grpAuthorize = view.findViewById(R.id.grpAuthorize);
         grpAdvanced = view.findViewById(R.id.grpAdvanced);
         grpFolders = view.findViewById(R.id.grpFolders);
+        grpError = view.findViewById(R.id.grpError);
 
         // Wire controls
 
@@ -280,14 +278,6 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
-
-        tvActiveSyncSupport.setPaintFlags(tvActiveSyncSupport.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        tvActiveSyncSupport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Helper.viewFAQ(getContext(), 133);
             }
         });
 
@@ -421,7 +411,6 @@ public class FragmentAccount extends FragmentBase {
 
         rgEncryption.setVisibility(View.GONE);
         cbInsecure.setVisibility(View.GONE);
-        tilPassword.setEndIconMode(id < 0 ? END_ICON_PASSWORD_TOGGLE : END_ICON_NONE);
 
         btnAdvanced.setVisibility(View.GONE);
 
@@ -435,7 +424,6 @@ public class FragmentAccount extends FragmentBase {
         pbSave.setVisibility(View.GONE);
         cbIdentity.setVisibility(View.GONE);
 
-        tvError.setVisibility(View.GONE);
         btnHelp.setVisibility(View.GONE);
         btnSupport.setVisibility(View.GONE);
         tvInstructions.setVisibility(View.GONE);
@@ -445,6 +433,7 @@ public class FragmentAccount extends FragmentBase {
         grpAuthorize.setVisibility(View.GONE);
         grpAdvanced.setVisibility(View.GONE);
         grpFolders.setVisibility(View.GONE);
+        grpError.setVisibility(View.GONE);
 
         return view;
     }
@@ -513,7 +502,7 @@ public class FragmentAccount extends FragmentBase {
                 tvIdle.setVisibility(View.GONE);
                 tvUtf8.setVisibility(View.GONE);
                 grpFolders.setVisibility(View.GONE);
-                tvError.setVisibility(View.GONE);
+                grpError.setVisibility(View.GONE);
                 btnHelp.setVisibility(View.GONE);
                 btnSupport.setVisibility(View.GONE);
                 tvInstructions.setVisibility(View.GONE);
@@ -738,7 +727,7 @@ public class FragmentAccount extends FragmentBase {
                 getActivity().invalidateOptionsMenu();
                 Helper.setViewsEnabled(view, false);
                 pbSave.setVisibility(View.VISIBLE);
-                tvError.setVisibility(View.GONE);
+                grpError.setVisibility(View.GONE);
                 btnHelp.setVisibility(View.GONE);
                 btnSupport.setVisibility(View.GONE);
                 tvInstructions.setVisibility(View.GONE);
@@ -1148,7 +1137,7 @@ public class FragmentAccount extends FragmentBase {
 
     private void showError(Throwable ex) {
         tvError.setText(Helper.formatThrowable(ex, false));
-        tvError.setVisibility(View.VISIBLE);
+        grpError.setVisibility(View.VISIBLE);
 
         final EmailProvider provider = (EmailProvider) spProvider.getSelectedItem();
         if (provider != null && provider.link != null) {
