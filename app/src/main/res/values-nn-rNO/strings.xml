@@ -225,6 +225,8 @@
     <string name="title_advanced_color_threshold">Terskelbokstavfarge</string>
     <string name="title_advanced_name_email">Vis navn og e-postadresser</string>
     <string name="title_advanced_authentication">Vis en advarsel når mottakeren ikke kunne godkjenne meldingen</string>
+    <string name="title_advanced_font_size_sender">Skriftstørrelse for avsender</string>
+    <string name="title_advanced_font_size_subject">Skriftstørrelse emne</string>
     <string name="title_advanced_subject_top">Vis emne over avsender</string>
     <string name="title_advanced_subject_italic">Vis emnet i kursivt</string>
     <string name="title_advanced_subject_elipsed">Forkorte emnet ved behov</string>
@@ -406,7 +408,6 @@
     <string name="title_sign_key">Skiltnøkkel: %1$s</string>
     <string name="title_last_connected">Sist tilkoblet: %1$s</string>
     <string name="title_pop_support">POP3-protokollen støtter bare nedlasting og sletting av meldinger fra innboksen. POP3 kan ikke merke meldinger som er lest, flytte meldinger, etc. POP3 vil bruke mer batteristrøm og data enn IMAP. Så vurder å bruke IMAP-protokollen når det er mulig.</string>
-    <string name="title_activesync_support">ActiveSync støttes ikke</string>
     <string name="title_oauth_support">OAuth støttes ikke</string>
     <string name="title_review">Anmeldelse</string>
     <string name="title_hint_alias">Trykk lenge for å velge alternativer, for eksempel kopiere for å opprette aliasidentiteter</string>
@@ -527,7 +528,8 @@
     <string name="title_no_folder">Mappe eksisterer ikke</string>
     <string name="title_no_format">Den opprinnelig mottatte meldingen vil bli inkludert</string>
     <string name="title_no_image">Bildet kunne ikke dekodes</string>
-    <string name="title_unused_inline">Ubrukte inline-bilder blir fjernet ved lagring/sending</string>
+    <string name="title_no_search">Søk på serveren er ikke tilgjengelig for denne kontoen</string>
+    <string name="title_unused_inline">Ubrukte inline bilder blir fjernet ved sending</string>
     <string name="title_accross_remark">Meldinger som er flyttet over kontoer, lastes ned igjen, noe som resulterer i ekstra databruk</string>
     <string name="title_raw_saved">Rå melding lagret</string>
     <string name="title_attachment_saved">Vedlegg lagret</string>
@@ -727,6 +729,7 @@
     <string name="title_legend_draft">Kladd finnes</string>
     <string name="title_legend_priority">Har høy prioritet</string>
     <string name="title_legend_priority_low">Har lav prioritet</string>
+    <string name="title_legend_encrypted">Er kryptert</string>
     <string name="title_legend_auth">Godkjenning mislyktes</string>
     <string name="title_legend_snoozed">Er utsatt</string>
     <string name="title_legend_browsed">Er bladd eller søkt etter</string>
@@ -856,6 +859,7 @@
     <string name="title_search_special_unseen">ulest</string>
     <string name="title_search_special_flagged">stjernemerkede</string>
     <string name="title_search_special_snoozed">skjult</string>
+    <string name="title_search_special_encrypted">kryptert</string>
     <string name="title_widget_title_count">Ny melding teller</string>
     <string name="title_widget_title_list">Meldingsliste</string>
     <string name="title_widget_account">Konto</string>
@@ -909,6 +913,8 @@
         <item>Stor</item>
         <item>Ekstra stor</item>
     </string-array>
+    <!-- https://en.wikipedia.org/wiki/Display_resolution -->
+    <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <string-array name="targetNames">
         <item>Til</item>
         <item>Kopi</item>
@@ -936,5 +942,11 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
+    </string-array>
+    <string-array name="fontSizeNames">
+        <item>Standard</item>
+        <item>Liten</item>
+        <item>Medium</item>
+        <item>Stor</item>
     </string-array>
 </resources>

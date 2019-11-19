@@ -151,6 +151,7 @@ import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
 import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_NO_SIGNATURE;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_VALID_KEY_CONFIRMED;
+import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_VALID_KEY_UNCONFIRMED;
 
 public class FragmentMessages extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ViewGroup view;
@@ -705,7 +706,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                        moveAsk(result, false);
+                        moveAsk(result, false, !autoclose && onclose == null);
                     }
 
                     @Override
@@ -1350,7 +1351,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                    moveAsk(result, false);
+                    moveAsk(result, false, !autoclose && onclose == null);
                 }
 
                 @Override
@@ -1812,10 +1813,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     List<EntityMessage> messages = db.message().getMessagesByThread(
                             message.account, message.thread, threading ? null : id, null);
                     for (EntityMessage threaded : messages) {
-                        if (threaded.ui_seen)
-                            result.seen = true;
-                        else
-                            result.unseen = true;
+                        if (threaded.folder.equals(message.folder))
+                            if (threaded.ui_seen)
+                                result.seen = true;
+                            else
+                                result.unseen = true;
 
                         if (threaded.ui_flagged)
                             result.flagged = true;
@@ -1987,8 +1989,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
         args.putBoolean("seen", seen);
 
-        if (selectionTracker != null)
-            selectionTracker.clearSelection();
+        //if (selectionTracker != null)
+        //    selectionTracker.clearSelection();
 
         new SimpleTask<Void>() {
             @Override
@@ -2121,7 +2123,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (color != null)
             args.putInt("color", color);
 
-        selectionTracker.clearSelection();
+        //selectionTracker.clearSelection();
 
         new SimpleTask<Void>() {
             @Override
@@ -2289,7 +2291,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (EntityFolder.JUNK.equals(type))
                     moveAskConfirmed(result);
                 else
-                    moveAsk(result, true);
+                    moveAsk(result, true, true);
             }
 
             @Override
@@ -2353,7 +2355,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result, true);
+                moveAsk(result, true, true);
             }
 
             @Override
@@ -3176,6 +3178,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     };
 
     private Observer<PagedList<TupleMessageEx>> observer = new Observer<PagedList<TupleMessageEx>>() {
+        private List<Long> ids = new ArrayList<>();
+
         @Override
         public void onChanged(@Nullable PagedList<TupleMessageEx> messages) {
             if (messages == null)
@@ -3184,6 +3188,25 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (viewType == AdapterMessage.ViewType.THREAD)
                 if (handleThreadActions(messages))
                     return;
+
+            if (viewType != AdapterMessage.ViewType.SEARCH) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                boolean autoscroll = prefs.getBoolean("autoscroll", true);
+
+                boolean gotoTop = false;
+                for (int i = 0; i < messages.size() && i < ViewModelMessages.LOCAL_PAGE_SIZE; i++) {
+                    TupleMessageEx message = messages.get(i);
+                    if (message != null && !ids.contains(message.id)) {
+                        ids.add(message.id);
+                        if (!message.ui_seen && !message.duplicate)
+                            gotoTop = true;
+                    }
+                }
+
+                if (gotoTop &&
+                        (autoscroll || viewType == AdapterMessage.ViewType.THREAD))
+                    adapter.gotoTop();
+            }
 
             Log.i("Submit messages=" + messages.size());
             adapter.submitList(messages);
@@ -3544,13 +3567,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "messages:navigate");
     }
 
-    private void moveAsk(final ArrayList<MessageTarget> result, boolean undo) {
+    private void moveAsk(final ArrayList<MessageTarget> result, boolean undo, boolean canUndo) {
         if (result.size() == 0)
             return;
 
+        if (undo) {
+            moveUndo(result);
+            return;
+        }
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         if (prefs.getBoolean("automove", false)) {
-            if (undo)
+            if (canUndo)
                 moveUndo(result);
             else
                 moveAskConfirmed(result);
@@ -4059,7 +4087,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 for (EntityAttachment attachment : attachments)
                     if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
                         if (!attachment.available)
-                            throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
+                            if (auto)
+                                return null;
+                            else
+                                throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
 
                         File file = attachment.getFile(context);
                         in = new FileInputStream(file);
@@ -4090,14 +4121,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 }
 
-                if (in == null) {
+                if (in == null)
                     if (auto)
                         return null;
-                    throw new IllegalArgumentException(context.getString(R.string.title_not_encrypted));
-                }
+                    else
+                        throw new IllegalArgumentException(context.getString(R.string.title_not_encrypted));
 
                 Intent result;
-                File plain = File.createTempFile("plain", "." + id, context.getCacheDir());
+                File plain = File.createTempFile("plain", "." + message.id, context.getCacheDir());
                 try {
                     // Decrypt message
                     Log.i("Executing " + data.getAction());
@@ -4116,7 +4147,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                     // Write decrypted body
                                     Helper.copy(plain, message.getFile(context));
-                                    db.message().setMessageStored(id, new Date().getTime());
+                                    db.message().setMessageStored(message.id, new Date().getTime());
 
                                     db.setTransactionSuccessful();
                                 } finally {
@@ -4142,15 +4173,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     Helper.writeText(message.getFile(context), html);
 
                                     // Remove existing attachments
-                                    for (EntityAttachment attachment : attachments)
-                                        if (attachment.encryption == null)
-                                            db.attachment().deleteAttachment(attachment.id);
+                                    db.attachment().deleteAttachments(message.id);
 
                                     // Add decrypted attachments
                                     List<EntityAttachment> remotes = parts.getAttachments();
                                     for (int index = 0; index < remotes.size(); index++) {
                                         EntityAttachment remote = remotes.get(index);
-                                        remote.message = id;
+                                        remote.message = message.id;
                                         remote.sequence = index + 1;
                                         remote.id = db.attachment().insertAttachment(remote);
                                         try {
@@ -4160,7 +4189,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         }
                                     }
 
-                                    db.message().setMessageStored(id, new Date().getTime());
+                                    db.message().setMessageStored(message.id, new Date().getTime());
 
                                     db.setTransactionSuccessful();
                                 } finally {
@@ -4175,6 +4204,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 Snackbar.make(view, R.string.title_signature_none, Snackbar.LENGTH_LONG).show();
                             else if (sresult == RESULT_VALID_KEY_CONFIRMED)
                                 Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG).show();
+                            else if (sresult == RESULT_VALID_KEY_UNCONFIRMED)
+                                Snackbar.make(view, R.string.title_signature_unconfirmed, Snackbar.LENGTH_LONG).show();
                             else
                                 Snackbar.make(view, R.string.title_signature_invalid, Snackbar.LENGTH_LONG).show();
 
@@ -4557,7 +4588,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                moveAsk(result, false);
+                moveAsk(result, false, true);
             }
 
             @Override

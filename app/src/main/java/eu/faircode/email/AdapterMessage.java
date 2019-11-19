@@ -197,6 +197,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean avatars;
     private boolean name_email;
     private boolean distinguish_contacts;
+    private Float font_size_sender;
+    private Float font_size_subject;
     private boolean subject_top;
     private boolean subject_italic;
     private String subject_ellipsize;
@@ -699,21 +701,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Text size
             if (textSize != 0) {
-                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * (message.unseen > 0 ? 1.1f : 1f));
-
+                float fz_sender = (font_size_sender == null ? textSize : font_size_sender) * (message.unseen > 0 ? 1.1f : 1f);
+                
                 // dev4223: subject size smaller in list view
                 // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
+                // ORIG NEU 191119: float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.9f;
                 if (zoom == 0)
-                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 1.0f);
+                    float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 1.0f;
                 else
-                    tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.8f);
+                    float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.8f;
+
+                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
+                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_subject);
                 tvFolder.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
-                int px = Math.round(
-                        textSize * (message.unseen > 0 ? 1.1f : 1f) +
-                                textSize * 0.9f +
-                                (compact ? 0 : textSize * 0.9f));
+                int px = Math.round(fz_sender + fz_subject + (compact ? 0 : textSize * 0.9f));
                 ViewGroup.LayoutParams lparams = ibAvatar.getLayoutParams();
                 if (lparams.height != px) {
                     lparams.width = px;
@@ -3717,7 +3720,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.avatars = (contacts && avatars) || generated;
         this.name_email = prefs.getBoolean("name_email", false);
         this.distinguish_contacts = prefs.getBoolean("distinguish_contacts", false);
+
         this.subject_top = prefs.getBoolean("subject_top", false);
+
+        int fz_sender = prefs.getInt("font_size_sender", -1);
+        if (fz_sender >= 0)
+            font_size_sender = Helper.getTextSize(context, fz_sender);
+
+        int fz_subject = prefs.getInt("font_size_subject", -1);
+        if (fz_subject >= 0)
+            font_size_subject = Helper.getTextSize(context, fz_subject);
+
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
         this.flags = prefs.getBoolean("flags", true);
@@ -3741,29 +3754,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.differ.addPagedListListener(new AsyncPagedListDiffer.PagedListListener<TupleMessageEx>() {
             @Override
             public void onCurrentListChanged(@Nullable PagedList<TupleMessageEx> previousList, @Nullable PagedList<TupleMessageEx> currentList) {
-                boolean autoscroll =
-                        (viewType == AdapterMessage.ViewType.THREAD ||
-                                (viewType != ViewType.SEARCH &&
-                                        prefs.getBoolean("autoscroll", true)));
-
-                int prev = 0;
-                if (autoscroll && previousList != null)
-                    for (int i = 0; i < previousList.size(); i++) {
-                        TupleMessageEx message = previousList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
-                            prev++;
-                    }
-
-                int cur = 0;
-                if (autoscroll && currentList != null)
-                    for (int i = 0; i < currentList.size(); i++) {
-                        TupleMessageEx message = currentList.get(i);
-                        if (message != null && !message.ui_seen && !message.ui_ignored && !message.duplicate)
-                            cur++;
-                    }
-
-                if (gotoTop ||
-                        (previousList != null && currentList != null && cur > prev)) {
+                if (gotoTop) {
                     gotoTop = false;
                     properties.scrollTo(0);
                 }

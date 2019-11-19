@@ -1556,31 +1556,29 @@ public class FragmentCompose extends FragmentBase {
                         attachments.remove(attachment);
                     }
 
-                // Create temporary files
-                File plain = File.createTempFile("plain", "." + id, context.getCacheDir());
-                File encrypted = File.createTempFile("encrypted", "." + id, context.getCacheDir());
+                // Create files
+                File input = new File(context.getCacheDir(), "input." + id);
+                File output = new File(context.getCacheDir(), "output." + id);
 
-                // Build message
-                Properties props = MessageHelper.getSessionProperties();
-                Session isession = Session.getInstance(props, null);
-                MimeMessage imessage = new MimeMessage(isession);
-                MessageHelper.build(context, message, attachments, identity, imessage);
+                // Serializing messages is NOT reproducible
+                if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction())) {
+                    // Build message
+                    Properties props = MessageHelper.getSessionProperties();
+                    Session isession = Session.getInstance(props, null);
+                    MimeMessage imessage = new MimeMessage(isession);
+                    MessageHelper.build(context, message, attachments, identity, imessage);
 
-                // Serialize message
-                try (OutputStream out = new FileOutputStream(plain)) {
-                    imessage.writeTo(out);
+                    // Serialize message
+                    try (OutputStream out = new FileOutputStream(input)) {
+                        imessage.writeTo(out);
+                    }
                 }
 
                 // Call OpenPGP
-                Intent result;
-                try {
-                    Log.i("Executing " + data.getAction());
-                    Log.logExtras(data);
-                    OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-                    result = api.executeApi(data, new FileInputStream(plain), new FileOutputStream(encrypted));
-                } finally {
-                    plain.delete();
-                }
+                Log.i("Executing " + data.getAction());
+                Log.logExtras(data);
+                OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
+                Intent result = api.executeApi(data, new FileInputStream(input), new FileOutputStream(output));
 
                 // Process result
                 try {
@@ -1629,8 +1627,8 @@ public class FragmentCompose extends FragmentBase {
                                         }
                                         db.attachment().setDownloaded(attachment.id, (long) bytes.length);
                                     } else {
-                                        Log.i("Writing " + file + " size=" + encrypted.length());
-                                        Helper.copy(encrypted, file);
+                                        Log.i("Writing " + file + " size=" + output.length());
+                                        Helper.copy(output, file);
                                         db.attachment().setDownloaded(attachment.id, file.length());
                                     }
 
@@ -1642,10 +1640,8 @@ public class FragmentCompose extends FragmentBase {
                             if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction())) {
                                 pgpKeyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
                                 Log.i("Keys=" + pgpKeyIds.length);
-
-                                // Send without encryption
                                 if (pgpKeyIds.length == 0)
-                                    return null;
+                                    throw new IllegalStateException("Got no key");
 
                                 // Get encrypt key
                                 if (pgpKeyIds.length == 1) {
@@ -1686,20 +1682,26 @@ public class FragmentCompose extends FragmentBase {
                                 intent.putExtra(BuildConfig.APPLICATION_ID, id);
                                 return intent;
                             } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
+                                input.delete();
+
                                 // Get signature
-                                Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
-                                intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
-                                intent.putExtra(BuildConfig.APPLICATION_ID, id);
-                                return null;
-                            } else {
+                                //Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
+                                //intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
+                                //intent.putExtra(BuildConfig.APPLICATION_ID, id);
+
                                 // send message
                                 return null;
-                            }
+                            } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                                // send message
+                                return null;
+                            } else
+                                throw new IllegalStateException("Unknown action=" + data.getAction());
 
                         case OpenPgpApi.RESULT_CODE_USER_INTERACTION_REQUIRED:
-                            return (PendingIntent) result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
+                            return result.getParcelableExtra(OpenPgpApi.RESULT_INTENT);
 
                         case OpenPgpApi.RESULT_CODE_ERROR:
+                            input.delete();
                             db.identity().setIdentitySignKey(identity.id, null);
                             OpenPgpError error = result.getParcelableExtra(OpenPgpApi.RESULT_ERROR);
                             throw new IllegalArgumentException(
@@ -1711,7 +1713,7 @@ public class FragmentCompose extends FragmentBase {
                             throw new IllegalStateException("OpenPgp unknown result code=" + resultCode);
                     }
                 } finally {
-                    encrypted.delete();
+                    output.delete();
                 }
             }
 
@@ -2315,7 +2317,9 @@ public class FragmentCompose extends FragmentBase {
                             data.draft.subject = status + ": " + ref.subject;
 
                         if (ref.plain_only != null && ref.plain_only)
-                            data.draft.plain_only = ref.plain_only;
+                            data.draft.plain_only = true;
+                        if (ref.encrypt != null && ref.encrypt)
+                            data.draft.encrypt = true;
 
                         if (answer > 0) {
                             EntityAnswer a = db.answer().getAnswer(answer);
@@ -2555,12 +2559,7 @@ public class FragmentCompose extends FragmentBase {
                         int sequence = 0;
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
-                            if (attachment.encryption != null &&
-                                    attachment.encryption.equals(EntityAttachment.PGP_MESSAGE)) {
-                                data.draft.encrypt = true;
-                                db.message().setMessageEncrypt(data.draft.id, true);
-
-                            } else if (attachment.encryption == null &&
+                            if (attachment.encryption == null &&
                                     ("forward".equals(action) || "editasnew".equals(action) ||
                                             (attachment.isInline() && attachment.isImage()))) {
                                 if (attachment.available) {

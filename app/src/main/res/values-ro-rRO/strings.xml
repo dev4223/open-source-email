@@ -147,6 +147,7 @@
     <string name="title_setup_go">Start</string>
     <string name="title_setup_to_do">De făcut</string>
     <string name="title_setup_done">Gata</string>
+    <string name="title_setup_error">Eroare</string>
     <string name="title_setup_export">Exportă setări</string>
     <string name="title_setup_import">Importă setări</string>
     <string name="title_setup_import_do">Conturile importate vor fi adăugate fără a suprascrie pe cele existente</string>
@@ -234,6 +235,8 @@
     <string name="title_advanced_color_threshold">Limită culoare literă</string>
     <string name="title_advanced_name_email">Arată nume și adrese de e-mail</string>
     <string name="title_advanced_authentication">Arată o avertizare atunci când serverul destinatar nu a putut autentifica mesajul</string>
+    <string name="title_advanced_font_size_sender">Mărime font expeditor</string>
+    <string name="title_advanced_font_size_subject">Mărime font subiect</string>
     <string name="title_advanced_subject_top">Arată subiectul desupra expeditorului</string>
     <string name="title_advanced_subject_italic">Arată subiectul cursiv</string>
     <string name="title_advanced_subject_elipsed">La nevoie, scurtează subiectul</string>
@@ -295,6 +298,7 @@
     <string name="title_advanced_display_hidden">Arată textul ascuns din mesaj</string>
     <string name="title_advanced_openpgp">Furnizor OpenPGP</string>
     <string name="title_advanced_auto_decrypt">Decriptează automat mesajele</string>
+    <string name="title_advanced_secure">Ascunde din lista de aplicații recente și previne capturarea ecranului</string>
     <string name="title_advanced_biometrics_timeout">Expirare autentificarea biometrică</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_english">Forțează folosirea limbii Engleze</string>
@@ -414,7 +418,6 @@
     <string name="title_sign_key">Cheie semnatură: %1$s</string>
     <string name="title_last_connected">Ultima conectare: %1$s</string>
     <string name="title_pop_support">Protocolul POP3 acceptă descărcarea și ștergerea mesajelor numai din căsuța de mesaje primite. POP3 nu poate marca mesajele drept citite, nu poate muta mesajele etc. POP3 va consuma mai multă baterie și date decât IMAP. Deci, luați în considerare utilizarea protocolului IMAP ori de câte ori este posibil.</string>
-    <string name="title_activesync_support">ActiveSync nu este suportat</string>
     <string name="title_oauth_support">OAuth nu este suportat</string>
     <string name="title_review">Revizuire</string>
     <string name="title_hint_alias">Apăsare lunga pentru opțiuni, precum copiere pentru crearea de identități alias</string>
@@ -535,7 +538,8 @@
     <string name="title_no_folder">Dosarul nu există</string>
     <string name="title_no_format">Mesajul primit inițial va fi inclus</string>
     <string name="title_no_image">Imaginea nu a putut fi decodată</string>
-    <string name="title_unused_inline">Imaginile integrate nefolosite vor fi eliminate la salvare/trimitere</string>
+    <string name="title_no_search">Căutarea pe server nu este disponibilă pentru acest cont</string>
+    <string name="title_unused_inline">Imaginile integrate nefolosite vor fi eliminate la trimitere</string>
     <string name="title_accross_remark">Mesajele mutate între conturi vor fi descărcate din nou consumând date în plus</string>
     <string name="title_raw_saved">Mesaj original salvat</string>
     <string name="title_attachment_saved">Atașament salvat</string>
@@ -617,6 +621,7 @@
     <string name="title_resync">Resincronizare</string>
     <string name="title_no_openpgp">OpenKeychain nu a fost găsit</string>
     <string name="title_not_encrypted">Mesajul nu este criptat</string>
+    <string name="title_reset_sign_key">Resetare cheie de semnare</string>
     <string name="title_signature_none">Mesaj nesemnat</string>
     <string name="title_signature_valid">Semnătura mesaj validă</string>
     <string name="title_signature_invalid">Semnătura mesaj invalidă</string>
@@ -734,6 +739,7 @@
     <string name="title_legend_draft">Are ciornă</string>
     <string name="title_legend_priority">Prioritate ridicată</string>
     <string name="title_legend_priority_low">Are prioritate redusă</string>
+    <string name="title_legend_encrypted">Este criptat</string>
     <string name="title_legend_auth">Autentificare eșuată</string>
     <string name="title_legend_snoozed">Este amânat</string>
     <string name="title_legend_browsed">Este răsfoit sau căutat</string>
@@ -863,8 +869,13 @@
     <string name="title_search_special_unseen">necitit</string>
     <string name="title_search_special_flagged">stea</string>
     <string name="title_search_special_snoozed">ascuns</string>
+    <string name="title_search_special_encrypted">criptat</string>
+    <string name="title_widget_title_count">Contor mesaje noi</string>
+    <string name="title_widget_title_list">Listă mesaje</string>
     <string name="title_widget_account">Cont</string>
     <string name="title_widget_account_all">Toate</string>
+    <string name="title_widget_folder">Dosar</string>
+    <string name="title_widget_folder_unified">Dosare unificate</string>
     <string name="title_widget_unseen">Numai mesajele necitite</string>
     <string name="title_widget_flagged">Numai mesajele cu stea</string>
     <string-array name="pollIntervalNames">
@@ -912,6 +923,8 @@
         <item>Mare</item>
         <item>Foarte mare</item>
     </string-array>
+    <!-- https://en.wikipedia.org/wiki/Display_resolution -->
+    <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <string-array name="targetNames">
         <item>Către</item>
         <item>Cc</item>
@@ -939,5 +952,11 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
+    </string-array>
+    <string-array name="fontSizeNames">
+        <item>Implicită</item>
+        <item>Mică</item>
+        <item>Medie</item>
+        <item>Mare</item>
     </string-array>
 </resources>

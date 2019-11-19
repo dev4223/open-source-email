@@ -51,7 +51,7 @@ Related questions:
 * A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * The folder selector sometimes shows no folders for yet unknown reasons.
 * A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
-* Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).
+* ~~Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 * A preview of the message text doesn't (always) appear on a Samsung watch because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. However, message preview texts are known to appear correctly on a Pebble 2, a Fitbit Charge 3 and a Mi band 3. See also [this FAQ](#user-content-faq126).
 
@@ -253,6 +253,7 @@ FairEmail follows all the best practices for an email client as described in [th
 * [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
 * [(138) Can you add calendar / contact management?](#user-content-faq138)
 * [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
+* [(140) Why does the message text contain strange characters?](#user-content-faq140)
 
 [I have another question.](#user-content-support)
 
@@ -754,6 +755,7 @@ There are general errors and errors specific to Gmail accounts (see below).
 
 The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means your username or password was incorrect.
 Some providers expect as username just *username* and others your full email address *username@example.com*.
+When using copy/paste to enter a username or password, invisible characters might be copied, which could cause this problem as well.
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
 for example by allowing to logging from certain networks / IP addresses only.
 
@@ -1847,6 +1849,9 @@ You can directly access this setting [here](https://login.yahoo.com/account/secu
 If you enable "*less secure sign in*", you should use a [strong password](https://en.wikipedia.org/wiki/Password_strength) for your Yahoo! account, which is a good idea anyway.
 Note that using the [standard](https://tools.ietf.org/html/rfc3501) IMAP protocol in itself is not less secure and not outdated.
 
+Depending on the age of your Yahoo! account you need to create a third-party app password.
+Please see [here](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html) for the instructions.
+
 <br />
 
 <a name="faq89"></a>
@@ -2487,6 +2492,16 @@ The error *User is authenticated but not connected* might occur if:
 
 * The account password was changed: changing it in FairEmail too should fix the problem
 * There are too many simultaneous connections: see [this FAQ](#user-content-faq23) for more information and a workaround
+
+<br />
+
+<a name="faq140"></a>
+**(140) Why does the message text contain strange characters?**
+
+Displaying strange characters is almost always caused by specifying no or an invalid character encoding by the sending software.
+There is no way to reliably determine the correct character encoding automatically,
+so this cannot be fixed by FairEmail. The right action is to complain to the sender.
+
 
 <br />
 

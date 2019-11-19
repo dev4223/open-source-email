@@ -225,6 +225,8 @@
     <string name="title_advanced_color_threshold">Eşik harf rengi</string>
     <string name="title_advanced_name_email">Adları ve e-posta adreslarini göster</string>
     <string name="title_advanced_authentication">Alıcı sunucu iletinin kimliğini doğrulayamadığında bir uyarı göster</string>
+    <string name="title_advanced_font_size_sender">Gönderen yazı boyutu</string>
+    <string name="title_advanced_font_size_subject">Konu yazı boyutu</string>
     <string name="title_advanced_subject_top">Gönderenin üzerinde konuyu göster</string>
     <string name="title_advanced_subject_italic">Konuyu eğik yazı ile göster</string>
     <string name="title_advanced_subject_elipsed">Gerektiğinde konuyu kısaltın</string>
@@ -406,7 +408,6 @@
     <string name="title_sign_key">İmzalama anahtarı: %1$s</string>
     <string name="title_last_connected">Son bağlantı: %1$s</string>
     <string name="title_pop_support">POP3 protokolü sadece gelen kutusundan mesajları indirmeyi ve silmeyi desteklemektedir. POP3 mesajları okundu olarak işaretleyemez, taşıyamaz, vs. POP3 IMAP\'ten daha fazla batarya gücü ve veri kullanacaktır. Bu yüzden, mümkün olduğunca IMAP protokolünü kullanmayı göz önünde bulundurun.</string>
-    <string name="title_activesync_support">ActiveSync desteklenmiyor</string>
     <string name="title_oauth_support">OAuth desteklenmemektedir</string>
     <string name="title_review">Gözden geçir</string>
     <string name="title_hint_alias">Takma ad kimlikleri oluşturmak için kopyalamak gibi seçenekler için uzun basın</string>
@@ -527,7 +528,8 @@
     <string name="title_no_folder">Klasör yok</string>
     <string name="title_no_format">Alınan özgün iletiye eklenecek</string>
     <string name="title_no_image">Görselin kodu çözülemedi</string>
-    <string name="title_unused_inline">Kullanılmayan satır içi resimler kaydederken/gönderirken kaldırılacaktır</string>
+    <string name="title_no_search">Bu hesap için sunucuda arama yapılamıyor</string>
+    <string name="title_unused_inline">Kullanılmayan satır içi resimler gönderirken kaldırılacaktır</string>
     <string name="title_accross_remark">Hesaplar arasında taşınan iletiler daha fazla veri kullanımıyla sonuçlanacak şekilde tekrar indirilecek</string>
     <string name="title_raw_saved">Ham ileti kaydedildi</string>
     <string name="title_attachment_saved">Ek kaydedildi</string>
@@ -727,6 +729,7 @@
     <string name="title_legend_draft">Taslak var</string>
     <string name="title_legend_priority">Yüksek önceliğe sahip</string>
     <string name="title_legend_priority_low">Düşük önceliğe sahip</string>
+    <string name="title_legend_encrypted">Şifrelenmiş</string>
     <string name="title_legend_auth">Kimlik doğrulama başarısız</string>
     <string name="title_legend_snoozed">Ertelendi</string>
     <string name="title_legend_browsed">Gözatılmış ve aranmış</string>
@@ -856,6 +859,7 @@
     <string name="title_search_special_unseen">okunmamış</string>
     <string name="title_search_special_flagged">yıldızlı</string>
     <string name="title_search_special_snoozed">gizli</string>
+    <string name="title_search_special_encrypted">şifreli</string>
     <string name="title_widget_title_count">Yeni mesaj sayısı</string>
     <string name="title_widget_title_list">Mesaj listesi</string>
     <string name="title_widget_account">Hesap</string>
@@ -909,6 +913,8 @@
         <item>Büyük</item>
         <item>Ekstra büyük</item>
     </string-array>
+    <!-- https://en.wikipedia.org/wiki/Display_resolution -->
+    <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <string-array name="targetNames">
         <item>Kime</item>
         <item>Kopya yollanacaklar</item>
@@ -936,5 +942,11 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
+    </string-array>
+    <string-array name="fontSizeNames">
+        <item>Varsayılan</item>
+        <item>Küçük</item>
+        <item>Orta</item>
+        <item>Büyük</item>
     </string-array>
 </resources>

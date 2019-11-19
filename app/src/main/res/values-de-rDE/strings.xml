@@ -224,6 +224,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_color_threshold">Schwellenwert für Buchstabenfarbe</string>
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
     <string name="title_advanced_authentication">Warnung anzeigen, wenn der empfangende Server die Nachricht nicht authentifizieren konnte</string>
+    <string name="title_advanced_font_size_sender">Schriftgröße für den Absender</string>
+    <string name="title_advanced_font_size_subject">Schriftgröße für den Betreff</string>
     <string name="title_advanced_subject_top">Zeige Betreff oberhalb des Absenders</string>
     <string name="title_advanced_subject_italic">Betreff kursiv anzeigen</string>
     <string name="title_advanced_subject_elipsed">Wenn nötig, den Betreff kürzen</string>
@@ -405,7 +407,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_sign_key">Signaturschlüssel: %1$s</string>
     <string name="title_last_connected">Zuletzt verbunden: %1$s</string>
     <string name="title_pop_support">Das POP3-Protokoll unterstützt das Herunterladen und Löschen von Nachrichten nur aus dem Posteingang. POP3 kann Nachrichten nicht markieren, Nachrichten verschieben, etc. POP3 verwendet mehr Akku- und Daten als IMAP. Daher erwägen Sie, das IMAP-Protokoll zu verwenden, wann immer möglich.</string>
-    <string name="title_activesync_support">ActiveSync wird nicht unterstützt</string>
     <string name="title_oauth_support">OAuth wird nicht unterstützt</string>
     <string name="title_review">Kontrolle</string>
     <string name="title_hint_alias">Lange Drücken für Optionen, wie z.B. Kopieren oder um Alias-Adressen zu erstellen</string>
@@ -527,7 +528,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_no_folder">Ordner nicht vorhanden</string>
     <string name="title_no_format">Die ursprünglich empfangene Nachricht wird miteinbezogen</string>
     <string name="title_no_image">Bild konnte nicht dekodiert werden</string>
-    <string name="title_unused_inline">Unbenutzte Inline-Bilder werden beim Speichern/Senden entfernt</string>
+    <string name="title_no_search">Die Suche auf dem Server ist für dieses Konto nicht verfügbar</string>
+    <string name="title_unused_inline">Ungenutzte Inline-Bilder werden beim Senden entfernt</string>
     <string name="title_accross_remark">E-Mails, die über unterschiedliche Konten verschoben werden, werden erneut heruntergeladen, was zu einem erhöhtem Datenverbrauch führt</string>
     <string name="title_raw_saved">Rohdaten gespeichert</string>
     <string name="title_attachment_saved">Anhang gespeichert</string>
@@ -727,6 +729,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_legend_draft">Entwurf vorhanden</string>
     <string name="title_legend_priority">Hat hohe Priorität</string>
     <string name="title_legend_priority_low">Hat niedrige Priorität</string>
+    <string name="title_legend_encrypted">Ist verschlüsselt</string>
     <string name="title_legend_auth">Authentifizierung fehlgeschlagen</string>
     <string name="title_legend_snoozed">Wurde zurückgestellt</string>
     <string name="title_legend_browsed">Gesehen oder gesucht</string>
@@ -855,6 +858,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_search_special_unseen">ungelesen</string>
     <string name="title_search_special_flagged">markiert</string>
     <string name="title_search_special_snoozed">verborgen</string>
+    <string name="title_search_special_encrypted">verschlüsselt</string>
     <string name="title_widget_title_count">Anzahl neuer Nachrichten</string>
     <string name="title_widget_title_list">Nachrichtenliste</string>
     <string name="title_widget_account">Konto</string>
@@ -908,6 +912,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
         <item>Groß</item>
         <item>Sehr groß</item>
     </string-array>
+    <!-- https://en.wikipedia.org/wiki/Display_resolution -->
+    <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->
     <string-array name="targetNames">
         <item>An</item>
         <item>Zusätzliche Empfänger (CC)</item>
@@ -935,5 +941,11 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
         <item>2</item>
         <item>3</item>
         <item>4</item>
+    </string-array>
+    <string-array name="fontSizeNames">
+        <item>Standard</item>
+        <item>Klein</item>
+        <item>Mittel</item>
+        <item>Groß</item>
     </string-array>
 </resources>

@@ -70,6 +70,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swDistinguishContacts;
     private SwitchCompat swAuthentication;
     private SwitchCompat swSubjectTop;
+    private Spinner spFontSizeSender;
+    private Spinner spFontSizeSubject;
     private SwitchCompat swSubjectItalic;
     private Spinner spSubjectEllipsize;
     private SwitchCompat swFlags;
@@ -92,7 +94,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             "theme", "landscape", "startup", "cards", "indentation", "date", "threading", "highlight_unread",
             "avatars", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
             "name_email", "distinguish_contacts", "authentication",
-            "subject_top", "subject_italic", "subject_ellipsize",
+            "subject_top", "font_size_sender", "font_size_subject", "subject_italic", "subject_ellipsize",
             "flags", "flags_background", "preview", "preview_italic", "preview_lines", "addresses", "attachments_alt",
             "contrast", "monospaced", "text_color",
             "inline_images", "collapse_quotes", "seekbar", "actionbar",
@@ -130,6 +132,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swDistinguishContacts = view.findViewById(R.id.swDistinguishContacts);
         swAuthentication = view.findViewById(R.id.swAuthentication);
         swSubjectTop = view.findViewById(R.id.swSubjectTop);
+        spFontSizeSender = view.findViewById(R.id.spFontSizeSender);
+        spFontSizeSubject = view.findViewById(R.id.spFontSizeSubject);
         swSubjectItalic = view.findViewById(R.id.swSubjectItalic);
         spSubjectEllipsize = view.findViewById(R.id.spSubjectEllipsize);
         swFlags = view.findViewById(R.id.swFlags);
@@ -337,6 +341,32 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("subject_top", checked).apply();
                 WidgetUnified.update(getContext());
+            }
+        });
+
+        spFontSizeSender.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                int[] values = getResources().getIntArray(R.array.fontSizeValues);
+                prefs.edit().putInt("font_size_sender", values[position]).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("font_size_sender").apply();
+            }
+        });
+
+        spFontSizeSubject.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                int[] values = getResources().getIntArray(R.array.fontSizeValues);
+                prefs.edit().putInt("font_size_subject", values[position]).apply();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("font_size_subject").apply();
             }
         });
 
@@ -548,7 +578,25 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swNameEmail.setChecked(prefs.getBoolean("name_email", false));
         swDistinguishContacts.setChecked(prefs.getBoolean("distinguish_contacts", false));
         swAuthentication.setChecked(prefs.getBoolean("authentication", true));
+
         swSubjectTop.setChecked(prefs.getBoolean("subject_top", false));
+
+        int[] fontSizeValues = getResources().getIntArray(R.array.fontSizeValues);
+
+        int font_size_sender = prefs.getInt("font_size_sender", -1);
+        for (int pos = 0; pos < fontSizeValues.length; pos++)
+            if (fontSizeValues[pos] == font_size_sender) {
+                spFontSizeSender.setSelection(pos);
+                break;
+            }
+
+        int font_size_subject = prefs.getInt("font_size_subject", -1);
+        for (int pos = 0; pos < fontSizeValues.length; pos++)
+            if (fontSizeValues[pos] == font_size_subject) {
+                spFontSizeSubject.setSelection(pos);
+                break;
+            }
+
         swSubjectItalic.setChecked(prefs.getBoolean("subject_italic", true));
 
         String subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
