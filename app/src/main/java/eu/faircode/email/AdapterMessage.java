@@ -706,10 +706,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 // dev4223: subject size smaller in list view
                 // ORIG:  tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 // ORIG NEU 191119: float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.9f;
+                float fz_subject;
                 if (zoom == 0)
-                    float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 1.0f;
+                    fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 1.0f;
                 else
-                    float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.8f;
+                    fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.8f;
 
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
                 tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_subject);
