@@ -80,17 +80,21 @@ public class HtmlHelper {
     private static final List<String> tails = Collections.unmodifiableList(Arrays.asList(
             "h1", "h2", "h3", "h4", "h5", "h6", "p", "ol", "ul", "li"));
 
-    static String sanitize(Context context, String html, boolean show_images, boolean autolink) {
+    static Document sanitize(Context context, String html, boolean show_images, boolean autolink) {
         try {
             return _sanitize(context, html, show_images, autolink);
         } catch (Throwable ex) {
             // OutOfMemoryError
             Log.e(ex);
-            return Helper.formatThrowable(ex);
+            Document document = Document.createShell("");
+            Element strong = document.createElement("strong");
+            strong.text(Helper.formatThrowable(ex));
+            document.body().appendChild(strong);
+            return document;
         }
     }
 
-    private static String _sanitize(Context context, String html, boolean show_images, boolean autolink) {
+    private static Document _sanitize(Context context, String html, boolean show_images, boolean autolink) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean text_color = prefs.getBoolean("text_color", true);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
@@ -135,7 +139,6 @@ public class HtmlHelper {
 
         Whitelist whitelist = Whitelist.relaxed()
                 .addTags("hr", "abbr", "big", "font")
-                .addAttributes("pre", "plain")
                 .removeTags("col", "colgroup", "thead", "tbody")
                 .removeAttributes("table", "width")
                 .removeAttributes("td", "colspan", "rowspan", "width")
@@ -268,70 +271,8 @@ public class HtmlHelper {
 
         // Pre formatted text
         for (Element pre : document.select("pre")) {
-            int level = 0;
-            StringBuilder sb = new StringBuilder();
-            String[] lines = pre.wholeText().split("\\r?\\n");
-            for (String line : lines) {
-                // Opening quotes
-                int tlevel = 0;
-                while (line.startsWith(">")) {
-                    tlevel++;
-                    if (tlevel > level)
-                        sb.append("<blockquote>");
-
-                    line = line.substring(1); // >
-
-                    if (line.startsWith(" "))
-                        line = line.substring(1);
-                }
-
-                // Closing quotes
-                for (int i = 0; i < level - tlevel; i++)
-                    sb.append("</blockquote>");
-                level = tlevel;
-
-                // Tabs characters
-                StringBuilder l = new StringBuilder();
-                for (int j = 0; j < line.length(); j++) {
-                    char kar = line.charAt(j);
-                    if (kar == '\t') {
-                        l.append(' ');
-                        while (l.length() % TAB_SIZE != 0)
-                            l.append(' ');
-                    } else
-                        l.append(kar);
-                }
-                line = l.toString();
-
-                // Html characters
-                line = Html.escapeHtml(line);
-
-                // Space characters
-                int len = line.length();
-                for (int j = 0; j < len; j++) {
-                    char kar = line.charAt(j);
-                    if (kar == ' ') {
-                        // Prevent trimming start
-                        // Keep one space for word wrapping
-                        if (j == 0 || (j + 1 < len && line.charAt(j + 1) == ' '))
-                            sb.append("&nbsp;");
-                        else
-                            sb.append(' ');
-                    } else
-                        sb.append(kar);
-                }
-
-                sb.append("<br>");
-            }
-
-            // Closing quotes
-            for (int i = 0; i < level; i++)
-                sb.append("</blockquote>");
-
-            String plain = pre.attr("plain");
-            pre.tagName(Boolean.parseBoolean(plain) ? "div" : "tt");
-
-            pre.html(sb.toString());
+            pre.html(formatPre(pre.wholeText()));
+            pre.tagName("tt");
         }
 
         // Code
@@ -535,8 +476,12 @@ public class HtmlHelper {
                 if (!TextUtils.isEmpty(span.attr("color")))
                     span.tagName("font");
 
-        Element body = document.body();
-        return (body == null ? "" : body.html());
+        if (document.body() == null) {
+            Log.e("Sanitize without body");
+            document.normalise();
+        }
+
+        return document;
     }
 
     private static boolean hasVisibleContent(List<Node> nodes) {
@@ -550,6 +495,70 @@ public class HtmlHelper {
                     return true;
             }
         return false;
+    }
+
+    static String formatPre(String text) {
+        int level = 0;
+        StringBuilder sb = new StringBuilder();
+        String[] lines = text.split("\\r?\\n");
+        for (String line : lines) {
+            // Opening quotes
+            int tlevel = 0;
+            while (line.startsWith(">")) {
+                tlevel++;
+                if (tlevel > level)
+                    sb.append("<blockquote>");
+
+                line = line.substring(1); // >
+
+                if (line.startsWith(" "))
+                    line = line.substring(1);
+            }
+
+            // Closing quotes
+            for (int i = 0; i < level - tlevel; i++)
+                sb.append("</blockquote>");
+            level = tlevel;
+
+            // Tabs characters
+            StringBuilder l = new StringBuilder();
+            for (int j = 0; j < line.length(); j++) {
+                char kar = line.charAt(j);
+                if (kar == '\t') {
+                    l.append(' ');
+                    while (l.length() % TAB_SIZE != 0)
+                        l.append(' ');
+                } else
+                    l.append(kar);
+            }
+            line = l.toString();
+
+            // Html characters
+            line = Html.escapeHtml(line);
+
+            // Space characters
+            int len = line.length();
+            for (int j = 0; j < len; j++) {
+                char kar = line.charAt(j);
+                if (kar == ' ') {
+                    // Prevent trimming start
+                    // Keep one space for word wrapping
+                    if (j == 0 || (j + 1 < len && line.charAt(j + 1) == ' '))
+                        sb.append("&nbsp;");
+                    else
+                        sb.append(' ');
+                } else
+                    sb.append(kar);
+            }
+
+            sb.append("<br>");
+        }
+
+        // Closing quotes
+        for (int i = 0; i < level; i++)
+            sb.append("</blockquote>");
+
+        return sb.toString();
     }
 
     static void removeTrackingPixels(Context context, Document document) {
@@ -682,13 +691,14 @@ public class HtmlHelper {
             private int qlevel = 0;
             private int tlevel = 0;
             private int plevel = 0;
+            private int lindex = 0;
 
             public void head(Node node, int depth) {
                 if (node instanceof TextNode)
                     if (plevel > 0) {
                         String[] lines = ((TextNode) node).getWholeText().split("\\r?\\n");
                         for (String line : lines) {
-                            append(line);
+                            append(line, true);
                             newline();
                         }
                     } else
@@ -729,19 +739,31 @@ public class HtmlHelper {
             }
 
             private void append(String text) {
+                append(text, false);
+            }
+
+            private void append(String text, boolean raw) {
                 if (tlevel != qlevel) {
                     newline();
                     tlevel = qlevel;
                 }
+
+                if (!raw && !"-- ".equals(text)) {
+                    text = text.trim();
+                    if (lindex > 0)
+                        text = " " + text;
+                }
+
                 sb.append(text);
+                lindex += text.length();
             }
 
             private void newline() {
+                lindex = 0;
                 sb.append("\n");
+
                 for (int i = 0; i < qlevel; i++)
-                    sb.append('>');
-                if (qlevel > 0)
-                    sb.append(' ');
+                    sb.append("> ");
             }
         }, JsoupEx.parse(html));
 

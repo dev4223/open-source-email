@@ -247,13 +247,25 @@ public class ServiceSynchronize extends ServiceBase {
             }
         });
 
-        db.message().liveWidgetUnified().observe(this, new Observer<TupleMessageWidgetCount>() {
-            private TupleMessageWidgetCount last = null;
+        db.message().liveWidgetUnified().observe(this, new Observer<List<TupleMessageWidgetCount>>() {
+            private List<TupleMessageWidgetCount> last = null;
 
             @Override
-            public void onChanged(TupleMessageWidgetCount current) {
-                Log.i("Widget total=" + current.total + " seen=" + current.seen + " flagged=" + current.flagged);
-                if (last == null || !last.equals(current))
+            public void onChanged(List<TupleMessageWidgetCount> current) {
+                if (current == null)
+                    current = new ArrayList<>();
+
+                boolean changed = false;
+                if (last == null || last.size() != current.size())
+                    changed = true;
+                else
+                    for (int i = 0; i < current.size(); i++)
+                        if (!current.get(i).equals(last.get(i))) {
+                            changed = true;
+                            break;
+                        }
+
+                if (changed)
                     WidgetUnified.update(ServiceSynchronize.this);
 
                 last = current;
@@ -705,7 +717,7 @@ public class ServiceSynchronize extends ServiceBase {
                         this, account.getProtocol(), account.realm, account.insecure, false, debug);
                 iservice.setPartialFetch(account.partial_fetch);
                 iservice.setIgnoreBodyStructureSize(account.ignore_size);
-                if (account.pop)
+                if (account.protocol != EntityAccount.TYPE_IMAP)
                     iservice.setLeaveOnServer(account.browse);
 
                 final Map<EntityFolder, IMAPFolder> mapFolders = new HashMap<>();
@@ -840,7 +852,7 @@ public class ServiceSynchronize extends ServiceBase {
                     });
 
                     // Update folder list
-                    if (!account.pop)
+                    if (account.protocol == EntityAccount.TYPE_IMAP)
                         Core.onSynchronizeFolders(this, account, iservice.getStore(), state);
 
                     // Open synchronizing folders
@@ -1047,7 +1059,7 @@ public class ServiceSynchronize extends ServiceBase {
 
                                                         // Get folder
                                                         Folder ifolder = mapFolders.get(folder); // null when polling
-                                                        boolean canOpen = (!account.pop || EntityFolder.INBOX.equals(folder.type));
+                                                        boolean canOpen = (account.protocol == EntityAccount.TYPE_IMAP || EntityFolder.INBOX.equals(folder.type));
                                                         final boolean shouldClose = (ifolder == null && canOpen);
 
                                                         try {

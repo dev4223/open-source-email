@@ -93,6 +93,9 @@ public class EntityOperation {
     static final String EXISTS = "exists";
 
     void cleanup(Context context) {
+        DB db = DB.getInstance(context);
+        db.message().setMessageUiHide(message, false);
+
         if (EntityOperation.MOVE.equals(name) ||
                 EntityOperation.ADD.equals(name) ||
                 EntityOperation.RAW.equals(name))
@@ -102,9 +105,7 @@ public class EntityOperation {
                 if (tmpid < 0)
                     return;
 
-                DB db = DB.getInstance(context);
                 db.message().deleteMessage(tmpid);
-                db.message().setMessageUiHide(message, false);
             } catch (JSONException ex) {
                 Log.e(ex);
             }
@@ -117,6 +118,12 @@ public class EntityOperation {
             JSONArray jargs = new JSONArray();
             for (Object value : values)
                 jargs.put(value);
+
+            if (MOVE.equals(name) && message.encrypt != null && message.encrypt) {
+                EntityFolder folder = db.folder().getFolder(message.folder);
+                if (folder != null && EntityFolder.DRAFTS.equals(folder.type))
+                    name = DELETE;
+            }
 
             if (SEEN.equals(name)) {
                 boolean seen = jargs.getBoolean(0);

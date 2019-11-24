@@ -20,12 +20,9 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.MailTo;
 import android.net.Uri;
 import android.text.TextUtils;
-
-import androidx.preference.PreferenceManager;
 
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
@@ -284,9 +281,6 @@ public class MessageHelper {
     }
 
     static void build(Context context, EntityMessage message, List<EntityAttachment> attachments, EntityIdentity identity, MimeMessage imessage) throws IOException, MessagingException {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean usenet = prefs.getBoolean("usenet_signature", false);
-
         if (message.receipt != null && message.receipt) {
             // https://www.ietf.org/rfc/rfc3798.txt
             Multipart report = new MimeMultipart("report; report-type=disposition-notification");
@@ -322,30 +316,11 @@ public class MessageHelper {
         }
 
         // Build html body
-        StringBuilder body = new StringBuilder();
-        body.append("<html><body>");
-
-        Document mdoc = JsoupEx.parse(Helper.readText(message.getFile(context)));
-        if (mdoc.body() != null)
-            body.append(mdoc.body().html());
+        Document document = JsoupEx.parse(Helper.readText(message.getFile(context)));
 
         // When sending message
-        if (identity != null) {
-            if (!TextUtils.isEmpty(identity.signature) && message.signature) {
-                Document sdoc = JsoupEx.parse(identity.signature);
-                if (sdoc.body() != null) {
-                    if (usenet) // https://www.ietf.org/rfc/rfc3676.txt
-                        body.append("<span>-- <br></span>");
-                    body.append(sdoc.body().html());
-                }
-            }
-
-            File refFile = message.getRefFile(context);
-            if (refFile.exists())
-                body.append(Helper.readText(refFile));
-        }
-
-        body.append("</body></html>");
+        if (identity != null)
+            document.select("div[fairemail=signature],div[fairemail=reference]").removeAttr("fairemail");
 
         // multipart/mixed
         //   multipart/related
@@ -355,7 +330,7 @@ public class MessageHelper {
         //     inlines
         //  attachments
 
-        String htmlContent = body.toString();
+        String htmlContent = document.html();
         String plainContent = HtmlHelper.getText(htmlContent);
 
         BodyPart plainPart = new MimeBodyPart();
@@ -1045,7 +1020,7 @@ public class MessageHelper {
             }
 
             if (part == plain)
-                result = "<pre plain=\"true\">" + result + "</pre>";
+                result = "<div>" + HtmlHelper.formatPre(result) + "</div>";
 
             return result;
         }
@@ -1262,19 +1237,18 @@ public class MessageHelper {
                     filename = null;
                 }
 
-                String pct = part.getContentType();
-                if (TextUtils.isEmpty(pct))
-                    pct = "text/plain";
-                ContentType contentType = new ContentType(pct);
-                if (part instanceof MimeMessage) {
-                    String header = ((MimeMessage) part).getHeader("Content-Type", null);
-                    if (!TextUtils.isEmpty(header)) {
-                        ContentType messageContentType = new ContentType(header);
-                        if (!messageContentType.getBaseType().equalsIgnoreCase(contentType.getBaseType())) {
-                            Log.w("Content type message=" + messageContentType + " part=" + contentType);
-                            contentType = messageContentType;
-                        }
-                    }
+                ContentType contentType;
+                try {
+                    String c = part.getContentType();
+                    contentType = new ContentType(c == null ? "" : c);
+                } catch (ParseException ex) {
+                    Log.w(ex);
+                    parts.warnings.add(Helper.formatThrowable(ex, false));
+
+                    if (part instanceof MimeMessage)
+                        contentType = new ContentType("text/html");
+                    else
+                        contentType = new ContentType(Helper.guessMimeType(filename));
                 }
 
                 if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
@@ -1292,15 +1266,6 @@ public class MessageHelper {
                     apart.pgp = pgp;
                     apart.part = part;
 
-                    ContentType ct;
-                    try {
-                        ct = new ContentType(apart.part.getContentType());
-                    } catch (ParseException ex) {
-                        Log.w(ex);
-                        parts.warnings.add(Helper.formatThrowable(ex, false));
-                        ct = new ContentType("application/octet-stream");
-                    }
-
                     String[] cid = null;
                     try {
                         cid = apart.part.getHeader("Content-ID");
@@ -1312,7 +1277,7 @@ public class MessageHelper {
 
                     apart.attachment = new EntityAttachment();
                     apart.attachment.name = apart.filename;
-                    apart.attachment.type = ct.getBaseType().toLowerCase(Locale.ROOT);
+                    apart.attachment.type = contentType.getBaseType().toLowerCase(Locale.ROOT);
                     apart.attachment.disposition = apart.disposition;
                     apart.attachment.size = (long) apart.part.getSize();
                     apart.attachment.cid = (cid == null || cid.length == 0 ? null : MimeUtility.unfold(cid[0]));

@@ -115,7 +115,7 @@ class ImageHelper {
         String letter = null;
         for (int i = 0; i < name.length(); i++) {
             char kar = name.charAt(i);
-            if (Character.isAlphabetic(kar)) {
+            if (Helper.isPrintableChar(kar)) {
                 letter = name.substring(i, i + 1).toUpperCase();
                 break;
             }
@@ -391,7 +391,7 @@ class ImageHelper {
     private static void fitDrawable(final Drawable d, final AnnotatedSource a, final View view) {
         Semaphore semaphore = new Semaphore(0);
 
-        new Handler(view.getContext().getMainLooper()).post(new Runnable() {
+        view.post(new Runnable() {
             @Override
             public void run() {
                 Rect bounds = d.getBounds();

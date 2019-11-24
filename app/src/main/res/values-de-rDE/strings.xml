@@ -545,7 +545,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_ask_show_html_images">Bilder immer anzeigen, wenn Originalnachrichten angezeigt werden</string>
     <string name="title_ask_show_image">Das Anzeigen von Bildern kann datenschutzrelevante Informationen preisgeben</string>
     <string name="title_ask_show_image_hint">Bilder, die als Tracking-Bilder erkannt werden, werden nicht angezeigt</string>
-    <string name="title_ask_delete_ref">Den Text der beantworteten/weitergeleiteten Nachricht löschen? Dies kann nicht rückgängig gemacht werden.</string>
     <string name="title_ask_sync_all">Alle Nachrichten in %1$s synchronisieren?</string>
     <string name="title_ask_delete_local">Lokale Nachrichten löschen? Die Nachrichten bleiben auf dem entfernten Server.</string>
     <string name="title_ask_help">Helfen Sie mit, FairEmail zu verbessern</string>
@@ -614,6 +613,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_reset_sign_key">Sign-Schlüssel zurücksetzen</string>
     <string name="title_signature_none">Unsignierte Nachricht</string>
     <string name="title_signature_valid">Gültige Nachrichtensignatur</string>
+    <string name="title_signature_unconfirmed">Die Signatur der Nachricht ist zwar gültig, aber nicht bestätigt</string>
     <string name="title_signature_invalid">Ungültige Nachrichtensignatur</string>
     <string name="title_search">Suche</string>
     <string name="title_search_server">Auf dem Server suchen</string>
@@ -841,6 +841,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_pro_info">Die Entwicklung von FairEmail hat buchstäblich tausende von Stunden gedauert und trotzdem sind die meisten Funktionen kostenlos nutzbar.
         Um FairEmail langfristig mit Support verfügbar zu erhalten, sind einige Komfort- und erweiterte Funktionen nicht frei nutzbar.
         FairEmail zeigt daher ein kleines Banner an, das Sie daran erinnert und beim Kauf der Pro-Funktionen auch sofort entfernt wird.    </string>
+    <string name="title_pro_hide">Banner-Nachricht bis morgen ausblenden</string>
     <string name="title_pro_hint">Der Erwerb der Pro-Funktionen erlaubt es Ihnen alle momentan und zukünftig verfügbaren Pro-Funktionen zu nutzen und ermöglicht die Weiterentwicklung und Pflege der App.</string>
     <string name="title_pro_price">Informationen zum Preis der Pro-Funktionen finden Sie in der <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">Hilfe</a></string>
     <string name="title_pro_pending">Kauf ausstehend</string>

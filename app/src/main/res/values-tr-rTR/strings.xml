@@ -545,7 +545,6 @@
     <string name="title_ask_show_html_images">Orijinal mesajları görüntülerken her zaman resimleri göster</string>
     <string name="title_ask_show_image">Resimlerin gösterilmesi gizliliğe duyarlı bilgilerin sızmasına neden olabilir</string>
     <string name="title_ask_show_image_hint">İzleme resimleri olarak tanınan resimler gösterilmeyecektir</string>
-    <string name="title_ask_delete_ref">Yanıtlanan/iletilen ileti metni silinsin mi? Bu geri alınamaz.</string>
     <string name="title_ask_sync_all">%1$s\'deki tüm iletiler eşzamanlandı mı?</string>
     <string name="title_ask_delete_local">Yerel iletiler silinsin mi? İletiler uzak sunucuda kalacaktır.</string>
     <string name="title_ask_help">FairEmail\'in geliştirilmesine yardımcı olun</string>
@@ -614,6 +613,7 @@
     <string name="title_reset_sign_key">İmzalama anahtarını sıfırla</string>
     <string name="title_signature_none">İleti imzalı değil</string>
     <string name="title_signature_valid">İleti imzası geçerli</string>
+    <string name="title_signature_unconfirmed">Mesaj imzası geçerli ancak onaylanmamış</string>
     <string name="title_signature_invalid">İleti imzası geçersiz</string>
     <string name="title_search">Ara</string>
     <string name="title_search_server">Sunucuda ara</string>
@@ -842,6 +842,7 @@
         FairEmail\'i uzun vadede sürdürülebilir kılmak için, bazı kolaylıkların ve gelişmiş özelliklerin kullanımı ücretsiz değildir.
         FairEmail size bunu hatırlatmak için, pro özellikleri satın alırsanız kaldırılacak olan küçük bir mesaj göstermektedir.
     </string>
+    <string name="title_pro_hide">Başlık mesajını yarına kadar gizle</string>
     <string name="title_pro_hint">Pro özelliklerin satın alınması, mevcut ve gelecekteki tüm pro özelliklerin kullanılmasına izin verecek ve bu uygulamayı ayakta tutup destekleyecek</string>
     <string name="title_pro_price">Lütfen pro özelliklerin fiyatı için <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">bu SSS sayfasını</a> görün</string>
     <string name="title_pro_pending">Satın alma beklemede</string>

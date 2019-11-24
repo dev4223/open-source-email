@@ -53,6 +53,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.LocaleList;
+import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.text.Html;
@@ -70,7 +71,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
@@ -103,10 +103,8 @@ import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.NodeTraversor;
-import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.Elements;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
@@ -137,8 +135,10 @@ import javax.mail.MessageRemovedException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
@@ -161,14 +161,13 @@ public class FragmentCompose extends FragmentBase {
     private ImageButton ibCcBcc;
     private RecyclerView rvAttachment;
     private TextView tvNoInternetAttachments;
-    private TextView tvUnusedInlineImages;
+    private ImageButton ibCloseUnusedImagesHint;
     private EditTextCompose etBody;
     private TextView tvNoInternet;
     private TextView tvSignature;
     private CheckBox cbSignature;
     private TextView tvReference;
     private ImageButton ibCloseRefHint;
-    private ImageButton ibReferenceDelete;
     private ImageButton ibReferenceEdit;
     private ImageButton ibReferenceImages;
     private BottomNavigationView style_bar;
@@ -179,6 +178,7 @@ public class FragmentCompose extends FragmentBase {
     private Group grpExtra;
     private Group grpAddresses;
     private Group grpAttachments;
+    private Group grpUnusedImagesHint;
     private Group grpBody;
     private Group grpSignature;
     private Group grpReferenceHint;
@@ -220,12 +220,11 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_RECORD_AUDIO = 7;
     private static final int REQUEST_ENCRYPT = 8;
     private static final int REQUEST_COLOR = 9;
-    private static final int REQUEST_REF_DELETE = 10;
-    private static final int REQUEST_CONTACT_GROUP = 11;
-    private static final int REQUEST_ANSWER = 12;
-    private static final int REQUEST_LINK = 13;
-    private static final int REQUEST_DISCARD = 14;
-    private static final int REQUEST_SEND = 15;
+    private static final int REQUEST_CONTACT_GROUP = 10;
+    private static final int REQUEST_ANSWER = 11;
+    private static final int REQUEST_LINK = 12;
+    private static final int REQUEST_DISCARD = 13;
+    private static final int REQUEST_SEND = 14;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -261,14 +260,13 @@ public class FragmentCompose extends FragmentBase {
         ibCcBcc = view.findViewById(R.id.ivCcBcc);
         rvAttachment = view.findViewById(R.id.rvAttachment);
         tvNoInternetAttachments = view.findViewById(R.id.tvNoInternetAttachments);
-        tvUnusedInlineImages = view.findViewById(R.id.tvUnusedInlineImages);
+        ibCloseUnusedImagesHint = view.findViewById(R.id.ibCloseUnusedImagesHint);
         etBody = view.findViewById(R.id.etBody);
         tvNoInternet = view.findViewById(R.id.tvNoInternet);
         tvSignature = view.findViewById(R.id.tvSignature);
         cbSignature = view.findViewById(R.id.cbSignature);
         tvReference = view.findViewById(R.id.tvReference);
         ibCloseRefHint = view.findViewById(R.id.ibCloseRefHint);
-        ibReferenceDelete = view.findViewById(R.id.ibReferenceDelete);
         ibReferenceEdit = view.findViewById(R.id.ibReferenceEdit);
         ibReferenceImages = view.findViewById(R.id.ibReferenceImages);
         style_bar = view.findViewById(R.id.style_bar);
@@ -281,6 +279,7 @@ public class FragmentCompose extends FragmentBase {
         grpAddresses = view.findViewById(R.id.grpAddresses);
         grpAttachments = view.findViewById(R.id.grpAttachments);
         grpBody = view.findViewById(R.id.grpBody);
+        grpUnusedImagesHint = view.findViewById(R.id.grpUnusedImagesHint);
         grpSignature = view.findViewById(R.id.grpSignature);
         grpReferenceHint = view.findViewById(R.id.grpReferenceHint);
 
@@ -387,6 +386,15 @@ public class FragmentCompose extends FragmentBase {
 
         setZoom();
 
+        ibCloseUnusedImagesHint.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                prefs.edit().putBoolean("inline_image_hint", false).apply();
+                grpUnusedImagesHint.setVisibility(View.GONE);
+            }
+        });
+
         etBody.setInputContentListener(new EditTextCompose.IInputContentListener() {
             @Override
             public void onInputContent(Uri uri) {
@@ -404,33 +412,11 @@ public class FragmentCompose extends FragmentBase {
         cbSignature.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                Bundle args = new Bundle();
-                args.putLong("id", working);
-                args.putBoolean("signature", checked);
-
-                new SimpleTask<Integer>() {
-                    @Override
-                    protected Integer onExecute(Context context, Bundle args) {
-                        long id = args.getLong("id");
-                        boolean signature = args.getBoolean("signature");
-
-                        DB db = DB.getInstance(context);
-                        return db.message().setMessageSignature(id, signature);
-                    }
-
-                    @Override
-                    protected void onExecuted(Bundle args, Integer count) {
-                        if (count > 0) {
-                            boolean signature = args.getBoolean("signature");
-                            tvSignature.setAlpha(signature ? 1.0f : Helper.LOW_LIGHT);
-                        }
-                    }
-
-                    @Override
-                    protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
-                    }
-                }.execute(FragmentCompose.this, args, "draft:signature");
+                Object tag = cbSignature.getTag();
+                if (tag == null || !tag.equals(checked)) {
+                    cbSignature.setTag(checked);
+                    onAction(R.id.action_save);
+                }
             }
         });
 
@@ -440,13 +426,6 @@ public class FragmentCompose extends FragmentBase {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                 prefs.edit().putBoolean("compose_reference", false).apply();
                 grpReferenceHint.setVisibility(View.GONE);
-            }
-        });
-
-        ibReferenceDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onReferenceDelete();
             }
         });
 
@@ -536,6 +515,7 @@ public class FragmentCompose extends FragmentBase {
 
         etExtra.setHint("");
         tvDomain.setText(null);
+        etBody.setText(null);
 
         grpHeader.setVisibility(View.GONE);
         grpExtra.setVisibility(View.GONE);
@@ -546,7 +526,6 @@ public class FragmentCompose extends FragmentBase {
         grpBody.setVisibility(View.GONE);
         grpSignature.setVisibility(View.GONE);
         grpReferenceHint.setVisibility(View.GONE);
-        ibReferenceDelete.setVisibility(View.GONE);
         ibReferenceEdit.setVisibility(View.GONE);
         ibReferenceImages.setVisibility(View.GONE);
         tvReference.setVisibility(View.GONE);
@@ -652,7 +631,7 @@ public class FragmentCompose extends FragmentBase {
         rvAttachment.setAdapter(adapter);
 
         tvNoInternetAttachments.setVisibility(View.GONE);
-        tvUnusedInlineImages.setVisibility(View.GONE);
+        grpUnusedImagesHint.setVisibility(View.GONE);
 
         String pkg = Helper.getOpenKeychainPackage(getContext());
         Log.i("Binding to " + pkg);
@@ -662,77 +641,12 @@ public class FragmentCompose extends FragmentBase {
         return view;
     }
 
-    private void onReferenceDelete() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (prefs.getBoolean("delete_ref_confirmed", false)) {
-            onReferenceDeleteConfirmed();
-            return;
-        }
-
-        Bundle args = new Bundle();
-        args.putString("question", getString(R.string.title_ask_delete_ref));
-        args.putString("notagain", "delete_ref_confirmed");
-
-        FragmentDialogAsk fragment = new FragmentDialogAsk();
-        fragment.setArguments(args);
-        fragment.setTargetFragment(this, REQUEST_REF_DELETE);
-        fragment.show(getParentFragmentManager(), "compose:refdelete");
-    }
-
-    private void onReferenceDeleteConfirmed() {
-        Bundle args = new Bundle();
-        args.putLong("id", working);
-
-        new SimpleTask<EntityMessage>() {
-            @Override
-            protected void onPreExecute(Bundle args) {
-                ibReferenceDelete.setEnabled(false);
-                ibReferenceEdit.setEnabled(false);
-            }
-
-            @Override
-            protected void onPostExecute(Bundle args) {
-                ibReferenceDelete.setEnabled(true);
-                ibReferenceEdit.setEnabled(true);
-            }
-
-            @Override
-            protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
-
-                DB db = DB.getInstance(context);
-                EntityMessage draft = db.message().getMessage(id);
-                if (draft != null) {
-                    File refFile = draft.getRefFile(context);
-                    refFile.delete();
-                }
-
-                return draft;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, EntityMessage draft) {
-                if (draft != null) {
-                    tvReference.setVisibility(View.GONE);
-                    grpReferenceHint.setVisibility(View.GONE);
-                    ibReferenceDelete.setVisibility(View.GONE);
-                    ibReferenceEdit.setVisibility(View.GONE);
-                    ibReferenceImages.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
-            }
-        }.execute(this, args, "compose:refdelete");
-    }
-
     private void onReferenceEdit() {
         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), ibReferenceEdit);
 
         popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_plain_text, 1, R.string.title_edit_plain_text);
         popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_formatted_text, 2, R.string.title_edit_formatted_text);
+        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, 3, R.string.title_delete);
 
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
@@ -744,6 +658,10 @@ public class FragmentCompose extends FragmentBase {
 
                     case R.string.title_edit_formatted_text:
                         convertRef(false);
+                        return true;
+
+                    case R.string.title_delete:
+                        deleteRef();
                         return true;
 
                     default:
@@ -760,13 +678,11 @@ public class FragmentCompose extends FragmentBase {
                 new SimpleTask<String>() {
                     @Override
                     protected void onPreExecute(Bundle args) {
-                        ibReferenceDelete.setEnabled(false);
                         ibReferenceEdit.setEnabled(false);
                     }
 
                     @Override
                     protected void onPostExecute(Bundle args) {
-                        ibReferenceDelete.setEnabled(true);
                         ibReferenceEdit.setEnabled(true);
                     }
 
@@ -776,16 +692,24 @@ public class FragmentCompose extends FragmentBase {
                         boolean plain = args.getBoolean("plain");
                         String body = args.getString("body");
 
-                        String html;
-                        File refFile = EntityMessage.getRefFile(context, id);
-                        String ref = Helper.readText(refFile);
-                        if (plain) {
-                            String text = HtmlHelper.getText(ref);
-                            html = "<p>" + text.replaceAll("\\r?\\n", "<br>") + "</p>";
-                        } else
-                            html = HtmlHelper.sanitize(context, ref, true, false);
+                        Document doc = JsoupEx.parse(Helper.readText(EntityMessage.getFile(context, id)));
+                        Elements ref = doc.select("div[fairemail=reference]");
+                        ref.removeAttr("fairemail");
 
-                        return body + html;
+                        Document document = JsoupEx.parse(body);
+                        if (plain) {
+                            String text = HtmlHelper.getText(ref.outerHtml());
+                            Element p = document.createElement("p");
+                            p.html(text.replaceAll("\\r?\\n", "<br>"));
+                            document.body().appendChild(p);
+                        } else {
+                            Document d = HtmlHelper.sanitize(context, ref.outerHtml(), true, false);
+                            Element b = d.body();
+                            b.tagName("div");
+                            document.body().appendChild(b);
+                        }
+
+                        return document.html();
                     }
 
                     @Override
@@ -801,6 +725,13 @@ public class FragmentCompose extends FragmentBase {
                         Helper.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentCompose.this, args, "compose:convert");
+            }
+
+            private void deleteRef() {
+                Bundle extras = new Bundle();
+                extras.putString("html", HtmlHelper.toHtml(etBody.getText()));
+                extras.putBoolean("show", true);
+                onAction(R.id.action_save, extras);
             }
         });
 
@@ -1315,10 +1246,6 @@ public class FragmentCompose extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         onPgp(data);
                     break;
-                case REQUEST_REF_DELETE:
-                    if (resultCode == RESULT_OK)
-                        onReferenceDeleteConfirmed();
-                    break;
                 case REQUEST_CONTACT_GROUP:
                     if (resultCode == RESULT_OK && data != null)
                         onContactGroupSelected(data.getBundleExtra("args"));
@@ -1641,7 +1568,7 @@ public class FragmentCompose extends FragmentBase {
                                 pgpKeyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
                                 Log.i("Keys=" + pgpKeyIds.length);
                                 if (pgpKeyIds.length == 0)
-                                    throw new IllegalStateException("Got no key");
+                                    throw new OperationCanceledException("Got no key");
 
                                 // Get encrypt key
                                 if (pgpKeyIds.length == 1) {
@@ -1740,7 +1667,9 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException) {
+                if (ex instanceof OperationCanceledException)
+                    ; // Do nothing
+                else if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 } else
@@ -1954,6 +1883,7 @@ public class FragmentCompose extends FragmentBase {
         args.putString("bcc", etBcc.getText().toString().trim());
         args.putString("subject", etSubject.getText().toString().trim());
         args.putString("body", HtmlHelper.toHtml(etBody.getText()));
+        args.putBoolean("signature", cbSignature.isChecked());
         args.putBoolean("empty", isEmpty());
         args.putBundle("extras", extras);
 
@@ -1988,17 +1918,21 @@ public class FragmentCompose extends FragmentBase {
             Log.e(ex);
         }
 
+        // Check name
         if (TextUtils.isEmpty(fname))
             fname = uri.getLastPathSegment();
 
-        if (TextUtils.isEmpty(ftype)) {
-            String extension = Helper.getExtension(fname);
-            if (extension != null)
-                ftype = MimeTypeMap.getSingleton()
-                        .getMimeTypeFromExtension(extension.toLowerCase(Locale.ROOT));
-            if (ftype == null)
-                ftype = "application/octet-stream";
-        }
+        // Check type
+        if (!TextUtils.isEmpty(ftype))
+            try {
+                new ContentType(ftype);
+            } catch (ParseException ex) {
+                Log.w(ex);
+                ftype = null;
+            }
+
+        if (TextUtils.isEmpty(ftype))
+            ftype = Helper.guessMimeType(fname);
 
         if (fsize != null && fsize <= 0)
             fsize = null;
@@ -2186,8 +2120,6 @@ public class FragmentCompose extends FragmentBase {
 
                     EntityMessage ref = db.message().getMessage(reference);
 
-                    String body = "";
-
                     data.draft = new EntityMessage();
                     data.draft.msgid = EntityMessage.generateMessageId();
 
@@ -2197,136 +2129,6 @@ public class FragmentCompose extends FragmentBase {
                         data.draft.encrypt = true;
                     if (receipt_default)
                         data.draft.receipt_request = true;
-
-                    if (ref == null) {
-                        data.draft.thread = data.draft.msgid;
-
-                        try {
-                            String to = args.getString("to");
-                            data.draft.to = (TextUtils.isEmpty(to) ? null : InternetAddress.parse(to));
-                        } catch (AddressException ex) {
-                            Log.w(ex);
-                        }
-
-                        try {
-                            String cc = args.getString("cc");
-                            data.draft.cc = (TextUtils.isEmpty(cc) ? null : InternetAddress.parse(cc));
-                        } catch (AddressException ex) {
-                            Log.w(ex);
-                        }
-
-                        try {
-                            String bcc = args.getString("bcc");
-                            data.draft.bcc = (TextUtils.isEmpty(bcc) ? null : InternetAddress.parse(bcc));
-                        } catch (AddressException ex) {
-                            Log.w(ex);
-                        }
-
-                        data.draft.subject = args.getString("subject", "");
-                        body = args.getString("body", "");
-                        if (!TextUtils.isEmpty(body))
-                            body = HtmlHelper.sanitize(context, body, false, false);
-
-                        if (answer > 0) {
-                            EntityAnswer a = db.answer().getAnswer(answer);
-                            if (a != null) {
-                                data.draft.subject = a.name;
-                                body = a.getText(null) + body;
-                            }
-                        }
-                    } else {
-                        // Actions:
-                        // - reply
-                        // - reply_all
-                        // - forward
-                        // - editasnew
-                        // - list
-                        // - receipt
-                        // - participation
-                        if ("reply".equals(action) || "reply_all".equals(action) ||
-                                "list".equals(action) ||
-                                "receipt".equals(action) ||
-                                "participation".equals(action)) {
-                            data.draft.references = (ref.references == null ? "" : ref.references + " ") + ref.msgid;
-                            data.draft.inreplyto = ref.msgid;
-                            data.draft.thread = ref.thread;
-
-                            if ("list".equals(action) && ref.list_post != null)
-                                data.draft.to = ref.list_post;
-                            else if ("receipt".equals(action) && ref.receipt_to != null)
-                                data.draft.to = ref.receipt_to;
-                            else {
-                                // Prevent replying to self
-                                if (ref.replySelf(data.identities, ref.account)) {
-                                    data.draft.from = ref.from;
-                                    data.draft.to = ref.to;
-                                } else {
-                                    data.draft.from = ref.to;
-                                    data.draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
-                                }
-
-                                if (data.draft.from != null && data.draft.from.length > 0) {
-                                    String from = ((InternetAddress) data.draft.from[0]).getAddress();
-                                    if (from != null && from.contains("@"))
-                                        data.draft.extra = from.substring(0, from.indexOf("@"));
-                                }
-                            }
-
-                            if ("reply_all".equals(action))
-                                data.draft.cc = ref.getAllRecipients(data.identities, ref.account);
-                            else if ("receipt".equals(action)) {
-                                data.draft.receipt = true;
-                                data.draft.receipt_request = false;
-                            }
-
-                        } else if ("forward".equals(action) || "editasnew".equals(action))
-                            data.draft.thread = data.draft.msgid; // new thread
-
-                        String subject = (ref.subject == null ? "" : ref.subject);
-                        if ("reply".equals(action) || "reply_all".equals(action)) {
-                            if (prefix_once) {
-                                String re = context.getString(R.string.title_subject_reply, "");
-                                subject = unprefix(subject, re);
-                            }
-                            data.draft.subject = context.getString(R.string.title_subject_reply, subject);
-                        } else if ("forward".equals(action)) {
-                            if (prefix_once) {
-                                String fwd = context.getString(R.string.title_subject_forward, "");
-                                subject = unprefix(subject, fwd);
-                            }
-                            data.draft.subject = context.getString(R.string.title_subject_forward, subject);
-                        } else if ("editasnew".equals(action)) {
-                            data.draft.subject = ref.subject;
-                            if (ref.content) {
-                                String html = Helper.readText(ref.getFile(context));
-                                body = HtmlHelper.sanitize(context, html, true, false);
-                            }
-                        } else if ("list".equals(action)) {
-                            data.draft.subject = ref.subject;
-                        } else if ("receipt".equals(action)) {
-                            data.draft.subject = context.getString(R.string.title_receipt_subject, subject);
-
-                            Configuration configuration = new Configuration(context.getResources().getConfiguration());
-                            configuration.setLocale(new Locale("en"));
-                            Resources res = context.createConfigurationContext(configuration).getResources();
-
-                            body = "<p>" + context.getString(R.string.title_receipt_text) + "</p>";
-                            if (!Locale.getDefault().getLanguage().equals("en"))
-                                body += "<p>" + res.getString(R.string.title_receipt_text) + "</p>";
-                        } else if ("participation".equals(action))
-                            data.draft.subject = status + ": " + ref.subject;
-
-                        if (ref.plain_only != null && ref.plain_only)
-                            data.draft.plain_only = true;
-                        if (ref.encrypt != null && ref.encrypt)
-                            data.draft.encrypt = true;
-
-                        if (answer > 0) {
-                            EntityAnswer a = db.answer().getAnswer(answer);
-                            if (a != null)
-                                body = a.getText(data.draft.to) + body;
-                        }
-                    }
 
                     // Select identity matching from address
                     EntityIdentity selected = null;
@@ -2420,6 +2222,239 @@ public class FragmentCompose extends FragmentBase {
                     if (selected == null)
                         throw new IllegalArgumentException(context.getString(R.string.title_no_identities));
 
+                    Document document = Document.createShell("");
+
+                    if (ref == null) {
+                        data.draft.thread = data.draft.msgid;
+
+                        try {
+                            String to = args.getString("to");
+                            data.draft.to = (TextUtils.isEmpty(to) ? null : InternetAddress.parse(to));
+                        } catch (AddressException ex) {
+                            Log.w(ex);
+                        }
+
+                        try {
+                            String cc = args.getString("cc");
+                            data.draft.cc = (TextUtils.isEmpty(cc) ? null : InternetAddress.parse(cc));
+                        } catch (AddressException ex) {
+                            Log.w(ex);
+                        }
+
+                        try {
+                            String bcc = args.getString("bcc");
+                            data.draft.bcc = (TextUtils.isEmpty(bcc) ? null : InternetAddress.parse(bcc));
+                        } catch (AddressException ex) {
+                            Log.w(ex);
+                        }
+
+                        data.draft.subject = args.getString("subject", "");
+                        String b = args.getString("body", "");
+                        if (!TextUtils.isEmpty(b)) {
+                            Document d = HtmlHelper.sanitize(context, b, false, false);
+                            Element e = d.body();
+                            e.tagName("div");
+                            document.body().appendChild(e);
+                        }
+
+                        if (answer > 0) {
+                            EntityAnswer a = db.answer().getAnswer(answer);
+                            if (a != null) {
+                                data.draft.subject = a.name;
+                                Document d = JsoupEx.parse(a.getText(null));
+                                Element e = d.body();
+                                e.tagName("div");
+                                document.body().appendChild(e);
+                            }
+                        }
+
+                        addSignature(document, data.draft, selected);
+                    } else {
+                        // Actions:
+                        // - reply
+                        // - reply_all
+                        // - forward
+                        // - editasnew
+                        // - list
+                        // - receipt
+                        // - participation
+                        if ("reply".equals(action) || "reply_all".equals(action) ||
+                                "list".equals(action) ||
+                                "receipt".equals(action) ||
+                                "participation".equals(action)) {
+                            data.draft.references = (ref.references == null ? "" : ref.references + " ") + ref.msgid;
+                            data.draft.inreplyto = ref.msgid;
+                            data.draft.thread = ref.thread;
+
+                            if ("list".equals(action) && ref.list_post != null)
+                                data.draft.to = ref.list_post;
+                            else if ("receipt".equals(action) && ref.receipt_to != null)
+                                data.draft.to = ref.receipt_to;
+                            else {
+                                // Prevent replying to self
+                                if (ref.replySelf(data.identities, ref.account)) {
+                                    data.draft.from = ref.from;
+                                    data.draft.to = ref.to;
+                                } else {
+                                    data.draft.from = ref.to;
+                                    data.draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
+                                }
+
+                                if (data.draft.from != null && data.draft.from.length > 0) {
+                                    String from = ((InternetAddress) data.draft.from[0]).getAddress();
+                                    if (from != null && from.contains("@"))
+                                        data.draft.extra = from.substring(0, from.indexOf("@"));
+                                }
+                            }
+
+                            if ("reply_all".equals(action))
+                                data.draft.cc = ref.getAllRecipients(data.identities, ref.account);
+                            else if ("receipt".equals(action)) {
+                                data.draft.receipt = true;
+                                data.draft.receipt_request = false;
+                            }
+
+                        } else if ("forward".equals(action) || "editasnew".equals(action))
+                            data.draft.thread = data.draft.msgid; // new thread
+
+                        String subject = (ref.subject == null ? "" : ref.subject);
+                        if ("reply".equals(action) || "reply_all".equals(action)) {
+                            if (prefix_once) {
+                                String re = context.getString(R.string.title_subject_reply, "");
+                                subject = unprefix(subject, re);
+                            }
+                            data.draft.subject = context.getString(R.string.title_subject_reply, subject);
+                        } else if ("forward".equals(action)) {
+                            if (prefix_once) {
+                                String fwd = context.getString(R.string.title_subject_forward, "");
+                                subject = unprefix(subject, fwd);
+                            }
+                            data.draft.subject = context.getString(R.string.title_subject_forward, subject);
+                        } else if ("editasnew".equals(action)) {
+                            data.draft.subject = ref.subject;
+                            if (ref.content) {
+                                String html = Helper.readText(ref.getFile(context));
+                                Document d = HtmlHelper.sanitize(context, html, true, false);
+                                Element e = d.body();
+                                e.tagName("div");
+                                document.body().appendChild(e);
+                            }
+                        } else if ("list".equals(action)) {
+                            data.draft.subject = ref.subject;
+                        } else if ("receipt".equals(action)) {
+                            data.draft.subject = context.getString(R.string.title_receipt_subject, subject);
+
+                            Element p = document.createElement("p");
+                            p.text(context.getString(R.string.title_receipt_text));
+                            document.body().appendChild(p);
+
+                            if (!Locale.getDefault().getLanguage().equals("en")) {
+                                Configuration configuration = new Configuration(context.getResources().getConfiguration());
+                                configuration.setLocale(new Locale("en"));
+                                Resources res = context.createConfigurationContext(configuration).getResources();
+
+                                p = document.createElement("p");
+                                p.text(res.getString(R.string.title_receipt_text));
+                                document.body().appendChild(p);
+                            }
+                        } else if ("participation".equals(action))
+                            data.draft.subject = status + ": " + ref.subject;
+
+                        if (ref.plain_only != null && ref.plain_only)
+                            data.draft.plain_only = true;
+                        if (ref.encrypt != null && ref.encrypt)
+                            data.draft.encrypt = true;
+
+                        if (answer > 0) {
+                            EntityAnswer a = db.answer().getAnswer(answer);
+                            if (a != null) {
+                                Document d = JsoupEx.parse(a.getText(data.draft.to));
+                                Element e = d.body();
+                                e.tagName("div");
+                                document.body().appendChild(e);
+                            }
+                        }
+
+                        if (ref.content &&
+                                !"editasnew".equals(action) &&
+                                !"list".equals(action) &&
+                                !"receipt".equals(action)) {
+                            // Reply/forward
+                            Element div = document.createElement("div");
+                            div.attr("fairemail", "reference");
+
+                            // Build reply header
+                            Element p = document.createElement("p");
+                            DateFormat DF = Helper.getDateTimeInstance(context);
+                            boolean extended_reply = prefs.getBoolean("extended_reply", false);
+                            if (extended_reply) {
+                                if (ref.from != null && ref.from.length > 0) {
+                                    Element strong = document.createElement("strong");
+                                    strong.text(context.getString(R.string.title_from) + " ");
+                                    p.appendChild(strong);
+                                    p.appendText(MessageHelper.formatAddresses(ref.from));
+                                    p.appendElement("br");
+                                }
+                                if (ref.to != null && ref.to.length > 0) {
+                                    Element strong = document.createElement("strong");
+                                    strong.text(context.getString(R.string.title_to) + " ");
+                                    p.appendChild(strong);
+                                    p.appendText(MessageHelper.formatAddresses(ref.to));
+                                    p.appendElement("br");
+                                }
+                                if (ref.cc != null && ref.cc.length > 0) {
+                                    Element strong = document.createElement("strong");
+                                    strong.text(context.getString(R.string.title_cc) + " ");
+                                    p.appendChild(strong);
+                                    p.appendText(MessageHelper.formatAddresses(ref.cc));
+                                    p.appendElement("br");
+                                }
+                                {
+                                    Element strong = document.createElement("strong");
+                                    strong.text(context.getString(R.string.title_received) + " ");
+                                    p.appendChild(strong);
+                                    p.appendText(DF.format(ref.received));
+                                    p.appendElement("br");
+                                }
+                                {
+                                    Element strong = document.createElement("strong");
+                                    strong.text(context.getString(R.string.title_subject) + " ");
+                                    p.appendChild(strong);
+                                    p.appendText(ref.subject == null ? "" : ref.subject);
+                                    p.appendElement("br");
+                                }
+                            } else
+                                p.text(DF.format(new Date(ref.received)) + " " + MessageHelper.formatAddresses(ref.from) + ":");
+
+                            div.appendChild(p);
+
+                            // Get referenced message body
+                            Document d = JsoupEx.parse(Helper.readText(ref.getFile(context)));
+
+                            // Remove signature separators
+                            boolean usenet = prefs.getBoolean("usenet_signature", false);
+                            if (usenet)
+                                for (Element span : d.select("span"))
+                                    if (span.childNodeSize() == 2 &&
+                                            span.childNode(0) instanceof TextNode &&
+                                            "-- ".equals(span.wholeText()) &&
+                                            "br".equals(span.childNode(1).nodeName()))
+                                        span.remove();
+
+                            // Quote referenced message body
+                            Element e = d.body();
+                            boolean quote_reply = prefs.getBoolean("quote_reply", true);
+                            boolean quote = (quote_reply && ("reply".equals(action) || "reply_all".equals(action)));
+
+                            e.tagName(quote ? "blockquote" : "div");
+                            div.appendChild(e);
+
+                            document.body().appendChild(div);
+
+                            addSignature(document, data.draft, selected);
+                        }
+                    }
+
                     EntityFolder drafts = db.folder().getFolderByType(selected.account, EntityFolder.DRAFTS);
                     if (drafts == null)
                         throw new IllegalArgumentException(context.getString(R.string.title_no_primary_drafts));
@@ -2441,12 +2476,15 @@ public class FragmentCompose extends FragmentBase {
                     data.draft.revisions = 1;
 
                     data.draft.id = db.message().insertMessage(data.draft);
-                    Helper.writeText(data.draft.getFile(context), body);
+
+                    String html = document.html();
+                    Helper.writeText(data.draft.getFile(context), html);
+                    Helper.writeText(data.draft.getFile(context, data.draft.revision), html);
 
                     db.message().setMessageContent(data.draft.id,
                             true,
                             data.draft.plain_only,
-                            HtmlHelper.getPreview(body),
+                            HtmlHelper.getPreview(html),
                             null);
 
                     if ("participation".equals(action)) {
@@ -2463,87 +2501,6 @@ public class FragmentCompose extends FragmentBase {
                         ics.renameTo(attachment.getFile(context));
                     }
 
-                    // Write reference text
-                    if (ref != null && ref.content &&
-                            !"editasnew".equals(action) &&
-                            !"list".equals(action) &&
-                            !"receipt".equals(action)) {
-                        String refText = Helper.readText(ref.getFile(context));
-
-                        boolean usenet = prefs.getBoolean("usenet_signature", false);
-                        if (usenet) {
-                            Document rdoc = JsoupEx.parse(refText);
-
-                            List<Node> tbd = new ArrayList<>();
-
-                            NodeTraversor.traverse(new NodeVisitor() {
-                                boolean found = false;
-
-                                public void head(Node node, int depth) {
-                                    if (node instanceof TextNode &&
-                                            "-- ".equals(((TextNode) node).getWholeText()) &&
-                                            node.nextSibling() != null &&
-                                            "br".equals(node.nextSibling().nodeName()))
-                                        found = true;
-                                    if (found)
-                                        tbd.add(node);
-                                }
-
-                                public void tail(Node node, int depth) {
-                                    // Do nothing
-                                }
-                            }, rdoc);
-
-                            if (tbd.size() > 0) {
-                                for (Node node : tbd)
-                                    node.remove();
-
-                                refText = (rdoc.body() == null ? "" : rdoc.body().html());
-                            }
-                        }
-
-                        // Build reply header
-                        StringBuilder sb = new StringBuilder();
-                        DateFormat DF = Helper.getDateTimeInstance(context);
-                        boolean extended_reply = prefs.getBoolean("extended_reply", false);
-                        if (extended_reply) {
-                            sb.append("<p>");
-                            if (ref.from != null && ref.from.length > 0)
-                                sb.append("<strong>").append(context.getString(R.string.title_from)).append("</strong> ")
-                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.from)))
-                                        .append("<br>\n");
-                            if (ref.to != null && ref.to.length > 0)
-                                sb.append("<strong>").append(context.getString(R.string.title_to)).append("</strong> ")
-                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.to))).
-                                        append("<br>\n");
-                            if (ref.cc != null && ref.cc.length > 0)
-                                sb.append("<strong>").append(context.getString(R.string.title_cc)).append("</strong> ")
-                                        .append(Html.escapeHtml(MessageHelper.formatAddresses(ref.cc)))
-                                        .append("<br>\n");
-                            sb.append("<strong>").append(context.getString(R.string.title_received)).append("</strong> ")
-                                    .append(Html.escapeHtml(DF.format(ref.received)))
-                                    .append("<br>\n");
-                            sb.append("<strong>").append(context.getString(R.string.title_subject)).append("</strong> ")
-                                    .append(Html.escapeHtml(ref.subject == null ? "" : ref.subject));
-                            sb.append("</p>\n");
-                        } else {
-                            sb.append("<p>");
-                            sb.append(Html.escapeHtml(DF.format(new Date(ref.received)))).append(" ");
-                            sb.append(Html.escapeHtml(MessageHelper.formatAddresses(ref.from))).append(":");
-                            sb.append("</p>\n");
-                        }
-
-                        boolean quote_reply = prefs.getBoolean("quote_reply", true);
-                        boolean quote = (quote_reply && ("reply".equals(action) || "reply_all".equals(action)));
-                        if (quote)
-                            sb.append("<blockquote>");
-                        sb.append(refText);
-                        if (quote)
-                            sb.append("</blockquote>");
-
-                        Helper.writeText(data.draft.getRefFile(context), sb.toString());
-                    }
-
                     if ("new".equals(action)) {
                         ArrayList<Uri> uris = args.getParcelableArrayList("attachments");
                         if (uris != null)
@@ -2556,14 +2513,26 @@ public class FragmentCompose extends FragmentBase {
                     } else if (ref != null &&
                             ("reply".equals(action) || "reply_all".equals(action) ||
                                     "forward".equals(action) || "editasnew".equals(action))) {
+
+                        List<String> cid = new ArrayList<>();
+                        for (Element img : document.select("img")) {
+                            String src = img.attr("src");
+                            if (src.startsWith("cid:"))
+                                cid.add("<" + src.substring(4) + ">");
+                        }
+
                         int sequence = 0;
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
                             if (attachment.encryption == null &&
                                     ("forward".equals(action) || "editasnew".equals(action) ||
-                                            (attachment.isInline() && attachment.isImage()))) {
+                                            (cid.contains(attachment.cid) ||
+                                                    (attachment.isInline() && attachment.isImage())))) {
                                 if (attachment.available) {
                                     File source = attachment.getFile(context);
+
+                                    if (cid.contains(attachment.cid))
+                                        attachment.disposition = Part.INLINE;
 
                                     attachment.id = null;
                                     attachment.message = data.draft.id;
@@ -2580,22 +2549,49 @@ public class FragmentCompose extends FragmentBase {
                             }
                     }
 
-                    // Create initial revision
-                    EntityRevision revision = new EntityRevision();
-                    revision.message = data.draft.id;
-                    revision.sequence = data.draft.revision;
-                    revision.reference = data.draft.getRefFile(context).exists();
-                    db.revision().insertRevision(revision);
-                    Helper.writeText(data.draft.getFile(context, data.draft.revision), body);
-
                     if (data.draft.encrypt == null || !data.draft.encrypt)
                         EntityOperation.queue(context, data.draft, EntityOperation.ADD);
                 } else {
+                    if (data.draft.revision == null) {
+                        data.draft.revision = 1;
+                        data.draft.revisions = 1;
+                        db.message().setMessageRevision(data.draft.id, data.draft.revision);
+                        db.message().setMessageRevisions(data.draft.id, data.draft.revisions);
+                    }
+
                     if (data.draft.content) {
                         File file = data.draft.getFile(context);
-                        String html = Helper.readText(file);
-                        html = HtmlHelper.sanitize(context, html, true, false);
+
+                        Document doc = JsoupEx.parse(Helper.readText(file));
+                        doc.select("div[fairemail=signature]").remove();
+                        Elements ref = doc.select("div[fairemail=reference]");
+                        ref.remove();
+
+                        File refFile = data.draft.getRefFile(context);
+                        if (refFile.exists()) {
+                            ref.html(Helper.readText(refFile));
+                            refFile.delete();
+                        }
+
+                        Document document = HtmlHelper.sanitize(context, doc.html(), true, false);
+
+                        if (data.draft.identity != null) {
+                            EntityIdentity identity = db.identity().getIdentity(data.draft.identity);
+                            addSignature(document, data.draft, identity);
+                        }
+
+                        for (Element e : ref)
+                            document.body().appendChild(e);
+
+                        String html = JsoupEx.parse(document.html()).html();
                         Helper.writeText(file, html);
+                        Helper.writeText(data.draft.getFile(context, data.draft.revision), html);
+
+                        db.message().setMessageContent(data.draft.id,
+                                true,
+                                data.draft.plain_only,
+                                HtmlHelper.getPreview(html),
+                                null);
                     } else {
                         if (data.draft.uid == null)
                             throw new IllegalStateException("Draft without uid");
@@ -2647,15 +2643,14 @@ public class FragmentCompose extends FragmentBase {
             long reference = args.getLong("reference", -1);
             etTo.setTag(reference < 0 ? "" : etTo.getText().toString());
             etSubject.setTag(reference < 0 ? "" : etSubject.getText().toString());
+            cbSignature.setTag(data.draft.signature);
 
             grpHeader.setVisibility(View.VISIBLE);
             grpAddresses.setVisibility("reply_all".equals(action) ? View.VISIBLE : View.GONE);
             ibCcBcc.setVisibility(View.VISIBLE);
 
-            bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(
-                    data.draft.revision != null && data.draft.revision > 1);
-            bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(
-                    data.draft.revision != null && !data.draft.revision.equals(data.draft.revisions));
+            bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(data.draft.revision > 1);
+            bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(data.draft.revision < data.draft.revisions);
 
             if (args.getBoolean("incomplete"))
                 Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_LONG).show();
@@ -2698,7 +2693,9 @@ public class FragmentCompose extends FragmentBase {
                             rvAttachment.setTag(downloading);
                             checkInternet();
 
-                            tvUnusedInlineImages.setVisibility(inline_images ? View.VISIBLE : View.GONE);
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            boolean inline_image_hint = prefs.getBoolean("inline_image_hint", true);
+                            grpUnusedImagesHint.setVisibility(inline_images && inline_image_hint ? View.VISIBLE : View.GONE);
                         }
                     });
 
@@ -2788,6 +2785,7 @@ public class FragmentCompose extends FragmentBase {
             String bcc = args.getString("bcc");
             String subject = args.getString("subject");
             String body = args.getString("body");
+            boolean signature = args.getBoolean("signature");
             boolean empty = args.getBoolean("empty");
             Bundle extras = args.getBundle("extras");
 
@@ -2936,6 +2934,7 @@ public class FragmentCompose extends FragmentBase {
                             !MessageHelper.equal(draft.cc, acc) ||
                             !MessageHelper.equal(draft.bcc, abcc) ||
                             !Objects.equals(draft.subject, subject) ||
+                            !draft.signature.equals(signature) ||
                             last_available != available);
 
                     last_available = available;
@@ -2949,65 +2948,64 @@ public class FragmentCompose extends FragmentBase {
                         draft.cc = acc;
                         draft.bcc = abcc;
                         draft.subject = subject;
+                        draft.signature = signature;
                         draft.sender = MessageHelper.getSortKey(draft.from);
                         Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
                         draft.avatar = (lookupUri == null ? null : lookupUri.toString());
                         db.message().updateMessage(draft);
                     }
 
-                    if (action == R.id.action_undo || action == R.id.action_redo) {
-                        if (draft.revision != null && draft.revisions != null) {
-                            Helper.writeText(draft.getFile(context, draft.revision), body);
+                    String p = Helper.readText(draft.getFile(context));
+                    Document doc = JsoupEx.parse(p);
+                    if ((body != null && !body.equals(doc.html())) ||
+                            (extras != null && extras.containsKey("html"))) {
+                        dirty = true;
 
-                            if (action == R.id.action_undo) {
-                                if (draft.revision > 1)
-                                    draft.revision--;
-                            } else {
-                                if (draft.revision < draft.revisions)
-                                    draft.revision++;
-                            }
+                        doc.select("div[fairemail=signature]").remove();
+                        Elements ref = doc.select("div[fairemail=reference]");
+                        ref.remove();
 
-                            // Restore revision
-                            Log.i("Restoring revision=" + draft.revision);
-                            body = Helper.readText(draft.getFile(context, draft.revision));
+                        // Get saved body
+                        Document d;
+                        if (extras != null && extras.containsKey("html")) {
+                            // Save current revision
+                            Document c = JsoupEx.parse(body);
+                            addSignature(c, draft, identity);
+                            for (Element e : ref)
+                                c.body().appendChild(e);
+                            Helper.writeText(draft.getFile(context, draft.revision), c.html());
+
+                            d = JsoupEx.parse(extras.getString("html"));
+                        } else {
+                            d = JsoupEx.parse(body);
+                            addSignature(d, draft, identity);
+                            for (Element e : ref)
+                                d.body().appendChild(e);
                         }
-                    } else {
-                        String previous = Helper.readText(draft.getFile(context));
-                        if ((body != null && !body.equals(previous)) ||
-                                (extras != null && extras.containsKey("html"))) {
-                            dirty = true;
 
-                            // Get revision info
-                            boolean reference;
-                            if (extras != null && extras.containsKey("html")) {
-                                reference = false;
-                                body = extras.getString("html");
-                            } else {
-                                File refFile = EntityMessage.getRefFile(context, draft.id);
-                                if (draft.revision == null)
-                                    reference = refFile.exists();
-                                else {
-                                    EntityRevision revision = db.revision().getRevision(draft.id, draft.revision);
-                                    reference = (revision == null ? refFile.exists() : revision.reference);
-                                }
-                            }
+                        body = d.html();
 
-                            // Create new revision
-                            if (draft.revisions == null)
-                                draft.revisions = 1;
-                            else
-                                draft.revisions++;
+                        // Create new revision
+                        if (action != R.id.action_undo && action != R.id.action_redo) {
+                            draft.revisions++;
                             draft.revision = draft.revisions;
-
-                            Log.i("Creating revision sequence=" + draft.revision + " reference=" + reference);
-                            EntityRevision revision = new EntityRevision();
-                            revision.message = draft.id;
-                            revision.sequence = draft.revision;
-                            revision.reference = reference;
-                            db.revision().insertRevision(revision);
-
-                            Helper.writeText(draft.getFile(context, draft.revision), body);
                         }
+
+                        Helper.writeText(draft.getFile(context, draft.revision), body);
+                    }
+
+                    if (action == R.id.action_undo || action == R.id.action_redo) {
+                        if (action == R.id.action_undo) {
+                            if (draft.revision > 1)
+                                draft.revision--;
+                        } else {
+                            if (draft.revision < draft.revisions)
+                                draft.revision++;
+                        }
+
+                        // Restore revision
+                        Log.i("Restoring revision=" + draft.revision);
+                        body = Helper.readText(draft.getFile(context, draft.revision));
                     }
 
                     Helper.writeText(draft.getFile(context), body);
@@ -3093,13 +3091,8 @@ public class FragmentCompose extends FragmentBase {
 
                     } else if (action == R.id.action_send) {
                         // Remove unused inline images
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(body);
-                        File rfile = draft.getRefFile(context);
-                        if (rfile.exists())
-                            sb.append(Helper.readText(rfile));
                         List<String> cids = new ArrayList<>();
-                        for (Element element : JsoupEx.parse(sb.toString()).select("img")) {
+                        for (Element element : JsoupEx.parse(body).select("img")) {
                             String src = element.attr("src");
                             if (src.startsWith("cid:"))
                                 cids.add("<" + src.substring(4) + ">");
@@ -3114,8 +3107,6 @@ public class FragmentCompose extends FragmentBase {
                         // Delete draft (cannot move to outbox)
                         EntityOperation.queue(context, draft, EntityOperation.DELETE);
 
-                        File refDraftFile = draft.getRefFile(context);
-
                         // Copy message to outbox
                         draft.id = null;
                         draft.folder = db.folder().getOutbox().id;
@@ -3123,10 +3114,6 @@ public class FragmentCompose extends FragmentBase {
                         draft.ui_hide = false;
                         draft.id = db.message().insertMessage(draft);
                         Helper.writeText(draft.getFile(context), body);
-                        if (refDraftFile.exists()) {
-                            File refFile = draft.getRefFile(context);
-                            refDraftFile.renameTo(refFile);
-                        }
 
                         // Move attachments
                         for (EntityAttachment attachment : attachments)
@@ -3182,8 +3169,8 @@ public class FragmentCompose extends FragmentBase {
             etCc.setText(MessageHelper.formatAddressesCompose(draft.cc));
             etBcc.setText(MessageHelper.formatAddressesCompose(draft.bcc));
 
-            bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision != null && draft.revision > 1);
-            bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
+            bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision > 1);
+            bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision < draft.revisions);
 
             if (action == R.id.action_delete) {
                 autosave = false;
@@ -3269,6 +3256,28 @@ public class FragmentCompose extends FragmentBase {
         return subject;
     }
 
+    private void addSignature(Document document, EntityMessage message, EntityIdentity identity) {
+        if (!message.signature ||
+                identity == null || TextUtils.isEmpty(identity.signature))
+            return;
+
+        Element div = document.createElement("div");
+        div.attr("fairemail", "signature");
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean usenet = prefs.getBoolean("usenet_signature", false);
+        if (usenet) {
+            // https://www.ietf.org/rfc/rfc3676.txt
+            Element span = document.createElement("span");
+            span.text("-- ");
+            span.appendElement("br");
+            div.appendChild(span);
+        }
+
+        div.append(identity.signature);
+        document.body().appendChild(div);
+    }
+
     private void showDraft(final EntityMessage draft) {
         Bundle args = new Bundle();
         args.putLong("id", draft.id);
@@ -3276,14 +3285,20 @@ public class FragmentCompose extends FragmentBase {
 
         new SimpleTask<Spanned[]>() {
             @Override
+            protected void onPreExecute(Bundle args) {
+                // Needed to get width for images
+                grpBody.setVisibility(View.VISIBLE);
+            }
+
+            @Override
             protected void onPostExecute(Bundle args) {
                 state = State.LOADED;
                 autosave = true;
 
                 pbWait.setVisibility(View.GONE);
                 media_bar.setVisibility(media ? View.VISIBLE : View.GONE);
-                bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision != null && draft.revision > 1);
-                bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision != null && !draft.revision.equals(draft.revisions));
+                bottom_navigation.getMenu().findItem(R.id.action_undo).setVisible(draft.revision > 1);
+                bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision < draft.revisions);
                 bottom_navigation.setVisibility(View.VISIBLE);
 
                 Helper.setViewsEnabled(view, true);
@@ -3303,8 +3318,12 @@ public class FragmentCompose extends FragmentBase {
                 if (draft == null || !draft.content)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_body));
 
-                String body = Helper.readText(draft.getFile(context));
-                Spanned spannedBody = HtmlHelper.fromHtml(body, new Html.ImageGetter() {
+                Document doc = JsoupEx.parse(Helper.readText(draft.getFile(context)));
+                doc.select("div[fairemail=signature]").remove();
+                Elements ref = doc.select("div[fairemail=reference]");
+                ref.remove();
+
+                Spanned spannedBody = HtmlHelper.fromHtml(doc.html(), new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
                         return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
@@ -3325,13 +3344,9 @@ public class FragmentCompose extends FragmentBase {
                 spannedBody = bodyBuilder;
 
                 Spanned spannedRef = null;
-                File refFile = draft.getRefFile(context);
-                EntityRevision revision = db.revision().getRevision(draft.id, draft.revision == null ? 0 : draft.revision);
-                Log.i("Viewing revision=" + (revision == null ? null : revision.sequence) +
-                        " reference=" + (revision == null ? null : revision.reference));
-                if (revision == null ? refFile.exists() : revision.reference) {
-                    String quote = HtmlHelper.sanitize(context, Helper.readText(refFile), show_images, false);
-                    Spanned spannedQuote = HtmlHelper.fromHtml(quote,
+                if (!ref.isEmpty()) {
+                    Document quote = HtmlHelper.sanitize(context, ref.outerHtml(), show_images, false);
+                    Spanned spannedQuote = HtmlHelper.fromHtml(quote.html(),
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
@@ -3377,7 +3392,6 @@ public class FragmentCompose extends FragmentBase {
                 tvReference.setText(text[1]);
                 tvReference.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 grpReferenceHint.setVisibility(text[1] == null || !ref_hint ? View.GONE : View.VISIBLE);
-                ibReferenceDelete.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 ibReferenceEdit.setVisibility(text[1] == null ? View.GONE : View.VISIBLE);
                 ibReferenceImages.setVisibility(ref_has_images && !show_images ? View.VISIBLE : View.GONE);
 

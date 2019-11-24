@@ -205,14 +205,13 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
         }));
 
-        NavMenuItem order = new NavMenuItem(R.drawable.baseline_reorder_24, R.string.title_setup_reorder_folders, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.baseline_reorder_24, R.string.title_setup_reorder_folders, new Runnable() {
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer);
                 onMenuOrder(R.string.title_setup_reorder_folders, TupleFolderSort.class);
             }
-        }).setSeparated();
-        menus.add(order);
+        }).setSeparated());
 
         menus.add(new NavMenuItem(R.drawable.baseline_help_24, R.string.menu_legend, new Runnable() {
             @Override
@@ -1269,8 +1268,18 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     }
 
     private void onEditAccount(Intent intent) {
-        boolean pop = intent.getBooleanExtra("pop", false);
-        FragmentBase fragment = pop ? new FragmentPop() : new FragmentAccount();
+        int protocol = intent.getIntExtra("protocol", EntityAccount.TYPE_IMAP);
+        FragmentBase fragment;
+        switch (protocol) {
+            case EntityAccount.TYPE_IMAP:
+                fragment = new FragmentAccount();
+                break;
+            case EntityAccount.TYPE_POP:
+                fragment = new FragmentPop();
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown protocol=" + protocol);
+        }
         fragment.setArguments(intent.getExtras());
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("account");

@@ -69,7 +69,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private final static String[] RESET_QUESTIONS = new String[]{
             "welcome", "crash_reports_asked",
             "html_always_images", "print_html_confirmed",
-            "identities_asked", "delete_ref_confirmed", "send_dialog"
+            "identities_asked",
+            "inline_image_hint", "compose_reference", "send_dialog"
     };
 
     @Override

@@ -37,6 +37,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.RemoteInput;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import com.sun.mail.iap.BadCommandException;
@@ -407,6 +408,8 @@ class Core {
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
                                 ex instanceof SQLiteConstraintException ||
+                                ex.getCause() instanceof MessageRemovedException ||
+                                ex.getCause() instanceof MessageRemovedIOException ||
                                 ex.getCause() instanceof BadCommandException ||
                                 ex.getCause() instanceof CommandFailedException) {
                             // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
@@ -427,10 +430,16 @@ class Core {
                                     db.folder().setFolderSyncState(folder.id, null);
 
                                 // Cleanup messages
-                                if (message != null && ex instanceof MessageRemovedException) {
+                                if (message != null &&
+                                        (ex instanceof MessageRemovedException ||
+                                                ex instanceof MessageRemovedIOException ||
+                                                ex.getCause() instanceof MessageRemovedException ||
+                                                ex.getCause() instanceof MessageRemovedIOException)) {
+                                    // Failsafe: retry batch
+                                    if (similar.size() > 0)
+                                        throw ex;
+
                                     db.message().deleteMessage(message.id);
-                                    for (EntityMessage m : similar.values())
-                                        db.message().deleteMessage(m.id);
                                 }
 
                                 // Cleanup operations
@@ -781,14 +790,15 @@ class Core {
         // Get source messages
         Map<Message, EntityMessage> map = new HashMap<>();
         for (EntityMessage message : messages)
-            if (message.uid != null)
-                try {
-                    Message imessage = ifolder.getMessageByUID(message.uid);
-                    if (imessage != null)
-                        map.put(imessage, message);
-                } catch (MessagingException ex) {
-                    Log.w(ex);
-                }
+            try {
+                Message imessage = ifolder.getMessageByUID(message.uid);
+                if (imessage == null)
+                    throw new MessageRemovedException();
+                map.put(imessage, message);
+            } catch (MessageRemovedException ex) {
+                Log.w(ex);
+                db.message().deleteMessage(message.id);
+            }
 
         // Some providers do not support the COPY operation for drafts
         boolean draft = (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type));
@@ -2177,6 +2187,16 @@ class Core {
                 }
 
                 runRules(context, imessage, message, rules);
+
+                // Prepare scroll to top
+                if (!message.ui_seen && message.received > account.created) {
+                    Intent report = new Intent(FragmentMessages.ACTION_NEW_MESSAGE);
+                    report.putExtra("folder", folder.id);
+                    report.putExtra("unified", folder.unified);
+
+                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                    lbm.sendBroadcast(report);
+                }
 
                 db.setTransactionSuccessful();
             } catch (SQLiteConstraintException ex) {
