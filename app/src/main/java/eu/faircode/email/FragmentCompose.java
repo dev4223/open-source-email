@@ -132,12 +132,14 @@ import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.MessageRemovedException;
+import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
 
 import static android.app.Activity.RESULT_CANCELED;
@@ -188,7 +190,7 @@ public class FragmentCompose extends FragmentBase {
 
     private boolean prefix_once = false;
     private boolean monospaced = false;
-    private boolean encrypt = false;
+    private Integer encrypt = null;
     private boolean media = true;
     private boolean compact = false;
     private int zoom = 0;
@@ -928,16 +930,17 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_send).setEnabled(!busy);
 
         int colorEncrypt = Helper.resolveColor(getContext(), R.attr.colorEncrypt);
+        boolean isEncrypted = (encrypt != null && !encrypt.equals(EntityMessage.ENCRYPTION_NONE));
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
         ib.setEnabled(!busy);
-        ib.setImageResource(encrypt ? R.drawable.baseline_lock_24 : R.drawable.baseline_lock_open_24);
-        ib.setImageTintList(encrypt ? ColorStateList.valueOf(colorEncrypt) : null);
+        ib.setImageResource(isEncrypted ? R.drawable.baseline_lock_24 : R.drawable.baseline_lock_open_24);
+        ib.setImageTintList(isEncrypted ? ColorStateList.valueOf(colorEncrypt) : null);
 
         menu.findItem(R.id.menu_media).setChecked(media);
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
         bottom_navigation.getMenu().findItem(R.id.action_send)
-                .setTitle(encrypt ? R.string.title_encrypt : R.string.title_send);
+                .setTitle(isEncrypted ? R.string.title_encrypt : R.string.title_send);
     }
 
     @Override
@@ -987,18 +990,19 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuEncrypt() {
-        encrypt = !encrypt;
+        encrypt = (encrypt == null ? EntityMessage.ENCRYPTION_SIGNENCRYPT : null);
         getActivity().invalidateOptionsMenu();
 
         Bundle args = new Bundle();
         args.putLong("id", working);
-        args.putBoolean("encrypt", encrypt);
+        if (encrypt != null)
+            args.putInt("encrypt", encrypt);
 
         new SimpleTask<Void>() {
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
-                boolean encrypt = args.getBoolean("encrypt");
+                Integer encrypt = (args.containsKey("encrypt") ? args.getInt("encrypt") : null);
 
                 DB db = DB.getInstance(context);
                 db.message().setMessageEncrypt(id, encrypt);
@@ -1499,16 +1503,29 @@ public class FragmentCompose extends FragmentBase {
                 File output = new File(context.getCacheDir(), "output." + id);
 
                 // Serializing messages is NOT reproducible
-                if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction())) {
+                if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()) ||
+                        OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
                     // Build message
                     Properties props = MessageHelper.getSessionProperties();
                     Session isession = Session.getInstance(props, null);
                     MimeMessage imessage = new MimeMessage(isession);
                     MessageHelper.build(context, message, attachments, identity, imessage);
 
-                    // Serialize message
-                    try (OutputStream out = new FileOutputStream(input)) {
-                        imessage.writeTo(out);
+                    if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                        // Serialize content
+                        Object content = imessage.getContent();
+                        if (content instanceof Multipart) {
+                            try (OutputStream out = new FileOutputStream(input)) {
+                                ((MimeMultipart) content).writeTo(out);
+                            }
+                        } else
+                            throw new ParseException(content.getClass().getName());
+
+                    } else {
+                        // Serialize message
+                        try (OutputStream out = new FileOutputStream(input)) {
+                            imessage.writeTo(out);
+                        }
                     }
                 }
 
@@ -1533,6 +1550,7 @@ public class FragmentCompose extends FragmentBase {
                                     db.beginTransaction();
 
                                     String name;
+                                    String type = "application/octet-stream";
                                     int encryption;
                                     if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
                                         name = "keydata.asc";
@@ -1543,6 +1561,7 @@ public class FragmentCompose extends FragmentBase {
                                     } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
                                         name = "signature.asc";
                                         encryption = EntityAttachment.PGP_SIGNATURE;
+                                        type += "; micalg=" + result.getStringExtra(OpenPgpApi.RESULT_SIGNATURE_MICALG);
                                     } else
                                         throw new IllegalStateException(data.getAction());
 
@@ -1550,7 +1569,7 @@ public class FragmentCompose extends FragmentBase {
                                     attachment.message = id;
                                     attachment.sequence = db.attachment().getAttachmentSequence(id) + 1;
                                     attachment.name = name;
-                                    attachment.type = "application/octet-stream";
+                                    attachment.type = type;
                                     attachment.disposition = Part.INLINE;
                                     attachment.encryption = encryption;
                                     attachment.id = db.attachment().insertAttachment(attachment);
@@ -1845,7 +1864,7 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onActionSend(EntityMessage draft) {
-        if (draft.encrypt != null && draft.encrypt)
+        if (draft.encrypt != null && draft.encrypt != 0)
             onEncrypt(draft);
         else
             onAction(R.id.action_send);
@@ -2135,7 +2154,7 @@ public class FragmentCompose extends FragmentBase {
                     if (plain_only)
                         data.draft.plain_only = true;
                     if (encrypt_default)
-                        data.draft.encrypt = true;
+                        data.draft.encrypt = EntityMessage.ENCRYPTION_SIGNENCRYPT;
                     if (receipt_default)
                         data.draft.receipt_request = true;
 
@@ -2371,8 +2390,8 @@ public class FragmentCompose extends FragmentBase {
 
                         if (ref.plain_only != null && ref.plain_only)
                             data.draft.plain_only = true;
-                        if (ref.encrypt != null && ref.encrypt)
-                            data.draft.encrypt = true;
+                        if (ref.encrypt != null && ref.encrypt != 0)
+                            data.draft.encrypt = ref.encrypt;
 
                         if (answer > 0) {
                             EntityAnswer a = db.answer().getAnswer(answer);
@@ -2558,7 +2577,7 @@ public class FragmentCompose extends FragmentBase {
                             }
                     }
 
-                    if (data.draft.encrypt == null || !data.draft.encrypt)
+                    if (data.draft.encrypt == null || data.draft.encrypt == 0)
                         EntityOperation.queue(context, data.draft, EntityOperation.ADD);
                 } else {
                     if (data.draft.revision == null) {
@@ -2627,7 +2646,7 @@ public class FragmentCompose extends FragmentBase {
             Log.i("Loaded draft id=" + data.draft.id + " action=" + action);
 
             working = data.draft.id;
-            encrypt = (data.draft.encrypt != null && data.draft.encrypt);
+            encrypt = data.draft.encrypt;
             getActivity().invalidateOptionsMenu();
 
             // Show identities
@@ -2716,7 +2735,7 @@ public class FragmentCompose extends FragmentBase {
                     if (draft == null || draft.ui_hide)
                         finish();
                     else {
-                        encrypt = (draft.encrypt != null && draft.encrypt);
+                        encrypt = draft.encrypt;
                         getActivity().invalidateOptionsMenu();
 
                         Log.i("Draft content=" + draft.content);
@@ -2864,7 +2883,7 @@ public class FragmentCompose extends FragmentBase {
                         draft.ui_hide = ui_hide;
                         db.message().updateMessage(draft);
 
-                        if (draft.content && (draft.encrypt == null || !draft.encrypt))
+                        if (draft.content && (draft.encrypt == null || draft.encrypt == 0))
                             EntityOperation.queue(context, draft, EntityOperation.ADD);
                     }
 
@@ -3040,7 +3059,7 @@ public class FragmentCompose extends FragmentBase {
                             action == R.id.action_redo ||
                             action == R.id.action_check) {
                         if (BuildConfig.DEBUG || dirty)
-                            if (draft.encrypt == null || !draft.encrypt)
+                            if (draft.encrypt == null || draft.encrypt == 0)
                                 EntityOperation.queue(context, draft, EntityOperation.ADD);
 
                         if (action == R.id.action_check) {
@@ -3602,6 +3621,7 @@ public class FragmentCompose extends FragmentBase {
             int send_delayed = prefs.getInt("send_delayed", 0);
             boolean send_dialog = prefs.getBoolean("send_dialog", true);
 
+            final int[] encryptValues = getResources().getIntArray(R.array.encryptValues);
             final int[] sendDelayedValues = getResources().getIntArray(R.array.sendDelayedValues);
             final String[] sendDelayedNames = getResources().getStringArray(R.array.sendDelayedNames);
 
@@ -3612,9 +3632,9 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvTo = dview.findViewById(R.id.tvTo);
             final TextView tvVia = dview.findViewById(R.id.tvVia);
             final CheckBox cbPlainOnly = dview.findViewById(R.id.cbPlainOnly);
-            final CheckBox cbEncrypt = dview.findViewById(R.id.cbEncrypt);
             final CheckBox cbReceipt = dview.findViewById(R.id.cbReceipt);
             final TextView tvReceipt = dview.findViewById(R.id.tvReceipt);
+            final Spinner spEncrypt = dview.findViewById(R.id.spEncrypt);
             final Spinner spPriority = dview.findViewById(R.id.spPriority);
             final TextView tvSendAt = dview.findViewById(R.id.tvSendAt);
             final ImageButton ibSendAt = dview.findViewById(R.id.ibSendAt);
@@ -3627,6 +3647,8 @@ public class FragmentCompose extends FragmentBase {
             tvTo.setText(null);
             tvVia.setText(null);
             tvReceipt.setVisibility(View.GONE);
+            spEncrypt.setTag(0);
+            spEncrypt.setSelection(0);
             spPriority.setTag(1);
             spPriority.setSelection(1);
             tvSendAt.setText(null);
@@ -3671,33 +3693,6 @@ public class FragmentCompose extends FragmentBase {
                 }
             });
 
-            cbEncrypt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                    Bundle args = new Bundle();
-                    args.putLong("id", id);
-                    args.putBoolean("encrypt", checked);
-
-                    new SimpleTask<Void>() {
-                        @Override
-                        protected Void onExecute(Context context, Bundle args) {
-                            long id = args.getLong("id");
-                            boolean encrypt = args.getBoolean("encrypt");
-
-                            DB db = DB.getInstance(context);
-                            db.message().setMessageEncrypt(id, encrypt);
-
-                            return null;
-                        }
-
-                        @Override
-                        protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
-                        }
-                    }.execute(FragmentDialogSend.this, args, "compose:encrypt");
-                }
-            });
-
             cbReceipt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -3724,6 +3719,47 @@ public class FragmentCompose extends FragmentBase {
                             Helper.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentDialogSend.this, args, "compose:receipt");
+                }
+            });
+
+            spEncrypt.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    int last = (int) spEncrypt.getTag();
+                    if (last != position) {
+                        spEncrypt.setTag(position);
+                        setEncrypt(encryptValues[position]);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    spEncrypt.setTag(0);
+                    setEncrypt(encryptValues[0]);
+                }
+
+                private void setEncrypt(int encrypt) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", id);
+                    args.putInt("encrypt", encrypt);
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+                            int encrypt = args.getInt("encrypt");
+
+                            DB db = DB.getInstance(context);
+                            db.message().setMessageEncrypt(id, encrypt);
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                        }
+                    }.execute(FragmentDialogSend.this, args, "compose:encrypt");
                 }
             });
 
@@ -3797,12 +3833,19 @@ public class FragmentCompose extends FragmentBase {
                     tvVia.setText(draft.identityEmail);
 
                     cbPlainOnly.setChecked(draft.plain_only != null && draft.plain_only);
-                    cbEncrypt.setChecked(draft.encrypt != null && draft.encrypt);
                     cbReceipt.setChecked(draft.receipt_request != null && draft.receipt_request);
 
                     cbPlainOnly.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
-                    cbEncrypt.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
                     cbReceipt.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
+
+                    int encrypt = (draft.encrypt == null ? EntityMessage.ENCRYPTION_NONE : draft.encrypt);
+                    for (int i = 0; i < encryptValues.length; i++)
+                        if (encryptValues[i] == encrypt) {
+                            spEncrypt.setTag(i);
+                            spEncrypt.setSelection(i);
+                            break;
+                        }
+                    spEncrypt.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
 
                     int priority = (draft.priority == null ? 1 : draft.priority);
                     spPriority.setTag(priority);
