@@ -3214,10 +3214,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (!loading && SimpleTask.getCount() == 0)
                 pbWait.setVisibility(View.GONE);
 
-            boolean none = (messages.size() == 0 && !loading);
-            tvNoEmail.setVisibility(none ? View.VISIBLE : View.GONE);
+            tvNoEmail.setVisibility(messages.size() == 0 ? View.VISIBLE : View.GONE);
             tvNoEmailHint.setVisibility(
-                    none && filterActive() && viewType != AdapterMessage.ViewType.SEARCH
+                    messages.size() == 0 && filterActive() && viewType != AdapterMessage.ViewType.SEARCH
                             ? View.VISIBLE : View.GONE);
 
             grpReady.setVisibility(View.VISIBLE);
@@ -3901,8 +3900,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             data.putExtra(BuildConfig.APPLICATION_ID, id);
 
             onDecrypt(data, auto);
-        } else
-            Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG).show();
+        } else {
+            Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
+            if (Helper.getIntentOpenKeychain().resolveActivity(getContext().getPackageManager()) != null)
+                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(Helper.getIntentOpenKeychain());
+                    }
+                });
+            snackbar.show();
+        }
     }
 
     @Override

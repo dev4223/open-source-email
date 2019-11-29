@@ -94,7 +94,9 @@ public class EntityOperation {
 
     void cleanup(Context context) {
         DB db = DB.getInstance(context);
-        db.message().setMessageUiHide(message, false);
+
+        if (message != null)
+            db.message().setMessageUiHide(message, false);
 
         if (EntityOperation.MOVE.equals(name) ||
                 EntityOperation.ADD.equals(name) ||
@@ -119,7 +121,7 @@ public class EntityOperation {
             for (Object value : values)
                 jargs.put(value);
 
-            if (MOVE.equals(name) && message.encrypt != null && message.encrypt) {
+            if (MOVE.equals(name) && message.encrypt != null && message.encrypt != 0) {
                 EntityFolder folder = db.folder().getFolder(message.folder);
                 if (folder != null && EntityFolder.DRAFTS.equals(folder.type))
                     name = DELETE;

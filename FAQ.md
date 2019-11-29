@@ -50,7 +50,7 @@ Related questions:
 * A [bug in Android](https://issuetracker.google.com/issues/37018931) sometimes causes a crash with *... InputChannel is not initialized ...* on some devices.
 * A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * The folder selector sometimes shows no folders for yet unknown reasons.
-* A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller.
+* ~~A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller. A workaround was added.~~
 * ~~Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
 * A preview of the message text doesn't (always) appear on a Samsung watch because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. However, message preview texts are known to appear correctly on a Pebble 2, a Fitbit Charge 3 and a Mi band 3. See also [this FAQ](#user-content-faq126).
@@ -85,8 +85,9 @@ Related questions:
 * ~~Select domains to show images for~~ (this will be too complicated to use)
 * ~~Unified starred messages view~~ (there is already a special search for this)
 * ~~Notification move action~~
-* Search for settings
-* S/MIME
+* Search for settings: low priority
+* Signed-only messages
+* S/MIME: waiting for sponsoring
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -319,6 +320,8 @@ with the "side effect" that new messages are often not or late being reported an
 
 Android shows icons of high priority status bar notifications first and will hide the icon of FairEmail's notification if there is no space to show icons anymore.
 In practice this means that the status bar notification doesn't take space in the status bar, unless there is space available.
+
+In most cases it is possible to disable the status bar notification via the notification settings of FairEmail.
 
 You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power.
 See [here](#user-content-faq39) for more details about battery usage.
@@ -579,18 +582,13 @@ The decrypted message text and decrypted attachments are stored. If you want to 
 Inline PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
 see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
 
-S/MIME is not supported because it is not used much and because key management is complex.
-There are also [security concerns](https://security.stackexchange.com/a/83752).
-
-Note that signed only or encrypted only messages are not supported, see here about why not:
+Signed only or encrypted only messages are not a good idea, please see here about why not:
 
 * [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
 * [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
 * [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
-If you want, you can verify a signature by opening the *signature.asc* attachment.
-
-Please see the [known problems](#known-problems) about YubiKey.
+For signed-only messages and S/MIME support, please see the [planned features](#user-content-planned-features).
 
 Please see [this comment](https://forum.xda-developers.com/showpost.php?p=79444379&postcount=5609)
 about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-signature-spoofing.html).
@@ -1388,6 +1386,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the floating reply button to reply to all?
+* Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
 
 <br />
 
