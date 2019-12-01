@@ -29,6 +29,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.net.Uri;
@@ -36,6 +38,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.LocaleList;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.StatFs;
@@ -87,6 +90,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -636,6 +640,29 @@ public class Helper {
         }
     }
 
+    static String[] getStrings(Context context, int resid, Object... formatArgs) {
+        List<String> result = new ArrayList<>();
+
+        Configuration configuration = new Configuration(context.getResources().getConfiguration());
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            result.add(context.getString(resid, formatArgs));
+            if (!Locale.getDefault().getLanguage().equals("en")) {
+                configuration.setLocale(new Locale("en"));
+                Resources res = context.createConfigurationContext(configuration).getResources();
+                result.add(res.getString(resid, formatArgs));
+            }
+        } else {
+            LocaleList ll = context.getResources().getConfiguration().getLocales();
+            for (int i = 0; i < ll.size(); i++) {
+                configuration.setLocale(ll.get(i));
+                Resources res = context.createConfigurationContext(configuration).getResources();
+                result.add(res.getString(resid, formatArgs));
+            }
+        }
+
+        return result.toArray(new String[0]);
+    }
+
     // Files
 
     static String sanitizeFilename(String name) {
@@ -692,17 +719,29 @@ public class Helper {
     static void copy(File src, File dst) throws IOException {
         try (InputStream in = new FileInputStream(src)) {
             try (FileOutputStream out = new FileOutputStream(dst)) {
-                byte[] buf = new byte[BUFFER_SIZE];
-                int len;
-                while ((len = in.read(buf)) > 0)
-                    out.write(buf, 0, len);
+                copy(in, out);
             }
         }
+    }
+
+    static void copy(InputStream in, OutputStream out) throws IOException {
+        byte[] buf = new byte[BUFFER_SIZE];
+        int len;
+        while ((len = in.read(buf)) > 0)
+            out.write(buf, 0, len);
     }
 
     static long getStorageSpace() {
         StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
         return stats.getAvailableBlocksLong() * stats.getBlockSizeLong();
+    }
+
+    static void openAdvanced(Intent intent) {
+        // https://issuetracker.google.com/issues/72053350
+        intent.putExtra("android.content.extra.SHOW_ADVANCED", true);
+        intent.putExtra("android.content.extra.FANCY", true);
+        intent.putExtra("android.content.extra.SHOW_FILESIZE", true);
+        intent.putExtra("android.provider.extra.SHOW_ADVANCED", true);
     }
 
     // Cryptography

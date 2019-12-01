@@ -86,7 +86,6 @@ Related questions:
 * ~~Unified starred messages view~~ (there is already a special search for this)
 * ~~Notification move action~~
 * Search for settings: low priority
-* Signed-only messages
 * S/MIME: waiting for sponsoring
 
 Anything on this list is in random order and *might* be added in the near future.
@@ -582,13 +581,15 @@ The decrypted message text and decrypted attachments are stored. If you want to 
 Inline PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
 see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
 
-Signed only or encrypted only messages are not a good idea, please see here about why not:
+Signed-only or encrypted-only messages are not a good idea, please see here about why not:
 
 * [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
 * [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
 * [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
-For signed-only messages and S/MIME support, please see the [planned features](#user-content-planned-features).
+Signed-only messages are supported, encrypted-only messages are not supported.
+
+For S/MIME support, please see the [planned features](#user-content-planned-features).
 
 Please see [this comment](https://forum.xda-developers.com/showpost.php?p=79444379&postcount=5609)
 about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-signature-spoofing.html).
@@ -1557,6 +1558,8 @@ Matching all messages is still possible by using a regex for the sender or recip
 You can use multiple rules, possibly with a *stop processing*, for an *or* or a *not* condition.
 
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression).
+Please see [here](https://developer.android.com/reference/java/util/regex/Pattern) for the documentation of Java regular expressions.
+Note that *dot all mode* is enabled to be able to match unfolded headers.
 
 You can select one of these actions to apply to matching messages:
 

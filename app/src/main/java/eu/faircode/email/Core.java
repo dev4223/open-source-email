@@ -791,12 +791,14 @@ class Core {
         Map<Message, EntityMessage> map = new HashMap<>();
         for (EntityMessage message : messages)
             try {
+                if (message.uid == null)
+                    throw new MessageRemovedException("move without uid");
                 Message imessage = ifolder.getMessageByUID(message.uid);
                 if (imessage == null)
-                    throw new MessageRemovedException();
+                    throw new MessageRemovedException("move without message");
                 map.put(imessage, message);
             } catch (MessageRemovedException ex) {
-                Log.w(ex);
+                Log.e(ex);
                 db.message().deleteMessage(message.id);
             }
 
@@ -1100,7 +1102,7 @@ class Core {
             throw new MessageRemovedException();
 
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-        MessageHelper.MessageParts parts = helper.getMessageParts();
+        MessageHelper.MessageParts parts = helper.getMessageParts(context);
         String body = parts.getHtml(context);
         Helper.writeText(message.getFile(context), body);
         db.message().setMessageContent(message.id,
@@ -1132,7 +1134,7 @@ class Core {
 
         // Get message parts
         MessageHelper helper = new MessageHelper((MimeMessage) imessage);
-        MessageHelper.MessageParts parts = helper.getMessageParts();
+        MessageHelper.MessageParts parts = helper.getMessageParts(context);
 
         // Download attachment
         parts.downloadAttachment(context, attachment);
@@ -1141,6 +1143,9 @@ class Core {
     private static void onExists(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws MessagingException {
         if (message.uid != null)
             return;
+
+        if (message.msgid == null)
+            throw new IllegalArgumentException("exists without msgid");
 
         if (EntityFolder.SENT.equals(folder.type)) {
             long ago = new Date().getTime() - op.created;
@@ -1467,7 +1472,7 @@ class Core {
                     Log.i(folder.name + " POP sync=" + msgid);
 
                     String authentication = helper.getAuthentication();
-                    MessageHelper.MessageParts parts = helper.getMessageParts();
+                    MessageHelper.MessageParts parts = helper.getMessageParts(context);
 
                     EntityMessage message = new EntityMessage();
                     message.account = folder.account;
@@ -1683,6 +1688,8 @@ class Core {
                 // Fallback to date only search
                 imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
             }
+            if (imessages == null)
+                imessages = new Message[0];
             Log.i(folder.name + " remote count=" + imessages.length +
                     " search=" + (SystemClock.elapsedRealtime() - search) + " ms");
 
@@ -1980,49 +1987,6 @@ class Core {
 
         long uid = ifolder.getUID(imessage);
 
-        try {
-            return _synchronizeMessage(context, account, folder, uid, istore, imessage, browsed, download, rules, state);
-        } catch (MessagingException ex) {
-            // https://javaee.github.io/javamail/FAQ#imapserverbug
-            if (MessageHelper.retryRaw(ex))
-                try {
-                    Log.w(folder.name + " " + ex.getMessage());
-
-                    Log.i(folder.name + " fetching raw message uid=" + uid);
-                    File file = File.createTempFile("serverbug." + folder.id, "." + uid, context.getCacheDir());
-                    try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
-                        imessage.writeTo(os);
-                    }
-
-                    Properties props = MessageHelper.getSessionProperties();
-                    Session isession = Session.getInstance(props, null);
-
-                    Log.i(folder.name + " decoding again uid=" + uid);
-                    try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                        imessage = new MimeMessageEx(isession, is, imessage);
-                    }
-
-                    file.delete();
-
-                    Log.i(folder.name + " synchronizing again uid=" + uid);
-                    return _synchronizeMessage(context, account, folder, uid, istore, imessage, browsed, download, rules, state);
-                } catch (MessagingException ex1) {
-                    if (MessageHelper.retryRaw(ex1))
-                        Log.e(ex1);
-                    throw ex1;
-                }
-
-            throw ex;
-        }
-    }
-
-    private static EntityMessage _synchronizeMessage(
-            Context context,
-            EntityAccount account, EntityFolder folder, long uid,
-            IMAPStore istore, MimeMessage imessage,
-            boolean browsed, boolean download,
-            List<EntityRule> rules, State state) throws MessagingException, IOException {
-
         if (imessage.isExpunged()) {
             Log.i(folder.name + " expunged uid=" + uid);
             throw new MessageRemovedException("Expunged");
@@ -2085,8 +2049,9 @@ class Core {
         }
 
         if (message == null) {
+            Long sent = helper.getSent();
             String authentication = helper.getAuthentication();
-            MessageHelper.MessageParts parts = helper.getMessageParts();
+            MessageHelper.MessageParts parts = helper.getMessageParts(context);
 
             message = new EntityMessage();
             message.account = folder.account;
@@ -2119,8 +2084,8 @@ class Core {
             message.size = parts.getBodySize();
             message.total = helper.getSize();
             message.content = false;
-            message.received = helper.getReceived();
-            message.sent = helper.getSent();
+            message.received = (account.use_date ? (sent == null ? 0 : sent) : helper.getReceived());
+            message.sent = sent;
             message.seen = seen;
             message.answered = answered;
             message.flagged = flagged;
@@ -2182,8 +2147,10 @@ class Core {
                     attachment.message = message.id;
                     attachment.sequence = sequence++;
                     attachment.id = db.attachment().insertAttachment(attachment);
-                    if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption))
-                        db.message().setMessageEncrypt(message.id, EntityMessage.ENCRYPTION_SIGNENCRYPT);
+                    if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption))
+                        db.message().setMessageEncrypt(message.id, EntityMessage.PGP_SIGNONLY);
+                    else if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption))
+                        db.message().setMessageEncrypt(message.id, EntityMessage.PGP_SIGNENCRYPT);
                 }
 
                 runRules(context, imessage, message, rules);
@@ -2551,7 +2518,7 @@ class Core {
             //ifolder.fetch(new Message[]{imessage}, fp);
 
             MessageHelper helper = new MessageHelper(imessage);
-            MessageHelper.MessageParts parts = helper.getMessageParts();
+            MessageHelper.MessageParts parts = helper.getMessageParts(context);
 
             if (!message.content) {
                 if (state.getNetworkState().isUnmetered() ||

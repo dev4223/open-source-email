@@ -3884,6 +3884,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         create.addCategory(Intent.CATEGORY_OPENABLE);
         create.setType("*/*");
         create.putExtra(Intent.EXTRA_TITLE, "email.eml");
+        Helper.openAdvanced(create);
         if (create.resolveActivity(getContext().getPackageManager()) == null)
             Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
         else
@@ -4113,11 +4114,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     return null;
 
                 InputStream in = null;
+                OutputStream out = null;
                 boolean inline = false;
+                File plain = File.createTempFile("plain", "." + message.id, context.getCacheDir());
 
                 // Find encrypted data
                 for (EntityAttachment attachment : attachments)
-                    if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
+                    if (EntityAttachment.PGP_CONTENT.equals(attachment.encryption) ||
+                            EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
                         if (!attachment.available)
                             if (auto)
                                 return null;
@@ -4126,7 +4130,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         File file = attachment.getFile(context);
                         in = new FileInputStream(file);
-                        break;
+
+                        if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption))
+                            out = new FileOutputStream(plain);
+
+                    } else if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
+                        File file = attachment.getFile(context);
+                        byte[] signature = new byte[(int) file.length()];
+                        try (FileInputStream fis = new FileInputStream(file)) {
+                            fis.read(signature);
+                        }
+                        data.putExtra(OpenPgpApi.EXTRA_DETACHED_SIGNATURE, signature);
                     }
 
                 if (in == null) {
@@ -4160,74 +4174,74 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         throw new IllegalArgumentException(context.getString(R.string.title_not_encrypted));
 
                 Intent result;
-                File plain = File.createTempFile("plain", "." + message.id, context.getCacheDir());
                 try {
                     // Decrypt message
                     Log.i("Executing " + data.getAction());
                     Log.logExtras(data);
                     OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-                    result = api.executeApi(data, in, new FileOutputStream(plain));
+                    result = api.executeApi(data, in, out);
 
                     int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
                     Log.i("Result action=" + data.getAction() + " code=" + resultCode);
                     Log.logExtras(data);
                     switch (resultCode) {
                         case OpenPgpApi.RESULT_CODE_SUCCESS:
-                            if (inline) {
-                                try {
-                                    db.beginTransaction();
+                            if (out != null)
+                                if (inline) {
+                                    try {
+                                        db.beginTransaction();
 
-                                    // Write decrypted body
-                                    Helper.copy(plain, message.getFile(context));
-                                    db.message().setMessageStored(message.id, new Date().getTime());
+                                        // Write decrypted body
+                                        Helper.copy(plain, message.getFile(context));
+                                        db.message().setMessageStored(message.id, new Date().getTime());
 
-                                    db.setTransactionSuccessful();
-                                } finally {
-                                    db.endTransaction();
-                                }
-
-                            } else {
-                                // Decode message
-                                MessageHelper.MessageParts parts;
-                                Properties props = MessageHelper.getSessionProperties();
-                                Session isession = Session.getInstance(props, null);
-                                try (InputStream fis = new FileInputStream(plain)) {
-                                    MimeMessage imessage = new MimeMessage(isession, fis);
-                                    MessageHelper helper = new MessageHelper(imessage);
-                                    parts = helper.getMessageParts();
-                                }
-
-                                try {
-                                    db.beginTransaction();
-
-                                    // Write decrypted body
-                                    String html = parts.getHtml(context);
-                                    Helper.writeText(message.getFile(context), html);
-
-                                    // Remove existing attachments
-                                    db.attachment().deleteAttachments(message.id);
-
-                                    // Add decrypted attachments
-                                    List<EntityAttachment> remotes = parts.getAttachments();
-                                    for (int index = 0; index < remotes.size(); index++) {
-                                        EntityAttachment remote = remotes.get(index);
-                                        remote.message = message.id;
-                                        remote.sequence = index + 1;
-                                        remote.id = db.attachment().insertAttachment(remote);
-                                        try {
-                                            parts.downloadAttachment(context, index, remote);
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                        }
+                                        db.setTransactionSuccessful();
+                                    } finally {
+                                        db.endTransaction();
                                     }
 
-                                    db.message().setMessageStored(message.id, new Date().getTime());
+                                } else {
+                                    // Decode message
+                                    MessageHelper.MessageParts parts;
+                                    Properties props = MessageHelper.getSessionProperties();
+                                    Session isession = Session.getInstance(props, null);
+                                    try (InputStream fis = new FileInputStream(plain)) {
+                                        MimeMessage imessage = new MimeMessage(isession, fis);
+                                        MessageHelper helper = new MessageHelper(imessage);
+                                        parts = helper.getMessageParts(context);
+                                    }
 
-                                    db.setTransactionSuccessful();
-                                } finally {
-                                    db.endTransaction();
+                                    try {
+                                        db.beginTransaction();
+
+                                        // Write decrypted body
+                                        String html = parts.getHtml(context);
+                                        Helper.writeText(message.getFile(context), html);
+
+                                        // Remove existing attachments
+                                        db.attachment().deleteAttachments(message.id);
+
+                                        // Add decrypted attachments
+                                        List<EntityAttachment> remotes = parts.getAttachments();
+                                        for (int index = 0; index < remotes.size(); index++) {
+                                            EntityAttachment remote = remotes.get(index);
+                                            remote.message = message.id;
+                                            remote.sequence = index + 1;
+                                            remote.id = db.attachment().insertAttachment(remote);
+                                            try {
+                                                parts.downloadAttachment(context, index, remote);
+                                            } catch (Throwable ex) {
+                                                Log.e(ex);
+                                            }
+                                        }
+
+                                        db.message().setMessageStored(message.id, new Date().getTime());
+
+                                        db.setTransactionSuccessful();
+                                    } finally {
+                                        db.endTransaction();
+                                    }
                                 }
-                            }
 
                             // Check signature status
                             OpenPgpSignatureResult sigResult = result.getParcelableExtra(OpenPgpApi.RESULT_SIGNATURE);

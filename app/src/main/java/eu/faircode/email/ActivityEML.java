@@ -134,7 +134,7 @@ public class ActivityEML extends ActivityBase {
                     result.from = MessageHelper.formatAddresses(helper.getFrom());
                     result.to = MessageHelper.formatAddresses(helper.getTo());
                     result.subject = helper.getSubject();
-                    result.parts = helper.getMessageParts();
+                    result.parts = helper.getMessageParts(context);
 
                     String html = result.parts.getHtml(context);
                     if (html != null) {
@@ -167,6 +167,7 @@ public class ActivityEML extends ActivityBase {
                                 create.setType(apart.attachment.getMimeType());
                                 if (!TextUtils.isEmpty(apart.attachment.name))
                                     create.putExtra(Intent.EXTRA_TITLE, apart.attachment.name);
+                                Helper.openAdvanced(create);
                                 if (create.resolveActivity(getPackageManager()) == null)
                                     ToastEx.makeText(ActivityEML.this, R.string.title_no_saf, Toast.LENGTH_LONG).show();
                                 else

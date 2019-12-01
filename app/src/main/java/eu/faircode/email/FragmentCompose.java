@@ -33,8 +33,6 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MergeCursor;
@@ -49,10 +47,8 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.LocaleList;
 import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
@@ -110,6 +106,7 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -131,13 +128,16 @@ import java.util.Properties;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.MessageRemovedException;
+import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
@@ -933,14 +933,26 @@ public class FragmentCompose extends FragmentBase {
         boolean isEncrypted = (encrypt != null && !encrypt.equals(EntityMessage.ENCRYPTION_NONE));
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
         ib.setEnabled(!busy);
-        ib.setImageResource(isEncrypted ? R.drawable.baseline_lock_24 : R.drawable.baseline_lock_open_24);
-        ib.setImageTintList(isEncrypted ? ColorStateList.valueOf(colorEncrypt) : null);
+        if (EntityMessage.PGP_SIGNONLY.equals(encrypt)) {
+            ib.setImageResource(R.drawable.baseline_gesture_24);
+            ib.setImageTintList(null);
+        } else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt)) {
+            ib.setImageResource(R.drawable.baseline_lock_24);
+            ib.setImageTintList(ColorStateList.valueOf(colorEncrypt));
+        } else {
+            ib.setImageResource(R.drawable.baseline_lock_open_24);
+            ib.setImageTintList(null);
+        }
 
         menu.findItem(R.id.menu_media).setChecked(media);
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
-        bottom_navigation.getMenu().findItem(R.id.action_send)
-                .setTitle(isEncrypted ? R.string.title_encrypt : R.string.title_send);
+        if (EntityMessage.PGP_SIGNONLY.equals(encrypt))
+            bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_sign);
+        else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt))
+            bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_encrypt);
+        else
+            bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_send);
     }
 
     @Override
@@ -990,22 +1002,29 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuEncrypt() {
-        encrypt = (encrypt == null ? EntityMessage.ENCRYPTION_SIGNENCRYPT : null);
+        if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt))
+            encrypt = EntityMessage.PGP_SIGNONLY;
+        else if (EntityMessage.PGP_SIGNONLY.equals(encrypt))
+            encrypt = EntityMessage.ENCRYPT_NONE;
+        else
+            encrypt = EntityMessage.PGP_SIGNENCRYPT;
         getActivity().invalidateOptionsMenu();
 
         Bundle args = new Bundle();
         args.putLong("id", working);
-        if (encrypt != null)
-            args.putInt("encrypt", encrypt);
+        args.putInt("encrypt", encrypt);
 
         new SimpleTask<Void>() {
             @Override
             protected Void onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
-                Integer encrypt = (args.containsKey("encrypt") ? args.getInt("encrypt") : null);
+                int encrypt = args.getInt("encrypt");
 
                 DB db = DB.getInstance(context);
-                db.message().setMessageEncrypt(id, encrypt);
+                if (EntityMessage.ENCRYPT_NONE.equals(encrypt))
+                    db.message().setMessageEncrypt(id, null);
+                else
+                    db.message().setMessageEncrypt(id, encrypt);
 
                 return null;
             }
@@ -1122,6 +1141,7 @@ public class FragmentCompose extends FragmentBase {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
+        Helper.openAdvanced(intent);
         PackageManager pm = getContext().getPackageManager();
         if (intent.resolveActivity(pm) == null)
             Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
@@ -1134,6 +1154,7 @@ public class FragmentCompose extends FragmentBase {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        Helper.openAdvanced(intent);
         PackageManager pm = getContext().getPackageManager();
         if (intent.resolveActivity(pm) == null)
             Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
@@ -1204,9 +1225,18 @@ public class FragmentCompose extends FragmentBase {
                     pgpUserIds[i] = recipient.getAddress().toLowerCase(Locale.ROOT);
                 }
 
-                Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
-                intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                intent.putExtra(BuildConfig.APPLICATION_ID, working);
+                Intent intent;
+                if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
+                    // TODO use previously selected sign key
+                    intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                    intent.putExtra(BuildConfig.APPLICATION_ID, working);
+                } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
+                    intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
+                    intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
+                    intent.putExtra(BuildConfig.APPLICATION_ID, working);
+                } else
+                    throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
+
                 onPgp(intent);
             } catch (Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
@@ -1483,44 +1513,69 @@ public class FragmentCompose extends FragmentBase {
                 DB db = DB.getInstance(context);
 
                 // Get data
-                EntityMessage message = db.message().getMessage(id);
-                if (message == null)
-                    throw new MessageRemovedException();
-                EntityIdentity identity = db.identity().getIdentity(message.identity);
+                EntityMessage draft = db.message().getMessage(id);
+                if (draft == null)
+                    throw new MessageRemovedException("PGP");
+                EntityIdentity identity = db.identity().getIdentity(draft.identity);
                 if (identity == null)
                     throw new IllegalArgumentException(getString(R.string.title_from_missing));
 
-                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
-                for (EntityAttachment attachment : new ArrayList<>(attachments))
-                    if (attachment.encryption != null) {
-                        if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()))
-                            db.attachment().deleteAttachment(attachment.id);
-                        attachments.remove(attachment);
-                    }
-
                 // Create files
-                File input = new File(context.getCacheDir(), "input." + id);
-                File output = new File(context.getCacheDir(), "output." + id);
+                File input = new File(context.getCacheDir(), "pgp_input." + id);
+                File output = new File(context.getCacheDir(), "pgp_output." + id);
 
                 // Serializing messages is NOT reproducible
-                if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()) ||
-                        OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                if ((EntityMessage.PGP_SIGNONLY.equals(draft.encrypt) &&
+                        OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) ||
+                        (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt) &&
+                                OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()))) {
+                    // Get/clean attachments
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    for (EntityAttachment attachment : new ArrayList<>(attachments))
+                        if (attachment.encryption != null) {
+                            db.attachment().deleteAttachment(attachment.id);
+                            attachments.remove(attachment);
+                        }
+
                     // Build message
                     Properties props = MessageHelper.getSessionProperties();
                     Session isession = Session.getInstance(props, null);
                     MimeMessage imessage = new MimeMessage(isession);
-                    MessageHelper.build(context, message, attachments, identity, imessage);
+                    MessageHelper.build(context, draft, attachments, identity, imessage);
 
-                    if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                    if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
                         // Serialize content
-                        Object content = imessage.getContent();
-                        if (content instanceof Multipart) {
-                            try (OutputStream out = new FileOutputStream(input)) {
-                                ((MimeMultipart) content).writeTo(out);
-                            }
-                        } else
-                            throw new ParseException(content.getClass().getName());
+                        imessage.saveChanges();
+                        BodyPart bpContent = new MimeBodyPart() {
+                            @Override
+                            public void setContent(Object content, String type) throws MessagingException {
+                                super.setContent(content, type);
 
+                                // https://javaee.github.io/javamail/FAQ#howencode
+                                updateHeaders();
+                                if (content instanceof Multipart) {
+                                    try {
+                                        MessageHelper.overrideContentTransferEncoding((Multipart) content);
+                                    } catch (IOException ex) {
+                                        Log.e(ex);
+                                    }
+                                } else
+                                    setHeader("Content-Transfer-Encoding", "base64");
+                            }
+                        };
+                        bpContent.setContent(imessage.getContent(), imessage.getContentType());
+
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        bpContent.writeTo(bos);
+
+                        // Just to be sure
+                        String raw = new String(bos.toByteArray());
+                        raw.replaceAll(" +$", "") // trim trailing spaces
+                                .replace("\\r?\\n", "\\r\\n"); // normalize new lines
+
+                        try (OutputStream out = new FileOutputStream(input)) {
+                            out.write(raw.getBytes());
+                        }
                     } else {
                         // Serialize message
                         try (OutputStream out = new FileOutputStream(input)) {
@@ -1529,11 +1584,19 @@ public class FragmentCompose extends FragmentBase {
                     }
                 }
 
-                // Call OpenPGP
-                Log.i("Executing " + data.getAction());
-                Log.logExtras(data);
-                OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-                Intent result = api.executeApi(data, new FileInputStream(input), new FileOutputStream(output));
+                Intent result;
+                if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction()) && identity.sign_key != null) {
+                    // Short circuit
+                    result = data;
+                    result.putExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_SUCCESS);
+                    result.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
+                } else {
+                    // Call OpenPGP
+                    Log.i("Executing " + data.getAction());
+                    Log.logExtras(data);
+                    OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
+                    result = api.executeApi(data, new FileInputStream(input), new FileOutputStream(output));
+                }
 
                 // Process result
                 try {
@@ -1542,10 +1605,10 @@ public class FragmentCompose extends FragmentBase {
                     Log.logExtras(data);
                     switch (resultCode) {
                         case OpenPgpApi.RESULT_CODE_SUCCESS:
-                            // Attach encrypted data / signature
+                            // Attach key, signed/encrypted data
                             if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction()) ||
-                                    OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction()) ||
-                                    OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction()))
+                                    OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction()) ||
+                                    OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction()))
                                 try {
                                     db.beginTransaction();
 
@@ -1555,13 +1618,14 @@ public class FragmentCompose extends FragmentBase {
                                     if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
                                         name = "keydata.asc";
                                         encryption = EntityAttachment.PGP_KEY;
-                                    } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
-                                        name = "encrypted.asc";
-                                        encryption = EntityAttachment.PGP_MESSAGE;
                                     } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
                                         name = "signature.asc";
                                         encryption = EntityAttachment.PGP_SIGNATURE;
-                                        type += "; micalg=" + result.getStringExtra(OpenPgpApi.RESULT_SIGNATURE_MICALG);
+                                        type = "application/pgp-signature; micalg=\"" +
+                                                result.getStringExtra(OpenPgpApi.RESULT_SIGNATURE_MICALG) + "\"";
+                                    } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
+                                        name = "encrypted.asc";
+                                        encryption = EntityAttachment.PGP_MESSAGE;
                                     } else
                                         throw new IllegalStateException(data.getAction());
 
@@ -1612,43 +1676,71 @@ public class FragmentCompose extends FragmentBase {
 
                             if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction()) ||
                                     (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()) && pgpKeyIds.length > 1)) {
-                                if (identity.sign_key != null) {
-                                    // Encrypt message
-                                    Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
-                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
-                                    intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
+                                if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
+                                    // Sign message
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
+                                    intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                     intent.putExtra(BuildConfig.APPLICATION_ID, id);
                                     return intent;
                                 } else {
-                                    // Get sign key
-                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                                    intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
-                                    return intent;
+                                    if (identity.sign_key != null) {
+                                        // Encrypt message
+                                        Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
+                                        intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
+                                        intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
+                                        intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+                                        intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                        return intent;
+                                    } else {
+                                        // Get sign key
+                                        Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                                        intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
+                                        intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                        return intent;
+                                    }
                                 }
                             } else if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
                                 pgpSignKeyId = result.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, -1);
                                 db.identity().setIdentitySignKey(identity.id, pgpSignKeyId);
 
-                                // Encrypt message
-                                Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
-                                intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
-                                intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
-                                intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                intent.putExtra(BuildConfig.APPLICATION_ID, id);
-                                return intent;
-                            } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
-                                input.delete();
+                                if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
+                                    // Get sign key
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
+                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
+                                    intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    return intent;
+                                } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
+                                    // Encrypt message
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
+                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
+                                    intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
+                                    intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    return intent;
+                                } else
+                                    throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
+                            } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                                EntityAttachment attachment = new EntityAttachment();
+                                attachment.message = id;
+                                attachment.sequence = db.attachment().getAttachmentSequence(id) + 1;
+                                attachment.name = "content.asc";
+                                attachment.type = "text/plain";
+                                attachment.disposition = Part.INLINE;
+                                attachment.encryption = EntityAttachment.PGP_CONTENT;
+                                attachment.id = db.attachment().insertAttachment(attachment);
 
-                                // Get signature
-                                //Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
-                                //intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
-                                //intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                File file = attachment.getFile(context);
+                                input.renameTo(file);
+
+                                db.attachment().setDownloaded(attachment.id, file.length());
 
                                 // send message
                                 return null;
-                            } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
+                            } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
+                                input.delete();
+
                                 // send message
                                 return null;
                             } else
@@ -2119,6 +2211,7 @@ public class FragmentCompose extends FragmentBase {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean plain_only = prefs.getBoolean("plain_only", false);
+            boolean sign_default = prefs.getBoolean("sign_default", false);
             boolean encrypt_default = prefs.getBoolean("encrypt_default", false);
             boolean receipt_default = prefs.getBoolean("receipt_default", false);
 
@@ -2154,7 +2247,9 @@ public class FragmentCompose extends FragmentBase {
                     if (plain_only)
                         data.draft.plain_only = true;
                     if (encrypt_default)
-                        data.draft.encrypt = EntityMessage.ENCRYPTION_SIGNENCRYPT;
+                        data.draft.encrypt = EntityMessage.PGP_SIGNENCRYPT;
+                    else if (sign_default)
+                        data.draft.encrypt = EntityMessage.PGP_SIGNONLY;
                     if (receipt_default)
                         data.draft.receipt_request = true;
 
@@ -2347,16 +2442,14 @@ public class FragmentCompose extends FragmentBase {
 
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action)) {
-                            if (prefix_once) {
-                                String re = context.getString(R.string.title_subject_reply, "");
-                                subject = unprefix(subject, re);
-                            }
+                            if (prefix_once)
+                                for (String re : Helper.getStrings(context, R.string.title_subject_reply, ""))
+                                    subject = unprefix(subject, re);
                             data.draft.subject = context.getString(R.string.title_subject_reply, subject);
                         } else if ("forward".equals(action)) {
-                            if (prefix_once) {
-                                String fwd = context.getString(R.string.title_subject_forward, "");
-                                subject = unprefix(subject, fwd);
-                            }
+                            if (prefix_once)
+                                for (String fwd : Helper.getStrings(context, R.string.title_subject_forward, ""))
+                                    subject = unprefix(subject, fwd);
                             data.draft.subject = context.getString(R.string.title_subject_forward, subject);
                         } else if ("editasnew".equals(action)) {
                             data.draft.subject = ref.subject;
@@ -2372,17 +2465,9 @@ public class FragmentCompose extends FragmentBase {
                         } else if ("receipt".equals(action)) {
                             data.draft.subject = context.getString(R.string.title_receipt_subject, subject);
 
-                            Element p = document.createElement("p");
-                            p.text(context.getString(R.string.title_receipt_text));
-                            document.body().appendChild(p);
-
-                            if (!Locale.getDefault().getLanguage().equals("en")) {
-                                Configuration configuration = new Configuration(context.getResources().getConfiguration());
-                                configuration.setLocale(new Locale("en"));
-                                Resources res = context.createConfigurationContext(configuration).getResources();
-
-                                p = document.createElement("p");
-                                p.text(res.getString(R.string.title_receipt_text));
+                            for (String text : Helper.getStrings(context, R.string.title_receipt_text)) {
+                                Element p = document.createElement("p");
+                                p.text(text);
                                 document.body().appendChild(p);
                             }
                         } else if ("participation".equals(action))
@@ -3086,21 +3171,8 @@ public class FragmentCompose extends FragmentBase {
                             // Check for missing attachments
                             if (attached == 0) {
                                 List<String> keywords = new ArrayList<>();
-
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                                    String[] k = context.getString(R.string.title_attachment_keywords).split(",");
-                                    keywords.addAll(Arrays.asList(k));
-                                } else {
-                                    Configuration config = context.getResources().getConfiguration();
-                                    LocaleList ll = context.getResources().getConfiguration().getLocales();
-                                    for (int i = 0; i < ll.size(); i++) {
-                                        Configuration lconf = new Configuration(config);
-                                        lconf.setLocale(ll.get(i));
-                                        Context lcontext = context.createConfigurationContext(lconf);
-                                        String[] k = lcontext.getString(R.string.title_attachment_keywords).split(",");
-                                        keywords.addAll(Arrays.asList(k));
-                                    }
-                                }
+                                for (String text : Helper.getStrings(context, R.string.title_attachment_keywords))
+                                    keywords.addAll(Arrays.asList(text.split(",")));
 
                                 Document d = JsoupEx.parse(body);
                                 d.select("div[fairemail=signature]").remove();
@@ -3838,7 +3910,8 @@ public class FragmentCompose extends FragmentBase {
                     cbPlainOnly.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
                     cbReceipt.setVisibility(draft.receipt != null && draft.receipt ? View.GONE : View.VISIBLE);
 
-                    int encrypt = (draft.encrypt == null ? EntityMessage.ENCRYPTION_NONE : draft.encrypt);
+                    int encrypt = (draft.encrypt == null ? EntityMessage.ENCRYPT_NONE : draft.encrypt);
+
                     for (int i = 0; i < encryptValues.length; i++)
                         if (encryptValues[i] == encrypt) {
                             spEncrypt.setTag(i);
