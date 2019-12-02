@@ -930,7 +930,6 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_send).setEnabled(!busy);
 
         int colorEncrypt = Helper.resolveColor(getContext(), R.attr.colorEncrypt);
-        boolean isEncrypted = (encrypt != null && !encrypt.equals(EntityMessage.ENCRYPTION_NONE));
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
         ib.setEnabled(!busy);
         if (EntityMessage.PGP_SIGNONLY.equals(encrypt)) {
