@@ -3524,9 +3524,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (message.from != null && message.from.length > 0)
                         from = ((InternetAddress) message.from[0]).getAddress();
 
-                    String html = HtmlHelper.getText(Helper.readText(file));
+                    String text = HtmlHelper.getText(Helper.readText(file));
 
-                    return new String[]{from, message.subject, html};
+                    return new String[]{from, message.subject, text};
                 }
 
                 @Override
@@ -3547,9 +3547,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     PackageManager pm = context.getPackageManager();
                     if (share.resolveActivity(pm) == null)
                         Snackbar.make(parentFragment.getView(),
-                                R.string.title_no_viewer, Snackbar.LENGTH_LONG).show();
+                                context.getString(R.string.title_no_viewer, share.getAction()),
+                                Snackbar.LENGTH_LONG).
+                                show();
                     else
-                        context.startActivity(share);
+                        context.startActivity(Helper.getChooser(context, share));
                 }
 
                 @Override

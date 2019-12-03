@@ -32,6 +32,7 @@ import org.jsoup.nodes.Document;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,6 +58,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.activation.FileTypeMap;
 import javax.mail.Address;
@@ -78,6 +80,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
+import javax.mail.internet.ParameterList;
 import javax.mail.internet.ParseException;
 
 import biweekly.Biweekly;
@@ -245,51 +248,60 @@ public class MessageHelper {
                                     " keydata=" + sb.toString());
                 }
 
-        // https://tools.ietf.org/html/rfc3156
+        // PGP: https://tools.ietf.org/html/rfc3156
+        // S/MIME: https://tools.ietf.org/html/rfc8551
         for (final EntityAttachment attachment : attachments)
             if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
-                Log.i("Sending signed message");
+                Log.i("Sending PGP signed message");
 
                 for (final EntityAttachment content : attachments)
                     if (EntityAttachment.PGP_CONTENT.equals(content.encryption)) {
                         BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
 
-                        // Build signature
                         final ContentType cts = new ContentType(attachment.type);
+                        String micalg = cts.getParameter("micalg");
+                        ParameterList params = cts.getParameterList();
+                        params.remove("micalg");
+                        cts.setParameterList(params);
+
+                        // Build signature
                         BodyPart bpSignature = new MimeBodyPart();
                         bpSignature.setFileName(attachment.name);
                         FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
                         dsSignature.setFileTypeMap(new FileTypeMap() {
                             @Override
                             public String getContentType(File file) {
-                                return cts.getBaseType();
+                                return cts.toString();
                             }
 
                             @Override
                             public String getContentType(String filename) {
-                                return cts.getBaseType();
+                                return cts.toString();
                             }
                         });
                         bpSignature.setDataHandler(new DataHandler(dsSignature));
                         bpSignature.setDisposition(Part.INLINE);
 
                         // Build message
-                        Multipart multipart = new MimeMultipart("signed;" +
-                                " micalg=\"" + cts.getParameter("micalg") + "\";" +
-                                " protocol=\"application/pgp-signature\"");
+                        ContentType ct = new ContentType("multipart/signed");
+                        ct.setParameter("micalg", micalg);
+                        ct.setParameter("protocol", "application/pgp-signature");
+                        String ctx = ct.toString();
+                        int slash = ctx.indexOf("/");
+                        Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
                         multipart.addBodyPart(bpContent);
                         multipart.addBodyPart(bpSignature);
                         imessage.setContent(multipart);
 
                         return imessage;
                     }
-                throw new IllegalStateException("Content not found");
+                throw new IllegalStateException("PGP content not found");
             } else if (EntityAttachment.PGP_MESSAGE.equals(attachment.encryption)) {
-                Log.i("Sending encrypted message");
+                Log.i("Sending PGP encrypted message");
 
                 // Build header
                 BodyPart bpHeader = new MimeBodyPart();
-                bpHeader.setContent("Version: 1\r\n", "application/pgp-encrypted");
+                bpHeader.setContent("", "application/pgp-encrypted");
 
                 // Build content
                 BodyPart bpContent = new MimeBodyPart();
@@ -310,10 +322,98 @@ public class MessageHelper {
                 bpContent.setDisposition(Part.INLINE);
 
                 // Build message
-                Multipart multipart = new MimeMultipart("encrypted; protocol=\"application/pgp-encrypted\"");
+                ContentType ct = new ContentType("multipart/encrypted");
+                ct.setParameter("protocol", "application/pgp-encrypted");
+                String ctx = ct.toString();
+                int slash = ctx.indexOf("/");
+                Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
                 multipart.addBodyPart(bpHeader);
                 multipart.addBodyPart(bpContent);
                 imessage.setContent(multipart);
+
+                return imessage;
+            } else if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
+                Log.i("Sending S/MIME signed message");
+
+                for (final EntityAttachment content : attachments)
+                    if (EntityAttachment.SMIME_CONTENT.equals(content.encryption)) {
+                        BodyPart bpContent = new MimeBodyPart(new FileInputStream(content.getFile(context)));
+
+                        final ContentType cts = new ContentType(attachment.type);
+                        String micalg = cts.getParameter("micalg");
+                        ParameterList params = cts.getParameterList();
+                        params.remove("micalg");
+                        cts.setParameterList(params);
+
+                        // Build signature
+                        BodyPart bpSignature = new MimeBodyPart();
+                        bpSignature.setFileName(attachment.name);
+                        FileDataSource dsSignature = new FileDataSource(attachment.getFile(context));
+                        dsSignature.setFileTypeMap(new FileTypeMap() {
+                            @Override
+                            public String getContentType(File file) {
+                                return cts.toString();
+                            }
+
+                            @Override
+                            public String getContentType(String filename) {
+                                return cts.toString();
+                            }
+                        });
+                        bpSignature.setDataHandler(new DataHandler(dsSignature));
+                        bpSignature.setDisposition(Part.INLINE);
+
+                        // Build message
+                        ContentType ct = new ContentType("multipart/signed");
+                        ct.setParameter("micalg", micalg);
+                        ct.setParameter("protocol", "application/pkcs7-signature");
+                        ct.setParameter("smime-type", "signed-data");
+                        String ctx = ct.toString();
+                        int slash = ctx.indexOf("/");
+                        Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
+                        multipart.addBodyPart(bpContent);
+                        multipart.addBodyPart(bpSignature);
+                        imessage.setContent(multipart);
+
+                        return imessage;
+                    }
+                throw new IllegalStateException("S/MIME content not found");
+            } else if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
+                Log.i("Sending S/MIME encrypted message");
+
+                File file = attachment.getFile(context);
+                byte[] encryptedData = new byte[(int) file.length()];
+                try (InputStream is = new FileInputStream(file)) {
+                    is.read(encryptedData);
+                }
+
+                // Build message
+                ContentType ct = new ContentType("application/pkcs7-mime");
+                ct.setParameter("name", attachment.name);
+                ct.setParameter("smime-type", "enveloped-data");
+                imessage.setDisposition(Part.ATTACHMENT);
+                imessage.setFileName(attachment.name);
+                imessage.setDataHandler(new DataHandler(new DataSource() {
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return new ByteArrayInputStream(encryptedData);
+                    }
+
+                    @Override
+                    public OutputStream getOutputStream() throws IOException {
+                        return null;
+                    }
+
+                    @Override
+                    public String getContentType() {
+                        return ct.toString();
+                    }
+
+                    @Override
+                    public String getName() {
+                        return null;
+                    }
+                }));
 
                 return imessage;
             }
@@ -1296,7 +1396,8 @@ public class MessageHelper {
                 ContentType ct = new ContentType(imessage.getContentType());
                 String protocol = ct.getParameter("protocol");
                 if ("application/pgp-signature".equals(protocol) ||
-                        "application/pkcs7-signature".equals(protocol)) {
+                        "application/pkcs7-signature".equals(protocol) ||
+                        "application/x-pkcs7-signature".equals(protocol)) {
                     Multipart multipart = (Multipart) imessage.getContent();
                     if (multipart.getCount() == 2) {
                         getMessageParts(multipart.getBodyPart(0), parts, null);

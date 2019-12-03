@@ -608,7 +608,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_ask_send_via">Sende E-Mail zu %1$s über %2$s?</string>
     <string name="title_queued">Nachricht wird gesendet</string>
     <string name="title_queued_at">Nachricht wird ungefähr %1$s gesendet</string>
-    <string name="title_sign">Unterschreiben</string>
+    <string name="title_sign">Signieren</string>
     <string name="title_encrypt">Verschlüsseln</string>
     <string name="title_decrypt">Entschlüsseln</string>
     <string name="title_resync">Neu synchronisieren</string>
@@ -620,6 +620,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_signature_valid">Gültige Nachrichtensignatur</string>
     <string name="title_signature_unconfirmed">Die Signatur der Nachricht ist zwar gültig, aber nicht bestätigt</string>
     <string name="title_signature_invalid">Ungültige Nachrichtensignatur</string>
+    <string name="title_signature_signed_by">Signatur gültig, signiert von: %1$s</string>
     <string name="title_search">Suche</string>
     <string name="title_search_server">Auf dem Server suchen</string>
     <string name="title_search_in">Suchen in</string>
@@ -957,7 +958,9 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     </string-array>
     <string-array name="encryptNames">
         <item>Keine Verschlüsselung</item>
-        <item>PGP nur unterschreiben</item>
-        <item>PGP unterschreiben + verschlüsseln</item>
+        <item>PGP nur signieren</item>
+        <item>PGP signieren + verschlüsseln</item>
+        <item>S/MIME nur signieren</item>
+        <item>S/MIME signieren + verschlüsseln</item>
     </string-array>
 </resources>

@@ -52,12 +52,15 @@ import android.os.Handler;
 import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.security.KeyChain;
+import android.security.KeyChainAliasCallback;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
+import android.util.Base64;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -97,6 +100,26 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.bouncycastle.cert.jcajce.JcaCertStore;
+import org.bouncycastle.cms.CMSAlgorithm;
+import org.bouncycastle.cms.CMSEnvelopedData;
+import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
+import org.bouncycastle.cms.CMSProcessableByteArray;
+import org.bouncycastle.cms.CMSProcessableFile;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.CMSSignedDataGenerator;
+import org.bouncycastle.cms.CMSTypedData;
+import org.bouncycastle.cms.RecipientInfoGenerator;
+import org.bouncycastle.cms.SignerInfoGenerator;
+import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
+import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
+import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DigestCalculatorProvider;
+import org.bouncycastle.operator.OutputEncryptor;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.bouncycastle.util.Store;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
@@ -106,6 +129,7 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -114,6 +138,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -1204,56 +1231,80 @@ public class FragmentCompose extends FragmentBase {
         onAction(R.id.action_check, extras);
     }
 
-    private void onEncrypt(EntityMessage draft) {
-        if (pgpService.isBound())
-            try {
-                List<Address> recipients = new ArrayList<>();
-                if (draft.to != null)
-                    recipients.addAll(Arrays.asList(draft.to));
-                if (draft.cc != null)
-                    recipients.addAll(Arrays.asList(draft.cc));
-                if (draft.bcc != null)
-                    recipients.addAll(Arrays.asList(draft.bcc));
+    private void onEncrypt(final EntityMessage draft) {
+        if (EntityMessage.SMIME_SIGNONLY.equals(draft.encrypt) ||
+                EntityMessage.SMIME_SIGNENCRYPT.equals(draft.encrypt)) {
+            Handler handler = new Handler();
+            KeyChain.choosePrivateKeyAlias(getActivity(), new KeyChainAliasCallback() {
+                        @Override
+                        public void alias(@Nullable String alias) {
+                            Log.i("Selected key alias=" + alias);
+                            if (alias != null) {
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            onSmime(draft, alias);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    null, null, null, -1, null);
+        } else {
+            if (pgpService.isBound())
+                try {
+                    List<Address> recipients = new ArrayList<>();
+                    if (draft.to != null)
+                        recipients.addAll(Arrays.asList(draft.to));
+                    if (draft.cc != null)
+                        recipients.addAll(Arrays.asList(draft.cc));
+                    if (draft.bcc != null)
+                        recipients.addAll(Arrays.asList(draft.bcc));
 
-                if (recipients.size() == 0)
-                    throw new IllegalArgumentException(getString(R.string.title_to_missing));
+                    if (recipients.size() == 0)
+                        throw new IllegalArgumentException(getString(R.string.title_to_missing));
 
-                pgpUserIds = new String[recipients.size()];
-                for (int i = 0; i < recipients.size(); i++) {
-                    InternetAddress recipient = (InternetAddress) recipients.get(i);
-                    pgpUserIds[i] = recipient.getAddress().toLowerCase(Locale.ROOT);
-                }
-
-                Intent intent;
-                if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
-                    intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                    intent.putExtra(BuildConfig.APPLICATION_ID, working);
-                } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
-                    intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
-                    intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                    intent.putExtra(BuildConfig.APPLICATION_ID, working);
-                } else
-                    throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
-
-                onPgp(intent);
-            } catch (Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else {
-                    Log.e(ex);
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
-                }
-            }
-        else {
-            Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
-            if (Helper.getIntentOpenKeychain().resolveActivity(getContext().getPackageManager()) != null)
-                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startActivity(Helper.getIntentOpenKeychain());
+                    pgpUserIds = new String[recipients.size()];
+                    for (int i = 0; i < recipients.size(); i++) {
+                        InternetAddress recipient = (InternetAddress) recipients.get(i);
+                        pgpUserIds[i] = recipient.getAddress().toLowerCase(Locale.ROOT);
                     }
-                });
-            snackbar.show();
+
+                    Intent intent;
+                    if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
+                        intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                        intent.putExtra(BuildConfig.APPLICATION_ID, working);
+                    } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
+                        intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
+                        intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
+                        intent.putExtra(BuildConfig.APPLICATION_ID, working);
+                    } else
+                        throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
+
+                    onPgp(intent);
+                } catch (Throwable ex) {
+                    if (ex instanceof IllegalArgumentException)
+                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    else {
+                        Log.e(ex);
+                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                    }
+                }
+            else {
+                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
+                if (Helper.getIntentOpenKeychain().resolveActivity(getContext().getPackageManager()) != null)
+                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startActivity(Helper.getIntentOpenKeychain());
+                        }
+                    });
+                snackbar.show();
+            }
         }
     }
 
@@ -1519,8 +1570,8 @@ public class FragmentCompose extends FragmentBase {
                     throw new IllegalArgumentException(getString(R.string.title_from_missing));
 
                 // Create files
-                File input = new File(context.getCacheDir(), "pgp_input." + id);
-                File output = new File(context.getCacheDir(), "pgp_output." + id);
+                File input = new File(context.getCacheDir(), "pgp_input." + draft.id);
+                File output = new File(context.getCacheDir(), "pgp_output." + draft.id);
 
                 // Serializing messages is NOT reproducible
                 if ((EntityMessage.PGP_SIGNONLY.equals(draft.encrypt) &&
@@ -1528,7 +1579,7 @@ public class FragmentCompose extends FragmentBase {
                         (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt) &&
                                 OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()))) {
                     // Get/clean attachments
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);
                     for (EntityAttachment attachment : new ArrayList<>(attachments))
                         if (attachment.encryption != null) {
                             db.attachment().deleteAttachment(attachment.id);
@@ -1611,7 +1662,7 @@ public class FragmentCompose extends FragmentBase {
                                     db.beginTransaction();
 
                                     String name;
-                                    String type = "application/octet-stream";
+                                    ContentType ct = new ContentType("application/octet-stream");
                                     int encryption;
                                     if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
                                         name = "keydata.asc";
@@ -1619,8 +1670,8 @@ public class FragmentCompose extends FragmentBase {
                                     } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
                                         name = "signature.asc";
                                         encryption = EntityAttachment.PGP_SIGNATURE;
-                                        type = "application/pgp-signature; micalg=\"" +
-                                                result.getStringExtra(OpenPgpApi.RESULT_SIGNATURE_MICALG) + "\"";
+                                        ct = new ContentType("application/pgp-signature");
+                                        ct.setParameter("micalg", result.getStringExtra(OpenPgpApi.RESULT_SIGNATURE_MICALG));
                                     } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
                                         name = "encrypted.asc";
                                         encryption = EntityAttachment.PGP_MESSAGE;
@@ -1628,10 +1679,10 @@ public class FragmentCompose extends FragmentBase {
                                         throw new IllegalStateException(data.getAction());
 
                                     EntityAttachment attachment = new EntityAttachment();
-                                    attachment.message = id;
-                                    attachment.sequence = db.attachment().getAttachmentSequence(id) + 1;
+                                    attachment.message = draft.id;
+                                    attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
                                     attachment.name = name;
-                                    attachment.type = type;
+                                    attachment.type = ct.toString();
                                     attachment.disposition = Part.INLINE;
                                     attachment.encryption = encryption;
                                     attachment.id = db.attachment().insertAttachment(attachment);
@@ -1667,7 +1718,7 @@ public class FragmentCompose extends FragmentBase {
                                     Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                     intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpKeyIds[0]);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
                                 }
                             }
@@ -1679,7 +1730,7 @@ public class FragmentCompose extends FragmentBase {
                                     Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
                                     intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
                                 } else {
                                     if (identity.sign_key != null) {
@@ -1688,13 +1739,13 @@ public class FragmentCompose extends FragmentBase {
                                         intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
                                         intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
                                         intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                        intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                        intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                         return intent;
                                     } else {
                                         // Get sign key
                                         Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
                                         intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                                        intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                        intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                         return intent;
                                     }
                                 }
@@ -1707,7 +1758,7 @@ public class FragmentCompose extends FragmentBase {
                                     Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                     intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
                                 } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
                                     // Encrypt message
@@ -1715,14 +1766,14 @@ public class FragmentCompose extends FragmentBase {
                                     intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
                                     intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, id);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
                                 } else
                                     throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
                             } else if (OpenPgpApi.ACTION_DETACHED_SIGN.equals(data.getAction())) {
                                 EntityAttachment attachment = new EntityAttachment();
-                                attachment.message = id;
-                                attachment.sequence = db.attachment().getAttachmentSequence(id) + 1;
+                                attachment.message = draft.id;
+                                attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
                                 attachment.name = "content.asc";
                                 attachment.type = "text/plain";
                                 attachment.disposition = Part.INLINE;
@@ -1795,7 +1846,192 @@ public class FragmentCompose extends FragmentBase {
                 } else
                     Helper.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, args, "compose:encrypt");
+        }.execute(this, args, "compose:pgp");
+    }
+
+    private void onSmime(EntityMessage draft, String alias) {
+        Bundle args = new Bundle();
+        args.putLong("id", draft.id);
+        args.putInt("type", draft.encrypt);
+        args.putString("alias", alias);
+
+        new SimpleTask<Void>() {
+            @Override
+            protected Void onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                int type = args.getInt("type");
+                String alias = args.getString("alias");
+
+                DB db = DB.getInstance(context);
+
+                // Get data
+                EntityMessage draft = db.message().getMessage(id);
+                if (draft == null)
+                    throw new MessageRemovedException("S/MIME");
+                EntityIdentity identity = db.identity().getIdentity(draft.identity);
+                if (identity == null)
+                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
+
+                // Get/clean attachments
+                List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                for (EntityAttachment attachment : new ArrayList<>(attachments))
+                    if (attachment.encryption != null) {
+                        db.attachment().deleteAttachment(attachment.id);
+                        attachments.remove(attachment);
+                    }
+
+                // Build message
+                Properties props = MessageHelper.getSessionProperties();
+                Session isession = Session.getInstance(props, null);
+                MimeMessage imessage = new MimeMessage(isession);
+                MessageHelper.build(context, draft, attachments, identity, imessage);
+                imessage.saveChanges();
+                BodyPart bpContent = new MimeBodyPart() {
+                    @Override
+                    public void setContent(Object content, String type) throws MessagingException {
+                        super.setContent(content, type);
+
+                        // https://javaee.github.io/javamail/FAQ#howencode
+                        updateHeaders();
+                        if (content instanceof Multipart) {
+                            try {
+                                MessageHelper.overrideContentTransferEncoding((Multipart) content);
+                            } catch (IOException ex) {
+                                Log.e(ex);
+                            }
+                        } else
+                            setHeader("Content-Transfer-Encoding", "base64");
+                    }
+                };
+                bpContent.setContent(imessage.getContent(), imessage.getContentType());
+
+                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
+                    if (alias == null)
+                        throw new IllegalArgumentException("Key alias missing");
+
+                    // Get key
+                    PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
+                    if (privkey == null)
+                        throw new IllegalArgumentException("Private key missing");
+                    X509Certificate[] chain = KeyChain.getCertificateChain(context, alias);
+                    if (chain == null || chain.length == 0)
+                        throw new IllegalArgumentException("Certificate missing");
+
+                    // Build content
+                    EntityAttachment cattachment = new EntityAttachment();
+                    cattachment.message = draft.id;
+                    cattachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
+                    cattachment.name = "content.asc";
+                    cattachment.type = "text/plain";
+                    cattachment.disposition = Part.INLINE;
+                    cattachment.encryption = EntityAttachment.SMIME_CONTENT;
+                    cattachment.id = db.attachment().insertAttachment(cattachment);
+
+                    File content = cattachment.getFile(context);
+                    try (OutputStream os = new FileOutputStream(content)) {
+                        bpContent.writeTo(os);
+                    }
+
+                    db.attachment().setDownloaded(cattachment.id, content.length());
+
+                    // Build signature
+                    Store store = new JcaCertStore(Arrays.asList(chain[0]));
+                    CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
+                    cmsGenerator.addCertificates(store);
+
+                    ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA")
+                            .build(privkey);
+                    DigestCalculatorProvider digestCalculator = new JcaDigestCalculatorProviderBuilder()
+                            .build();
+                    SignerInfoGenerator signerInfoGenerator = new JcaSignerInfoGeneratorBuilder(digestCalculator)
+                            .build(contentSigner, chain[0]);
+                    cmsGenerator.addSignerInfoGenerator(signerInfoGenerator);
+
+                    CMSTypedData cmsData = new CMSProcessableFile(content);
+                    CMSSignedData cmsSignedData = cmsGenerator.generate(cmsData, true);
+                    byte[] signedMessage = cmsSignedData.getEncoded();
+
+                    ContentType ct = new ContentType("application/pkcs7-signature");
+                    ct.setParameter("micalg", "sha-256");
+
+                    EntityAttachment sattachment = new EntityAttachment();
+                    sattachment.message = draft.id;
+                    sattachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
+                    sattachment.name = "smime.p7s";
+                    sattachment.type = ct.toString();
+                    sattachment.disposition = Part.INLINE;
+                    sattachment.encryption = EntityAttachment.SMIME_SIGNATURE;
+                    sattachment.id = db.attachment().insertAttachment(sattachment);
+
+                    File file = sattachment.getFile(context);
+                    try (OutputStream os = new FileOutputStream(file)) {
+                        os.write(signedMessage);
+                    }
+
+                    db.attachment().setDownloaded(sattachment.id, file.length());
+                } else if (EntityMessage.SMIME_SIGNENCRYPT.equals(draft.encrypt)) {
+                    // TODO: sign
+                    if (draft.to == null || draft.to.length != 1)
+                        throw new IllegalArgumentException(getString(R.string.title_to_missing));
+
+                    String to = ((InternetAddress) draft.to[0]).getAddress();
+                    List<EntityCertificate> c = db.certificate().getCertificateByEmail(to);
+                    if (c == null || c.size() == 0)
+                        throw new IllegalArgumentException("Certificate not found");
+
+                    byte[] encoded = Base64.decode(c.get(0).data, Base64.NO_WRAP);
+                    X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509")
+                            .generateCertificate(new ByteArrayInputStream(encoded));
+
+                    CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator = new CMSEnvelopedDataGenerator();
+                    RecipientInfoGenerator gen = new JceKeyTransRecipientInfoGenerator(cert);
+                    cmsEnvelopedDataGenerator.addRecipientInfoGenerator(gen);
+
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    bpContent.writeTo(bos);
+                    CMSTypedData msg = new CMSProcessableByteArray(bos.toByteArray());
+
+                    OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
+                            .build();
+                    CMSEnvelopedData cmsEnvelopedData = cmsEnvelopedDataGenerator
+                            .generate(msg, encryptor);
+
+                    byte[] encryptedData = cmsEnvelopedData/*.toASN1Structure()*/.getEncoded();
+
+                    EntityAttachment attachment = new EntityAttachment();
+                    attachment.message = draft.id;
+                    attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
+                    attachment.name = "smime.p7m";
+                    attachment.type = "application/pkcs7-mime";
+                    attachment.disposition = Part.INLINE;
+                    attachment.encryption = EntityAttachment.SMIME_MESSAGE;
+                    attachment.id = db.attachment().insertAttachment(attachment);
+
+                    File file = attachment.getFile(context);
+                    try (OutputStream os = new FileOutputStream(file)) {
+                        os.write(encryptedData);
+                    }
+
+                    db.attachment().setDownloaded(attachment.id, file.length());
+                }
+
+                return null;
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, Void result) {
+                onAction(R.id.action_send);
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                if (ex instanceof IllegalArgumentException) {
+                    Log.i(ex);
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                } else
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "compose:s/mimem");
     }
 
     private void onContactGroupSelected(Bundle args) {

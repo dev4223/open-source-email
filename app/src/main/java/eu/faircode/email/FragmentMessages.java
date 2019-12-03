@@ -52,6 +52,7 @@ import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.TypedValue;
@@ -123,7 +124,6 @@ import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
 import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Store;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -163,6 +163,7 @@ import java.util.Properties;
 
 import javax.mail.FolderClosedException;
 import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import static android.app.Activity.RESULT_OK;
@@ -3189,34 +3190,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     };
 
     private Observer<PagedList<TupleMessageEx>> observer = new Observer<PagedList<TupleMessageEx>>() {
-        private List<Long> ids = new ArrayList<>();
-
         @Override
         public void onChanged(@Nullable PagedList<TupleMessageEx> messages) {
             if (messages == null)
                 return;
 
-            if (viewType == AdapterMessage.ViewType.THREAD) {
+            if (viewType == AdapterMessage.ViewType.THREAD)
                 if (handleThreadActions(messages))
                     return;
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                boolean autoscroll = prefs.getBoolean("autoscroll", true);
-                if (autoscroll) {
-                    boolean gotoTop = false;
-                    for (int i = 0; i < messages.size(); i++) {
-                        TupleMessageEx message = messages.get(i);
-                        if (message != null && !ids.contains(message.id)) {
-                            ids.add(message.id);
-                            if (!message.ui_seen && !message.duplicate)
-                                gotoTop = true;
-                        }
-                    }
-
-                    if (gotoTop)
-                        adapter.gotoTop();
-                }
-            }
 
             Log.i("Submit messages=" + messages.size());
             adapter.submitList(messages);
@@ -4369,10 +4350,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 DB db = DB.getInstance(context);
 
                 if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null)
+                        return null;
+
                     // Get content/signature
                     File content = null;
                     File signature = null;
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                     for (EntityAttachment attachment : attachments)
                         if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
                             if (!attachment.available)
@@ -4401,11 +4386,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         for (Object match : store.getMatches(signer.getSID())) {
                             X509CertificateHolder certHolder = (X509CertificateHolder) match;
                             X509Certificate cert = new JcaX509CertificateConverter()
-                                    .setProvider(new BouncyCastleProvider())
                                     .getCertificate(certHolder);
                             try {
-                                if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert)))
-                                    return cert.getSubjectDN().getName();
+                                if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert))) {
+                                    String subject = cert.getSubjectDN().getName();
+                                    if (!TextUtils.isEmpty(subject) &&
+                                            message.from != null && message.from.length == 1) {
+                                        EntityCertificate c = db.certificate().getCertificateBySubject(subject);
+                                        if (c == null) {
+                                            c = new EntityCertificate();
+                                            c.subject = subject;
+                                            c.email = ((InternetAddress) message.from[0]).getAddress();
+                                            c.data = Base64.encodeToString(cert.getEncoded(), Base64.NO_WRAP);
+                                            c.id = db.certificate().insertCertificate(c);
+                                        }
+                                    }
+
+                                    return subject;
+                                }
                             } catch (CMSVerifierCertificateNotValidException ex) {
                                 Log.w(ex);
                             }
@@ -4413,11 +4411,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     return null;
                 } else {
+                    // Get alias
                     String alias = args.getString("alias");
                     if (alias == null)
                         throw new IllegalArgumentException("Key alias missing");
 
-                    // Check private key
+                    // Get private key
                     PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
                     if (privkey == null)
                         throw new IllegalArgumentException("Private key missing");
@@ -4437,8 +4436,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         throw new IllegalArgumentException("Encrypted message missing");
 
                     // Build enveloped data
-                    FileInputStream fis = new FileInputStream(input);
-                    CMSEnvelopedData envelopedData = new CMSEnvelopedData(fis);
+                    CMSEnvelopedData envelopedData;
+                    try (FileInputStream fis = new FileInputStream(input)) {
+                        envelopedData = new CMSEnvelopedData(fis);
+                    }
 
                     // Decrypt message
                     Collection<RecipientInformation> recipients = envelopedData.getRecipientInfos().getRecipients();
