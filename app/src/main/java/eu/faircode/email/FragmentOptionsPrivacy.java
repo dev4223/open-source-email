@@ -26,6 +26,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.security.KeyChain;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -54,6 +55,7 @@ import androidx.preference.PreferenceManager;
 
 import org.openintents.openpgp.util.OpenPgpApi;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,8 +68,10 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private SwitchCompat swAutoDecrypt;
     private SwitchCompat swSecure;
     private Button btnBiometrics;
-    private Spinner spBiometricsTimeout;
     private Button btnPin;
+    private Spinner spBiometricsTimeout;
+    private Button btnImportKey;
+    private TextView tvKeySize;
 
     private List<String> openPgpProvider = new ArrayList<>();
 
@@ -96,8 +100,10 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swAutoDecrypt = view.findViewById(R.id.swAutoDecrypt);
         swSecure = view.findViewById(R.id.swSecure);
         btnBiometrics = view.findViewById(R.id.btnBiometrics);
-        spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
         btnPin = view.findViewById(R.id.btnPin);
+        spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
+        btnImportKey = view.findViewById(R.id.btnImportKey);
+        tvKeySize = view.findViewById(R.id.tvKeySize);
 
         Intent intent = new Intent(OpenPgpApi.SERVICE_INTENT_2);
         List<ResolveInfo> ris = getContext().getPackageManager().queryIntentServices(intent, 0);
@@ -218,6 +224,22 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                 prefs.edit().remove("biometrics_timeout").apply();
             }
         });
+
+        final Intent importKey = KeyChain.createInstallIntent();
+        btnImportKey.setEnabled(importKey.resolveActivity(getContext().getPackageManager()) != null);
+        btnImportKey.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(importKey);
+            }
+        });
+
+        try {
+            int maxKeySize = javax.crypto.Cipher.getMaxAllowedKeyLength("AES");
+            tvKeySize.setText(getString(R.string.title_aes_key_size, maxKeySize));
+        } catch (NoSuchAlgorithmException ex) {
+            tvKeySize.setText(Helper.formatThrowable(ex));
+        }
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 

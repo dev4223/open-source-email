@@ -48,6 +48,8 @@ import android.os.Parcelable;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
+import android.security.KeyChain;
+import android.security.KeyChainAliasCallback;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.LongSparseArray;
@@ -107,6 +109,22 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.sun.mail.util.FolderClosedIOException;
 
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cms.CMSEnvelopedData;
+import org.bouncycastle.cms.CMSProcessable;
+import org.bouncycastle.cms.CMSProcessableFile;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.CMSVerifierCertificateNotValidException;
+import org.bouncycastle.cms.KeyTransRecipientInformation;
+import org.bouncycastle.cms.RecipientInformation;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.cms.jcajce.JceKeyTransEnvelopedRecipient;
+import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.Store;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openintents.openpgp.OpenPgpError;
@@ -123,6 +141,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.text.Collator;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -130,6 +150,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -242,7 +263,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
 
     private static final int REQUEST_RAW = 1;
-    private static final int REQUEST_DECRYPT = 4;
+    private static final int REQUEST_OPENPGP = 4;
     static final int REQUEST_MESSAGE_DELETE = 5;
     private static final int REQUEST_MESSAGES_DELETE = 6;
     static final int REQUEST_MESSAGE_JUNK = 7;
@@ -3892,25 +3913,55 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onDecrypt(Intent intent) {
-        if (pgpService.isBound()) {
-            long id = intent.getLongExtra("id", -1);
-            boolean auto = intent.getBooleanExtra("auto", false);
+        long id = intent.getLongExtra("id", -1);
+        boolean auto = intent.getBooleanExtra("auto", false);
+        int type = intent.getIntExtra("type", EntityMessage.ENCRYPT_NONE);
 
-            Intent data = new Intent();
-            data.setAction(OpenPgpApi.ACTION_DECRYPT_VERIFY);
-            data.putExtra(BuildConfig.APPLICATION_ID, id);
+        final Bundle args = new Bundle();
+        args.putLong("id", id);
+        args.putInt("type", type);
 
-            onDecrypt(data, auto);
+        if (EntityMessage.SMIME_SIGNONLY.equals(type))
+            onSmime(args);
+        else if (EntityMessage.SMIME_SIGNENCRYPT.equals(type)) {
+            Handler handler = new Handler();
+            KeyChain.choosePrivateKeyAlias(getActivity(), new KeyChainAliasCallback() {
+                        @Override
+                        public void alias(@Nullable String alias) {
+                            Log.i("Selected key alias=" + alias);
+                            if (alias != null) {
+                                args.putString("alias", alias);
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            onSmime(args);
+                                        } catch (Throwable ex) {
+                                            Log.e(ex);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    null, null, null, -1, null);
         } else {
-            Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
-            if (Helper.getIntentOpenKeychain().resolveActivity(getContext().getPackageManager()) != null)
-                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startActivity(Helper.getIntentOpenKeychain());
-                    }
-                });
-            snackbar.show();
+            if (pgpService.isBound()) {
+                Intent data = new Intent();
+                data.setAction(OpenPgpApi.ACTION_DECRYPT_VERIFY);
+                data.putExtra(BuildConfig.APPLICATION_ID, id);
+                onPgp(data, auto);
+            } else {
+                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
+                if (Helper.getIntentOpenKeychain().resolveActivity(getContext().getPackageManager()) != null)
+                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            startActivity(Helper.getIntentOpenKeychain());
+                        }
+                    });
+                snackbar.show();
+            }
         }
     }
 
@@ -3924,9 +3975,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (resultCode == RESULT_OK && data != null)
                         onSaveRaw(data);
                     break;
-                case REQUEST_DECRYPT:
+                case REQUEST_OPENPGP:
                     if (resultCode == RESULT_OK && data != null)
-                        onDecrypt(data, false);
+                        onPgp(data, false);
                     break;
                 case REQUEST_MESSAGE_DELETE:
                     if (resultCode == RESULT_OK && data != null)
@@ -4092,7 +4143,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }.execute(this, args, "raw:save");
     }
 
-    private void onDecrypt(Intent data, boolean auto) {
+    private void onPgp(Intent data, boolean auto) {
         Bundle args = new Bundle();
         args.putParcelable("data", data);
         args.putBoolean("auto", auto);
@@ -4135,6 +4186,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             out = new FileOutputStream(plain);
 
                     } else if (EntityAttachment.PGP_SIGNATURE.equals(attachment.encryption)) {
+                        if (!attachment.available)
+                            throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
+
                         File file = attachment.getFile(context);
                         byte[] signature = new byte[(int) file.length()];
                         try (FileInputStream fis = new FileInputStream(file)) {
@@ -4235,6 +4289,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             }
                                         }
 
+                                        db.message().setMessageEncrypt(message.id, parts.getEncryption());
                                         db.message().setMessageStored(message.id, new Date().getTime());
 
                                         db.setTransactionSuccessful();
@@ -4286,7 +4341,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         Log.i("Executing pi=" + pi);
                         startIntentSenderForResult(
                                 pi.getIntentSender(),
-                                REQUEST_DECRYPT,
+                                REQUEST_OPENPGP,
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
                         Helper.unexpectedError(getParentFragmentManager(), ex);
@@ -4301,7 +4356,157 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } else
                     Helper.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, args, "decrypt");
+        }.execute(this, args, "decrypt:pgp");
+    }
+
+    private void onSmime(Bundle args) {
+        new SimpleTask<String>() {
+            @Override
+            protected String onExecute(Context context, Bundle args) throws Throwable {
+                long id = args.getLong("id");
+                int type = args.getInt("type");
+
+                DB db = DB.getInstance(context);
+
+                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
+                    // Get content/signature
+                    File content = null;
+                    File signature = null;
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    for (EntityAttachment attachment : attachments)
+                        if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
+                            if (!attachment.available)
+                                throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
+                            signature = attachment.getFile(context);
+                        } else if (EntityAttachment.SMIME_CONTENT.equals(attachment.encryption)) {
+                            if (!attachment.available)
+                                throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
+                            content = attachment.getFile(context);
+                        }
+
+                    if (content == null)
+                        throw new IllegalArgumentException("Signed content missing");
+                    if (signature == null)
+                        throw new IllegalArgumentException("Signature missing");
+
+                    // Build signed data
+                    CMSProcessable signedContent = new CMSProcessableFile(content);
+                    FileInputStream fis = new FileInputStream(signature);
+                    CMSSignedData signedData = new CMSSignedData(signedContent, fis);
+
+                    // Check signature
+                    Store store = signedData.getCertificates();
+                    SignerInformationStore signerInfos = signedData.getSignerInfos();
+                    for (SignerInformation signer : signerInfos.getSigners())
+                        for (Object match : store.getMatches(signer.getSID())) {
+                            X509CertificateHolder certHolder = (X509CertificateHolder) match;
+                            X509Certificate cert = new JcaX509CertificateConverter()
+                                    .setProvider(new BouncyCastleProvider())
+                                    .getCertificate(certHolder);
+                            try {
+                                if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert)))
+                                    return cert.getSubjectDN().getName();
+                            } catch (CMSVerifierCertificateNotValidException ex) {
+                                Log.w(ex);
+                            }
+                        }
+
+                    return null;
+                } else {
+                    String alias = args.getString("alias");
+                    if (alias == null)
+                        throw new IllegalArgumentException("Key alias missing");
+
+                    // Check private key
+                    PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
+                    if (privkey == null)
+                        throw new IllegalArgumentException("Private key missing");
+
+                    // Get encrypted message
+                    File input = null;
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    for (EntityAttachment attachment : attachments)
+                        if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
+                            if (!attachment.available)
+                                throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
+                            input = attachment.getFile(context);
+                            break;
+                        }
+
+                    if (input == null)
+                        throw new IllegalArgumentException("Encrypted message missing");
+
+                    // Build enveloped data
+                    FileInputStream fis = new FileInputStream(input);
+                    CMSEnvelopedData envelopedData = new CMSEnvelopedData(fis);
+
+                    // Decrypt message
+                    Collection<RecipientInformation> recipients = envelopedData.getRecipientInfos().getRecipients();
+                    KeyTransRecipientInformation recipientInfo = (KeyTransRecipientInformation) recipients.iterator().next();
+                    JceKeyTransRecipient recipient = new JceKeyTransEnvelopedRecipient(privkey);
+                    InputStream is = recipientInfo.getContentStream(recipient).getContentStream();
+
+                    // Decode message
+                    Properties props = MessageHelper.getSessionProperties();
+                    Session isession = Session.getInstance(props, null);
+                    MimeMessage imessage = new MimeMessage(isession, is);
+                    MessageHelper helper = new MessageHelper(imessage);
+                    MessageHelper.MessageParts parts = helper.getMessageParts(context);
+
+                    try {
+                        db.beginTransaction();
+
+                        // Write decrypted body
+                        String html = parts.getHtml(context);
+                        Helper.writeText(EntityMessage.getFile(context, id), html);
+
+                        // Remove existing attachments
+                        db.attachment().deleteAttachments(id);
+
+                        // Add decrypted attachments
+                        List<EntityAttachment> remotes = parts.getAttachments();
+                        for (int index = 0; index < remotes.size(); index++) {
+                            EntityAttachment remote = remotes.get(index);
+                            remote.message = id;
+                            remote.sequence = index + 1;
+                            remote.id = db.attachment().insertAttachment(remote);
+                            try {
+                                parts.downloadAttachment(context, index, remote);
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+
+                        db.message().setMessageEncrypt(id, parts.getEncryption());
+                        db.message().setMessageStored(id, new Date().getTime());
+
+                        db.setTransactionSuccessful();
+                    } finally {
+                        db.endTransaction();
+                    }
+
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, String result) {
+                int type = args.getInt("type");
+                if (EntityMessage.SMIME_SIGNONLY.equals(type))
+                    if (result == null)
+                        Snackbar.make(view, R.string.title_signature_invalid, Snackbar.LENGTH_LONG).show();
+                    else
+                        Snackbar.make(view, getString(R.string.title_signature_signed_by, result), Snackbar.LENGTH_LONG).show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                if (ex instanceof IllegalArgumentException)
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                else
+                    Helper.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "decrypt:s/mime");
     }
 
     private void onDelete(long id) {
@@ -4645,15 +4850,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onPrint(Bundle args) {
-        Bundle pargs = new Bundle();
-        pargs.putLong("id", args.getLong("id"));
-
         new SimpleTask<String[]>() {
             private WebView printWebView = null;
 
             @Override
             protected String[] onExecute(Context context, Bundle args) throws IOException {
                 long id = args.getLong("id");
+                boolean headers = args.getBoolean("headers");
 
                 DB db = DB.getInstance(context);
                 EntityMessage message = db.message().getMessage(id);
@@ -4719,6 +4922,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     p.appendChild(span);
                 }
 
+                if (headers && message.headers != null) {
+                    p.appendElement("hr");
+                    Element pre = document.createElement("pre");
+                    pre.text(message.headers);
+                    p.appendChild(pre);
+                }
+
                 p.appendElement("hr").appendElement("br");
 
                 document.prependChild(p);
@@ -4774,7 +4984,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 Helper.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, pargs, "message:print");
+        }.execute(this, args, "message:print");
     }
 
     private void onEmptyFolder(Bundle args) {

@@ -1620,7 +1620,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 protected void onExecuted(Bundle args, Object result) {
                     TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-                    properties.setValue("inline_encrypted", message.id, args.getBoolean("inline_encrypted"));
 
                     TupleMessageEx amessage = getMessage();
                     if (amessage == null || !amessage.id.equals(message.id))
@@ -1650,8 +1649,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     pbBody.setVisibility(View.GONE);
 
-                    // Show attachments/images
+                    // Show attachments
                     cowner.start();
+
+                    // Show encrypt actions
+                    ibVerify.setVisibility(false ||
+                            EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
+                            EntityMessage.SMIME_SIGNONLY.equals(message.encrypt)
+                            ? View.VISIBLE : View.GONE);
+                    ibDecrypt.setVisibility(args.getBoolean("inline_encrypted") ||
+                            EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) ||
+                            EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)
+                            ? View.VISIBLE : View.GONE);
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
+                    if (auto_decrypt && EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt))
+                        onActionDecrypt(message, true);
+
+                    // Show images
                     ibImages.setVisibility(has_images ? View.VISIBLE : View.GONE);
                 }
 
@@ -1670,12 +1686,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
             boolean show_inline = properties.getValue("inline", message.id);
-            boolean inline_encrypted = properties.getValue("inline_encrypted", message.id);
-            Log.i("Show inline=" + show_inline + " encrypted=" + inline_encrypted);
+            Log.i("Show inline=" + show_inline);
 
             boolean has_inline = false;
-            boolean is_signed = false;
-            boolean is_encrypted = false;
             boolean download = false;
             boolean save = (attachments.size() > 1);
             boolean downloading = false;
@@ -1686,10 +1699,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean inline = (attachment.isInline() && attachment.isImage());
                 if (inline)
                     has_inline = true;
-                if (Objects.equals(attachment.encryption, EntityAttachment.PGP_MESSAGE))
-                    is_encrypted = true;
-                if (Objects.equals(attachment.encryption, EntityAttachment.PGP_CONTENT))
-                    is_signed = true;
                 if (attachment.progress == null && !attachment.available)
                     download = true;
                 if (!attachment.available)
@@ -1724,14 +1733,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnSaveAttachments.setVisibility(save ? View.VISIBLE : View.GONE);
             btnDownloadAttachments.setVisibility(download && suitable ? View.VISIBLE : View.GONE);
             tvNoInternetAttachments.setVisibility(downloading && !suitable ? View.VISIBLE : View.GONE);
-
-            ibVerify.setVisibility(is_signed ? View.VISIBLE : View.GONE);
-            ibDecrypt.setVisibility(inline_encrypted || is_encrypted ? View.VISIBLE : View.GONE);
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
-            if (auto_decrypt && is_encrypted)
-                onActionDecrypt(message, true);
 
             cbInline.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -2786,7 +2787,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             lbm.sendBroadcast(
                     new Intent(FragmentMessages.ACTION_DECRYPT)
                             .putExtra("id", message.id)
-                            .putExtra("auto", auto));
+                            .putExtra("auto", auto)
+                            .putExtra("type", (int) message.encrypt));
         }
 
         private void onActionReplyMenu(TupleMessageEx message) {
@@ -3558,23 +3560,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onMenuPrint(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+            args.putBoolean("headers", properties.getValue("headers", message.id));
+
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             if (prefs.getBoolean("print_html_confirmed", false)) {
-                Bundle args = new Bundle();
-                args.putLong("id", message.id);
                 Intent data = new Intent();
                 data.putExtra("args", args);
                 parentFragment.onActivityResult(FragmentMessages.REQUEST_PRINT, RESULT_OK, data);
                 return;
             }
 
-            Bundle aargs = new Bundle();
-            aargs.putString("question", context.getString(R.string.title_ask_show_html));
-            aargs.putString("notagain", "print_html_confirmed");
-            aargs.putLong("id", message.id);
+            args.putString("question", context.getString(R.string.title_ask_show_html));
+            args.putString("notagain", "print_html_confirmed");
 
             FragmentDialogAsk ask = new FragmentDialogAsk();
-            ask.setArguments(aargs);
+            ask.setArguments(args);
             ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_PRINT);
             ask.show(parentFragment.getParentFragmentManager(), "message:print");
         }
