@@ -63,9 +63,10 @@ public class ViewCardOptional extends CardView {
 
         // dev4223: was: '3 : 6' and '12 + (compact ? 3 : 6)'
         margin = Helper.dp2pixels(context, compact ? 1 : 2);
-        ident = Helper.dp2pixels(context, 6 + (compact ? 1 : 2));
+        ident = Helper.dp2pixels(context, 6 + (compact ? 2 : 4));
 
-        setRadius(cards ? margin : 0);
+        // dev4223: was: 'vsetRadius(cards ? margin : 0);'
+        setRadius(cards ? 4 : 0);
         setCardElevation(0);
         setCardBackgroundColor(Color.TRANSPARENT);
     }
