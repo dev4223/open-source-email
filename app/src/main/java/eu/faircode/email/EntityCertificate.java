@@ -19,19 +19,38 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
+import android.util.Base64;
+
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayInputStream;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+
+import javax.security.auth.x500.X500Principal;
 
 @Entity(
         tableName = EntityCertificate.TABLE_NAME,
         foreignKeys = {
         },
         indices = {
-                @Index(value = {"subject"}, unique = true),
+                @Index(value = {"fingerprint", "email"}, unique = true),
                 @Index(value = {"email"}),
         }
 )
@@ -41,17 +60,102 @@ public class EntityCertificate {
     @PrimaryKey(autoGenerate = true)
     public Long id;
     @NonNull
-    public String subject;
+    public String fingerprint;
+    @NonNull
     public String email;
+    public String subject;
+    public Long after;
+    public Long before;
     @NonNull
     public String data;
+
+    static EntityCertificate from(X509Certificate certificate, String email) throws CertificateEncodingException, NoSuchAlgorithmException {
+        EntityCertificate record = new EntityCertificate();
+        record.fingerprint = getFingerprint(certificate);
+        record.email = email;
+        record.subject = getSubject(certificate);
+
+        Date after = certificate.getNotBefore();
+        Date before = certificate.getNotAfter();
+
+        record.after = (after == null ? null : after.getTime());
+        record.before = (before == null ? null : before.getTime());
+
+        record.data = Base64.encodeToString(certificate.getEncoded(), Base64.NO_WRAP);
+
+        return record;
+    }
+
+    X509Certificate getCertificate() throws CertificateException {
+        byte[] encoded = Base64.decode(this.data, Base64.NO_WRAP);
+        return (X509Certificate) CertificateFactory.getInstance("X.509")
+                .generateCertificate(new ByteArrayInputStream(encoded));
+    }
+
+    boolean isExpired() {
+        long now = new Date().getTime();
+        return ((this.after != null && now <= this.after) || (this.before != null && now > this.before));
+    }
+
+    static String getFingerprint(X509Certificate certificate) throws CertificateEncodingException, NoSuchAlgorithmException {
+        return Helper.sha256(certificate.getEncoded());
+    }
+
+    static String getSubject(X509Certificate certificate) {
+        return certificate.getSubjectX500Principal().getName(X500Principal.RFC2253);
+    }
+
+    static List<String> getAltSubjectName(X509Certificate certificate) {
+        List<String> result = new ArrayList<>();
+        try {
+            Collection<List<?>> altNames = certificate.getSubjectAlternativeNames();
+            if (altNames != null)
+                for (List altName : altNames)
+                    if (altName.get(0).equals(GeneralName.rfc822Name))
+                        result.add((String) altName.get(1));
+                    else
+                        Log.i("Alt type=" + altName.get(0) + " data=" + altName.get(1));
+        } catch (CertificateParsingException ex) {
+            Log.w(ex);
+        }
+
+        return result;
+    }
+
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("email", email);
+        json.put("data", data);
+        return json;
+    }
+
+    public static EntityCertificate fromJSON(JSONObject json) throws JSONException, CertificateException, NoSuchAlgorithmException {
+        EntityCertificate certificate = new EntityCertificate();
+        certificate.id = json.getLong("id");
+        certificate.email = json.getString("email");
+        certificate.data = json.getString("data");
+
+        X509Certificate cert = certificate.getCertificate();
+        certificate.fingerprint = getFingerprint(cert);
+        certificate.subject = getSubject(cert);
+
+        Date after = cert.getNotBefore();
+        Date before = cert.getNotAfter();
+
+        certificate.after = (after == null ? null : after.getTime());
+        certificate.before = (before == null ? null : before.getTime());
+
+        return certificate;
+    }
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof EntityCertificate) {
             EntityCertificate other = (EntityCertificate) obj;
-            return (this.subject.equals(other.subject) &&
+            return (this.fingerprint.equals(other.fingerprint) &&
                     Objects.equals(this.email, other.email) &&
+                    Objects.equals(this.subject, other.subject) &&
                     this.data.equals(other.data));
         } else
             return false;

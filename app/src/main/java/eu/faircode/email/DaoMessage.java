@@ -45,14 +45,14 @@ public interface DaoMessage {
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType, folder.read_only AS folderReadOnly" +
-            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
+            ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
             ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", SUM(message.encrypt IN (2, 4)) AS signed" +
-            ", SUM(message.encrypt IN (1, 3)) AS encrypted" +
+            ", (message.encrypt IN (2, 4)) AS signed" +
+            ", (message.encrypt IN (1, 3)) AS encrypted" +
             ", COUNT(DISTINCT CASE WHEN message.msgid IS NULL THEN message.id ELSE message.msgid END) AS visible" +
             ", SUM(message.total) AS totalSize" +
             ", MAX(CASE WHEN" +
@@ -96,14 +96,14 @@ public interface DaoMessage {
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType, folder.read_only AS folderReadOnly" +
-            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
+            ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", '[' || group_concat(message.`from`, ',') || ']' AS senders" +
             ", COUNT(message.id) AS count" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", SUM(1 - message.ui_flagged) AS unflagged" +
             ", SUM(folder.type = '" + EntityFolder.DRAFTS + "') AS drafts" +
-            ", SUM(message.encrypt IN (2, 4)) AS signed" +
-            ", SUM(message.encrypt IN (1, 3)) AS encrypted" +
+            ", (message.encrypt IN (2, 4)) AS signed" +
+            ", (message.encrypt IN (1, 3)) AS encrypted" +
             ", COUNT(DISTINCT CASE WHEN message.msgid IS NULL THEN message.id ELSE message.msgid END) AS visible" +
             ", SUM(message.total) AS totalSize" +
             ", MAX(CASE WHEN folder.id = :folder THEN message.received ELSE 0 END) AS dummy" +
@@ -141,7 +141,7 @@ public interface DaoMessage {
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType, folder.read_only AS folderReadOnly" +
-            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
+            ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
@@ -281,7 +281,7 @@ public interface DaoMessage {
             ", account.pop AS accountProtocol, account.name AS accountName, identity.color AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType, folder.read_only AS folderReadOnly" +
-            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
+            ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", 1 AS count" +
             ", CASE WHEN message.ui_seen THEN 0 ELSE 1 END AS unseen" +
@@ -316,7 +316,7 @@ public interface DaoMessage {
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
             ", folder.name AS folderName, folder.display AS folderDisplay, folder.type AS folderType, folder.read_only AS folderReadOnly" +
-            ", identity.name AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
+            ", IFNULL(identity.display, identity.name) AS identityName, identity.email AS identityEmail, identity.synchronize AS identitySynchronize" +
             ", message.`from` AS senders" +
             ", 1 AS count" +
             ", 1 AS unseen" +

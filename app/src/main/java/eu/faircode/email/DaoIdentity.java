@@ -49,23 +49,23 @@ public interface DaoIdentity {
             " ORDER BY name COLLATE NOCASE")
     List<EntityIdentity> getIdentities(long account);
 
+    @Query("SELECT * FROM identity" +
+            " WHERE account = :account" +
+            " AND email = :email COLLATE NOCASE")
+    List<EntityIdentity> getIdentities(long account, String email);
+
     @Query("SELECT identity.* FROM identity" +
             " JOIN account ON account.id = identity.account" +
             " WHERE identity.account = :account" +
-            " AND identity.synchronize AND account.synchronize")
+            " AND identity.synchronize AND account.synchronize" +
+            " ORDER BY identity.`primary` DESC, IFNULL(identity.display, identity.name)")
     List<EntityIdentity> getSynchronizingIdentities(long account);
-
-    @Query("SELECT * FROM identity WHERE id = :id")
-    EntityIdentity getIdentity(long id);
-
-    @Query("SELECT * FROM identity" +
-            " WHERE account = :account AND email = :email COLLATE NOCASE" +
-            " ORDER BY CASE WHEN synchronize THEN 0 ELSE 1 END" +
-            " LIMIT 1")
-    EntityIdentity getIdentity(long account, String email);
 
     @Query("SELECT COUNT(*) FROM identity WHERE synchronize")
     int getSynchronizingIdentityCount();
+
+    @Query("SELECT * FROM identity WHERE id = :id")
+    EntityIdentity getIdentity(long id);
 
     @Insert
     long insertIdentity(EntityIdentity identity);
@@ -93,6 +93,9 @@ public interface DaoIdentity {
 
     @Query("UPDATE identity SET sign_key = :sign_key WHERE id = :id")
     int setIdentitySignKey(long id, Long sign_key);
+
+    @Query("UPDATE identity SET sign_key_alias = :alias WHERE id = :id")
+    int setIdentitySignKeyAlias(long id, String alias);
 
     @Query("UPDATE identity SET error = :error WHERE id = :id")
     int setIdentityError(long id, String error);

@@ -49,10 +49,8 @@ import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.security.KeyChain;
-import android.security.KeyChainAliasCallback;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.TypedValue;
@@ -113,11 +111,12 @@ import com.sun.mail.util.FolderClosedIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.CMSEnvelopedData;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSProcessable;
 import org.bouncycastle.cms.CMSProcessableFile;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSVerifierCertificateNotValidException;
-import org.bouncycastle.cms.KeyTransRecipientInformation;
+import org.bouncycastle.cms.KeyTransRecipientId;
 import org.bouncycastle.cms.RecipientInformation;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
@@ -142,6 +141,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.text.Collator;
 import java.text.DateFormat;
@@ -734,7 +734,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:move");
             }
@@ -822,7 +822,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:drafts");
 
@@ -908,7 +908,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (ex instanceof IllegalArgumentException)
                             ToastEx.makeText(getContext(), ex.getMessage(), Toast.LENGTH_LONG).show();
                         else
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentMessages.this, args, "messages:search");
             }
@@ -1216,7 +1216,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:refresh");
     }
@@ -1365,7 +1365,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "messages:move");
         }
@@ -1773,7 +1773,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (ex instanceof IllegalArgumentException)
                         Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                     else
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(FragmentMessages.this, args, "messages:swipe");
         }
@@ -1978,7 +1978,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:more");
     }
@@ -2034,7 +2034,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:seen");
     }
@@ -2121,7 +2121,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:flag");
     }
@@ -2168,7 +2168,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:flag");
     }
@@ -2237,7 +2237,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:delete:ask");
     }
@@ -2306,7 +2306,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -2370,7 +2370,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -2614,7 +2614,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(this, args, "messages:ignore");
             }
@@ -3126,7 +3126,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "search:reset");
         } else
@@ -3180,7 +3180,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else {
                     Bundle args = new Bundle();
-                    args.putString("error", Helper.formatThrowable(ex, false));
+                    args.putString("error", Log.formatThrowable(ex, false));
 
                     FragmentDialogError fragment = new FragmentDialogError();
                     fragment.setArguments(args);
@@ -3413,7 +3413,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.setLog(false).execute(this, args, "messages:navigation");
         }
@@ -3485,7 +3485,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.setLog(false).execute(this, args, "messages:expand");
     }
@@ -3552,7 +3552,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:navigate");
     }
@@ -3626,7 +3626,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:move");
     }
@@ -3694,7 +3694,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                             @Override
                             protected void onException(Bundle args, Throwable ex) {
-                                Helper.unexpectedError(getParentFragmentManager(), ex);
+                                Log.unexpectedError(getParentFragmentManager(), ex);
                             }
                         }.execute(FragmentMessages.this, args, "messages:moveundo");
                     }
@@ -3749,7 +3749,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:movehide");
     }
@@ -3905,27 +3905,62 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (EntityMessage.SMIME_SIGNONLY.equals(type))
             onSmime(args);
         else if (EntityMessage.SMIME_SIGNENCRYPT.equals(type)) {
-            Handler handler = new Handler();
-            KeyChain.choosePrivateKeyAlias(getActivity(), new KeyChainAliasCallback() {
+            new SimpleTask<EntityIdentity>() {
+                @Override
+                protected EntityIdentity onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+
+                    EntityMessage message = db.message().getMessage(id);
+                    if (message == null || message.identity == null)
+                        return null;
+
+                    EntityIdentity identity = db.identity().getIdentity(message.identity);
+                    if (identity == null)
+                        return null;
+
+                    List<EntityIdentity> duplicates = db.identity().getIdentities(identity.account, identity.email);
+                    if (duplicates == null || duplicates.size() > 1)
+                        return null;
+
+                    return identity;
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, EntityIdentity identity) {
+                    Boolean auto = args.getBoolean("auto");
+                    if (auto && identity == null)
+                        return;
+
+                    Helper.selectKeyAlias(getActivity(), identity == null ? null : identity.sign_key_alias, new Helper.IKeyAlias() {
                         @Override
-                        public void alias(@Nullable String alias) {
-                            Log.i("Selected key alias=" + alias);
-                            if (alias != null) {
-                                args.putString("alias", alias);
-                                handler.post(new Runnable() {
+                        public void onSelected(String alias) {
+                            args.putString("alias", alias);
+                            onSmime(args);
+                        }
+
+                        @Override
+                        public void onNothingSelected() {
+                            Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG);
+                            final Intent intent = KeyChain.createInstallIntent();
+                            if (intent.resolveActivity(getContext().getPackageManager()) != null)
+                                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                                     @Override
-                                    public void run() {
-                                        try {
-                                            onSmime(args);
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                        }
+                                    public void onClick(View v) {
+                                        startActivity(intent);
                                     }
                                 });
-                            }
+                            snackbar.show();
                         }
-                    },
-                    null, null, null, -1, null);
+                    });
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
+            }.execute(this, args, "messages:alias");
         } else {
             if (pgpService.isBound()) {
                 Intent data = new Intent();
@@ -4119,7 +4154,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "raw:save");
     }
@@ -4325,7 +4360,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 REQUEST_OPENPGP,
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
             }
 
@@ -4335,15 +4370,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 } else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "decrypt:pgp");
     }
 
     private void onSmime(Bundle args) {
-        new SimpleTask<String>() {
+        new SimpleTask<X509Certificate>() {
             @Override
-            protected String onExecute(Context context, Bundle args) throws Throwable {
+            protected X509Certificate onExecute(Context context, Bundle args) throws Throwable {
                 long id = args.getLong("id");
                 int type = args.getInt("type");
 
@@ -4389,20 +4424,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     .getCertificate(certHolder);
                             try {
                                 if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert))) {
-                                    String subject = cert.getSubjectDN().getName();
-                                    if (!TextUtils.isEmpty(subject) &&
-                                            message.from != null && message.from.length == 1) {
-                                        EntityCertificate c = db.certificate().getCertificateBySubject(subject);
-                                        if (c == null) {
-                                            c = new EntityCertificate();
-                                            c.subject = subject;
-                                            c.email = ((InternetAddress) message.from[0]).getAddress();
-                                            c.data = Base64.encodeToString(cert.getEncoded(), Base64.NO_WRAP);
-                                            c.id = db.certificate().insertCertificate(c);
-                                        }
+                                    boolean known = true;
+                                    String fingerprint = EntityCertificate.getFingerprint(cert);
+                                    List<String> emails = EntityCertificate.getAltSubjectName(cert);
+                                    for (String email : emails) {
+                                        EntityCertificate record = db.certificate().getCertificate(fingerprint, email);
+                                        if (record == null)
+                                            known = false;
                                     }
 
-                                    return subject;
+                                    String sender = null;
+                                    if (message.from != null && message.from.length == 1)
+                                        sender = ((InternetAddress) message.from[0]).getAddress();
+
+                                    args.putString("sender", sender);
+                                    args.putBoolean("known", known);
+
+                                    return cert;
                                 }
                             } catch (CMSVerifierCertificateNotValidException ex) {
                                 Log.w(ex);
@@ -4420,6 +4458,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
                     if (privkey == null)
                         throw new IllegalArgumentException("Private key missing");
+
+                    // Get public key
+                    X509Certificate[] chain = KeyChain.getCertificateChain(context, alias);
+                    if (chain == null || chain.length == 0)
+                        throw new IllegalArgumentException("Public key missing");
 
                     // Get encrypted message
                     File input = null;
@@ -4441,11 +4484,33 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         envelopedData = new CMSEnvelopedData(fis);
                     }
 
-                    // Decrypt message
-                    Collection<RecipientInformation> recipients = envelopedData.getRecipientInfos().getRecipients();
-                    KeyTransRecipientInformation recipientInfo = (KeyTransRecipientInformation) recipients.iterator().next();
+                    // Get recipient info
                     JceKeyTransRecipient recipient = new JceKeyTransEnvelopedRecipient(privkey);
-                    InputStream is = recipientInfo.getContentStream(recipient).getContentStream();
+                    Collection<RecipientInformation> recipients = envelopedData.getRecipientInfos().getRecipients(); // KeyTransRecipientInformation
+
+                    // Find recipient
+                    InputStream is = null;
+                    for (RecipientInformation recipientInfo : recipients) {
+                        KeyTransRecipientId recipientId = (KeyTransRecipientId) recipientInfo.getRID();
+                        if (recipientId.getSerialNumber().equals(chain[0].getSerialNumber()))
+                            try {
+                                is = recipientInfo.getContentStream(recipient).getContentStream();
+                            } catch (CMSException ex) {
+                                Log.w(ex);
+                            }
+                    }
+
+                    // Fallback: try all recipients
+                    if (is == null)
+                        for (RecipientInformation recipientInfo : recipients)
+                            try {
+                                is = recipientInfo.getContentStream(recipient).getContentStream();
+                            } catch (CMSException ex) {
+                                Log.w(ex);
+                            }
+
+                    if (is == null)
+                        throw new IllegalArgumentException(context.getString(R.string.title_invalid_key));
 
                     // Decode message
                     Properties props = MessageHelper.getSessionProperties();
@@ -4491,13 +4556,105 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             @Override
-            protected void onExecuted(Bundle args, String result) {
+            protected void onExecuted(final Bundle args, X509Certificate cert) {
                 int type = args.getInt("type");
-                if (EntityMessage.SMIME_SIGNONLY.equals(type))
-                    if (result == null)
+                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
+                    String sender = args.getString("sender");
+                    boolean known = args.getBoolean("known");
+
+                    if (cert == null)
                         Snackbar.make(view, R.string.title_signature_invalid, Snackbar.LENGTH_LONG).show();
                     else
-                        Snackbar.make(view, getString(R.string.title_signature_signed_by, result), Snackbar.LENGTH_LONG).show();
+                        try {
+                            EntityCertificate record = EntityCertificate.from(cert, null);
+
+                            boolean match = false;
+                            List<String> emails = EntityCertificate.getAltSubjectName(cert);
+                            for (String email : emails)
+                                if (Objects.equals(sender, email)) {
+                                    match = true;
+                                    break;
+                                }
+
+                            if (known && !record.isExpired() && match)
+                                Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG).show();
+                            else {
+                                LayoutInflater inflator = LayoutInflater.from(getContext());
+                                View dview = inflator.inflate(R.layout.dialog_certificate, null);
+                                TextView tvSender = dview.findViewById(R.id.tvSender);
+                                TextView tvEmail = dview.findViewById(R.id.tvEmail);
+                                TextView tvEmailInvalid = dview.findViewById(R.id.tvEmailInvalid);
+                                TextView tvSubject = dview.findViewById(R.id.tvSubject);
+                                TextView tvAfter = dview.findViewById(R.id.tvAfter);
+                                TextView tvBefore = dview.findViewById(R.id.tvBefore);
+                                TextView tvExpired = dview.findViewById(R.id.tvExpired);
+
+                                tvSender.setText(sender);
+                                tvEmail.setText(TextUtils.join(",", emails));
+                                tvEmailInvalid.setVisibility(match ? View.GONE : View.VISIBLE);
+                                tvSubject.setText(record.subject);
+
+                                DateFormat TF = Helper.getDateTimeInstance(getContext(), SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+                                tvAfter.setText(record.after == null ? null : TF.format(record.after));
+                                tvBefore.setText(record.before == null ? null : TF.format(record.before));
+                                tvExpired.setVisibility(record.isExpired() ? View.VISIBLE : View.GONE);
+
+                                AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                                        .setView(dview)
+                                        .setNegativeButton(android.R.string.cancel, null);
+
+                                if (!TextUtils.isEmpty(sender) && !known && emails.size() > 0)
+                                    builder.setPositiveButton(R.string.title_signature_store, new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            try {
+                                                args.putByteArray("encoded", cert.getEncoded());
+
+                                                new SimpleTask<Void>() {
+                                                    @Override
+                                                    protected Void onExecute(Context context, Bundle args) throws Throwable {
+                                                        long id = args.getLong("id");
+                                                        byte[] encoded = args.getByteArray("encoded");
+
+                                                        X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509")
+                                                                .generateCertificate(new ByteArrayInputStream(encoded));
+
+                                                        DB db = DB.getInstance(context);
+                                                        EntityMessage message = db.message().getMessage(id);
+                                                        if (message == null)
+                                                            return null;
+
+                                                        String fingerprint = EntityCertificate.getFingerprint(cert);
+                                                        List<String> emails = EntityCertificate.getAltSubjectName(cert);
+                                                        String subject = EntityCertificate.getSubject(cert);
+                                                        for (String email : emails) {
+                                                            EntityCertificate record = db.certificate().getCertificate(fingerprint, email);
+                                                            if (record == null) {
+                                                                record = EntityCertificate.from(cert, email);
+                                                                record.id = db.certificate().insertCertificate(record);
+                                                            }
+                                                        }
+
+                                                        return null;
+                                                    }
+
+                                                    @Override
+                                                    protected void onException(Bundle args, Throwable ex) {
+                                                        Log.unexpectedError(getParentFragmentManager(), ex);
+                                                    }
+                                                }.execute(FragmentMessages.this, args, "certificate:store");
+                                            } catch (Throwable ex) {
+                                                Log.unexpectedError(getParentFragmentManager(), ex);
+                                            }
+                                        }
+                                    });
+
+                                builder.show();
+                            }
+                        } catch (Throwable ex) {
+                            Snackbar.make(view, Log.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                        }
+                }
             }
 
             @Override
@@ -4505,7 +4662,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "decrypt:s/mime");
     }
@@ -4561,7 +4718,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:delete");
     }
@@ -4596,7 +4753,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:delete:execute");
     }
@@ -4631,7 +4788,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:junk");
     }
@@ -4689,7 +4846,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:color");
     }
@@ -4737,7 +4894,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:snooze");
     }
@@ -4791,7 +4948,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "messages:snooze");
     }
@@ -4845,7 +5002,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:move");
     }
@@ -4983,7 +5140,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:print");
     }
@@ -5023,7 +5180,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "folder:delete");
     }
@@ -5176,7 +5333,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "messages:accounts");
 
@@ -5271,7 +5428,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "identity:select");
 

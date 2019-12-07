@@ -85,8 +85,8 @@ Related questions:
 * ~~Select domains to show images for~~ (this will be too complicated to use)
 * ~~Unified starred messages view~~ (there is already a special search for this)
 * ~~Notification move action~~
+* ~~S/MIME support~~
 * Search for settings: low priority
-* S/MIME: waiting for sponsoring
 
 Anything on this list is in random order and *might* be added in the near future.
 
@@ -560,25 +560,32 @@ So, unless your provider can enable this extension, you cannot use FairEmail for
 <a name="faq12"></a>
 **(12) How does encryption/decryption work?**
 
-First of all you need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/).
+*General*
 
-To encrypt and send a message just check the menu *Encrypt* and the message will be encrypted on sending.
+To sign/encrypt a message, just select the appropriate method in the send dialog.
+You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
 
-To decrypt a received message, open the message and just tap the padlock icon just below the message action bar.
+To verify a signature or to decrypt a received message, open the message and just tap the gesture or padlock icon just below the message action bar.
 
-The first time you send an encrypted message you might be asked for a sign key.
-FairEmail will automatically store the sign key ID in the selected identity for the next time.
-If you need to reset the sign key, just save the identity to clear the sign key ID again.
-The sign key is visible in the list of identities.
+The first time you send a signed/encrypted message you might be asked for a sign key.
+FairEmail will automatically store the selected sign key in the used identity for the next time.
+If you need to reset the sign key, just save the identity or long press the identity in the list of identities and select *Reset sign key*.
+The selected sign key is visible in the list of identities.
 
-You can enable *Encrypt by default* in the identity settings, which replaces *Send* by *Encrypt and send*.
-You can enable *Automatically decrypt messages* in the privacy settings, but be aware that automatic decryption is not possible if user interaction is required.
+In the privacy settings you can select the default encryption method (PGP or S/MIME),
+enable *Sign by default*, *Encrypt by default* and *Automatically decrypt messages*,
+but be aware that automatic decryption is not possible if user interaction is required, like selecting a key or reading a security token.
 
-FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for other email clients.
+The to be encrypted message text/attachments and the decrypted message text/attachments are stored locally only and will never be added to the remote server.
+If you want to undo decryption, you can use the *resync* menu item in the three-dots menu of the message action bar.
 
-The decrypted message text and decrypted attachments are stored. If you want to undo this, you can use the *resync* message 'more' menu.
+*PGP*
 
-Inline PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
+You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/) first.
+
+FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients.
+
+Inline encrypted PGP in received messages is supported, but inline PGP in outgoing messages is not supported,
 see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
 
 Signed-only or encrypted-only messages are not a good idea, please see here about why not:
@@ -589,10 +596,23 @@ Signed-only or encrypted-only messages are not a good idea, please see here abou
 
 Signed-only messages are supported, encrypted-only messages are not supported.
 
-For S/MIME support, please see the [planned features](#user-content-planned-features).
+*S/MIME*
 
-Please see [this comment](https://forum.xda-developers.com/showpost.php?p=79444379&postcount=5609)
-about [these vulnerabilities](https://amp.thehackernews.com/thn/2019/04/email-signature-spoofing.html).
+Encrypting a message requires the public key(s) of the recipient(s). Signing a message requires your private key.
+
+Private keys are stored by Android and can be imported via the Android advanced security settings.
+There is a shortcut (button) for this in the privacy settings.
+Public keys are stored by FairEmail and can be imported when verifying a signature for the first time or via the privacy settings (PEM or DER format).
+
+The use of expired keys, inline encrypted/signed messages and hardware security tokens is not supported.
+
+How to extract a public key from a S/MIME certificate:
+
+```
+openssl pkcs12 -in filename.pfx -clcerts -nokeys -out cert.pem
+```
+
+S/MIME sign/encrypt is a pro feature, but all other PGP and S/MIME operations are free to use.
 
 <br />
 
@@ -855,12 +875,23 @@ You can disable this feature in the advanced account settings.
 <a name="faq25"></a>
 **(25) Why can't I select/open/save an image, attachment or a file?**
 
-If a menu item to select/open/save a file is disabled (dimmed) or not available,
-the [storage access framework](https://developer.android.com/guide/topics/providers/document-provider),
-a standard Android component, is probably not present,
-for example because your custom ROM does not include it or because it was removed.
+When a menu item to select/open/save a file is disabled (dimmed) or when you get the message *Storage access framework not available*,
+the [storage access framework](https://developer.android.com/guide/topics/providers/document-provider), a standard Android component, is probably not present.
+This might be because your custom ROM does not include it or because it was actively removed (debloated).
+
 FairEmail does not request storage permissions, so this framework is required to select files and folders.
 No app, except maybe file managers, targeting Android 4.4 KitKat or later should ask for storage permissions because it would allow access to *all* files.
+
+The storage access framework is provided by the package *com.android.documentsui*,
+which is visible as *Files* app on some Android versions (notable OxygenOS).
+
+You can enable the storage access framework (again) with this adb command:
+
+```
+pm install -k --user 0 com.android.documentsui
+```
+
+Alternatively, you might be able to enable the *Files* app again using the Android app settings.
 
 <br />
 
@@ -1038,7 +1069,7 @@ so all data, including usernames, passwords, messages, etc, is stored encrypted.
 
 Recent Android versions by default report *app usage* as a percentage in the Android battery settings screen.
 Confusingly, *app usage* is not the same as *battery usage*.
-The app usage will be very high because FairEmail is using a foreground service which is considered as constant app usage by Android.
+The app usage (while in use) will be very high because FairEmail is using a foreground service which is considered as constant app usage by Android.
 However, this doesn't mean that FairEmail is constantly using battery power.
 The real battery usage can be seen by using the three dot overflow menu *Show full device usage*.
 As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby*.

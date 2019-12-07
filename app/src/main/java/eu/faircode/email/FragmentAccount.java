@@ -272,6 +272,7 @@ public class FragmentAccount extends FragmentBase {
 
                 etName.setText(position > 1 ? provider.name : null);
                 etInterval.setText(provider.keepalive > 0 ? Integer.toString(provider.keepalive) : null);
+                cbPartialFetch.setChecked(provider.partial);
 
                 grpFolders.setVisibility(View.GONE);
                 btnSave.setVisibility(View.GONE);
@@ -477,7 +478,7 @@ public class FragmentAccount extends FragmentBase {
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "account:config");
     }
@@ -559,7 +560,6 @@ public class FragmentAccount extends FragmentBase {
                     iservice.connect(host, Integer.parseInt(port), auth, user, password);
 
                     result.idle = iservice.hasCapability("IDLE");
-                    result.empty = iservice.emptyMessages();
 
                     boolean inbox = false;
 
@@ -631,8 +631,6 @@ public class FragmentAccount extends FragmentBase {
                 tvUtf8.setVisibility(result.utf8 == null || result.utf8 ? View.GONE : View.VISIBLE);
                 if (!result.idle)
                     etInterval.setText(Integer.toString(EntityAccount.DEFAULT_POLL_INTERVAL));
-                if (result.empty)
-                    cbPartialFetch.setChecked(false);
 
                 setFolders(result.folders, result.account);
 
@@ -894,7 +892,7 @@ public class FragmentAccount extends FragmentBase {
                 boolean check = (synchronize && (account == null ||
                         !account.synchronize || account.error != null ||
                         !account.insecure.equals(insecure) ||
-                        !host.equals(account.host) || Integer.parseInt(port) != account.port ||
+                        !host.equals(account.host) || starttls != account.starttls || Integer.parseInt(port) != account.port ||
                         !user.equals(account.user) || !password.equals(account.password) ||
                         !Objects.equals(realm, accountRealm)));
                 boolean reload = (check || account == null ||
@@ -1144,7 +1142,7 @@ public class FragmentAccount extends FragmentBase {
     }
 
     private void showError(Throwable ex) {
-        tvError.setText(Helper.formatThrowable(ex, false));
+        tvError.setText(Log.formatThrowable(ex, false));
         grpError.setVisibility(View.VISIBLE);
 
         final EmailProvider provider = (EmailProvider) spProvider.getSelectedItem();
@@ -1270,7 +1268,7 @@ public class FragmentAccount extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentAccount.this, new Bundle(), "account:primary");
                 } else {
@@ -1321,7 +1319,7 @@ public class FragmentAccount extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentAccount.this, args, "account:folders");
                 }
@@ -1329,7 +1327,7 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "account:get");
     }
@@ -1435,7 +1433,7 @@ public class FragmentAccount extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "account:delete");
     }
@@ -1552,6 +1550,5 @@ public class FragmentAccount extends FragmentBase {
         List<EntityFolder> folders;
         boolean idle;
         Boolean utf8;
-        boolean empty;
     }
 }

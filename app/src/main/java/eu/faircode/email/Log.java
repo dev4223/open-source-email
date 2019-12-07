@@ -20,8 +20,10 @@ package eu.faircode.email;
 */
 
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -41,8 +43,12 @@ import android.text.TextUtils;
 import android.view.Display;
 import android.view.OrientationEventListener;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import com.bugsnag.android.BeforeNotify;
@@ -54,7 +60,10 @@ import com.bugsnag.android.Client;
 import com.bugsnag.android.Error;
 import com.bugsnag.android.Report;
 import com.bugsnag.android.Severity;
+import com.sun.mail.iap.BadCommandException;
+import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.ProtocolException;
+import com.sun.mail.util.FolderClosedIOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,6 +80,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +92,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import javax.mail.Address;
+import javax.mail.AuthenticationFailedException;
+import javax.mail.FolderClosedException;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
@@ -422,6 +435,22 @@ public class Log {
             */
             return false;
 
+        if (ex instanceof RuntimeException &&
+                ex.getMessage() != null &&
+                ex.getMessage().startsWith("Could not get application info"))
+            return false;
+        /*
+                java.lang.RuntimeException: Could not get application info.
+                 java.lang.RuntimeException: Could not get application info.
+                   at CH0.a(PG:11)
+                   at org.chromium.content.browser.ChildProcessLauncherHelperImpl.a(PG:34)
+                   at Fn2.run(PG:5)
+                   at android.os.Handler.handleCallback(Handler.java:874)
+                   at android.os.Handler.dispatchMessage(Handler.java:100)
+                   at android.os.Looper.loop(Looper.java:198)
+                   at android.os.HandlerThread.run(HandlerThread.java:65)
+         */
+
         if (ex.getMessage() != null &&
                 (ex.getMessage().startsWith("Bad notification posted") ||
                         ex.getMessage().contains("ActivityRecord not found") ||
@@ -451,6 +480,97 @@ public class Log {
         }
 
         return false;
+    }
+
+    static String formatThrowable(Throwable ex) {
+        return formatThrowable(ex, true);
+    }
+
+    static String formatThrowable(Throwable ex, boolean santize) {
+        return formatThrowable(ex, " ", santize);
+    }
+
+    static String formatThrowable(Throwable ex, String separator, boolean sanitize) {
+        if (sanitize) {
+            if (ex instanceof MessageRemovedException)
+                return null;
+
+            if (ex instanceof AuthenticationFailedException &&
+                    ex.getCause() instanceof SocketException)
+                return null;
+
+            if (ex instanceof MessagingException &&
+                    ("connection failure".equals(ex.getMessage()) ||
+                            "failed to create new store connection".equals(ex.getMessage())))
+                return null;
+
+            if (ex instanceof MessagingException &&
+                    ex.getCause() instanceof ConnectionException &&
+                    ex.getCause().getMessage() != null &&
+                    (ex.getCause().getMessage().contains("Read error") ||
+                            ex.getCause().getMessage().contains("Write error") ||
+                            ex.getCause().getMessage().contains("Socket is closed")))
+                return null;
+
+            // javax.mail.MessagingException: AU3 BAD User is authenticated but not connected.;
+            //   nested exception is:
+            //  com.sun.mail.iap.BadCommandException: AU3 BAD User is authenticated but not connected.
+            // javax.mail.MessagingException: AU3 BAD User is authenticated but not connected.;
+            //   nested exception is:
+            // 	com.sun.mail.iap.BadCommandException: AU3 BAD User is authenticated but not connected.
+            // 	at com.sun.mail.imap.IMAPFolder.logoutAndThrow(SourceFile:1156)
+            // 	at com.sun.mail.imap.IMAPFolder.open(SourceFile:1063)
+            // 	at com.sun.mail.imap.IMAPFolder.open(SourceFile:977)
+            // 	at eu.faircode.email.ServiceSynchronize.monitorAccount(SourceFile:890)
+            // 	at eu.faircode.email.ServiceSynchronize.access$1500(SourceFile:85)
+            // 	at eu.faircode.email.ServiceSynchronize$7$1.run(SourceFile:627)
+            // 	at java.lang.Thread.run(Thread.java:764)
+            // Caused by: com.sun.mail.iap.BadCommandException: AU3 BAD User is authenticated but not connected.
+            // 	at com.sun.mail.iap.Protocol.handleResult(SourceFile:415)
+            // 	at com.sun.mail.imap.protocol.IMAPProtocol.select(SourceFile:1230)
+            // 	at com.sun.mail.imap.IMAPFolder.open(SourceFile:1034)
+
+            if (ex instanceof MessagingException &&
+                    ex.getCause() instanceof BadCommandException &&
+                    ex.getCause().getMessage() != null &&
+                    ex.getCause().getMessage().contains("User is authenticated but not connected"))
+                return null;
+
+            if (ex instanceof IOException &&
+                    ex.getCause() instanceof MessageRemovedException)
+                return null;
+
+            if (ex instanceof ConnectionException)
+                return null;
+
+            if (ex instanceof FolderClosedException || ex instanceof FolderClosedIOException)
+                return null;
+
+            if (ex instanceof IllegalStateException &&
+                    ("Not connected".equals(ex.getMessage()) ||
+                            "This operation is not allowed on a closed folder".equals(ex.getMessage())))
+                return null;
+
+            if (ex instanceof Core.AlertException)
+                return ex.getMessage();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (BuildConfig.DEBUG)
+            sb.append(ex.toString());
+        else
+            sb.append(ex.getMessage() == null ? ex.getClass().getName() : ex.getMessage());
+
+        Throwable cause = ex.getCause();
+        while (cause != null) {
+            if (BuildConfig.DEBUG)
+                sb.append(separator).append(cause.toString());
+            else
+                sb.append(separator).append(cause.getMessage() == null ? cause.getClass().getName() : cause.getMessage());
+            cause = cause.getCause();
+        }
+
+        return sb.toString();
     }
 
     static void writeCrashLog(Context context, Throwable ex) {
@@ -522,6 +642,60 @@ public class Log {
         }
 
         return draft;
+    }
+
+    static void unexpectedError(FragmentManager manager, Throwable ex) {
+        Log.e(ex);
+
+        Bundle args = new Bundle();
+        args.putSerializable("ex", ex);
+
+        FragmentDialogUnexpected fragment = new FragmentDialogUnexpected();
+        fragment.setArguments(args);
+        fragment.show(manager, "error:unexpected");
+    }
+
+    public static class FragmentDialogUnexpected extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final Throwable ex = (Throwable) getArguments().getSerializable("ex");
+
+            return new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.title_unexpected_error)
+                    .setMessage(Log.formatThrowable(ex, false))
+                    .setPositiveButton(android.R.string.cancel, null)
+                    .setNeutralButton(R.string.title_report, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Dialog will be dismissed
+                            final Context context = getContext();
+
+                            new SimpleTask<Long>() {
+                                @Override
+                                protected Long onExecute(Context context, Bundle args) throws Throwable {
+                                    return Log.getDebugInfo(context, R.string.title_crash_info_remark, ex, null).id;
+                                }
+
+                                @Override
+                                protected void onExecuted(Bundle args, Long id) {
+                                    context.startActivity(new Intent(context, ActivityCompose.class)
+                                            .putExtra("action", "edit")
+                                            .putExtra("id", id));
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    if (ex instanceof IllegalArgumentException)
+                                        ToastEx.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+                                    else
+                                        ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
+                                }
+                            }.execute(getContext(), getActivity(), new Bundle(), "error:unexpected");
+                        }
+                    })
+                    .create();
+        }
     }
 
     private static StringBuilder getAppInfo(Context context) {
@@ -814,7 +988,6 @@ public class Log {
         os.write(bytes);
         return bytes.length;
     }
-
 
     private static long getFreeMem() {
         Runtime rt = Runtime.getRuntime();

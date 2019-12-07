@@ -53,14 +53,12 @@ import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.security.KeyChain;
-import android.security.KeyChainAliasCallback;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
-import android.util.Base64;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -105,7 +103,6 @@ import org.bouncycastle.cms.CMSAlgorithm;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
 import org.bouncycastle.cms.CMSProcessableByteArray;
-import org.bouncycastle.cms.CMSProcessableFile;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
 import org.bouncycastle.cms.CMSTypedData;
@@ -129,7 +126,6 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -139,7 +135,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.security.PrivateKey;
-import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -154,6 +150,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.MessageRemovedException;
@@ -168,6 +165,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
+import javax.mail.util.ByteArrayDataSource;
 
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
@@ -254,6 +252,7 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_LINK = 12;
     private static final int REQUEST_DISCARD = 13;
     private static final int REQUEST_SEND = 14;
+    private static final int REQUEST_CERTIFICATE = 15;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -762,7 +761,7 @@ public class FragmentCompose extends FragmentBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(FragmentCompose.this, args, "compose:convert");
             }
@@ -959,10 +958,10 @@ public class FragmentCompose extends FragmentBase {
         int colorEncrypt = Helper.resolveColor(getContext(), R.attr.colorEncrypt);
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
         ib.setEnabled(!busy);
-        if (EntityMessage.PGP_SIGNONLY.equals(encrypt)) {
+        if (EntityMessage.PGP_SIGNONLY.equals(encrypt) || EntityMessage.SMIME_SIGNONLY.equals(encrypt)) {
             ib.setImageResource(R.drawable.baseline_gesture_24);
             ib.setImageTintList(null);
-        } else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt)) {
+        } else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) || EntityMessage.SMIME_SIGNENCRYPT.equals(encrypt)) {
             ib.setImageResource(R.drawable.baseline_lock_24);
             ib.setImageTintList(ColorStateList.valueOf(colorEncrypt));
         } else {
@@ -973,9 +972,11 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_media).setChecked(media);
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
-        if (EntityMessage.PGP_SIGNONLY.equals(encrypt))
+        if (EntityMessage.PGP_SIGNONLY.equals(encrypt) ||
+                EntityMessage.SMIME_SIGNONLY.equals(encrypt))
             bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_sign);
-        else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt))
+        else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) ||
+                EntityMessage.SMIME_SIGNENCRYPT.equals(encrypt))
             bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_encrypt);
         else
             bottom_navigation.getMenu().findItem(R.id.action_send).setTitle(R.string.title_send);
@@ -1028,12 +1029,25 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onMenuEncrypt() {
-        if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt))
-            encrypt = EntityMessage.PGP_SIGNONLY;
-        else if (EntityMessage.PGP_SIGNONLY.equals(encrypt))
-            encrypt = EntityMessage.ENCRYPT_NONE;
-        else
-            encrypt = EntityMessage.PGP_SIGNENCRYPT;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String encrypt_method = prefs.getString("default_encrypt_method", "pgp");
+
+        if ("pgp".equals(encrypt_method)) {
+            if (EntityMessage.ENCRYPT_NONE.equals(encrypt) || encrypt == null)
+                encrypt = EntityMessage.PGP_SIGNENCRYPT;
+            else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt))
+                encrypt = EntityMessage.PGP_SIGNONLY;
+            else
+                encrypt = EntityMessage.ENCRYPT_NONE;
+        } else {
+            if (EntityMessage.ENCRYPT_NONE.equals(encrypt) || encrypt == null)
+                encrypt = EntityMessage.SMIME_SIGNENCRYPT;
+            else if (EntityMessage.SMIME_SIGNENCRYPT.equals(encrypt))
+                encrypt = EntityMessage.SMIME_SIGNONLY;
+            else
+                encrypt = EntityMessage.ENCRYPT_NONE;
+        }
+
         getActivity().invalidateOptionsMenu();
 
         Bundle args = new Bundle();
@@ -1057,7 +1071,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:encrypt");
     }
@@ -1234,26 +1248,53 @@ public class FragmentCompose extends FragmentBase {
     private void onEncrypt(final EntityMessage draft) {
         if (EntityMessage.SMIME_SIGNONLY.equals(draft.encrypt) ||
                 EntityMessage.SMIME_SIGNENCRYPT.equals(draft.encrypt)) {
-            Handler handler = new Handler();
-            KeyChain.choosePrivateKeyAlias(getActivity(), new KeyChainAliasCallback() {
+            Bundle args = new Bundle();
+            args.putLong("id", draft.id);
+            args.putInt("type", draft.encrypt);
+
+            new SimpleTask<EntityIdentity>() {
+                @Override
+                protected EntityIdentity onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
+
+                    DB db = DB.getInstance(context);
+                    EntityMessage draft = db.message().getMessage(id);
+                    if (draft == null || draft.identity == null)
+                        return null;
+
+                    return db.identity().getIdentity(draft.identity);
+                }
+
+                @Override
+                protected void onExecuted(final Bundle args, EntityIdentity identity) {
+                    Helper.selectKeyAlias(getActivity(), identity.sign_key_alias, new Helper.IKeyAlias() {
                         @Override
-                        public void alias(@Nullable String alias) {
-                            Log.i("Selected key alias=" + alias);
-                            if (alias != null) {
-                                handler.post(new Runnable() {
+                        public void onSelected(String alias) {
+                            args.putString("alias", alias);
+                            onSmime(args);
+                        }
+
+                        @Override
+                        public void onNothingSelected() {
+                            Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG);
+                            final Intent intent = KeyChain.createInstallIntent();
+                            if (intent.resolveActivity(getContext().getPackageManager()) != null)
+                                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                                     @Override
-                                    public void run() {
-                                        try {
-                                            onSmime(draft, alias);
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                        }
+                                    public void onClick(View v) {
+                                        startActivity(intent);
                                     }
                                 });
-                            }
+                            snackbar.show();
                         }
-                    },
-                    null, null, null, -1, null);
+                    });
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
+            }.execute(this, args, "compose:alias");
         } else {
             if (pgpService.isBound())
                 try {
@@ -1291,7 +1332,7 @@ public class FragmentCompose extends FragmentBase {
                         Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                     else {
                         Log.e(ex);
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }
             else {
@@ -1363,6 +1404,10 @@ public class FragmentCompose extends FragmentBase {
                 case REQUEST_SEND:
                     if (resultCode == RESULT_OK)
                         onActionSend();
+                    break;
+                case REQUEST_CERTIFICATE:
+                    if (resultCode == RESULT_OK && data != null)
+                        onSmime(data.getBundleExtra("args"));
                     break;
             }
         } catch (Throwable ex) {
@@ -1454,7 +1499,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:picked");
     }
@@ -1524,7 +1569,7 @@ public class FragmentCompose extends FragmentBase {
                 else if (ex instanceof IllegalArgumentException)
                     Snackbar.make(view, ex.toString(), Snackbar.LENGTH_LONG).show();
                 else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:attachment:add");
     }
@@ -1614,16 +1659,8 @@ public class FragmentCompose extends FragmentBase {
                         };
                         bpContent.setContent(imessage.getContent(), imessage.getContentType());
 
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        bpContent.writeTo(bos);
-
-                        // Just to be sure
-                        String raw = new String(bos.toByteArray());
-                        raw.replaceAll(" +$", "") // trim trailing spaces
-                                .replace("\\r?\\n", "\\r\\n"); // normalize new lines
-
                         try (OutputStream out = new FileOutputStream(input)) {
-                            out.write(raw.getBytes());
+                            bpContent.writeTo(out);
                         }
                     } else {
                         // Serialize message
@@ -1832,7 +1869,7 @@ public class FragmentCompose extends FragmentBase {
                                 null, 0, 0, 0, null);
                     } catch (IntentSender.SendIntentException ex) {
                         Log.e(ex);
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
             }
 
@@ -1844,17 +1881,12 @@ public class FragmentCompose extends FragmentBase {
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 } else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:pgp");
     }
 
-    private void onSmime(EntityMessage draft, String alias) {
-        Bundle args = new Bundle();
-        args.putLong("id", draft.id);
-        args.putInt("type", draft.encrypt);
-        args.putString("alias", alias);
-
+    private void onSmime(Bundle args) {
         new SimpleTask<Void>() {
             @Override
             protected Void onExecute(Context context, Bundle args) throws Throwable {
@@ -1880,7 +1912,7 @@ public class FragmentCompose extends FragmentBase {
                         attachments.remove(attachment);
                     }
 
-                // Build message
+                // Build message to sign
                 Properties props = MessageHelper.getSessionProperties();
                 Session isession = Session.getInstance(props, null);
                 MimeMessage imessage = new MimeMessage(isession);
@@ -1905,19 +1937,26 @@ public class FragmentCompose extends FragmentBase {
                 };
                 bpContent.setContent(imessage.getContent(), imessage.getContentType());
 
+                // Store selected alias
+                if (alias == null)
+                    throw new IllegalArgumentException("Key alias missing");
+                db.identity().setIdentitySignKeyAlias(identity.id, alias);
+
+                // Get private key
+                PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
+                if (privkey == null)
+                    throw new IllegalArgumentException("Private key missing");
+                X509Certificate[] chain = KeyChain.getCertificateChain(context, alias);
+                if (chain == null || chain.length == 0)
+                    throw new IllegalArgumentException("Certificate missing");
+                try {
+                    chain[0].checkValidity();
+                } catch (CertificateException ex) {
+                    throw new IllegalArgumentException(context.getString(R.string.title_invalid_key), ex);
+                }
+
+                // Build content
                 if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
-                    if (alias == null)
-                        throw new IllegalArgumentException("Key alias missing");
-
-                    // Get key
-                    PrivateKey privkey = KeyChain.getPrivateKey(context, alias);
-                    if (privkey == null)
-                        throw new IllegalArgumentException("Private key missing");
-                    X509Certificate[] chain = KeyChain.getCertificateChain(context, alias);
-                    if (chain == null || chain.length == 0)
-                        throw new IllegalArgumentException("Certificate missing");
-
-                    // Build content
                     EntityAttachment cattachment = new EntityAttachment();
                     cattachment.message = draft.id;
                     cattachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
@@ -1933,24 +1972,30 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     db.attachment().setDownloaded(cattachment.id, content.length());
+                }
 
-                    // Build signature
-                    Store store = new JcaCertStore(Arrays.asList(chain[0]));
-                    CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
-                    cmsGenerator.addCertificates(store);
+                // Sign
+                Store store = new JcaCertStore(Arrays.asList(chain[0]));
+                CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
+                cmsGenerator.addCertificates(store);
 
-                    ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA")
-                            .build(privkey);
-                    DigestCalculatorProvider digestCalculator = new JcaDigestCalculatorProviderBuilder()
-                            .build();
-                    SignerInfoGenerator signerInfoGenerator = new JcaSignerInfoGeneratorBuilder(digestCalculator)
-                            .build(contentSigner, chain[0]);
-                    cmsGenerator.addSignerInfoGenerator(signerInfoGenerator);
+                ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA")
+                        .build(privkey);
+                DigestCalculatorProvider digestCalculator = new JcaDigestCalculatorProviderBuilder()
+                        .build();
+                SignerInfoGenerator signerInfoGenerator = new JcaSignerInfoGeneratorBuilder(digestCalculator)
+                        .build(contentSigner, chain[0]);
+                cmsGenerator.addSignerInfoGenerator(signerInfoGenerator);
 
-                    CMSTypedData cmsData = new CMSProcessableFile(content);
-                    CMSSignedData cmsSignedData = cmsGenerator.generate(cmsData, true);
-                    byte[] signedMessage = cmsSignedData.getEncoded();
+                ByteArrayOutputStream osContent = new ByteArrayOutputStream();
+                bpContent.writeTo(osContent);
 
+                CMSTypedData cmsData = new CMSProcessableByteArray(osContent.toByteArray());
+                CMSSignedData cmsSignedData = cmsGenerator.generate(cmsData, true);
+                byte[] signedMessage = cmsSignedData.getEncoded();
+
+                // Build signature
+                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
                     ContentType ct = new ContentType("application/pkcs7-signature");
                     ct.setParameter("micalg", "sha-256");
 
@@ -1969,51 +2014,91 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     db.attachment().setDownloaded(sattachment.id, file.length());
-                } else if (EntityMessage.SMIME_SIGNENCRYPT.equals(draft.encrypt)) {
-                    // TODO: sign
-                    if (draft.to == null || draft.to.length != 1)
-                        throw new IllegalArgumentException(getString(R.string.title_to_missing));
 
-                    String to = ((InternetAddress) draft.to[0]).getAddress();
-                    List<EntityCertificate> c = db.certificate().getCertificateByEmail(to);
-                    if (c == null || c.size() == 0)
-                        throw new IllegalArgumentException("Certificate not found");
+                    return null;
+                }
 
-                    byte[] encoded = Base64.decode(c.get(0).data, Base64.NO_WRAP);
-                    X509Certificate cert = (X509Certificate) CertificateFactory.getInstance("X.509")
-                            .generateCertificate(new ByteArrayInputStream(encoded));
+                List<Address> addresses = new ArrayList<>();
+                if (draft.to != null)
+                    addresses.addAll(Arrays.asList(draft.to));
+                if (draft.cc != null)
+                    addresses.addAll(Arrays.asList(draft.cc));
+                if (draft.bcc != null)
+                    addresses.addAll(Arrays.asList(draft.bcc));
 
-                    CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator = new CMSEnvelopedDataGenerator();
+                List<X509Certificate> certs = new ArrayList<>();
+                certs.add(chain[0]); // Allow sender to decrypt own message
+
+                for (Address address : addresses) {
+                    String email = ((InternetAddress) address).getAddress();
+
+                    List<EntityCertificate> acertificates = db.certificate().getCertificateByEmail(email);
+                    if (acertificates == null || acertificates.size() == 0)
+                        throw new IllegalArgumentException(
+                                context.getString(R.string.title_certificate_missing, email), new CertificateException());
+
+                    for (EntityCertificate acertificate : acertificates) {
+                        X509Certificate cert = acertificate.getCertificate();
+                        try {
+                            cert.checkValidity();
+                        } catch (CertificateException ex) {
+                            throw new IllegalArgumentException(
+                                    context.getString(R.string.title_certificate_invalid, email), ex);
+                        }
+                        certs.add(cert);
+                    }
+                }
+
+                // Build signature
+                BodyPart bpSignature = new MimeBodyPart();
+                bpSignature.setFileName("smime.p7s");
+                bpSignature.setDataHandler(new DataHandler(new ByteArrayDataSource(signedMessage, "application/pkcs7-signature")));
+                bpSignature.setDisposition(Part.INLINE);
+
+                // Build message
+                ContentType ct = new ContentType("multipart/signed");
+                ct.setParameter("micalg", "sha-256");
+                ct.setParameter("protocol", "application/pkcs7-signature");
+                ct.setParameter("smime-type", "signed-data");
+                String ctx = ct.toString();
+                int slash = ctx.indexOf("/");
+                Multipart multipart = new MimeMultipart(ctx.substring(slash + 1));
+                multipart.addBodyPart(bpContent);
+                multipart.addBodyPart(bpSignature);
+                imessage.setContent(multipart);
+                imessage.saveChanges();
+
+                // Encrypt
+                CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator = new CMSEnvelopedDataGenerator();
+                for (X509Certificate cert : certs) {
                     RecipientInfoGenerator gen = new JceKeyTransRecipientInfoGenerator(cert);
                     cmsEnvelopedDataGenerator.addRecipientInfoGenerator(gen);
-
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                    bpContent.writeTo(bos);
-                    CMSTypedData msg = new CMSProcessableByteArray(bos.toByteArray());
-
-                    OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
-                            .build();
-                    CMSEnvelopedData cmsEnvelopedData = cmsEnvelopedDataGenerator
-                            .generate(msg, encryptor);
-
-                    byte[] encryptedData = cmsEnvelopedData/*.toASN1Structure()*/.getEncoded();
-
-                    EntityAttachment attachment = new EntityAttachment();
-                    attachment.message = draft.id;
-                    attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
-                    attachment.name = "smime.p7m";
-                    attachment.type = "application/pkcs7-mime";
-                    attachment.disposition = Part.INLINE;
-                    attachment.encryption = EntityAttachment.SMIME_MESSAGE;
-                    attachment.id = db.attachment().insertAttachment(attachment);
-
-                    File file = attachment.getFile(context);
-                    try (OutputStream os = new FileOutputStream(file)) {
-                        os.write(encryptedData);
-                    }
-
-                    db.attachment().setDownloaded(attachment.id, file.length());
                 }
+
+                ByteArrayOutputStream osMessage = new ByteArrayOutputStream();
+                imessage.writeTo(osMessage);
+                CMSTypedData msg = new CMSProcessableByteArray(osMessage.toByteArray());
+
+                OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(CMSAlgorithm.AES128_CBC)
+                        .build();
+                CMSEnvelopedData cmsEnvelopedData = cmsEnvelopedDataGenerator
+                        .generate(msg, encryptor);
+
+                EntityAttachment attachment = new EntityAttachment();
+                attachment.message = draft.id;
+                attachment.sequence = db.attachment().getAttachmentSequence(draft.id) + 1;
+                attachment.name = "smime.p7m";
+                attachment.type = "application/pkcs7-mime";
+                attachment.disposition = Part.INLINE;
+                attachment.encryption = EntityAttachment.SMIME_MESSAGE;
+                attachment.id = db.attachment().insertAttachment(attachment);
+
+                File encrypted = attachment.getFile(context);
+                try (OutputStream os = new FileOutputStream(encrypted)) {
+                    cmsEnvelopedData.toASN1Structure().encodeTo(os);
+                }
+
+                db.attachment().setDownloaded(attachment.id, encrypted.length());
 
                 return null;
             }
@@ -2027,9 +2112,19 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    if (ex.getCause() instanceof CertificateException)
+                        snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(
+                                        new Intent(getContext(), ActivitySetup.class)
+                                                .putExtra("tab", "privacy"));
+                            }
+                        });
+                    snackbar.show();
                 } else
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:s/mimem");
     }
@@ -2125,7 +2220,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:picked");
     }
@@ -2183,7 +2278,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "draft:get");
 
@@ -2370,7 +2465,7 @@ public class FragmentCompose extends FragmentBase {
         } catch (Throwable ex) {
             // Reset progress on failure
             Log.e(ex);
-            db.attachment().setError(attachment.id, Helper.formatThrowable(ex, false));
+            db.attachment().setError(attachment.id, Log.formatThrowable(ex, false));
             throw ex;
         }
 
@@ -2445,6 +2540,7 @@ public class FragmentCompose extends FragmentBase {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean plain_only = prefs.getBoolean("plain_only", false);
+            String encrypt_method = prefs.getString("default_encrypt_method", "pgp");
             boolean sign_default = prefs.getBoolean("sign_default", false);
             boolean encrypt_default = prefs.getBoolean("encrypt_default", false);
             boolean receipt_default = prefs.getBoolean("receipt_default", false);
@@ -2481,9 +2577,15 @@ public class FragmentCompose extends FragmentBase {
                     if (plain_only)
                         data.draft.plain_only = true;
                     if (encrypt_default)
-                        data.draft.encrypt = EntityMessage.PGP_SIGNENCRYPT;
+                        if ("s/mime".equals(encrypt_method))
+                            data.draft.encrypt = EntityMessage.SMIME_SIGNENCRYPT;
+                        else
+                            data.draft.encrypt = EntityMessage.PGP_SIGNENCRYPT;
                     else if (sign_default)
-                        data.draft.encrypt = EntityMessage.PGP_SIGNONLY;
+                        if ("s/mime".equals(encrypt_method))
+                            data.draft.encrypt = EntityMessage.SMIME_SIGNONLY;
+                        else
+                            data.draft.encrypt = EntityMessage.PGP_SIGNONLY;
                     if (receipt_default)
                         data.draft.receipt_request = true;
 
@@ -2896,8 +2998,7 @@ public class FragmentCompose extends FragmentBase {
                             }
                     }
 
-                    if (data.draft.encrypt == null || data.draft.encrypt == 0)
-                        EntityOperation.queue(context, data.draft, EntityOperation.ADD);
+                    EntityOperation.queue(context, data.draft, EntityOperation.ADD);
                 } else {
                     if (data.draft.revision == null) {
                         data.draft.revision = 1;
@@ -3090,7 +3191,7 @@ public class FragmentCompose extends FragmentBase {
                 });
                 snackbar.show();
             } else
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
         }
     };
 
@@ -3202,7 +3303,7 @@ public class FragmentCompose extends FragmentBase {
                         draft.ui_hide = ui_hide;
                         db.message().updateMessage(draft);
 
-                        if (draft.content && (draft.encrypt == null || draft.encrypt == 0))
+                        if (draft.content)
                             EntityOperation.queue(context, draft, EntityOperation.ADD);
                     }
 
@@ -3378,8 +3479,7 @@ public class FragmentCompose extends FragmentBase {
                             action == R.id.action_redo ||
                             action == R.id.action_check) {
                         if (BuildConfig.DEBUG || dirty)
-                            if (draft.encrypt == null || draft.encrypt == 0)
-                                EntityOperation.queue(context, draft, EntityOperation.ADD);
+                            EntityOperation.queue(context, draft, EntityOperation.ADD);
 
                         if (action == R.id.action_check) {
                             // Check data
@@ -3556,7 +3656,7 @@ public class FragmentCompose extends FragmentBase {
                     ex instanceof AddressException || ex instanceof UnknownHostException)
                 Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
             else
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
         }
 
         private String getActionName(int id) {
@@ -3762,7 +3862,7 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Helper.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:show");
     }
@@ -3891,7 +3991,7 @@ public class FragmentCompose extends FragmentBase {
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Helper.unexpectedError(getParentFragmentManager(), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex);
                 }
             }.execute(this, new Bundle(), "compose:answer");
 
@@ -3993,7 +4093,7 @@ public class FragmentCompose extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentDialogSend.this, args, "compose:plain_only");
                 }
@@ -4022,7 +4122,7 @@ public class FragmentCompose extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentDialogSend.this, args, "compose:receipt");
                 }
@@ -4063,7 +4163,7 @@ public class FragmentCompose extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentDialogSend.this, args, "compose:encrypt");
                 }
@@ -4104,7 +4204,7 @@ public class FragmentCompose extends FragmentBase {
 
                         @Override
                         protected void onException(Bundle args, Throwable ex) {
-                            Helper.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         }
                     }.execute(FragmentDialogSend.this, args, "compose:priority");
                 }
@@ -4217,7 +4317,7 @@ public class FragmentCompose extends FragmentBase {
 
                     @Override
                     protected void onException(Bundle args, Throwable ex) {
-                        Helper.unexpectedError(getParentFragmentManager(), ex);
+                        Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }.execute(this, args, "compose:snooze");
             }

@@ -23,9 +23,11 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.security.KeyChain;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -51,6 +53,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.lifecycle.Lifecycle;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import org.openintents.openpgp.util.OpenPgpApi;
@@ -62,6 +65,7 @@ import java.util.List;
 public class FragmentOptionsPrivacy extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swDisableTracking;
     private SwitchCompat swDisplayHidden;
+    private Spinner spEncryptMethod;
     private Spinner spOpenPgp;
     private SwitchCompat swSign;
     private SwitchCompat swEncrypt;
@@ -70,14 +74,16 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private Button btnBiometrics;
     private Button btnPin;
     private Spinner spBiometricsTimeout;
+    private Button btnManageCertificates;
     private Button btnImportKey;
+    private Button btnManageKeys;
     private TextView tvKeySize;
 
     private List<String> openPgpProvider = new ArrayList<>();
 
     private final static String[] RESET_OPTIONS = new String[]{
             "disable_tracking", "display_hidden",
-            "openpgp_provider", "sign_default", "encrypt_default", "auto_decrypt",
+            "default_encrypt_method", "openpgp_provider", "sign_default", "encrypt_default", "auto_decrypt",
             "secure",
             "biometrics", "pin", "biometrics_timeout"
     };
@@ -88,12 +94,14 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         setSubtitle(R.string.title_setup);
         setHasOptionsMenu(true);
 
+        PackageManager pm = getContext().getPackageManager();
         View view = inflater.inflate(R.layout.fragment_options_privacy, container, false);
 
         // Get controls
 
         swDisableTracking = view.findViewById(R.id.swDisableTracking);
         swDisplayHidden = view.findViewById(R.id.swDisplayHidden);
+        spEncryptMethod = view.findViewById(R.id.spEncryptMethod);
         spOpenPgp = view.findViewById(R.id.spOpenPgp);
         swSign = view.findViewById(R.id.swSign);
         swEncrypt = view.findViewById(R.id.swEncrypt);
@@ -102,11 +110,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         btnBiometrics = view.findViewById(R.id.btnBiometrics);
         btnPin = view.findViewById(R.id.btnPin);
         spBiometricsTimeout = view.findViewById(R.id.spBiometricsTimeout);
+        btnManageCertificates = view.findViewById(R.id.btnManageCertificates);
         btnImportKey = view.findViewById(R.id.btnImportKey);
+        btnManageKeys = view.findViewById(R.id.btnManageKeys);
         tvKeySize = view.findViewById(R.id.tvKeySize);
 
         Intent intent = new Intent(OpenPgpApi.SERVICE_INTENT_2);
-        List<ResolveInfo> ris = getContext().getPackageManager().queryIntentServices(intent, 0);
+        List<ResolveInfo> ris = pm.queryIntentServices(intent, 0);
         for (ResolveInfo ri : ris)
             if (ri.serviceInfo != null)
                 openPgpProvider.add(ri.serviceInfo.packageName);
@@ -133,6 +143,21 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("display_hidden", checked).apply();
+            }
+        });
+
+        spEncryptMethod.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 1)
+                    prefs.edit().putString("default_encrypt_method", "s/mime").apply();
+                else
+                    onNothingSelected(parent);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                prefs.edit().remove("default_encrypt_method").apply();
             }
         });
 
@@ -186,14 +211,18 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
                 Helper.authenticate(getActivity(), biometrics, new Runnable() {
                     @Override
                     public void run() {
-                        boolean pro = ActivityBilling.isPro(getContext());
-                        if (pro) {
-                            prefs.edit().putBoolean("biometrics", !biometrics).apply();
-                            btnBiometrics.setText(biometrics
-                                    ? R.string.title_setup_biometrics_disable
-                                    : R.string.title_setup_biometrics_enable);
-                        } else
-                            startActivity(new Intent(getContext(), ActivityBilling.class));
+                        try {
+                            boolean pro = ActivityBilling.isPro(getContext());
+                            if (pro) {
+                                prefs.edit().putBoolean("biometrics", !biometrics).apply();
+                                btnBiometrics.setText(biometrics
+                                        ? R.string.title_setup_biometrics_disable
+                                        : R.string.title_setup_biometrics_enable);
+                            } else
+                                startActivity(new Intent(getContext(), ActivityBilling.class));
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
                     }
                 }, new Runnable() {
                     @Override
@@ -225,8 +254,16 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
+        btnManageCertificates.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_MANAGE_CERTIFICATES));
+            }
+        });
+
         final Intent importKey = KeyChain.createInstallIntent();
-        btnImportKey.setEnabled(importKey.resolveActivity(getContext().getPackageManager()) != null);
+        btnImportKey.setEnabled(importKey.resolveActivity(pm) != null);
         btnImportKey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -234,11 +271,20 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
+        final Intent security = new Intent(Settings.ACTION_SECURITY_SETTINGS);
+        btnImportKey.setEnabled(security.resolveActivity(pm) != null);
+        btnManageKeys.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(security);
+            }
+        });
+
         try {
             int maxKeySize = javax.crypto.Cipher.getMaxAllowedKeyLength("AES");
-            tvKeySize.setText(getString(R.string.title_aes_key_size, maxKeySize));
+            tvKeySize.setText(getString(R.string.title_advanced_aes_key_size, maxKeySize));
         } catch (NoSuchAlgorithmException ex) {
-            tvKeySize.setText(Helper.formatThrowable(ex));
+            tvKeySize.setText(Log.formatThrowable(ex));
         }
 
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
@@ -289,6 +335,10 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
 
         swDisableTracking.setChecked(prefs.getBoolean("disable_tracking", true));
         swDisplayHidden.setChecked(prefs.getBoolean("display_hidden", false));
+
+        String encrypt_method = prefs.getString("default_encrypt_method", "pgp");
+        if ("s/mime".equals(encrypt_method))
+            spEncryptMethod.setSelection(1);
 
         String provider = prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
         for (int pos = 0; pos < openPgpProvider.size(); pos++)

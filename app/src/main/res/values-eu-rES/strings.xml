@@ -286,13 +286,16 @@
     <string name="title_advanced_sound">Aukeratu jakinarazpenen soinua</string>
     <string name="title_advanced_tracking">Antzeman eta desgaitu jarraipen irudiak automatikoki</string>
     <string name="title_advanced_display_hidden">Erakutsi ezkutatutako mezuen testuak</string>
+    <string name="title_advanced_encrypt_method">Berezko zifratze-metodoa</string>
     <string name="title_advanced_openpgp">OpenPGP hornitzailea</string>
     <string name="title_advanced_sign_default">Besterik ezean sinatu</string>
     <string name="title_advanced_encrypt_default">Besterik ezean zifratu</string>
     <string name="title_advanced_auto_decrypt">Desenkriptatu mezuak automatikoki</string>
     <string name="title_advanced_secure">Ezkutatu erabilitako azken aplikazioen pantailatik eta saihestu pantaila-argazkia egitea</string>
-    <string name="title_advanced_biometrics_timeout">Autentifikazio biometrikoaren iraupena</string>
     <string name="title_advanced_pin">PINa</string>
+    <string name="title_advanced_biometrics_timeout">Autentifikazio biometrikoaren iraupena</string>
+    <string name="title_advanced_manage_certificates">Kudeatu gako publikoak</string>
+    <string name="title_advanced_import_key">Inportatu gako pribatua</string>
     <string name="title_advanced_english">Behartu hizkuntza ingelesa</string>
     <string name="title_advanced_watchdog">Aldiro egiaztatu FairEmail aktibo dagoen</string>
     <string name="title_advanced_updates">Egiaztatu eguneraketarik dagoen</string>
@@ -592,6 +595,10 @@
     <string name="title_insert_template">Txertatu txantiloia</string>
     <string name="title_edit_plain_text">Editatu testu soil gisa</string>
     <string name="title_edit_formatted_text">Editatu birformateatutako testu gisa</string>
+    <string name="title_select_certificate">Aukeratu gako publikoa</string>
+    <string name="title_certificate_missing">Ez dago gako publikorik %1$s-(r)entzat</string>
+    <string name="title_no_key">Ez dago gako pribaturik</string>
+    <string name="title_invalid_key">Baliorik gabeko gako pribatua</string>
     <string name="title_send_plain_text">Testu soila besterik ez</string>
     <string name="title_send_receipt">Eskatu bidaltze agiriak / irakurragiriak</string>
     <string name="title_send_receipt_remark">Hornitzaile eta bezero gehienek ez dituzte jasotze agiri eskariak aintzat hartzen</string>
@@ -615,12 +622,15 @@
     <string name="title_no_openpgp">Ez da OpenKeychain aurkitu</string>
     <string name="title_not_encrypted">Mezua ez dago ez zifratuta ez sinatuta</string>
     <string name="title_reset_sign_key">Berrezarri sinadura gakoa</string>
-    <string name="title_import_encrypt_key">Inportatu zifratze-gakoa</string>
     <string name="title_signature_none">Mezua ez dago sinatuta</string>
     <string name="title_signature_valid">Mezuaren sinadura baliozkoa</string>
     <string name="title_signature_unconfirmed">Mezuaren sinadura baliozkoa da baina ez da baieztatu</string>
     <string name="title_signature_invalid">Mezuaren sinadura baliogabea</string>
-    <string name="title_signature_signed_by">Mezuaren sinadura baliozkoa da. Sinatzailea: %1$s</string>
+    <string name="title_signature_sender">Igorlearen helbidea</string>
+    <string name="title_signature_email">Sinaduraren helbidea</string>
+    <string name="title_signature_mismatch">Igorlearen helbide elektronikoa eta sinadura ez datoz bat</string>
+    <string name="title_signature_subject">Gaia</string>
+    <string name="title_signature_store">Biltegiratu</string>
     <string name="title_search">Bilatu</string>
     <string name="title_search_server">Bilatu zerbitzarian</string>
     <string name="title_search_in">Bilatu hemen</string>
@@ -960,8 +970,8 @@
     <string-array name="encryptNames">
         <item>Bat ere ez</item>
         <item>PGP sinadura soilik</item>
-        <item>PGP sinadura eta enkriptatzea</item>
-        <item>S/MIME sign-only</item>
-        <item>S/MIME sign+encrypt</item>
+        <item>PGP sinadura eta zifratzea</item>
+        <item>S/MIME sinadura soilik</item>
+        <item>S/MIME sinadura eta zifratzea</item>
     </string-array>
 </resources>

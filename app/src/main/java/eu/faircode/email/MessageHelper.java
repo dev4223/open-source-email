@@ -32,7 +32,6 @@ import org.jsoup.nodes.Document;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +57,6 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
-import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.activation.FileTypeMap;
 import javax.mail.Address;
@@ -91,6 +89,7 @@ public class MessageHelper {
 
     static final int SMALL_MESSAGE_SIZE = 32 * 1024; // bytes
     static final int DEFAULT_ATTACHMENT_DOWNLOAD_SIZE = 256 * 1024; // bytes
+    static final long ATTACHMENT_PROGRESS_UPDATE = 1500L; // milliseconds
 
     static void setSystemProperties(Context context) {
         System.setProperty("mail.mime.decodetext.strict", "false");
@@ -381,39 +380,30 @@ public class MessageHelper {
             } else if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
                 Log.i("Sending S/MIME encrypted message");
 
-                File file = attachment.getFile(context);
-                byte[] encryptedData = new byte[(int) file.length()];
-                try (InputStream is = new FileInputStream(file)) {
-                    is.read(encryptedData);
-                }
-
                 // Build message
+                imessage.setDisposition(Part.ATTACHMENT);
+                imessage.setFileName(attachment.name);
+                imessage.setDescription("S/MIME Encrypted Message");
+
                 ContentType ct = new ContentType("application/pkcs7-mime");
                 ct.setParameter("name", attachment.name);
                 ct.setParameter("smime-type", "enveloped-data");
-                imessage.setDisposition(Part.ATTACHMENT);
-                imessage.setFileName(attachment.name);
-                imessage.setDataHandler(new DataHandler(new DataSource() {
-                    @Override
-                    public InputStream getInputStream() throws IOException {
-                        return new ByteArrayInputStream(encryptedData);
-                    }
 
+                File file = attachment.getFile(context);
+                FileDataSource dataSource = new FileDataSource(file);
+                dataSource.setFileTypeMap(new FileTypeMap() {
                     @Override
-                    public OutputStream getOutputStream() throws IOException {
-                        return null;
-                    }
-
-                    @Override
-                    public String getContentType() {
+                    public String getContentType(File file) {
                         return ct.toString();
                     }
 
                     @Override
-                    public String getName() {
-                        return null;
+                    public String getContentType(String filename) {
+                        return ct.toString();
                     }
-                }));
+                });
+
+                imessage.setDataHandler(new DataHandler(dataSource));
 
                 return imessage;
             }
@@ -1144,7 +1134,7 @@ public class MessageHelper {
                 throw ex;
             } catch (Throwable ex) {
                 Log.w(ex);
-                warnings.add(Helper.formatThrowable(ex, false));
+                warnings.add(Log.formatThrowable(ex, false));
                 return null;
             }
 
@@ -1172,7 +1162,7 @@ public class MessageHelper {
                 }
             } catch (ParseException ex) {
                 Log.w(ex);
-                warnings.add(Helper.formatThrowable(ex, false));
+                warnings.add(Log.formatThrowable(ex, false));
             }
 
             if (part == plain)
@@ -1308,7 +1298,7 @@ public class MessageHelper {
                 try (InputStream is = apart.part.getInputStream()) {
                     long size = 0;
                     long total = apart.part.getSize();
-                    int lastprogress = 0;
+                    long lastprogress = System.currentTimeMillis();
 
                     try (OutputStream os = new FileOutputStream(file)) {
                         byte[] buffer = new byte[Helper.BUFFER_SIZE];
@@ -1318,10 +1308,10 @@ public class MessageHelper {
 
                             // Update progress
                             if (total > 0) {
-                                int progress = (int) (size * 100 / total / 20 * 20);
-                                if (progress != lastprogress) {
-                                    lastprogress = progress;
-                                    db.attachment().setProgress(local.id, progress);
+                                long now = System.currentTimeMillis();
+                                if (now - lastprogress > ATTACHMENT_PROGRESS_UPDATE) {
+                                    lastprogress = now;
+                                    db.attachment().setProgress(local.id, (int) (size * 100 / total));
                                 }
                             }
                         }
@@ -1332,15 +1322,15 @@ public class MessageHelper {
 
                     Log.i("Downloaded attachment size=" + size);
                 } catch (FolderClosedIOException ex) {
-                    db.attachment().setError(local.id, Helper.formatThrowable(ex));
+                    db.attachment().setError(local.id, Log.formatThrowable(ex));
                     throw new FolderClosedException(ex.getFolder(), "downloadAttachment", ex);
                 } catch (MessageRemovedIOException ex) {
-                    db.attachment().setError(local.id, Helper.formatThrowable(ex));
+                    db.attachment().setError(local.id, Log.formatThrowable(ex));
                     throw new MessagingException("downloadAttachment", ex);
                 } catch (Throwable ex) {
                     // Reset progress on failure
                     Log.e(ex);
-                    db.attachment().setError(local.id, Helper.formatThrowable(ex));
+                    db.attachment().setError(local.id, Log.formatThrowable(ex));
                     throw ex;
                 }
         }
@@ -1437,7 +1427,8 @@ public class MessageHelper {
                         return parts;
                     }
                 }
-            } else if (imessage.isMimeType("application/pkcs7-mime")) {
+            } else if (imessage.isMimeType("application/pkcs7-mime") ||
+                    imessage.isMimeType("application/x-pkcs7-mime")) {
                 ContentType ct = new ContentType(imessage.getContentType());
                 String smimeType = ct.getParameter("smime-type");
                 if ("enveloped-data".equals(smimeType)) {
@@ -1476,7 +1467,7 @@ public class MessageHelper {
                         // Nested body: try to continue
                         // ParseException: In parameter list boundary="...">, expected parameter name, got ";"
                         Log.w(ex);
-                        parts.warnings.add(Helper.formatThrowable(ex, false));
+                        parts.warnings.add(Log.formatThrowable(ex, false));
                     }
             } else {
                 // https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
@@ -1487,7 +1478,7 @@ public class MessageHelper {
                         disposition = disposition.toLowerCase(Locale.ROOT);
                 } catch (MessagingException ex) {
                     Log.w(ex);
-                    parts.warnings.add(Helper.formatThrowable(ex, false));
+                    parts.warnings.add(Log.formatThrowable(ex, false));
                     disposition = null;
                 }
 
@@ -1498,7 +1489,7 @@ public class MessageHelper {
                         filename = decodeMime(filename);
                 } catch (MessagingException ex) {
                     Log.w(ex);
-                    parts.warnings.add(Helper.formatThrowable(ex, false));
+                    parts.warnings.add(Log.formatThrowable(ex, false));
                     filename = null;
                 }
 
@@ -1508,7 +1499,7 @@ public class MessageHelper {
                     contentType = new ContentType(c == null ? "" : c);
                 } catch (ParseException ex) {
                     Log.w(ex);
-                    parts.warnings.add(Helper.formatThrowable(ex, false));
+                    parts.warnings.add(Log.formatThrowable(ex, false));
 
                     if (part instanceof MimeMessage)
                         contentType = new ContentType("text/html");
@@ -1537,7 +1528,7 @@ public class MessageHelper {
                     } catch (MessagingException ex) {
                         Log.w(ex);
                         if (!"Failed to fetch headers".equals(ex.getMessage()))
-                            parts.warnings.add(Helper.formatThrowable(ex, false));
+                            parts.warnings.add(Log.formatThrowable(ex, false));
                     }
 
                     apart.attachment = new EntityAttachment();
@@ -1570,7 +1561,7 @@ public class MessageHelper {
             throw ex;
         } catch (MessagingException ex) {
             Log.w(ex);
-            parts.warnings.add(Helper.formatThrowable(ex, false));
+            parts.warnings.add(Log.formatThrowable(ex, false));
         }
     }
 

@@ -51,7 +51,7 @@ FairEmail might be for you if you value your privacy.
 * Offline storage and operations
 * Battery friendly
 * Low data usage
-* Small (< 10 MB)
+* Small (~ 12 MB)
 * Material design (including dark/black theme)
 * Maintained and supported
 
@@ -61,7 +61,7 @@ This app starts a foreground service with a low priority status bar notification
 
 ## Privacy features
 
-* Encryption/decryption supported ([OpenPGP](https://www.openpgp.org/))
+* Encryption/decryption supported ([OpenPGP](https://www.openpgp.org/) and [S/MIME](https://en.wikipedia.org/wiki/S/MIME))
 * Reformat messages to prevent [phishing](https://en.wikipedia.org/wiki/Phishing)
 * Confirm showing images to prevent tracking
 * Confirm opening links to prevent tracking and phishing
@@ -78,7 +78,7 @@ This app starts a foreground service with a low priority status bar notification
 ## Secure
 
 * No data storage on third party servers
-* Using open standards (IMAP, SMTP, [OpenPGP](https://www.openpgp.org/), etc)
+* Using open standards (IMAP, SMTP, OpenPGP, S/MIME, etc)
 * Safe message view (styling, scripting and unsafe HTML removed)
 * Confirm opening links, images and attachments
 * No special permissions required
@@ -109,6 +109,7 @@ All pro features are convenience or advanced features.
 * Filter rules ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq71))
 * Search on server ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq13))
 * Keyword management
+* S/MIME sign/encrypt
 * Biometric authentication ([instructions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq113))
 * Unified inbox widget
 * Export settings

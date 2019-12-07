@@ -28,18 +28,25 @@ import java.util.List;
 
 @Dao
 public interface DaoCertificate {
+    @Query("SELECT * FROM certificate")
+    List<EntityCertificate> getCertificates();
+
     @Query("SELECT * FROM certificate" +
-            " ORDER BY subject DESC")
+            " ORDER BY email, subject")
     LiveData<List<EntityCertificate>> liveCertificates();
 
     @Query("SELECT * FROM certificate" +
-            " WHERE subject = :subject")
-    EntityCertificate getCertificateBySubject(String subject);
+            " WHERE fingerprint = :fingerprint" +
+            " AND email = :email COLLATE NOCASE")
+    EntityCertificate getCertificate(String fingerprint, String email);
 
     @Query("SELECT * FROM certificate" +
-            " WHERE email = :email")
+            " WHERE email = :email COLLATE NOCASE")
     List<EntityCertificate> getCertificateByEmail(String email);
 
     @Insert
     long insertCertificate(EntityCertificate certificate);
+
+    @Query("DELETE FROM certificate WHERE id = :id")
+    void deleteCertificate(long id);
 }
