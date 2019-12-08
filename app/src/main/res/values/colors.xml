@@ -70,7 +70,7 @@
     <color name="darkColorDrawerText">#fff</color>
     <color name="darkColorDrawerBackground">#222</color>
     <color name="darkestColorDrawerBackground">#111111</color>
-    <color name="darkColorCardBackground">#1d1d1d</color>
+    <color name="darkColorCardBackground">#1a1a1a</color>
 
     <color name="darkActionForeground">#fff</color>
     <color name="darkActionForegroundDisabled">#666</color>
