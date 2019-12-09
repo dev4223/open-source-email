@@ -130,6 +130,7 @@
         <item name="colorFabBackground">@color/blackAccent</item>
         <item name="colorWarning">@color/colorError</item>
 
+        <item name="colorSeparator">@color/blackColorSeparator</item>
         <item name="android:windowBackground">@color/black</item>
         <item name="colorDrawerBackground">@color/black</item>
         <item name="dateColorDrawerBackground">@color/darkestColorDrawerBackground</item>

@@ -36,6 +36,7 @@
     <color name="blackAccent">#FFE50A3E</color>
     <color name="blackColorSubject">#dfdfdf</color>
     <color name="blackColorUnread">#fff</color>
+    <color name="blackColorSeparator">#999</color>
 
     <!-- Grey 800 / Blue grey 300 -->
     <color name="greyPrimary">#424242</color>
