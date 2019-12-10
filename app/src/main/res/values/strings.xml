@@ -38,8 +38,8 @@
     <string name="shortcut_setup">Settings</string>
 
     <plurals name="title_notification_synchronizing">
-        <item quantity="one">Synchronizing %1$d account</item>
-        <item quantity="other">Synchronizing %1$d accounts</item>
+        <item quantity="one">Monitoring %1$d account</item>
+        <item quantity="other">Monitoring %1$d accounts</item>
     </plurals>
 
     <plurals name="title_notification_operations">
@@ -90,6 +90,7 @@
 
     <string name="title_name_count">%1$s (%2$s)</string>
 
+    <string name="menu_exit">Exit</string>
     <string name="menu_answers">Templates</string>
     <string name="menu_operations">Operations</string>
     <string name="menu_contacts">Local contacts</string>
@@ -142,6 +143,8 @@
     <string name="title_setup_other">Other provider</string>
     <string name="title_setup_gmail_support">Authorizing Google accounts will work in official versions only because Android checks the app signature</string>
     <string name="title_setup_gmail_rationale">Please grant permissions to select an account and read your name</string>
+    <string name="title_setup_gmail_permissions">Google will ask for permissions to read, compose, send and permanently delete all your email. FairEmail will never delete your messages without your explicit consent.</string>
+    <string name="title_setup_gmail_drafts">If the drafts folder is not accessible by IMAP, this can be fixed in the Gmail label settings</string>
     <string name="title_setup_select_account">Select account</string>
     <string name="title_setup_instructions">Setup instructions</string>
     <string name="title_setup_no_settings">No settings found for domain \'%1$s\'</string>
@@ -358,7 +361,7 @@
     <string name="title_advanced_hint">All settings have sensible default values, which should only be changed if necessary</string>
 
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
-    <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list. This will synchronize messages and execute operations for a limited time.</string>
+    <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list.</string>
     <string name="title_advanced_poll_hint">Synchronizing periodically will compare local and remote messages each and every time, which is an expensive operation possibly resulting in extra battery usage, especially when there are a lot of messages to synchronize. Always synchronizing will avoid this by continuous monitoring for changes only.</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
     <string name="title_advanced_check_mx">Check sender email addresses on synchronizing messages</string>
@@ -430,6 +433,7 @@
     <string name="title_account_partial_fetch_hint">Disable this only in case of empty messages or corrupt attachments</string>
     <string name="title_account_signature">Signature text</string>
     <string name="title_color">Color</string>
+    <string name="title_account_ondemand">Synchronize manually</string>
     <string name="title_account_notify">Separate notifications</string>
     <string name="title_account_left">Swipe left</string>
     <string name="title_account_right">Swipe right</string>
@@ -645,6 +649,7 @@
     <string name="title_cc">CC:</string>
     <string name="title_bcc">BCC:</string>
     <string name="title_via_identity">Via:</string>
+    <string name="title_sent">Sent:</string>
     <string name="title_received">Received:</string>
     <string name="title_size">Size:</string>
     <string name="title_subject">Subject:</string>

@@ -339,7 +339,6 @@ public class ActivityEML extends ActivityBase {
                                             try (MailService iservice = new MailService(context, account.getProtocol(), account.realm, account.insecure, false, true)) {
                                                 iservice.setPartialFetch(account.partial_fetch);
                                                 iservice.setIgnoreBodyStructureSize(account.ignore_size);
-                                                iservice.setSeparateStoreConnection();
                                                 iservice.connect(account);
 
                                                 IMAPFolder ifolder = (IMAPFolder) iservice.getStore().getFolder(inbox.name);
@@ -349,9 +348,10 @@ public class ActivityEML extends ActivityBase {
                                                     imessage.setFlag(Flags.Flag.DRAFT, false);
 
                                                 ifolder.appendMessages(new Message[]{imessage});
-
-                                                EntityOperation.sync(context, inbox.id, true);
                                             }
+
+                                            EntityOperation.sync(context, inbox.id, true);
+                                            ServiceSynchronize.eval(context, "EML");
                                         }
 
                                         return account.name + "/" + inbox.name;

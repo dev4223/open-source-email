@@ -1192,6 +1192,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "refresh");
+
                 if (!now)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
 
@@ -2029,6 +2031,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "seen");
+
                 return null;
             }
 
@@ -2162,6 +2166,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "flag");
 
                 return null;
             }
@@ -3026,7 +3032,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onMenuForceSync() {
-        ServiceSynchronize.reset(getContext());
+        ServiceSynchronize.reload(getContext(), null, "force sync");
         ToastEx.makeText(getContext(), R.string.title_executing, Toast.LENGTH_LONG).show();
     }
 
@@ -3480,6 +3486,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "expand");
+
                 return null;
             }
 
@@ -3618,6 +3626,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "move");
+
                 return null;
             }
 
@@ -3739,6 +3750,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 } finally {
                                     db.endTransaction();
                                 }
+
+                                ServiceSynchronize.eval(context, "move");
                             }
                         }, "messages:movetimeout");
                         thread.setPriority(THREAD_PRIORITY_BACKGROUND);
@@ -3834,10 +3847,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private BroadcastReceiver creceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.i("Received " + intent);
-            Log.logExtras(intent);
-
             String action = intent.getAction();
+
+            if (!SimpleTask.ACTION_TASK_COUNT.equals(action)) {
+                Log.i("Received " + intent);
+                Log.logExtras(intent);
+            }
+
             if (SimpleTask.ACTION_TASK_COUNT.equals(action))
                 onTaskCount(intent);
             else if (ACTION_NEW_MESSAGE.equals(action))
@@ -4713,6 +4729,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "delete");
+
                 return null;
             }
 
@@ -4748,6 +4766,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "delete");
+
                 return null;
             }
 
@@ -4782,6 +4802,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "move");
 
                 return null;
             }
@@ -4841,6 +4863,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         EntityOperation.queue(context, message, EntityOperation.FLAG, true, color);
                     }
                 });
+
+                ServiceSynchronize.eval(context, "flag");
+
                 return null;
             }
 
@@ -4991,6 +5016,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "copy");
 
                 return result;
             }
@@ -5174,6 +5201,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "delete");
 
                 return null;
             }

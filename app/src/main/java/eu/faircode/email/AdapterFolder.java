@@ -544,13 +544,15 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 private void onActionProperty(int property, boolean enabled) {
                     Bundle args = new Bundle();
                     args.putLong("id", folder.id);
+                    args.putLong("account", folder.account);
                     args.putInt("property", property);
                     args.putBoolean("enabled", enabled);
 
-                    new SimpleTask<Boolean>() {
+                    new SimpleTask<Void>() {
                         @Override
-                        protected Boolean onExecute(Context context, Bundle args) {
+                        protected Void onExecute(Context context, Bundle args) {
                             long id = args.getLong("id");
+                            long aid = args.getLong("account");
                             int property = args.getInt("property");
                             boolean enabled = args.getBoolean("enabled");
 
@@ -558,25 +560,22 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             switch (property) {
                                 case R.string.title_unified_folder:
                                     db.folder().setFolderUnified(id, enabled);
-                                    return false;
+                                    break;
                                 case R.string.title_navigation_folder:
                                     db.folder().setFolderNavigation(id, enabled);
-                                    return false;
+                                    break;
                                 case R.string.title_notify_folder:
                                     db.folder().setFolderNotify(id, enabled);
-                                    return false;
+                                    break;
                                 case R.string.title_synchronize_enabled:
                                     db.folder().setFolderSynchronize(id, enabled);
-                                    return true;
+                                    ServiceSynchronize.reload(context, aid, "folder sync=" + enabled);
+                                    break;
                                 default:
-                                    return false;
+                                    throw new IllegalArgumentException("Unknown folder property=" + property);
                             }
-                        }
 
-                        @Override
-                        protected void onExecuted(Bundle args, Boolean reload) {
-                            if (reload)
-                                ServiceSynchronize.reload(context, "folder property changed");
+                            return null;
                         }
 
                         @Override
@@ -598,6 +597,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             boolean subscribed = args.getBoolean("subscribed");
 
                             EntityOperation.subscribe(context, id, subscribed);
+                            ServiceSynchronize.eval(context, "subscribed=" + subscribed);
 
                             return null;
                         }
@@ -729,7 +729,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         owner.getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
-                Log.i(AdapterFolder.this + " parent destroyed");
+                Log.d(AdapterFolder.this + " parent destroyed");
                 AdapterFolder.this.parentFragment = null;
             }
         });
@@ -820,25 +820,38 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
             public void onInserted(int position, int count) {
-                Log.i("Inserted @" + position + " #" + count);
+                Log.d("Inserted @" + position + " #" + count);
             }
 
             @Override
             public void onRemoved(int position, int count) {
-                Log.i("Removed @" + position + " #" + count);
+                Log.d("Removed @" + position + " #" + count);
             }
 
             @Override
             public void onMoved(int fromPosition, int toPosition) {
-                Log.i("Moved " + fromPosition + ">" + toPosition);
+                Log.d("Moved " + fromPosition + ">" + toPosition);
             }
 
             @Override
             public void onChanged(int position, int count, Object payload) {
-                Log.i("Changed @" + position + " #" + count);
+                Log.d("Changed @" + position + " #" + count);
             }
         });
         diff.dispatchUpdatesTo(this);
+    }
+
+    public int search(String query, int result) {
+        int pos = 0;
+        if (!TextUtils.isEmpty(query))
+            for (int i = 0; i < items.size(); i++)
+                if (items.get(i).getDisplayName(context).toLowerCase().contains(query.toLowerCase())) {
+                    pos = i;
+                    if (--result < 0)
+                        break;
+                }
+
+        return pos;
     }
 
     private List<TupleFolderEx> getHierarchical(List<TupleFolderEx> parents, int indentation) {

@@ -159,7 +159,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
                 ivState.setImageResource(R.drawable.baseline_close_24);
             else
                 ivState.setImageResource(R.drawable.baseline_cloud_off_24);
-            ivState.setVisibility(account.synchronize ? View.VISIBLE : View.INVISIBLE);
+            ivState.setVisibility(account.synchronize || account.state != null ? View.VISIBLE : View.INVISIBLE);
 
             tvHost.setText(String.format("%s:%d", account.host, account.port));
             tvLast.setText(context.getString(R.string.title_last_connected,
@@ -272,7 +272,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
 
                         @Override
                         protected void onExecuted(Bundle args, Boolean sync) {
-                            ServiceSynchronize.reload(context, "account set sync=" + sync);
+                            ServiceSynchronize.eval(context, "account sync=" + sync);
                         }
 
                         @Override
@@ -326,7 +326,7 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
         owner.getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
-                Log.i(AdapterAccount.this + " parent destroyed");
+                Log.d(AdapterAccount.this + " parent destroyed");
                 AdapterAccount.this.parentFragment = null;
             }
         });
@@ -342,22 +342,22 @@ public class AdapterAccount extends RecyclerView.Adapter<AdapterAccount.ViewHold
         diff.dispatchUpdatesTo(new ListUpdateCallback() {
             @Override
             public void onInserted(int position, int count) {
-                Log.i("Inserted @" + position + " #" + count);
+                Log.d("Inserted @" + position + " #" + count);
             }
 
             @Override
             public void onRemoved(int position, int count) {
-                Log.i("Removed @" + position + " #" + count);
+                Log.d("Removed @" + position + " #" + count);
             }
 
             @Override
             public void onMoved(int fromPosition, int toPosition) {
-                Log.i("Moved " + fromPosition + ">" + toPosition);
+                Log.d("Moved " + fromPosition + ">" + toPosition);
             }
 
             @Override
             public void onChanged(int position, int count, Object payload) {
-                Log.i("Changed @" + position + " #" + count);
+                Log.d("Changed @" + position + " #" + count);
             }
         });
         diff.dispatchUpdatesTo(this);
