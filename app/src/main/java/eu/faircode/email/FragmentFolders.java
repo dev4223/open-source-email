@@ -321,6 +321,7 @@ public class FragmentFolders extends FragmentBase {
                     throw new IllegalStateException(context.getString(R.string.title_no_internet));
 
                 boolean now = true;
+                boolean outbox = false;
 
                 DB db = DB.getInstance(context);
                 try {
@@ -332,26 +333,28 @@ public class FragmentFolders extends FragmentBase {
                         for (EntityFolder folder : folders) {
                             EntityOperation.sync(context, folder.id, true);
 
-                            if (folder.account != null) {
+                            if (folder.account == null)
+                                outbox = true;
+                            else {
                                 EntityAccount account = db.account().getAccount(folder.account);
                                 if (account != null && !"connected".equals(account.state))
                                     now = false;
                             }
                         }
-                    } else {
-                        // Folder list
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        boolean enabled = prefs.getBoolean("enabled", true);
-                        if (enabled)
-                            ServiceSynchronize.reload(context, "refresh folders");
-                        else
-                            ServiceSynchronize.process(context, true);
                     }
 
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }
+
+                if (aid < 0)
+                    ServiceSynchronize.eval(context, "refresh/folders");
+                else
+                    ServiceSynchronize.reload(context, aid, "refresh/folders");
+
+                if (outbox)
+                    ServiceSend.start(context);
 
                 if (!now)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
@@ -517,6 +520,8 @@ public class FragmentFolders extends FragmentBase {
                     db.endTransaction();
                 }
 
+                ServiceSynchronize.eval(context, "refresh/folder");
+
                 if (!now)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
 
@@ -606,6 +611,8 @@ public class FragmentFolders extends FragmentBase {
                 } finally {
                     db.endTransaction();
                 }
+
+                ServiceSynchronize.eval(context, "delete");
 
                 return null;
             }

@@ -383,7 +383,7 @@ public class FragmentGmail extends FragmentBase {
                     db.endTransaction();
                 }
 
-                ServiceSynchronize.reload(context, "Gmail");
+                ServiceSynchronize.eval(context, "Gmail");
 
                 return null;
             }

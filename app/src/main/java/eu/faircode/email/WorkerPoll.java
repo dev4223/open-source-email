@@ -30,6 +30,8 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class WorkerPoll extends Worker {
@@ -42,7 +44,9 @@ public class WorkerPoll extends Worker {
     @Override
     public Result doWork() {
         Log.i("Running " + getName());
-        ServiceSynchronize.process(getApplicationContext(), true);
+
+        sync(getApplicationContext());
+
         return Result.success();
     }
 
@@ -70,6 +74,28 @@ public class WorkerPoll extends Worker {
             // https://issuetracker.google.com/issues/138465476
             Log.w(ex);
         }
+    }
+
+    static void sync(Context context) {
+        DB db = DB.getInstance(context);
+        try {
+            db.beginTransaction();
+
+            List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
+            for (EntityAccount account : accounts) {
+                List<EntityFolder> folders = db.folder().getSynchronizingFolders(account.id);
+                if (folders.size() > 0)
+                    Collections.sort(folders, folders.get(0).getComparator(context));
+                for (EntityFolder folder : folders)
+                    EntityOperation.sync(context, folder.id, false);
+            }
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+
+        ServiceSynchronize.eval(context, "refresh/poll");
     }
 
     private static String getName() {

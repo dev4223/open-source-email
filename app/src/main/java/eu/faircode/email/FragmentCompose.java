@@ -2263,7 +2263,7 @@ public class FragmentCompose extends FragmentBase {
 
         new SimpleTask<EntityMessage>() {
             @Override
-            protected EntityMessage onExecute(Context context, Bundle args) throws Throwable {
+            protected EntityMessage onExecute(Context context, Bundle args) {
                 long id = args.getLong("id");
 
                 DB db = DB.getInstance(context);
@@ -2286,7 +2286,10 @@ public class FragmentCompose extends FragmentBase {
 
     private void onActionSend(EntityMessage draft) {
         if (draft.encrypt != null && draft.encrypt != 0)
-            onEncrypt(draft);
+            if (ActivityBilling.isPro(getContext()))
+                onEncrypt(draft);
+            else
+                startActivity(new Intent(getContext(), ActivityBilling.class));
         else
             onAction(R.id.action_send);
     }
@@ -3057,6 +3060,8 @@ public class FragmentCompose extends FragmentBase {
                 db.endTransaction();
             }
 
+            ServiceSynchronize.eval(context, "compose/draft");
+
             return data;
         }
 
@@ -3589,6 +3594,8 @@ public class FragmentCompose extends FragmentBase {
             } finally {
                 db.endTransaction();
             }
+
+            ServiceSynchronize.eval(context, "compose/action");
 
             if (action == R.id.action_send && draft.ui_snoozed != null) {
                 Log.i("Delayed send id=" + draft.id + " at " + new Date(draft.ui_snoozed));

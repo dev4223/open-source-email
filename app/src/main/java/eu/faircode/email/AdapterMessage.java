@@ -304,6 +304,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvCcTitle;
         private TextView tvBccTitle;
         private TextView tvIdentityTitle;
+        private TextView tvSentTitle;
+        private TextView tvReceivedTitle;
         private TextView tvSizeExTitle;
 
         private TextView tvFromEx;
@@ -312,7 +314,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvCc;
         private TextView tvBcc;
         private TextView tvIdentity;
-        private TextView tvTimeEx;
+        private TextView tvSent;
+        private TextView tvReceived;
         private TextView tvSizeEx;
 
         private TextView tvSubjectEx;
@@ -451,6 +454,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCcTitle = vsBody.findViewById(R.id.tvCcTitle);
             tvBccTitle = vsBody.findViewById(R.id.tvBccTitle);
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
+            tvSentTitle = vsBody.findViewById(R.id.tvSentTitle);
+            tvReceivedTitle = vsBody.findViewById(R.id.tvReceivedTitle);
             tvSizeExTitle = vsBody.findViewById(R.id.tvSizeExTitle);
 
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
@@ -459,7 +464,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCc = vsBody.findViewById(R.id.tvCc);
             tvBcc = vsBody.findViewById(R.id.tvBcc);
             tvIdentity = vsBody.findViewById(R.id.tvIdentity);
-            tvTimeEx = vsBody.findViewById(R.id.tvTimeEx);
+            tvSent = vsBody.findViewById(R.id.tvSent);
+            tvReceived = vsBody.findViewById(R.id.tvReceived);
             tvSizeEx = vsBody.findViewById(R.id.tvSizeEx);
 
             tvSubjectEx = vsBody.findViewById(R.id.tvSubjectEx);
@@ -1032,6 +1038,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCcTitle.setVisibility(View.GONE);
             tvBccTitle.setVisibility(View.GONE);
             tvIdentityTitle.setVisibility(View.GONE);
+            tvSentTitle.setVisibility(View.GONE);
+            tvReceivedTitle.setVisibility(View.GONE);
             tvSizeExTitle.setVisibility(View.GONE);
 
             tvFromEx.setVisibility(View.GONE);
@@ -1040,7 +1048,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvCc.setVisibility(View.GONE);
             tvBcc.setVisibility(View.GONE);
             tvIdentity.setVisibility(View.GONE);
-            tvTimeEx.setVisibility(View.GONE);
+            tvSent.setVisibility(View.GONE);
+            tvReceived.setVisibility(View.GONE);
             tvSizeEx.setVisibility(View.GONE);
             tvSubjectEx.setVisibility(View.GONE);
             tvFlags.setVisibility(View.GONE);
@@ -1217,6 +1226,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvTimeEx.setVisibility(View.VISIBLE);
             tvTimeEx.setText(DTF.format(message.received));
+
+            tvSentTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvSent.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvSent.setText(message.sent == null ? null : DTF.format(message.sent));
+
+            tvReceivedTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvReceived.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvReceived.setText(DTF.format(message.received));
 
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
@@ -1410,7 +1427,28 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (wvBody instanceof WebView)
                     webView = (WebViewEx) wvBody;
                 else {
-                    webView = new WebViewEx(context);
+                    try {
+                        webView = new WebViewEx(context);
+                    } catch (Throwable ex) {
+                        /*
+                            android.util.AndroidRuntimeException: java.lang.reflect.InvocationTargetException
+                                    at android.webkit.WebViewFactory.getProvider(WebViewFactory.java:270)
+                                    at android.webkit.WebView.getFactory(WebView.java:2681)
+                                    at android.webkit.WebView.ensureProviderCreated(WebView.java:2676)
+                                    at android.webkit.WebView.setOverScrollMode(WebView.java:2741)
+                                    at android.view.View.<init>(View.java:4815)
+                                    at android.view.View.<init>(View.java:4956)
+                                    at android.view.ViewGroup.<init>(ViewGroup.java:659)
+                                    at android.widget.AbsoluteLayout.<init>(AbsoluteLayout.java:55)
+                                    at android.webkit.WebView.<init>(WebView.java:659)
+                                    at android.webkit.WebView.<init>(WebView.java:604)
+                                    at android.webkit.WebView.<init>(WebView.java:587)
+                                    at android.webkit.WebView.<init>(WebView.java:574)
+                                    at android.webkit.WebView.<init>(WebView.java:564)
+                         */
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                        return;
+                    }
 
                     webView.setId(wvBody.getId());
 
@@ -2187,6 +2225,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     db.endTransaction();
                                 }
 
+                                ServiceSynchronize.eval(context, "doubletap");
+
                                 return null;
                             }
 
@@ -2348,6 +2388,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } finally {
                         db.endTransaction();
                     }
+
+                    ServiceSynchronize.eval(context, "flag");
 
                     return null;
                 }
@@ -2600,6 +2642,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         db.endTransaction();
                     }
 
+                    ServiceSynchronize.eval(context, "attachment");
+
                     return null;
                 }
 
@@ -2768,6 +2812,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } finally {
                         db.endTransaction();
                     }
+
+                    ServiceSynchronize.eval(context, "attachment");
 
                     return null;
                 }
@@ -3011,6 +3057,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } finally {
                         db.endTransaction();
                     }
+
+                    ServiceSynchronize.eval(context, "outbox/drafts");
 
                     if (message.identity != null) {
                         // Identity can be deleted
@@ -3309,6 +3357,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         db.endTransaction();
                     }
 
+                    ServiceSynchronize.eval(context, "seen");
+
                     return null;
                 }
 
@@ -3444,6 +3494,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } finally {
                         db.endTransaction();
                     }
+
+                    ServiceSynchronize.eval(context, "resync");
 
                     return null;
                 }
@@ -3620,6 +3672,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         } finally {
                             db.endTransaction();
                         }
+
+                        ServiceSynchronize.eval(context, "headers");
+
                         return null;
                     }
 
@@ -3657,6 +3712,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } finally {
                         db.endTransaction();
                     }
+
+                    ServiceSynchronize.eval(context, "raw");
+
                     return null;
                 }
 
@@ -3814,7 +3872,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         owner.getLifecycle().addObserver(new LifecycleObserver() {
             @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
             public void onDestroyed() {
-                Log.i(AdapterMessage.this + " parent destroyed");
+                Log.d(AdapterMessage.this + " parent destroyed");
                 AdapterMessage.this.parentFragment = null;
             }
         });
@@ -4610,6 +4668,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         db.endTransaction();
                                     }
 
+                                    ServiceSynchronize.eval(context, "keywords");
+
                                     return null;
                                 }
 
@@ -4669,11 +4729,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         String keyword = args.getString("keyword");
 
                                         DB db = DB.getInstance(context);
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message == null)
-                                            return null;
+                                        try {
+                                            db.beginTransaction();
 
-                                        EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, true);
+                                            EntityMessage message = db.message().getMessage(id);
+                                            if (message == null)
+                                                return null;
+
+                                            EntityOperation.queue(context, message, EntityOperation.KEYWORD, keyword, true);
+
+                                            db.setTransactionSuccessful();
+                                        } finally {
+                                            db.endTransaction();
+                                        }
+
+                                        ServiceSynchronize.eval(context, "keyword=" + keyword);
+
                                         return null;
                                     }
 

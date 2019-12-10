@@ -97,6 +97,7 @@ import javax.mail.FolderClosedException;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Part;
+import javax.mail.StoreClosedException;
 import javax.mail.internet.InternetAddress;
 
 public class Log {
@@ -104,7 +105,7 @@ public class Log {
     private static final String TAG = "fairemail";
 
     public static int d(String msg) {
-        if (BuildConfig.DEBUG)
+        if (BuildConfig.DEBUG && false)
             return android.util.Log.d(TAG, msg);
         else
             return 0;
@@ -353,7 +354,7 @@ public class Log {
                         for (int i = 0; i < length; i++) {
                             Object element = Array.get(v, i);
                             if (element instanceof Long)
-                                elements[i] = "0x" + Long.toHexString((Long) element);
+                                elements[i] = element.toString() + " (0x" + Long.toHexString((Long) element) + ")";
                             else
                                 elements[i] = (element == null ? null : element.toString());
                         }
@@ -361,7 +362,7 @@ public class Log {
                     } else
                         value = "[" + length + "]";
                 } else if (v instanceof Long)
-                    value = "0x" + Long.toHexString((Long) v);
+                    value = v.toString() + " (0x" + Long.toHexString((Long) v) + ")";
 
                 result.add(key + "=" + value + (value == null ? "" : " (" + v.getClass().getSimpleName() + ")"));
             }
@@ -543,7 +544,8 @@ public class Log {
             if (ex instanceof ConnectionException)
                 return null;
 
-            if (ex instanceof FolderClosedException || ex instanceof FolderClosedIOException)
+            if (ex instanceof StoreClosedException ||
+                    ex instanceof FolderClosedException || ex instanceof FolderClosedIOException)
                 return null;
 
             if (ex instanceof IllegalStateException &&
@@ -640,6 +642,8 @@ public class Log {
         } finally {
             db.endTransaction();
         }
+
+        ServiceSynchronize.eval(context, "debuginfo");
 
         return draft;
     }

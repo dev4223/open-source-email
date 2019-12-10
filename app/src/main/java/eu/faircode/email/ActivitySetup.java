@@ -189,6 +189,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
         final List<NavMenuItem> menus = new ArrayList<>();
 
+        menus.add(new NavMenuItem(R.drawable.baseline_exit_to_app_24, R.string.menu_exit, new Runnable() {
+            @Override
+            public void run() {
+                drawerLayout.closeDrawer(drawerContainer, false);
+                onBackPressed();
+            }
+        }).setSeparated());
+
         menus.add(new NavMenuItem(R.drawable.baseline_archive_24, R.string.title_setup_export, new Runnable() {
             @Override
             public void run() {
@@ -374,7 +382,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         handleImport(data, this.password);
                     break;
                 case REQUEST_IMPORT_OAUTH:
-                    ServiceSynchronize.reload(this, "oauth");
+                    ServiceSynchronize.eval(this, "import/oauth");
                     break;
                 case REQUEST_IMPORT_CERTIFICATE:
                     if (resultCode == RESULT_OK && data != null)
@@ -983,7 +991,6 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 }
 
                 Log.i("Imported data");
-                ServiceSynchronize.reload(context, "import");
 
                 return oauth;
             }
@@ -992,9 +999,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             protected void onExecuted(Bundle args, Boolean oauth) {
                 ToastEx.makeText(ActivitySetup.this, R.string.title_setup_imported, Toast.LENGTH_LONG).show();
 
-                if (oauth &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
-                        getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+                if (oauth && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     List<String> permissions = new ArrayList<>();
                     permissions.add(Manifest.permission.READ_CONTACTS); // profile
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
@@ -1002,10 +1007,13 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                     for (String permission : permissions)
                         if (!hasPermission(permission)) {
+                            // TODO: fix permissions request
                             requestPermissions(permissions.toArray(new String[0]), REQUEST_IMPORT_OAUTH);
-                            break;
+                            //return;
                         }
                 }
+
+                ServiceSynchronize.eval(ActivitySetup.this, "import");
             }
 
             @Override

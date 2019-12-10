@@ -30,14 +30,17 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.core.app.AlarmManagerCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -46,9 +49,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
 
-import com.sun.mail.iap.BadCommandException;
 import com.sun.mail.imap.IMAPFolder;
 
+import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,9 +63,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
 
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Folder;
@@ -87,62 +89,113 @@ import me.leolin.shortcutbadger.ShortcutBadger;
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
 public class ServiceSynchronize extends ServiceBase implements SharedPreferences.OnSharedPreferenceChangeListener {
-    private ConnectionHelper.NetworkState networkState = new ConnectionHelper.NetworkState();
-    private Core.State state = null;
-    private int lastStartId = -1;
-    private boolean started = false;
-    private int queued = 0;
-    private long lastLost = 0;
-    private TupleAccountStats lastStats = new TupleAccountStats();
-    private ExecutorService queue =
-            Helper.getBackgroundExecutor(1, "service");
-
-    private static boolean sync = true;
-    private static boolean oneshot = false;
+    private Boolean lastSuitable = null;
+    private int lastAccounts = 0;
+    private int lastOperations = 0;
 
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 64; // seconds (totally 2 minutes)
     private static final int CONNECT_BACKOFF_AlARM = 15; // minutes
-    private static final long RECONNECT_BACKOFF = 90 * 1000L; // milliseconds
     private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
     private static final int BACKOFF_ERROR_AFTER = 16; // seconds
-    private static final long ONESHOT_DURATION_RUN = 90 * 1000L; // milliseconds
-    private static final long ONESHOT_DURATION_IDLE = 10 * 1000L; // milliseconds
-    private static final long STOP_DELAY = 5000L; // milliseconds
-    private static final long CHECK_ALIVE_INTERVAL = 19 * 60 * 1000L; // milliseconds
+
+    private static final List<String> PREF_EVAL = Collections.unmodifiableList(Arrays.asList(
+            "enabled", "poll_interval"
+    ));
+
+    private static final List<String> PREF_RELOAD = Collections.unmodifiableList(Arrays.asList(
+            "metered", "roaming", "rlah", // force reconnect
+            "socks_enabled", "socks_proxy", // force reconnect
+            "subscribed_only", // force folder sync
+            "badge", "unseen_ignored", // force update badge/widget
+            "debug" // force reconnect
+    ));
 
     static final int PI_ALARM = 1;
-    static final int PI_ONESHOT = 2;
+    static final int PI_WAKEUP = 2;
 
     private MutableLiveData<ConnectionHelper.NetworkState> liveNetworkState = new MutableLiveData<>();
     private MutableLiveData<List<TupleAccountState>> liveAccountState = new MutableLiveData<>();
     private MediatorState liveAccountNetworkState = new MediatorState();
 
     private class MediatorState extends MediatorLiveData<List<TupleAccountNetworkState>> {
+        boolean running = true;
         private ConnectionHelper.NetworkState lastNetworkState = null;
         private List<TupleAccountState> lastAccountStates = null;
 
-        private void post(boolean reload) {
-            post(reload, lastNetworkState, lastAccountStates);
+        private void post(Bundle command) {
+            Log.i("### command posted");
+            for (String extra : Log.getExtras(command))
+                Log.i("### " + extra);
+            post(command, lastNetworkState, lastAccountStates);
         }
 
         private void post(ConnectionHelper.NetworkState networkState) {
             lastNetworkState = networkState;
-            post(false, lastNetworkState, lastAccountStates);
+            post(null, lastNetworkState, lastAccountStates);
         }
 
         private void post(List<TupleAccountState> accountStates) {
             lastAccountStates = accountStates;
-            post(false, lastNetworkState, lastAccountStates);
+            post(null, lastNetworkState, lastAccountStates);
         }
 
-        private void post(boolean reload, ConnectionHelper.NetworkState networkState, List<TupleAccountState> accountStates) {
-            if (networkState != null && accountStates != null) {
-                List<TupleAccountNetworkState> result = new ArrayList<>();
-                for (TupleAccountState accountState : accountStates)
-                    result.add(new TupleAccountNetworkState(reload, networkState, accountState));
-                postValue(result);
+        private void postDestroy() {
+            if (running) {
+                running = false;
+                postValue(null);
             }
+        }
+
+        private void post(Bundle command, ConnectionHelper.NetworkState networkState, List<TupleAccountState> accountStates) {
+            if (!running) {
+                Log.i("### not running");
+                return;
+            }
+
+            if (networkState == null || accountStates == null)
+                return;
+
+            if (Looper.myLooper() == Looper.getMainLooper())
+                _post(command, networkState, accountStates);
+            else {
+                // Some Android versions call onDestroy not on the main thread
+                Log.e("### not main thread states=" + accountStates.size());
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        _post(command, networkState, accountStates);
+                    }
+                });
+            }
+        }
+
+        private void _post(Bundle command, ConnectionHelper.NetworkState networkState, List<TupleAccountState> accountStates) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
+            boolean enabled = prefs.getBoolean("enabled", true);
+            int pollInterval = prefs.getInt("poll_interval", 0);
+
+            long[] schedule = getSchedule(ServiceSynchronize.this);
+            long now = new Date().getTime();
+            boolean scheduled = (schedule == null || now >= schedule[0] && now < schedule[1]);
+
+            Long account = null;
+            if (command != null) {
+                account = command.getLong("account", -1);
+                if (account < 0)
+                    account = null;
+            }
+
+            List<TupleAccountNetworkState> result = new ArrayList<>();
+            for (TupleAccountState accountState : accountStates)
+                if (account == null || account.equals(accountState.id))
+                    result.add(new TupleAccountNetworkState(
+                            enabled && pollInterval == 0 && scheduled,
+                            command,
+                            networkState,
+                            accountState));
+
+            postValue(result);
         }
     }
 
@@ -150,7 +203,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     public void onCreate() {
         EntityLog.log(this, "Service create version=" + BuildConfig.VERSION_NAME);
         super.onCreate();
-        startForeground(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(null).build());
+        startForeground(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(null, null).build());
 
         // Listen for network changes
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -168,13 +221,12 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
         DB db = DB.getInstance(this);
 
-        if (BuildConfig.DEBUG)
-            db.account().liveAccountState().observe(this, new Observer<List<TupleAccountState>>() {
-                @Override
-                public void onChanged(List<TupleAccountState> accountStates) {
-                    liveAccountState.postValue(accountStates);
-                }
-            });
+        db.account().liveAccountState().observe(this, new Observer<List<TupleAccountState>>() {
+            @Override
+            public void onChanged(List<TupleAccountState> accountStates) {
+                liveAccountState.postValue(accountStates);
+            }
+        });
 
         liveAccountNetworkState.addSource(liveNetworkState, new Observer<ConnectionHelper.NetworkState>() {
             @Override
@@ -190,124 +242,197 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
         });
 
-        liveAccountNetworkState.observe(this, new Observer<List<TupleAccountNetworkState>>() {
+        liveAccountNetworkState.observeForever(new Observer<List<TupleAccountNetworkState>>() {
             private List<TupleAccountNetworkState> accountStates = new ArrayList<>();
             private Map<TupleAccountNetworkState, Core.State> serviceStates = new Hashtable<>();
+            private ExecutorService queue = Helper.getBackgroundExecutor(1, "service");
 
             @Override
             public void onChanged(List<TupleAccountNetworkState> accountNetworkStates) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
-                boolean enabled = prefs.getBoolean("enabled", true);
+                if (accountNetworkStates == null) {
+                    // Destroy
+                    for (TupleAccountNetworkState prev : serviceStates.keySet())
+                        stop(prev);
 
-                boolean runService = false;
-                for (TupleAccountNetworkState current : accountNetworkStates) {
-                    if (enabled && current.accountState.shouldRun())
-                        runService = true;
+                    quit();
 
-                    int index = accountStates.indexOf(current);
-                    if (index < 0) {
-                        if (enabled && current.shouldRun())
-                            start(current);
-                    } else {
-                        TupleAccountNetworkState prev = accountStates.get(index);
-                        accountStates.remove(index);
-                        if (enabled) {
-                            if (current.reload ||
-                                    !prev.accountState.equals(current.accountState) ||
-                                    prev.shouldRun() != current.shouldRun()) {
-                                Log.i("XXX account=" + current +
-                                        " reload=" + current.reload + " change=" + !prev.accountState.equals(current.accountState));
-                                if (prev.shouldRun())
-                                    stop(prev);
-                                if (current.shouldRun())
-                                    start(prev);
+                    accountStates.clear();
+                    serviceStates.clear();
+                    liveAccountNetworkState.removeObserver(this);
+                } else {
+                    int accounts = 0;
+                    int operations = 0;
+                    boolean runService = false;
+                    for (TupleAccountNetworkState current : accountNetworkStates) {
+                        if (current.accountState.shouldRun(current.enabled))
+                            runService = true;
+                        if ("connected".equals(current.accountState.state))
+                            accounts++;
+                        if (current.accountState.synchronize)
+                            operations += current.accountState.operations;
+
+                        int index = accountStates.indexOf(current);
+                        if (index < 0) {
+                            if (current.canRun()) {
+                                EntityLog.log(ServiceSynchronize.this, "### new " + current);
+                                start(current, current.accountState.isEnabled(current.enabled));
                             }
                         } else {
-                            if (prev.shouldRun())
-                                stop(prev);
+                            TupleAccountNetworkState prev = accountStates.get(index);
+                            accountStates.remove(index);
+
+                            Core.State state = serviceStates.get(current);
+                            if (state != null)
+                                state.setNetworkState(current.networkState);
+
+                            boolean reload = false;
+                            if (current.command != null)
+                                switch (current.command.getString("name")) {
+                                    case "reload":
+                                        reload = true;
+                                        break;
+                                    case "wakeup":
+                                        if (state == null)
+                                            Log.e("### wakeup without state");
+                                        else
+                                            state.release();
+                                        continue;
+                                }
+
+                            // Some networks disallow email server connections:
+                            // - reload on network type change when disconnected
+                            if (reload ||
+                                    prev.canRun() != current.canRun() ||
+                                    !prev.accountState.equals(current.accountState) ||
+                                    (!"connected".equals(current.accountState.state) &&
+                                            !Objects.equals(prev.networkState.getType(), current.networkState.getType()))) {
+                                if (prev.canRun() || current.canRun())
+                                    EntityLog.log(ServiceSynchronize.this, "### changed " + current +
+                                            " reload=" + reload +
+                                            " stop=" + prev.canRun() +
+                                            " start=" + current.canRun() +
+                                            " changed=" + !prev.accountState.equals(current.accountState) +
+                                            " enabled=" + current.accountState.synchronize +
+                                            " state=" + current.accountState.state +
+                                            " type=" + prev.networkState.getType() + "/" + current.networkState.getType());
+                                if (prev.canRun())
+                                    stop(prev);
+                                if (current.canRun())
+                                    start(current, current.accountState.isEnabled(current.enabled));
+                                if (current.accountState.tbd != null)
+                                    delete(current);
+                            }
                         }
+
+                        if (current.accountState.tbd == null)
+                            accountStates.add(current);
                     }
 
-                    accountStates.add(current);
+                    if (runService) {
+                        if (lastAccounts != accounts || lastOperations != operations) {
+                            lastAccounts = accounts;
+                            lastOperations = operations;
+                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(lastAccounts, lastOperations).build());
+                        }
+                    } else
+                        stopSelf(); // will result in quit
                 }
-
-                if (!runService)
-                    stopSelf();
             }
 
-            private void start(final TupleAccountNetworkState accountNetworkState) {
+            private void start(final TupleAccountNetworkState accountNetworkState, boolean sync) {
+                EntityLog.log(ServiceSynchronize.this, "Service start=" + accountNetworkState);
+
+                final Core.State astate = new Core.State(accountNetworkState.networkState);
+                astate.runnable(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            monitorAccount(accountNetworkState.accountState, astate, sync);
+                        } catch (Throwable ex) {
+                            Log.e(accountNetworkState.accountState.name, ex);
+                        }
+                    }
+                }, "sync.account." + accountNetworkState.accountState.id);
+                serviceStates.put(accountNetworkState, astate);
+
                 queue.submit(new Runnable() {
                     @Override
                     public void run() {
-                        long ago = new Date().getTime() - lastLost;
-                        if (ago < RECONNECT_BACKOFF)
-                            try {
-                                long backoff = RECONNECT_BACKOFF - ago;
-                                EntityLog.log(ServiceSynchronize.this, accountNetworkState + " backoff=" + (backoff / 1000));
-                                Thread.sleep(backoff);
-                            } catch (InterruptedException ex) {
-                                Log.w(accountNetworkState + " backoff " + ex.toString());
-                            }
+                        Map<String, String> crumb = new HashMap<>();
+                        crumb.put("account", accountNetworkState.accountState.id.toString());
+                        crumb.put("connected", Boolean.toString(accountNetworkState.networkState.isConnected()));
+                        crumb.put("suitable", Boolean.toString(accountNetworkState.networkState.isSuitable()));
+                        crumb.put("unmetered", Boolean.toString(accountNetworkState.networkState.isUnmetered()));
+                        crumb.put("roaming", Boolean.toString(accountNetworkState.networkState.isRoaming()));
+                        Log.breadcrumb("start", crumb);
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            if (accountNetworkState.accountState.notify)
-                                accountNetworkState.accountState.createNotificationChannel(ServiceSynchronize.this);
-                            else
-                                accountNetworkState.accountState.deleteNotificationChannel(ServiceSynchronize.this);
-                        }
-
-                        Log.i(accountNetworkState.accountState.host + "/" + accountNetworkState.accountState.user + " run");
-                        final Core.State astate = new Core.State(state);
-                        astate.runnable(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    monitorAccount(accountNetworkState.accountState, astate, sync);
-                                } catch (Throwable ex) {
-                                    Log.e(accountNetworkState.accountState.name, ex);
-                                }
-                            }
-                        }, "sync.account." + accountNetworkState.accountState.id);
+                        Log.i("### start=" + accountNetworkState);
                         astate.start();
-                        Log.i("XXX started=" + accountNetworkState);
-                        serviceStates.put(accountNetworkState, astate);
+                        EntityLog.log(ServiceSynchronize.this, "### started=" + accountNetworkState);
                     }
                 });
             }
 
             private void stop(final TupleAccountNetworkState accountNetworkState) {
+                EntityLog.log(ServiceSynchronize.this, "Service stop=" + accountNetworkState);
+
                 final Core.State state = serviceStates.get(accountNetworkState);
                 serviceStates.remove(accountNetworkState);
+
                 queue.submit(new Runnable() {
                     @Override
                     public void run() {
-                        Log.i("XXX stop=" + accountNetworkState);
+                        Map<String, String> crumb = new HashMap<>();
+                        crumb.put("account", accountNetworkState.accountState.id.toString());
+                        crumb.put("connected", Boolean.toString(accountNetworkState.networkState.isConnected()));
+                        crumb.put("suitable", Boolean.toString(accountNetworkState.networkState.isSuitable()));
+                        crumb.put("unmetered", Boolean.toString(accountNetworkState.networkState.isUnmetered()));
+                        crumb.put("roaming", Boolean.toString(accountNetworkState.networkState.isRoaming()));
+                        Log.breadcrumb("stop", crumb);
+
+                        Log.i("### stop=" + accountNetworkState);
                         state.stop();
                         state.join();
-                        Log.i("XXX stopped=" + accountNetworkState);
+                        EntityLog.log(ServiceSynchronize.this, "### stopped=" + accountNetworkState);
                     }
                 });
             }
-        });
 
-        db.account().liveStats().observe(this, new Observer<TupleAccountStats>() {
-            private TupleAccountStats lastStats = null;
+            private void delete(final TupleAccountNetworkState accountNetworkState) {
+                EntityLog.log(ServiceSynchronize.this, "Service delete=" + accountNetworkState);
 
-            @Override
-            public void onChanged(@Nullable TupleAccountStats stats) {
-                if (stats != null && !stats.equals(lastStats)) {
-                    try {
-                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(stats).build());
-                    } catch (Throwable ex) {
-                        Log.e(ex);
+                queue.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        DB db = DB.getInstance(ServiceSynchronize.this);
+                        db.account().deleteAccount(accountNetworkState.accountState.id);
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                            nm.deleteNotificationChannel(EntityAccount.getNotificationChannelId(accountNetworkState.accountState.id));
+                        }
                     }
+                });
+            }
 
-                    if (oneshot)
-                        onOneshot(true, stats.operations == 0);
-                }
+            private void quit() {
+                EntityLog.log(ServiceSynchronize.this, "Service quit");
 
-                lastStats = stats;
+                queue.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.i("### quit");
+
+                        DB db = DB.getInstance(ServiceSynchronize.this);
+                        List<EntityOperation> ops = db.operation().getOperations(EntityOperation.SYNC);
+                        for (EntityOperation op : ops)
+                            db.folder().setFolderSyncState(op.folder, null);
+
+                        stopSelf();
+                        EntityLog.log(ServiceSynchronize.this, "### quited");
+                    }
+                });
             }
         });
 
@@ -433,19 +558,16 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         prefs.registerOnSharedPreferenceChangeListener(this);
     }
 
-    private static final List<String> POST_EVAL =
-            Collections.unmodifiableList(Arrays.asList("enabled"));
-    private static final List<String> POST_RELOAD =
-            Collections.unmodifiableList(Arrays.asList(
-                    "metered", "roaming", "rlah",
-                    "socks_enabled", "socks_proxy", "subscribed_only", "debug"));
-
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (POST_EVAL.contains(key))
-            liveAccountNetworkState.post(false);
-        else if (POST_RELOAD.contains(key))
-            liveAccountNetworkState.post(true);
+        if (PREF_EVAL.contains(key)) {
+            Bundle command = new Bundle();
+            command.putString("name", "eval");
+        } else if (PREF_RELOAD.contains(key)) {
+            Bundle command = new Bundle();
+            command.putString("name", "reload");
+            liveAccountNetworkState.post(command);
+        }
     }
 
     @Override
@@ -461,12 +583,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         cm.unregisterNetworkCallback(networkCallback);
 
-        setUnseen(null);
+        liveAccountNetworkState.postDestroy();
 
-        if (state != null && state.isRunning()) {
-            Log.e("Destroy while monitor running ignoring=" + Helper.isIgnoringOptimizations(this));
-            state.stop();
-        }
+        setUnseen(null);
 
         try {
             stopForeground(true);
@@ -503,41 +622,42 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        lastStartId = startId;
         String action = (intent == null ? null : intent.getAction());
-        Log.i("Service command intent=" + intent + " action=" + action);
+        String reason = (intent == null ? null : intent.getStringExtra("reason"));
+        EntityLog.log(ServiceSynchronize.this, "### Service command " + intent +
+                " action=" + action + " reason=" + reason);
         Log.logExtras(intent);
 
         super.onStartCommand(intent, flags, startId);
-        startForeground(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(null).build());
+        startForeground(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(null, null).build());
 
         if (action != null)
             try {
-                switch (action) {
-                    case "alarm":
-                        onAlarm();
+                String[] a = action.split(":");
+                Bundle command = new Bundle();
+                switch (a[0]) {
+                    case "eval":
+                        command.putString("name", "eval");
+                        command.putLong("account", intent.getLongExtra("account", -1));
+                        liveAccountNetworkState.post(command);
                         break;
 
                     case "reload":
-                        onReload(
-                                intent.getBooleanExtra("clear", false),
-                                intent.getStringExtra("reason"));
+                        command.putString("name", "reload");
+                        command.putLong("account", intent.getLongExtra("account", -1));
+                        liveAccountNetworkState.post(command);
                         break;
 
-                    case "reset":
-                        onReset();
+                    case "wakeup":
+                        command.putString("name", "wakeup");
+                        command.putLong("account", Long.parseLong(a[1]));
+                        liveAccountNetworkState.post(command);
                         break;
 
-                    case "oneshot_start":
-                        onOneshot(true, false);
-                        break;
-
-                    case "oneshot_end":
-                        onOneshot(false, false);
-                        break;
-
-                    case "watchdog":
-                        onWatchdog();
+                    case "alarm":
+                        schedule(this);
+                        command.putString("name", "eval");
+                        liveAccountNetworkState.post(command);
                         break;
 
                     default:
@@ -550,9 +670,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         return START_STICKY;
     }
 
-    private NotificationCompat.Builder getNotificationService(TupleAccountStats stats) {
-        if (stats != null)
-            lastStats = stats;
+    private NotificationCompat.Builder getNotificationService(Integer accounts, Integer operations) {
+        if (accounts != null)
+            this.lastAccounts = accounts;
+        if (operations != null)
+            this.lastOperations = operations;
 
         // Build pending intent
         Intent why = new Intent(this, ActivityView.class);
@@ -564,7 +686,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 new NotificationCompat.Builder(this, "service")
                         .setSmallIcon(R.drawable.baseline_compare_arrows_white_24)
                         .setContentTitle(getResources().getQuantityString(
-                                R.plurals.title_notification_synchronizing, lastStats.accounts, lastStats.accounts))
+                                R.plurals.title_notification_synchronizing, lastAccounts, lastAccounts))
                         .setContentIntent(piWhy)
                         .setAutoCancel(false)
                         .setShowWhen(false)
@@ -573,11 +695,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         .setVisibility(NotificationCompat.VISIBILITY_SECRET)
                         .setLocalOnly(true);
 
-        if (lastStats.operations > 0)
+        if (lastOperations > 0)
             builder.setContentText(getResources().getQuantityString(
-                    R.plurals.title_notification_operations, lastStats.operations, lastStats.operations));
+                    R.plurals.title_notification_operations, lastOperations, lastOperations));
 
-        if (!networkState.isSuitable())
+        if (lastSuitable == null || !lastSuitable)
             builder.setSubText(getString(R.string.title_notification_waiting));
 
         return builder;
@@ -599,275 +721,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         }
     }
 
-    private void onAlarm() {
-        schedule(this);
-        onReload(true, "alarm");
-    }
-
-    private void onReload(boolean clear, String reason) {
-        synchronized (this) {
-            try {
-                queue_reload(true, clear, reason);
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-        }
-    }
-
-    private void onReset() {
-        lastLost = 0;
-        onReload(true, "reset");
-    }
-
-    private void onOneshot(boolean start, boolean idle) {
-        Log.i("Oneshot start=" + start + " idle=" + idle);
-
-        Intent alarm = new Intent(this, ServiceSynchronize.class);
-        alarm.setAction("oneshot_end");
-        PendingIntent piOneshot;
-
-        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            piOneshot = PendingIntent.getService(this, PI_ONESHOT, alarm, PendingIntent.FLAG_UPDATE_CURRENT);
-        else
-            piOneshot = PendingIntent.getForegroundService(this, PI_ONESHOT, alarm, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        am.cancel(piOneshot);
-
-        oneshot = start;
-
-        if (start) {
-            // Network events will manage the service
-            long at = System.currentTimeMillis() + (idle ? ONESHOT_DURATION_IDLE : ONESHOT_DURATION_RUN);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                am.set(AlarmManager.RTC_WAKEUP, at, piOneshot);
-            else
-                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, piOneshot);
-
-            if (!started)
-                onReload(true, "oneshot start");
-        } else
-            onReload(true, "oneshot end");
-    }
-
-    private void onWatchdog() {
-        EntityLog.log(this, "Service watchdog");
-        // Network events will manage the service
-    }
-
-    private void queue_reload(final boolean start, final boolean clear, final String reason) {
-        final boolean doStop = started;
-        final boolean doStart = (start && isEnabled() && networkState.isSuitable());
-
-        EntityLog.log(this, "Queue reload" +
-                " doStop=" + doStop + " doStart=" + doStart + " queued=" + queued + " reason=" + reason);
-
-        started = doStart;
-
-        try {
-            queued++;
-            queue.submit(new Runnable() {
-                private PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                private PowerManager.WakeLock wl = pm.newWakeLock(
-                        PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":manage");
-
-                @Override
-                public void run() {
-                    DB db = DB.getInstance(ServiceSynchronize.this);
-
-                    try {
-                        wl.acquire();
-
-                        EntityLog.log(ServiceSynchronize.this, "Reload" +
-                                " stop=" + doStop + " start=" + doStart + " queued=" + queued + " " + reason);
-
-                        Map<String, String> crumb = new HashMap<>();
-                        crumb.put("oneshot", Boolean.toString(oneshot));
-                        crumb.put("started", Boolean.toString(started));
-                        crumb.put("doStop", Boolean.toString(doStop));
-                        crumb.put("doStart", Boolean.toString(doStart));
-                        crumb.put("queued", Integer.toString(queued));
-                        crumb.put("reason", reason == null ? "" : reason);
-                        crumb.put("connected", Boolean.toString(networkState.isConnected()));
-                        crumb.put("suitable", Boolean.toString(networkState.isSuitable()));
-                        crumb.put("unmetered", Boolean.toString(networkState.isUnmetered()));
-                        crumb.put("roaming", Boolean.toString(networkState.isRoaming()));
-                        crumb.put("lastLost", new Date(lastLost).toString());
-                        Log.breadcrumb("reload", crumb);
-
-                        if (doStop)
-                            stop();
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                            for (EntityAccount account : db.account().getAccountsTbd())
-                                nm.deleteNotificationChannel(EntityAccount.getNotificationChannelId(account.id));
-                        }
-
-                        int accounts = db.account().deleteAccountsTbd();
-                        int identities = db.identity().deleteIdentitiesTbd();
-                        if (accounts > 0 || identities > 0)
-                            Log.i("Deleted accounts=" + accounts + " identities=" + identities);
-
-                        if (doStart) {
-                            if (clear)
-                                db.account().clearAccountConnected();
-                            start(!oneshot || sync);
-                        }
-
-                    } catch (Throwable ex) {
-                        Log.e(ex);
-                    } finally {
-                        queued--;
-                        EntityLog.log(ServiceSynchronize.this, "Reload done queued=" + queued);
-
-                        if (!doStart && queued == 0 && !isEnabled()) {
-                            try {
-                                Thread.sleep(STOP_DELAY);
-                            } catch (InterruptedException ignored) {
-                            }
-                            if (queued == 0 && !isEnabled())
-                                stopService(lastStartId);
-                        }
-
-                        wl.release();
-                    }
-                }
-            });
-        } catch (RejectedExecutionException ex) {
-            Log.w(ex);
-        }
-    }
-
-    private boolean isEnabled() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean enabled = prefs.getBoolean("enabled", true);
-        int pollInterval = prefs.getInt("poll_interval", 0);
-        return ((enabled && pollInterval == 0) || oneshot);
-    }
-
-    private void start(final boolean sync) {
-        EntityLog.log(this, "Main start");
-
-        final Thread main = Thread.currentThread();
-
-        if (state != null && state.isRunning()) {
-            Log.e("Monitor running ignoring=" + Helper.isIgnoringOptimizations(this));
-            state.stop();
-        }
-
-        state = new Core.State(networkState);
-        state.runnable(new Runnable() {
-            private PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-            private PowerManager.WakeLock wl = pm.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":main");
-
-            @Override
-            public void run() {
-                try {
-                    wl.acquire();
-
-                    final DB db = DB.getInstance(ServiceSynchronize.this);
-
-                    long ago = new Date().getTime() - lastLost;
-                    if (ago < RECONNECT_BACKOFF)
-                        try {
-                            long backoff = RECONNECT_BACKOFF - ago;
-                            EntityLog.log(ServiceSynchronize.this, "Main backoff=" + (backoff / 1000));
-                            if (state.acquire(backoff))
-                                return;
-                        } catch (InterruptedException ex) {
-                            Log.w("main backoff " + ex.toString());
-                        }
-
-                    // Start monitoring accounts
-                    if (!BuildConfig.DEBUG) {
-                        List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
-                        for (final EntityAccount account : accounts) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                if (account.notify)
-                                    account.createNotificationChannel(ServiceSynchronize.this);
-                                else
-                                    account.deleteNotificationChannel(ServiceSynchronize.this);
-                            }
-
-                            Log.i(account.host + "/" + account.user + " run");
-                            final Core.State astate = new Core.State(state);
-                            astate.runnable(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        monitorAccount(account, astate, sync);
-                                    } catch (Throwable ex) {
-                                        Log.e(account.name, ex);
-                                    }
-                                }
-                            }, "sync.account." + account.id);
-                            astate.start();
-                            state.childs.add(astate);
-                        }
-                    }
-
-                    EntityLog.log(ServiceSynchronize.this, "Main started");
-
-                    try {
-                        wl.release();
-                        while (!state.acquire(CHECK_ALIVE_INTERVAL)) {
-                            if (!main.isAlive()) {
-                                Log.e("Main thread died");
-                                state.stop();
-                            }
-                        }
-                    } catch (InterruptedException ex) {
-                        Log.w("main wait " + ex.toString());
-                    } finally {
-                        wl.acquire();
-                    }
-
-                    // Stop monitoring accounts
-                    for (Core.State astate : state.childs)
-                        astate.stop();
-                    for (Core.State astate : state.childs)
-                        astate.join();
-                    state.childs.clear();
-
-                    EntityLog.log(ServiceSynchronize.this, "Main exited");
-                } catch (Throwable ex) {
-                    // Fail-safe
-                    Log.e(ex);
-                } finally {
-                    wl.release();
-                    EntityLog.log(ServiceSynchronize.this, "Start wake lock=" + wl.isHeld());
-                }
-            }
-        }, "sync.main");
-        state.start();
-    }
-
-    private void stop() {
-        EntityLog.log(this, "Main stop");
-
-        if (state != null) {
-            state.stop();
-            state.join();
-        }
-
-        EntityLog.log(this, "Main stopped");
-
-        state = null;
-    }
-
-    private void stopService(int startId) {
-        EntityLog.log(this, "Service stop");
-
-        DB db = DB.getInstance(this);
-        List<EntityOperation> ops = db.operation().getOperations(EntityOperation.SYNC);
-        for (EntityOperation op : ops)
-            db.folder().setFolderSyncState(op.folder, null);
-
-        stopSelf(startId);
-    }
-
     private void monitorAccount(final EntityAccount account, final Core.State state, final boolean sync) throws NoSuchProviderException {
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         final PowerManager.WakeLock wlAccount = pm.newWakeLock(
@@ -876,8 +729,22 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":account." + account.id + ".folder");
         final PowerManager.WakeLock wlMessage = pm.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":account." + account.id + ".message");
+
         try {
             wlAccount.acquire();
+
+            PendingIntent piWakeup = PendingIntent.getService(
+                    this,
+                    PI_WAKEUP,
+                    new Intent("wakeup:" + account.id),
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (account.notify)
+                    account.createNotificationChannel(ServiceSynchronize.this);
+                else
+                    account.deleteNotificationChannel(ServiceSynchronize.this);
+            }
 
             final DB db = DB.getInstance(this);
 
@@ -899,6 +766,35 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 iservice.setIgnoreBodyStructureSize(account.ignore_size);
                 if (account.protocol != EntityAccount.TYPE_IMAP)
                     iservice.setLeaveOnServer(account.browse);
+                iservice.setListener(new StoreListener() {
+                    @Override
+                    public void notification(StoreEvent e) {
+                        if (e.getMessageType() == StoreEvent.NOTICE)
+                            EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + e.getMessage());
+                        else
+                            try {
+                                wlFolder.acquire();
+
+                                String message = e.getMessage();
+                                Log.w(account.name + " alert: " + message);
+                                EntityLog.log(
+                                        ServiceSynchronize.this, account.name + " " +
+                                                Log.formatThrowable(new Core.AlertException(message), false));
+                                db.account().setAccountError(account.id, message);
+
+                                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                nm.notify("alert:" + account.id, 1,
+                                        Core.getNotificationError(
+                                                ServiceSynchronize.this, "warning", account.name,
+                                                new Core.AlertException(message))
+                                                .build());
+
+                                state.error(null);
+                            } finally {
+                                wlFolder.release();
+                            }
+                    }
+                });
 
                 final Map<EntityFolder, IMAPFolder> mapFolders = new HashMap<>();
                 List<Thread> idlers = new ArrayList<>();
@@ -911,7 +807,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     try {
                         iservice.connect(account);
                     } catch (Throwable ex) {
-                        if (ex instanceof AuthenticationFailedException) {
+                        // Immediately report auth errors
+                        if (ex instanceof AuthenticationFailedException &&
+                                !(ex.getCause() instanceof SocketException)) {
                             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                             nm.notify("receive:" + account.id, 1,
                                     Core.getNotificationError(this, "error", account.name, ex)
@@ -949,39 +847,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     db.account().setAccountWarning(account.id, null);
                     EntityLog.log(this, account.name + " connected");
 
-                    // Listen for store events
-                    iservice.getStore().addStoreListener(new StoreListener() {
-                        @Override
-                        public void notification(StoreEvent e) {
-                            if (e.getMessageType() == StoreEvent.NOTICE)
-                                EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + e.getMessage());
-                            else
-                                try {
-                                    wlFolder.acquire();
-
-                                    String message = e.getMessage();
-                                    Log.w(account.name + " alert: " + message);
-                                    EntityLog.log(
-                                            ServiceSynchronize.this, account.name + " " +
-                                                    Log.formatThrowable(new Core.AlertException(message), false));
-                                    db.account().setAccountError(account.id, message);
-
-                                    if (message != null && !message.startsWith("Too many simultaneous connections")) {
-                                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                        nm.notify("alert:" + account.id, 1,
-                                                Core.getNotificationError(
-                                                        ServiceSynchronize.this, "warning", account.name,
-                                                        new Core.AlertException(message))
-                                                        .build());
-                                    }
-
-                                    state.error(null);
-                                } finally {
-                                    wlFolder.release();
-                                }
-                        }
-                    });
-
                     // Listen for folder events
                     iservice.getStore().addFolderListener(new FolderAdapter() {
                         @Override
@@ -992,7 +857,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 String name = e.getFolder().getFullName();
                                 Log.i("Folder created=" + name);
                                 if (db.folder().getFolderByName(account.id, name) == null)
-                                    reload(ServiceSynchronize.this, "folder created");
+                                    reload(ServiceSynchronize.this, account.id, "folder created");
                             } finally {
                                 wlFolder.release();
                             }
@@ -1010,7 +875,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 int count = db.folder().renameFolder(account.id, old, name);
                                 Log.i("Renamed to " + name + " count=" + count);
                                 if (count == 0)
-                                    reload(ServiceSynchronize.this, "folder renamed");
+                                    reload(ServiceSynchronize.this, account.id, "folder renamed");
                             } finally {
                                 wlFolder.release();
                             }
@@ -1024,7 +889,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 String name = e.getFolder().getFullName();
                                 Log.i("Folder deleted=" + name);
                                 if (db.folder().getFolderByName(account.id, name) != null)
-                                    reload(ServiceSynchronize.this, "folder deleted");
+                                    reload(ServiceSynchronize.this, account.id, "folder deleted");
                             } finally {
                                 wlFolder.release();
                             }
@@ -1070,26 +935,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 try {
                                     ifolder.open(Folder.READ_ONLY);
                                     db.folder().setFolderReadOnly(folder.id, true);
-                                } catch (MessagingException ex1) {
-                                    Log.w(folder.name, ex1);
-                                    db.folder().setFolderState(folder.id, null);
+                                } catch (Throwable ex1) {
                                     db.folder().setFolderError(folder.id, Log.formatThrowable(ex1));
-                                    continue;
+                                    throw ex1;
                                 }
                             } catch (FolderNotFoundException ex) {
                                 Log.w(folder.name, ex);
                                 db.folder().deleteFolder(folder.id);
-                                continue;
-                            } catch (MessagingException ex) {
-                                Log.e(folder.name, ex);
-                                db.folder().setFolderState(folder.id, null);
-
-                                if (ex.getCause() instanceof BadCommandException)
-                                    throw ex;
-                                if ("connection failure".equals(ex.getMessage()))
-                                    throw ex;
-
-                                db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
                                 continue;
                             } catch (Throwable ex) {
                                 db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
@@ -1204,7 +1056,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         } else
                             mapFolders.put(folder, null);
 
-                        Log.i(folder.name + " observing");
+                        Log.d(folder.name + " observing");
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
@@ -1305,83 +1157,61 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         });
                     }
 
-                    // Keep alive alarm receiver
-                    BroadcastReceiver alarm = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            // Receiver runs on main thread
-                            // Receiver has a wake lock for ~10 seconds
-                            EntityLog.log(context, account.name + " keep alive wake lock=" + wlAccount.isHeld());
-                            state.release();
-                        }
-                    };
-
-                    String id = BuildConfig.APPLICATION_ID + ".POLL." + account.id + "." + new Random().nextInt();
-                    PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(id), 0);
-                    registerReceiver(alarm, new IntentFilter(id));
 
                     // Keep alive
-                    AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                    try {
-                        while (state.isRunning()) {
-                            if (!state.isRecoverable())
-                                throw new StoreClosedException(iservice.getStore(), "Unrecoverable");
+                    while (state.isRunning()) {
+                        if (!state.isRecoverable())
+                            throw new StoreClosedException(iservice.getStore(), "Unrecoverable");
 
-                            // Sends store NOOP
-                            if (!iservice.getStore().isConnected())
-                                throw new StoreClosedException(iservice.getStore(), "NOOP");
+                        // Sends store NOOP
+                        if (!iservice.getStore().isConnected())
+                            throw new StoreClosedException(iservice.getStore(), "NOOP");
 
-                            if (sync)
-                                for (EntityFolder folder : mapFolders.keySet())
-                                    if (folder.synchronize)
-                                        if (!folder.poll && capIdle) {
-                                            // Sends folder NOOP
-                                            if (!mapFolders.get(folder).isOpen())
-                                                throw new StoreClosedException(iservice.getStore(), folder.name);
-                                        } else
-                                            EntityOperation.sync(this, folder.id, false);
+                        if (sync)
+                            for (EntityFolder folder : mapFolders.keySet())
+                                if (folder.synchronize)
+                                    if (!folder.poll && capIdle) {
+                                        // Sends folder NOOP
+                                        if (!mapFolders.get(folder).isOpen())
+                                            throw new StoreClosedException(iservice.getStore(), folder.name);
+                                    } else
+                                        EntityOperation.sync(this, folder.id, false);
 
-                            // Successfully connected: reset back off time
-                            backoff = CONNECT_BACKOFF_START;
+                        // Successfully connected: reset back off time
+                        backoff = CONNECT_BACKOFF_START;
 
-                            // Record successful connection
-                            account.last_connected = new Date().getTime();
-                            EntityLog.log(this, account.name + " set last_connected=" + new Date(account.last_connected));
-                            db.account().setAccountConnected(account.id, account.last_connected);
-                            db.account().setAccountWarning(account.id, capIdle ? null : getString(R.string.title_no_idle));
+                        // Record successful connection
+                        account.last_connected = new Date().getTime();
+                        EntityLog.log(this, account.name + " set last_connected=" + new Date(account.last_connected));
+                        db.account().setAccountConnected(account.id, account.last_connected);
+                        db.account().setAccountWarning(account.id, capIdle ? null : getString(R.string.title_no_idle));
 
-                            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                            nm.cancel("receive:" + account.id, 1);
+                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                        nm.cancel("receive:" + account.id, 1);
 
-                            // Schedule keep alive alarm
-                            EntityLog.log(this, account.name + " wait=" + account.poll_interval);
-                            AlarmManagerCompat.setAndAllowWhileIdle(am,
-                                    AlarmManager.RTC_WAKEUP,
-                                    System.currentTimeMillis() + account.poll_interval * 60 * 1000L,
-                                    pi);
+                        // Schedule keep alive alarm
+                        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        try {
+                            long duration = account.poll_interval * 60 * 1000L;
+                            long trigger = System.currentTimeMillis() + duration;
+                            EntityLog.log(this, "### " + account.name + " keep alive" +
+                                    " wait=" + account.poll_interval + " until=" + new Date(trigger));
+                            AlarmManagerCompat.setAndAllowWhileIdle(am, AlarmManager.RTC_WAKEUP, trigger, piWakeup);
 
                             try {
                                 wlAccount.release();
-                                state.acquire();
+                                state.acquire(2 * duration);
                             } catch (InterruptedException ex) {
                                 EntityLog.log(this, account.name + " waited state=" + state);
                             } finally {
                                 wlAccount.acquire();
                             }
-                        }
-                    } finally {
-                        // Cleanup
-                        am.cancel(pi);
-                        try {
-                            unregisterReceiver(alarm);
-                        } catch (IllegalArgumentException ex) {
-                            Log.e(ex);
+                        } finally {
+                            am.cancel(piWakeup);
                         }
                     }
 
                     Log.i(account.name + " done state=" + state);
-                } catch (StoreClosedException ex) {
-                    Log.w(account.name, ex);
                 } catch (Throwable ex) {
                     Log.e(account.name, ex);
                     EntityLog.log(
@@ -1389,6 +1219,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             account.name + " " + Log.formatThrowable(ex, false));
                     db.account().setAccountError(account.id, Log.formatThrowable(ex));
                 } finally {
+                    // Update state
+                    EntityLog.log(this, account.name + " closing");
+                    db.account().setAccountState(account.id, "closing");
+
                     // Stop watching for operations
                     handler.post(new Runnable() {
                         @Override
@@ -1398,12 +1232,19 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         }
                     });
 
-                    // Update state
-                    EntityLog.log(this, account.name + " closing");
-                    db.account().setAccountState(account.id, "closing");
+                    // Close folders
                     for (EntityFolder folder : mapFolders.keySet())
-                        if (folder.synchronize && !folder.poll && mapFolders.get(folder) != null)
+                        if (folder.synchronize && !folder.poll && mapFolders.get(folder) != null) {
                             db.folder().setFolderState(folder.id, "closing");
+                            try {
+                                if (iservice.getStore().isConnected())
+                                    mapFolders.get(folder).close();
+                            } catch (Throwable ex) {
+                                Log.w(ex);
+                            } finally {
+                                db.folder().setFolderState(folder.id, null);
+                            }
+                        }
 
                     // Close store
                     try {
@@ -1421,69 +1262,43 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     for (Thread idler : idlers)
                         state.join(idler);
                     idlers.clear();
-
-                    // Update state
-                    for (EntityFolder folder : mapFolders.keySet())
-                        if (folder.synchronize && !folder.poll && mapFolders.get(folder) != null)
-                            db.folder().setFolderState(folder.id, null);
                 }
 
-                if (state.isRunning())
-                    try {
-                        if (backoff <= CONNECT_BACKOFF_MAX) {
-                            // Short back-off period, keep device awake
-                            EntityLog.log(this, account.name + " backoff=" + backoff);
+                if (state.isRunning()) {
+                    if (backoff <= CONNECT_BACKOFF_MAX) {
+                        // Short back-off period, keep device awake
+                        EntityLog.log(this, account.name + " backoff=" + backoff);
+                        try {
                             state.acquire(backoff * 1000L);
-                        } else {
-                            // Long back-off period, let device sleep
-                            EntityLog.log(this, account.name + " backoff alarm=" + CONNECT_BACKOFF_AlARM);
-
-                            BroadcastReceiver alarm = new BroadcastReceiver() {
-                                @Override
-                                public void onReceive(Context context, Intent intent) {
-                                    state.release();
-                                }
-                            };
-
-                            String id = BuildConfig.APPLICATION_ID + ".BACKOFF." + account.id + "." + new Random().nextInt();
-                            PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(id), 0);
-                            registerReceiver(alarm, new IntentFilter(id));
-
-                            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-                            try {
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
-                                    am.set(
-                                            AlarmManager.RTC_WAKEUP,
-                                            System.currentTimeMillis() + CONNECT_BACKOFF_AlARM * 60 * 1000L,
-                                            pi);
-                                else
-                                    am.setAndAllowWhileIdle(
-                                            AlarmManager.RTC_WAKEUP,
-                                            System.currentTimeMillis() + CONNECT_BACKOFF_AlARM * 60 * 1000L,
-                                            pi);
-
-                                try {
-                                    wlAccount.release();
-                                    state.acquire(2 * CONNECT_BACKOFF_AlARM * 60 * 1000L);
-                                } finally {
-                                    wlAccount.acquire();
-                                }
-                            } finally {
-                                // Cleanup
-                                am.cancel(pi);
-                                try {
-                                    unregisterReceiver(alarm);
-                                } catch (IllegalArgumentException ex) {
-                                    Log.e(ex);
-                                }
-                            }
+                        } catch (InterruptedException ex) {
+                            Log.w(account.name + " backoff " + ex.toString());
                         }
+                    } else {
+                        // Long back-off period, let device sleep
+                        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                        try {
+                            long duration = CONNECT_BACKOFF_AlARM * 60 * 1000L;
+                            long trigger = System.currentTimeMillis() + duration;
+                            EntityLog.log(this, "### " + account.name + " backoff" +
+                                    " alarm=" + CONNECT_BACKOFF_AlARM + " until=" + new Date(trigger));
+                            AlarmManagerCompat.setAndAllowWhileIdle(am, AlarmManager.RTC_WAKEUP, trigger, piWakeup);
 
-                        if (backoff <= CONNECT_BACKOFF_MAX)
-                            backoff *= 2;
-                    } catch (InterruptedException ex) {
-                        Log.w(account.name + " backoff " + ex.toString());
+                            try {
+                                wlAccount.release();
+                                state.acquire(2 * duration);
+                            } catch (InterruptedException ex) {
+                                Log.w(account.name + " backoff " + ex.toString());
+                            } finally {
+                                wlAccount.acquire();
+                            }
+                        } finally {
+                            am.cancel(piWakeup);
+                        }
                     }
+
+                    if (backoff <= CONNECT_BACKOFF_MAX)
+                        backoff *= 2;
+                }
             }
         } finally {
             EntityLog.log(this, account.name + " stopped");
@@ -1492,121 +1307,38 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
-        private Boolean lastSuitable = null;
-
         @Override
-        public void onAvailable(Network network) {
+        public void onAvailable(@NonNull Network network) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            EntityLog.log(ServiceSynchronize.this, "Available network=" + network +
+                    " capabilities " + cm.getNetworkCapabilities(network));
             updateState();
-
-            synchronized (ServiceSynchronize.this) {
-                try {
-                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                    EntityLog.log(ServiceSynchronize.this, "Available " + network +
-                            " capabilities " + cm.getNetworkCapabilities(network) +
-                            " connected=" + networkState.isConnected() +
-                            " suitable=" + networkState.isSuitable() +
-                            " unmetered=" + networkState.isUnmetered() +
-                            " roaming=" + networkState.isRoaming() +
-                            " started=" + started);
-
-                    if (networkState.isSuitable())
-                        if (started) {
-                            EntityLog.log(ServiceSynchronize.this, "Checking account states");
-
-                            Thread check = new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        DB db = DB.getInstance(ServiceSynchronize.this);
-
-                                        boolean disconnected = false;
-                                        List<EntityAccount> accounts = db.account().getSynchronizingAccounts();
-                                        for (EntityAccount account : accounts)
-                                            if (!"connected".equals(account.state)) {
-                                                disconnected = true;
-                                                break;
-                                            }
-
-                                        if (disconnected)
-                                            new Handler(getMainLooper()).post(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    try {
-                                                        synchronized (ServiceSynchronize.this) {
-                                                            queue_reload(true, false, "Some accounts disconnected");
-                                                        }
-                                                    } catch (Throwable ex) {
-                                                        Log.e(ex);
-                                                    }
-                                                }
-                                            });
-                                    } catch (Throwable ex) {
-                                        Log.e(ex);
-                                    }
-                                }
-                            }, "synchronize:connectivity");
-                            check.setPriority(THREAD_PRIORITY_BACKGROUND);
-                            check.start();
-                        } else
-                            queue_reload(true, false, "connect " + network);
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-            }
         }
 
         @Override
-        public void onCapabilitiesChanged(Network network, NetworkCapabilities capabilities) {
+        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities capabilities) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            EntityLog.log(ServiceSynchronize.this, "Changed network=" + network +
+                    " capabilities " + cm.getNetworkCapabilities(network));
             updateState();
-
-            synchronized (ServiceSynchronize.this) {
-                try {
-                    if (!started) {
-                        EntityLog.log(ServiceSynchronize.this, "Network " + network + " capabilities " + capabilities);
-                        if (networkState.isSuitable())
-                            queue_reload(true, false, "capabilities " + network);
-                    }
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-            }
         }
 
         @Override
-        public void onLost(Network network) {
+        public void onLost(@NonNull Network network) {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo active = cm.getActiveNetworkInfo();
+            EntityLog.log(ServiceSynchronize.this, "Lost network=" + network + " active=" + active);
             updateState();
-
-            synchronized (ServiceSynchronize.this) {
-                try {
-                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                    EntityLog.log(ServiceSynchronize.this, "Lost " + network +
-                            " active=" + cm.getActiveNetworkInfo() +
-                            " connected=" + networkState.isConnected() +
-                            " suitable=" + networkState.isSuitable() +
-                            " unmetered=" + networkState.isUnmetered() +
-                            " roaming=" + networkState.isRoaming() +
-                            " started=" + started);
-
-                    if (started && !networkState.isSuitable()) {
-                        lastLost = new Date().getTime();
-                        queue_reload(false, false, "disconnect " + network);
-                    }
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-            }
         }
 
         private void updateState() {
             ConnectionHelper.NetworkState ns = ConnectionHelper.getNetworkState(ServiceSynchronize.this);
-            if (BuildConfig.DEBUG)
-                liveNetworkState.postValue(ns);
-            networkState.update(ns);
+            liveNetworkState.postValue(ns);
 
-            if (lastSuitable == null || lastSuitable != networkState.isSuitable()) {
-                lastSuitable = networkState.isSuitable();
+            if (lastSuitable == null || lastSuitable != ns.isSuitable()) {
+                lastSuitable = ns.isSuitable();
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(lastStats).build());
+                nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(lastAccounts, lastOperations).build());
             }
         }
     };
@@ -1620,7 +1352,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             if (Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(intent.getAction())) {
                 boolean on = intent.getBooleanExtra("state", false);
                 if (!on)
-                    lastLost = 0;
+                    ;
             }
 
             networkCallback.onCapabilitiesChanged(null, null);
@@ -1656,7 +1388,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     // Conditionally init service
                     int accounts = db.account().getSynchronizingAccounts().size();
                     if (accounts > 0)
-                        watchdog(context);
+                        eval(context, "boot");
                     else {
                         for (EntityAccount account : db.account().getAccounts())
                             db.account().setAccountState(account.id, null);
@@ -1687,9 +1419,29 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.cancel(piAlarm);
 
+        long[] schedule = getSchedule(context);
+        if (schedule == null)
+            return;
+
+        long now = new Date().getTime();
+        long next = (now < schedule[0] ? schedule[0] : schedule[1]);
+        boolean enabled = (now >= schedule[0] && now < schedule[1]);
+
+        Log.i("Schedule now=" + new Date(now));
+        Log.i("Schedule start=" + new Date(schedule[0]));
+        Log.i("Schedule end=" + new Date(schedule[1]));
+        Log.i("Schedule next=" + new Date(next));
+        Log.i("Schedule enabled=" + enabled);
+
+        AlarmManagerCompat.setAndAllowWhileIdle(am, AlarmManager.RTC_WAKEUP, next, piAlarm);
+
+        WorkerPoll.init(context);
+    }
+
+    private static long[] getSchedule(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         if (!prefs.getBoolean("schedule", false) || !ActivityBilling.isPro(context))
-            return;
+            return null;
 
         int minuteStart = prefs.getInt("schedule_start", 0);
         int minuteEnd = prefs.getInt("schedule_end", 0);
@@ -1714,78 +1466,35 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             calStart.set(Calendar.DAY_OF_MONTH, calStart.get(Calendar.DAY_OF_MONTH) + 1);
             calEnd.set(Calendar.DAY_OF_MONTH, calEnd.get(Calendar.DAY_OF_MONTH) + 1);
         }
+        if (now > calEnd.getTimeInMillis())
+            Log.e("Schedule invalid now=" + new Date(now) + " end=" + new Date(calEnd.getTimeInMillis()));
 
         long start = calStart.getTimeInMillis();
         long end = calEnd.getTimeInMillis();
-        long next = (now < start ? start : end);
+        if (start > end)
+            Log.e("Schedule invalid start=" + new Date(start) + " end=" + new Date(end));
 
-        Log.i("Schedule now=" + new Date(now));
-        Log.i("Schedule start=" + new Date(start));
-        Log.i("Schedule end=" + new Date(end));
-        Log.i("Schedule next=" + new Date(next));
+        return new long[]{start, end};
+    }
 
-        boolean enabled = (now >= start && now < end);
-        prefs.edit().putBoolean("enabled", enabled).apply();
+    static void eval(Context context, String reason) {
+        ContextCompat.startForegroundService(context,
+                new Intent(context, ServiceSynchronize.class)
+                        .setAction("eval")
+                        .putExtra("reason", reason));
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, piAlarm);
-        else
-            am.set(AlarmManager.RTC_WAKEUP, next, piAlarm);
-
-        WorkerPoll.init(context);
+    static void reload(Context context, Long account, String reason) {
+        ContextCompat.startForegroundService(context,
+                new Intent(context, ServiceSynchronize.class)
+                        .setAction("reload")
+                        .putExtra("account", account == null ? -1 : account)
+                        .putExtra("reason", reason));
     }
 
     static void reschedule(Context context) {
         ContextCompat.startForegroundService(context,
                 new Intent(context, ServiceSynchronize.class)
                         .setAction("alarm"));
-    }
-
-    static void reload(Context context, String reason) {
-        reload(context, false, reason);
-    }
-
-    static void reload(Context context, boolean clear, String reason) {
-        ContextCompat.startForegroundService(context,
-                new Intent(context, ServiceSynchronize.class)
-                        .setAction("reload")
-                        .putExtra("clear", clear)
-                        .putExtra("reason", reason));
-    }
-
-    static void reset(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean enabled = prefs.getBoolean("enabled", true);
-        int pollInterval = prefs.getInt("poll_interval", 0);
-        if (!enabled || pollInterval > 0) {
-            ServiceSynchronize.sync = true;
-            ServiceSynchronize.oneshot = true;
-        }
-        ContextCompat.startForegroundService(context,
-                new Intent(context, ServiceSynchronize.class)
-                        .setAction("reset"));
-    }
-
-    static void process(Context context, boolean sync) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean enabled = prefs.getBoolean("enabled", true);
-        int pollInterval = prefs.getInt("poll_interval", 0);
-        if (!enabled || pollInterval > 0) {
-            ServiceSynchronize.sync = sync;
-            ServiceSynchronize.oneshot = true;
-            ContextCompat.startForegroundService(context,
-                    new Intent(context, ServiceSynchronize.class)
-                            .setAction("oneshot_start"));
-        }
-    }
-
-    static void watchdog(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean enabled = prefs.getBoolean("enabled", true);
-        int pollInterval = prefs.getInt("poll_interval", 0);
-        if (enabled && pollInterval == 0)
-            ContextCompat.startForegroundService(context,
-                    new Intent(context, ServiceSynchronize.class)
-                            .setAction("watchdog"));
     }
 }

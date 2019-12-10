@@ -522,7 +522,7 @@ class Core {
                     uid = muid;
             }
 
-            if (uid != null && purge)
+            if (uid != null && purge) {
                 for (Message iexisting : imessages) {
                     long muid = ifolder.getUID(iexisting);
                     if (muid != uid)
@@ -533,6 +533,8 @@ class Core {
                             Log.w(name + " existing gone uid=" + muid + " for msgid=" + msgid);
                         }
                 }
+                ifolder.expunge();
+            }
         }
 
         Log.i(name + " got uid=" + uid + " for msgid=" + msgid);
@@ -734,13 +736,15 @@ class Core {
             Message iexisting = ifolder.getMessageByUID(message.uid);
             if (iexisting == null)
                 Log.w(folder.name + " existing not found uid=" + message.uid);
-            else
+            else {
                 try {
                     Log.i(folder.name + " deleting uid=" + message.uid);
                     iexisting.setFlag(Flags.Flag.DELETED, true);
                 } catch (MessageRemovedException ignored) {
                     Log.w(folder.name + " existing gone uid=" + message.uid);
                 }
+                ifolder.expunge();
+            }
         }
 
         if (folder.id.equals(message.folder)) {
@@ -1503,7 +1507,7 @@ class Core {
                     message.total = helper.getSize();
                     message.content = false;
                     message.encrypt = parts.getEncryption();
-                    message.received = helper.getReceived();
+                    message.received = helper.getSent();
                     message.sent = helper.getSent();
                     message.seen = false;
                     message.answered = false;
@@ -2302,8 +2306,8 @@ class Core {
             if (process)
                 updateContactInfo(context, folder, message);
 
-            else if (BuildConfig.DEBUG)
-                Log.i(folder.name + " unchanged uid=" + uid);
+            else
+                Log.d(folder.name + " unchanged uid=" + uid);
         }
 
         List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));
@@ -3214,14 +3218,13 @@ class Core {
         private Semaphore semaphore = new Semaphore(0);
         private boolean running = true;
         private boolean recoverable = true;
-        List<State> childs = Collections.synchronizedList(new ArrayList<>());
 
         State(ConnectionHelper.NetworkState networkState) {
             this.networkState = networkState;
         }
 
-        State(State parent) {
-            this(parent.networkState);
+        void setNetworkState(ConnectionHelper.NetworkState networkState) {
+            this.networkState = networkState;
         }
 
         ConnectionHelper.NetworkState getNetworkState() {
