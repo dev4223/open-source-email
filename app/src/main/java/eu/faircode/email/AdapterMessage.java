@@ -305,7 +305,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvBccTitle;
         private TextView tvIdentityTitle;
         private TextView tvSentTitle;
-        private TextView tvReceivedTitle;
         private TextView tvSizeExTitle;
 
         private TextView tvFromEx;
@@ -455,7 +454,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle = vsBody.findViewById(R.id.tvBccTitle);
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
             tvSentTitle = vsBody.findViewById(R.id.tvSentTitle);
-            tvReceivedTitle = vsBody.findViewById(R.id.tvReceivedTitle);
             tvSizeExTitle = vsBody.findViewById(R.id.tvSizeExTitle);
 
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
@@ -1039,7 +1037,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle.setVisibility(View.GONE);
             tvIdentityTitle.setVisibility(View.GONE);
             tvSentTitle.setVisibility(View.GONE);
-            tvReceivedTitle.setVisibility(View.GONE);
             tvSizeExTitle.setVisibility(View.GONE);
 
             tvFromEx.setVisibility(View.GONE);
@@ -1222,17 +1219,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity.setVisibility(show_addresses && via != null ? View.VISIBLE : View.GONE);
             tvIdentity.setText(via == null ? null : MessageHelper.formatAddresses(new Address[]{via}));
 
-            // dev4223: show always
-            //tvTimeEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            tvTimeEx.setVisibility(View.VISIBLE);
-            tvTimeEx.setText(DTF.format(message.received));
-
             tvSentTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSent.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             tvSent.setText(message.sent == null ? null : DTF.format(message.sent));
 
-            tvReceivedTitle.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
-            tvReceived.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            // dev4223: show always and without title
+            //tvReceived.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
+            tvReceived.setVisibility(View.VISIBLE);
             tvReceived.setText(DTF.format(message.received));
 
             if (!message.duplicate)
