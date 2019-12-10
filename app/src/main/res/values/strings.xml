@@ -15,6 +15,7 @@
     <string name="channel_update">Updates</string>
     <string name="channel_warning">Warnings</string>
     <string name="channel_error">Errors</string>
+    <string name="channel_alert">Server alerts</string>
     <string name="channel_group_contacts">Contacts</string>
 
     <plurals name="page_conversation">
@@ -87,6 +88,7 @@
     <string name="title_notification_waiting">Waiting for suitable connection</string>
     <string name="title_notification_sending">Sending messages</string>
     <string name="title_notification_failed">\'%1$s\' failed</string>
+    <string name="title_notification_alert">\'%1$s\' server alert</string>
 
     <string name="title_name_count">%1$s (%2$s)</string>
 
@@ -341,6 +343,7 @@
     <string name="title_advanced_secure">Hide from recent apps screen and prevent taking screenshots</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
+    <string name="title_advanced_smime" translatable="false">S/MIME</string>
     <string name="title_advanced_manage_certificates">Manage public keys</string>
     <string name="title_advanced_import_key">Import private key</string>
     <string name="title_advanced_manage_keys">Manage private keys</string>
@@ -553,7 +556,7 @@
     <string name="title_no_folders">No folders</string>
     <string name="title_no_messages">No messages</string>
     <string name="title_filters_active">One or more filters active</string>
-    <string name="title_duplicate_in">Duplicate in %1$s</string>
+    <string name="title_duplicate_in">Duplicate message in %1$s</string>
 
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>

@@ -138,7 +138,7 @@ FairEmail follows all the best practices for an email client as described in [th
 * [(20) Can I get a refund?](#user-content-faq20)
 * [(21) How do I enable the notification light?](#user-content-faq21)
 * [(22) What does account/folder error ... mean?](#user-content-faq22)
-* [(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?](#user-content-faq23)
+* [(23) Why do I get alert .. ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
 * [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
@@ -311,7 +311,8 @@ only suggesting contacts won't work without contacts permissions.
 
 A low priority permanent status bar notification with the number of accounts being synchronized and the number of operations pending (see the next question) is shown
 to prevent Android from killing the service that takes care of continuous receiving email.
-This is necessary because of the introduction of [doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) in Android 6 Marshmallow.
+This was [already necessary](https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)),
+but with the introduction of [doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) in Android 6 Marshmallow this is more than ever necessary.
 Doze mode will stop all apps when the screen is off for some time, unless the app did start a foreground service, which requires showing a status bar notification.
 
 Most, if not all, other email apps don't show a notification
@@ -602,6 +603,9 @@ Encrypting a message requires the public key(s) of the recipient(s). Signing a m
 
 Private keys are stored by Android and can be imported via the Android advanced security settings.
 There is a shortcut (button) for this in the privacy settings.
+Android will ask you to set a PIN, pattern, or password if you didn't before.
+If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
+
 Public keys are stored by FairEmail and can be imported when verifying a signature for the first time or via the privacy settings (PEM or DER format).
 
 The use of expired keys, inline encrypted/signed messages and hardware security tokens is not supported.
@@ -842,26 +846,33 @@ When in doubt, you can ask for [support](#user-content-support).
 <br />
 
 <a name="faq23"></a>
-**(23) Why do I get 'Too many simultaneous connections' or 'Maximum number of connections ... exceeded' ?**
+**(23) Why do I get alert ... ?**
 
-The message *Too many simultaneous connections* is sent by the email server
-when there are too many folder connections for the same email account at the same time.
+*General*
+
+Alerts are warning messages sent by email servers.
+
+*Too many simultaneous connections* or *Maximum number of connections exceeded*
+
+This alert will be sent when there are too many folder connections for the same email account at the same time.
 
 Possible causes are:
 
 * There are multiple email clients connected to the same account
 * The same email client is connected multiple times to the same account
-* The previous connection was terminated abruptly for example by abruptly losing internet connectivity, for example when turning on flight mode
+* Previous connections were terminated abruptly for example by abruptly losing internet connectivity
 
-If only FairEmail is connecting to the email server, first try to wait half an hour to see if the problem resolves itself,
-else enable the folder setting *Poll instead of synchronize* for some folders (long press folder in the folder list > Edit properties).
+First try to wait some time to see if the problem resolves itself,
+else try to enable the folder setting *Poll instead of synchronize* for some folders (long press folder in the folder list, edit properties).
 The poll interval can be configured in the account settings.
-
-You also might want to disable *Browse messages on the server* in the advanced account settings (Setup > Step 1 > Manage > Tap account > Advanced).
 
 The maximum number of simultaneous folder connections for Gmail is 15,
 so you can synchronize at most 15 folders simultaneously on *all* your devices at the same time.
+For this reason Gmail user folders are set to poll by default.
 See [here](https://support.google.com/mail/answer/7126229) for details.
+
+When using a Dovecot server,
+you might want to change the setting [mail_max_userip_connections](https://doc.dovecot.org/settings/dovecot_core_settings/#mail-max-userip-connections).
 
 <br />
 
@@ -1083,6 +1094,9 @@ Reconnecting to an email server will use extra battery power, so an unstable int
 In this case you might want to synchronize periodically, for example each hour, instead of continuously.
 Note that polling frequently (more than every 30-60 minutes) will likely use more battery power than synchronizing always
 because connecting to the server and comparing the local and remotes messages are expensive operations.
+
+Note that setting a different poll interval for different accounts is deliberately not possible
+since this would result in extra, unnecessary battery usage because the device would need to wake up more often than needed.
 
 Most of the battery usage, not considering viewing messages, is due to synchronization (receiving and sending) of messages.
 So, to reduce the battery usage, set the number of days to synchronize message for to a lower value,
