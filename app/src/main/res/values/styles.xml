@@ -135,7 +135,7 @@
         <item name="colorSeparator">@color/blackColorSeparator</item>
         <item name="android:windowBackground">@color/black</item>
         <item name="colorDrawerBackground">@color/black</item>
-        <item name="dateColorDrawerBackground">@color/darkestColorDrawerBackground</item>
+        <item name="dateColorDrawerBackground">@color/darkerColorDrawerBackground</item>
         <item name="dateColorDrawerForeground">@color/blackAccent</item>
     </style>
 
