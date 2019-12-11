@@ -51,6 +51,8 @@ import androidx.preference.PreferenceManager;
 
 import com.sun.mail.imap.IMAPFolder;
 
+import org.w3c.dom.Text;
+
 import java.net.SocketException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -93,6 +95,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private int lastAccounts = 0;
     private int lastOperations = 0;
 
+    private static final long SERVICE_YIELD = 5000; // milliseconds
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 64; // seconds (totally 2 minutes)
     private static final int CONNECT_BACKOFF_AlARM = 15; // minutes
@@ -114,6 +117,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     static final int PI_ALARM = 1;
     static final int PI_WAKEUP = 2;
 
+    private PowerManager.WakeLock wlService;
     private MutableLiveData<ConnectionHelper.NetworkState> liveNetworkState = new MutableLiveData<>();
     private MutableLiveData<List<TupleAccountState>> liveAccountState = new MutableLiveData<>();
     private MediatorState liveAccountNetworkState = new MediatorState();
@@ -216,6 +220,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         registerReceiver(connectionChangedReceiver, iif);
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
 
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wlService = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":service");
+
         DB db = DB.getInstance(this);
 
         db.account().liveAccountState().observe(this, new Observer<List<TupleAccountState>>() {
@@ -291,9 +298,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     break;
                                 case "wakeup":
                                     if (state == null)
-                                        Log.w("### wakeup without state");
+                                        EntityLog.log(ServiceSynchronize.this, "### wakeup without state");
                                     else {
-                                        Log.i("### waking up " + current);
+                                        EntityLog.log(ServiceSynchronize.this, "### waking up " + current);
                                         state.release();
                                     }
                                     break;
@@ -624,6 +631,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Allow updating account state
+        wlService.acquire(SERVICE_YIELD);
+
         String action = (intent == null ? null : intent.getAction());
         String reason = (intent == null ? null : intent.getStringExtra("reason"));
         EntityLog.log(ServiceSynchronize.this, "### Service command " + intent +
@@ -777,7 +787,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
             final DB db = DB.getInstance(this);
 
-            int backoff = CONNECT_BACKOFF_START;
+            state.setBackoff(CONNECT_BACKOFF_START);
             while (state.isRunning()) {
                 state.reset();
                 Log.i(account.name + " run");
@@ -798,17 +808,24 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 iservice.setListener(new StoreListener() {
                     @Override
                     public void notification(StoreEvent e) {
+                        String message = e.getMessage();
+                        if (TextUtils.isEmpty(message))
+                            message = "?";
                         if (e.getMessageType() == StoreEvent.NOTICE)
-                            EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + e.getMessage());
+                            EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + message);
                         else
                             try {
                                 wlFolder.acquire();
 
-                                EntityLog.log(ServiceSynchronize.this, account.name + " " + e.getMessage());
+                                EntityLog.log(ServiceSynchronize.this, account.name + " " + message);
 
-                                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                nm.notify("alert:" + account.id, 1,
-                                        getNotificationAlert(account.name, e.getMessage()).build());
+                                if (state.getBackoff() > CONNECT_BACKOFF_MAX ||
+                                        !(message.startsWith("Maximum number of connections") /* Dovecot */ ||
+                                                message.startsWith("Too many simultaneous connections") /* Gmail */)) {
+                                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                    nm.notify("alert:" + account.id, 1,
+                                            getNotificationAlert(account.name, message).build());
+                                }
                             } finally {
                                 wlFolder.release();
                             }
@@ -842,7 +859,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                             long now = new Date().getTime();
                             long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
-                            if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L && backoff > BACKOFF_ERROR_AFTER) {
+                            if (delayed > ACCOUNT_ERROR_AFTER * 60 * 1000L && state.getBackoff() > BACKOFF_ERROR_AFTER) {
                                 Log.i("Reporting sync error after=" + delayed);
                                 Throwable warning = new Throwable(
                                         getString(R.string.title_no_sync,
@@ -944,6 +961,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             db.folder().setFolderState(folder.id, "connecting");
 
                             final IMAPFolder ifolder = (IMAPFolder) iservice.getStore().getFolder(folder.name);
+                            mapFolders.put(folder, ifolder);
                             try {
                                 if (BuildConfig.DEBUG && "Postausgang".equals(folder.name))
                                     throw new ReadOnlyFolderException(ifolder);
@@ -966,7 +984,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
                                 throw ex;
                             }
-                            mapFolders.put(folder, ifolder);
 
                             db.folder().setFolderState(folder.id, "connected");
                             db.folder().setFolderError(folder.id, null);
@@ -1197,7 +1214,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                         EntityOperation.sync(this, folder.id, false);
 
                         // Successfully connected: reset back off time
-                        backoff = CONNECT_BACKOFF_START;
+                        state.setBackoff(CONNECT_BACKOFF_START);
 
                         // Record successful connection
                         account.last_connected = new Date().getTime();
@@ -1221,7 +1238,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             try {
                                 wlAccount.release();
                                 state.acquire(2 * duration);
-                                Log.i("### " + account.name + " keeping alive");
+                                EntityLog.log(this, "### " + account.name + " keeping alive");
                             } catch (InterruptedException ex) {
                                 EntityLog.log(this, account.name + " waited state=" + state);
                             } finally {
@@ -1286,6 +1303,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 }
 
                 if (state.isRunning()) {
+                    int backoff = state.getBackoff();
                     if (backoff <= CONNECT_BACKOFF_MAX) {
                         // Short back-off period, keep device awake
                         EntityLog.log(this, account.name + " backoff=" + backoff);
@@ -1319,7 +1337,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     }
 
                     if (backoff <= CONNECT_BACKOFF_MAX)
-                        backoff *= 2;
+                        state.setBackoff(backoff * 2);
                 }
             }
         } finally {
