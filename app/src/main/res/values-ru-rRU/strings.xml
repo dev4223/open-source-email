@@ -146,6 +146,7 @@
     <string name="title_setup_quick_failed">Вы также можете настроить учётную запись и идентификатор ниже</string>
     <string name="title_setup_manage">Редактировать</string>
     <string name="title_setup_grant">Предоставить</string>
+    <string name="title_setup_grant_again">Предоставить необходимые разрешения</string>
     <string name="title_setup_account">Настроить учётные записи</string>
     <string name="title_setup_account_remark">Подключить почтовый ящик</string>
     <string name="title_setup_account_hint">Для изменения цвета смахните нужную папку влево/вправо и т.д.</string>
@@ -558,7 +559,7 @@
     <string name="title_no_stream">Устаревшее приложение послало путь к файлу вместо файлового потока</string>
     <string name="title_no_contacts">Выбор контакта недоступен</string>
     <string name="title_no_internet">Нет или нет подходящего интернет-соединения</string>
-    <string name="title_no_connection">Будет синхронизировано при следующем подключении к учётной записи</string>
+    <string name="title_no_connection">Подключение к одной или нескольким учётным записям&#8230;</string>
     <string name="title_no_folder">Папка не существует</string>
     <string name="title_no_format">Оригинальное сообщение будет включено</string>
     <string name="title_no_image">Изображение не может быть декодировано</string>
@@ -903,6 +904,7 @@
     <string name="title_unexpected_error">Непредвиденная ошибка</string>
     <string name="title_log">Журнал</string>
     <string name="title_auto_scroll">Автопрокрутка</string>
+    <string name="title_log_clear">Очистить</string>
     <string name="title_debug_info">Отладочная информация</string>
     <string name="title_debug_info_remark">Пожалуйста, опишите проблему и укажите момент её возникновения:</string>
     <string name="title_crash_info_remark">Пожалуйста, опишите, что вы делали, когда в приложении произошёл сбой:</string>

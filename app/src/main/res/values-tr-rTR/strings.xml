@@ -124,6 +124,7 @@
     <string name="title_setup_quick_failed">Bir hesap ve kimlik yapılandırmayı aşağıdan da deneyebilirsiniz</string>
     <string name="title_setup_manage">Yönet</string>
     <string name="title_setup_grant">İzin</string>
+    <string name="title_setup_grant_again">Gerekli izinleri ver</string>
     <string name="title_setup_account">Kurulum hesapları</string>
     <string name="title_setup_account_remark">E-posta almak için</string>
     <string name="title_setup_account_hint">Rengi değiştirmek için hedef klasörü sola/sağa kaydırın, vb</string>
@@ -536,7 +537,7 @@
     <string name="title_no_stream">Eski bir uygulama bir dosya akışı yerine dosya yolu gönderdi</string>
     <string name="title_no_contacts">Kişi seçici mevcut değil</string>
     <string name="title_no_internet">Uygun internet bağlantısı veya internet yok</string>
-    <string name="title_no_connection">Eşitleme sonraki hesap bağlantı üzerinde gerçekleştir</string>
+    <string name="title_no_connection">Bir veya daha fazla hesaba bağlanılıyor &#8230;</string>
     <string name="title_no_folder">Klasör yok</string>
     <string name="title_no_format">Alınan özgün iletiye eklenecek</string>
     <string name="title_no_image">Görselin kodu çözülemedi</string>
@@ -881,6 +882,7 @@
     <string name="title_unexpected_error">Beklenmedik hata</string>
     <string name="title_log">Kayıt defteri</string>
     <string name="title_auto_scroll">Otomatik kaydırma</string>
+    <string name="title_log_clear">Temizle</string>
     <string name="title_debug_info">Hata ayıklama bilgisi</string>
     <string name="title_debug_info_remark">Lütfen sorunu açıklayın ve sorunun zamanını belirtin:</string>
     <string name="title_crash_info_remark">Lütfen uygulama çöktüğü sırada ne yaptığınızı açıklayın:</string>

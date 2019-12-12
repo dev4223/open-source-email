@@ -4400,11 +4400,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 DB db = DB.getInstance(context);
 
-                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
-                    EntityMessage message = db.message().getMessage(id);
-                    if (message == null)
-                        return null;
+                EntityMessage message = db.message().getMessage(id);
+                if (message == null)
+                    return null;
 
+                if (EntityMessage.SMIME_SIGNONLY.equals(type)) {
                     // Get content/signature
                     File content = null;
                     File signature = null;
@@ -4482,7 +4482,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     // Get encrypted message
                     File input = null;
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(id);
+                    List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                     for (EntityAttachment attachment : attachments)
                         if (EntityAttachment.SMIME_MESSAGE.equals(attachment.encryption)) {
                             if (!attachment.available)
@@ -4525,8 +4525,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 Log.w(ex);
                             }
 
-                    if (is == null)
+                    if (is == null) {
+                        if (message.identity != null)
+                            db.identity().setIdentitySignKeyAlias(message.identity, null);
                         throw new IllegalArgumentException(context.getString(R.string.title_invalid_key));
+                    }
 
                     // Decode message
                     Properties props = MessageHelper.getSessionProperties();
@@ -4540,16 +4543,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         // Write decrypted body
                         String html = parts.getHtml(context);
-                        Helper.writeText(EntityMessage.getFile(context, id), html);
+                        Helper.writeText(message.getFile(context), html);
 
                         // Remove existing attachments
-                        db.attachment().deleteAttachments(id);
+                        db.attachment().deleteAttachments(message.id);
 
                         // Add decrypted attachments
                         List<EntityAttachment> remotes = parts.getAttachments();
                         for (int index = 0; index < remotes.size(); index++) {
                             EntityAttachment remote = remotes.get(index);
-                            remote.message = id;
+                            remote.message = message.id;
                             remote.sequence = index + 1;
                             remote.id = db.attachment().insertAttachment(remote);
                             try {
@@ -4559,8 +4562,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             }
                         }
 
-                        db.message().setMessageEncrypt(id, parts.getEncryption());
-                        db.message().setMessageStored(id, new Date().getTime());
+                        db.message().setMessageEncrypt(message.id, parts.getEncryption());
+                        db.message().setMessageStored(message.id, new Date().getTime());
+
+                        if (message.identity != null)
+                            db.identity().setIdentitySignKeyAlias(message.identity, alias);
 
                         db.setTransactionSuccessful();
                     } finally {

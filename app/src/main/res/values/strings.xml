@@ -155,6 +155,7 @@
     <string name="title_setup_quick_failed">You can try to configure an account and an identity below too</string>
     <string name="title_setup_manage">Manage</string>
     <string name="title_setup_grant">Grant</string>
+    <string name="title_setup_grant_again">Grant required permissions</string>
     <string name="title_setup_account">Setup accounts</string>
     <string name="title_setup_account_remark">To receive email</string>
     <string name="title_setup_account_hint">To change color, swipe left/right target folder, etc</string>
@@ -616,7 +617,7 @@
     <string name="title_no_stream">An outdated app sent a file path instead of a file stream</string>
     <string name="title_no_contacts">Contact picker not available</string>
     <string name="title_no_internet">No or no suitable internet connection</string>
-    <string name="title_no_connection">Synchronization will be performed on next account connection</string>
+    <string name="title_no_connection">Connecting to one or more accounts &#8230;</string>
     <string name="title_no_folder">Folder does not exist</string>
     <string name="title_no_format">The originally received message will be included</string>
     <string name="title_no_image">Image could not be decoded</string>
