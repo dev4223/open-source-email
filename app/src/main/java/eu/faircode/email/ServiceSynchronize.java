@@ -1304,27 +1304,27 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
         @Override
         public void onAvailable(@NonNull Network network) {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            EntityLog.log(ServiceSynchronize.this, "Available network=" + network +
-                    " capabilities " + cm.getNetworkCapabilities(network));
+            EntityLog.log(ServiceSynchronize.this, "Available network=" + network);
             updateState();
         }
 
         @Override
         public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities capabilities) {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            EntityLog.log(ServiceSynchronize.this, "Changed network=" + network +
-                    " capabilities " + cm.getNetworkCapabilities(network));
+            EntityLog.log(ServiceSynchronize.this, "Changed network=" + network + " capabilities " + capabilities);
             updateState();
         }
 
         @Override
         public void onLost(@NonNull Network network) {
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo active = cm.getActiveNetworkInfo();
-            EntityLog.log(ServiceSynchronize.this, "Lost network=" + network + " active=" + active);
-            if (active == null)
-                lastLost = new Date().getTime();
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo active = cm.getActiveNetworkInfo();
+                EntityLog.log(ServiceSynchronize.this, "Lost network=" + network + " active=" + active);
+                if (active == null)
+                    lastLost = new Date().getTime();
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
             updateState();
         }
 
@@ -1456,7 +1456,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     schedule(context);
 
                     // Init service
-                    eval(context, "boot");
+                    int accounts = db.account().getSynchronizingAccounts().size();
+                    if (accounts > 0)
+                        eval(context, "boot");
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
