@@ -19,7 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import android.Manifest;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -1224,7 +1223,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                                                             String user = email;
                                                             String password = token;
                                                             try (MailService iservice = new MailService(context, "imaps", null, false, true, true)) {
-                                                                iservice.connect(host, port, MailService.AUTH_TYPE_OUTLOOK, user, password);
+                                                                iservice.connect(host, port, MailService.AUTH_TYPE_OUTLOOK, user, password, null);
 
                                                                 folders = iservice.getFolders();
 

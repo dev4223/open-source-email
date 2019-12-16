@@ -803,10 +803,14 @@ see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/)
 
 The error *... Read timed out ...* means that the email server is not responding anymore or that the internet connection is bad.
 
-The error *... Unexpected end of zlib input stream ...*" means that not all data was received, possibly due to a bad or interrupted connection.
+The error *... Unexpected end of zlib input stream ...* means that not all data was received, possibly due to a bad or interrupted connection.
 
 The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported.
 FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.
+
+Please [see here](#user-content-faq4) for the error *... Invalid security certificate (Can't verify identity of server) ...*.
+
+Please [see here](#user-content-faq127) for the error *... Syntactically invalid HELO argument(s) ...*.
 
 See [here](https://linux.die.net/man/3/connect) for what error codes like EHOSTUNREACH and ETIMEDOUT mean.
 
@@ -2394,7 +2398,8 @@ It is a good idea to review the connection setting *Automatically download messa
 <a name="faq127"></a>
 **(127) How can I fix 'Syntactically invalid HELO argument(s)'?**
 
-You can likely fix the error *Syntactically invalid HELO argument(s)* by disabling the advanced indentity option *Use local IP address instead of host name*.
+The error *... Syntactically invalid HELO argument(s) ...* means that the SMTP server rejected the local IP address or host name.
+You can likely fix this error by enabling or disabling the advanced indentity option *Use local IP address instead of host name*.
 
 <br />
 
@@ -2552,9 +2557,10 @@ The error *User is authenticated but not connected* might occur if:
 **(140) Why does the message text contain strange characters?**
 
 Displaying strange characters is almost always caused by specifying no or an invalid character encoding by the sending software.
-There is no way to reliably determine the correct character encoding automatically,
+FairEmail will assume [ISO 8859-1](https://en.wikipedia.org/wiki/ISO/IEC_8859-1)
+when no character set or when [US-ASCII](https://en.wikipedia.org/wiki/ASCII) was specified.
+Other than that there is no way to reliably determine the correct character encoding automatically,
 so this cannot be fixed by FairEmail. The right action is to complain to the sender.
-
 
 <br />
 

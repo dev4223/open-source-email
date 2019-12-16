@@ -19,7 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2019 by Marcel Bokhorst (M66B)
 */
 
-import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerCallback;
@@ -28,7 +27,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
@@ -49,7 +47,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.Group;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -288,7 +285,7 @@ public class FragmentGmail extends FragmentBase {
 
                 String aprotocol = provider.imap.starttls ? "imap" : "imaps";
                 try (MailService iservice = new MailService(context, aprotocol, null, false, true, true)) {
-                    iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_GMAIL, user, password);
+                    iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_GMAIL, user, password, null);
 
                     folders = iservice.getFolders();
 
@@ -298,7 +295,7 @@ public class FragmentGmail extends FragmentBase {
 
                 String iprotocol = provider.smtp.starttls ? "smtp" : "smtps";
                 try (MailService iservice = new MailService(context, iprotocol, null, false, true, true)) {
-                    iservice.connect(provider.smtp.host, provider.smtp.port, MailService.AUTH_TYPE_GMAIL, user, password);
+                    iservice.connect(provider.smtp.host, provider.smtp.port, MailService.AUTH_TYPE_GMAIL, user, password, null);
                 }
 
                 DB db = DB.getInstance(context);
