@@ -13,19 +13,21 @@ import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.smtp.SMTPTransport;
 import com.sun.mail.util.MailConnectException;
-import com.sun.mail.util.MailSSLSocketFactory;
 
 import org.bouncycastle.asn1.x509.GeneralName;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -47,18 +49,22 @@ import javax.mail.Service;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.event.StoreListener;
-import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 public class MailService implements AutoCloseable {
     private Context context;
     private String protocol;
+    private boolean insecure;
     private boolean useip;
     private boolean debug;
-    private String trustedFingerprint;
     private Properties properties;
     private Session isession;
     private Service iservice;
-    private X509Certificate certificate;
     private StoreListener listener;
 
     private ExecutorService executor = Helper.getBackgroundExecutor(0, "mail");
@@ -82,6 +88,7 @@ public class MailService implements AutoCloseable {
     MailService(Context context, String protocol, String realm, boolean insecure, boolean check, boolean debug) throws NoSuchProviderException {
         this.context = context.getApplicationContext();
         this.protocol = protocol;
+        this.insecure = insecure;
         this.debug = debug;
 
         properties = MessageHelper.getSessionProperties();
@@ -89,44 +96,6 @@ public class MailService implements AutoCloseable {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean socks_enabled = prefs.getBoolean("socks_enabled", false);
         String socks_proxy = prefs.getString("socks_proxy", "localhost:9050");
-
-        if (BuildConfig.DEBUG)
-            try {
-                // openssl s_client -connect host:port < /dev/null 2>/dev/null | openssl x509 -fingerprint -noout -in /dev/stdin
-                MailSSLSocketFactory sf = new MailSSLSocketFactory() {
-                    @Override
-                    public synchronized boolean isServerTrusted(String server, SSLSocket sslSocket) {
-                        try {
-                            Certificate[] certificates = sslSocket.getSession().getPeerCertificates();
-                            if (certificates == null || certificates.length == 0 ||
-                                    !(certificates[0] instanceof X509Certificate))
-                                return false;
-
-                            certificate = (X509Certificate) certificates[0];
-
-                            boolean trusted = false;
-
-                            String name = getDnsName(certificate);
-                            if (name != null && matches(server, name))
-                                trusted = true;
-
-                            if (getFingerPrint(certificate).equals(trustedFingerprint))
-                                trusted = true;
-
-                            Log.i("Is trusted? server=" + server + " trusted=" + trusted);
-                            return trusted;
-                        } catch (Throwable ex) {
-                            Log.e(ex);
-                            return false;
-                        }
-                    }
-                };
-
-                properties.put("mail." + protocol + ".ssl.socketFactory", sf);
-                properties.put("mail." + protocol + ".socketFactory.fallback", "false");
-            } catch (GeneralSecurityException ex) {
-                Log.e(ex);
-            }
 
         // SOCKS proxy
         if (socks_enabled) {
@@ -160,9 +129,6 @@ public class MailService implements AutoCloseable {
             this.debug = true;
 
             // https://javaee.github.io/javamail/docs/api/com/sun/mail/pop3/package-summary.html#properties
-            properties.put("mail." + protocol + ".ssl.checkserveridentity", Boolean.toString(!insecure));
-            properties.put("mail." + protocol + ".ssl.trust", "*");
-
             properties.put("mail.pop3s.starttls.enable", "false");
 
             properties.put("mail.pop3.starttls.enable", "true");
@@ -246,15 +212,28 @@ public class MailService implements AutoCloseable {
     }
 
     public String connect(String host, int port, int auth, String user, String password, String fingerprint) throws MessagingException {
-        this.trustedFingerprint = fingerprint;
+        SSLSocketFactoryService factory;
+        try {
+            factory = new SSLSocketFactoryService(host, insecure, fingerprint);
+            properties.put("mail." + protocol + ".ssl.socketFactory", factory);
+            properties.put("mail." + protocol + ".socketFactory.fallback", "false");
+            properties.put("mail." + protocol + ".ssl.checkserveridentity", "false");
+        } catch (GeneralSecurityException ex) {
+            properties.put("mail." + protocol + ".ssl.checkserveridentity", Boolean.toString(!insecure));
+            if (insecure)
+                properties.put("mail." + protocol + ".ssl.trust", "*");
+            throw new MessagingException("Trust issues", ex);
+        }
+
         try {
             if (auth == AUTH_TYPE_GMAIL || auth == AUTH_TYPE_OUTLOOK)
                 properties.put("mail." + protocol + ".auth.mechanisms", "XOAUTH2");
 
             //if (BuildConfig.DEBUG)
-            //    throw new MailConnectException(new SocketConnectException("Debug", new Exception(), host, port, 0));
+            //    throw new MailConnectException(
+            //            new SocketConnectException("Debug", new Exception("Test"), host, port, 0));
 
-            _connect(context, host, port, user, password);
+            _connect(context, host, port, user, password, factory);
             return null;
         } catch (AuthenticationFailedException ex) {
             // Refresh token
@@ -271,7 +250,7 @@ public class MailService implements AutoCloseable {
                             if (token == null)
                                 throw new IllegalArgumentException("No token on refresh");
 
-                            _connect(context, host, port, user, token);
+                            _connect(context, host, port, user, token, factory);
                             return token;
                         }
 
@@ -285,13 +264,13 @@ public class MailService implements AutoCloseable {
         } catch (MailConnectException ex) {
             try {
                 // Some devices resolve IPv6 addresses while not having IPv6 connectivity
-                properties.put("mail." + protocol + ".ssl.checkserveridentity", "false");
                 InetAddress[] iaddrs = InetAddress.getAllByName(host);
+                Log.i("Fallback count=" + iaddrs.length);
                 if (iaddrs.length > 1)
                     for (InetAddress iaddr : iaddrs)
                         try {
                             Log.i("Falling back to " + iaddr.getHostAddress());
-                            _connect(context, iaddr.getHostAddress(), port, user, password);
+                            _connect(context, iaddr.getHostAddress(), port, user, password, factory);
                             return null;
                         } catch (MessagingException ex1) {
                             Log.w(ex1);
@@ -301,84 +280,81 @@ public class MailService implements AutoCloseable {
             }
 
             throw ex;
-        } catch (MessagingException ex) {
-            if (BuildConfig.DEBUG &&
-                    ex.getCause() instanceof IOException &&
-                    ex.getCause().getMessage() != null &&
-                    ex.getCause().getMessage().startsWith("Server is not trusted:")) {
-                String sfingerprint;
-                try {
-                    sfingerprint = getFingerPrint(certificate);
-                } catch (Throwable ex1) {
-                    Log.e(ex1);
-                    throw ex;
-                }
-                throw new UntrustedException(sfingerprint, ex);
-            } else
-                throw ex;
         }
     }
 
-    private void _connect(Context context, String host, int port, String user, String password) throws MessagingException {
-        isession = Session.getInstance(properties, null);
-        isession.setDebug(debug);
-        //System.setProperty("mail.socket.debug", Boolean.toString(debug));
+    private void _connect(
+            Context context,
+            String host, int port, String user, String password,
+            SSLSocketFactoryService factory) throws MessagingException {
+        try {
+            isession = Session.getInstance(properties, null);
+            isession.setDebug(debug);
+            //System.setProperty("mail.socket.debug", Boolean.toString(debug));
 
-        if ("pop3".equals(protocol) || "pop3s".equals(protocol)) {
-            isession.setDebug(true);
-            iservice = isession.getStore(protocol);
-            iservice.connect(host, port, user, password);
+            if ("pop3".equals(protocol) || "pop3s".equals(protocol)) {
+                isession.setDebug(true);
+                iservice = isession.getStore(protocol);
+                iservice.connect(host, port, user, password);
 
-        } else if ("imap".equals(protocol) || "imaps".equals(protocol)) {
-            iservice = isession.getStore(protocol);
-            if (listener != null)
-                ((IMAPStore) iservice).addStoreListener(listener);
-            iservice.connect(host, port, user, password);
+            } else if ("imap".equals(protocol) || "imaps".equals(protocol)) {
+                iservice = isession.getStore(protocol);
+                if (listener != null)
+                    ((IMAPStore) iservice).addStoreListener(listener);
+                iservice.connect(host, port, user, password);
 
-            // https://www.ietf.org/rfc/rfc2971.txt
-            IMAPStore istore = (IMAPStore) getStore();
-            if (istore.hasCapability("ID"))
-                try {
-                    Map<String, String> id = new LinkedHashMap<>();
-                    id.put("name", context.getString(R.string.app_name));
-                    id.put("version", BuildConfig.VERSION_NAME);
-                    Map<String, String> sid = istore.id(id);
-                    if (sid != null) {
-                        Map<String, String> crumb = new HashMap<>();
-                        for (String key : sid.keySet()) {
-                            crumb.put(key, sid.get(key));
-                            EntityLog.log(context, "Server " + key + "=" + sid.get(key));
+                // https://www.ietf.org/rfc/rfc2971.txt
+                IMAPStore istore = (IMAPStore) getStore();
+                if (istore.hasCapability("ID"))
+                    try {
+                        Map<String, String> id = new LinkedHashMap<>();
+                        id.put("name", context.getString(R.string.app_name));
+                        id.put("version", BuildConfig.VERSION_NAME);
+                        Map<String, String> sid = istore.id(id);
+                        if (sid != null) {
+                            Map<String, String> crumb = new HashMap<>();
+                            for (String key : sid.keySet()) {
+                                crumb.put(key, sid.get(key));
+                                EntityLog.log(context, "Server " + key + "=" + sid.get(key));
+                            }
+                            Log.breadcrumb("server", crumb);
                         }
-                        Log.breadcrumb("server", crumb);
+                    } catch (MessagingException ex) {
+                        Log.w(ex);
                     }
-                } catch (MessagingException ex) {
-                    Log.w(ex);
-                }
 
-        } else if ("smtp".equals(protocol) || "smtps".equals(protocol)) {
-            String[] c = BuildConfig.APPLICATION_ID.split("\\.");
-            Collections.reverse(Arrays.asList(c));
-            String haddr = TextUtils.join(".", c);
+            } else if ("smtp".equals(protocol) || "smtps".equals(protocol)) {
+                String[] c = BuildConfig.APPLICATION_ID.split("\\.");
+                Collections.reverse(Arrays.asList(c));
+                String haddr = TextUtils.join(".", c);
 
-            if (useip)
-                try {
-                    // This assumes getByName always returns the same address (type)
-                    InetAddress addr = InetAddress.getByName(host);
-                    if (addr instanceof Inet4Address)
-                        haddr = "[" + Inet4Address.getLocalHost().getHostAddress() + "]";
-                    else
-                        haddr = "[IPv6:" + Inet6Address.getLocalHost().getHostAddress() + "]";
-                } catch (UnknownHostException ex) {
-                    Log.w(ex);
-                }
+                if (useip)
+                    try {
+                        // This assumes getByName always returns the same address (type)
+                        InetAddress addr = InetAddress.getByName(host);
+                        if (addr instanceof Inet4Address)
+                            haddr = "[" + Inet4Address.getLocalHost().getHostAddress() + "]";
+                        else
+                            haddr = "[IPv6:" + Inet6Address.getLocalHost().getHostAddress() + "]";
+                    } catch (UnknownHostException ex) {
+                        Log.w(ex);
+                    }
 
-            Log.i("Using localhost=" + haddr);
-            properties.put("mail." + protocol + ".localhost", haddr);
+                Log.i("Using localhost=" + haddr);
+                properties.put("mail." + protocol + ".localhost", haddr);
 
-            iservice = isession.getTransport(protocol);
-            iservice.connect(host, port, user, password);
-        } else
-            throw new NoSuchProviderException(protocol);
+                iservice = isession.getTransport(protocol);
+                iservice.connect(host, port, user, password);
+            } else
+                throw new NoSuchProviderException(protocol);
+        } catch (MessagingException ex) {
+            if (factory != null &&
+                    ex.getCause() instanceof SSLHandshakeException &&
+                    ex.getCause().getCause() instanceof CertificateException)
+                throw new UntrustedException(factory.getFingerPrint(), ex);
+            else
+                throw ex;
+        }
     }
 
     static String getAuthTokenType(String type) {
@@ -463,42 +439,174 @@ public class MailService implements AutoCloseable {
         }
     }
 
-    private static String getDnsName(X509Certificate certificate) throws CertificateParsingException {
-        Collection<List<?>> altNames = certificate.getSubjectAlternativeNames();
-        if (altNames == null)
-            return null;
+    private static class SSLSocketFactoryService extends SSLSocketFactory {
+        // openssl s_client -connect host:port < /dev/null 2>/dev/null | openssl x509 -fingerprint -noout -in /dev/stdin
+        private String server;
+        private boolean secure;
+        private String trustedFingerprint;
+        private SSLSocketFactory factory;
+        private X509Certificate certificate;
 
-        for (List altName : altNames)
-            if (altName.get(0).equals(GeneralName.dNSName))
-                return (String) altName.get(1);
+        SSLSocketFactoryService(String host, boolean insecure, String fingerprint) throws GeneralSecurityException {
+            this.server = host;
+            this.secure = !insecure;
+            this.trustedFingerprint = fingerprint;
 
-        return null;
-    }
+            SSLContext sslContext = SSLContext.getInstance("TLS");
 
-    private static String getFingerPrint(X509Certificate certificate) throws CertificateEncodingException, NoSuchAlgorithmException {
-        return Helper.sha1(certificate.getEncoded());
-    }
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init((KeyStore) null);
 
-    private static boolean matches(String server, String name) {
-        if (name.startsWith("*.")) {
-            // Wildcard certificate
-            String domain = name.substring(2);
-            if (TextUtils.isEmpty(domain))
-                return false;
+            TrustManager[] tms = tmf.getTrustManagers();
+            if (tms == null || tms.length == 0 || !(tms[0] instanceof X509TrustManager)) {
+                Log.e("Missing root trust manager");
+                sslContext.init(null, tms, null);
+            } else {
+                final X509TrustManager rtm = (X509TrustManager) tms[0];
 
-            int dot = server.indexOf(".");
-            if (dot < 0)
-                return false;
+                X509TrustManager tm = new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        if (secure)
+                            rtm.checkClientTrusted(chain, authType);
+                    }
 
-            String cdomain = server.substring(dot + 1);
-            if (TextUtils.isEmpty(cdomain))
-                return false;
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                        certificate = chain[0];
 
-            Log.i("Trust " + domain + " =? " + cdomain);
-            return domain.equalsIgnoreCase(cdomain);
-        } else {
-            Log.i("Trust " + server + " =? " + name);
-            return server.equalsIgnoreCase(name);
+                        if (secure) {
+                            // Get certificate fingerprint
+                            String fingerprint;
+                            try {
+                                fingerprint = getFingerPrint(certificate);
+                            } catch (Throwable ex) {
+                                throw new CertificateException(ex);
+                            }
+
+                            // Check if selected fingerprint
+                            if (fingerprint.equals(trustedFingerprint)) {
+                                Log.i("Trusted selected fingerprint");
+                                return;
+                            }
+
+                            // Check certificates
+                            rtm.checkServerTrusted(chain, authType);
+
+                            // Check host name
+                            List<String> names = getDnsNames(certificate);
+                            for (String name : names)
+                                if (matches(server, name)) {
+                                    Log.i("Trusted server=" + server + " name=" + name);
+                                    return;
+                                }
+
+                            String error = server + " not in certificate: " + TextUtils.join(",", names);
+                            Log.e(error);
+                            throw new CertificateException(error);
+                        }
+                    }
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return rtm.getAcceptedIssuers();
+                    }
+                };
+
+                sslContext.init(null, new TrustManager[]{tm}, null);
+            }
+
+            factory = sslContext.getSocketFactory();
+        }
+
+        @Override
+        public Socket createSocket() throws IOException {
+            Log.e("createSocket");
+            throw new IOException("createSocket");
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            return factory.createSocket(server, port);
+        }
+
+        @Override
+        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+            return factory.createSocket(s, server, port, autoClose);
+        }
+
+        @Override
+        public Socket createSocket(InetAddress address, int port) throws IOException {
+            Log.e("createSocket(address, port)");
+            throw new IOException("createSocket");
+        }
+
+        @Override
+        public Socket createSocket(String host, int port, InetAddress clientAddress, int clientPort) throws IOException {
+            return factory.createSocket(server, port, clientAddress, clientPort);
+        }
+
+        @Override
+        public Socket createSocket(InetAddress address, int port, InetAddress clientAddress, int clientPort) throws IOException {
+            Log.e("createSocket(address, port, clientAddress, clientPort)");
+            throw new IOException("createSocket");
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return factory.getDefaultCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return factory.getSupportedCipherSuites();
+        }
+
+        private static boolean matches(String server, String name) {
+            if (name.startsWith("*.")) {
+                // Wildcard certificate
+                String domain = name.substring(2);
+                if (TextUtils.isEmpty(domain))
+                    return false;
+
+                int dot = server.indexOf(".");
+                if (dot < 0)
+                    return false;
+
+                String cdomain = server.substring(dot + 1);
+                if (TextUtils.isEmpty(cdomain))
+                    return false;
+
+                return domain.equalsIgnoreCase(cdomain);
+            } else
+                return server.equalsIgnoreCase(name);
+        }
+
+        private static List<String> getDnsNames(X509Certificate certificate) throws CertificateParsingException {
+            List<String> result = new ArrayList<>();
+
+            Collection<List<?>> altNames = certificate.getSubjectAlternativeNames();
+            if (altNames == null)
+                return result;
+
+            for (List altName : altNames)
+                if (altName.get(0).equals(GeneralName.dNSName))
+                    result.add((String) altName.get(1));
+
+            return result;
+        }
+
+        private static String getFingerPrint(X509Certificate certificate) throws CertificateEncodingException, NoSuchAlgorithmException {
+            return Helper.sha1(certificate.getEncoded());
+        }
+
+        String getFingerPrint() {
+            try {
+                return getFingerPrint(certificate);
+            } catch (Throwable ex) {
+                Log.e(ex);
+                return null;
+            }
         }
     }
 
@@ -506,7 +614,7 @@ public class MailService implements AutoCloseable {
         private String fingerprint;
 
         UntrustedException(@NonNull String fingerprint, @NonNull Exception cause) {
-            super(cause.getMessage(), cause);
+            super("Untrusted", cause);
             this.fingerprint = fingerprint;
         }
 
@@ -514,6 +622,7 @@ public class MailService implements AutoCloseable {
             return fingerprint;
         }
 
+        @NotNull
         @Override
         public synchronized String toString() {
             return getCause().toString();
