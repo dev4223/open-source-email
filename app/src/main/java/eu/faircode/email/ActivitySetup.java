@@ -66,12 +66,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputLayout;
-import com.microsoft.identity.client.AuthenticationCallback;
-import com.microsoft.identity.client.IAuthenticationResult;
-import com.microsoft.identity.client.IMultipleAccountPublicClientApplication;
-import com.microsoft.identity.client.IPublicClientApplication;
-import com.microsoft.identity.client.PublicClientApplication;
-import com.microsoft.identity.client.exception.MsalException;
+
+import net.openid.appauth.AppAuthConfiguration;
+import net.openid.appauth.AuthState;
+import net.openid.appauth.AuthorizationException;
+import net.openid.appauth.AuthorizationRequest;
+import net.openid.appauth.AuthorizationResponse;
+import net.openid.appauth.AuthorizationService;
+import net.openid.appauth.AuthorizationServiceConfiguration;
+import net.openid.appauth.ClientAuthentication;
+import net.openid.appauth.ClientSecretPost;
+import net.openid.appauth.NoClientAuthentication;
+import net.openid.appauth.ResponseTypeValues;
+import net.openid.appauth.TokenResponse;
+import net.openid.appauth.browser.BrowserBlacklist;
+import net.openid.appauth.browser.Browsers;
+import net.openid.appauth.browser.VersionRange;
+import net.openid.appauth.browser.VersionedBrowserMatcher;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -131,8 +142,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     static final int REQUEST_CHOOSE_ACCOUNT = 5;
     static final int REQUEST_DONE = 6;
     static final int REQUEST_IMPORT_CERTIFICATE = 7;
+    static final int REQUEST_OAUTH = 8;
 
     static final String ACTION_QUICK_GMAIL = BuildConfig.APPLICATION_ID + ".ACTION_QUICK_GMAIL";
+    static final String ACTION_QUICK_OAUTH = BuildConfig.APPLICATION_ID + ".ACTION_QUICK_OAUTH";
     static final String ACTION_QUICK_OUTLOOK = BuildConfig.APPLICATION_ID + ".ACTION_QUICK_OUTLOOK";
     static final String ACTION_QUICK_SETUP = BuildConfig.APPLICATION_ID + ".ACTION_QUICK_SETUP";
     static final String ACTION_VIEW_ACCOUNTS = BuildConfig.APPLICATION_ID + ".ACTION_VIEW_ACCOUNTS";
@@ -310,7 +323,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
         IntentFilter iff = new IntentFilter();
         iff.addAction(ACTION_QUICK_GMAIL);
-        iff.addAction(ACTION_QUICK_OUTLOOK);
+        iff.addAction(ACTION_QUICK_OAUTH);
         iff.addAction(ACTION_QUICK_SETUP);
         iff.addAction(ACTION_VIEW_ACCOUNTS);
         iff.addAction(ACTION_VIEW_IDENTITIES);
@@ -382,6 +395,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 case REQUEST_IMPORT_CERTIFICATE:
                     if (resultCode == RESULT_OK && data != null)
                         handleImportCertificate(data);
+                    break;
+                case REQUEST_OAUTH:
+                    if (resultCode == RESULT_OK && data != null)
+                        onHandleOAuth(data);
                     break;
             }
         } catch (Throwable ex) {
@@ -1138,201 +1155,270 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
         fragmentTransaction.commit();
     }
 
-    private void onOutlook(Intent intent) {
-        PublicClientApplication.createMultipleAccountPublicClientApplication(
-                this,
-                R.raw.msal_config,
-                new IPublicClientApplication.IMultipleAccountApplicationCreatedListener() {
-                    @Override
-                    public void onCreated(IMultipleAccountPublicClientApplication msal) {
-                        Log.i("MSAL app created");
-                        msal.acquireToken(
-                                ActivitySetup.this,
-                                // "openid", "offline_access", "profile", "email"
-                                // https://docs.microsoft.com/en-us/graph/permissions-reference
-                                new String[]{
-                                        "openid", "offline_access", "profile", "email",
-                                        "User.Read", "Mail.ReadWrite", "Mail.Send", "MailboxSettings.ReadWrite"},
-                                new AuthenticationCallback() {
-                                    @Override
-                                    public void onSuccess(IAuthenticationResult result) {
-                                        Log.i("MSAL got token");
+    private AuthorizationService getAuthorizationService() {
+        AppAuthConfiguration appAuthConfig = new AppAuthConfiguration.Builder()
+                .setBrowserMatcher(new BrowserBlacklist(
+                        new VersionedBrowserMatcher(
+                                Browsers.SBrowser.PACKAGE_NAME,
+                                Browsers.SBrowser.SIGNATURE_SET,
+                                true,
+                                VersionRange.atMost("5.3")
+                        )))
+                .build();
 
-                                        Bundle args = new Bundle();
-                                        args.putString("token", result.getAccessToken());
-                                        args.putString("id", result.getAccount().getId());
-                                        args.putString("tenant", result.getAccount().getTenantId());
-                                        Log.logBundle(args);
+        return new AuthorizationService(this, appAuthConfig);
+    }
 
-                                        Map<String, ?> claims = result.getAccount().getClaims();
-                                        if (claims != null)
-                                            for (String key : claims.keySet())
-                                                Log.i(key + "=" + claims.get(key));
+    private void onOAuth(Intent intent) {
+        try {
+            String name = intent.getStringExtra("name");
+            for (EmailProvider provider : EmailProvider.loadProfiles(this))
+                if (provider.name.equals(name) && provider.oauth != null) {
+                    AuthorizationServiceConfiguration serviceConfig = new AuthorizationServiceConfiguration(
+                            Uri.parse(provider.oauth.authorizationEndpoint),
+                            Uri.parse(provider.oauth.tokenEndpoint));
 
-                                        new SimpleTask<JSONObject>() {
-                                            @Override
-                                            protected JSONObject onExecute(Context context, Bundle args) throws Throwable {
-                                                String token = args.getString("token");
+                    AuthState authState = new AuthState(serviceConfig);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    prefs.edit().putString("oauth." + provider.name, authState.jsonSerializeString()).apply();
 
-                                                // https://docs.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http#http-request
-                                                URL url = new URL("https://graph.microsoft.com/v1.0/me" +
-                                                        "?$select=displayName,otherMails");
-                                                Log.i("MSAL fetching " + url);
+                    AuthorizationRequest authRequest =
+                            new AuthorizationRequest.Builder(
+                                    serviceConfig,
+                                    provider.oauth.clientId,
+                                    ResponseTypeValues.CODE,
+                                    Uri.parse(provider.oauth.redirectUri))
+                                    .setScopes(provider.oauth.scopes)
+                                    .setState(provider.name)
+                                    .build();
 
-                                                HttpURLConnection request = (HttpURLConnection) url.openConnection();
-                                                request.setReadTimeout(15 * 1000);
-                                                request.setConnectTimeout(15 * 1000);
-                                                request.setRequestMethod("GET");
-                                                request.setDoInput(true);
-                                                request.setRequestProperty("Authorization", "Bearer " + token);
-                                                request.setRequestProperty("Content-Type", "application/json");
-                                                request.connect();
+                    Intent authIntent = getAuthorizationService().getAuthorizationRequestIntent(authRequest);
+                    startActivityForResult(authIntent, REQUEST_OAUTH);
 
-                                                try {
-                                                    Log.i("MSAL getting response");
-                                                    String json = Helper.readStream(request.getInputStream(), StandardCharsets.UTF_8.name());
-                                                    return new JSONObject(json);
-                                                } finally {
-                                                    request.disconnect();
+                    return;
+                }
+
+            throw new IllegalArgumentException("Unknown provider=" + name);
+        } catch (Throwable ex) {
+            Log.unexpectedError(getSupportFragmentManager(), ex);
+        }
+    }
+
+    private void onHandleOAuth(@NonNull Intent data) {
+        try {
+            AuthorizationResponse auth = AuthorizationResponse.fromIntent(data);
+            if (auth == null)
+                throw AuthorizationException.fromIntent(data);
+
+            for (EmailProvider provider : EmailProvider.loadProfiles(this))
+                if (provider.name.equals(auth.state)) {
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                    final AuthState authState = AuthState.jsonDeserialize(prefs.getString("oauth." + provider.name, null));
+                    authState.update(auth, null);
+                    prefs.edit().remove("oauth." + provider.name).apply();
+
+                    ClientAuthentication clientAuth;
+                    if (provider.oauth.clientSecret == null)
+                        clientAuth = NoClientAuthentication.INSTANCE;
+                    else
+                        clientAuth = new ClientSecretPost(provider.oauth.clientSecret);
+                    getAuthorizationService().performTokenRequest(
+                            auth.createTokenExchangeRequest(),
+                            clientAuth,
+                            new AuthorizationService.TokenResponseCallback() {
+                                @Override
+                                public void onTokenRequestCompleted(TokenResponse access, AuthorizationException error) {
+                                    try {
+                                        if (access == null)
+                                            throw error;
+
+                                        authState.update(access, null);
+
+                                        Log.i("OAuth token provider=" + provider.name);
+
+                                        if ("Outlook/Office365".equals(provider.name)) {
+                                            authState.performActionWithFreshTokens(getAuthorizationService(), new AuthState.AuthStateAction() {
+                                                @Override
+                                                public void execute(String accessToken, String idToken, AuthorizationException error) {
+                                                    try {
+                                                        if (error != null)
+                                                            throw error;
+
+                                                        onOutlook(accessToken, idToken);
+                                                    } catch (Throwable ex) {
+                                                        Log.unexpectedError(getSupportFragmentManager(), ex);
+                                                    }
                                                 }
-                                            }
+                                            });
+                                        } else
+                                            throw new IllegalArgumentException("Unknown action provider=" + provider.name);
 
-                                            @Override
-                                            protected void onExecuted(Bundle args, JSONObject data) {
-                                                Log.i("MSAL " + data);
+                                    } catch (Throwable ex) {
+                                        Log.unexpectedError(getSupportFragmentManager(), ex);
+                                    }
+                                }
+                            });
 
-                                                try {
-                                                    JSONArray otherMails = data.getJSONArray("otherMails");
+                    return;
+                }
 
-                                                    args.putString("displayName", data.getString("displayName"));
-                                                    args.putString("email", (String) otherMails.get(0));
+            throw new IllegalArgumentException("Unknown state=" + auth.state);
+        } catch (Throwable ex) {
+            Log.unexpectedError(getSupportFragmentManager(), ex);
+        }
+    }
 
-                                                    new SimpleTask<Void>() {
-                                                        @Override
-                                                        protected Void onExecute(Context context, Bundle args) throws Throwable {
-                                                            String token = args.getString("token");
-                                                            String email = args.getString("email");
-                                                            String displayName = args.getString("displayName");
+    private void onOutlook(String accessToken, String idToken) {
+        Bundle args = new Bundle();
+        args.putString("token", accessToken);
 
-                                                            List<EntityFolder> folders;
+        new SimpleTask<JSONObject>() {
+            @Override
+            protected JSONObject onExecute(Context context, Bundle args) throws Throwable {
+                String token = args.getString("token");
 
-                                                            // https://msdn.microsoft.com/en-us/windows/desktop/dn440163
-                                                            String host = "imap-mail.outlook.com";
-                                                            int port = 993;
-                                                            boolean starttls = false;
-                                                            String user = email;
-                                                            String password = token;
-                                                            try (MailService iservice = new MailService(context, "imaps", null, false, true, true)) {
-                                                                iservice.connect(host, port, MailService.AUTH_TYPE_OUTLOOK, user, password, null);
+                // https://docs.microsoft.com/en-us/graph/api/user-get?view=graph-rest-1.0&tabs=http#http-request
+                URL url = new URL("https://graph.microsoft.com/v1.0/me" +
+                        "?$select=displayName,otherMails");
+                Log.i("MSGraph fetching " + url);
 
-                                                                folders = iservice.getFolders();
+                HttpURLConnection request = (HttpURLConnection) url.openConnection();
+                request.setReadTimeout(15 * 1000);
+                request.setConnectTimeout(15 * 1000);
+                request.setRequestMethod("GET");
+                request.setDoInput(true);
+                request.setRequestProperty("Authorization", "Bearer " + token);
+                request.setRequestProperty("Content-Type", "application/json");
+                request.connect();
 
-                                                                DB db = DB.getInstance(context);
-                                                                try {
-                                                                    db.beginTransaction();
+                try {
+                    Log.i("MSGraph getting response");
+                    String json = Helper.readStream(request.getInputStream(), StandardCharsets.UTF_8.name());
+                    return new JSONObject(json);
+                } finally {
+                    request.disconnect();
+                }
+            }
 
-                                                                    EntityAccount primary = db.account().getPrimaryAccount();
+            @Override
+            protected void onExecuted(Bundle args, JSONObject data) {
+                Log.i("MSGraph " + data);
 
-                                                                    // Create account
-                                                                    EntityAccount account = new EntityAccount();
+                try {
+                    JSONArray otherMails = data.getJSONArray("otherMails");
 
-                                                                    account.host = host;
-                                                                    account.starttls = starttls;
-                                                                    account.port = port;
-                                                                    account.auth_type = MailService.AUTH_TYPE_OUTLOOK;
-                                                                    account.user = user;
-                                                                    account.password = password;
+                    args.putString("displayName", data.getString("displayName"));
+                    args.putString("email", (String) otherMails.get(0));
 
-                                                                    account.name = "OutLook";
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) throws Throwable {
+                            String token = args.getString("token");
+                            String email = args.getString("email");
+                            String displayName = args.getString("displayName");
 
-                                                                    account.synchronize = true;
-                                                                    account.primary = (primary == null);
+                            List<EntityFolder> folders;
 
-                                                                    account.created = new Date().getTime();
-                                                                    account.last_connected = account.created;
+                            // https://msdn.microsoft.com/en-us/windows/desktop/dn440163
+                            String host = "imap-mail.outlook.com";
+                            int port = 993;
+                            boolean starttls = false;
+                            String user = email;
+                            String password = token;
+                            try (MailService iservice = new MailService(context, "imaps", null, false, true, true)) {
+                                iservice.connect(host, port, MailService.AUTH_TYPE_OUTLOOK, user, password, null);
 
-                                                                    account.id = db.account().insertAccount(account);
-                                                                    args.putLong("account", account.id);
-                                                                    EntityLog.log(context, "OutLook account=" + account.name);
+                                folders = iservice.getFolders();
 
-                                                                    // Create folders
-                                                                    for (EntityFolder folder : folders) {
-                                                                        folder.account = account.id;
-                                                                        folder.id = db.folder().insertFolder(folder);
-                                                                        EntityLog.log(context, "OutLook folder=" + folder.name + " type=" + folder.type);
-                                                                    }
+                                DB db = DB.getInstance(context);
+                                try {
+                                    db.beginTransaction();
 
-                                                                    // Set swipe left/right folder
-                                                                    for (EntityFolder folder : folders)
-                                                                        if (EntityFolder.TRASH.equals(folder.type))
-                                                                            account.swipe_left = folder.id;
-                                                                        else if (EntityFolder.ARCHIVE.equals(folder.type))
-                                                                            account.swipe_right = folder.id;
+                                    EntityAccount primary = db.account().getPrimaryAccount();
 
-                                                                    db.account().updateAccount(account);
+                                    // Create account
+                                    EntityAccount account = new EntityAccount();
 
-                                                                    // Create identity
-                                                                    EntityIdentity identity = new EntityIdentity();
-                                                                    identity.name = displayName;
-                                                                    identity.email = user;
-                                                                    identity.account = account.id;
+                                    account.host = host;
+                                    account.starttls = starttls;
+                                    account.port = port;
+                                    account.auth_type = MailService.AUTH_TYPE_OUTLOOK;
+                                    account.user = user;
+                                    account.password = password;
 
-                                                                    identity.host = "smtp-mail.outlook.com";
-                                                                    identity.starttls = true;
-                                                                    identity.port = 587;
-                                                                    identity.auth_type = MailService.AUTH_TYPE_OUTLOOK;
-                                                                    identity.user = user;
-                                                                    identity.password = password;
-                                                                    identity.synchronize = true;
-                                                                    identity.primary = true;
+                                    account.name = "OutLook";
 
-                                                                    identity.id = db.identity().insertIdentity(identity);
-                                                                    args.putLong("identity", identity.id);
-                                                                    EntityLog.log(context, "Gmail identity=" + identity.name + " email=" + identity.email);
+                                    account.synchronize = true;
+                                    account.primary = (primary == null);
 
-                                                                    db.setTransactionSuccessful();
-                                                                } finally {
-                                                                    db.endTransaction();
-                                                                }
-                                                            }
+                                    account.created = new Date().getTime();
+                                    account.last_connected = account.created;
 
-                                                            return null;
-                                                        }
+                                    account.id = db.account().insertAccount(account);
+                                    args.putLong("account", account.id);
+                                    EntityLog.log(context, "OutLook account=" + account.name);
 
-                                                        @Override
-                                                        protected void onException(Bundle args, Throwable ex) {
-
-                                                        }
-                                                    }.execute(ActivitySetup.this, args, "outlook:account");
-                                                } catch (JSONException ex) {
-                                                    Log.e(ex);
-                                                }
-                                            }
-
-                                            @Override
-                                            protected void onException(Bundle args, Throwable ex) {
-                                                Log.unexpectedError(getSupportFragmentManager(), ex);
-                                            }
-                                        }.execute(ActivitySetup.this, args, "graph:profile");
+                                    // Create folders
+                                    for (EntityFolder folder : folders) {
+                                        folder.account = account.id;
+                                        folder.id = db.folder().insertFolder(folder);
+                                        EntityLog.log(context, "OutLook folder=" + folder.name + " type=" + folder.type);
                                     }
 
-                                    @Override
-                                    public void onError(MsalException ex) {
-                                        Log.e(ex);
-                                    }
+                                    // Set swipe left/right folder
+                                    for (EntityFolder folder : folders)
+                                        if (EntityFolder.TRASH.equals(folder.type))
+                                            account.swipe_left = folder.id;
+                                        else if (EntityFolder.ARCHIVE.equals(folder.type))
+                                            account.swipe_right = folder.id;
 
-                                    @Override
-                                    public void onCancel() {
-                                        Log.w("MSAL cancelled");
-                                    }
-                                });
-                    }
+                                    db.account().updateAccount(account);
 
-                    @Override
-                    public void onError(MsalException ex) {
-                        Log.e("MSAL", ex);
-                    }
-                });
+                                    // Create identity
+                                    EntityIdentity identity = new EntityIdentity();
+                                    identity.name = displayName;
+                                    identity.email = user;
+                                    identity.account = account.id;
+
+                                    identity.host = "smtp-mail.outlook.com";
+                                    identity.starttls = true;
+                                    identity.port = 587;
+                                    identity.auth_type = MailService.AUTH_TYPE_OUTLOOK;
+                                    identity.user = user;
+                                    identity.password = password;
+                                    identity.synchronize = true;
+                                    identity.primary = true;
+
+                                    identity.id = db.identity().insertIdentity(identity);
+                                    args.putLong("identity", identity.id);
+                                    EntityLog.log(context, "Gmail identity=" + identity.name + " email=" + identity.email);
+
+                                    db.setTransactionSuccessful();
+                                } finally {
+                                    db.endTransaction();
+                                }
+                            }
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+
+                        }
+                    }.execute(ActivitySetup.this, args, "outlook:account");
+                } catch (JSONException ex) {
+                    Log.e(ex);
+                }
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getSupportFragmentManager(), ex);
+            }
+        }.execute(ActivitySetup.this, args, "graph:profile");
+
     }
 
     private void onViewQuickSetup(Intent intent) {
@@ -1484,8 +1570,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 String action = intent.getAction();
                 if (ACTION_QUICK_GMAIL.equals(action))
                     onGmail(intent);
-                else if (ACTION_QUICK_OUTLOOK.equals(action))
-                    onOutlook(intent);
+                else if (ACTION_QUICK_OAUTH.equals(action))
+                    onOAuth(intent);
                 else if (ACTION_QUICK_SETUP.equals(action))
                     onViewQuickSetup(intent);
                 else if (ACTION_VIEW_ACCOUNTS.equals(action))

@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 855
-        versionName "1.855"
+        versionCode 857
+        versionName "1.857"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -214,6 +214,7 @@ dependencies {
     def msal_version = "1.0.0"
     def bouncycastle_version = "1.64"
     def colorpicker_version = "0.0.15"
+    def appauth_version = "0.7.1"
 
     // https://developer.android.com/jetpack/androidx/releases/
 
@@ -333,10 +334,11 @@ dependencies {
     // // https://github.com/QuadFlask/colorpicker
     implementation "com.github.QuadFlask:colorpicker:$colorpicker_version"
 
-    // https://github.com/AzureAD/microsoft-authentication-library-for-android
-    implementation "com.microsoft.identity.client:msal:$msal_version"
-
     // https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on
     implementation "org.bouncycastle:bcpkix-jdk15to18:$bouncycastle_version"
     //implementation "org.bouncycastle:bcmail-jdk15to18:$bouncycastle_version"
+
+    // https://github.com/openid/AppAuth-Android
+    // https://mvnrepository.com/artifact/net.openid/appauth?repo=bt-openid
+    implementation "net.openid:appauth:$appauth_version"
 }

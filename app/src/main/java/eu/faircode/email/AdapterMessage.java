@@ -816,6 +816,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (ibExpander.getTag() == null || (boolean) ibExpander.getTag() != expanded) {
                 ibExpander.setTag(expanded);
                 ibExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
+                ibExpander.setContentDescription(context.getString(
+                        expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
             }
             if (viewType == ViewType.THREAD)
                 ibExpander.setVisibility(EntityFolder.DRAFTS.equals(message.folderType) ? View.INVISIBLE : View.VISIBLE);
@@ -833,6 +835,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivEncrypted.setVisibility(message.encrypted > 0 ? View.VISIBLE : View.GONE);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
+            //tvFrom.setContentDescription(context.getString(
+            //        message.unseen > 0 ? R.string.title_accessibility_unseen : R.string.title_accessibility_seen));
             tvSize.setText(message.totalSize == null ? null : Helper.humanReadableByteCount(message.totalSize, true));
             tvSize.setVisibility(message.totalSize != null && "size".equals(sort) ? View.VISIBLE : View.GONE);
             tvTime.setText(date && "time".equals(sort)
@@ -977,7 +981,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (amessage == null || !amessage.id.equals(id))
                             return;
 
-                        bindContactInfo(info, message);
+                        bindContactInfo(info, addresses, name_email);
                     }
 
                     @Override
@@ -986,7 +990,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 }.setLog(false).execute(context, owner, aargs, "message:avatar");
             } else
-                bindContactInfo(info, message);
+                bindContactInfo(info, addresses, name_email);
 
             if (viewType == ViewType.THREAD)
                 if (expanded)
@@ -1088,6 +1092,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int color = (message.color == null || !pro ? colorAccent : message.color);
 
             ibFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
+            ibFlagged.setContentDescription(context.getString(
+                    flagged > 0 ? R.string.title_accessibility_flagged : R.string.title_accessibility_unflagged));
             ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? color : textColorSecondary));
             ibFlagged.setEnabled(message.uid != null || message.accountProtocol != EntityAccount.TYPE_IMAP);
 
@@ -1101,7 +1107,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFlagged.setVisibility(View.GONE);
         }
 
-        private void bindContactInfo(ContactInfo info, TupleMessageEx message) {
+        private void bindContactInfo(ContactInfo info, Address[] addresses, boolean name_email) {
             if (info.hasPhoto()) {
                 ibAvatar.setImageBitmap(info.getPhotoBitmap());
                 ibAvatar.setVisibility(View.VISIBLE);
@@ -1111,6 +1117,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Uri lookupUri = info.getLookupUri();
             ibAvatar.setTag(lookupUri);
             ibAvatar.setEnabled(lookupUri != null);
+
+            if (addresses != null && addresses.length == 1) {
+                String displayName = info.getDisplayName();
+                if (!TextUtils.isEmpty(displayName)) {
+                    String personal = ((InternetAddress) addresses[0]).getPersonal();
+                    if (TextUtils.isEmpty(personal))
+                        try {
+                            ((InternetAddress) addresses[0]).setPersonal(displayName);
+                            tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
+                        } catch (UnsupportedEncodingException ex) {
+                            Log.w(ex);
+                        }
+                }
+            }
 
             if (distinguish_contacts && info.isKnown())
                 tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -1407,6 +1427,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean show_full = properties.getValue("full", message.id);
             boolean show_images = properties.getValue("images", message.id);
             boolean show_quotes = (properties.getValue("quotes", message.id) || !collapse_quotes);
+
+            boolean always_images = prefs.getBoolean("html_always_images", false);
+            if (always_images && show_full) {
+                show_images = true;
+                properties.setValue("images", message.id, true);
+            }
+
             float size = properties.getSize(message.id, show_full ? 0 : textSize);
             int height = properties.getHeight(message.id, 0);
             Pair<Integer, Integer> position = properties.getPosition(message.id);
@@ -1564,6 +1591,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                     args.putBoolean("has_images", has_images);
 
+                    // Download inline images
+                    if (show_images) {
+                        DB db = DB.getInstance(context);
+                        try {
+                            db.beginTransaction();
+
+                            List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+                            for (EntityAttachment attachment : attachments)
+                                if (attachment.isInline() && attachment.isImage() &&
+                                        attachment.progress == null && !attachment.available)
+                                    EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+                    }
+
+                    // Format message
                     if (show_full) {
                         HtmlHelper.setViewport(document);
                         if (inline || show_images)
@@ -1702,8 +1748,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)))
                         onActionDecrypt(message, true);
 
+                    boolean show_full = properties.getValue("full", message.id);
+                    boolean always_images = prefs.getBoolean("html_always_images", false);
+
                     // Show images
-                    ibImages.setVisibility(has_images ? View.VISIBLE : View.GONE);
+                    ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.GONE);
                 }
 
                 @Override
@@ -2591,6 +2640,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibExpander.setTag(expanded);
                 ibExpander.setImageLevel(expanded ? 0 /* less*/ : 1 /* more */);
+                ibExpander.setContentDescription(context.getString(
+                        expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
 
                 if (expanded)
                     bindExpanded(message, true);
@@ -2767,13 +2818,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShowFullConfirmed(final TupleMessageEx message) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean images = prefs.getBoolean("html_always_images", false);
-            if (images) {
-                properties.setValue("images", message.id, true);
-                onShowImagesConfirmed(message);
-            }
-
             properties.setSize(message.id, null);
             properties.setHeight(message.id, null);
             properties.setPosition(message.id, null);
@@ -2781,43 +2825,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             bindBody(message);
         }
 
-        private void onShowImagesConfirmed(final TupleMessageEx message) {
+        private void onShowImagesConfirmed(TupleMessageEx message) {
             bindBody(message);
-
-            // Download inline images
-            Bundle args = new Bundle();
-            args.putSerializable("message", message);
-
-            new SimpleTask<Void>() {
-                @Override
-                protected Void onExecute(Context context, Bundle args) {
-                    TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
-
-                    DB db = DB.getInstance(context);
-                    try {
-                        db.beginTransaction();
-
-                        List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
-                        for (EntityAttachment attachment : attachments)
-                            if (attachment.isInline() && attachment.isImage() &&
-                                    attachment.progress == null && !attachment.available)
-                                EntityOperation.queue(context, message, EntityOperation.ATTACHMENT, attachment.id);
-
-                        db.setTransactionSuccessful();
-                    } finally {
-                        db.endTransaction();
-                    }
-
-                    ServiceSynchronize.eval(context, "attachment");
-
-                    return null;
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                }
-            }.execute(context, owner, args, "show:images");
         }
 
         private void onActionUnsubscribe(TupleMessageEx message) {

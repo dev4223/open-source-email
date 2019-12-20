@@ -1975,7 +1975,7 @@ public class FragmentCompose extends FragmentBase {
                 }
 
                 // Sign
-                Store store = new JcaCertStore(Arrays.asList(chain[0]));
+                Store store = new JcaCertStore(Arrays.asList(chain));
                 CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
                 cmsGenerator.addCertificates(store);
 
@@ -4294,7 +4294,7 @@ public class FragmentCompose extends FragmentBase {
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    .setPositiveButton(R.string.title_send, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             sendResult(Activity.RESULT_OK);

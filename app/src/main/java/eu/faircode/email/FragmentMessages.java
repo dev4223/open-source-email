@@ -1087,7 +1087,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             public boolean canChildScrollUp(@NonNull SwipeRefreshLayout parent, @Nullable View child) {
                 if (viewType != AdapterMessage.ViewType.UNIFIED && viewType != AdapterMessage.ViewType.FOLDER)
                     return true;
-                if (!prefs.getBoolean("pull", true))
+                if (!prefs.getBoolean("pull", true) && !EntityFolder.OUTBOX.equals(type))
                     return true;
                 if (swiping)
                     return true;
@@ -2737,6 +2737,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         menu.findItem(R.id.menu_folders).setActionView(R.layout.action_button);
         ImageButton ib = (ImageButton) menu.findItem(R.id.menu_folders).getActionView();
         ib.setImageResource(R.drawable.baseline_folder_24);
+        ib.setContentDescription(getString(R.string.title_legend_section_folders));
         ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.Principal;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
@@ -212,7 +213,7 @@ public class MailService implements AutoCloseable {
     }
 
     public String connect(String host, int port, int auth, String user, String password, String fingerprint) throws MessagingException {
-        SSLSocketFactoryService factory;
+        SSLSocketFactoryService factory = null;
         try {
             factory = new SSLSocketFactoryService(host, insecure, fingerprint);
             properties.put("mail." + protocol + ".ssl.socketFactory", factory);
@@ -222,7 +223,7 @@ public class MailService implements AutoCloseable {
             properties.put("mail." + protocol + ".ssl.checkserveridentity", Boolean.toString(!insecure));
             if (insecure)
                 properties.put("mail." + protocol + ".ssl.trust", "*");
-            throw new MessagingException("Trust issues", ex);
+            Log.e("Trust issues", ex);
         }
 
         try {
@@ -491,7 +492,15 @@ public class MailService implements AutoCloseable {
                             }
 
                             // Check certificates
-                            rtm.checkServerTrusted(chain, authType);
+                            try {
+                                rtm.checkServerTrusted(chain, authType);
+                            } catch (CertificateException ex) {
+                                Principal principal = certificate.getSubjectDN();
+                                if (principal == null)
+                                    throw ex;
+                                else
+                                    throw new CertificateException(principal.getName(), ex);
+                            }
 
                             // Check host name
                             List<String> names = getDnsNames(certificate);
