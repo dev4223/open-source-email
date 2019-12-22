@@ -281,11 +281,10 @@ public class FragmentGmail extends FragmentBase {
                 EmailProvider provider = EmailProvider.fromDomain(context, "gmail.com", EmailProvider.Discover.ALL);
 
                 List<EntityFolder> folders;
-                String domain = user.split("@")[1];
 
                 String aprotocol = provider.imap.starttls ? "imap" : "imaps";
                 try (MailService iservice = new MailService(context, aprotocol, null, false, true, true)) {
-                    iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_GMAIL, user, password, null);
+                    iservice.connect(provider.imap.host, provider.imap.port, MailService.AUTH_TYPE_GMAIL, null, user, password, null);
 
                     folders = iservice.getFolders();
 
@@ -295,7 +294,7 @@ public class FragmentGmail extends FragmentBase {
 
                 String iprotocol = provider.smtp.starttls ? "smtp" : "smtps";
                 try (MailService iservice = new MailService(context, iprotocol, null, false, true, true)) {
-                    iservice.connect(provider.smtp.host, provider.smtp.port, MailService.AUTH_TYPE_GMAIL, user, password, null);
+                    iservice.connect(provider.smtp.host, provider.smtp.port, MailService.AUTH_TYPE_GMAIL, null, user, password, null);
                 }
 
                 DB db = DB.getInstance(context);
@@ -361,7 +360,6 @@ public class FragmentGmail extends FragmentBase {
                     identity.primary = true;
 
                     identity.id = db.identity().insertIdentity(identity);
-                    args.putLong("identity", identity.id);
                     EntityLog.log(context, "Gmail identity=" + identity.name + " email=" + identity.email);
 
                     db.setTransactionSuccessful();

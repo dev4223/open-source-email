@@ -116,6 +116,8 @@
     <string name="title_setup_gmail_rationale">Veuillez accorder les autorisations pour sélectionner un compte et lire votre nom</string>
     <string name="title_setup_gmail_permissions">Google vous demandera l\'autorisation de lire, rédiger, envoyer et supprimer définitivement tous vos e-mails. FairEmail ne supprimera jamais vos messages sans votre approbation.</string>
     <string name="title_setup_gmail_drafts">Si le dossier brouillons n\'est pas accessible par IMAP, cela peut être corrigé dans les paramètres de préfixe Gmail</string>
+    <string name="title_setup_oauth_rationale">Autoriser l\'accès à votre compte %1$s</string>
+    <string name="title_setup_oauth_authorize">Autoriser</string>
     <string name="title_setup_select_account">Sélectionner un compte</string>
     <string name="title_setup_instructions">Instructions de configuration</string>
     <string name="title_setup_no_settings">Aucun paramètre trouvé pour le domaine \'%1$s\'</string>
@@ -310,6 +312,7 @@
     <string name="title_advanced_crash_reports">Envoyer des rapports d\'erreur</string>
     <string name="title_advanced_debug">Débogage</string>
     <string name="title_advanced_cleanup">Nettoyage</string>
+    <string name="title_advanced_last_cleanup">Dernier nettoyage : %1$s</string>
     <string name="title_advanced_hint">Toutes les options ont des valeurs par défaut raisonnables et ne doivent être modifiées que lorsque cela est nécessaire</string>
     <string name="title_advanced_enabled_hint">Désactiver ou activer globalement la réception de messages</string>
     <string name="title_advanced_manual_hint">Si la synchronisation est désactivée, il est toujours possible de synchroniser manuellement en tirant la liste des messages vers le bas.</string>
@@ -725,6 +728,7 @@
     <string name="title_legend_section_folders">Dossiers</string>
     <string name="title_legend_section_messages">Messages</string>
     <string name="title_legend_section_compose">Rédaction</string>
+    <string name="title_legend_oauth">Autorisation OAuth</string>
     <string name="title_legend_primary_connected">Compte connecté</string>
     <string name="title_legend_primary_disconnected">Compte déconnecté</string>
     <string name="title_legend_download_on">Télécharger le contenu des messages automatiquement</string>

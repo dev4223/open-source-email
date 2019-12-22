@@ -876,6 +876,20 @@ public class MessageHelper {
         }
     }
 
+    String getAutocrypt() throws MessagingException {
+        String autocrypt = imessage.getHeader("Autocrypt", null);
+        if (autocrypt == null)
+            return null;
+
+        autocrypt = MimeUtility.unfold(autocrypt);
+
+        int k = autocrypt.indexOf("keydata=");
+        if (k < 0)
+            return null;
+
+        return autocrypt.substring(k + 8);
+    }
+
     String getSubject() throws MessagingException {
         String subject = imessage.getHeader("Subject", null);
         if (subject == null)

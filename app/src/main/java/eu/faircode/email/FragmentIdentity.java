@@ -125,6 +125,7 @@ public class FragmentIdentity extends FragmentBase {
     private long copy = -1;
     private long account = -1;
     private int auth = MailService.AUTH_TYPE_PASSWORD;
+    private String provider = null;
     private boolean saving = false;
 
     private static final int REQUEST_COLOR = 1;
@@ -253,10 +254,15 @@ public class FragmentIdentity extends FragmentBase {
                 }
 
                 // Copy account credentials
+                auth = account.auth_type;
+                provider = account.provider;
                 etEmail.setText(account.user);
                 etUser.setText(account.user);
                 tilPassword.getEditText().setText(account.password);
                 etRealm.setText(account.realm);
+
+                etUser.setEnabled(auth == MailService.AUTH_TYPE_PASSWORD);
+                tilPassword.setEnabled(auth == MailService.AUTH_TYPE_PASSWORD);
                 cbTrust.setChecked(false);
             }
 
@@ -515,7 +521,8 @@ public class FragmentIdentity extends FragmentBase {
         args.putBoolean("insecure", cbInsecure.isChecked());
         args.putString("port", etPort.getText().toString());
         args.putInt("auth", auth);
-        args.putString("user", etUser.getText().toString());
+        args.putString("provider", provider);
+        args.putString("user", etUser.getText().toString().trim());
         args.putString("password", tilPassword.getEditText().getText().toString());
         args.putString("realm", etRealm.getText().toString());
         args.putString("fingerprint", cbTrust.isChecked() ? (String) cbTrust.getTag() : null);
@@ -563,6 +570,7 @@ public class FragmentIdentity extends FragmentBase {
                 boolean insecure = args.getBoolean("insecure");
                 String port = args.getString("port");
                 int auth = args.getInt("auth");
+                String provider = args.getString("provider");
                 String user = args.getString("user").trim();
                 String password = args.getString("password");
                 String realm = args.getString("realm");
@@ -737,7 +745,7 @@ public class FragmentIdentity extends FragmentBase {
                     String protocol = (starttls ? "smtp" : "smtps");
                     try (MailService iservice = new MailService(context, protocol, realm, insecure, true, true)) {
                         iservice.setUseIp(use_ip);
-                        iservice.connect(host, Integer.parseInt(port), auth, user, password, fingerprint);
+                        iservice.connect(host, Integer.parseInt(port), auth, provider, user, password, fingerprint);
                     }
                 }
 
@@ -771,6 +779,7 @@ public class FragmentIdentity extends FragmentBase {
                         identity.user = user;
                         identity.password = password;
                     }
+                    identity.provider = provider;
                     identity.realm = realm;
                     identity.fingerprint = fingerprint;
                     identity.use_ip = use_ip;
@@ -877,6 +886,7 @@ public class FragmentIdentity extends FragmentBase {
         outState.putString("fair:password", tilPassword.getEditText().getText().toString());
         outState.putInt("fair:advanced", grpAdvanced.getVisibility());
         outState.putInt("fair:auth", auth);
+        outState.putString("fair:authprovider", provider);
         outState.putString("fair:html", (String) etSignature.getTag());
         super.onSaveInstanceState(outState);
     }
@@ -937,6 +947,7 @@ public class FragmentIdentity extends FragmentBase {
                     etBcc.setText(identity == null ? null : identity.bcc);
 
                     auth = (identity == null ? MailService.AUTH_TYPE_PASSWORD : identity.auth_type);
+                    provider = (identity == null ? null : identity.provider);
 
                     if (identity == null || copy > 0)
                         new SimpleTask<Integer>() {
@@ -959,6 +970,7 @@ public class FragmentIdentity extends FragmentBase {
                     tilPassword.getEditText().setText(savedInstanceState.getString("fair:password"));
                     grpAdvanced.setVisibility(savedInstanceState.getInt("fair:advanced"));
                     auth = savedInstanceState.getInt("fair:auth");
+                    provider = savedInstanceState.getString("fair:authprovider");
                     etSignature.setTag(savedInstanceState.getString("fair:html"));
                 }
 

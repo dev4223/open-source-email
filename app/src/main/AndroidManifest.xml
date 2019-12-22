@@ -209,20 +209,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="com.microsoft.identity.client.BrowserTabActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="eu.faircode.email"
-                    android:path="/F7oVwa9V2SX5i5nOpDddTN9MF0s="
-                    android:scheme="msauth" />
-            </intent-filter>
-        </activity>
-
         <activity
             android:name=".ActivityBilling"
             android:icon="@mipmap/ic_launcher"
@@ -238,9 +224,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="email.faircode.eu"
-                    android:path="/oauth/"
+                    android:host="oauth.faircode.eu"
                     android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="eu.faircode.email" />
             </intent-filter>
         </activity>
 

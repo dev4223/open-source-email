@@ -3,6 +3,7 @@
     <provider
         name="Gmail"
         domain="gmail\\.com"
+        id="gmail"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq6"
         order="1"
         type="com.google">
@@ -19,7 +20,7 @@
             clientId="803253368361-574lor1js3csqif9nogkhk5m7688af3c.apps.googleusercontent.com"
             clientSecret="9iyiDx1LEfpg3fpH6DqzoIcG"
             enabled="false"
-            redirectUri="https://email.faircode.eu/oauth/"
+            redirectUri="https://oauth.faircode.eu/"
             scopes="https://mail.google.com/"
             tokenEndpoint="https://oauth2.googleapis.com/token" />
         <!-- https://email.faircode.eu/.well-known/assetlinks.json -->
@@ -28,6 +29,7 @@
     <provider
         name="Outlook/Office365"
         domain="outlook\\..*,live\\..*,hotmail\\..*"
+        id="outlook"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq14"
         order="2"
         partial="false">
@@ -43,7 +45,8 @@
             authorizationEndpoint="https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize"
             clientId="3514cf2c-e7a3-45a2-80d4-6a3c3498eca0"
             enabled="false"
-            redirectUri="https://email.faircode.eu/oauth/"
+            clientSecret="MZaRn@liyA0T98GwdRDK:m-cSWrUgA9:"
+            redirectUri="https://oauth.faircode.eu/"
             scopes="openid,offline_access,profile,email,User.Read,Mail.ReadWrite,Mail.Send,MailboxSettings.ReadWrite"
             tokenEndpoint="https://login.microsoftonline.com/organizations/oauth2/v2.0/token" />
     </provider>
@@ -63,6 +66,7 @@
     <!-- no IMAP IDLE -->
     <provider
         name="Yahoo!"
+        id="yahoo"
         link="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq88">
         <imap
             host="imap.mail.yahoo.com"
@@ -72,6 +76,14 @@
             host="smtp.mail.yahoo.com"
             port="465"
             starttls="false" />
+        <oauth
+            authorizationEndpoint="https://api.login.yahoo.com/oauth2/request_auth"
+            clientId="dj0yJmk9eDZYbnFSMkVtMEdMJmQ9WVdrOVdXOUZabXBwTnpnbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWJm"
+            clientSecret="927650c8ce98b653d7f88d0398a192dc44cedcd2"
+            enabled="false"
+            redirectUri="https://oauth.faircode.eu/"
+            scopes="mail-w"
+            tokenEndpoint="https://api.login.aol.com/oauth2/get_token" />
     </provider>
     <provider
         name="Posteo.de"

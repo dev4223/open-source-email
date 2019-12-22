@@ -115,6 +115,8 @@
     <string name="title_setup_gmail_rationale">Si prega di concedere i permessi per selezionare un account e leggere il tuo nome</string>
     <string name="title_setup_gmail_permissions">Google chiederà le autorizzazioni per leggere, comporre, inviare e eliminare definitivamente tutte le tue email. FairEmail non eliminerà mai i tuoi messaggi senza il tuo esplicito consenso.</string>
     <string name="title_setup_gmail_drafts">Se la cartella bozze non è accessibile da IMAP, questo può essere corretto nelle impostazioni dell\'etichetta Gmail</string>
+    <string name="title_setup_oauth_rationale">Autorizza l\'accesso al tuo account %1$s</string>
+    <string name="title_setup_oauth_authorize">Autorizza</string>
     <string name="title_setup_select_account">Seleziona account</string>
     <string name="title_setup_instructions">Istruzioni di configurazione</string>
     <string name="title_setup_no_settings">Nessuna impostazione trovata per il dominio \'%1$s\'</string>
@@ -309,6 +311,7 @@
     <string name="title_advanced_crash_reports">Invia rapporti di errore</string>
     <string name="title_advanced_debug">Modalità debug</string>
     <string name="title_advanced_cleanup">Pulizia</string>
+    <string name="title_advanced_last_cleanup">Ultima pulizia: %1$s</string>
     <string name="title_advanced_hint">Tutte le opzioni hanno impostazioni predefinite ragionevoli e devono essere modificate solo quando è necessario</string>
     <string name="title_advanced_enabled_hint">Attiva o disattiva a livello globale la ricezione dei messaggi</string>
     <string name="title_advanced_manual_hint">Se la sincronizzazione è disabilitata, è ancora possibile sincronizzare manualmente tirando verso il basso l\'elenco dei messaggi.</string>
@@ -724,6 +727,7 @@
     <string name="title_legend_section_folders">Cartelle</string>
     <string name="title_legend_section_messages">Messaggi</string>
     <string name="title_legend_section_compose">Scrivi</string>
+    <string name="title_legend_oauth">Autorizzazione OAuth</string>
     <string name="title_legend_primary_connected">Account connesso</string>
     <string name="title_legend_primary_disconnected">Account disconnesso</string>
     <string name="title_legend_download_on">Scarica il contenuto del messaggio automaticamente</string>

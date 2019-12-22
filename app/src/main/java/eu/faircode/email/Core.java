@@ -66,6 +66,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -97,6 +98,7 @@ import javax.mail.FolderNotFoundException;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.UIDFolder;
@@ -852,7 +854,7 @@ class Core {
         }
 
         // Delete source
-        if (!copy && !EntityFolder.TRASH.equals(folder.type)) {
+        if (!copy) {
             try {
                 for (Message imessage : map.keySet())
                     imessage.setFlag(Flags.Flag.DELETED, true);
@@ -1417,11 +1419,6 @@ class Core {
 
             Message[] imessages = ifolder.getMessages();
             Log.i(folder.name + " POP messages=" + imessages.length);
-
-            // Some servers send messages once only
-            // Prevent deleting all local messages
-            if (imessages.length == 0)
-                return;
 
             if (caps.containsKey("UIDL")) {
                 FetchProfile ifetch = new FetchProfile();
@@ -2148,6 +2145,31 @@ class Core {
                 Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);
 
                 int sequence = 1;
+
+                String autocrypt = helper.getAutocrypt();
+                if (autocrypt != null) {
+                    EntityAttachment attachment = new EntityAttachment();
+                    attachment.message = message.id;
+                    attachment.sequence = sequence++;
+                    attachment.name = "pubkey.pem";
+                    attachment.type = "application/pgp-keys";
+                    attachment.disposition = Part.ATTACHMENT;
+                    attachment.id = db.attachment().insertAttachment(attachment);
+
+                    File file = attachment.getFile(context);
+                    try (FileWriter writer = new FileWriter(file)) {
+                        writer.write("-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n\r\n");
+                        while (autocrypt.length() > 0) {
+                            int i = Math.min(64, autocrypt.length());
+                            writer.write(autocrypt.substring(0, i) + "\r\n");
+                            autocrypt = autocrypt.substring(i);
+                        }
+                        writer.write("-----END PGP PUBLIC KEY BLOCK-----\r\n");
+                    }
+
+                    db.attachment().setDownloaded(attachment.id, file.length());
+                }
+
                 List<EntityAttachment> attachments = parts.getAttachments();
                 for (EntityAttachment attachment : attachments) {
                     Log.i(folder.name + " attachment seq=" + sequence + " " + attachment);

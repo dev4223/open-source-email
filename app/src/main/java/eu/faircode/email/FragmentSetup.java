@@ -169,13 +169,15 @@ public class FragmentSetup extends FragmentBase {
                 int order = 1;
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_gmail, order++, R.string.title_setup_gmail);
 
-                // Android 5 Lollipop does not support app links
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                if (!Helper.isPlayStoreInstall() &&
+                        (Helper.hasValidFingerprint(getContext()) || BuildConfig.DEBUG))
                     for (EmailProvider provider : EmailProvider.loadProfiles(getContext()))
                         if (provider.oauth != null && (provider.oauth.enabled || BuildConfig.DEBUG))
                             popupMenu.getMenu()
                                     .add(Menu.NONE, -1, order++, getString(R.string.title_setup_oauth, provider.name))
-                                    .setIntent(new Intent(ActivitySetup.ACTION_QUICK_OAUTH).putExtra("name", provider.name));
+                                    .setIntent(new Intent(ActivitySetup.ACTION_QUICK_OAUTH)
+                                            .putExtra("id", provider.id)
+                                            .putExtra("name", provider.name));
 
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_activesync, order++, R.string.title_setup_activesync);
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_other, order++, R.string.title_setup_other);
@@ -184,11 +186,6 @@ public class FragmentSetup extends FragmentBase {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                        if (item.getIntent() != null) {
-                            lbm.sendBroadcast(item.getIntent());
-                            return true;
-                        }
-
                         switch (item.getItemId()) {
                             case R.string.title_setup_gmail:
                                 if (Helper.hasValidFingerprint(getContext()))
@@ -203,7 +200,12 @@ public class FragmentSetup extends FragmentBase {
                                 lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_SETUP));
                                 return true;
                             default:
-                                return false;
+                                if (item.getIntent() == null)
+                                    return false;
+                                else {
+                                    lbm.sendBroadcast(item.getIntent());
+                                    return true;
+                                }
                         }
                     }
                 });
