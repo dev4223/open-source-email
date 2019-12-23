@@ -32,6 +32,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -2156,18 +2157,22 @@ class Core {
                     attachment.disposition = Part.ATTACHMENT;
                     attachment.id = db.attachment().insertAttachment(attachment);
 
-                    File file = attachment.getFile(context);
-                    try (FileWriter writer = new FileWriter(file)) {
-                        writer.write("-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n\r\n");
-                        while (autocrypt.length() > 0) {
-                            int i = Math.min(64, autocrypt.length());
-                            writer.write(autocrypt.substring(0, i) + "\r\n");
-                            autocrypt = autocrypt.substring(i);
-                        }
-                        writer.write("-----END PGP PUBLIC KEY BLOCK-----\r\n");
-                    }
+                    try {
+                        byte[] b = Base64.decode(autocrypt, Base64.DEFAULT);
 
-                    db.attachment().setDownloaded(attachment.id, file.length());
+                        File file = attachment.getFile(context);
+                        try (FileWriter writer = new FileWriter(file)) {
+                            writer.write("-----BEGIN PGP PUBLIC KEY BLOCK-----\r\n\r\n");
+                            writer.write(Base64.encodeToString(b, Base64.CRLF));
+                            writer.write("-----END PGP PUBLIC KEY BLOCK-----\r\n");
+                        }
+
+                        db.attachment().setDownloaded(attachment.id, file.length());
+                    } catch (IllegalArgumentException ex) {
+                        Log.w(ex);
+                        db.attachment().setDownloaded(attachment.id, 0L);
+                        db.attachment().setError(attachment.id, Log.formatThrowable(ex, false));
+                    }
                 }
 
                 List<EntityAttachment> attachments = parts.getAttachments();
