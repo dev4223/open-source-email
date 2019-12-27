@@ -83,27 +83,75 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
 
         if (!this.getClass().equals(ActivityMain.class)) {
             String theme = prefs.getString("theme", "light");
+            int uiMode = getResources().getConfiguration().uiMode;
+            Log.i("UI mode=" + uiMode);
 
-            if ("dark".equals(theme))
-                setTheme(R.style.AppThemeDark);
-            else if ("black".equals(theme))
-                setTheme(R.style.AppThemeBlack);
-            else if ("grey_light".equals(theme))
-                setTheme(R.style.AppThemeGreyLight);
-            else if ("grey_dark".equals(theme))
-                setTheme(R.style.AppThemeGreyDark);
-            else if ("system".equals(theme)) {
-                int uiMode = getResources().getConfiguration().uiMode;
-                Log.i("UI mode=" + uiMode);
-                if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+            switch (theme) {
+                case "light":
+                case "blue_orange_light":
+                    setTheme(R.style.AppThemeBlueOrangeLight);
+                    break;
+                case "orange_blue_light":
+                    setTheme(R.style.AppThemeOrangeBlueLight);
+                    break;
+
+                case "yellow_purple_light":
+                    setTheme(R.style.AppThemeYellowPurpleLight);
+                    break;
+                case "purple_yellow_light":
+                    setTheme(R.style.AppThemePurpleYellowLight);
+                    break;
+
+                case "red_green_light":
+                    setTheme(R.style.AppThemeRedGreenLight);
+                    break;
+                case "green_red_light":
+                    setTheme(R.style.AppThemeGreenRedLight);
+                    break;
+
+                case "dark":
+                case "blue_orange_dark":
+                    setTheme(R.style.AppThemeBlueOrangeDark);
+                    break;
+                case "orange_blue_dark":
+                    setTheme(R.style.AppThemeOrangeBlueDark);
+                    break;
+
+                case "yellow_purple_dark":
+                    setTheme(R.style.AppThemeYellowPurpleDark);
+                    break;
+                case "purple_yellow_dark":
+                    setTheme(R.style.AppThemePurpleYellowDark);
+                    break;
+
+                case "red_green_dark":
+                    setTheme(R.style.AppThemeRedGreenDark);
+                    break;
+                case "green_red_dark":
+                    setTheme(R.style.AppThemeGreenRedDark);
+                    break;
+
+                case "grey_light":
+                    setTheme(R.style.AppThemeGreySteelBlueLight);
+                    break;
+                case "grey_dark":
+                    setTheme(R.style.AppThemeGreySteelBlueDark);
+                    break;
+                case "black":
                     setTheme(R.style.AppThemeBlack);
-            } else if ("grey_system".equals(theme)) {
-                int uiMode = getResources().getConfiguration().uiMode;
-                Log.i("UI mode=" + uiMode);
-                if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
-                    setTheme(R.style.AppThemeGreyDark);
-                else
-                    setTheme(R.style.AppThemeGreyLight);
+                    break;
+                case "system":
+                    if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+                        setTheme(R.style.AppThemeBlueOrangeDark);
+                    else
+                        setTheme(R.style.AppThemeBlueOrangeLight);
+                    break;
+                case "grey_system":
+                    if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
+                        setTheme(R.style.AppThemeGreySteelBlueDark);
+                    else
+                        setTheme(R.style.AppThemeGreySteelBlueLight);
+                    break;
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

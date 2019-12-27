@@ -53,10 +53,12 @@ import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.security.KeyChain;
+import android.text.Editable;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.util.TypedValue;
@@ -444,6 +446,25 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public void onSelected(boolean selection) {
                 style_bar.setVisibility(selection ? View.VISIBLE : View.GONE);
+            }
+        });
+
+        etBody.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Do nothing
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Activity activity = getActivity();
+                if (activity != null)
+                    activity.onUserInteraction();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // Do nothing
             }
         });
 
@@ -2285,13 +2306,17 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onActionSend(EntityMessage draft) {
-        if (draft.encrypt != null && draft.encrypt != 0)
-            if (ActivityBilling.isPro(getContext()))
-                onEncrypt(draft);
-            else
+        if (EntityMessage.SMIME_SIGNONLY.equals(draft.encrypt) ||
+                EntityMessage.SMIME_SIGNENCRYPT.equals(draft.encrypt))
+            if (!ActivityBilling.isPro(getContext())) {
                 startActivity(new Intent(getContext(), ActivityBilling.class));
-        else
+                return;
+            }
+
+        if (draft.encrypt == null || EntityMessage.ENCRYPT_NONE.equals(draft.encrypt))
             onAction(R.id.action_send);
+        else
+            onEncrypt(draft);
     }
 
     private void onExit() {
@@ -2768,7 +2793,24 @@ public class FragmentCompose extends FragmentBase {
                                 }
 
                                 if (data.draft.from != null && data.draft.from.length > 0) {
-                                    String from = ((InternetAddress) data.draft.from[0]).getAddress();
+                                    Address preferred = null;
+                                    if (ref.identity != null) {
+                                        EntityIdentity recognized = db.identity().getIdentity(ref.identity);
+                                        if (recognized != null) {
+                                            Address same = null;
+                                            Address similar = null;
+                                            for (Address from : data.draft.from) {
+                                                if (same == null && recognized.sameAddress(from))
+                                                    same = from;
+                                                if (similar == null && recognized.similarAddress(from))
+                                                    similar = from;
+                                            }
+                                            preferred = (same == null ? similar : same);
+                                        }
+                                    }
+                                    if (preferred == null)
+                                        preferred = data.draft.from[0];
+                                    String from = ((InternetAddress) preferred).getAddress();
                                     if (from != null && from.contains("@"))
                                         data.draft.extra = from.substring(0, from.indexOf("@"));
                                 }

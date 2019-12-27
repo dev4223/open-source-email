@@ -166,14 +166,15 @@
     <string name="title_setup_biometrics_disable">Deaktiver</string>
     <string name="title_setup_biometrics_unlock">Låse opp</string>
     <string name="title_setup_theme">Velg tema</string>
-    <string name="title_setup_light_theme">Lyst tema</string>
-    <string name="title_setup_dark_theme">Mørkt tema</string>
-    <string name="title_setup_black_theme">Svart tema</string>
-    <string name="title_setup_grey_light_theme">Grått lyst tema</string>
-    <string name="title_setup_grey_dark_theme">Grått mørkt tema</string>
-    <string name="title_setup_system_theme">System tema</string>
-    <string name="title_setup_grey_system_theme">Grått systemtema</string>
-    <string name="title_setup_system_theme_hint">System temaene skifter automatisk lys/mørk på dag/natt, hvis de støttes av Android</string>
+    <string name="title_setup_theme_blue_orange">Blå/oransje</string>
+    <string name="title_setup_theme_yellow_purple">Gul/lilla</string>
+    <string name="title_setup_theme_red_green">Rød/grønn</string>
+    <string name="title_setup_theme_grey">Grå</string>
+    <string name="title_setup_theme_black">Svart</string>
+    <string name="title_setup_theme_reverse">Omvendte farger</string>
+    <string name="title_setup_theme_dark">Mørk</string>
+    <string name="title_setup_theme_system">Følg systemet</string>
+    <string name="title_setup_theme_system_hint">Følgende system temaer vil automatisk bytte til lys/mørk på dag/natt, hvis det støttes av Android</string>
     <string name="title_setup_advanced">Avansert</string>
     <string name="title_setup_options">Alternativer</string>
     <string name="title_setup_defaults">Gjenopprett standarder</string>
@@ -296,6 +297,7 @@
     <string name="title_advanced_display_hidden">Vis skjulte meldingstekster</string>
     <string name="title_advanced_encrypt_method">Standard krypterings metode</string>
     <string name="title_advanced_openpgp">OpenPGP-leverandør</string>
+    <string name="title_advanced_autocrypt_mutual">Autokrypt gjensidig modus</string>
     <string name="title_advanced_sign_default">Signer som standard</string>
     <string name="title_advanced_encrypt_default">Krypter som standard</string>
     <string name="title_advanced_auto_decrypt">Dekrypter meldinger automatisk</string>
@@ -567,6 +569,10 @@
     <string name="title_ask_help">Hjelp til å forbedre FairEmail</string>
     <string name="title_ask_reporting">Send feilrapporter?</string>
     <string name="title_reporting_why">Feilrapportering vil bidra til å forbedre FairEmail</string>
+    <string name="title_ask_review">Vennligst anmeld FairEmail</string>
+    <string name="title_ask_review_rationale">Du har brukt FairEmail en stund.
+Det vil bli satt pris på om du kunne rangere FairEmail i Play Store.
+Dette vil bidra til å opprettholde en balanse mellom ugunstige og gunstige anmeldelser.    </string>
     <string name="title_expand_warning">Å utvide denne meldingen vil laste ned %1$s</string>
     <string name="title_download_message">Laster ned &#8230;</string>
     <string name="title_compose">Skriv</string>
@@ -835,6 +841,7 @@
     <string name="title_issue">Har du et spørsmål eller et problem?</string>
     <string name="title_yes">Ja</string>
     <string name="title_no">Nei</string>
+    <string name="title_later">Senere</string>
     <string name="title_undo">Angre</string>
     <string name="title_redo">Gjenta</string>
     <string name="title_add">Legg til</string>
@@ -911,6 +918,14 @@
     <string name="title_accessibility_unseen">Ulest</string>
     <string name="title_accessibility_flagged">Stjernemerkede</string>
     <string name="title_accessibility_unflagged">Ikke med stjerne</string>
+    <string name="title_accessibility_collapse">Skjul</string>
+    <string name="title_accessibility_expand">Utvid</string>
+    <string name="title_accessibility_view_contact">Vis kontakt</string>
+    <string name="title_accessibility_show_authentication_result">Vis autentiseringsresultat</string>
+    <string name="title_accessibility_show_snooze_time">Vis slumretid</string>
+    <string name="title_accessibility_view_help">Se hjelp</string>
+    <string name="title_accessibility_selected">Valgt</string>
+    <string name="title_accessibility_answered">Svarte</string>
     <string-array name="pollIntervalNames">
         <item>Alltid</item>
         <item>Hvert 15. minutt</item>

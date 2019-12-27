@@ -165,14 +165,6 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_biometrics_disable">Deaktivieren</string>
     <string name="title_setup_biometrics_unlock">Entsperren</string>
     <string name="title_setup_theme">Design auswählen</string>
-    <string name="title_setup_light_theme">Helles Design</string>
-    <string name="title_setup_dark_theme">Dunkles Design</string>
-    <string name="title_setup_black_theme">Schwarzes Design</string>
-    <string name="title_setup_grey_light_theme">Graues Design auf hellem Hintergrund</string>
-    <string name="title_setup_grey_dark_theme">Graues Design auf dunklem Hintergrund</string>
-    <string name="title_setup_system_theme">System-Design</string>
-    <string name="title_setup_grey_system_theme">Graues System-Design</string>
-    <string name="title_setup_system_theme_hint">Das System-Design wird abhängig von der Tageszeit automatisch zwischen hell und dunkel wechseln, falls von Android unterstützt</string>
     <string name="title_setup_advanced">Erweitert</string>
     <string name="title_setup_options">Optionen</string>
     <string name="title_setup_defaults">Auf Standard zurücksetzen</string>
@@ -567,6 +559,11 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_ask_help">Helfen Sie mit, FairEmail zu verbessern</string>
     <string name="title_ask_reporting">Fehlerberichte senden?</string>
     <string name="title_reporting_why">Fehlerberichte helfen uns, FairEmail zu verbessern</string>
+    <string name="title_ask_review">Bitte bewerten Sie FairEmail</string>
+    <string name="title_ask_review_rationale">        Du hast FairEmail schon eine Weile benutzt.
+        Es wäre zu begrüßen, wenn Du FairEmail - sofern Du zufrieden bist - im Play Store positiv bewerten könntest.
+        Dies wird helfen, ein Gleichgewicht zwischen ungünstigen und vorteilhaften Bewertungen zu erhalten.
+    </string>
     <string name="title_expand_warning">Durch Erweitern dieser Nachricht wird %1$s heruntergeladen</string>
     <string name="title_download_message">Lädt herunter &#8230;</string>
     <string name="title_compose">Verfassen</string>
@@ -835,6 +832,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_issue">Haben Sie eine Frage oder ein Problem?</string>
     <string name="title_yes">Ja</string>
     <string name="title_no">Nein</string>
+    <string name="title_later">Später</string>
     <string name="title_undo">Rückgängig</string>
     <string name="title_redo">Rückgängig</string>
     <string name="title_add">Hinzufügen</string>
@@ -910,6 +908,14 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_accessibility_unseen">Ungelesene</string>
     <string name="title_accessibility_flagged">Markierte</string>
     <string name="title_accessibility_unflagged">Nicht markiert</string>
+    <string name="title_accessibility_collapse">Zusammenklappen</string>
+    <string name="title_accessibility_expand">Erweitern</string>
+    <string name="title_accessibility_view_contact">Kontakt anzeigen</string>
+    <string name="title_accessibility_show_authentication_result">Authentifizierungsergebnis anzeigen</string>
+    <string name="title_accessibility_show_snooze_time">Schlummerzeit anzeigen</string>
+    <string name="title_accessibility_view_help">Hilfe anzeigen</string>
+    <string name="title_accessibility_selected">Ausgewählt</string>
+    <string name="title_accessibility_answered">Beantwortet</string>
     <string-array name="pollIntervalNames">
         <item>Immer</item>
         <item>Alle 15 Minuten</item>

@@ -165,14 +165,15 @@
     <string name="title_setup_biometrics_disable">Disabilita</string>
     <string name="title_setup_biometrics_unlock">Sblocca</string>
     <string name="title_setup_theme">Seleziona tema</string>
-    <string name="title_setup_light_theme">Tema chiaro</string>
-    <string name="title_setup_dark_theme">Tema scuro</string>
-    <string name="title_setup_black_theme">Tema nero</string>
-    <string name="title_setup_grey_light_theme">Tema grigio chiaro</string>
-    <string name="title_setup_grey_dark_theme">Tema grigio scuro</string>
-    <string name="title_setup_system_theme">Tema di sistema</string>
-    <string name="title_setup_grey_system_theme">Tema di sistema grigio</string>
-    <string name="title_setup_system_theme_hint">I temi di sistema passeranno automaticamente a chiaro/scuro a seconda sia giorno o notte, se supportato da Android</string>
+    <string name="title_setup_theme_blue_orange">Blu/arancione</string>
+    <string name="title_setup_theme_yellow_purple">Giallo/viola</string>
+    <string name="title_setup_theme_red_green">Rosso/verde</string>
+    <string name="title_setup_theme_grey">Grigio</string>
+    <string name="title_setup_theme_black">Nero</string>
+    <string name="title_setup_theme_reverse">Inverti colori</string>
+    <string name="title_setup_theme_dark">Scuro</string>
+    <string name="title_setup_theme_system">Segui il sistema</string>
+    <string name="title_setup_theme_system_hint">I temi di sistema passeranno automaticamente a chiaro/scuro a seconda sia giorno o notte, se supportato da Android</string>
     <string name="title_setup_advanced">Avanzate</string>
     <string name="title_setup_options">Opzioni</string>
     <string name="title_setup_defaults">Ripristina predefiniti</string>
@@ -295,6 +296,7 @@
     <string name="title_advanced_display_hidden">Mostra il testo nascosto del messaggio</string>
     <string name="title_advanced_encrypt_method">Metodo di crittografia predefinito</string>
     <string name="title_advanced_openpgp">Provider OpenPGP</string>
+    <string name="title_advanced_autocrypt_mutual">Autocrypt in modalità reciproca</string>
     <string name="title_advanced_sign_default">Firma di default</string>
     <string name="title_advanced_encrypt_default">Crittografa di default</string>
     <string name="title_advanced_auto_decrypt">Decodifica automaticamente i messaggi</string>
@@ -566,6 +568,10 @@
     <string name="title_ask_help">Aiuta a migliorare FairEmail</string>
     <string name="title_ask_reporting">Inviare rapporti di errore?</string>
     <string name="title_reporting_why">Il report di errore aiuterà a migliorare FairEmail</string>
+    <string name="title_ask_review">Si prega di valutare FairEmail</string>
+    <string name="title_ask_review_rationale">        Stai usando FairEmail da un po\'.
+        Ti saremmo grati se potessi valutare FairEmail nel Play Store.
+        Questo aiuterà a mantenere un equilibrio tra revisioni sfavorevoli e favorevoli.    </string>
     <string name="title_expand_warning">Espandendo questo messaggio verrà scaricato %1$s</string>
     <string name="title_download_message">Download &#8230;</string>
     <string name="title_compose">Scrivi</string>
@@ -834,6 +840,7 @@
     <string name="title_issue">Hai una domanda o un problema?</string>
     <string name="title_yes">Sì</string>
     <string name="title_no">No</string>
+    <string name="title_later">Più tardi</string>
     <string name="title_undo">Annulla</string>
     <string name="title_redo">Ripeti</string>
     <string name="title_add">Aggiungi</string>
@@ -910,6 +917,14 @@
     <string name="title_accessibility_unseen">Non letto</string>
     <string name="title_accessibility_flagged">Preferiti</string>
     <string name="title_accessibility_unflagged">Non preferito</string>
+    <string name="title_accessibility_collapse">Comprimi</string>
+    <string name="title_accessibility_expand">Espandi</string>
+    <string name="title_accessibility_view_contact">Visualizza contatto</string>
+    <string name="title_accessibility_show_authentication_result">Mostra risultato autenticazione</string>
+    <string name="title_accessibility_show_snooze_time">Mostra tempo di sospensione</string>
+    <string name="title_accessibility_view_help">Visualizza aiuto</string>
+    <string name="title_accessibility_selected">Selezionato</string>
+    <string name="title_accessibility_answered">Risposto</string>
     <string-array name="pollIntervalNames">
         <item>Sempre</item>
         <item>Ogni 15 minuti</item>

@@ -166,14 +166,6 @@
     <string name="title_setup_biometrics_disable">Desgaitu</string>
     <string name="title_setup_biometrics_unlock">Desblokeatu</string>
     <string name="title_setup_theme">Hautatu gaia</string>
-    <string name="title_setup_light_theme">Gai argia</string>
-    <string name="title_setup_dark_theme">Gai iluna</string>
-    <string name="title_setup_black_theme">Gai beltza</string>
-    <string name="title_setup_grey_light_theme">Gai gris argia</string>
-    <string name="title_setup_grey_dark_theme">Gai gris iluna</string>
-    <string name="title_setup_system_theme">Sistemako gaia</string>
-    <string name="title_setup_grey_system_theme">Sistemako gai grisa</string>
-    <string name="title_setup_system_theme_hint">Sistemako gaiek automatikoki txandakatuko dute argia/iluna eguna/gauaren arabera, Androidek onartzen duenean</string>
     <string name="title_setup_advanced">Aurreratua</string>
     <string name="title_setup_options">Aukerak</string>
     <string name="title_setup_defaults">Berrezarri balio lehenetsiak</string>
@@ -296,6 +288,7 @@
     <string name="title_advanced_display_hidden">Erakutsi ezkutatutako mezuen testuak</string>
     <string name="title_advanced_encrypt_method">Berezko zifratze-metodoa</string>
     <string name="title_advanced_openpgp">OpenPGP hornitzailea</string>
+    <string name="title_advanced_autocrypt_mutual">Elkarrekiko autozifratze modua</string>
     <string name="title_advanced_sign_default">Besterik ezean sinatu</string>
     <string name="title_advanced_encrypt_default">Besterik ezean zifratu</string>
     <string name="title_advanced_auto_decrypt">Desenkriptatu mezuak automatikoki</string>
@@ -910,6 +903,14 @@
     <string name="title_accessibility_unseen">Irakurri gabea</string>
     <string name="title_accessibility_flagged">Izarduna</string>
     <string name="title_accessibility_unflagged">Izarrik gabe</string>
+    <string name="title_accessibility_collapse">Tolestu</string>
+    <string name="title_accessibility_expand">Hedatu</string>
+    <string name="title_accessibility_view_contact">Hautatu kontaktua</string>
+    <string name="title_accessibility_show_authentication_result">Erakutsi autentifikazioaren emaitza</string>
+    <string name="title_accessibility_show_snooze_time">Erakutsi atzerapen denbora</string>
+    <string name="title_accessibility_view_help">Erakutsi laguntza</string>
+    <string name="title_accessibility_selected">Aukeratuta</string>
+    <string name="title_accessibility_answered">Erantzuna emana</string>
     <string-array name="pollIntervalNames">
         <item>Beti</item>
         <item>15 minutuero</item>

@@ -104,6 +104,8 @@
     <string name="title_setup_gmail_rationale">请授予权限来选择一个帐户并读取您的姓名</string>
     <string name="title_setup_gmail_permissions">谷歌会请求权限来读取、撰写、发送和永久删除您所有的电子邮件。相比之下，未经您的明确同意，FairEmail永远不会删除您的邮件。</string>
     <string name="title_setup_gmail_drafts">如果草稿文件夹无法通过IMAP访问，可以在Gmail的标签设置中进行修复</string>
+    <string name="title_setup_oauth_rationale">授权访问您的 %1$s 帐户</string>
+    <string name="title_setup_oauth_authorize">授权</string>
     <string name="title_setup_select_account">选择账户</string>
     <string name="title_setup_instructions">设置指南</string>
     <string name="title_setup_no_settings">找不到域名\"%1$s\"的设置</string>
@@ -152,14 +154,6 @@
     <string name="title_setup_biometrics_disable">禁用</string>
     <string name="title_setup_biometrics_unlock">解锁​​​​</string>
     <string name="title_setup_theme">选择主题</string>
-    <string name="title_setup_light_theme">亮色主题</string>
-    <string name="title_setup_dark_theme">暗色主题</string>
-    <string name="title_setup_black_theme">黑色主题</string>
-    <string name="title_setup_grey_light_theme">灰亮主题</string>
-    <string name="title_setup_grey_dark_theme">灰暗主题</string>
-    <string name="title_setup_system_theme">系统主题</string>
-    <string name="title_setup_grey_system_theme">灰色系统主题</string>
-    <string name="title_setup_system_theme_hint">如果Android支持，系统主题将在白天/夜间自动切换亮色/暗色主题</string>
     <string name="title_setup_advanced">高级选项</string>
     <string name="title_setup_options">选项</string>
     <string name="title_setup_defaults">恢复默认设置</string>
@@ -282,6 +276,7 @@
     <string name="title_advanced_display_hidden">显示隐藏消息文本</string>
     <string name="title_advanced_encrypt_method">默认加密方法</string>
     <string name="title_advanced_openpgp">OpenPGP 提供者</string>
+    <string name="title_advanced_autocrypt_mutual">自动双向加密模式</string>
     <string name="title_advanced_sign_default">使用默认签名</string>
     <string name="title_advanced_encrypt_default">使用默认加密</string>
     <string name="title_advanced_auto_decrypt">自动解密消息</string>
@@ -553,6 +548,11 @@
     <string name="title_ask_help">帮助改进FairEmail</string>
     <string name="title_ask_reporting">发送错误报告?</string>
     <string name="title_reporting_why">错误报告将有助于改进FairEmail</string>
+    <string name="title_ask_review">请评价FairEmail</string>
+    <string name="title_ask_review_rationale">您已经使用FairEmail一段时间了。
+        要是您可以在谷歌商店为FairEmail评分，我将感激不尽。
+        这有助于保持批评和赞同评论之间的平衡。
+    </string>
     <string name="title_expand_warning">展开此消息将下载 %1$s</string>
     <string name="title_download_message">&#8230; 下载中</string>
     <string name="title_compose">撰写</string>
@@ -821,6 +821,7 @@
     <string name="title_issue">您要提问或有问题吗？</string>
     <string name="title_yes">是</string>
     <string name="title_no">否</string>
+    <string name="title_later">以后再说</string>
     <string name="title_undo">撤销</string>
     <string name="title_redo">重做</string>
     <string name="title_add">添加</string>
@@ -896,6 +897,14 @@ FairEmail会显示一条消息来提醒您这一点，这条消息在您购买�
     <string name="title_accessibility_unseen">未读</string>
     <string name="title_accessibility_flagged">标星</string>
     <string name="title_accessibility_unflagged">取消标星</string>
+    <string name="title_accessibility_collapse">折叠</string>
+    <string name="title_accessibility_expand">展开</string>
+    <string name="title_accessibility_view_contact">查看联系人</string>
+    <string name="title_accessibility_show_authentication_result">显示授权结果</string>
+    <string name="title_accessibility_show_snooze_time">显示暂停时间</string>
+    <string name="title_accessibility_view_help">查看帮助</string>
+    <string name="title_accessibility_selected">已选</string>
+    <string name="title_accessibility_answered">已回复</string>
     <string-array name="pollIntervalNames">
         <item>总是</item>
         <item>每15分钟</item>

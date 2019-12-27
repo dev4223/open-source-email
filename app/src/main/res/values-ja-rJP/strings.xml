@@ -154,14 +154,15 @@
     <string name="title_setup_biometrics_disable">無効</string>
     <string name="title_setup_biometrics_unlock">ロック解除</string>
     <string name="title_setup_theme">テーマを選択</string>
-    <string name="title_setup_light_theme">ライトテーマ</string>
-    <string name="title_setup_dark_theme">ダークテーマ</string>
-    <string name="title_setup_black_theme">ブラックテーマ</string>
-    <string name="title_setup_grey_light_theme">グレイライトテーマ</string>
-    <string name="title_setup_grey_dark_theme">グレイダークテーマ</string>
-    <string name="title_setup_system_theme">システムテーマ</string>
-    <string name="title_setup_grey_system_theme">グレイシステムテーマ</string>
-    <string name="title_setup_system_theme_hint">Androidでサポートされている場合、システムテーマは自動的に昼/夜においてライト/ダークテーマに切り替わります</string>
+    <string name="title_setup_theme_blue_orange">ブルー/オレンジ</string>
+    <string name="title_setup_theme_yellow_purple">イエロー/パープル</string>
+    <string name="title_setup_theme_red_green">レッド/グリーン</string>
+    <string name="title_setup_theme_grey">グレイ</string>
+    <string name="title_setup_theme_black">ブラック</string>
+    <string name="title_setup_theme_reverse">色を反転</string>
+    <string name="title_setup_theme_dark">ダーク</string>
+    <string name="title_setup_theme_system">システム設定に従う</string>
+    <string name="title_setup_theme_system_hint">Androidでサポートされている場合、システムテーマは昼/夜に自動的に切り替わります</string>
     <string name="title_setup_advanced">詳細</string>
     <string name="title_setup_options">オプション</string>
     <string name="title_setup_defaults">既定に戻します</string>
@@ -284,6 +285,7 @@
     <string name="title_advanced_display_hidden">非表示のメッセージテキストを表示</string>
     <string name="title_advanced_encrypt_method">デフォルトの暗号化方法</string>
     <string name="title_advanced_openpgp">OpenPGP プロバイダ</string>
+    <string name="title_advanced_autocrypt_mutual">相互暗号化モード</string>
     <string name="title_advanced_sign_default">デフォルトで署名</string>
     <string name="title_advanced_encrypt_default">デフォルトで暗号化</string>
     <string name="title_advanced_auto_decrypt">メッセージを自動的に解読</string>
@@ -554,6 +556,10 @@
     <string name="title_ask_help">FairEmailの改善にご協力下さい</string>
     <string name="title_ask_reporting">エラーレポートを送信しますか？</string>
     <string name="title_reporting_why">エラー報告はFairEmailの改善に役立ちます</string>
+    <string name="title_ask_review">FairEmailを確認して下さい</string>
+    <string name="title_ask_review_rationale">FairEmailをしばらく使用しています。
+PlayストアでFairEmailを評価できれば幸いです。
+これは、好ましくないレビューと好ましいレビューのバランスを保つのに役立ちます。</string>
     <string name="title_expand_warning">このメッセージを展開すると、%1$sがダウンロードされます</string>
     <string name="title_download_message">&#8230; をダウンロード中</string>
     <string name="title_compose">作成する</string>
@@ -822,6 +828,7 @@
     <string name="title_issue">質問や問題がありますか？</string>
     <string name="title_yes">はい</string>
     <string name="title_no">いいえ</string>
+    <string name="title_later">後ほど</string>
     <string name="title_undo">元に戻す</string>
     <string name="title_redo">やり直し</string>
     <string name="title_add">追加</string>
@@ -897,6 +904,14 @@ FairEmailは、Pro機能購入の為に上部に小さなメッセージを表�
     <string name="title_accessibility_unseen">未読</string>
     <string name="title_accessibility_flagged">スター付き</string>
     <string name="title_accessibility_unflagged">スター無し</string>
+    <string name="title_accessibility_collapse">折りたたむ</string>
+    <string name="title_accessibility_expand">展開</string>
+    <string name="title_accessibility_view_contact">連絡先を表示</string>
+    <string name="title_accessibility_show_authentication_result">認証結果を表示</string>
+    <string name="title_accessibility_show_snooze_time">スヌーズ時間を表示</string>
+    <string name="title_accessibility_view_help">ヘルプを見る</string>
+    <string name="title_accessibility_selected">選択</string>
+    <string name="title_accessibility_answered">返信済み</string>
     <string-array name="pollIntervalNames">
         <item>常に</item>
         <item>15分毎</item>

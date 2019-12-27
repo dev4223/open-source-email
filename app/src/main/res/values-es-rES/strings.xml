@@ -166,14 +166,6 @@
     <string name="title_setup_biometrics_disable">Desactivar</string>
     <string name="title_setup_biometrics_unlock">Desbloquear</string>
     <string name="title_setup_theme">Seleccionar tema</string>
-    <string name="title_setup_light_theme">Tema claro</string>
-    <string name="title_setup_dark_theme">Tema oscuro</string>
-    <string name="title_setup_black_theme">Tema negro</string>
-    <string name="title_setup_grey_light_theme">Tema gris claro</string>
-    <string name="title_setup_grey_dark_theme">Tema gris oscuro</string>
-    <string name="title_setup_system_theme">Tema del sistema</string>
-    <string name="title_setup_grey_system_theme">Tema gris del sistema</string>
-    <string name="title_setup_system_theme_hint">Los temas del sistema cambiarán automáticamente a claro/oscuro durante el día/noche, si es compatible con Android</string>
     <string name="title_setup_advanced">Avanzado</string>
     <string name="title_setup_options">Opciones</string>
     <string name="title_setup_defaults">Restablecer ajustes por defecto</string>
@@ -296,6 +288,7 @@
     <string name="title_advanced_display_hidden">Mostrar textos de mensajes ocultos</string>
     <string name="title_advanced_encrypt_method">Método de cifrado por defecto</string>
     <string name="title_advanced_openpgp">Proveedor OpenPGP</string>
+    <string name="title_advanced_autocrypt_mutual">Modo mutuo Autocrypt</string>
     <string name="title_advanced_sign_default">Firmar por defecto</string>
     <string name="title_advanced_encrypt_default">Cifrar por defecto</string>
     <string name="title_advanced_auto_decrypt">Descifrar automáticamente los mensajes</string>
@@ -567,6 +560,11 @@
     <string name="title_ask_help">Ayude a mejorar FairEmail</string>
     <string name="title_ask_reporting">¿Enviar informes de error?</string>
     <string name="title_reporting_why">Informar de errores ayudará a mejorar FairEmail</string>
+    <string name="title_ask_review">Por favor califique FairEmail</string>
+    <string name="title_ask_review_rationale">        Ha estado usando FairEmail durante un tiempo.
+        Agradecería que pudiera calificar a FairEmail en Play Store.
+        Esto ayudará a mantener un equilibrio entre reseñas desfavorables y favorables.
+    </string>
     <string name="title_expand_warning">Expandir este mensaje descargará %1$s</string>
     <string name="title_download_message">Descargando &#8230;</string>
     <string name="title_compose">Redactar</string>
@@ -835,6 +833,7 @@
     <string name="title_issue">¿Tiene una pregunta o problema?</string>
     <string name="title_yes">Sí</string>
     <string name="title_no">No</string>
+    <string name="title_later">Más tarde</string>
     <string name="title_undo">Deshacer</string>
     <string name="title_redo">Rehacer</string>
     <string name="title_add">Agregar</string>
@@ -911,6 +910,14 @@
     <string name="title_accessibility_unseen">No leído</string>
     <string name="title_accessibility_flagged">Destacado</string>
     <string name="title_accessibility_unflagged">No destacado</string>
+    <string name="title_accessibility_collapse">Ocultar</string>
+    <string name="title_accessibility_expand">Expandir</string>
+    <string name="title_accessibility_view_contact">Ver contacto</string>
+    <string name="title_accessibility_show_authentication_result">Mostrar resultado de autenticación</string>
+    <string name="title_accessibility_show_snooze_time">Mostrar tiempo pospuesto</string>
+    <string name="title_accessibility_view_help">Ver ayuda</string>
+    <string name="title_accessibility_selected">Seleccionado</string>
+    <string name="title_accessibility_answered">Respondido</string>
     <string-array name="pollIntervalNames">
         <item>Siempre</item>
         <item>Cada 15 minutos</item>

@@ -30,6 +30,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -51,6 +53,7 @@ import android.print.PrintManager;
 import android.security.KeyChain;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.util.TypedValue;
@@ -126,6 +129,7 @@ import org.bouncycastle.cms.jcajce.JceKeyTransRecipient;
 import org.bouncycastle.util.Store;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.openintents.openpgp.AutocryptPeerUpdate;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.OpenPgpSignatureResult;
 import org.openintents.openpgp.util.OpenPgpApi;
@@ -285,6 +289,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
     static final String ACTION_NEW_MESSAGE = BuildConfig.APPLICATION_ID + ".NEW_MESSAGE";
+
+    private static final long REVIEW_ASK_DELAY = 3 * 24 * 3600 * 1000L; // milliseonds
 
     private static final List<String> DUPLICATE_ORDER = Collections.unmodifiableList(Arrays.asList(
             EntityFolder.INBOX,
@@ -487,6 +493,32 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         at androidx.recyclerview.widget.RecyclerView$LayoutManager.requestChildRectangleOnScreen(SourceFile:9881)
                      */
                     return false;
+                }
+            }
+
+            @Override
+            public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+                try {
+                    super.onLayoutChildren(recycler, state);
+                } catch (IndexOutOfBoundsException ex) {
+                    /*
+                        java.lang.IndexOutOfBoundsException: Inconsistency detected. Invalid view holder adapter positionViewHolder{c6d0306 position=571 id=-1, oldPos=534, pLpos:534 scrap [attachedScrap] tmpDetached not recyclable(1) no parent} eu.faircode.email.FixedRecyclerView{8cb71ae VFED..... .F....ID 0,0-959,1068 #7f0902e9 app:id/rvMessage}, adapter:eu.faircode.email.AdapterMessage@5d69b4f, layout:eu.faircode.email.FragmentMessages$6@dcc62dc, context:eu.faircode.email.ActivityView@31147e2
+                          at androidx.recyclerview.widget.RecyclerView$Recycler.validateViewHolderForOffsetPosition(SourceFile:5974)
+                          at androidx.recyclerview.widget.RecyclerView$Recycler.tryGetViewHolderForPositionByDeadline(SourceFile:6158)
+                          at androidx.recyclerview.widget.RecyclerView$Recycler.getViewForPosition(SourceFile:6118)
+                          at androidx.recyclerview.widget.RecyclerView$Recycler.getViewForPosition(SourceFile:6114)
+                          at androidx.recyclerview.widget.LinearLayoutManager$LayoutState.next(SourceFile:2303)
+                          at androidx.recyclerview.widget.LinearLayoutManager.layoutChunk(SourceFile:1627)
+                          at androidx.recyclerview.widget.LinearLayoutManager.fill(SourceFile:1587)
+                          at androidx.recyclerview.widget.LinearLayoutManager.onLayoutChildren(SourceFile:665)
+                          at androidx.recyclerview.widget.RecyclerView.dispatchLayoutStep1(SourceFile:4085)
+                          at androidx.recyclerview.widget.RecyclerView.dispatchLayout(SourceFile:3849)
+                          at androidx.recyclerview.widget.RecyclerView.onLayout(SourceFile:4404)
+
+                        possibly related to the workaround for:
+                          https://issuetracker.google.com/issues/135628748
+                     */
+                    Log.w(ex);
                 }
             }
         };
@@ -2576,7 +2608,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         else
             fabMore.hide();
 
-        checkReporting();
+        if (!checkReporting())
+            checkReview();
     }
 
     @Override
@@ -2694,24 +2727,77 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
     };
 
-    private void checkReporting() {
-        if (viewType == AdapterMessage.ViewType.UNIFIED) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            if (prefs.getBoolean("crash_reports", false) ||
-                    prefs.getBoolean("crash_reports_asked", false))
-                return;
+    private boolean checkReporting() {
+        if (viewType != AdapterMessage.ViewType.UNIFIED)
+            return false;
 
-            final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_help, Snackbar.LENGTH_INDEFINITE);
-            snackbar.setAction(R.string.title_info, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    snackbar.dismiss();
-                    new FragmentDialogReporting().show(getParentFragmentManager(), "reporting");
-                }
-            });
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (prefs.getBoolean("crash_reports", false) ||
+                prefs.getBoolean("crash_reports_asked", false))
+            return false;
 
-            snackbar.show();
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_help, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction(R.string.title_info, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+                new FragmentDialogReporting().show(getParentFragmentManager(), "reporting");
+            }
+        });
+
+        snackbar.show();
+
+        return true;
+    }
+
+    private boolean checkReview() {
+        if (viewType != AdapterMessage.ViewType.UNIFIED)
+            return false;
+
+        if (!Helper.isPlayStoreInstall() && !BuildConfig.DEBUG)
+            return false;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (prefs.getBoolean("review_asked", false))
+            return false;
+
+        PackageManager pm = getContext().getPackageManager();
+
+        Intent intent = Helper.getIntentRate(getContext());
+        if (intent.resolveActivity(pm) == null)
+            return false;
+
+        long installed = 0;
+        try {
+            PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, 0);
+            if (pi != null)
+                installed = pi.firstInstallTime;
+        } catch (Throwable ex) {
+            Log.e(ex);
         }
+
+        long later = prefs.getLong("review_later", 0);
+
+        Log.i("Installed=" + new Date(installed) + " later=" + new Date(later));
+        if (later > installed)
+            installed = later;
+
+        long now = new Date().getTime();
+        if (installed + REVIEW_ASK_DELAY > now)
+            return false;
+
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_review, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction(R.string.title_info, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+                new FragmentDialogReview().show(getParentFragmentManager(), "review");
+            }
+        });
+
+        snackbar.show();
+
+        return true;
     }
 
     @Override
@@ -4282,6 +4368,47 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     else
                         throw new IllegalArgumentException(context.getString(R.string.title_not_encrypted));
 
+                if (message.from != null && message.from.length > 0 &&
+                        message.autocrypt != null &&
+                        OpenPgpApi.ACTION_DECRYPT_VERIFY.equals(data.getAction()))
+                    try {
+                        String peer = ((InternetAddress) message.from[0]).getAddress();
+                        boolean mutual = false;
+                        byte[] keydata = null;
+
+                        // https://autocrypt.org/level1.html#the-autocrypt-header
+                        String[] param = message.autocrypt.split(";");
+                        for (int i = 0; i < param.length; i++) {
+                            int e = param[i].indexOf("=");
+                            if (e > 0) {
+                                String key = param[i].substring(0, e).trim().toLowerCase();
+                                String value = param[i].substring(e + 1);
+                                Log.i("Autocrypt " + key + "=" + value);
+                                switch (key) {
+                                    case "addr":
+                                        break;
+                                    case "prefer-encrypt":
+                                        mutual = value.trim().toLowerCase().equals("mutual");
+                                        break;
+                                    case "keydata":
+                                        keydata = Base64.decode(value, Base64.DEFAULT);
+                                        break;
+                                }
+                            }
+                        }
+
+                        if (keydata == null)
+                            throw new IllegalArgumentException("keydata not found");
+
+                        AutocryptPeerUpdate update = AutocryptPeerUpdate.create(
+                                keydata, new Date(message.received), mutual);
+
+                        data.putExtra(OpenPgpApi.EXTRA_AUTOCRYPT_PEER_ID, peer);
+                        data.putExtra(OpenPgpApi.EXTRA_AUTOCRYPT_PEER_UPDATE, update);
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+
                 Intent result;
                 try {
                     // Decrypt message
@@ -5367,6 +5494,56 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         }
                     })
                     .setNegativeButton(android.R.string.no, null)
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogReview extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_review, null);
+            Button btnIssue = dview.findViewById(R.id.btnIssue);
+            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
+
+            final Intent issue = Helper.getIntentIssue(getContext(), true);
+            btnIssue.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(issue);
+                    dismiss();
+                }
+            });
+
+            PackageManager pm = getContext().getPackageManager();
+            btnIssue.setVisibility(issue.resolveActivity(pm) == null ? View.GONE : View.VISIBLE);
+
+            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    prefs.edit().putBoolean("review_asked", isChecked).apply();
+                }
+            });
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("review_asked", true).apply();
+                            startActivity(Helper.getIntentRate(getContext()));
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, null)
+                    .setNeutralButton(R.string.title_later, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putLong("review_later", new Date().getTime()).apply();
+                        }
+                    })
                     .create();
         }
     }

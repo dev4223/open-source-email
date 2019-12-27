@@ -198,15 +198,21 @@
     <string name="title_setup_biometrics_enable">Enable</string>
     <string name="title_setup_biometrics_disable">Disable</string>
     <string name="title_setup_biometrics_unlock">Unlock</string>
+
     <string name="title_setup_theme">Select theme</string>
-    <string name="title_setup_light_theme">Light theme</string>
-    <string name="title_setup_dark_theme">Dark theme</string>
-    <string name="title_setup_black_theme">Black theme</string>
-    <string name="title_setup_grey_light_theme">Grey light theme</string>
-    <string name="title_setup_grey_dark_theme">Grey dark theme</string>
-    <string name="title_setup_system_theme">System theme</string>
-    <string name="title_setup_grey_system_theme">Grey system theme</string>
-    <string name="title_setup_system_theme_hint">The system themes will automatically switch to light/dark on day/night, if supported by Android</string>
+
+    <string name="title_setup_theme_blue_orange">Blue/orange</string>
+    <string name="title_setup_theme_yellow_purple">Yellow/purple</string>
+    <string name="title_setup_theme_red_green">Red/green</string>
+    <string name="title_setup_theme_grey">Grey</string>
+    <string name="title_setup_theme_black">Black</string>
+
+    <string name="title_setup_theme_reverse">Reverse colors</string>
+    <string name="title_setup_theme_dark">Dark</string>
+    <string name="title_setup_theme_system">Follow system</string>
+
+    <string name="title_setup_theme_system_hint">Follow system theme will automatically switch to light/dark on day/night, if supported by Android</string>
+
     <string name="title_setup_advanced">Advanced</string>
 
     <string name="title_setup_options">Options</string>
@@ -340,6 +346,7 @@
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
     <string name="title_advanced_encrypt_method">Default encryption method</string>
     <string name="title_advanced_openpgp">OpenPGP provider</string>
+    <string name="title_advanced_autocrypt_mutual">Autocrypt mutual mode</string>
     <string name="title_advanced_sign_default">Sign by default</string>
     <string name="title_advanced_encrypt_default">Encrypt by default</string>
     <string name="title_advanced_auto_decrypt">Automatically decrypt messages</string>
@@ -361,7 +368,7 @@
     <string name="title_advanced_cleanup">Cleanup</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
-    <string name="title_advanced_storage_space" translatable="false">Storage space: %1$s</string>
+    <string name="title_advanced_storage_space" translatable="false">Storage space: %1$s/%2$s</string>
     <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
 
     <string name="title_advanced_hint">All settings have sensible default values, which should only be changed if necessary</string>
@@ -646,6 +653,14 @@
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
+
+    <string name="title_ask_review">Please review FairEmail</string>
+    <string name="title_ask_review_rationale">
+        You have been using FairEmail for a while.
+        It would be appreciated if you could rate FairEmail in the Play Store.
+        This will help to maintain a balance between unfavorable and favorable reviews.
+    </string>
+
     <string name="title_expand_warning">Expanding this message will download %1$s</string>
     <string name="title_download_message">Downloading &#8230;</string>
 
@@ -939,6 +954,7 @@
     <string name="title_issue">Do you have a question or problem?</string>
     <string name="title_yes">Yes</string>
     <string name="title_no">No</string>
+    <string name="title_later">Later</string>
     <string name="title_undo">Undo</string>
     <string name="title_redo">Redo</string>
     <string name="title_add">Add</string>
@@ -1023,8 +1039,22 @@
     <string name="title_accessibility_expanded">Expanded</string>
     <string name="title_accessibility_seen">Read</string>
     <string name="title_accessibility_unseen">Unread</string>
+
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d message</item>
+        <item quantity="other">%1$d messages</item>
+    </plurals>
+
     <string name="title_accessibility_flagged">Starred</string>
     <string name="title_accessibility_unflagged">Unstarred</string>
+    <string name="title_accessibility_collapse">Collapse</string>
+    <string name="title_accessibility_expand">Expand</string>
+    <string name="title_accessibility_view_contact">View contact</string>
+    <string name="title_accessibility_show_authentication_result">Show authentication result</string>
+    <string name="title_accessibility_show_snooze_time">Show snooze time</string>
+    <string name="title_accessibility_view_help">View help</string>
+    <string name="title_accessibility_selected">Selected</string>
+    <string name="title_accessibility_answered">Replied</string>
 
     <string-array name="pollIntervalNames">
         <item>Always</item>

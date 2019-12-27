@@ -20,9 +20,12 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.MailTo;
 import android.net.Uri;
 import android.text.TextUtils;
+
+import androidx.preference.PreferenceManager;
 
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
@@ -154,9 +157,15 @@ public class MessageHelper {
         if (message.from != null && message.from.length > 0) {
             String email = ((InternetAddress) message.from[0]).getAddress();
             String name = ((InternetAddress) message.from[0]).getPersonal();
-            if (email != null && identity != null && identity.sender_extra && !TextUtils.isEmpty(message.extra)) {
+            if (identity != null && identity.sender_extra &&
+                    identity.email.contains("@") &&
+                    email != null &&
+                    email.contains("@") &&
+                    message.extra != null &&
+                    !message.extra.equals(identity.email.split("@")[0])) {
                 int at = email.indexOf('@');
                 email = message.extra + email.substring(at);
+                name = null;
                 Log.i("extra=" + email);
             }
             imessage.setFrom(new InternetAddress(email, name));
@@ -232,18 +241,35 @@ public class MessageHelper {
             for (EntityAttachment attachment : attachments)
                 if (EntityAttachment.PGP_KEY.equals(attachment.encryption)) {
                     InternetAddress from = (InternetAddress) message.from[0];
-                    File file = attachment.getFile(context);
+
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    boolean mutual = prefs.getBoolean("autocrypt_mutual", true);
+                    String mode = (mutual ? "mutual" : "nopreference");
+
                     StringBuilder sb = new StringBuilder();
+                    File file = attachment.getFile(context);
                     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                        String line;
-                        while ((line = br.readLine()) != null)
-                            if (!line.startsWith("-----") && !line.endsWith("-----"))
-                                sb.append(line);
+                        String line = br.readLine();
+                        while (line != null) {
+                            String data = null;
+                            if (line.length() > 0 &&
+                                    !line.startsWith("-----BEGIN ") &&
+                                    !line.startsWith("-----END "))
+                                data = line;
+
+                            line = br.readLine();
+
+                            // https://www.w3.org/Protocols/rfc822/3_Lexical.html#z0
+                            if (data != null &&
+                                    line != null && !line.startsWith("-----END "))
+                                sb.append("\r\n ").append(data);
+                        }
                     }
 
+                    // https://autocrypt.org/level1.html#the-autocrypt-header
                     imessage.addHeader("Autocrypt",
                             "addr=" + from.getAddress() + ";" +
-                                    " prefer-encrypt=mutual;" +
+                                    " prefer-encrypt=" + mode + ";" +
                                     " keydata=" + sb.toString());
                 }
 
@@ -881,13 +907,7 @@ public class MessageHelper {
         if (autocrypt == null)
             return null;
 
-        autocrypt = MimeUtility.unfold(autocrypt);
-
-        int k = autocrypt.indexOf("keydata=");
-        if (k < 0)
-            return null;
-
-        return autocrypt.substring(k + 8);
+        return MimeUtility.unfold(autocrypt);
     }
 
     String getSubject() throws MessagingException {

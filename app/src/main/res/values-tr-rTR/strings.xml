@@ -166,14 +166,15 @@
     <string name="title_setup_biometrics_disable">Devredışı</string>
     <string name="title_setup_biometrics_unlock">Kilidi Aç</string>
     <string name="title_setup_theme">Tema Seç</string>
-    <string name="title_setup_light_theme">Aydınlık tema</string>
-    <string name="title_setup_dark_theme">Koyu Tema</string>
-    <string name="title_setup_black_theme">Siyah tema</string>
-    <string name="title_setup_grey_light_theme">Açık gri tema</string>
-    <string name="title_setup_grey_dark_theme">Koyu gri tema</string>
-    <string name="title_setup_system_theme">Sistem teması</string>
-    <string name="title_setup_grey_system_theme">Gri sistem teması</string>
-    <string name="title_setup_system_theme_hint">Eğer Android tarafından destekleniyorsa, sistem temaları gündüz/gece otomatik olarak açık/koyu olarak değişecektir</string>
+    <string name="title_setup_theme_blue_orange">Mavi/turuncu</string>
+    <string name="title_setup_theme_yellow_purple">Sarı/mor</string>
+    <string name="title_setup_theme_red_green">Kırmızı/yeşil</string>
+    <string name="title_setup_theme_grey">Gri</string>
+    <string name="title_setup_theme_black">Siyah</string>
+    <string name="title_setup_theme_reverse">Renkleri ters çevir</string>
+    <string name="title_setup_theme_dark">Koyu</string>
+    <string name="title_setup_theme_system">Sistem ile aynı</string>
+    <string name="title_setup_theme_system_hint">Eğer Android tarafından destekleniyorsa, sistem temasını izleme, gündüz/gece otomatik olarak açık/koyu olarak değişecektir</string>
     <string name="title_setup_advanced">Gelişmiş</string>
     <string name="title_setup_options">Seçenekler</string>
     <string name="title_setup_defaults">Öntanımlıları geri yükle</string>
@@ -296,6 +297,7 @@
     <string name="title_advanced_display_hidden">Gizli mesaj metinlerini göster</string>
     <string name="title_advanced_encrypt_method">Varsayılan şifreleme metodu</string>
     <string name="title_advanced_openpgp">OpenPGP sağlayıcı</string>
+    <string name="title_advanced_autocrypt_mutual">Autocrypt karşılıklı mod</string>
     <string name="title_advanced_sign_default">Varsayılan olarak imzala</string>
     <string name="title_advanced_encrypt_default">Varsayılan olarak şifrele</string>
     <string name="title_advanced_auto_decrypt">İletilerin şifrelerini otomatik olarak çöz</string>
@@ -567,6 +569,11 @@
     <string name="title_ask_help">FairEmail\'in geliştirilmesine yardımcı olun</string>
     <string name="title_ask_reporting">Hata raporları gönderilsin mi?</string>
     <string name="title_reporting_why">Hata raporlama FairEmail\'in geliştirilmesine yardımcı olacaktır</string>
+    <string name="title_ask_review">Lütfen FairEmail\'i değerlendirin</string>
+    <string name="title_ask_review_rationale">        Bir süredir FairEmail kullanıyorsunuz.
+        Play Store\'da FairEmail\'e puan verebilirseniz seviniriz.
+        Bu, olumsuz ve olumlu değerlendirmeler arasında bir denge kurulmasına yardımcı olacaktır.
+    </string>
     <string name="title_expand_warning">Bu mesajı genişletmek %1$s indirecektir</string>
     <string name="title_download_message">İndiriliyor &#8230;</string>
     <string name="title_compose">Eposta Oluştur</string>
@@ -835,6 +842,7 @@
     <string name="title_issue">Bir sorunuz ya da probleminiz mi var?</string>
     <string name="title_yes">Evet</string>
     <string name="title_no">Hayır</string>
+    <string name="title_later">Daha sonra</string>
     <string name="title_undo">Geri Al</string>
     <string name="title_redo">Yinele</string>
     <string name="title_add">Ekle</string>
@@ -911,6 +919,14 @@
     <string name="title_accessibility_unseen">Okunmayan</string>
     <string name="title_accessibility_flagged">Yıldızlı</string>
     <string name="title_accessibility_unflagged">Yıldızlı olmayan</string>
+    <string name="title_accessibility_collapse">Daralt</string>
+    <string name="title_accessibility_expand">Genişlet</string>
+    <string name="title_accessibility_view_contact">Kişiyi görüntüle</string>
+    <string name="title_accessibility_show_authentication_result">Kimlik doğrulama sonucunu göster</string>
+    <string name="title_accessibility_show_snooze_time">Erteleme süresini göster</string>
+    <string name="title_accessibility_view_help">Yardımı görüntüle</string>
+    <string name="title_accessibility_selected">Seçildi</string>
+    <string name="title_accessibility_answered">Yanıtlandı</string>
     <string-array name="pollIntervalNames">
         <item>Her Zaman</item>
         <item>Her 15 dakikada</item>

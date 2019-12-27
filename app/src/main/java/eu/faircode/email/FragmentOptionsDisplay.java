@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -657,73 +658,152 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     }
 
     public static class FragmentDialogTheme extends FragmentDialogBase {
+        private RadioGroup rgTheme;
+        private SwitchCompat swReverse;
+        private SwitchCompat swDark;
+        private SwitchCompat swSystem;
+
+        private void eval() {
+            int checkedId = rgTheme.getCheckedRadioButtonId();
+
+            swReverse.setEnabled(checkedId == R.id.rbThemeBlueOrange ||
+                    checkedId == R.id.rbThemeYellowPurple ||
+                    checkedId == R.id.rbThemeRedGreen);
+            swDark.setEnabled(checkedId == R.id.rbThemeBlueOrange ||
+                    checkedId == R.id.rbThemeYellowPurple ||
+                    checkedId == R.id.rbThemeRedGreen ||
+                    checkedId == R.id.rbThemeGrey);
+            swSystem.setEnabled(checkedId == R.id.rbThemeBlueOrange ||
+                    checkedId == R.id.rbThemeGrey);
+
+            boolean reverse = (swReverse.isEnabled() && swReverse.isChecked());
+            boolean dark = (swDark.isEnabled() && swDark.isChecked());
+            boolean system = (swSystem.isEnabled() && swSystem.isChecked());
+
+            swReverse.setEnabled(swReverse.isEnabled() && !system);
+            swSystem.setEnabled(swSystem.isEnabled() && !reverse && !dark);
+        }
+
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_theme, null);
-            final RadioGroup rgTheme = dview.findViewById(R.id.rgTheme);
+            rgTheme = dview.findViewById(R.id.rgTheme);
+            swReverse = dview.findViewById(R.id.swReverse);
+            swDark = dview.findViewById(R.id.swDark);
+            swSystem = dview.findViewById(R.id.swSystem);
 
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             String theme = prefs.getString("theme", "light");
 
-            switch (theme) {
-                case "dark":
-                    rgTheme.check(R.id.rbThemeDark);
-                    break;
-                case "black":
-                    rgTheme.check(R.id.rbThemeBlack);
-                    break;
-                case "grey_light":
-                    rgTheme.check(R.id.rbThemeGreyLight);
-                    break;
-                case "grey_dark":
-                    rgTheme.check(R.id.rbThemeGreyDark);
-                    break;
-                case "system":
-                    rgTheme.check(R.id.rbThemeSystem);
-                    break;
-                case "grey_system":
-                    rgTheme.check(R.id.rbThemeGreySystem);
-                    break;
-                default:
-                    rgTheme.check(R.id.rbThemeLight);
-            }
+            swReverse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    eval();
+                }
+            });
+
+            swDark.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    eval();
+                }
+            });
+
+            swSystem.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    eval();
+                }
+            });
 
             rgTheme.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    getActivity().getIntent().putExtra("tab", "display");
-
-                    ContactInfo.clearCache();
-
-                    switch (checkedId) {
-                        case R.id.rbThemeLight:
-                            prefs.edit().putString("theme", "light").apply();
-                            break;
-                        case R.id.rbThemeDark:
-                            prefs.edit().putString("theme", "dark").apply();
-                            break;
-                        case R.id.rbThemeBlack:
-                            prefs.edit().putString("theme", "black").apply();
-                            break;
-                        case R.id.rbThemeGreyLight:
-                            prefs.edit().putString("theme", "grey_light").apply();
-                            break;
-                        case R.id.rbThemeGreyDark:
-                            prefs.edit().putString("theme", "grey_dark").apply();
-                            break;
-                        case R.id.rbThemeSystem:
-                            prefs.edit().putString("theme", "system").apply();
-                            break;
-                        case R.id.rbThemeGreySystem:
-                            prefs.edit().putString("theme", "grey_system").apply();
-                            break;
-                    }
+                    eval();
                 }
             });
 
+            swReverse.setChecked(theme.startsWith("orange_blue") ||
+                    theme.startsWith("purple_yellow") ||
+                    theme.startsWith("green_red"));
+            swDark.setChecked(theme.endsWith("dark"));
+            swSystem.setChecked(theme.endsWith("system"));
+
+            switch (theme) {
+                case "light":
+                case "dark":
+                case "system":
+                case "blue_orange_light":
+                case "blue_orange_dark":
+                case "orange_blue_light":
+                case "orange_blue_dark":
+                    rgTheme.check(R.id.rbThemeBlueOrange);
+                    break;
+                case "yellow_purple_light":
+                case "yellow_purple_dark":
+                case "purple_yellow_light":
+                case "purple_yellow_dark":
+                    rgTheme.check(R.id.rbThemeYellowPurple);
+                    break;
+                case "red_green_light":
+                case "red_green_dark":
+                case "green_red_light":
+                case "green_red_dark":
+                    rgTheme.check(R.id.rbThemeRedGreen);
+                    break;
+                case "grey_system":
+                case "grey_light":
+                case "grey_dark":
+                    rgTheme.check(R.id.rbThemeGrey);
+                    break;
+                case "black":
+                    rgTheme.check(R.id.rbThemeBlack);
+                    break;
+            }
+
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getActivity().getIntent().putExtra("tab", "display");
+
+                            ContactInfo.clearCache();
+
+                            switch (rgTheme.getCheckedRadioButtonId()) {
+                                case R.id.rbThemeBlueOrange:
+                                    if (swSystem.isChecked())
+                                        prefs.edit().putString("theme", "system").apply();
+                                    else
+                                        prefs.edit().putString("theme",
+                                                (swReverse.isChecked() ? "orange_blue" : "blue_orange") +
+                                                        (swDark.isChecked() ? "_dark" : "_light")).apply();
+                                    break;
+                                case R.id.rbThemeYellowPurple:
+                                    prefs.edit().putString("theme",
+                                            (swReverse.isChecked() ? "purple_yellow" : "yellow_purple") +
+                                                    (swDark.isChecked() ? "_dark" : "_light")).apply();
+                                    break;
+                                case R.id.rbThemeRedGreen:
+                                    prefs.edit().putString("theme",
+                                            (swReverse.isChecked() ? "green_red" : "red_green") +
+                                                    (swDark.isChecked() ? "_dark" : "_light")).apply();
+                                    break;
+                                case R.id.rbThemeGrey:
+                                    if (swSystem.isChecked())
+                                        prefs.edit().putString("theme", "grey_system").apply();
+                                    else if (swDark.isChecked())
+                                        prefs.edit().putString("theme", "grey_dark").apply();
+                                    else
+                                        prefs.edit().putString("theme", "grey_light").apply();
+                                    break;
+                                case R.id.rbThemeBlack:
+                                    prefs.edit().putString("theme", "black").apply();
+                                    break;
+                            }
+                        }
+                    })
                     .setNegativeButton(android.R.string.cancel, null)
                     .create();
         }

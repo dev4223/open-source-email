@@ -18,11 +18,11 @@
     <attr name="colorActionBackground" format="reference" />
     <attr name="colorFabForeground" format="reference" />
     <attr name="colorFabBackground" format="reference" />
-    <attr name="colorToastForeground" format="reference" />
-    <attr name="colorToastBackground" format="reference" />
+    <attr name="colorInfoForeground" format="reference" />
+    <attr name="colorInfoBackground" format="reference" />
     <attr name="activatableItemBackground" format="reference" />
 
-    <style name="AppThemeLight" parent="Base.Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppThemeBaseLight" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <item name="themeName">light</item>
         <item name="android:windowDisablePreview">true</item>
 
@@ -33,11 +33,11 @@
         <item name="colorSubject">@color/lightColorUnread</item>
         <item name="colorRead">@color/colorReadLight</item>
         <item name="colorUnread">@color/colorUnreadLight</item>
-        <item name="colorUnreadHighlight">@color/colorAccentDark</item>
 
         <item name="colorEncrypt">@color/colorEncryptLight</item>
 
         <item name="colorSeparator">@color/lightColorSeparator</item>
+
         <item name="colorWarning">@color/lightColorWarning</item>
 
         <item name="colorDrawerScrim">@color/lightColorDrawerScrim</item>
@@ -53,14 +53,9 @@
         <item name="colorActionBackground">@color/lightActionBackground</item>
 
         <item name="colorFabForeground">@color/white</item>
-        <item name="colorFabBackground">@color/colorAccent</item>
-
-        <item name="colorToastForeground">@color/white</item>
-        <item name="colorToastBackground">@color/colorPrimaryDark</item>
 
         <item name="activatableItemBackground">@drawable/activatable_item_background_light</item>
 
-        <item name="android:textColorLink">@color/colorAccentDark</item>
         <item name="android:checkboxStyle">@style/checkboxStyle</item>
         <item name="android:buttonStyle">@style/buttonStyle</item>
         <item name="android:buttonStyleSmall">@style/buttonStyleSmall</item>
@@ -72,7 +67,7 @@
         <item name="android:scrollbarTrackVertical">@drawable/scroll_track</item>
     </style>
 
-    <style name="AppThemeDark" parent="Base.Theme.AppCompat">
+    <style name="AppThemeBaseDark" parent="Base.Theme.AppCompat">
         <item name="themeName">dark</item>
         <item name="android:windowDisablePreview">true</item>
 
@@ -85,11 +80,11 @@
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorRead">@color/colorReadDark</item>
         <item name="colorUnread">@color/colorUnreadDark</item>
-        <item name="colorUnreadHighlight">@color/colorAccent</item>
 
         <item name="colorEncrypt">@color/colorEncryptDark</item>
 
         <item name="colorSeparator">@color/darkColorSeparator</item>
+
         <item name="colorWarning">@color/darkColorWarning</item>
 
         <item name="colorDrawerScrim">@color/darkColorDrawerScrim</item>
@@ -105,10 +100,6 @@
         <item name="colorActionBackground">@color/darkActionBackground</item>
 
         <item name="colorFabForeground">@color/white</item>
-        <item name="colorFabBackground">@color/colorAccent</item>
-
-        <item name="colorToastForeground">@color/white</item>
-        <item name="colorToastBackground">@color/darkPrimaryLight</item>
 
         <item name="activatableItemBackground">@drawable/activatable_item_background_dark</item>
 
@@ -123,8 +114,200 @@
         <item name="android:scrollbarTrackVertical">@drawable/scroll_track</item>
     </style>
 
-    <style name="AppThemeBlack" parent="AppThemeDark">
+    <!-- Light -->
+
+    <style name="AppThemeBlueOrangeLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightBluePrimary</item>
+        <item name="colorPrimaryDark">@color/lightBluePrimaryDark</item>
+        <item name="colorAccent">@color/lightAmberAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightAmberAccentDark</item>
+
+        <item name="colorWarning">@color/lightAmberAccent</item>
+
+        <item name="colorFabBackground">@color/lightAmberAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightAmberAccent</item>
+
+        <item name="android:textColorLink">@color/lightAmberAccentDark</item>
+    </style>
+
+    <style name="AppThemeOrangeBlueLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightAmberPrimary</item>
+        <item name="colorPrimaryDark">@color/lightAmberPrimaryDark</item>
+        <item name="colorAccent">@color/lightBlueAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightBlueAccent</item>
+
+        <item name="colorWarning">@color/lightBlueAccent</item>
+
+        <item name="colorFabBackground">@color/lightBlueAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightBlueAccent</item>
+
+        <item name="android:textColorLink">@color/lightBlueAccent</item>
+    </style>
+
+    <style name="AppThemeYellowPurpleLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightYellowPrimary</item>
+        <item name="colorPrimaryDark">@color/lightYellowPrimaryDark</item>
+        <item name="colorAccent">@color/lightPurpleAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightPurpleAccent</item>
+
+        <item name="colorFabBackground">@color/lightPurpleAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightPurpleAccent</item>
+
+        <item name="android:textColorLink">@color/lightPurpleAccent</item>
+    </style>
+
+    <style name="AppThemePurpleYellowLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightPurplePrimary</item>
+        <item name="colorPrimaryDark">@color/lightPurplePrimaryDark</item>
+        <item name="colorAccent">@color/lightYellowAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightYellowAccent</item>
+
+        <item name="colorFabBackground">@color/lightYellowAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightYellowAccent</item>
+
+        <item name="android:textColorLink">@color/lightYellowAccent</item>
+    </style>
+
+    <style name="AppThemeRedGreenLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightRedPrimary</item>
+        <item name="colorPrimaryDark">@color/lightRedPrimaryDark</item>
+        <item name="colorAccent">@color/lightGreenAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightGreenAccent</item>
+
+        <item name="colorFabBackground">@color/lightGreenAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightGreenAccent</item>
+
+        <item name="android:textColorLink">@color/lightGreenAccent</item>
+    </style>
+
+    <style name="AppThemeGreenRedLight" parent="AppThemeBaseLight">
+        <item name="colorPrimary">@color/lightGreenPrimary</item>
+        <item name="colorPrimaryDark">@color/lightGreenPrimaryDark</item>
+        <item name="colorAccent">@color/lightRedAccent</item>
+
+        <item name="colorUnreadHighlight">@color/lightRedAccent</item>
+
+        <item name="colorFabBackground">@color/lightRedAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/lightRedAccent</item>
+
+        <item name="android:textColorLink">@color/lightRedAccent</item>
+    </style>
+
+    <!-- Dark -->
+
+    <style name="AppThemeBlueOrangeDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkBluePrimary</item>
+        <item name="colorPrimaryDark">@color/darkBluePrimaryDark</item>
+        <item name="colorAccent">@color/darkAmberAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkAmberAccent</item>
+
+        <item name="colorWarning">@color/darkAmberAccent</item>
+
+        <item name="colorFabBackground">@color/darkAmberAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkAmberAccent</item>
+    </style>
+
+    <style name="AppThemeOrangeBlueDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkAmberPrimary</item>
+        <item name="colorPrimaryDark">@color/darkAmberPrimaryDark</item>
+        <item name="colorAccent">@color/darkBlueAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkBlueAccent</item>
+
+        <item name="colorWarning">@color/darkBlueAccent</item>
+
+        <item name="colorFabBackground">@color/darkBlueAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkBlueAccent</item>
+    </style>
+
+    <style name="AppThemeYellowPurpleDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkYellowPrimary</item>
+        <item name="colorPrimaryDark">@color/darkYellowPrimaryDark</item>
+        <item name="colorAccent">@color/darkPurpleAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkPurpleAccent</item>
+
+        <item name="colorFabBackground">@color/darkPurpleAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkPurpleAccent</item>
+
+        <item name="android:textColorLink">@color/darkPurpleAccent</item>
+    </style>
+
+    <style name="AppThemePurpleYellowDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkPurplePrimary</item>
+        <item name="colorPrimaryDark">@color/darkPurplePrimaryDark</item>
+        <item name="colorAccent">@color/darkYellowAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkYellowAccent</item>
+
+        <item name="colorFabBackground">@color/darkYellowAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkYellowAccent</item>
+
+        <item name="android:textColorLink">@color/darkYellowAccent</item>
+    </style>
+
+    <style name="AppThemeRedGreenDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkRedPrimary</item>
+        <item name="colorPrimaryDark">@color/darkRedPrimaryDark</item>
+        <item name="colorAccent">@color/darkGreenAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkGreenAccent</item>
+
+        <item name="colorFabBackground">@color/darkGreenAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkGreenAccent</item>
+
+        <item name="android:textColorLink">@color/darkGreenAccent</item>
+    </style>
+
+    <style name="AppThemeGreenRedDark" parent="AppThemeBaseDark">
+        <item name="colorPrimary">@color/darkGreenPrimary</item>
+        <item name="colorPrimaryDark">@color/darkGreenPrimaryDark</item>
+        <item name="colorAccent">@color/darkRedAccent</item>
+
+        <item name="colorUnreadHighlight">@color/darkRedAccent</item>
+
+        <item name="colorFabBackground">@color/darkRedAccent</item>
+
+        <item name="colorInfoForeground">@color/black</item>
+        <item name="colorInfoBackground">@color/darkRedAccent</item>
+
+        <item name="android:textColorLink">@color/darkRedAccent</item>
+    </style>
+
+    <!-- Other -->
+
+    <style name="AppThemeBlack" parent="AppThemeBlueOrangeDark">
         <item name="themeName">black</item>
+        <item name="colorPrimary">@color/blackPrimary</item>
+        <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
 
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorUnread">@color/blackColorUnread</item>
@@ -139,8 +322,7 @@
         <item name="dateColorDrawerForeground">@color/blackAccent</item>
     </style>
 
-    <style name="AppThemeGreyLight" parent="AppThemeLight">
-        <item name="themeName">light</item>
+    <style name="AppThemeGreySteelBlueLight" parent="AppThemeBaseLight">
         <item name="colorPrimary">@color/greyPrimary</item>
         <item name="colorPrimaryDark">@color/greyPrimaryDark</item>
         <item name="colorAccent">@color/greyAccent</item>
@@ -151,11 +333,11 @@
 
         <item name="colorFabBackground">@color/greyAccent</item>
 
-        <item name="colorToastForeground">@color/white</item>
-        <item name="colorToastBackground">@color/greyAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/greyAccent</item>
     </style>
 
-    <style name="AppThemeGreyDark" parent="AppThemeBlack">
+    <style name="AppThemeGreySteelBlueDark" parent="AppThemeBlack">
         <item name="colorPrimary">@color/greyPrimary</item>
         <item name="colorPrimaryDark">@color/greyPrimaryDark</item>
         <item name="colorAccent">@color/greyAccent</item>
@@ -167,8 +349,8 @@
 
         <item name="colorFabBackground">@color/greyAccentDark</item>
 
-        <item name="colorToastForeground">@color/white</item>
-        <item name="colorToastBackground">@color/greyAccentDark</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/greyAccentDark</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">

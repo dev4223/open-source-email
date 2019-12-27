@@ -304,7 +304,11 @@ public class Helper {
     }
 
     static Intent getIntentIssue(Context context) {
-        if (ActivityBilling.isPro(context)) {
+        return getIntentIssue(context, ActivityBilling.isPro(context));
+    }
+
+    static Intent getIntentIssue(Context context, boolean pro) {
+        if (pro) {
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
@@ -322,6 +326,13 @@ public class Helper {
             return intent;
         } else
             return new Intent(Intent.ACTION_VIEW, Uri.parse(XDA_URI));
+    }
+
+    static Intent getIntentRate(Context context) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + BuildConfig.APPLICATION_ID));
+        if (intent.resolveActivity(context.getPackageManager()) == null)
+            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID));
+        return intent;
     }
 
     // Graphics
@@ -609,9 +620,14 @@ public class Helper {
             out.write(buf, 0, len);
     }
 
-    static long getStorageSpace() {
+    static long getAvailableStorageSpace() {
         StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
         return stats.getAvailableBlocksLong() * stats.getBlockSizeLong();
+    }
+
+    static long getTotalStorageSpace() {
+        StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
+        return stats.getTotalBytes();
     }
 
     static void openAdvanced(Intent intent) {

@@ -138,7 +138,7 @@
     <string name="title_setup_doze">Configurer les optimisations de la batterie</string>
     <string name="title_setup_doze_remark">Pour recevoir des e-mails en continu (facultatif)</string>
     <string name="title_setup_doze_instructions">Sur le prochain écran, sélectionnez \"Toutes les applications\" en haut, recherchez cette application puis sélectionnez et validez \"Ne pas optimiser\"</string>
-    <string name="title_setup_doze_battery">Utilisation de batterie élevée ?</string>
+    <string name="title_setup_doze_battery">Utilisation élevée de batterie ?</string>
     <string name="title_setup_doze_stopped">Synchronisation arrêtée ?</string>
     <string name="title_setup_data">L\'économiseur de données est activé</string>
     <string name="title_setup_inbox">Voir les messages</string>
@@ -166,14 +166,15 @@
     <string name="title_setup_biometrics_disable">Désactiver</string>
     <string name="title_setup_biometrics_unlock">Déverrouiller</string>
     <string name="title_setup_theme">Choisir le thème</string>
-    <string name="title_setup_light_theme">Thème clair</string>
-    <string name="title_setup_dark_theme">Thème sombre</string>
-    <string name="title_setup_black_theme">Thème noir</string>
-    <string name="title_setup_grey_light_theme">Thème clair gris</string>
-    <string name="title_setup_grey_dark_theme">Thème sombre gris</string>
-    <string name="title_setup_system_theme">Thème système</string>
-    <string name="title_setup_grey_system_theme">Thème système gris</string>
-    <string name="title_setup_system_theme_hint">Les thèmes système basculeront automatiquement en mode clair/sombre le jour/la nuit si pris en charge par Android</string>
+    <string name="title_setup_theme_blue_orange">Bleu/orange</string>
+    <string name="title_setup_theme_yellow_purple">Jaune/violet</string>
+    <string name="title_setup_theme_red_green">Rouge/vert</string>
+    <string name="title_setup_theme_grey">Gris</string>
+    <string name="title_setup_theme_black">Noir</string>
+    <string name="title_setup_theme_reverse">Inverser les couleurs</string>
+    <string name="title_setup_theme_dark">Sombre</string>
+    <string name="title_setup_theme_system">Suivre le système</string>
+    <string name="title_setup_theme_system_hint">Suivre le thème système basculera automatiquement en mode clair/sombre le jour/la nuit si cela est pris en charge par Android</string>
     <string name="title_setup_advanced">Avancé</string>
     <string name="title_setup_options">Options</string>
     <string name="title_setup_defaults">Rétablir les paramètres par défaut</string>
@@ -296,6 +297,7 @@
     <string name="title_advanced_display_hidden">Afficher les textes de message cachés</string>
     <string name="title_advanced_encrypt_method">Méthode de chiffrement par défaut</string>
     <string name="title_advanced_openpgp">Fournisseur OpenPGP</string>
+    <string name="title_advanced_autocrypt_mutual">Mode Autocrypt mutuel</string>
     <string name="title_advanced_sign_default">Signer par défaut</string>
     <string name="title_advanced_encrypt_default">Chiffrer par défaut</string>
     <string name="title_advanced_auto_decrypt">Déchiffrer automatiquement les messages</string>
@@ -567,6 +569,11 @@
     <string name="title_ask_help">Aider à améliorer FairEmail</string>
     <string name="title_ask_reporting">Envoyer des rapports d\'erreur ?</string>
     <string name="title_reporting_why">Un rapport d\'erreur aidera à améliorer FairEmail</string>
+    <string name="title_ask_review">Veuillez évaluer FairEmail</string>
+    <string name="title_ask_review_rationale">        Vous utilisez FairEmail depuis un moment.
+        Je vous serais reconnaissant si vous pouviez noter FairEmail dans le Play Store.
+        Cela aidera à maintenir un équilibre entre les avis défavorables et favorables.
+    </string>
     <string name="title_expand_warning">Développer ce message téléchargera %1$s</string>
     <string name="title_download_message">Téléchargement&#8230;</string>
     <string name="title_compose">Rédiger</string>
@@ -835,6 +842,7 @@
     <string name="title_issue">Avez-vous une question ou un problème ?</string>
     <string name="title_yes">Oui</string>
     <string name="title_no">Non</string>
+    <string name="title_later">Plus tard</string>
     <string name="title_undo">Annuler</string>
     <string name="title_redo">Recommencer</string>
     <string name="title_add">Ajouter</string>
@@ -911,6 +919,14 @@
     <string name="title_accessibility_unseen">Non lu</string>
     <string name="title_accessibility_flagged">Suivi</string>
     <string name="title_accessibility_unflagged">Non suivi</string>
+    <string name="title_accessibility_collapse">Réduire</string>
+    <string name="title_accessibility_expand">Développer</string>
+    <string name="title_accessibility_view_contact">Voir le contact</string>
+    <string name="title_accessibility_show_authentication_result">Afficher le résultat d\'authentification</string>
+    <string name="title_accessibility_show_snooze_time">Afficher le délai de répétition</string>
+    <string name="title_accessibility_view_help">Voir l\'aide</string>
+    <string name="title_accessibility_selected">Sélectionné</string>
+    <string name="title_accessibility_answered">Répondu</string>
     <string-array name="pollIntervalNames">
         <item>Toujours</item>
         <item>Toutes les 15 minutes</item>

@@ -78,6 +78,8 @@ import android.view.ViewAnimationUtils;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.accessibility.AccessibilityManager;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -173,6 +175,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
+    private boolean accessibility;
 
     private boolean suitable;
     private boolean unmetered;
@@ -265,7 +268,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibExpander;
         private ImageView ibFlagged;
         private ImageButton ibAvatar;
-        private View vwSeen;
         private ImageButton ibAuth;
         private ImageView ivPriorityHigh;
         private ImageView ivPriorityLow;
@@ -382,7 +384,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private ScaleGestureDetector gestureDetector;
 
-        ViewHolder(final View itemView) {
+        ViewHolder(final View itemView, long viewType) {
             super(itemView);
 
             card = itemView.findViewById(R.id.card);
@@ -392,7 +394,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibExpander = itemView.findViewById(R.id.ibExpander);
             ibFlagged = itemView.findViewById(R.id.ibFlagged);
             ibAvatar = itemView.findViewById(R.id.ibAvatar);
-            vwSeen = itemView.findViewById(R.id.vwSeen);
             ibAuth = itemView.findViewById(R.id.ibAuth);
             ivPriorityHigh = itemView.findViewById(R.id.ivPriorityHigh);
             ivPriorityLow = itemView.findViewById(R.id.ivPriorityLow);
@@ -425,6 +426,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     else
                         tvSubject.setEllipsize(TextUtils.TruncateAt.MIDDLE);
             }
+
+            if (viewType != R.layout.item_message_compact && viewType != R.layout.item_message_normal)
+                return;
+
+            if (!BuildConfig.DEBUG && !accessibility)
+                return;
         }
 
         private void ensureExpanded() {
@@ -620,6 +627,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 });
             }
+
+
+            if (accessibility)
+                view.setAccessibilityDelegate(accessibilityDelegateHeader);
         }
 
         private void unwire() {
@@ -662,6 +673,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarMaybe.setOnClickListener(null);
                 ibCalendar.setOnClickListener(null);
             }
+
+            if (accessibility)
+                view.setAccessibilityDelegate(null);
         }
 
         private void clear() {
@@ -700,7 +714,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         @SuppressLint("WrongConstant")
-        private void bindTo(final TupleMessageEx message) {
+        private void bindTo(final TupleMessageEx message, int position) {
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
             boolean outgoing = isOutgoing(message);
@@ -817,8 +831,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (ibExpander.getTag() == null || (boolean) ibExpander.getTag() != expanded) {
                 ibExpander.setTag(expanded);
                 ibExpander.setImageLevel(expanded ? 0 /* less */ : 1 /* more */);
-                ibExpander.setContentDescription(context.getString(
-                        expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
             }
             if (viewType == ViewType.THREAD)
                 ibExpander.setVisibility(EntityFolder.DRAFTS.equals(message.folderType) ? View.INVISIBLE : View.VISIBLE);
@@ -827,9 +839,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Photo
             ibAvatar.setVisibility(avatars ? View.INVISIBLE : View.GONE);
-
-            vwSeen.setContentDescription(context.getString(
-                    message.unseen > 0 ? R.string.title_accessibility_unseen : R.string.title_accessibility_seen));
 
             // Line 1
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
@@ -1094,8 +1103,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int color = (message.color == null || !pro ? colorAccent : message.color);
 
             ibFlagged.setImageResource(flagged > 0 ? R.drawable.baseline_star_24 : R.drawable.baseline_star_border_24);
-            ibFlagged.setContentDescription(context.getString(
-                    flagged > 0 ? R.string.title_accessibility_flagged : R.string.title_accessibility_unflagged));
             ibFlagged.setImageTintList(ColorStateList.valueOf(flagged > 0 ? color : textColorSecondary));
             ibFlagged.setEnabled(message.uid != null || message.accountProtocol != EntityAccount.TYPE_IMAP);
 
@@ -1120,21 +1127,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAvatar.setTag(lookupUri);
             ibAvatar.setEnabled(lookupUri != null);
 
-            // Updating in message lists causes jitter
-            if (viewType == ViewType.THREAD) {
-                String displayName = info.getDisplayName();
-                if (!TextUtils.isEmpty(displayName) &&
-                        addresses != null && addresses.length == 1) {
-                    String email = ((InternetAddress) addresses[0]).getAddress();
-                    String personal = ((InternetAddress) addresses[0]).getPersonal();
-                    if (TextUtils.isEmpty(personal) || !personal.equals(displayName))
-                        try {
-                            InternetAddress a = new InternetAddress(email, displayName);
-                            tvFrom.setText(MessageHelper.formatAddresses(new Address[]{a}, name_email, false));
-                        } catch (UnsupportedEncodingException ex) {
-                            Log.w(ex);
-                        }
-                }
+            String displayName = info.getDisplayName();
+            if (!TextUtils.isEmpty(displayName) &&
+                    addresses != null && addresses.length == 1) {
+                String email = ((InternetAddress) addresses[0]).getAddress();
+                String personal = ((InternetAddress) addresses[0]).getPersonal();
+                if (TextUtils.isEmpty(personal))
+                    try {
+                        InternetAddress a = new InternetAddress(email, displayName, StandardCharsets.UTF_8.name());
+                        tvFrom.setText(MessageHelper.formatAddresses(new Address[]{a}, name_email, false));
+                    } catch (UnsupportedEncodingException ex) {
+                        Log.w(ex);
+                    }
             }
 
             if (distinguish_contacts && info.isKnown())
@@ -2239,7 +2243,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else {
                         message.ui_seen = !message.ui_seen;
                         message.unseen = (message.ui_seen ? 0 : message.count);
-                        bindTo(message);
+                        bindTo(message, getAdapterPosition());
 
                         Bundle args = new Bundle();
                         args.putLong("id", message.id);
@@ -2645,8 +2649,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibExpander.setTag(expanded);
                 ibExpander.setImageLevel(expanded ? 0 /* less*/ : 1 /* more */);
-                ibExpander.setContentDescription(context.getString(
-                        expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
 
                 if (expanded)
                     bindExpanded(message, true);
@@ -3759,6 +3761,158 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         Long getKey() {
             return getKeyAtPosition(getAdapterPosition());
         }
+
+        private View.AccessibilityDelegate accessibilityDelegateHeader = new View.AccessibilityDelegate() {
+            @Override
+            public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
+                super.onInitializeAccessibilityNodeInfo(host, info);
+
+                TupleMessageEx message = getMessage();
+                if (message == null)
+                    return;
+
+                boolean expanded = properties.getValue("expanded", message.id);
+
+                List<String> result = new ArrayList<>();
+
+                vwColor.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (selectionTracker != null && selectionTracker.isSelected(message.id))
+                    result.add(context.getString(R.string.title_accessibility_selected));
+
+                result.add(context.getString(message.unseen > 0 ? R.string.title_accessibility_unseen : R.string.title_accessibility_seen));
+                result.add(context.getResources().getQuantityString(
+                        R.plurals.title_accessibility_messages, message.visible, message.visible));
+
+                if (ibExpander.getVisibility() == View.VISIBLE) {
+                    result.add(context.getString(expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibExpander,
+                            context.getString(expanded ? R.string.title_accessibility_collapse : R.string.title_accessibility_expand)));
+                }
+                ibExpander.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (ibAvatar.getVisibility() == View.VISIBLE && ibAvatar.isEnabled())
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibAvatar,
+                            context.getString(R.string.title_accessibility_view_contact)));
+                ibAvatar.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (message.drafts > 0)
+                    result.add(context.getString(R.string.title_legend_draft));
+                if (message.ui_answered)
+                    result.add(context.getString(R.string.title_accessibility_answered));
+
+                if (ibFlagged.getVisibility() == View.VISIBLE && ibFlagged.isEnabled()) {
+                    int flagged = (message.count - message.unflagged);
+                    if (flagged > 0)
+                        result.add(context.getString(R.string.title_accessibility_flagged));
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibFlagged,
+                            context.getString(flagged > 0 ? R.string.title_unflag : R.string.title_flag)));
+                }
+                ibFlagged.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (EntityMessage.PRIORITIY_HIGH.equals(message.priority))
+                    result.add(context.getString(R.string.title_legend_priority));
+                if (EntityMessage.PRIORITIY_LOW.equals(message.priority))
+                    result.add(context.getString(R.string.title_legend_priority_low));
+                if (message.attachments > 0)
+                    result.add(context.getString(R.string.title_legend_attachment));
+
+                // For a11y purpose report addresses first in case of incoming message
+                boolean outgoing = isOutgoing(message);
+                if (!outgoing || message.count > 1)
+                    result.add(tvFrom.getText().toString());
+                else
+                    result.add(message.subject); // Don't want to ellipsize for a11y
+                result.add(tvTime.getText().toString());
+                if (outgoing && message.count == 1)
+                    result.add(tvFrom.getText().toString());
+                else
+                    result.add(message.subject);
+
+                if (message.encrypted > 0)
+                    result.add(context.getString(R.string.title_legend_encrypted));
+                if (message.signed > 0)
+                    result.add(context.getString(R.string.title_legend_signed));
+
+                if (ibAuth.getVisibility() == View.VISIBLE) {
+                    result.add(context.getString(R.string.title_legend_auth));
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibAuth,
+                            context.getString(R.string.title_accessibility_show_authentication_result)));
+                }
+                ibAuth.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (ibSnoozed.getVisibility() == View.VISIBLE) {
+                    result.add(context.getString(R.string.title_legend_snoozed));
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibSnoozed,
+                            context.getString(R.string.title_accessibility_show_snooze_time)));
+                }
+                ibSnoozed.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (tvFolder.getVisibility() == View.VISIBLE)
+                    result.add(tvFolder.getText().toString());
+                if (tvSize.getVisibility() == View.VISIBLE)
+                    result.add(tvSize.getText().toString());
+                if (tvError.getVisibility() == View.VISIBLE)
+                    result.add(tvError.getText().toString());
+                if (tvPreview.getVisibility() == View.VISIBLE)
+                    result.add(tvPreview.getText().toString());
+
+                if (ibHelp.getVisibility() == View.VISIBLE)
+                    info.addAction(new AccessibilityNodeInfo.AccessibilityAction(R.id.ibHelp,
+                            context.getString(R.string.title_accessibility_view_help)));
+                ibHelp.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+                if (expanded)
+                    for (int i = 0; i < bnvActions.getMenu().size(); i++) {
+                        MenuItem menuItem = bnvActions.getMenu().getItem(i);
+                        if (menuItem.isVisible() && menuItem.isEnabled())
+                            info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
+                                    menuItem.getItemId(), menuItem.getTitle()));
+                    }
+
+                info.setContentDescription(TextUtils.join(", ", result));
+            }
+
+            @Override
+            public boolean performAccessibilityAction(View host, int action, Bundle args) {
+                TupleMessageEx message = getMessage();
+                if (message == null)
+                    return false;
+
+                boolean expanded = properties.getValue("expanded", message.id);
+
+                switch (action) {
+                    case R.id.ibExpander:
+                        onToggleMessage(message);
+                        return true;
+                    case R.id.ibAvatar:
+                        onViewContact(message);
+                        return true;
+                    case R.id.ibFlagged:
+                        onToggleFlag(message);
+                        return true;
+                    case R.id.ibAuth:
+                        onShowAuth(message);
+                        return true;
+                    case R.id.ibSnoozed:
+                        onShowSnoozed(message);
+                        return true;
+                    case R.id.ibHelp:
+                        onHelp(message);
+                        return true;
+                    default:
+                        if (expanded)
+                            for (int i = 0; i < bnvActions.getMenu().size(); i++) {
+                                MenuItem menuItem = bnvActions.getMenu().getItem(i);
+                                if (menuItem.getItemId() == action) {
+                                    bnvActions.getMenu().performIdentifierAction(action, 0);
+                                    return true;
+                                }
+                            }
+                        return super.performAccessibilityAction(host, action, args);
+                }
+            }
+        };
     }
 
     AdapterMessage(Fragment parentFragment,
@@ -3778,6 +3932,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.context = parentFragment.getContext();
         this.owner = parentFragment.getViewLifecycleOwner();
         this.inflater = LayoutInflater.from(context);
+
+        AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        this.accessibility = (am != null && am.isEnabled());
+
         this.TF = Helper.getTimeInstance(context, SimpleDateFormat.SHORT);
         this.DTF = Helper.getDateTimeInstance(context, SimpleDateFormat.LONG, SimpleDateFormat.LONG);
 
@@ -4264,7 +4422,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ViewHolder(inflater.inflate(viewType, parent, false));
+        return new ViewHolder(inflater.inflate(viewType, parent, false), viewType);
     }
 
     @Override
@@ -4288,7 +4446,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         holder.unwire();
-        holder.bindTo(message);
+        holder.bindTo(message, position);
         holder.wire();
     }
 

@@ -68,7 +68,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
-            "welcome", "crash_reports_asked",
+            "welcome", "crash_reports_asked", "review_asked", "review_later",
             "html_always_images", "print_html_confirmed",
             "identities_asked", "cc_bcc", "inline_image_hint", "compose_reference", "send_dialog"
     };
@@ -296,7 +296,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvMemoryClass.setText(getString(R.string.title_advanced_memory_class, class_mb + " MB"));
 
         tvStorageSpace.setText(getString(R.string.title_advanced_storage_space,
-                Helper.humanReadableByteCount(Helper.getStorageSpace(), true)));
+                Helper.humanReadableByteCount(Helper.getAvailableStorageSpace(), true),
+                Helper.humanReadableByteCount(Helper.getTotalStorageSpace(), true)));
         tvFingerprint.setText(Helper.getFingerprint(getContext()));
 
         grpDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
