@@ -42,6 +42,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
@@ -290,7 +291,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
     static final String ACTION_NEW_MESSAGE = BuildConfig.APPLICATION_ID + ".NEW_MESSAGE";
 
-    private static final long REVIEW_ASK_DELAY = 3 * 24 * 3600 * 1000L; // milliseonds
+    private static final long REVIEW_ASK_DELAY = 21 * 24 * 3600 * 1000L; // milliseconds
 
     private static final List<String> DUPLICATE_ORDER = Collections.unmodifiableList(Arrays.asList(
             EntityFolder.INBOX,
@@ -545,7 +546,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 for (int i = 0; i < parent.getChildCount(); i++) {
                     View view = parent.getChildAt(i);
                     int pos = parent.getChildAdapterPosition(view);
-                    View header = getView(parent, pos);
+                    View header = getView(view, parent, pos);
                     if (header != null) {
                         canvas.save();
                         canvas.translate(0, parent.getChildAt(i).getTop() - header.getMeasuredHeight());
@@ -558,14 +559,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
                 int pos = parent.getChildAdapterPosition(view);
-                View header = getView(parent, pos);
+                View header = getView(view, parent, pos);
                 if (header == null)
                     outRect.setEmpty();
                 else
                     outRect.top = header.getMeasuredHeight();
             }
 
-            private View getView(RecyclerView parent, int pos) {
+            private View getView(View view, RecyclerView parent, int pos) {
                 if (!date || !"time".equals(adapter.getSort()))
                     return null;
 
@@ -621,6 +622,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     message.received,
                                     new Date().getTime(),
                                     DAY_IN_MILLIS, 0));
+
+                view.setContentDescription(tvDate.getText().toString());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+                    view.setAccessibilityHeading(true);
 
                 header.measure(View.MeasureSpec.makeMeasureSpec(parent.getWidth(), View.MeasureSpec.EXACTLY),
                         View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
@@ -4058,7 +4063,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (auto && identity == null)
                         return;
 
-                    Helper.selectKeyAlias(getActivity(), identity == null ? null : identity.sign_key_alias, new Helper.IKeyAlias() {
+                    String alias = (identity == null ? null : identity.sign_key_alias);
+                    Helper.selectKeyAlias(getActivity(), getViewLifecycleOwner(), alias, new Helper.IKeyAlias() {
                         @Override
                         public void onSelected(String alias) {
                             args.putString("alias", alias);
@@ -5503,20 +5509,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_review, null);
-            Button btnIssue = dview.findViewById(R.id.btnIssue);
             CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-            final Intent issue = Helper.getIntentIssue(getContext(), true);
-            btnIssue.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(issue);
-                    dismiss();
-                }
-            });
-
-            PackageManager pm = getContext().getPackageManager();
-            btnIssue.setVisibility(issue.resolveActivity(pm) == null ? View.GONE : View.VISIBLE);
 
             cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override

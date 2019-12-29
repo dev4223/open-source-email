@@ -170,7 +170,7 @@
     <string name="title_setup_theme_yellow_purple">Jaune/violet</string>
     <string name="title_setup_theme_red_green">Rouge/vert</string>
     <string name="title_setup_theme_grey">Gris</string>
-    <string name="title_setup_theme_black">Noir</string>
+    <string name="title_setup_theme_black">Noir (AMOLED)</string>
     <string name="title_setup_theme_reverse">Inverser les couleurs</string>
     <string name="title_setup_theme_dark">Sombre</string>
     <string name="title_setup_theme_system">Suivre le système</string>
@@ -885,7 +885,7 @@
         Pour rendre FairEmail durable à long terme, certaines fonctionnalités pratiques et avancées ne sont pas libres d\'utilisation.
         FairEmail affiche un petit message pour vous rappeler ceci, message qui sera retiré si vous achetez les fonctionnalités Pro.
     </string>
-    <string name="title_pro_hide">Masquer le petit message jusqu\'à demain</string>
+    <string name="title_pro_hide">Masquer la bannière pendant une semaine</string>
     <string name="title_pro_hint">L\'achat des fonctionnalités Pro vous autorisera à utiliser toutes les fonctionnalités Pro actuelles et futures et permettra de maintenir et de supporter cette application</string>
     <string name="title_pro_price">Veuillez voir <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">cette FAQ</a> à propos du prix des fonctionnalités Pro</string>
     <string name="title_pro_pending">Achat en cours</string>
@@ -917,6 +917,10 @@
     <string name="title_accessibility_expanded">Étendu</string>
     <string name="title_accessibility_seen">Lu</string>
     <string name="title_accessibility_unseen">Non lu</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d message</item>
+        <item quantity="other">%1$d messages</item>
+    </plurals>
     <string name="title_accessibility_flagged">Suivi</string>
     <string name="title_accessibility_unflagged">Non suivi</string>
     <string name="title_accessibility_collapse">Réduire</string>
@@ -927,6 +931,14 @@
     <string name="title_accessibility_view_help">Voir l\'aide</string>
     <string name="title_accessibility_selected">Sélectionné</string>
     <string name="title_accessibility_answered">Répondu</string>
+    <string name="title_accessibility_scroll_down">Défiler vers le bas</string>
+    <string name="title_accessibility_scroll_up">Défiler vers le haut</string>
+    <string name="title_accessibility_filter_out_seen">Activer/désactiver le filtre de messages lus</string>
+    <string name="title_accessibility_filter_out_unflagged">Activer/désactiver le filtre de messages suivis</string>
+    <string name="title_accessibility_filter_out_snoozed">Activer/désactiver le filtre de messages reportés</string>
+    <string name="title_accessibility_edit">Modifier</string>
+    <string name="title_accessibility_show_addresses">Afficher les adresses</string>
+    <string name="title_accessibility_hide_addresses">Masquer les adresses</string>
     <string-array name="pollIntervalNames">
         <item>Toujours</item>
         <item>Toutes les 15 minutes</item>

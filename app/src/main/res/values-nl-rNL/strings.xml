@@ -170,7 +170,7 @@
     <string name="title_setup_theme_yellow_purple">Geel/paars</string>
     <string name="title_setup_theme_red_green">Rood/groen</string>
     <string name="title_setup_theme_grey">Grijs</string>
-    <string name="title_setup_theme_black">Zwart</string>
+    <string name="title_setup_theme_black">Zwart (AMOLED)</string>
     <string name="title_setup_theme_reverse">Kleuren omkeren</string>
     <string name="title_setup_theme_dark">Donker</string>
     <string name="title_setup_theme_system">Volg systeem</string>
@@ -882,7 +882,7 @@
     <string name="title_pro_purchase">Koop</string>
     <string name="title_pro_once">Eenmalig</string>
     <string name="title_pro_info">Het ontwikkelen van FairEmail kostte letterlijk duizenden uren en ondanks dat zijn de meeste functies gratis te gebruiken. Om FairEmail op de lange termijn duurzaam te maken, zijn sommige gebruiksgemak en geavanceerde functies niet gratis te gebruiken. FairEmail geeft een klein bericht weer om u hieraan te herinneren, dat wordt verwijderd als u de pro functies aanschaft.</string>
-    <string name="title_pro_hide">Verberg kleine bericht tot morgen</string>
+    <string name="title_pro_hide">Verberg het kleine bericht voor een week</string>
     <string name="title_pro_hint">Het kopen van pro functies geeft toegang tot alle huidige en toekomstige pro functies en zorgt voor onderhoud en ondersteuning van deze app.</string>
     <string name="title_pro_price">Zie <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">deze FAQ</a> over de prijs van de pro-functies</string>
     <string name="title_pro_pending">Aankoop in behandeling</string>
@@ -914,6 +914,10 @@
     <string name="title_accessibility_expanded">Uitgevouwen</string>
     <string name="title_accessibility_seen">Gelezen</string>
     <string name="title_accessibility_unseen">Ongelezen</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d bericht</item>
+        <item quantity="other">%1$d berichten</item>
+    </plurals>
     <string name="title_accessibility_flagged">Met ster</string>
     <string name="title_accessibility_unflagged">Zonder ster</string>
     <string name="title_accessibility_collapse">Samenvouwen</string>
@@ -924,6 +928,14 @@
     <string name="title_accessibility_view_help">Help bekijken</string>
     <string name="title_accessibility_selected">Geselecteerd</string>
     <string name="title_accessibility_answered">Beantwoord</string>
+    <string name="title_accessibility_scroll_down">Scroll omlaag</string>
+    <string name="title_accessibility_scroll_up">Scroll omhoog</string>
+    <string name="title_accessibility_filter_out_seen">Filter voor gelezen berichten in-/uitschakelen</string>
+    <string name="title_accessibility_filter_out_unflagged">Filter voor favoriete berichten in-/uitschakelen</string>
+    <string name="title_accessibility_filter_out_snoozed">Filter voor gesluimerde berichten in-/uitschakelen</string>
+    <string name="title_accessibility_edit">Wijzigen</string>
+    <string name="title_accessibility_show_addresses">Toon adressen</string>
+    <string name="title_accessibility_hide_addresses">Verberg adressen</string>
     <string-array name="pollIntervalNames">
         <item>Altijd</item>
         <item>Elke 15 minuten</item>

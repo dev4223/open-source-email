@@ -128,7 +128,7 @@
         <item name="colorFabBackground">@color/lightAmberAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightAmberAccent</item>
+        <item name="colorInfoBackground">@color/lightBluePrimary</item>
 
         <item name="android:textColorLink">@color/lightAmberAccentDark</item>
     </style>
@@ -145,7 +145,7 @@
         <item name="colorFabBackground">@color/lightBlueAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightBlueAccent</item>
+        <item name="colorInfoBackground">@color/lightAmberPrimary</item>
 
         <item name="android:textColorLink">@color/lightBlueAccent</item>
     </style>
@@ -160,7 +160,7 @@
         <item name="colorFabBackground">@color/lightPurpleAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightPurpleAccent</item>
+        <item name="colorInfoBackground">@color/lightYellowPrimary</item>
 
         <item name="android:textColorLink">@color/lightPurpleAccent</item>
     </style>
@@ -175,7 +175,7 @@
         <item name="colorFabBackground">@color/lightYellowAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightYellowAccent</item>
+        <item name="colorInfoBackground">@color/lightPurplePrimary</item>
 
         <item name="android:textColorLink">@color/lightYellowAccent</item>
     </style>
@@ -190,7 +190,7 @@
         <item name="colorFabBackground">@color/lightGreenAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightGreenAccent</item>
+        <item name="colorInfoBackground">@color/lightRedPrimary</item>
 
         <item name="android:textColorLink">@color/lightGreenAccent</item>
     </style>
@@ -205,7 +205,7 @@
         <item name="colorFabBackground">@color/lightRedAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/lightRedAccent</item>
+        <item name="colorInfoBackground">@color/lightGreenPrimary</item>
 
         <item name="android:textColorLink">@color/lightRedAccent</item>
     </style>
@@ -223,8 +223,8 @@
 
         <item name="colorFabBackground">@color/darkAmberAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkAmberAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkBluePrimary</item>
     </style>
 
     <style name="AppThemeOrangeBlueDark" parent="AppThemeBaseDark">
@@ -238,8 +238,8 @@
 
         <item name="colorFabBackground">@color/darkBlueAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkBlueAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkAmberPrimary</item>
     </style>
 
     <style name="AppThemeYellowPurpleDark" parent="AppThemeBaseDark">
@@ -251,8 +251,8 @@
 
         <item name="colorFabBackground">@color/darkPurpleAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkPurpleAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkYellowPrimary</item>
 
         <item name="android:textColorLink">@color/darkPurpleAccent</item>
     </style>
@@ -266,8 +266,8 @@
 
         <item name="colorFabBackground">@color/darkYellowAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkYellowAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkPurplePrimary</item>
 
         <item name="android:textColorLink">@color/darkYellowAccent</item>
     </style>
@@ -281,8 +281,8 @@
 
         <item name="colorFabBackground">@color/darkGreenAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkGreenAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkRedPrimary</item>
 
         <item name="android:textColorLink">@color/darkGreenAccent</item>
     </style>
@@ -296,8 +296,8 @@
 
         <item name="colorFabBackground">@color/darkRedAccent</item>
 
-        <item name="colorInfoForeground">@color/black</item>
-        <item name="colorInfoBackground">@color/darkRedAccent</item>
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/darkGreenPrimary</item>
 
         <item name="android:textColorLink">@color/darkRedAccent</item>
     </style>
@@ -308,6 +308,10 @@
         <item name="themeName">black</item>
         <item name="colorPrimary">@color/blackPrimary</item>
         <item name="colorPrimaryDark">@color/blackPrimaryDark</item>
+        <item name="colorAccent">@color/blackAccent</item>
+
+        <item name="colorInfoForeground">@color/white</item>
+        <item name="colorInfoBackground">@color/blackPrimary</item>
 
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorUnread">@color/blackColorUnread</item>
@@ -334,7 +338,7 @@
         <item name="colorFabBackground">@color/greyAccent</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/greyAccent</item>
+        <item name="colorInfoBackground">@color/greyPrimary</item>
     </style>
 
     <style name="AppThemeGreySteelBlueDark" parent="AppThemeBlack">
@@ -350,7 +354,7 @@
         <item name="colorFabBackground">@color/greyAccentDark</item>
 
         <item name="colorInfoForeground">@color/white</item>
-        <item name="colorInfoBackground">@color/greyAccentDark</item>
+        <item name="colorInfoBackground">@color/greyPrimary</item>
     </style>
 
     <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">

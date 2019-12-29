@@ -1212,6 +1212,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Addresses
             ibExpanderAddress.setImageLevel(show_addresses ? 0 /* less */ : 1 /* more */);
+            ibExpanderAddress.setContentDescription(context.getString(show_addresses ? R.string.title_accessibility_hide_addresses : R.string.title_accessibility_show_addresses));
 
             String from = MessageHelper.formatAddresses(message.senders);
             String to = MessageHelper.formatAddresses(message.to);
@@ -3781,8 +3782,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     result.add(context.getString(R.string.title_accessibility_selected));
 
                 result.add(context.getString(message.unseen > 0 ? R.string.title_accessibility_unseen : R.string.title_accessibility_seen));
-                result.add(context.getResources().getQuantityString(
-                        R.plurals.title_accessibility_messages, message.visible, message.visible));
+                if (tvCount.getVisibility() == View.VISIBLE)
+                    result.add(context.getResources().getQuantityString(
+                            R.plurals.title_accessibility_messages, message.visible, message.visible));
 
                 if (ibExpander.getVisibility() == View.VISIBLE) {
                     result.add(context.getString(expanded ? R.string.title_accessibility_expanded : R.string.title_accessibility_collapsed));
@@ -3848,6 +3850,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
                 ibSnoozed.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
+                if (expanded) {
+                    if (message.receipt_request != null && message.receipt_request)
+                        result.add(context.getString(R.string.title_legend_receipt));
+                    if (message.plain_only != null && message.plain_only)
+                        result.add(context.getString(R.string.title_legend_plain_only));
+                    if (message.ui_browsed)
+                        result.add(context.getString(R.string.title_legend_browsed));
+                }
+
                 if (tvFolder.getVisibility() == View.VISIBLE)
                     result.add(tvFolder.getText().toString());
                 if (tvSize.getVisibility() == View.VISIBLE)
@@ -3862,7 +3873,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             context.getString(R.string.title_accessibility_view_help)));
                 ibHelp.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
-                if (expanded)
+                if (expanded && bnvActions != null)
                     for (int i = 0; i < bnvActions.getMenu().size(); i++) {
                         MenuItem menuItem = bnvActions.getMenu().getItem(i);
                         if (menuItem.isVisible() && menuItem.isEnabled())

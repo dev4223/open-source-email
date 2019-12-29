@@ -166,6 +166,14 @@
     <string name="title_setup_biometrics_disable">Деактивирай</string>
     <string name="title_setup_biometrics_unlock">Отключване</string>
     <string name="title_setup_theme">Избор на тема</string>
+    <string name="title_setup_theme_blue_orange">Синьо/оранжево</string>
+    <string name="title_setup_theme_yellow_purple">Жълто/лилаво</string>
+    <string name="title_setup_theme_red_green">Червено/зелено</string>
+    <string name="title_setup_theme_grey">Сиво</string>
+    <string name="title_setup_theme_reverse">Обратни цветове</string>
+    <string name="title_setup_theme_dark">Тъмна</string>
+    <string name="title_setup_theme_system">Използвай системните</string>
+    <string name="title_setup_theme_system_hint">Системната тема ще превключи автоматично от светло/тъмно през деня/ноща, ако се поддържа от Андроид</string>
     <string name="title_setup_advanced">Разширени</string>
     <string name="title_setup_options">Настройки</string>
     <string name="title_setup_defaults">Възстановяване по подразбиране</string>
@@ -288,6 +296,7 @@
     <string name="title_advanced_display_hidden">Показване на скрит текст в съобщение</string>
     <string name="title_advanced_encrypt_method">Метод на криптиране по подразбиране</string>
     <string name="title_advanced_openpgp">OpenPGP доставчик</string>
+    <string name="title_advanced_autocrypt_mutual">Автокриптиране на споделен режим</string>
     <string name="title_advanced_sign_default">Подписване по подразбиране</string>
     <string name="title_advanced_encrypt_default">Криптиране по подразбиране</string>
     <string name="title_advanced_auto_decrypt">Автоматично декриптиране на съобщение</string>
@@ -558,6 +567,11 @@
     <string name="title_ask_help">Помогнете за подобряване на FairEmail</string>
     <string name="title_ask_reporting">Изпрати репорт с грешки?</string>
     <string name="title_reporting_why">Докладе с грешки ще помогне да се подобри FairEmail</string>
+    <string name="title_ask_review">Моля, прегледайте FairEmail</string>
+    <string name="title_ask_review_rationale">        Използвате FairEmail от известно време.
+        Ще Ви бъде благодарен, ако можете да оцените FairEmail в Play Store.
+        Това ще помогне да се поддържа баланс между неблагоприятните и благоприятните прегледи.
+    </string>
     <string name="title_expand_warning">Рзширеното съобщение ще се изтегли %1$s</string>
     <string name="title_download_message">Изтегляне &#8230;</string>
     <string name="title_compose">Ново съобщение</string>
@@ -826,6 +840,7 @@
     <string name="title_issue">Имате ли въпрос или проблем?</string>
     <string name="title_yes">Да</string>
     <string name="title_no">Не</string>
+    <string name="title_later">По-късно</string>
     <string name="title_undo">Отмени</string>
     <string name="title_redo">Повтори</string>
     <string name="title_add">Добави</string>
@@ -868,7 +883,6 @@
         За да бъде FairEmail устойчив в дългосрочен план, някои удобства и разширени функции не са безплатни.
         FairEmail показва малко съобщение, което да ви напомня за това, което ще бъде премахнато, ако закупите pro функциите.
     </string>
-    <string name="title_pro_hide">Скриване на кратки съобщения за по-късно</string>
     <string name="title_pro_hint">Купуването на професионалните функции ще ви позволи да използвате всички настоящи и бъдещи професионални функции, ще поддържа това приложение поддържано.</string>
     <string name="title_pro_price">Моля вижте <a href="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq19">ЧЗВ</a> за цената на PRO функциите</string>
     <string name="title_pro_pending">Чакащо плащане</string>
@@ -900,8 +914,20 @@
     <string name="title_accessibility_expanded">Разширен</string>
     <string name="title_accessibility_seen">Прочетено</string>
     <string name="title_accessibility_unseen">Непрочетено</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d съобщение</item>
+        <item quantity="other">%1$d съобщения</item>
+    </plurals>
     <string name="title_accessibility_flagged">Със звезда</string>
     <string name="title_accessibility_unflagged">Без звезда</string>
+    <string name="title_accessibility_collapse">Свий</string>
+    <string name="title_accessibility_expand">Разшири</string>
+    <string name="title_accessibility_view_contact">Виж контакт</string>
+    <string name="title_accessibility_show_authentication_result">Показване на резултата за удостоверяване</string>
+    <string name="title_accessibility_show_snooze_time">Показване на времето за отлагане</string>
+    <string name="title_accessibility_view_help">Вижте помощ</string>
+    <string name="title_accessibility_selected">Избрано</string>
+    <string name="title_accessibility_answered">Отговорено</string>
     <string-array name="pollIntervalNames">
         <item>Винаги</item>
         <item>На всеки 15 минути</item>

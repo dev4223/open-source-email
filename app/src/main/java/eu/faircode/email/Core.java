@@ -412,10 +412,16 @@ class Core {
                                 ex.getCause() instanceof MessageRemovedException ||
                                 ex.getCause() instanceof MessageRemovedIOException ||
                                 ex.getCause() instanceof BadCommandException ||
-                                ex.getCause() instanceof CommandFailedException) {
+                                ex.getCause() instanceof CommandFailedException ||
+                                (ex instanceof FolderClosedException &&
+                                        ex.getCause() instanceof IOException &&
+                                        EntityFolder.DRAFTS.equals(folder.type) &&
+                                        EntityOperation.ADD.equals(op.name))) {
                             // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
                             // com.sun.mail.iap.CommandFailedException: AY3 NO [CANNOT] Cannot APPEND to a SPAM folder
                             // com.sun.mail.iap.CommandFailedException: B16 NO [ALERT] Cannot MOVE messages out of the Drafts folder
+                            // Drafts: javax.mail.FolderClosedException: * BYE Jakarta Mail Exception:
+                            //   javax.net.ssl.SSLException: Write error: ssl=0x8286cac0: I/O error during system call, Broken pipe
                             Log.w("Unrecoverable");
 
                             try {
@@ -3201,6 +3207,7 @@ class Core {
         private Semaphore semaphore = new Semaphore(0);
         private boolean running = true;
         private boolean recoverable = true;
+        private Long lastActivity = null;
 
         State(ConnectionHelper.NetworkState networkState) {
             this.networkState = networkState;
@@ -3264,6 +3271,7 @@ class Core {
 
         void reset() {
             recoverable = true;
+            lastActivity = null;
         }
 
         private void yield() {
@@ -3308,10 +3316,20 @@ class Core {
                 }
         }
 
+        synchronized void activity() {
+            lastActivity = SystemClock.elapsedRealtime();
+        }
+
+        long getIdleTime() {
+            return (lastActivity == null ? 0 : SystemClock.elapsedRealtime() - lastActivity);
+        }
+
         @NonNull
         @Override
         public String toString() {
-            return "[running=" + running + ",recoverable=" + recoverable + "]";
+            return "[running=" + running +
+                    ",recoverable=" + recoverable +
+                    ",activity=" + new Date(lastActivity == null ? 0 : lastActivity) + "]";
         }
     }
 }

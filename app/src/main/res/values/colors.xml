@@ -104,7 +104,7 @@
     <color name="lightGreenPrimaryDark">#00701a</color>
     <color name="lightRedAccent">#e53935</color>
 
-    <!-- Light blue 900 -->
+    <!-- Light blue 900 / Amber 600 -->
     <color name="darkBluePrimary">#01579b</color>
     <color name="darkBluePrimaryDark">#002f6c</color>
     <color name="darkAmberAccent">#ffb300</color>
@@ -134,9 +134,10 @@
     <color name="darkGreenPrimaryDark">#003300</color>
     <color name="darkRedAccent">#e57373</color>
 
-    <!-- Grey 800 -->
+    <!-- Grey 800 / Amber 800 -->
     <color name="blackPrimary">#424242</color>
     <color name="blackPrimaryDark">#1b1b1b</color>
+    <color name="blackAccent">#ff8f00</color>
 
     <!-- Grey 800 / Blue grey 300 -->
     <color name="greyPrimary">#424242</color>

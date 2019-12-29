@@ -154,6 +154,15 @@
     <string name="title_setup_biometrics_disable">禁用</string>
     <string name="title_setup_biometrics_unlock">解锁​​​​</string>
     <string name="title_setup_theme">选择主题</string>
+    <string name="title_setup_theme_blue_orange">蓝色/橙色</string>
+    <string name="title_setup_theme_yellow_purple">黄色/紫色</string>
+    <string name="title_setup_theme_red_green">红色/绿色</string>
+    <string name="title_setup_theme_grey">灰色</string>
+    <string name="title_setup_theme_black">黑色 (AMOLED)</string>
+    <string name="title_setup_theme_reverse">反转色</string>
+    <string name="title_setup_theme_dark">深色</string>
+    <string name="title_setup_theme_system">跟随系统</string>
+    <string name="title_setup_theme_system_hint">跟随系统主题会自动切在白天/夜间切换到亮/暗色主题，如果安卓系统支持</string>
     <string name="title_setup_advanced">高级选项</string>
     <string name="title_setup_options">选项</string>
     <string name="title_setup_defaults">恢复默认设置</string>
@@ -863,7 +872,7 @@
     <string name="title_pro_info">毫不夸张地说，我在开发FairEmail上花费了数千小时，尽管如此，多数功能依旧可免费使用。
 为了让FairEmail开发维持下去，免费版无法使用一些便利和高级的功能。
 FairEmail会显示一条消息来提醒您这一点，这条消息在您购买专业版后将被移除。</string>
-    <string name="title_pro_hide">明天之前隐藏横幅消息</string>
+    <string name="title_pro_hide">将升级Pro横幅隐藏一周</string>
     <string name="title_pro_hint">购买专业版将获得现在以及未来更新中全部专业版功能，并将支持开发者维护这个应用</string>
     <string name="title_pro_price">请参见<a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">常见问题</a>关于专业版的价格</string>
     <string name="title_pro_pending">购买待处理</string>
@@ -895,6 +904,9 @@ FairEmail会显示一条消息来提醒您这一点，这条消息在您购买�
     <string name="title_accessibility_expanded">展开</string>
     <string name="title_accessibility_seen">阅读</string>
     <string name="title_accessibility_unseen">未读</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="other">%1$d 条消息</item>
+    </plurals>
     <string name="title_accessibility_flagged">标星</string>
     <string name="title_accessibility_unflagged">取消标星</string>
     <string name="title_accessibility_collapse">折叠</string>

@@ -84,7 +84,8 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
         if (!this.getClass().equals(ActivityMain.class)) {
             String theme = prefs.getString("theme", "light");
             int uiMode = getResources().getConfiguration().uiMode;
-            Log.i("UI mode=" + uiMode);
+            boolean night = (uiMode & Configuration.UI_MODE_NIGHT_YES) != 0;
+            Log.i("theme=" + theme + " UI mode=" + uiMode + " night=" + night);
 
             switch (theme) {
                 case "light":
@@ -140,17 +141,23 @@ abstract class ActivityBase extends AppCompatActivity implements SharedPreferenc
                 case "black":
                     setTheme(R.style.AppThemeBlack);
                     break;
+
                 case "system":
-                    if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
-                        setTheme(R.style.AppThemeBlueOrangeDark);
-                    else
-                        setTheme(R.style.AppThemeBlueOrangeLight);
+                case "blue_orange_system":
+                    setTheme(night
+                            ? R.style.AppThemeBlueOrangeDark : R.style.AppThemeBlueOrangeLight);
+                    break;
+                case "yellow_purple_system":
+                    setTheme(night
+                            ? R.style.AppThemeYellowPurpleDark : R.style.AppThemeYellowPurpleLight);
+                    break;
+                case "red_green_system":
+                    setTheme(night
+                            ? R.style.AppThemeRedGreenDark : R.style.AppThemeRedGreenLight);
                     break;
                 case "grey_system":
-                    if ((uiMode & Configuration.UI_MODE_NIGHT_YES) != 0)
-                        setTheme(R.style.AppThemeGreySteelBlueDark);
-                    else
-                        setTheme(R.style.AppThemeGreySteelBlueLight);
+                    setTheme(night
+                            ? R.style.AppThemeGreySteelBlueDark : R.style.AppThemeGreySteelBlueLight);
                     break;
             }
 

@@ -166,6 +166,15 @@
     <string name="title_setup_biometrics_disable">Desactivar</string>
     <string name="title_setup_biometrics_unlock">Desbloquear</string>
     <string name="title_setup_theme">Seleccionar tema</string>
+    <string name="title_setup_theme_blue_orange">Azul/naranja</string>
+    <string name="title_setup_theme_yellow_purple">Amarillo/morado</string>
+    <string name="title_setup_theme_red_green">Rojo/verde</string>
+    <string name="title_setup_theme_grey">Gris</string>
+    <string name="title_setup_theme_black">Negro (AMOLED)</string>
+    <string name="title_setup_theme_reverse">Invertir colores</string>
+    <string name="title_setup_theme_dark">Oscuro</string>
+    <string name="title_setup_theme_system">Igual que el sistema</string>
+    <string name="title_setup_theme_system_hint">Igual que el tema del sistema cambiará automáticamente a luz/oscuro en el día y la noche, si es compatible con Android</string>
     <string name="title_setup_advanced">Avanzado</string>
     <string name="title_setup_options">Opciones</string>
     <string name="title_setup_defaults">Restablecer ajustes por defecto</string>
@@ -876,7 +885,6 @@
         Para hacer a Fairemail sostenible en el largo plazo, algunas funciones de conveniencia y avanzadas no son de uso libre.
         FairEmail muestra un pequeño mensaje para recordarte esto, que dejará de mostrarse si compras las funciones avanzadas.
     </string>
-    <string name="title_pro_hide">Ocultar mensaje pequeño hasta mañana</string>
     <string name="title_pro_hint">La compra de características Pro le permitirá usar todas las características Pro actuales y futuras, y ayudará al mantenimiento y desarrollo de esta aplicación</string>
     <string name="title_pro_price">Por favor vea <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">estas Preguntas Frecuentes</a> acerca del precio de las características Pro</string>
     <string name="title_pro_pending">Compra pendiente</string>
@@ -908,6 +916,10 @@
     <string name="title_accessibility_expanded">Expandido</string>
     <string name="title_accessibility_seen">Leído</string>
     <string name="title_accessibility_unseen">No leído</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d mensaje</item>
+        <item quantity="other">%1$d mensajes</item>
+    </plurals>
     <string name="title_accessibility_flagged">Destacado</string>
     <string name="title_accessibility_unflagged">No destacado</string>
     <string name="title_accessibility_collapse">Ocultar</string>
