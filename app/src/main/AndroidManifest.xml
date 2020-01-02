@@ -94,6 +94,15 @@
         </activity>
 
         <activity
+            android:name=".ActivityWidget"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ActivityWidgetUnified"
             android:exported="true">
 
@@ -110,7 +119,7 @@
 
         <activity
             android:name=".ActivitySearch"
-            android:enabled="false"
+            android:enabled="true"
             android:excludeFromRecents="true"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"

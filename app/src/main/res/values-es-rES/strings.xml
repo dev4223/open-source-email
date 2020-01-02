@@ -170,9 +170,10 @@
     <string name="title_setup_theme_yellow_purple">Amarillo/morado</string>
     <string name="title_setup_theme_red_green">Rojo/verde</string>
     <string name="title_setup_theme_grey">Gris</string>
-    <string name="title_setup_theme_black">Negro (AMOLED)</string>
+    <string name="title_setup_theme_black">Negro</string>
     <string name="title_setup_theme_reverse">Invertir colores</string>
     <string name="title_setup_theme_dark">Oscuro</string>
+    <string name="title_setup_theme_black_background">Fondo negro</string>
     <string name="title_setup_theme_system">Igual que el sistema</string>
     <string name="title_setup_theme_system_hint">Igual que el tema del sistema cambiará automáticamente a luz/oscuro en el día y la noche, si es compatible con Android</string>
     <string name="title_setup_advanced">Avanzado</string>
@@ -225,6 +226,7 @@
     <string name="title_advanced_indentation">Sangría izquierda/derecha para mensajes recibidos/enviados en conversaciones</string>
     <string name="title_advanced_highlight_unread">Resaltar mensajes no leídos</string>
     <string name="title_advanced_distinguish_contacts">Distinguir mensajes de contactos conocidos y desconocidos</string>
+    <string name="title_advanced_color_stripe">Mostrar raya de color</string>
     <string name="title_advanced_avatars">Mostrar fotos de contactos</string>
     <string name="title_advanced_generated_icons">Mostrar iconos generados</string>
     <string name="title_advanced_identicons">Mostrar identicons</string>
@@ -265,6 +267,8 @@
     <string name="title_advanced_collapse_multiple">Colapsar mensajes en una conversación con varios mensajes al ir \'atrás\'</string>
     <string name="title_advanced_autoclose">Cerrar conversaciones automáticamente</string>
     <string name="title_advanced_onclose">Al cerrar una conversación</string>
+    <string name="title_advanced_quick_filter">Mostrar iconos de filtro rápido no intrusivos</string>
+    <string name="title_advanced_quick_scroll">Mostrar iconos rápidos de arriba/abajo no intrusivos</string>
     <string name="title_advanced_autoread">Marcar mensaje como leído automáticamente al moverlo</string>
     <string name="title_advanced_autounstar">Eliminar automáticamente la estrella de los mensajes al ser movidos</string>
     <string name="title_advanced_automove">Confirmar mover mensajes</string>
@@ -307,6 +311,7 @@
     <string name="title_advanced_manage_certificates">Administrar claves públicas</string>
     <string name="title_advanced_import_key">Importar clave privada</string>
     <string name="title_advanced_manage_keys">Administrar claves privadas</string>
+    <string name="title_advanced_external_search">Permitir que otras aplicaciones busquen en mensajes</string>
     <string name="title_advanced_english">Forzar idioma inglés</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Buscar actualizaciones</string>
@@ -447,6 +452,8 @@
     <string name="title_create_sub_folder">Crear subcarpeta</string>
     <string name="title_empty_trash_ask">¿Eliminar todos los mensajes borrados permanentemente?</string>
     <string name="title_empty_spam_ask">¿Eliminar todos los mensajes spam permanentemente?</string>
+    <string name="title_empty_trash_all_ask">¿Eliminar todos los mensajes en papelera de todas las cuentas permanentemente?</string>
+    <string name="title_empty_spam_all_ask">¿Eliminar permanentemente todos los mensajes de spam de todas las cuentas?</string>
     <string name="title_delete_operation">¿Eliminar operaciones con un mensaje de error?</string>
     <string name="title_delete_contacts">¿Eliminar todos los contactos locales?</string>
     <string name="title_no_operations">No hay operaciones pendientes</string>
@@ -641,6 +648,7 @@
     <string name="title_decrypt">Descifrar</string>
     <string name="title_resync">Resincronizar</string>
     <string name="title_no_openpgp">OpenKeychain no encontrado</string>
+    <string name="title_user_interaction">Transfiriendo a OpenKeychain</string>
     <string name="title_not_encrypted">El mensaje no está firmado ni cifrado</string>
     <string name="title_reset_sign_key">Restablecer clave de firma</string>
     <string name="title_signature_none">Mensaje no firmado</string>
@@ -885,6 +893,7 @@
         Para hacer a Fairemail sostenible en el largo plazo, algunas funciones de conveniencia y avanzadas no son de uso libre.
         FairEmail muestra un pequeño mensaje para recordarte esto, que dejará de mostrarse si compras las funciones avanzadas.
     </string>
+    <string name="title_pro_hide">Ocultar mensaje pequeño durante una semana</string>
     <string name="title_pro_hint">La compra de características Pro le permitirá usar todas las características Pro actuales y futuras, y ayudará al mantenimiento y desarrollo de esta aplicación</string>
     <string name="title_pro_price">Por favor vea <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">estas Preguntas Frecuentes</a> acerca del precio de las características Pro</string>
     <string name="title_pro_pending">Compra pendiente</string>
@@ -930,6 +939,15 @@
     <string name="title_accessibility_view_help">Ver ayuda</string>
     <string name="title_accessibility_selected">Seleccionado</string>
     <string name="title_accessibility_answered">Respondido</string>
+    <string name="title_accessibility_scroll_down">Desplazar hacia abajo</string>
+    <string name="title_accessibility_scroll_up">Desplazar hacia arriba</string>
+    <string name="title_accessibility_filter_out_seen">Cambiar el filtro de mensajes leídos</string>
+    <string name="title_accessibility_filter_out_unflagged">Cambiar filtro de mensajes destacados</string>
+    <string name="title_accessibility_filter_out_snoozed">Cambiar filtro de mensajes pospuestos</string>
+    <string name="title_accessibility_edit">Editar</string>
+    <string name="title_accessibility_show_addresses">Mostrar direcciones</string>
+    <string name="title_accessibility_hide_addresses">Ocultar direcciones</string>
+    <string name="title_accessibility_attachment">Adjunto</string>
     <string-array name="pollIntervalNames">
         <item>Siempre</item>
         <item>Cada 15 minutos</item>

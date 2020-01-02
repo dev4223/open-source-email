@@ -170,9 +170,10 @@
     <string name="title_setup_theme_yellow_purple">Sarı/mor</string>
     <string name="title_setup_theme_red_green">Kırmızı/yeşil</string>
     <string name="title_setup_theme_grey">Gri</string>
-    <string name="title_setup_theme_black">Siyah (AMOLED)</string>
+    <string name="title_setup_theme_black">Siyah</string>
     <string name="title_setup_theme_reverse">Renkleri ters çevir</string>
     <string name="title_setup_theme_dark">Koyu</string>
+    <string name="title_setup_theme_black_background">Siyah arka plan</string>
     <string name="title_setup_theme_system">Sistem ile aynı</string>
     <string name="title_setup_theme_system_hint">Eğer Android tarafından destekleniyorsa, sistem temasını izleme, gündüz/gece otomatik olarak açık/koyu olarak değişecektir</string>
     <string name="title_setup_advanced">Gelişmiş</string>
@@ -225,6 +226,7 @@
     <string name="title_advanced_indentation">Sohbetlerde alınan/gönderilen mesajları sola/sağa girintile</string>
     <string name="title_advanced_highlight_unread">Okunmamış iletileri vurgula</string>
     <string name="title_advanced_distinguish_contacts">Bilinen ve bilinmeyen kişilerin mesajlarını ayır</string>
+    <string name="title_advanced_color_stripe">Renk şeridini göster</string>
     <string name="title_advanced_avatars">Kişi fotoğraflarını göster</string>
     <string name="title_advanced_generated_icons">Oluşturulan simgeleri göster</string>
     <string name="title_advanced_identicons">Kimliklerini göster</string>
@@ -265,6 +267,8 @@
     <string name="title_advanced_collapse_multiple">Birden fazla mesaj içeren sohbetlerdeki mesajları \'geri\' seçeneğinde daralt</string>
     <string name="title_advanced_autoclose">İletişimleri otomatik olarak kapat</string>
     <string name="title_advanced_onclose">Bir konuşmayı kapatırken</string>
+    <string name="title_advanced_quick_filter">Rahatsız edici olmayan hızlı filtre simgelerini göster</string>
+    <string name="title_advanced_quick_scroll">Rahatsız edici olmayan hızlı yukarı/aşağı kaydırma simgelerini göster</string>
     <string name="title_advanced_autoread">İleti taşındığında otomatik olarak okundu diye işaretle</string>
     <string name="title_advanced_autounstar">Mesajları taşırken otomatik olarak yıldızı kaldır</string>
     <string name="title_advanced_automove">İletileri taşımayı onaylayın</string>
@@ -307,6 +311,7 @@
     <string name="title_advanced_manage_certificates">Genel anahtarları yönet</string>
     <string name="title_advanced_import_key">Özel anahtarı içe aktar</string>
     <string name="title_advanced_manage_keys">Özel anahtarları yönet</string>
+    <string name="title_advanced_external_search">Diğer uygulamaların mesajlarda arama yapmasına izin ver</string>
     <string name="title_advanced_english">İngilizce Diline Zorla</string>
     <string name="title_advanced_watchdog">Düzenli aralıklarla FairEmail hala etkin mi diye kontrol et</string>
     <string name="title_advanced_updates">Güncellemelere bak</string>
@@ -447,6 +452,8 @@
     <string name="title_create_sub_folder">Alt dizin oluştur</string>
     <string name="title_empty_trash_ask">Çöpe atılmış tüm iletiler kalıcı olarak silinsin mi?</string>
     <string name="title_empty_spam_ask">Tüm spam mesajlarını kalıcı olarak sil?</string>
+    <string name="title_empty_trash_all_ask">Tüm hesapların çöp kutusuna gönderilen tüm iletileri kalıcı olarak silinsin mi?</string>
+    <string name="title_empty_spam_all_ask">Tüm hesapların tüm spam iletileri kalıcı olarak silinsin mi?</string>
     <string name="title_delete_operation">Hata iletisi olan işlemler silinsin mi?</string>
     <string name="title_delete_contacts">Tüm yerel rehber silinsin mi?</string>
     <string name="title_no_operations">Bekleyen işlem yok</string>
@@ -641,6 +648,7 @@
     <string name="title_decrypt">Şifreyi çöz</string>
     <string name="title_resync">Yeniden eşzamanla</string>
     <string name="title_no_openpgp">OpenKeychain bulunamadı</string>
+    <string name="title_user_interaction">OpenKeychain\'e gönderiliyor</string>
     <string name="title_not_encrypted">Mesaj imzalı veya şifreli değil</string>
     <string name="title_reset_sign_key">İmzalama anahtarını sıfırla</string>
     <string name="title_signature_none">İleti imzalı değil</string>
@@ -939,6 +947,7 @@
     <string name="title_accessibility_edit">Düzenle</string>
     <string name="title_accessibility_show_addresses">Adresleri göster</string>
     <string name="title_accessibility_hide_addresses">Adresleri gizle</string>
+    <string name="title_accessibility_attachment">Ek</string>
     <string-array name="pollIntervalNames">
         <item>Her Zaman</item>
         <item>Her 15 dakikada</item>

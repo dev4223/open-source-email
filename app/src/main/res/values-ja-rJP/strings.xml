@@ -158,9 +158,10 @@
     <string name="title_setup_theme_yellow_purple">イエロー/パープル</string>
     <string name="title_setup_theme_red_green">レッド/グリーン</string>
     <string name="title_setup_theme_grey">グレイ</string>
-    <string name="title_setup_theme_black">ブラック(AMOLED)</string>
+    <string name="title_setup_theme_black">ブラック</string>
     <string name="title_setup_theme_reverse">色を反転</string>
     <string name="title_setup_theme_dark">ダーク</string>
+    <string name="title_setup_theme_black_background">ブラック背景</string>
     <string name="title_setup_theme_system">システム設定に従う</string>
     <string name="title_setup_theme_system_hint">Androidでサポートされている場合、システムテーマは昼/夜に自動的に切り替わります</string>
     <string name="title_setup_advanced">詳細</string>
@@ -213,6 +214,7 @@
     <string name="title_advanced_indentation">会話の受信/送信メッセージの左/右インデント</string>
     <string name="title_advanced_highlight_unread">未読メッセージを強調表示</string>
     <string name="title_advanced_distinguish_contacts">既知及び未知の連絡先からのメッセージを区別</string>
+    <string name="title_advanced_color_stripe">カラーストライプを表示</string>
     <string name="title_advanced_avatars">連絡先の写真を表示</string>
     <string name="title_advanced_generated_icons">生成されたアイコンを表示</string>
     <string name="title_advanced_identicons">識別アイコンを表示</string>
@@ -253,6 +255,8 @@
     <string name="title_advanced_collapse_multiple">複数のメッセージがある会話を\"戻る\"で折りたたむ</string>
     <string name="title_advanced_autoclose">会話を自動的に閉じます</string>
     <string name="title_advanced_onclose">会話を閉じる時</string>
+    <string name="title_advanced_quick_filter">目立たないクイックフィルターアイコンを表示</string>
+    <string name="title_advanced_quick_scroll">目立たないクイックスクロールアップ/ダウンアイコンを表示</string>
     <string name="title_advanced_autoread">移動するメッセージを既読にします</string>
     <string name="title_advanced_autounstar">移動するメッセージのスターを取り消します</string>
     <string name="title_advanced_automove">メッセージを移動する時に確認</string>
@@ -295,6 +299,7 @@
     <string name="title_advanced_manage_certificates">公開鍵の管理</string>
     <string name="title_advanced_import_key">秘密鍵をインポート</string>
     <string name="title_advanced_manage_keys">秘密鍵を管理する</string>
+    <string name="title_advanced_external_search">他のアプリにメッセージの検索を許可</string>
     <string name="title_advanced_english">強制的に英語表示</string>
     <string name="title_advanced_watchdog">FairEmailがアクティブか定期的に確認</string>
     <string name="title_advanced_updates">更新を確認</string>
@@ -434,6 +439,8 @@
     <string name="title_create_sub_folder">サブフォルダーを作成</string>
     <string name="title_empty_trash_ask">ゴミ箱にある全てのメッセージを完全に削除しますか？</string>
     <string name="title_empty_spam_ask">全ての迷惑メールを完全に削除しますか？</string>
+    <string name="title_empty_trash_all_ask">全てのアカウントのゴミ箱メッセージを完全に削除しますか？</string>
+    <string name="title_empty_spam_all_ask">全てのアカウントの迷惑メールを完全に削除しますか？</string>
     <string name="title_delete_operation">エラーメッセージのある操作を削除しますか？</string>
     <string name="title_delete_contacts">ローカルにある全ての連絡先を削除しますか？</string>
     <string name="title_no_operations">保留中の操作は有りません</string>
@@ -627,6 +634,7 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_decrypt">解読</string>
     <string name="title_resync">再同期</string>
     <string name="title_no_openpgp">オープンキーチェーンが見つかりません</string>
+    <string name="title_user_interaction">OpenKeychainへの転送</string>
     <string name="title_not_encrypted">メッセージは署名又は暗号化されていません</string>
     <string name="title_reset_sign_key">署名キーをリセット</string>
     <string name="title_signature_none">メッセージが署名されていません</string>
@@ -923,6 +931,7 @@ FairEmailは、Pro機能購入の為に上部に小さなメッセージを表�
     <string name="title_accessibility_edit">編集</string>
     <string name="title_accessibility_show_addresses">アドレスを表示</string>
     <string name="title_accessibility_hide_addresses">アドレスを非表示</string>
+    <string name="title_accessibility_attachment">添付ファイル</string>
     <string-array name="pollIntervalNames">
         <item>常に</item>
         <item>15分毎</item>

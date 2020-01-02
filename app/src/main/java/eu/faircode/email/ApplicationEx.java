@@ -190,10 +190,13 @@ public class ApplicationEx extends Application {
         } else if (version < 844) {
             if (prefs.getBoolean("schedule", false))
                 editor.putBoolean("enabled", true);
-        }
 
-        if (version < BuildConfig.VERSION_CODE)
-            editor.putBoolean("vacuum", true);
+        } else if (version < 874) {
+            if (prefs.contains("experiments") &&
+                    prefs.getBoolean("experiments", false))
+                editor.putBoolean("quick_filter", true);
+            editor.remove("experiments");
+        }
 
         if (BuildConfig.DEBUG && false) {
             editor.remove("app_support");

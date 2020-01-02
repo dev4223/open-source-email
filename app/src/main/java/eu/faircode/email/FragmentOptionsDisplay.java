@@ -25,6 +25,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -35,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
@@ -57,6 +59,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swThreading;
     private SwitchCompat swIndentation;
     private SwitchCompat swHighlightUnread;
+    private SwitchCompat swColorStripe;
     private SwitchCompat swAvatars;
     private SwitchCompat swGeneratedIcons;
     private SwitchCompat swIdenticons;
@@ -92,7 +95,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swActionbar;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "theme", "landscape", "startup", "cards", "indentation", "date", "threading", "highlight_unread",
+            "theme", "landscape", "startup", "cards", "indentation", "date", "threading", "highlight_unread", "color_stripe",
             "avatars", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
             "name_email", "distinguish_contacts", "authentication",
             "subject_top", "font_size_sender", "font_size_subject", "subject_italic", "subject_ellipsize",
@@ -119,6 +122,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swDate = view.findViewById(R.id.swDate);
         swThreading = view.findViewById(R.id.swThreading);
         swHighlightUnread = view.findViewById(R.id.swHighlightUnread);
+        swColorStripe = view.findViewById(R.id.swColorStripe);
         swAvatars = view.findViewById(R.id.swAvatars);
         swGeneratedIcons = view.findViewById(R.id.swGeneratedIcons);
         swIdenticons = view.findViewById(R.id.swIdenticons);
@@ -211,7 +215,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("threading", checked).apply();
-                WidgetUnified.update(getContext());
+                WidgetUnified.updateData(getContext());
             }
         });
 
@@ -219,6 +223,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("highlight_unread", checked).apply();
+            }
+        });
+
+        swColorStripe.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("color_stripe", checked).apply();
             }
         });
 
@@ -341,7 +352,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("subject_top", checked).apply();
-                WidgetUnified.update(getContext());
+                WidgetUnified.updateData(getContext());
             }
         });
 
@@ -375,7 +386,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("subject_italic", checked).apply();
-                WidgetUnified.update(getContext());
+                WidgetUnified.updateData(getContext());
             }
         });
 
@@ -563,6 +574,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swDate.setChecked(prefs.getBoolean("date", true));
         swThreading.setChecked(prefs.getBoolean("threading", true));
         swHighlightUnread.setChecked(prefs.getBoolean("highlight_unread", false));
+        swColorStripe.setChecked(prefs.getBoolean("color_stripe", true));
         swAvatars.setChecked(prefs.getBoolean("avatars", true));
         swGeneratedIcons.setChecked(prefs.getBoolean("generated_icons", true));
         swIdenticons.setChecked(prefs.getBoolean("identicons", false));
@@ -658,9 +670,11 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     }
 
     public static class FragmentDialogTheme extends FragmentDialogBase {
+        private ImageButton itten;
         private RadioGroup rgTheme;
         private SwitchCompat swReverse;
         private SwitchCompat swDark;
+        private SwitchCompat swBlack;
         private SwitchCompat swSystem;
 
         private void eval() {
@@ -673,28 +687,43 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                     checkedId == R.id.rbThemeYellowPurple ||
                     checkedId == R.id.rbThemeRedGreen ||
                     checkedId == R.id.rbThemeGrey);
+            swBlack.setEnabled(checkedId == R.id.rbThemeBlueOrange ||
+                    checkedId == R.id.rbThemeYellowPurple ||
+                    checkedId == R.id.rbThemeRedGreen);
             swSystem.setEnabled(swDark.isEnabled());
 
             boolean reverse = (swReverse.isEnabled() && swReverse.isChecked());
             boolean dark = (swDark.isEnabled() && swDark.isChecked());
+            boolean black = (swBlack.isEnabled() && swBlack.isChecked());
             boolean system = (swSystem.isEnabled() && swSystem.isChecked());
 
             swReverse.setEnabled(swReverse.isEnabled() && !system);
             swDark.setEnabled(swDark.isEnabled() && !system);
-            swSystem.setEnabled(swSystem.isEnabled() && !reverse && !dark);
+            swBlack.setEnabled(swBlack.isEnabled() && dark);
+            swSystem.setEnabled(swSystem.isEnabled() && !reverse && !dark && !black);
         }
 
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_theme, null);
+            itten = dview.findViewById(R.id.itten);
             rgTheme = dview.findViewById(R.id.rgTheme);
             swReverse = dview.findViewById(R.id.swReverse);
             swDark = dview.findViewById(R.id.swDark);
+            swBlack = dview.findViewById(R.id.swBlack);
             swSystem = dview.findViewById(R.id.swSystem);
 
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             String theme = prefs.getString("theme", "light");
+
+            itten.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Uri uri = Uri.parse("https://en.wikipedia.org/wiki/Johannes_Itten");
+                    Helper.view(getContext(), uri, false);
+                }
+            });
 
             swReverse.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -704,6 +733,13 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             });
 
             swDark.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    eval();
+                }
+            });
+
+            swBlack.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     eval();
@@ -724,11 +760,18 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 }
             });
 
-            swReverse.setChecked(theme.startsWith("orange_blue") ||
-                    theme.startsWith("purple_yellow") ||
-                    theme.startsWith("green_red"));
-            swDark.setChecked(theme.endsWith("dark"));
-            swSystem.setChecked(theme.endsWith("system"));
+            boolean colored =
+                    (theme.startsWith("orange_blue") ||
+                            theme.startsWith("purple_yellow") ||
+                            theme.startsWith("green_red"));
+            boolean dark = theme.endsWith("dark");
+            boolean black = (!"black".equals(theme) && theme.endsWith("black"));
+            boolean system = theme.endsWith("system");
+
+            swReverse.setChecked(colored);
+            swDark.setChecked(dark || black);
+            swBlack.setChecked(black);
+            swSystem.setChecked(system);
 
             switch (theme) {
                 case "light":
@@ -737,22 +780,28 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 case "blue_orange_system":
                 case "blue_orange_light":
                 case "blue_orange_dark":
+                case "blue_orange_black":
                 case "orange_blue_light":
                 case "orange_blue_dark":
+                case "orange_blue_black":
                     rgTheme.check(R.id.rbThemeBlueOrange);
                     break;
                 case "yellow_purple_system":
                 case "yellow_purple_light":
                 case "yellow_purple_dark":
+                case "yellow_purple_black":
                 case "purple_yellow_light":
                 case "purple_yellow_dark":
+                case "purple_yellow_black":
                     rgTheme.check(R.id.rbThemeYellowPurple);
                     break;
                 case "red_green_system":
                 case "red_green_light":
                 case "red_green_dark":
+                case "red_green_black":
                 case "green_red_light":
                 case "green_red_dark":
+                case "green_red_black":
                     rgTheme.check(R.id.rbThemeRedGreen);
                     break;
                 case "grey_system":
@@ -760,6 +809,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 case "grey_dark":
                     rgTheme.check(R.id.rbThemeGrey);
                     break;
+
                 case "black":
                     rgTheme.check(R.id.rbThemeBlack);
                     break;
@@ -776,6 +826,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
                             boolean reverse = (swReverse.isEnabled() && swReverse.isChecked());
                             boolean dark = (swDark.isEnabled() && swDark.isChecked());
+                            boolean black = (swBlack.isEnabled() && swBlack.isChecked());
                             boolean system = (swSystem.isEnabled() && swSystem.isChecked());
 
                             switch (rgTheme.getCheckedRadioButtonId()) {
@@ -785,7 +836,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                                     else
                                         prefs.edit().putString("theme",
                                                 (reverse ? "orange_blue" : "blue_orange") +
-                                                        (dark ? "_dark" : "_light")).apply();
+                                                        (black ? "_black" : dark ? "_dark" : "_light")).apply();
                                     break;
                                 case R.id.rbThemeYellowPurple:
                                     if (system)
@@ -793,7 +844,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                                     else
                                         prefs.edit().putString("theme",
                                                 (reverse ? "purple_yellow" : "yellow_purple") +
-                                                        (dark ? "_dark" : "_light")).apply();
+                                                        (black ? "_black" : dark ? "_dark" : "_light")).apply();
                                     break;
                                 case R.id.rbThemeRedGreen:
                                     if (system)
@@ -801,7 +852,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                                     else
                                         prefs.edit().putString("theme",
                                                 (reverse ? "green_red" : "red_green") +
-                                                        (dark ? "_dark" : "_light")).apply();
+                                                        (black ? "_black" : dark ? "_dark" : "_light")).apply();
                                     break;
                                 case R.id.rbThemeGrey:
                                     if (system)

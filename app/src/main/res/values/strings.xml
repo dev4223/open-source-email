@@ -205,10 +205,11 @@
     <string name="title_setup_theme_yellow_purple">Yellow/purple</string>
     <string name="title_setup_theme_red_green">Red/green</string>
     <string name="title_setup_theme_grey">Grey</string>
-    <string name="title_setup_theme_black">Black (AMOLED)</string>
+    <string name="title_setup_theme_black">Black</string>
 
     <string name="title_setup_theme_reverse">Reverse colors</string>
     <string name="title_setup_theme_dark">Dark</string>
+    <string name="title_setup_theme_black_background">Black background</string>
     <string name="title_setup_theme_system">Follow system</string>
 
     <string name="title_setup_theme_system_hint">Follow system theme will automatically switch to light/dark on day/night, if supported by Android</string>
@@ -269,6 +270,7 @@
     <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
     <string name="title_advanced_distinguish_contacts">Distinguish messages from known and unknown contacts</string>
+    <string name="title_advanced_color_stripe">Show color stripe</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_generated_icons">Show generated icons</string>
     <string name="title_advanced_identicons">Show identicons</string>
@@ -310,6 +312,8 @@
     <string name="title_advanced_collapse_multiple">Collapse messages in a conversation with multiple messages on \'back\'</string>
     <string name="title_advanced_autoclose">Automatically close conversations</string>
     <string name="title_advanced_onclose">On closing a conversation</string>
+    <string name="title_advanced_quick_filter">Show non-obtrusive quick filter icons</string>
+    <string name="title_advanced_quick_scroll">Show non-obtrusive quick scroll up/down icons</string>
     <string name="title_advanced_autoread">Automatically mark messages read on moving messages</string>
     <string name="title_advanced_autounstar">Automatically remove stars from messages on moving messages</string>
     <string name="title_advanced_automove">Confirm moving messages</string>
@@ -359,6 +363,7 @@
     <string name="title_advanced_manage_keys">Manage private keys</string>
     <string name="title_advanced_aes_key_size" translatable="false">Max AES key size: %1$d</string>
 
+    <string name="title_advanced_external_search">Allow other apps to search in messages</string>
     <string name="title_advanced_english">Force English language</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_updates">Check for updates</string>
@@ -524,6 +529,8 @@
 
     <string name="title_empty_trash_ask">Delete all trashed messages permanently?</string>
     <string name="title_empty_spam_ask">Delete all spam messages permanently?</string>
+    <string name="title_empty_trash_all_ask">Delete all trashed messages of all accounts permanently?</string>
+    <string name="title_empty_spam_all_ask">Delete all spam messages of all accounts permanently?</string>
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
@@ -733,6 +740,7 @@
     <string name="title_decrypt">Decrypt</string>
     <string name="title_resync">Resync</string>
     <string name="title_no_openpgp">OpenKeychain not found</string>
+    <string name="title_user_interaction">Transferring to OpenKeychain</string>
     <string name="title_not_encrypted">Message is not signed or encrypted</string>
     <string name="title_reset_sign_key">Reset sign key</string>
 
@@ -1063,6 +1071,7 @@
     <string name="title_accessibility_edit">Edit</string>
     <string name="title_accessibility_show_addresses">Show addresses</string>
     <string name="title_accessibility_hide_addresses">Hide addresses</string>
+    <string name="title_accessibility_attachment">Attachment</string>
 
     <string-array name="pollIntervalNames">
         <item>Always</item>

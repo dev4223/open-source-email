@@ -239,6 +239,7 @@ public class FragmentCompose extends FragmentBase {
     static final int REDUCED_IMAGE_QUALITY = 90; // percent
 
     private static final int ADDRESS_ELLIPSIZE = 50;
+    private static final int RECIPIENTS_WARNING = 10;
 
     private static final int REQUEST_CONTACT_TO = 1;
     private static final int REQUEST_CONTACT_CC = 2;
@@ -809,7 +810,7 @@ public class FragmentCompose extends FragmentBase {
     public void onDestroyView() {
         adapter = null;
 
-        if (pgpService != null)
+        if (pgpService != null && pgpService.isBound())
             pgpService.unbindFromService();
 
         super.onDestroyView();
@@ -1182,7 +1183,12 @@ public class FragmentCompose extends FragmentBase {
 
     private void onActionRecordAudio() {
         Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
-        startActivityForResult(intent, REQUEST_RECORD_AUDIO);
+        try {
+            startActivityForResult(intent, REQUEST_RECORD_AUDIO);
+        } catch (SecurityException ex) {
+            Log.w(ex);
+            Snackbar.make(view, getString(R.string.title_no_viewer, intent.getAction()), Snackbar.LENGTH_LONG).show();
+        }
     }
 
     private void onActionTakePhoto() {
@@ -1193,9 +1199,14 @@ public class FragmentCompose extends FragmentBase {
 
         // https://developer.android.com/training/camera/photobasics
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        photoURI = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID, file);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-        startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+        try {
+            photoURI = FileProvider.getUriForFile(getContext(), BuildConfig.APPLICATION_ID, file);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            startActivityForResult(intent, REQUEST_TAKE_PHOTO);
+        } catch (SecurityException ex) {
+            Log.w(ex);
+            Snackbar.make(view, getString(R.string.title_no_viewer, intent.getAction()), Snackbar.LENGTH_LONG).show();
+        }
     }
 
     private void onActionImage() {
@@ -1320,6 +1331,8 @@ public class FragmentCompose extends FragmentBase {
             if (pgpService.isBound())
                 try {
                     List<Address> recipients = new ArrayList<>();
+                    if (draft.from != null)
+                        recipients.addAll(Arrays.asList(draft.from));
                     if (draft.to != null)
                         recipients.addAll(Arrays.asList(draft.to));
                     if (draft.cc != null)
@@ -1337,15 +1350,15 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     Intent intent;
-                    if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
+                    if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt))
                         intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                        intent.putExtra(BuildConfig.APPLICATION_ID, working);
-                    } else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
+                    else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.encrypt)) {
                         intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
                         intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                        intent.putExtra(BuildConfig.APPLICATION_ID, working);
                     } else
                         throw new IllegalArgumentException("Invalid encrypt=" + draft.encrypt);
+
+                    intent.putExtra(BuildConfig.APPLICATION_ID, working);
 
                     onPgp(intent);
                 } catch (Throwable ex) {
@@ -1765,56 +1778,46 @@ public class FragmentCompose extends FragmentBase {
                                     db.endTransaction();
                                 }
 
+                            // Sign-only: [get sign key id], get key, detached sign
+                            // Sign/encrypt: get key ids, [get sign key id], get key, sign and encrypt
+
                             if (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction())) {
+                                // Sign/encrypt
                                 pgpKeyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
                                 Log.i("Keys=" + pgpKeyIds.length);
                                 if (pgpKeyIds.length == 0)
                                     throw new OperationCanceledException("Got no key");
 
-                                // Get encrypt key
-                                if (pgpKeyIds.length == 1) {
-                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
-                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpKeyIds[0]);
-                                    intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
-                                    return intent;
-                                }
-                            }
+                                if (identity.sign_key != null) {
+                                    pgpSignKeyId = identity.sign_key;
 
-                            if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction()) ||
-                                    (OpenPgpApi.ACTION_GET_KEY_IDS.equals(data.getAction()) && pgpKeyIds.length > 1)) {
-                                if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
-                                    // Sign message
-                                    Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
-                                    intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
+                                    // Get public key
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
+                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                     intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
                                 } else {
-                                    if (identity.sign_key != null) {
-                                        // Encrypt message
-                                        Intent intent = new Intent(OpenPgpApi.ACTION_SIGN_AND_ENCRYPT);
-                                        intent.putExtra(OpenPgpApi.EXTRA_KEY_IDS, pgpKeyIds);
-                                        intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, identity.sign_key);
-                                        intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
-                                        intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
-                                        return intent;
-                                    } else {
-                                        // Get sign key
-                                        Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
-                                        intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, pgpUserIds);
-                                        intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
-                                        return intent;
-                                    }
+                                    // Get sign key
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_SIGN_KEY_ID);
+                                    intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
+                                    return intent;
                                 }
                             } else if (OpenPgpApi.ACTION_GET_SIGN_KEY_ID.equals(data.getAction())) {
                                 pgpSignKeyId = result.getLongExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, -1);
                                 db.identity().setIdentitySignKey(identity.id, pgpSignKeyId);
 
+                                // Get public key
+                                Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
+                                intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
+                                intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
+                                intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
+                                return intent;
+                            } else if (OpenPgpApi.ACTION_GET_KEY.equals(data.getAction())) {
                                 if (EntityMessage.PGP_SIGNONLY.equals(draft.encrypt)) {
-                                    // Get sign key
-                                    Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
-                                    intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
+                                    // Get signature
+                                    Intent intent = new Intent(OpenPgpApi.ACTION_DETACHED_SIGN);
+                                    intent.putExtra(OpenPgpApi.EXTRA_SIGN_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                     intent.putExtra(BuildConfig.APPLICATION_ID, draft.id);
                                     return intent;
@@ -1883,6 +1886,7 @@ public class FragmentCompose extends FragmentBase {
                     onPgp(intent);
                 } else if (result instanceof PendingIntent)
                     try {
+                        ToastEx.makeText(getContext(), R.string.title_user_interaction, Toast.LENGTH_SHORT).show();
                         PendingIntent pi = (PendingIntent) result;
                         startIntentSenderForResult(
                                 pi.getIntentSender(),
@@ -3685,7 +3689,10 @@ public class FragmentCompose extends FragmentBase {
                 boolean remind_text = args.getBoolean("remind_text", false);
                 boolean remind_attachment = args.getBoolean("remind_attachment", false);
 
-                if (dialog || remind_subject || remind_text || remind_attachment) {
+                int recipients = (draft.to == null ? 0 : draft.to.length) +
+                        (draft.cc == null ? 0 : draft.cc.length) +
+                        (draft.bcc == null ? 0 : draft.bcc.length);
+                if (dialog || remind_subject || remind_text || remind_attachment || recipients > RECIPIENTS_WARNING) {
                     setBusy(false);
 
                     FragmentDialogSend fragment = new FragmentDialogSend();
@@ -4290,9 +4297,11 @@ public class FragmentCompose extends FragmentBase {
                         return;
                     }
 
-                    int plus = (draft.cc == null ? 0 : draft.cc.length) +
-                            (draft.bcc == null ? 0 : draft.bcc.length);
-                    tvTo.setText(MessageHelper.formatAddressesShort(draft.to) + (plus > 0 ? " +" + plus : ""));
+                    int to = (draft.to == null ? 0 : draft.to.length);
+                    int cc = (draft.cc == null ? 0 : draft.cc.length) + (draft.bcc == null ? 0 : draft.bcc.length);
+                    tvTo.setText(MessageHelper.formatAddressesShort(draft.to) + (cc > 0 ? " +" + cc : ""));
+                    tvTo.setTextColor(Helper.resolveColor(getContext(),
+                            to + cc > RECIPIENTS_WARNING ? R.attr.colorWarning : android.R.attr.textColorPrimary));
                     tvVia.setText(draft.identityEmail);
 
                     cbPlainOnly.setChecked(draft.plain_only != null && draft.plain_only);

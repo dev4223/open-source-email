@@ -170,9 +170,10 @@
     <string name="title_setup_theme_yellow_purple">Keltainen/violetti</string>
     <string name="title_setup_theme_red_green">Punainen/vihreä</string>
     <string name="title_setup_theme_grey">Harmaa</string>
-    <string name="title_setup_theme_black">Musta (AMOLED)</string>
+    <string name="title_setup_theme_black">Musta</string>
     <string name="title_setup_theme_reverse">Käänteiset värit</string>
     <string name="title_setup_theme_dark">Tumma</string>
+    <string name="title_setup_theme_black_background">Musta tausta</string>
     <string name="title_setup_theme_system">Noudata järjestelmän teemaa</string>
     <string name="title_setup_theme_system_hint">Järjestelmän teeman noudattaminen vaihtaa automaattisesti vaaleaksi/tummaksi päivällä/yöllä, jos Android tukee tätä</string>
     <string name="title_setup_advanced">Lisäasetukset</string>
@@ -225,6 +226,7 @@
     <string name="title_advanced_indentation">Tasaa vastaanotetut/lähetetyt viestit keskusteluissa vasemmalle/oikealle</string>
     <string name="title_advanced_highlight_unread">Korosta lukemattomat viestit</string>
     <string name="title_advanced_distinguish_contacts">Erottele tunnettujen ja tuntemattomien kontaktien viestit</string>
+    <string name="title_advanced_color_stripe">Näytä väriliuska</string>
     <string name="title_advanced_avatars">Näytä yhteystietojen kuvat</string>
     <string name="title_advanced_generated_icons">Näytä luodut kuvakkeet</string>
     <string name="title_advanced_identicons">Näytä identikonit</string>
@@ -265,6 +267,8 @@
     <string name="title_advanced_collapse_multiple">Tiivistä useamman viestin keskusteluiden viestit menemällä \'takaisin\'</string>
     <string name="title_advanced_autoclose">Sulje keskustelut automaattisesti</string>
     <string name="title_advanced_onclose">Keskustelua suljettaessa</string>
+    <string name="title_advanced_quick_filter">Näytä häiritsemättömät pikasuodatuskuvakkeet</string>
+    <string name="title_advanced_quick_scroll">Näytä häiritsemättömät ylös-/alaspikavierityskuvakkeet</string>
     <string name="title_advanced_autoread">Siirtäessä viestejä merkitse ne luetuiksi</string>
     <string name="title_advanced_autounstar">Poista tähti viestejä siirrettäessä</string>
     <string name="title_advanced_automove">Vahvista viestien siirto</string>
@@ -307,6 +311,7 @@
     <string name="title_advanced_manage_certificates">Hallinnoi julkisia avaimia</string>
     <string name="title_advanced_import_key">Tuo yksityinen avain</string>
     <string name="title_advanced_manage_keys">Hallinnoi yksityisiä avaimia</string>
+    <string name="title_advanced_external_search">Salli muiden sovellusten hakea viesteistä</string>
     <string name="title_advanced_english">Pakota englannin kieli</string>
     <string name="title_advanced_watchdog">Tarkista toistuvasti, että FairEmail on edelleen aktiivinen</string>
     <string name="title_advanced_updates">Päivitysten tarkastus</string>
@@ -447,6 +452,8 @@
     <string name="title_create_sub_folder">Luo alikansio</string>
     <string name="title_empty_trash_ask">Tyhjennetäänkö roskakori pysyvästi?</string>
     <string name="title_empty_spam_ask">Poistetaanko kaikki roskapostit pysyvästi?</string>
+    <string name="title_empty_trash_all_ask">Tyhjennetäänkö pysyvästi kaikkien tilien roskakoreissa olevat viestit?</string>
+    <string name="title_empty_spam_all_ask">Tyhjennetäänkö pysyvästi kaikkien tilien roskapostiviestit?</string>
     <string name="title_delete_operation">Poistetaanko toimenpiteet, joille on virheilmoitus?</string>
     <string name="title_delete_contacts">Poistetaanko kaikki paikalliset yhteystiedot?</string>
     <string name="title_no_operations">Ei odottavia toimenpiteitä</string>
@@ -885,6 +892,7 @@
         Jotta FairEmailin kehittäminen olisi mahdollista, jotkin mukavuutta tuovat ja edistyneemmät ominaisuudet eivät ole ilmaisia.
         FairEmail näyttää pienen viestin muistuttaakseen sinua tästä. Viesti poistuu, jos ostat pro-ominaisuudet.
     </string>
+    <string name="title_pro_hide">Piilota pieni viesti viikon ajaksi</string>
     <string name="title_pro_hint">Pro-ominaisuuksien ostaminen antaa oikeudet käyttää nykyisiä ja tulevia pro-ominaisuuksia sekä auttaa ylläpitämään ja tukemaan tätä sovellusta</string>
     <string name="title_pro_price">Katso <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">nämä usein kysytyt kysymykset</a> pro-ominaisuuksien hinnasta</string>
     <string name="title_pro_pending">Ostos odottaa vahvistusta</string>
@@ -930,6 +938,15 @@
     <string name="title_accessibility_view_help">Näytä ohje</string>
     <string name="title_accessibility_selected">Valittu</string>
     <string name="title_accessibility_answered">Vastattu</string>
+    <string name="title_accessibility_scroll_down">Vieritä alas</string>
+    <string name="title_accessibility_scroll_up">Vieritä ylös</string>
+    <string name="title_accessibility_filter_out_seen">Kytke luettujen viestien suodatus</string>
+    <string name="title_accessibility_filter_out_unflagged">Kytke tähdellisten viestien suodatus</string>
+    <string name="title_accessibility_filter_out_snoozed">Kytke torkutettujen viestien suodatus</string>
+    <string name="title_accessibility_edit">Muokkaa</string>
+    <string name="title_accessibility_show_addresses">Näytä osoitteet</string>
+    <string name="title_accessibility_hide_addresses">Piilota osoitteet</string>
+    <string name="title_accessibility_attachment">Liite</string>
     <string-array name="pollIntervalNames">
         <item>Koko ajan</item>
         <item>15 minuutin välein</item>

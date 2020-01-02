@@ -158,11 +158,12 @@
     <string name="title_setup_theme_yellow_purple">黄色/紫色</string>
     <string name="title_setup_theme_red_green">红色/绿色</string>
     <string name="title_setup_theme_grey">灰色</string>
-    <string name="title_setup_theme_black">黑色 (AMOLED)</string>
-    <string name="title_setup_theme_reverse">反转色</string>
+    <string name="title_setup_theme_black">黑色</string>
+    <string name="title_setup_theme_reverse">反色</string>
     <string name="title_setup_theme_dark">深色</string>
+    <string name="title_setup_theme_black_background">黑色背景</string>
     <string name="title_setup_theme_system">跟随系统</string>
-    <string name="title_setup_theme_system_hint">跟随系统主题会自动切在白天/夜间切换到亮/暗色主题，如果安卓系统支持</string>
+    <string name="title_setup_theme_system_hint">如果安卓系统支持，跟随系统主题将在白天/夜间自动切换到亮/暗色主题</string>
     <string name="title_setup_advanced">高级选项</string>
     <string name="title_setup_options">选项</string>
     <string name="title_setup_defaults">恢复默认设置</string>
@@ -213,6 +214,7 @@
     <string name="title_advanced_indentation">左/右缩进接收/发送的消息</string>
     <string name="title_advanced_highlight_unread">高亮未读消息</string>
     <string name="title_advanced_distinguish_contacts">区分已知和未知联系人的信息</string>
+    <string name="title_advanced_color_stripe">显示颜色条纹</string>
     <string name="title_advanced_avatars">显示联系人头像</string>
     <string name="title_advanced_generated_icons">显示生成的图标</string>
     <string name="title_advanced_identicons">显示哈希头像</string>
@@ -253,6 +255,8 @@
     <string name="title_advanced_collapse_multiple">按返回时折叠会话中的多条消息</string>
     <string name="title_advanced_autoclose">自动关闭对话</string>
     <string name="title_advanced_onclose">关闭对话时</string>
+    <string name="title_advanced_quick_filter">显示非侵扰性快速过滤器图标</string>
+    <string name="title_advanced_quick_scroll">显示非侵扰性快速上／下滚动图标</string>
     <string name="title_advanced_autoread">移动消息时自动标记为已读</string>
     <string name="title_advanced_autounstar">移动消息时自动移除星标</string>
     <string name="title_advanced_automove">确认移动邮件</string>
@@ -295,6 +299,7 @@
     <string name="title_advanced_manage_certificates">管理公钥</string>
     <string name="title_advanced_import_key">导入私钥</string>
     <string name="title_advanced_manage_keys">管理私钥</string>
+    <string name="title_advanced_external_search">允许其他应用在消息中搜索</string>
     <string name="title_advanced_english">强制使用英语</string>
     <string name="title_advanced_watchdog">定期检查FairEmail是否仍在运行</string>
     <string name="title_advanced_updates">检查更新</string>
@@ -435,6 +440,8 @@
     <string name="title_create_sub_folder">创建子文件夹</string>
     <string name="title_empty_trash_ask">是否永久删除所有垃圾邮件？</string>
     <string name="title_empty_spam_ask">永久删除所有垃圾邮件？</string>
+    <string name="title_empty_trash_all_ask">永久删除所有账户的所有回收站消息？</string>
+    <string name="title_empty_spam_all_ask">永久删除所有帐户的垃圾邮件？</string>
     <string name="title_delete_operation">是否删除带有错误消息的操作？</string>
     <string name="title_delete_contacts">删除所有本地联系人？</string>
     <string name="title_no_operations">没有待执行操作</string>
@@ -557,10 +564,10 @@
     <string name="title_ask_help">帮助改进FairEmail</string>
     <string name="title_ask_reporting">发送错误报告?</string>
     <string name="title_reporting_why">错误报告将有助于改进FairEmail</string>
-    <string name="title_ask_review">请评价FairEmail</string>
-    <string name="title_ask_review_rationale">您已经使用FairEmail一段时间了。
-        要是您可以在谷歌商店为FairEmail评分，我将感激不尽。
-        这有助于保持批评和赞同评论之间的平衡。
+    <string name="title_ask_review">请给FairEmail评分</string>
+    <string name="title_ask_review_rationale">        您已经使用FairEmail一段时间了。
+        如果您能在谷歌商店为FairEmail评分，我将感激不尽。
+        这将有助于保持批评和赞同评论之间的平衡。
     </string>
     <string name="title_expand_warning">展开此消息将下载 %1$s</string>
     <string name="title_download_message">&#8230; 下载中</string>
@@ -629,6 +636,7 @@
     <string name="title_decrypt">解密</string>
     <string name="title_resync">重新同步</string>
     <string name="title_no_openpgp">OpenKeychain 未找到</string>
+    <string name="title_user_interaction">正传输到 OpenKeychain</string>
     <string name="title_not_encrypted">消息未签名或加密</string>
     <string name="title_reset_sign_key">重置签名密钥</string>
     <string name="title_signature_none">消息未签名</string>
@@ -830,7 +838,7 @@
     <string name="title_issue">您要提问或有问题吗？</string>
     <string name="title_yes">是</string>
     <string name="title_no">否</string>
-    <string name="title_later">以后再说</string>
+    <string name="title_later">稍后再说</string>
     <string name="title_undo">撤销</string>
     <string name="title_redo">重做</string>
     <string name="title_add">添加</string>
@@ -912,11 +920,20 @@ FairEmail会显示一条消息来提醒您这一点，这条消息在您购买�
     <string name="title_accessibility_collapse">折叠</string>
     <string name="title_accessibility_expand">展开</string>
     <string name="title_accessibility_view_contact">查看联系人</string>
-    <string name="title_accessibility_show_authentication_result">显示授权结果</string>
-    <string name="title_accessibility_show_snooze_time">显示暂停时间</string>
+    <string name="title_accessibility_show_authentication_result">显示认证结果</string>
+    <string name="title_accessibility_show_snooze_time">显示打盹时间</string>
     <string name="title_accessibility_view_help">查看帮助</string>
     <string name="title_accessibility_selected">已选</string>
     <string name="title_accessibility_answered">已回复</string>
+    <string name="title_accessibility_scroll_down">向下滚动</string>
+    <string name="title_accessibility_scroll_up">向上滚动</string>
+    <string name="title_accessibility_filter_out_seen">切换已读消息过滤器</string>
+    <string name="title_accessibility_filter_out_unflagged">切换星标消息过滤器</string>
+    <string name="title_accessibility_filter_out_snoozed">切换待办消息过滤器</string>
+    <string name="title_accessibility_edit">编辑</string>
+    <string name="title_accessibility_show_addresses">显示地址</string>
+    <string name="title_accessibility_hide_addresses">隐藏地址</string>
+    <string name="title_accessibility_attachment">附件</string>
     <string-array name="pollIntervalNames">
         <item>总是</item>
         <item>每15分钟</item>

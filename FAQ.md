@@ -597,6 +597,9 @@ If you want to undo decryption, you can use the *resync* menu item in the three-
 
 You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/) first.
 
+The OpenKeychain app is known to (silently) crash when the calling app (FairEmail) is not authorized yet and is getting an existing public key.
+You can workaround this by trying to send a signed/encrypted message to a sender with an unknown public key.
+
 FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients.
 
 Inline encrypted PGP in received messages is supported, but inline PGP signatures and inline PGP in outgoing messages is not supported,
@@ -1100,10 +1103,13 @@ so all data, including usernames, passwords, messages, etc, is stored encrypted.
 **(39) How can I reduce the battery usage of FairEmail?**
 
 Recent Android versions by default report *app usage* as a percentage in the Android battery settings screen.
-Confusingly, *app usage* is not the same as *battery usage*.
+Confusingly, *app usage* is not the same as *battery usage* and is not even directly related to battery usage!
 The app usage (while in use) will be very high because FairEmail is using a foreground service which is considered as constant app usage by Android.
 However, this doesn't mean that FairEmail is constantly using battery power.
-The real battery usage can be seen by using the three dot overflow menu *Show full device usage*.
+The real battery usage can be seen by navigating to this screen:
+
+*Android settings*, *Battery*, three-dots menu *Battery usage*, three-dots menu *Show full device usage*
+
 As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby*.
 If this isn't the case, please let me know.
 
@@ -1464,6 +1470,8 @@ Messages shown dimmed (grayed) are locally moved messages for which the move is 
 This can happen when there is no connection to the server or the account (yet).
 These messages will be synchronized after a connection to the server and the account has been made
 or, if this never happens, will be deleted if they are too old to be synchronized.
+
+You might need to manually synchronize the folder, for example by pulling down.
 
 You can view these messages, but you cannot move these messages again until the previous move has been confirmed.
 
@@ -1910,16 +1918,7 @@ You will likely need to save the associated identity again as well.
 <a name="faq88"></a>
 **(88) How can I use a Yahoo! account?**
 
-For the correct settings, see [here](https://help.yahoo.com/kb/SLN4075.html).
-
-You might need to enable "*less secure sign in*" for "*outdated*" apps,
-see [here](https://help.yahoo.com/kb/grant-temporary-access-outdated-apps-account-settings-sln27791.html) for more information.
-You can directly access this setting [here](https://login.yahoo.com/account/security#less-secure-apps).
-
-If you enable "*less secure sign in*", you should use a [strong password](https://en.wikipedia.org/wiki/Password_strength) for your Yahoo! account, which is a good idea anyway.
-Note that using the [standard](https://tools.ietf.org/html/rfc3501) IMAP protocol in itself is not less secure and not outdated.
-
-Depending on the age of your Yahoo! account you need to create a third-party app password.
+To authorize a Yahoo! account you will need to create a third-party app password.
 Please see [here](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html) for the instructions.
 
 <br />
