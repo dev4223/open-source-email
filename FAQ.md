@@ -45,6 +45,7 @@ Related questions:
 * Change the account name: Setup, step 1, Manage, tap account
 * Change the swipe left/right target: Setup, step 1, Manage, tap account, at the bottom
 * Set a signature: Setup, step 2, Manage, tap identity
+* Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Export/import settings: Setup, navigation/hamburger menu
 
@@ -2598,4 +2599,6 @@ Requested features should:
 
 Features not fulfilling these requirements will likely be rejected.
 
-If you have another question, want to request a feature or report a bug, please use *Report issue* in the main navigation/hamburger menu of the app.
+If you have another question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
+
+Copyright &copy; 2018-2020 Marcel Bokhorst.

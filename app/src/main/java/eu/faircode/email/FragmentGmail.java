@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+    Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
 import android.accounts.Account;
@@ -133,7 +133,7 @@ public class FragmentGmail extends FragmentBase {
         btnSupport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Helper.view(getContext(), Uri.parse(Helper.FAQ_URI + "#user-content-authorizing-accounts"), false);
+                Helper.view(getContext(), Uri.parse(Helper.SUPPORT_URI), false);
             }
         });
 

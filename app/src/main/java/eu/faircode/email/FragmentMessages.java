@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+    Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -1410,7 +1410,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             return result;
 
                         EntityFolder target = db.folder().getFolderByType(message.account, type);
-
                         if (target == null)
                             return result;
 
@@ -4993,6 +4992,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         return null;
 
                     EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
+                    if (junk == null)
+                        return null;
+
                     EntityOperation.queue(context, message, EntityOperation.MOVE, junk.id);
 
                     db.setTransactionSuccessful();

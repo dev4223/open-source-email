@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 882
-        versionName "1.882"
+        versionCode 885
+        versionName "1.885"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -326,6 +326,7 @@ dependencies {
     implementation "com.github.chrisbanes:PhotoView:$photoview_version"
 
     // https://github.com/KeepSafe/ReLinker
+    // https://mvnrepository.com/artifact/com.getkeepsafe.relinker/relinker?repo=jcenter
     implementation "com.getkeepsafe.relinker:relinker:$relinker_version"
 
     // https://github.com/noties/Markwon

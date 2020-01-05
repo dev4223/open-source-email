@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+    Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -94,6 +94,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -132,7 +133,7 @@ public class Helper {
 
     static final String FAQ_URI = "https://github.com/M66B/FairEmail/blob/master/FAQ.md";
     static final String XDA_URI = "https://forum.xda-developers.com/showthread.php?t=3824168";
-    static final String SUPPORT_URI = "https://support.faircode.eu/";
+    static final String SUPPORT_URI = "https://contact.faircode.eu/?product=fairemailsupport";
     static final String TEST_URI = "https://play.google.com/apps/testing/" + BuildConfig.APPLICATION_ID;
 
     static ExecutorService getBackgroundExecutor(int threads, String name) {
@@ -270,8 +271,11 @@ public class Helper {
         } else {
             // https://developer.chrome.com/multidevice/android/customtabs
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-            builder.setNavigationBarColor(resolveColor(context, R.attr.colorPrimaryDark));
             builder.setToolbarColor(resolveColor(context, R.attr.colorPrimary));
+            builder.setSecondaryToolbarColor(resolveColor(context, R.attr.colorPrimaryDark));
+            builder.setColorScheme(Helper.isDarkTheme(context)
+                    ? CustomTabsIntent.COLOR_SCHEME_DARK : CustomTabsIntent.COLOR_SCHEME_LIGHT);
+            builder.addDefaultShareMenuItem();
 
             CustomTabsIntent customTabsIntent = builder.build();
             try {
@@ -306,8 +310,6 @@ public class Helper {
 
     static Intent getIntentIssue(Context context) {
         if (ActivityBilling.isPro(context)) {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(SUPPORT_URI));
-/*
             String version = BuildConfig.VERSION_NAME + "/" +
                     (Helper.hasValidFingerprint(context) ? "1" : "3") +
                     (BuildConfig.PLAY_STORE_RELEASE ? "p" : "") +
@@ -323,7 +325,6 @@ public class Helper {
             }
             intent.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.title_issue_subject, version));
             return intent;
-*/
         } else
             return new Intent(Intent.ACTION_VIEW, Uri.parse(XDA_URI));
     }

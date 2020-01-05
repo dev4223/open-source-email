@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2019 by Marcel Bokhorst (M66B)
+    Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -646,7 +646,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void unwire() {
             final View touch = (viewType == ViewType.THREAD ? ibExpander : header);
             touch.setOnClickListener(null);
-            view.setOnKeyListener(null);
+            header.setOnKeyListener(null);
 
             ibAvatar.setOnClickListener(null);
             ibAuth.setOnClickListener(null);
