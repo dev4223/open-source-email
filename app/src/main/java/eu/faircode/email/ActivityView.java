@@ -40,6 +40,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -78,6 +79,8 @@ import java.util.List;
 import javax.net.ssl.HttpsURLConnection;
 
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
+import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_LOCKED_OPEN;
+import static androidx.drawerlayout.widget.DrawerLayout.LOCK_MODE_UNLOCKED;
 
 public class ActivityView extends ActivityBilling implements FragmentManager.OnBackStackChangedListener {
     private String startup;
@@ -137,9 +140,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         startup = prefs.getString("startup", "unified");
 
         Configuration config = getResources().getConfiguration();
-        boolean normal = config.isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
-        boolean landscape = prefs.getBoolean("landscape", true);
-        Log.i("Orientation=" + config.orientation + " normal=" + normal + " landscape=" + landscape);
+        final boolean normal = config.isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
+        final boolean landscape = prefs.getBoolean("landscape", true);
+        final boolean landscape3 = prefs.getBoolean("landscape3", true);
+        Log.i("Orientation=" + config.orientation + " normal=" + normal +
+                " landscape=" + landscape + "/" + landscape3);
 
         view = LayoutInflater.from(this).inflate(
                 config.orientation == ORIENTATION_PORTRAIT || !normal || !landscape
@@ -154,13 +159,31 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
         drawerLayout = findViewById(R.id.drawer_layout);
 
+        final ViewGroup childContent = (ViewGroup) drawerLayout.getChildAt(0);
+        final ViewGroup childDrawer = (ViewGroup) drawerLayout.getChildAt(1);
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.app_name, R.string.app_name) {
             public void onDrawerClosed(View view) {
+                drawerLayout.setDrawerLockMode(LOCK_MODE_UNLOCKED);
+                childContent.setPaddingRelative(0, 0, 0, 0);
                 super.onDrawerClosed(view);
             }
 
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
+                if (normal && landscape && landscape3 &&
+                        config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    drawerLayout.setDrawerLockMode(LOCK_MODE_LOCKED_OPEN);
+                    childContent.setPaddingRelative(childDrawer.getLayoutParams().width, 0, 0, 0);
+                }
+            }
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset) {
+                super.onDrawerSlide(drawerView, slideOffset);
+                if (normal && landscape && landscape3 &&
+                        config.orientation == Configuration.ORIENTATION_LANDSCAPE)
+                    childContent.setPaddingRelative(
+                            Math.round(slideOffset * childDrawer.getLayoutParams().width), 0, 0, 0);
             }
         };
         drawerLayout.addDrawerListener(drawerToggle);
@@ -262,7 +285,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         final NavMenuItem navOperations = new NavMenuItem(R.drawable.baseline_dns_24, R.string.menu_operations, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuOperations();
             }
         });
@@ -272,7 +296,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         menus.add(new NavMenuItem(R.drawable.baseline_list_24, R.string.title_log, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onShowLog();
             }
         }));
@@ -280,7 +305,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         menus.add(new NavMenuItem(R.drawable.baseline_reply_24, R.string.menu_answers, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuAnswers();
             }
         }));
@@ -288,7 +314,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         menus.add(new NavMenuItem(R.drawable.baseline_settings_applications_24, R.string.menu_setup, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuSetup();
             }
         }));
@@ -302,7 +329,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         extra.add(new NavMenuItem(R.drawable.baseline_help_24, R.string.menu_legend, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuLegend();
             }
         }));
@@ -310,13 +338,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         extra.add(new NavMenuItem(R.drawable.baseline_question_answer_24, R.string.menu_faq, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuFAQ();
             }
         }, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onDebugInfo();
             }
         }).setExternal(true));
@@ -325,7 +355,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             extra.add(new NavMenuItem(R.drawable.baseline_feedback_24, R.string.menu_issue, new Runnable() {
                 @Override
                 public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     onMenuIssue();
                 }
             }).setExternal(true));
@@ -334,7 +365,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             extra.add(new NavMenuItem(R.drawable.baseline_bug_report_24, R.string.menu_test, new Runnable() {
                 @Override
                 public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     onMenuTest();
                 }
             }).setExternal(true));
@@ -342,7 +374,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         extra.add(new NavMenuItem(R.drawable.baseline_account_box_24, R.string.menu_privacy, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 onMenuPrivacy();
             }
         }));
@@ -356,7 +389,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             @Override
             public void run() {
                 if (!Helper.isPlayStoreInstall()) {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     checkUpdate(true);
                 }
             }
@@ -365,7 +399,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         extra.add(new NavMenuItem(R.drawable.baseline_monetization_on_24, R.string.menu_pro, new Runnable() {
             @Override
             public void run() {
-                drawerLayout.closeDrawer(drawerContainer);
+                if (!drawerLayout.isLocked(drawerContainer))
+                    drawerLayout.closeDrawer(drawerContainer);
                 startActivity(new Intent(ActivityView.this, ActivityBilling.class));
             }
         }));
@@ -374,7 +409,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             extra.add(new NavMenuItem(R.drawable.baseline_people_24, R.string.menu_invite, new Runnable() {
                 @Override
                 public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     onMenuInvite();
                 }
             }).setExternal(true));
@@ -384,7 +420,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             extra.add(new NavMenuItem(R.drawable.baseline_star_24, R.string.menu_rate, new Runnable() {
                 @Override
                 public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     onMenuRate();
                 }
             }).setExternal(true));
@@ -393,7 +430,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             extra.add(new NavMenuItem(R.drawable.baseline_get_app_24, R.string.menu_other, new Runnable() {
                 @Override
                 public void run() {
-                    drawerLayout.closeDrawer(drawerContainer);
+                    if (!drawerLayout.isLocked(drawerContainer))
+                        drawerLayout.closeDrawer(drawerContainer);
                     onMenuOtherApps();
                 }
             }).setExternal(true));
@@ -499,7 +537,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        drawerLayout.setup(getResources().getConfiguration());
+        drawerLayout.setup(getResources().getConfiguration(), drawerContainer, drawerToggle);
         drawerToggle.syncState();
     }
 
@@ -540,16 +578,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        drawerLayout.setup(newConfig);
+        drawerLayout.setup(newConfig, drawerContainer, drawerToggle);
         drawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(drawerContainer))
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        if (drawerLayout.isDrawerOpen(drawerContainer) &&
+                (!drawerLayout.isLocked(drawerContainer) || count == 1))
             drawerLayout.closeDrawer(drawerContainer);
         else {
-            int count = getSupportFragmentManager().getBackStackEntryCount();
             if (exit || count > 1)
                 super.onBackPressed();
             else if (!backHandled()) {
@@ -577,7 +616,8 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         if (count == 0)
             finish();
         else {
-            if (drawerLayout.isDrawerOpen(drawerContainer))
+            if (drawerLayout.isDrawerOpen(drawerContainer) &&
+                    !drawerLayout.isLocked(drawerContainer))
                 drawerLayout.closeDrawer(drawerContainer);
             drawerToggle.setDrawerIndicatorEnabled(count == 1);
 
@@ -591,8 +631,12 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (drawerToggle.onOptionsItemSelected(item))
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            int count = getSupportFragmentManager().getBackStackEntryCount();
+            if (count == 1 && drawerLayout.isLocked(drawerContainer))
+                drawerLayout.closeDrawer(drawerContainer);
             return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }

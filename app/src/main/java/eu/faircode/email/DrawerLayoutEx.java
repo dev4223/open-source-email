@@ -20,22 +20,22 @@ package eu.faircode.email;
 */
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.Parcelable;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.preference.PreferenceManager;
 
 public class DrawerLayoutEx extends DrawerLayout {
-    private boolean locked = false;
-
     public DrawerLayoutEx(@NonNull Context context) {
         super(context);
     }
@@ -48,49 +48,68 @@ public class DrawerLayoutEx extends DrawerLayout {
         super(context, attrs, defStyle);
     }
 
-    void setup(Configuration config) {
-        setScrimColor(Helper.resolveColor(getContext(), R.attr.colorDrawerScrim));
+    void setup(Configuration config, View drawerContainer, ActionBarDrawerToggle drawerToggle) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean normal = config.isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
+        boolean landscape = prefs.getBoolean("landscape", true);
+        boolean landscape3 = prefs.getBoolean("landscape3", true);
 
-        ViewGroup childContent = (ViewGroup) getChildAt(0);
-        ViewGroup childDrawer = (ViewGroup) getChildAt(1);
-        if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            locked = true;
-            setDrawerLockMode(LOCK_MODE_LOCKED_OPEN);
+        if (normal && landscape && landscape3 &&
+                config.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             setScrimColor(Color.TRANSPARENT);
-            childContent.setPaddingRelative(childDrawer.getLayoutParams().width, 0, 0, 0);
+            openDrawer(drawerContainer, false);
+            drawerToggle.onDrawerOpened(drawerContainer);
         } else {
-            locked = false;
-            setDrawerLockMode(LOCK_MODE_UNLOCKED);
             setScrimColor(Helper.resolveColor(getContext(), R.attr.colorDrawerScrim));
-            childContent.setPaddingRelative(0, 0, 0, 0);
+            closeDrawer(drawerContainer, false);
+            drawerToggle.onDrawerClosed(drawerContainer);
         }
     }
 
-    @Override
-    protected void onRestoreInstanceState(Parcelable state) {
-        super.onRestoreInstanceState(state);
-        locked = (getDrawerLockMode(Gravity.LEFT) == LOCK_MODE_LOCKED_OPEN ||
+    public boolean isLocked(View view) {
+        return (getDrawerLockMode(view) != LOCK_MODE_UNLOCKED);
+    }
+
+    public boolean isLocked() {
+        return (getDrawerLockMode(Gravity.LEFT) == LOCK_MODE_LOCKED_OPEN ||
                 getDrawerLockMode(Gravity.RIGHT) == LOCK_MODE_LOCKED_OPEN);
     }
 
     @Override
-    public boolean isDrawerOpen(@NonNull View drawer) {
-        return (!locked && super.isDrawerOpen(drawer));
-    }
-
-    @Override
-    public boolean isDrawerOpen(int drawerGravity) {
-        return (!locked && super.isDrawerOpen(drawerGravity));
-    }
-
-    @Override
     public boolean onInterceptTouchEvent(final MotionEvent ev) {
-        return (!locked && super.onInterceptTouchEvent(ev));
+        if (isLocked()) {
+            Rect rect = new Rect();
+            getChildAt(1).getHitRect(rect);
+            if (!rect.contains((int) ev.getX(), (int) ev.getY()))
+                return false;
+        }
+
+        try {
+            return super.onInterceptTouchEvent(ev);
+        } catch (Throwable ex) {
+            Log.w(ex);
+/*
+            java.lang.NullPointerException: Attempt to get length of null array
+            java.lang.NullPointerException: Attempt to get length of null array
+            at androidx.customview.widget.ViewDragHelper.checkTouchSlop(SourceFile:1334)
+            at androidx.drawerlayout.widget.DrawerLayout.onInterceptTouchEvent(SourceFile:1512)
+*/
+            return false;
+        }
     }
 
     @Override
-    public void closeDrawer(@NonNull View drawerView) {
-        if (!locked)
-            super.closeDrawer(drawerView);
+    public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+        if (isLocked()) {
+            View content = getChildAt(0);
+            Rect rect = new Rect();
+            content.getHitRect(rect);
+            rect.left += content.getPaddingLeft();
+            rect.right -= content.getPaddingRight();
+            if (rect.contains((int) ev.getX(), (int) ev.getY()))
+                return content.dispatchGenericMotionEvent(ev);
+        }
+
+        return super.dispatchGenericMotionEvent(ev);
     }
 }

@@ -219,6 +219,7 @@
     <string name="title_advanced_socks">Käytä SOCKS-proxypalvelinta</string>
     <string name="title_advanced_manage_connectivity">Hallitse verkkoyhteyksiä</string>
     <string name="title_advanced_landscape">Käytä kahta saraketta vaakatilassa</string>
+    <string name="title_advanced_landscape3">Salli kiinteä navigointivalikko vaakatilassa</string>
     <string name="title_advanced_startup">Näytä aloitusnäytössä</string>
     <string name="title_advanced_cards">Näytä kortit</string>
     <string name="title_advanced_date_header">Ryhmittely päivämäärän mukaan</string>
@@ -272,7 +273,7 @@
     <string name="title_advanced_autoread">Siirtäessä viestejä merkitse ne luetuiksi</string>
     <string name="title_advanced_autounstar">Poista tähti viestejä siirrettäessä</string>
     <string name="title_advanced_automove">Vahvista viestien siirto</string>
-    <string name="title_advanced_discard_delete">Luonnosta hylättäessä poista se pysyvästi</string>
+    <string name="title_advanced_discard_delete">Poista luonnos hylättäessä</string>
     <string name="title_advanced_default_snooze">Torkutuksen oletusaika</string>
     <string name="title_advanced_notifications">Hallinnoi ilmoituksia</string>
     <string name="title_advanced_notifications_default">Oletuskanava</string>
@@ -320,7 +321,6 @@
     <string name="title_advanced_debug">Debug-tila</string>
     <string name="title_advanced_cleanup">Siistiminen</string>
     <string name="title_advanced_last_cleanup">Viimeisin puhdistus: %1$s</string>
-    <string name="title_advanced_hint">Kaikilla asetuksilla on järkevät oletusarvot ja niitä tulisi muuttaa vain tarvittaessa</string>
     <string name="title_advanced_enabled_hint">Estä tai salli viestien vastaanotto globaalisti</string>
     <string name="title_advanced_manual_hint">Jos automaattinen synkronointi on pois käytöstä, synkronoinnin voi tehdä manuaalisesti vetämällä alaspäin viestilistassa.</string>
     <string name="title_advanced_poll_hint">Ajoittainen synkronointi vertaa paikallisia ja palvelimen viestejä joka kerta ja voi aiheuttaa ylimääräistä akun käyttöä varsinkin, kun synkronoitavia viestejä on paljon. Koko ajan synkronointi välttää tämän synkronoimalla jatkuvasti vain muutokset.</string>
@@ -648,6 +648,7 @@
     <string name="title_decrypt">Pura salaus</string>
     <string name="title_resync">Synkronoi uudelleen</string>
     <string name="title_no_openpgp">OpenKeychain ei löytynyt</string>
+    <string name="title_user_interaction">Siirretään OpenKeychain-sovellukseen</string>
     <string name="title_not_encrypted">Viestiä ei ole allekirjoitettu tai salattu</string>
     <string name="title_reset_sign_key">Nollaa allekirjoitusavain</string>
     <string name="title_signature_none">Viestiä ei allekirjoitettu</string>

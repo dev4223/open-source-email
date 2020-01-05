@@ -1644,6 +1644,8 @@ public class FragmentCompose extends FragmentBase {
                 EntityMessage draft = db.message().getMessage(id);
                 if (draft == null)
                     throw new MessageRemovedException("PGP");
+                if (draft.identity == null)
+                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
                 EntityIdentity identity = db.identity().getIdentity(draft.identity);
                 if (identity == null)
                     throw new IllegalArgumentException(getString(R.string.title_from_missing));
@@ -2812,11 +2814,10 @@ public class FragmentCompose extends FragmentBase {
                                             preferred = (same == null ? similar : same);
                                         }
                                     }
-                                    if (preferred == null)
-                                        preferred = data.draft.from[0];
-                                    String from = ((InternetAddress) preferred).getAddress();
-                                    if (from != null && from.contains("@"))
+                                    if (preferred != null) {
+                                        String from = ((InternetAddress) preferred).getAddress();
                                         data.draft.extra = from.substring(0, from.indexOf("@"));
+                                    }
                                 }
                             }
 
