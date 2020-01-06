@@ -2152,6 +2152,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message == null)
                 return;
 
+            if (selectionTracker != null && selectionTracker.isSelected(message.id))
+                return;
+
             if (view.getId() == R.id.ibAvatar)
                 onViewContact(message);
             else if (view.getId() == R.id.ibAuth)
@@ -4526,7 +4529,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     public void onItemSelected(@NonNull ViewHolder holder, boolean selected) {
-        if (accessibility) {
+        if (accessibility && holder.view != null) {
             AccessibilityEvent event = AccessibilityEvent.obtain();
             holder.view.onInitializeAccessibilityEvent(event);
             event.setEventType(AccessibilityEvent.TYPE_VIEW_SELECTED);
