@@ -169,6 +169,11 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
 import javax.mail.util.ByteArrayDataSource;
 
+import biweekly.Biweekly;
+import biweekly.ICalendar;
+import biweekly.component.VEvent;
+import biweekly.property.Organizer;
+
 import static android.app.Activity.RESULT_CANCELED;
 import static android.app.Activity.RESULT_OK;
 import static android.widget.AdapterView.INVALID_POSITION;
@@ -1195,7 +1200,7 @@ public class FragmentCompose extends FragmentBase {
         File dir = new File(getContext().getCacheDir(), "photo");
         if (!dir.exists())
             dir.mkdir();
-        File file = new File(dir, new Date().getTime() + ".jpg");
+        File file = new File(dir, working + ".jpg");
 
         // https://developer.android.com/training/camera/photobasics
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -2508,11 +2513,14 @@ public class FragmentCompose extends FragmentBase {
 
     private static void resizeAttachment(Context context, EntityAttachment attachment) throws IOException {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean autoresize = prefs.getBoolean("autoresize", true);
+        boolean resize_images = prefs.getBoolean("resize_images", true);
+        boolean resize_attachments = prefs.getBoolean("resize_attachments", true);
 
         File file = attachment.getFile(context);
 
-        if (autoresize && file.exists() /* upload cancelled */ &&
+        if (((resize_images && Part.INLINE.equals(attachment.disposition)) ||
+                (resize_attachments && Part.ATTACHMENT.equals(attachment.disposition))) &&
+                file.exists() /* upload cancelled */ &&
                 ("image/jpeg".equals(attachment.type) || "image/png".equals(attachment.type))) {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
@@ -3002,7 +3010,21 @@ public class FragmentCompose extends FragmentBase {
                         attachment.progress = null;
                         attachment.available = true;
                         attachment.id = db.attachment().insertAttachment(attachment);
-                        ics.renameTo(attachment.getFile(context));
+                        File file = attachment.getFile(context);
+                        ics.renameTo(file);
+
+                        ICalendar icalendar = Biweekly.parse(file).first();
+                        VEvent event = icalendar.getEvents().get(0);
+                        Organizer organizer = event.getOrganizer();
+                        if (organizer != null) {
+                            String email = organizer.getEmail();
+                            String name = organizer.getCommonName();
+                            if (!TextUtils.isEmpty(email)) {
+                                InternetAddress o = new InternetAddress(email, name);
+                                Log.i("Setting organizer=" + o);
+                                data.draft.to = new Address[]{o};
+                            }
+                        }
                     }
 
                     if ("new".equals(action)) {
@@ -3717,8 +3739,16 @@ public class FragmentCompose extends FragmentBase {
 
             if (ex instanceof MessageRemovedException)
                 finish();
-            else if (ex instanceof IllegalArgumentException ||
-                    ex instanceof AddressException || ex instanceof UnknownHostException)
+            else if (ex instanceof AddressException) {
+                final Snackbar sb = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                sb.setAction(android.R.string.ok, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        sb.dismiss();
+                    }
+                });
+                sb.show();
+            } else if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
                 Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
             else
                 Log.unexpectedError(getParentFragmentManager(), ex);

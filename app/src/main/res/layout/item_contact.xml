@@ -13,23 +13,22 @@
             android:id="@+id/ivType"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:contentDescription="@string/title_legend_avatar"
-            app:srcCompat="@drawable/baseline_call_received_24"
+            android:contentDescription="@string/title_accessibility_from"
             app:layout_constraintBottom_toBottomOf="@+id/ivAvatar"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/ivAvatar" />
+            app:layout_constraintTop_toTopOf="@+id/ivAvatar"
+            app:srcCompat="@drawable/baseline_call_received_24" />
 
         <ImageView
             android:id="@+id/ivAvatar"
             android:layout_width="42dp"
             android:layout_height="0dp"
             android:layout_marginStart="6dp"
-            android:contentDescription="@string/title_legend_avatar"
             android:padding="3dp"
-            app:srcCompat="@drawable/baseline_person_24"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintStart_toEndOf="@id/ivType"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/baseline_person_24" />
 
         <TextView
             android:id="@+id/tvName"
@@ -86,11 +85,11 @@
             android:id="@+id/ivFavorite"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:contentDescription="@string/title_legend_flagged"
-            app:srcCompat="@drawable/baseline_star_24"
+            android:contentDescription="@string/title_accessibility_flagged"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@+id/ivAvatar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/ivAvatar" />
+            app:layout_constraintTop_toTopOf="@+id/ivAvatar"
+            app:srcCompat="@drawable/baseline_star_24" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

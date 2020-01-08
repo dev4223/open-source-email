@@ -620,6 +620,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarMaybe.setOnClickListener(this);
                 ibCalendar.setOnClickListener(this);
 
+                btnCalendarAccept.setOnLongClickListener(this);
+                btnCalendarDecline.setOnLongClickListener(this);
+                btnCalendarMaybe.setOnLongClickListener(this);
+
                 gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                     @Override
                     public boolean onScale(ScaleGestureDetector detector) {
@@ -683,6 +687,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarDecline.setOnClickListener(null);
                 btnCalendarMaybe.setOnClickListener(null);
                 ibCalendar.setOnClickListener(null);
+
+                btnCalendarAccept.setOnLongClickListener(null);
+                btnCalendarDecline.setOnLongClickListener(null);
+                btnCalendarMaybe.setOnLongClickListener(null);
             }
 
             if (accessibility)
@@ -1964,7 +1972,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.setLog(false).execute(context, owner, args, "message:calendar");
         }
 
-        private void onActionCalendar(TupleMessageEx message, int action) {
+        private void onActionCalendar(TupleMessageEx message, int action, boolean share) {
             if (!ActivityBilling.isPro(context)) {
                 context.startActivity(new Intent(context, ActivityBilling.class));
                 return;
@@ -1973,6 +1981,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putLong("id", message.id);
             args.putInt("action", action);
+            args.putBoolean("share", share);
 
             new SimpleTask<Object>() {
                 @Override
@@ -2025,6 +2034,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 if (location != null)
                                     intent.putExtra(CalendarContract.Events.EVENT_LOCATION, location);
 
+                                intent.putExtra(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED);
+
                                 if (attendee.size() > 0)
                                     intent.putExtra(Intent.EXTRA_EMAIL, TextUtils.join(",", attendee));
 
@@ -2041,6 +2052,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 ev.setDateStart(event.getDateStart());
                             if (event.getDateEnd() != null)
                                 ev.setDateEnd(event.getDateEnd());
+                            ev.setSummary(event.getSummary());
+                            ev.setDescription(event.getDescription());
+                            ev.setLocation(event.getLocation());
 
                             InternetAddress to = (InternetAddress) message.to[0];
                             Attendee attendee = new Attendee(to.getPersonal(), to.getAddress());
@@ -2064,7 +2078,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             response.setMethod(Method.REPLY);
                             response.addEvent(ev);
 
-                            File ics = File.createTempFile("calendar", ".ics", context.getCacheDir());
+                            File dir = new File(context.getCacheDir(), "calendar");
+                            if (!dir.exists())
+                                dir.mkdir();
+                            File ics = new File(dir, message.id + ".ics");
                             response.write(ics);
 
                             return ics;
@@ -2089,12 +2106,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 break;
                         }
 
-                        Intent reply = new Intent(context, ActivityCompose.class)
-                                .putExtra("action", "participation")
-                                .putExtra("reference", args.getLong("id"))
-                                .putExtra("ics", (File) result)
-                                .putExtra("status", status);
-                        context.startActivity(reply);
+                        if (args.getBoolean("share"))
+                            Helper.share(context, (File) result, "text/calendar", status + ".ics");
+                        else {
+                            Intent reply = new Intent(context, ActivityCompose.class)
+                                    .putExtra("action", "participation")
+                                    .putExtra("reference", args.getLong("id"))
+                                    .putExtra("ics", (File) result)
+                                    .putExtra("status", status);
+                            context.startActivity(reply);
+                        }
                     } else if (result instanceof Intent) {
                         context.startActivity((Intent) result);
                     }
@@ -2209,7 +2230,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.btnCalendarDecline:
                     case R.id.btnCalendarMaybe:
                     case R.id.ibCalendar:
-                        onActionCalendar(message, view.getId());
+                        onActionCalendar(message, view.getId(), false);
                         break;
                     default:
                         onToggleMessage(message);
@@ -2356,12 +2377,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message == null || message.folderReadOnly)
                 return false;
 
-            if (view.getId() == R.id.ibFlagged) {
-                onMenuColoredStar(message);
-                return true;
+            switch (view.getId()) {
+                case R.id.ibFlagged:
+                    onMenuColoredStar(message);
+                    return true;
+                case R.id.btnCalendarAccept:
+                case R.id.btnCalendarDecline:
+                case R.id.btnCalendarMaybe:
+                    onActionCalendar(message, view.getId(), true);
+                    return true;
+                default:
+                    return false;
             }
-
-            return false;
         }
 
         @Override

@@ -86,7 +86,7 @@ public class MailService implements AutoCloseable {
     private final static int CONNECT_TIMEOUT = 20 * 1000; // milliseconds
     private final static int WRITE_TIMEOUT = 60 * 1000; // milliseconds
     private final static int READ_TIMEOUT = 60 * 1000; // milliseconds
-    private final static int FETCH_SIZE = 256 * 1024; // bytes, default 16K
+    private final static int FETCH_SIZE = 512 * 1024; // bytes, default 16K
     private final static int POOL_TIMEOUT = 45 * 1000; // milliseconds, default 45 sec
 
     private static final int APPEND_BUFFER_SIZE = 4 * 1024 * 1024; // bytes
@@ -345,8 +345,9 @@ public class MailService implements AutoCloseable {
             } else if ("smtp".equals(protocol) || "smtps".equals(protocol)) {
                 String[] c = BuildConfig.APPLICATION_ID.split("\\.");
                 Collections.reverse(Arrays.asList(c));
-                String haddr = TextUtils.join(".", c);
+                String domain = TextUtils.join(".", c);
 
+                String haddr = domain;
                 if (useip)
                     try {
                         // This assumes getByName always returns the same address (type)
@@ -363,7 +364,18 @@ public class MailService implements AutoCloseable {
                 properties.put("mail." + protocol + ".localhost", haddr);
 
                 iservice = isession.getTransport(protocol);
-                iservice.connect(host, port, user, password);
+                try {
+                    iservice.connect(host, port, user, password);
+                } catch (MessagingException ex) {
+                    if (useip &&
+                            ex.getMessage() != null &&
+                            ex.getMessage().toLowerCase().contains("syntactically invalid")) {
+                        Log.i("Using localhost=" + domain);
+                        properties.put("mail." + protocol + ".localhost", domain);
+                        iservice.connect(host, port, user, password);
+                    } else
+                        throw ex;
+                }
             } else
                 throw new NoSuchProviderException(protocol);
         } catch (MessagingException ex) {

@@ -505,7 +505,7 @@ class Core {
 
         Long uid = findUid(ifolder, message.msgid, false);
         if (uid == null)
-            throw new IllegalArgumentException("Message not found for " + op.name);
+            throw new IllegalArgumentException("Message not found for " + op.name + " folder=" + folder.name);
 
         DB db = DB.getInstance(context);
         db.message().setMessageUid(message.id, message.uid);
@@ -1477,6 +1477,10 @@ class Core {
 
                     Log.i(folder.name + " POP sync=" + msgid);
 
+                    Long sent = helper.getSent();
+                    if (sent == null)
+                        sent = 0L;
+
                     String authentication = helper.getAuthentication();
                     MessageHelper.MessageParts parts = helper.getMessageParts(context);
 
@@ -1508,8 +1512,8 @@ class Core {
                     message.total = helper.getSize();
                     message.content = false;
                     message.encrypt = parts.getEncryption();
-                    message.received = helper.getSent();
-                    message.sent = helper.getSent();
+                    message.received = sent;
+                    message.sent = sent;
                     message.seen = false;
                     message.answered = false;
                     message.flagged = false;
@@ -2568,10 +2572,10 @@ class Core {
                     StringBuilder sb = new StringBuilder();
                     for (String key : sid.keySet())
                         sb.append(" ").append(key).append("=").append(sid.get(key));
-                    Log.e("Empty message" + sb.toString());
+                    Log.e("Empty message" + sb.toString() + " partial=" + account.partial_fetch);
                 }
             } else
-                Log.e("Empty message " + account.host);
+                Log.e("Empty message " + account.host + " partial=" + account.partial_fetch);
         } catch (Throwable ex) {
             Log.w(ex);
         }

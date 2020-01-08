@@ -293,6 +293,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static final String ACTION_NEW_MESSAGE = BuildConfig.APPLICATION_ID + ".NEW_MESSAGE";
 
     private static final long REVIEW_ASK_DELAY = 21 * 24 * 3600 * 1000L; // milliseconds
+    private static final long REVIEW_LATER_DELAY = 3 * 24 * 3600 * 1000L; // milliseconds
 
     private static final List<String> DUPLICATE_ORDER = Collections.unmodifiableList(Arrays.asList(
             EntityFolder.INBOX,
@@ -698,7 +699,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
                     case R.id.action_delete:
-                        onActionMove(EntityFolder.TRASH);
+                        if ((Boolean) bottom_navigation.getTag())
+                            onActionDelete();
+                        else
+                            onActionMove(EntityFolder.TRASH);
                         return true;
 
                     case R.id.action_snooze:
@@ -720,6 +724,61 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     default:
                         return false;
                 }
+            }
+
+            private void onActionDelete() {
+                Bundle args = new Bundle();
+                args.putLong("account", account);
+                args.putString("thread", thread);
+                args.putLong("id", id);
+
+                new SimpleTask<List<Long>>() {
+                    @Override
+                    protected List<Long> onExecute(Context context, Bundle args) throws Throwable {
+                        long aid = args.getLong("account");
+                        String thread = args.getString("thread");
+                        long id = args.getLong("id");
+
+                        ArrayList<Long> result = new ArrayList<>();
+
+                        DB db = DB.getInstance(context);
+                        try {
+                            db.beginTransaction();
+
+                            List<EntityMessage> messages = db.message().getMessagesByThread(
+                                    aid, thread, threading ? null : id, null);
+                            for (EntityMessage threaded : messages) {
+                                EntityFolder folder = db.folder().getFolder(threaded.folder);
+                                if (folder != null && !folder.read_only)
+                                    result.add(threaded.id);
+                            }
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+
+                        return result;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, List<Long> ids) {
+                        Bundle aargs = new Bundle();
+                        aargs.putString("question", getResources()
+                                .getQuantityString(R.plurals.title_deleting_messages, ids.size(), ids.size()));
+                        aargs.putLongArray("ids", Helper.toLongArray(ids));
+
+                        FragmentDialogAsk ask = new FragmentDialogAsk();
+                        ask.setArguments(aargs);
+                        ask.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGES_DELETE);
+                        ask.show(getParentFragmentManager(), "messages:delete");
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(getParentFragmentManager(), ex);
+                    }
+                }.execute(FragmentMessages.this, args, "messages:delete");
             }
 
             private void onActionMove(String folderType) {
@@ -750,7 +809,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         aid, thread, threading ? null : id, null);
                                 for (EntityMessage threaded : messages) {
                                     EntityFolder folder = db.folder().getFolder(threaded.folder);
-                                    if (!target.id.equals(threaded.folder) &&
+                                    if (!folder.read_only &&
+                                            !target.id.equals(threaded.folder) &&
                                             !EntityFolder.DRAFTS.equals(folder.type) && !EntityFolder.OUTBOX.equals(folder.type) &&
                                             (!EntityFolder.SENT.equals(folder.type) || EntityFolder.TRASH.equals(target.type)) &&
                                             !EntityFolder.TRASH.equals(folder.type) && !EntityFolder.JUNK.equals(folder.type))
@@ -1973,7 +2033,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (result.hasArchive && !result.isArchive) // has archive and not is archive/drafts
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_archive, order++, R.string.title_archive);
 
-                if (result.isTrash) // is trash
+                if (result.isTrash || !result.hasTrash) // is trash or no trash
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, order++, R.string.title_delete);
 
                 if (!result.isTrash && result.hasTrash) // not trash and has trash
@@ -2787,24 +2847,28 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (intent.resolveActivity(pm) == null)
             return false;
 
-        long installed = 0;
-        try {
-            PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, 0);
-            if (pi != null)
-                installed = pi.firstInstallTime;
-        } catch (Throwable ex) {
-            Log.e(ex);
-        }
-
-        long later = prefs.getLong("review_later", 0);
-
-        Log.i("Installed=" + new Date(installed) + " later=" + new Date(later));
-        if (later > installed)
-            installed = later;
-
         long now = new Date().getTime();
-        if (installed + REVIEW_ASK_DELAY > now)
-            return false;
+        long later = prefs.getLong("review_later", -1);
+        if (later < 0) {
+            long installed = 0;
+            try {
+                PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, 0);
+                if (pi != null)
+                    installed = pi.firstInstallTime;
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
+            Log.i("Review installed=" + new Date(installed));
+
+            if (installed + REVIEW_ASK_DELAY > now)
+                return false;
+        } else {
+            Log.i("Review later=" + new Date(later));
+
+            if (later + REVIEW_LATER_DELAY > now)
+                return false;
+        }
 
         final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_review, Snackbar.LENGTH_INDEFINITE);
         snackbar.setAction(R.string.title_info, new View.OnClickListener() {
@@ -3505,6 +3569,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     DB db = DB.getInstance(context);
 
+                    EntityFolder trash = db.folder().getFolderByType(account, EntityFolder.TRASH);
+                    EntityFolder archive = db.folder().getFolderByType(account, EntityFolder.ARCHIVE);
+
                     List<EntityMessage> messages = db.message().getMessagesByThread(
                             account, thread, threading ? null : id, null);
 
@@ -3514,12 +3581,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     for (EntityMessage message : messages) {
                         EntityFolder folder = db.folder().getFolder(message.folder);
 
-                        if (!folder.read_only &&
-                                !EntityFolder.DRAFTS.equals(folder.type) &&
-                                !EntityFolder.OUTBOX.equals(folder.type) &&
-                                // allow sent
-                                !EntityFolder.TRASH.equals(folder.type) &&
-                                !EntityFolder.JUNK.equals(folder.type))
+                        if (!folder.read_only && (trash == null ||
+                                (!EntityFolder.DRAFTS.equals(folder.type) &&
+                                        !EntityFolder.OUTBOX.equals(folder.type) &&
+                                        // allow sent
+                                        !EntityFolder.TRASH.equals(folder.type) &&
+                                        !EntityFolder.JUNK.equals(folder.type))))
                             trashable = true;
 
                         if (!EntityFolder.OUTBOX.equals(folder.type))
@@ -3533,20 +3600,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             archivable = true;
                     }
 
-                    EntityFolder trash = db.folder().getFolderByType(account, EntityFolder.TRASH);
-                    EntityFolder archive = db.folder().getFolderByType(account, EntityFolder.ARCHIVE);
-
-                    trashable = (trashable && trash != null);
-                    archivable = (archivable && archive != null);
-
-                    return new Boolean[]{trashable, snoozable, archivable};
+                    return new Boolean[]{
+                            trash == null,
+                            trashable,
+                            snoozable,
+                            archivable && archive != null};
                 }
 
                 @Override
                 protected void onExecuted(Bundle args, Boolean[] data) {
-                    bottom_navigation.getMenu().findItem(R.id.action_delete).setVisible(data[0]);
-                    bottom_navigation.getMenu().findItem(R.id.action_snooze).setVisible(data[1]);
-                    bottom_navigation.getMenu().findItem(R.id.action_archive).setVisible(data[2]);
+                    bottom_navigation.setTag(data[0]);
+                    bottom_navigation.getMenu().findItem(R.id.action_delete).setVisible(data[1]);
+                    bottom_navigation.getMenu().findItem(R.id.action_snooze).setVisible(data[2]);
+                    bottom_navigation.getMenu().findItem(R.id.action_archive).setVisible(data[3]);
                     bottom_navigation.setVisibility(View.VISIBLE);
                 }
 
@@ -4938,7 +5004,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onDelete(Bundle args) {
-        selectionTracker.clearSelection();
+        if (selectionTracker != null)
+            selectionTracker.clearSelection();
 
         new SimpleTask<Void>() {
             @Override
@@ -5519,20 +5586,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_error_reporting, null);
             Button btnInfo = dview.findViewById(R.id.btnInfo);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
 
             btnInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Helper.viewFAQ(getContext(), 104);
-                }
-            });
-
-            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                    prefs.edit().putBoolean("crash_reports_asked", isChecked).apply();
                 }
             });
 
@@ -5546,7 +5604,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             Log.setCrashReporting(true);
                         }
                     })
-                    .setNegativeButton(android.R.string.no, null)
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("crash_reports_asked", true).apply();
+                        }
+                    })
                     .create();
         }
     }
@@ -5556,15 +5620,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_review, null);
-            CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-
-            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                    prefs.edit().putBoolean("review_asked", isChecked).apply();
-                }
-            });
 
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
@@ -5576,7 +5631,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             startActivity(Helper.getIntentRate(getContext()));
                         }
                     })
-                    .setNegativeButton(android.R.string.no, null)
+                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                            prefs.edit().putBoolean("review_asked", true).apply();
+                        }
+                    })
                     .setNeutralButton(R.string.title_later, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

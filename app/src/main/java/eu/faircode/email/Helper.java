@@ -78,6 +78,7 @@ import androidx.biometric.BiometricPrompt;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
@@ -252,6 +253,36 @@ public class Helper {
             return intent;
         else
             return Intent.createChooser(intent, context.getString(R.string.title_select_app));
+    }
+
+    static void share(Context context, File file, String type, String name) {
+        // https://developer.android.com/reference/android/support/v4/content/FileProvider
+        Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+        Log.i("uri=" + uri);
+
+        // Build intent
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndTypeAndNormalize(uri, type);
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (!TextUtils.isEmpty(name))
+            intent.putExtra(Intent.EXTRA_TITLE, Helper.sanitizeFilename(name));
+        Log.i("Intent=" + intent + " type=" + type);
+
+        // Get targets
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> ris = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        for (ResolveInfo ri : ris) {
+            Log.i("Target=" + ri);
+            context.grantUriPermission(ri.activityInfo.packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+
+        // Check if viewer available
+        if (ris.size() == 0) {
+            String message = context.getString(R.string.title_no_viewer,
+                    type != null ? type : name != null ? name : file.getName());
+            ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
+        } else
+            context.startActivity(intent);
     }
 
     static void view(Context context, Intent intent) {
@@ -551,6 +582,26 @@ public class Helper {
         }
 
         return result.toArray(new String[0]);
+    }
+
+    static boolean containsWhiteSpace(String text) {
+        return text.matches(".*\\s+.*");
+    }
+
+    static boolean containsControlChars(String text) {
+        for (int offset = 0; offset < text.length(); ) {
+            int codePoint = text.codePointAt(offset);
+            offset += Character.charCount(codePoint);
+            switch (Character.getType(codePoint)) {
+                case Character.CONTROL:     // \p{Cc}
+                case Character.FORMAT:      // \p{Cf}
+                case Character.PRIVATE_USE: // \p{Co}
+                case Character.SURROGATE:   // \p{Cs}
+                case Character.UNASSIGNED:  // \p{Cn}
+                    return true;
+            }
+        }
+        return false;
     }
 
     // Files

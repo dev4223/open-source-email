@@ -37,8 +37,8 @@ Please see [here](#user-content-faq22) for common error messages.
 
 Related questions:
 
+* [Is OAuth supported?](#user-content-faq111)
 * [Why is ActiveSync not supported?](#user-content-faq133)
-* [Why is OAuth not supported?](#user-content-faq111)
 
 ## How to ...?
 
@@ -46,8 +46,12 @@ Related questions:
 * Change the swipe left/right target: Setup, step 1, Manage, tap account, at the bottom
 * Set a signature: Setup, step 2, Manage, tap identity
 * Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
+* Load older messages: long press a folder in the folder list, select *Edit properties* and change the number of days to sync/keep messages for; please [read this FAQ](#user-content-faq39)
+* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text there is a *Delete* item for this (1)
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Export/import settings: Setup, navigation/hamburger menu
+
+1) Alternatively, unselect the trash folder in the account settings (requires FairEmail version 1.890+)
 
 ## Known problems
 
@@ -236,7 +240,7 @@ FairEmail follows all the best practices for an email client as described in [th
 * [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
 * [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
 * [(110) Why are (some) messages empty and/or attachments corrupted?](#user-content-faq110)
-* [(111) Why is OAuth not supported?](#user-content-faq111)
+* [(111) Is OAuth supported?](#user-content-faq111)
 * [(112) Which email provider do you recommend?](#user-content-faq112)
 * [(113) How does biometric authentication work?](#user-content-faq113)
 * [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
@@ -1515,7 +1519,10 @@ will automatically be resized for displaying on screens.
 This is because email messages are limited in size, depending on the provider mostly between 10 and 50 MB.
 Images will by default be resized to a maximum width and height of about 1440 pixels and saved with a compression ratio of 90 %.
 Images are scaled down using whole number factors to reduce memory usage and to retain image quality.
-There is an advanced option to disable automatically resizing and to set the target image size.
+Automatically resizing of inline and/or attached images and the maximum target image size can be configured in the send settings.
+
+If you want to resize images on a case-by-case basis,
+you can use [Send Reduced](https://f-droid.org/en/packages/mobi.omegacentauri.SendReduced/) or a similar app.
 
 <br />
 
@@ -2218,13 +2225,16 @@ Disabling *Partial fetch* will result in more memory usage.
 <br />
 
 <a name="faq111"></a>
-**(111) Why is OAuth not supported?**
+**(111) Is OAuth supported?**
 
 OAuth is supported for Gmail via the quick setup wizard.
-The Android account manager will be used to fetch and refresh OAuth tokens for the selected account.
+The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts.
+OAuth for non on-device accounts is not support because Google requires [an expensive security audit](https://support.google.com/cloud/answer/9110914) for this.
 
 Outlook, Live and Hotmail do not yet support OAuth for IMAP/SMTP connections, but
 "*[We are actively working on OAuth support for IMAP connections to O365 mailboxes. We will make a public announcement once the same is available.](https://stackoverflow.com/a/58072053)*" (September 24, 2019).
+
+OAuth access for Yahoo! was requested, but Yahoo! never responded to the request.
 
 <br />
 
@@ -2416,8 +2426,10 @@ FairEmail updates exiting notifications with a preview of the message text, but 
 
 Since there is no guarantee that a message text will always be fetched directly after a message header,
 it is not possible to guarantee that a new message notification with a preview text will always be sent to a wearable.
+
 If you think this is good enough, you can enable the notification option *Only send notifications with a message preview to wearables*.
 It is a good idea to review the connection setting *Automatically download messages and attachments on a metered connection up to ...* as well.
+For some odd reason notifications will work on [WearOS](https://wearos.google.com/) with this setting enabled only.
 
 <br />
 
@@ -2501,7 +2513,10 @@ Android might rate limit the notification sound, which can cause some new messag
 The Microsoft Exchange ActiveSync protocol [is patented](https://en.wikipedia.org/wiki/Exchange_ActiveSync#Licensing) and can therefore not be supported.
 For this reason you won't find many, if any, other email clients supporting ActiveSync.
 
-Note that the Microsoft Exchange Web Services [are being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
+The Microsoft Exchange Web Services protocol [is being phased out](https://techcommunity.microsoft.com/t5/Exchange-Team-Blog/Upcoming-changes-to-Exchange-Web-Services-EWS-API-for-Office-365/ba-p/608055).
+
+Note that the desciption of FairEmail starts with the remark
+that non-standard protocols, like Microsoft Exchange Web Services and Microsoft ActiveSync are not supported.
 
 <br />
 
@@ -2510,7 +2525,9 @@ Note that the Microsoft Exchange Web Services [are being phased out](https://tec
 
 Since locally deleted messages would be downloaded again on the next sync it is not possible to permanently delete local messages.
 
-As an alternative you can snooze messages, which will hide messages for a selected time.
+As an alternative you can hide messages,
+either via the three-dots menu in the action bar just above the message text
+or by multiple selecting messages in the message list.
 
 <br />
 
