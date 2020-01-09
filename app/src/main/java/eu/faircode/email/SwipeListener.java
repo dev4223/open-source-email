@@ -32,6 +32,7 @@ public class SwipeListener implements View.OnTouchListener {
     SwipeListener(final Context context, final ISwipeListener listener) {
         final int width = context.getResources().getDisplayMetrics().widthPixels;
         final int MOVE_THRESHOLD = width / 3;
+        final int SPEED_THRESHOLD = width / 2;
 
         gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
@@ -44,7 +45,6 @@ public class SwipeListener implements View.OnTouchListener {
                 boolean consumed = false;
                 int dx = Math.round(me2.getX() - me1.getX());
                 int dy = Math.round(me2.getY() - me1.getY());
-
                 long dt = me2.getEventTime() - me1.getEventTime();
                 long vx = dx * 1000 / dt;
                 if (Math.abs(dx) > Math.abs(dy)) {
