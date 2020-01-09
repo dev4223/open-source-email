@@ -749,7 +749,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     aid, thread, threading ? null : id, null);
                             for (EntityMessage threaded : messages) {
                                 EntityFolder folder = db.folder().getFolder(threaded.folder);
-                                if (folder != null && !folder.read_only)
+                                if (!folder.read_only &&
+                                        !EntityFolder.DRAFTS.equals(folder.type) &&
+                                        !EntityFolder.OUTBOX.equals(folder.type) &&
+                                        // sent
+                                        // trash
+                                        !EntityFolder.JUNK.equals(folder.type))
                                     result.add(threaded.id);
                             }
 
@@ -3581,12 +3586,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     for (EntityMessage message : messages) {
                         EntityFolder folder = db.folder().getFolder(message.folder);
 
-                        if (!folder.read_only && (trash == null ||
-                                (!EntityFolder.DRAFTS.equals(folder.type) &&
-                                        !EntityFolder.OUTBOX.equals(folder.type) &&
-                                        // allow sent
-                                        !EntityFolder.TRASH.equals(folder.type) &&
-                                        !EntityFolder.JUNK.equals(folder.type))))
+                        if (!folder.read_only &&
+                                !EntityFolder.DRAFTS.equals(folder.type) &&
+                                !EntityFolder.OUTBOX.equals(folder.type) &&
+                                // allow sent
+                                !EntityFolder.TRASH.equals(folder.type) &&
+                                !EntityFolder.JUNK.equals(folder.type))
                             trashable = true;
 
                         if (!EntityFolder.OUTBOX.equals(folder.type))
@@ -4464,7 +4469,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     else
                         throw new IllegalArgumentException(context.getString(R.string.title_not_encrypted));
 
-                if (message.from != null && message.from.length > 0 &&
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean autocrypt = prefs.getBoolean("autocrypt", true);
+                if (autocrypt &&
+                        message.from != null && message.from.length > 0 &&
                         message.autocrypt != null &&
                         OpenPgpApi.ACTION_DECRYPT_VERIFY.equals(data.getAction()))
                     try {
@@ -4800,6 +4808,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         // Write decrypted body
                         String html = parts.getHtml(context);
                         Helper.writeText(message.getFile(context), html);
+                        Log.i("s/mime html=" + (html == null ? null : html.length()));
 
                         // Remove existing attachments
                         db.attachment().deleteAttachments(message.id);
@@ -4816,6 +4825,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             } catch (Throwable ex) {
                                 Log.e(ex);
                             }
+                            Log.i("s/mime attachment=" + remote);
                         }
 
                         db.message().setMessageEncrypt(message.id, parts.getEncryption());

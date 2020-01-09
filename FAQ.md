@@ -47,11 +47,9 @@ Related questions:
 * Set a signature: Setup, step 2, Manage, tap identity
 * Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
 * Load older messages: long press a folder in the folder list, select *Edit properties* and change the number of days to sync/keep messages for; please [read this FAQ](#user-content-faq39)
-* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text there is a *Delete* item for this (1)
+* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text there is a *Delete* item for this or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Export/import settings: Setup, navigation/hamburger menu
-
-1) Alternatively, unselect the trash folder in the account settings (requires FairEmail version 1.890+)
 
 ## Known problems
 
@@ -589,6 +587,11 @@ So, unless your provider can enable this extension, you cannot use FairEmail for
 **(12) How does encryption/decryption work?**
 
 *General*
+
+Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works. In short:
+
+* **Outgoing** messages are encrypted with the **public key** of the other party
+* **Incoming** messages are decrypted with your own **private key**
 
 To sign/encrypt a message, just select the appropriate method in the send dialog.
 You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
@@ -1892,8 +1895,8 @@ and why you can make a contact a favorite or exclude it from favorites by long p
 
 The list of contacts is sorted on number of times contacted and the last time contacted.
 
-Local contacts will be used for auto completion only when no contacts permission has been granted to FairEmail.
-You can revoke contacts permission in the Android app settings.
+By default only names and addresses to whom you send messages to will be recorded.
+You can change this in the send settings.
 
 <br />
 
@@ -2227,14 +2230,20 @@ Disabling *Partial fetch* will result in more memory usage.
 <a name="faq111"></a>
 **(111) Is OAuth supported?**
 
-OAuth is supported for Gmail via the quick setup wizard.
+OAuth for Gmail is supported via the quick setup wizard.
 The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts.
-OAuth for non on-device accounts is not support because Google requires [an expensive security audit](https://support.google.com/cloud/answer/9110914) for this.
+OAuth for non on-device accounts is not supported
+because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this.
+
+OAuth for Yandex is supported via the quick setup wizard.
 
 Outlook, Live and Hotmail do not yet support OAuth for IMAP/SMTP connections, but
 "*[We are actively working on OAuth support for IMAP connections to O365 mailboxes. We will make a public announcement once the same is available.](https://stackoverflow.com/a/58072053)*" (September 24, 2019).
 
 OAuth access for Yahoo! was requested, but Yahoo! never responded to the request.
+OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL.
+Verizon owns both AOL and Yahoo!, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media).
+So, it is reasonable to assume that OAuth is not supported by Yahoo! anymore too.
 
 <br />
 
