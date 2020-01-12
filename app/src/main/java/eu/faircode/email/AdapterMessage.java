@@ -1227,11 +1227,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFull.setEnabled(false);
             ibFull.setVisibility(View.VISIBLE);
             ibImages.setVisibility(View.GONE);
-            ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
-            ibJunk.setVisibility(
-                    message.uid == null || message.folderReadOnly &&
-                            (hasJunk && !EntityFolder.JUNK.equals(message.folderType))
-                            ? View.GONE : View.VISIBLE);
+            ibUnsubscribe.setVisibility(View.GONE);
+            ibJunk.setEnabled(false);
+            ibJunk.setVisibility(View.GONE);
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
 
@@ -1373,6 +1371,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean inJunk = EntityFolder.JUNK.equals(message.folderType);
 
                     delete = (inTrash || !hasTrash || inOutbox);
+
+                    ibJunk.setEnabled(hasJunk);
 
                     bnvActions.getMenu().findItem(R.id.action_more).setVisible(!inOutbox);
 
@@ -1766,16 +1766,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     // Show attachments
                     cowner.start();
 
-                    // Show encrypt actions
-                    ibVerify.setVisibility(false ||
-                            EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
-                            EntityMessage.SMIME_SIGNONLY.equals(message.encrypt)
-                            ? View.VISIBLE : View.GONE);
-                    ibDecrypt.setVisibility(args.getBoolean("inline_encrypted") ||
-                            EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) ||
-                            EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)
-                            ? View.VISIBLE : View.GONE);
-
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
                     if (auto_decrypt &&
@@ -1788,6 +1778,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     // Show images
                     ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.GONE);
+
+                    ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
+                    ibJunk.setVisibility(
+                            message.uid == null || message.folderReadOnly ||
+                                    EntityFolder.JUNK.equals(message.folderType)
+                                    ? View.GONE : View.VISIBLE);
+
+                    // Show encrypt actions
+                    ibVerify.setVisibility(false ||
+                            EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
+                            EntityMessage.SMIME_SIGNONLY.equals(message.encrypt)
+                            ? View.VISIBLE : View.GONE);
+                    ibDecrypt.setVisibility(args.getBoolean("inline_encrypted") ||
+                            EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) ||
+                            EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)
+                            ? View.VISIBLE : View.GONE);
                 }
 
                 @Override
@@ -2893,7 +2899,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionJunk(TupleMessageEx message) {
-            onMenuJunk(message);
+            Bundle aargs = new Bundle();
+            aargs.putLong("id", message.id);
+            aargs.putString("from", MessageHelper.formatAddresses(message.from));
+
+            FragmentDialogJunk ask = new FragmentDialogJunk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
+            ask.show(parentFragment.getParentFragmentManager(), "message:junk");
         }
 
         private void onActionDecrypt(TupleMessageEx message, boolean auto) {
@@ -3192,9 +3205,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_junk).setVisible(hasJunk && !EntityFolder.JUNK.equals(message.folderType));
-
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(hasWebView && message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setVisible(Helper.canPrint(context));
@@ -3238,9 +3248,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_delete:
                             onMenuDelete(message);
-                            return true;
-                        case R.id.menu_junk:
-                            onMenuJunk(message);
                             return true;
                         case R.id.menu_resync:
                             onMenuResync(message);
@@ -3521,19 +3528,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ask.setArguments(aargs);
             ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_DELETE);
             ask.show(parentFragment.getParentFragmentManager(), "message:delete");
-        }
-
-        private void onMenuJunk(final TupleMessageEx message) {
-            String who = MessageHelper.formatAddresses(message.from);
-
-            Bundle aargs = new Bundle();
-            aargs.putString("question", context.getString(R.string.title_ask_spam_who, who));
-            aargs.putLong("id", message.id);
-
-            FragmentDialogAsk ask = new FragmentDialogAsk();
-            ask.setArguments(aargs);
-            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
-            ask.show(parentFragment.getParentFragmentManager(), "message:junk");
         }
 
         private void onMenuResync(TupleMessageEx message) {
@@ -4883,6 +4877,33 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             dialog.setContentView(pv);
 
             return dialog;
+        }
+    }
+
+    public static class FragmentDialogJunk extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            String from = getArguments().getString("from");
+
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_junk, null);
+            final TextView tvMessage = view.findViewById(R.id.tvMessage);
+            final CheckBox cbBlock = view.findViewById(R.id.cbBlock);
+
+            tvMessage.setText(getString(R.string.title_ask_spam_who, from));
+            cbBlock.setEnabled(ActivityBilling.isPro(getContext()));
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getArguments().putBoolean("block", cbBlock.isChecked());
+                            sendResult(RESULT_OK);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
         }
     }
 

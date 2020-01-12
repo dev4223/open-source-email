@@ -67,6 +67,11 @@
         <item quantity="other">Behandel %1$d berichten als spam?</item>
     </plurals>
     <string name="title_ask_spam_who">Behandel bericht van %1$s als spam?</string>
+    <string name="title_block">Blokkeer %1$s</string>
+    <string name="title_block_sender">Blokkeer afzender</string>
+    <string name="title_block_sender_hint">        Dit zal een regel maken om toekomstige berichten automatisch naar de spam map te verplaatsen.
+        Het maken en gebruiken van regels is een pro functie.
+    </string>
     <string name="title_notification_waiting">Wachten op een geschikte verbinding</string>
     <string name="title_notification_sending">Berichten verzenden</string>
     <string name="title_notification_failed">\'%1$s\' is mislukt</string>
@@ -196,6 +201,7 @@
     <string name="title_advanced_section_misc">Diversen</string>
     <string name="title_advanced_receive">Berichten ontvangen</string>
     <string name="title_advanced_when">Wanneer</string>
+    <string name="title_advanced_always">Synchroniseer deze accounts altijd</string>
     <string name="title_advanced_schedule">Schema</string>
     <string name="title_advanced_unseen">Alle ongelezen berichten</string>
     <string name="title_advanced_flagged">Alle berichten met een ster</string>
@@ -967,6 +973,7 @@
         <item>Elke 2 uur</item>
         <item>Elke 4 uur</item>
         <item>Elke 8 uur</item>
+        <item>Elke dag</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Geen</item>

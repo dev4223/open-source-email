@@ -67,6 +67,11 @@
         <item quantity="other">Håndter %1$d beskeder som spam?</item>
     </plurals>
     <string name="title_ask_spam_who">Håndtér besked fra %1$s som spam?</string>
+    <string name="title_block">Blokér %1$s</string>
+    <string name="title_block_sender">Blokér afsender</string>
+    <string name="title_block_sender_hint">        Dette opretter en regel til automatisk at flytte fremtidige beskeder til Spam-mappen.
+         Oprettelse og brug af regler er en Pro-funktion.
+    </string>
     <string name="title_notification_waiting">Afventer en passende forbindelse</string>
     <string name="title_notification_sending">Sender beskeder</string>
     <string name="title_notification_failed">\'%1$s\' mislykkedes</string>
@@ -195,6 +200,7 @@
     <string name="title_advanced_section_misc">Diverse</string>
     <string name="title_advanced_receive">Beskedmodtagelse</string>
     <string name="title_advanced_when">Når</string>
+    <string name="title_advanced_always">Synkronisér altid disse konti</string>
     <string name="title_advanced_schedule">Planlægning</string>
     <string name="title_advanced_unseen">Alle ulæste beskeder</string>
     <string name="title_advanced_flagged">Alle stjernemarkerede beskeder</string>
@@ -332,12 +338,14 @@
     <string name="title_advanced_poll_hint">Periodisk synkronisering vil hver gang sammenligne lokale og fjernplacerede beskeder, hvilket koster en del resssourcer, herunder et muligt ekstra strømforbrug, især hvis der er mange beskeder at synkronisere. Kontinuerlig synkronisering undgår dette ved løbende kun at tjekke for ændringer.</string>
     <string name="title_advanced_schedule_hint">Tryk på et tidspunkt for at angive et tidspunkt</string>
     <string name="title_advanced_check_mx">Tjek afsenderadresser ved beskedsynkroniseringer</string>
+    <string name="title_advanced_check_reply">Tjek svar e-mailadresser ved beskedsynkroniseringer</string>
     <string name="title_advanced_unseen_hint">Visse udbydere understøtter ikke dette ordentligt, hvilket kan forårsage synkronisering af ingen eller alle beskeder</string>
     <string name="title_advanced_sync_kept_hint">Dette vil overføre ekstra data og forbruge ekstra strøm, især hvis der er mange beskeder lagret på enheden</string>
     <string name="title_advanced_sync_folders_hint">Deaktivering af dette reducerer data- og strømforbruget noget, men deaktiverer også mappelisteopdatering</string>
     <string name="title_advanced_sync_delay_hint">Dette vil forøge beskedsynkroniseringstiden</string>
     <string name="title_advanced_suggest_local_hint">Ud over kontakter fra Android. Kontaktdata gemmes kun for nyligt afsendte eller modtagne beskeder, når aktiveret.</string>
     <string name="title_advanced_lookup_mx_hint">Dette tjekker, om der findes DNS MX-poster</string>
+    <string name="title_advanced_check_reply_hint">Dette tjekker, om domænenavnet for afsender- og svaradresser er ens</string>
     <string name="title_advanced_metered_hint">Forbrugsbaserede forbindelser er typisk mobildataforbindelser eller betalte Wi-Fi hotspots</string>
     <string name="title_advanced_metered_warning">Deaktivering af denne indstilling vil ikke gøre det muligt at modtage og sende meddelelser på mobildataforbindelser</string>
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
@@ -430,6 +438,7 @@
     <string name="title_no_idle">Denne udbyder understøtter ikke push-beskeder. Dette vil forsinke modtagelsen af nye beskeder samt forøge strømforbruget.</string>
     <string name="title_no_utf8">Denne udbyder understøtter ikke UTF-8</string>
     <string name="title_no_sync">Synkroniseringsfejl siden %1$s</string>
+    <string name="title_reply_domain">Afsender- (%1$s) og svardomæne (%2$s) er ikke ens</string>
     <string name="title_identity_required">En identitet kræves for at kunne sende beskeder</string>
     <string name="title_drafts_required">Kladdemappe kræves for at kunne sende beskeder</string>
     <string name="title_account_delete">Slet denne konto permanent?</string>
@@ -965,6 +974,7 @@
         <item>Hver 2. time</item>
         <item>Hver 4. time</item>
         <item>Hver 8. time</item>
+        <item>Every day</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Nej</item>

@@ -45,10 +45,12 @@ Related questions:
 * Change the account name: Setup, step 1, Manage, tap account
 * Change the swipe left/right target: Setup, step 1, Manage, tap account, at the bottom
 * Set a signature: Setup, step 2, Manage, tap identity
+* Add a folder to the unified inbox: long press the folder in the folder list and check *Show in unified inbox*
 * Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
 * Load older messages: long press a folder in the folder list, select *Edit properties* and change the number of days to sync/keep messages for; please [read this FAQ](#user-content-faq39)
-* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text there is a *Delete* item for this or alternatively, unselect the trash folder in the account settings
+* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
+* Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
 * Export/import settings: Setup, navigation/hamburger menu
 
 ## Known problems
@@ -1140,9 +1142,6 @@ In this case you might want to synchronize periodically, for example each hour, 
 Note that polling frequently (more than every 30-60 minutes) will likely use more battery power than synchronizing always
 because connecting to the server and comparing the local and remotes messages are expensive operations.
 
-Note that setting a different poll interval for different accounts is deliberately not possible
-since this would result in extra, unnecessary battery usage because the device would need to wake up more often than needed.
-
 Most of the battery usage, not considering viewing messages, is due to synchronization (receiving and sending) of messages.
 So, to reduce the battery usage, set the number of days to synchronize message for to a lower value,
 especially if there are a lot of recent messages in a folder.
@@ -1162,7 +1161,7 @@ will result in less network traffic and thus less battery usage.
 You could disable this option for example for the sent folder and the archive.
 
 Synchronizing messages at night is mostly not useful, so you can save on battery usage by not synchronizing at night.
-In the settings you can select a schedule for message synchronization (this is a pro feature). See also [this FAQ](#user-content-faq78).
+In the settings you can select a schedule for message synchronization (this is a pro feature).
 
 FairEmail will by default synchronize the folder list on each connection.
 Since folders are mostly not created, renamed and deleted very often, you can save some network and battery usage by disabling this in the receive settings.
@@ -1173,6 +1172,7 @@ If you don't mind that old messages that were delete from the server are still v
 Some providers don't follow the IMAP standard and don't keep connections open long enough, forcing FairEmail to reconnect often, causing extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if there are frequent reconnects (connection closed/reset, read/write error/timeout, etc).
 You can workaround this by lowering the keep-alive interval in the advanced account settings to for example 9 or 15 minutes.
+Note that battery optimizations need to be disabled in setup step 4 to reliably keep connections alive.
 
 Some providers send every two minutes something like '*Still there*' resulting in network traffic and your device to wake up and causing unnecessary extra battery usage.
 You can inspect the *Log* via the main navigation menu to check if your provider is doing this.
