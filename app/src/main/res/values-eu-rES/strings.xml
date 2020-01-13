@@ -69,9 +69,6 @@
     <string name="title_ask_spam_who">Jo %1$s erabiltzailearen mezua spamtzat?</string>
     <string name="title_block">Blokeatu %1$s</string>
     <string name="title_block_sender">Blokeatu igorlea</string>
-    <string name="title_block_sender_hint">        Honek etorkizuneko mezuak automatikoki spam karpetara eramateko arau bat sortuko du.
-        Arauak sortu eta erabiltzea ordainpeko ezaugarri bat da.
-    </string>
     <string name="title_notification_waiting">Konexio erabilgarriaren zain</string>
     <string name="title_notification_sending">Mezuak bidaltzen</string>
     <string name="title_notification_failed">%1$s(e)k huts egin du</string>
@@ -975,7 +972,7 @@ Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
         <item>2 ordurik behin</item>
         <item>4 ordurik behin</item>
         <item>8 ordurik behin</item>
-        <item>Every day</item>
+        <item>Egunero</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Ez</item>

@@ -69,7 +69,7 @@
     <string name="title_ask_spam_who">%1$s\' in iletisi istenmeyen posta olarak kabul edilsin mi?</string>
     <string name="title_block">Engelle: %1$s</string>
     <string name="title_block_sender">Göndereni engelle</string>
-    <string name="title_block_sender_hint">        Bu, gelecekteki iletileri otomatik olarak spam klasörüne taşımak için bir kural oluşturacaktır.
+    <string name="title_block_sender_hint">        Göndereni engellemek, gelecekteki iletileri otomatik olarak spam klasörüne taşımak için bir kural oluşturacaktır.
         Kural oluşturma ve kullanma, pro sürümüne has bir özelliktir.
     </string>
     <string name="title_notification_waiting">Uygun bağlantı bekleniyor</string>
@@ -976,7 +976,7 @@
         <item>2 saatte bir</item>
         <item>4 saatte bir</item>
         <item>8 saatte bir</item>
-        <item>Every day</item>
+        <item>Her gün</item>
     </string-array>
     <string-array name="sendDelayedNames">
         <item>Hayır</item>
