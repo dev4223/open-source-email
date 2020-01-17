@@ -650,7 +650,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 viewType == AdapterMessage.ViewType.THREAD ? "ascending_thread" : "ascending_list", false);
         boolean filter_duplicates = prefs.getBoolean("filter_duplicates", true);
 
-        adapter = new AdapterMessage(this, type, viewType, compact, zoom, sort, ascending, filter_duplicates, iProperties);
+        adapter = new AdapterMessage(
+                this, type, found, viewType,
+                compact, zoom, sort, ascending, filter_duplicates,
+                iProperties);
         rvMessage.setAdapter(adapter);
 
         sbThread.setOnTouchListener(new View.OnTouchListener() {
@@ -4546,12 +4549,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         // Write decrypted body
                                         Helper.copy(plain, message.getFile(context));
                                         db.message().setMessageStored(message.id, new Date().getTime());
+                                        db.message().setMessageFts(message.id, false);
 
                                         db.setTransactionSuccessful();
                                     } finally {
                                         db.endTransaction();
                                     }
 
+                                    WorkerFts.init(context, false);
                                 } else {
                                     // Decode message
                                     MessageHelper.MessageParts parts;
@@ -4589,11 +4594,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                         db.message().setMessageEncrypt(message.id, parts.getEncryption());
                                         db.message().setMessageStored(message.id, new Date().getTime());
+                                        db.message().setMessageFts(message.id, false);
 
                                         db.setTransactionSuccessful();
                                     } finally {
                                         db.endTransaction();
                                     }
+
+                                    WorkerFts.init(context, false);
                                 }
 
                             // Check signature status
@@ -4858,6 +4866,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         db.message().setMessageEncrypt(message.id, parts.getEncryption());
                         db.message().setMessageStored(message.id, new Date().getTime());
+                        db.message().setMessageFts(message.id, false);
 
                         if (alias != null && message.identity != null)
                             db.identity().setIdentitySignKeyAlias(message.identity, alias);
@@ -4866,6 +4875,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     } finally {
                         db.endTransaction();
                     }
+
+                    WorkerFts.init(context, false);
                 }
 
                 return result;
@@ -5459,6 +5470,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 // https://developer.android.com/training/printing/html-docs.html
                 printWebView = new WebView(getContext());
                 WebSettings settings = printWebView.getSettings();
+                settings.setLoadsImagesAutomatically(true);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                 settings.setAllowFileAccess(false);
 

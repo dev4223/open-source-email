@@ -43,10 +43,16 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
 import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.Observer;
 import androidx.preference.PreferenceManager;
+
+import io.requery.android.database.sqlite.SQLiteDatabase;
 
 public class FragmentOptionsMisc extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private SwitchCompat swExternalSearch;
+    private SwitchCompat swFts;
+    private TextView tvFtsIndexed;
+    private TextView tvFtsPro;
     private SwitchCompat swEnglish;
     private SwitchCompat swWatchdog;
     private SwitchCompat swUpdates;
@@ -67,7 +73,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpDebug;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
+            "fts", "english", "watchdog", "updates", "experiments", "crash_reports", "debug"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -88,6 +94,9 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         // Get controls
 
         swExternalSearch = view.findViewById(R.id.swExternalSearch);
+        swFts = view.findViewById(R.id.swFts);
+        tvFtsIndexed = view.findViewById(R.id.tvFtsIndexed);
+        tvFtsPro = view.findViewById(R.id.tvFtsPro);
         swEnglish = view.findViewById(R.id.swEnglish);
         swWatchdog = view.findViewById(R.id.swWatchdog);
         swUpdates = view.findViewById(R.id.swUpdates);
@@ -125,6 +134,40 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         PackageManager.DONT_KILL_APP);
             }
         });
+
+        swFts.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("fts", checked).apply();
+
+                WorkerFts.init(getContext(), true);
+
+                if (!checked) {
+                    Bundle args = new Bundle();
+
+                    new SimpleTask<Void>() {
+                        @Override
+                        protected Void onExecute(Context context, Bundle args) {
+                            SQLiteDatabase sdb = FtsDbHelper.getInstance(context);
+                            FtsDbHelper.delete(sdb);
+                            FtsDbHelper.optimize(sdb);
+
+                            DB db = DB.getInstance(context);
+                            db.message().resetFts();
+
+                            return null;
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(getParentFragmentManager(), ex);
+                        }
+                    }.execute(FragmentOptionsMisc.this, args, "fts:reset");
+                }
+            }
+        });
+
+        Helper.linkPro(tvFtsPro);
 
         swEnglish.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -198,6 +241,25 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onClick(View view) {
                 onCleanup();
+            }
+        });
+
+        tvFtsIndexed.setText(null);
+
+        DB db = DB.getInstance(getContext());
+        db.message().liveFts().observe(getViewLifecycleOwner(), new Observer<TupleFtsStats>() {
+            private TupleFtsStats last = null;
+
+            @Override
+            public void onChanged(TupleFtsStats stats) {
+                if (stats == null)
+                    tvFtsIndexed.setText(null);
+                else if (last == null || !last.equals(stats))
+                    tvFtsIndexed.setText(getString(R.string.title_advanced_fts_indexed,
+                            stats.fts,
+                            stats.total,
+                            Helper.humanReadableByteCount(FtsDbHelper.size(getContext()), true)));
+                last = stats;
             }
         });
 
@@ -298,6 +360,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         int state = pm.getComponentEnabledSetting(new ComponentName(getContext(), ActivitySearch.class));
 
         swExternalSearch.setChecked(state != PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
+        swFts.setChecked(prefs.getBoolean("fts", false));
         swEnglish.setChecked(prefs.getBoolean("english", false));
         swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));

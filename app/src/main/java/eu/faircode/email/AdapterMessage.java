@@ -165,6 +165,7 @@ import static android.app.Activity.RESULT_OK;
 public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHolder> {
     private Fragment parentFragment;
     private String type;
+    private boolean found;
     private ViewType viewType;
     private boolean compact;
     private int zoom;
@@ -280,6 +281,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvSize;
         private TextView tvTime;
         private ImageView ivType;
+        private ImageView ivFound;
         private ImageButton ibSnoozed;
         private ImageView ivAnswered;
         private ImageView ivAttachments;
@@ -408,6 +410,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize = itemView.findViewById(R.id.tvSize);
             tvTime = itemView.findViewById(R.id.tvTime);
             ivType = itemView.findViewById(R.id.ivType);
+            ivFound = itemView.findViewById(R.id.ivFound);
             ibSnoozed = itemView.findViewById(R.id.ibSnoozed);
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
@@ -711,6 +714,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSize.setText(null);
             tvTime.setText(null);
             ivType.setVisibility(View.GONE);
+            ivFound.setVisibility(View.GONE);
             ibSnoozed.setVisibility(View.GONE);
             ivAnswered.setVisibility(View.GONE);
             ivAttachments.setVisibility(View.GONE);
@@ -794,6 +798,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSize.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvTime.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivType.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivFound.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ibSnoozed.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAnswered.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAttachments.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -891,6 +896,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivType.setTag(icon);
                 ivType.setImageResource(icon);
             }
+
+            ivFound.setVisibility(message.ui_found && found ? View.VISIBLE : View.GONE);
 
             ibSnoozed.setImageResource(
                     message.ui_snoozed != null && message.ui_snoozed == Long.MAX_VALUE
@@ -1028,6 +1035,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     bindExpanded(message, false);
                 else
                     clearExpanded(message);
+
+            if (properties.getValue("raw_save", message.id)) {
+                properties.setValue("raw_save", message.id, false);
+                onMenuRawSave(message);
+            }
+
+            if (properties.getValue("raw_send", message.id)) {
+                properties.setValue("raw_send", message.id, false);
+                onMenuRawSend(message);
+            }
         }
 
         private void clearExpanded(TupleMessageEx message) {
@@ -3041,7 +3058,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         int order = 0;
                         for (EntityAnswer answer : answers)
-                            popupMenu.getMenu().add(Menu.NONE, answer.id.intValue(), order++, answer.name);
+                            popupMenu.getMenu().add(Menu.NONE, answer.id.intValue(), order++, answer.toString());
 
                         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                             @Override
@@ -3116,6 +3133,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         EntityFolder drafts = db.folder().getFolderByType(message.account, EntityFolder.DRAFTS);
                         message.id = null;
                         message.folder = drafts.id;
+                        message.fts = false;
                         message.ui_snoozed = null;
                         message.error = null;
                         message.id = db.message().insertMessage(message);
@@ -3213,14 +3231,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setEnabled(message.uid != null);
             popupMenu.getMenu().findItem(R.id.menu_show_headers).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_raw_download).setEnabled(
-                    message.uid != null && (message.raw == null || !message.raw));
-            popupMenu.getMenu().findItem(R.id.menu_raw_save).setEnabled(
-                    message.uid != null && (message.raw != null && message.raw));
-            popupMenu.getMenu().findItem(R.id.menu_raw_send).setEnabled(
-                    message.uid != null && (message.raw != null && message.raw));
+            popupMenu.getMenu().findItem(R.id.menu_raw_save).setEnabled(message.uid != null);
+            popupMenu.getMenu().findItem(R.id.menu_raw_send).setEnabled(message.uid != null);
 
-            popupMenu.getMenu().findItem(R.id.menu_raw_download).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
             popupMenu.getMenu().findItem(R.id.menu_raw_save).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
             popupMenu.getMenu().findItem(R.id.menu_raw_send).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
@@ -3266,9 +3279,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_show_headers:
                             onMenuShowHeaders(message);
-                            return true;
-                        case R.id.menu_raw_download:
-                            onMenuRawDownload(message);
                             return true;
                         case R.id.menu_raw_save:
                             onMenuRawSave(message);
@@ -3752,7 +3762,35 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 bindExpanded(message, false);
         }
 
-        private void onMenuRawDownload(TupleMessageEx message) {
+        private void onMenuRawSave(TupleMessageEx message) {
+            if (message.raw == null || !message.raw) {
+                properties.setValue("raw_save", message.id, true);
+                rawDownload(message);
+            } else {
+                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                lbm.sendBroadcast(
+                        new Intent(FragmentMessages.ACTION_STORE_RAW)
+                                .putExtra("id", message.id));
+            }
+        }
+
+        private void onMenuRawSend(TupleMessageEx message) {
+            if (message.raw == null || !message.raw) {
+                properties.setValue("raw_send", message.id, true);
+                rawDownload(message);
+            } else {
+                File file = message.getRawFile(context);
+                Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+
+                Intent send = new Intent(Intent.ACTION_SEND);
+                send.putExtra(Intent.EXTRA_STREAM, uri);
+                send.setType("message/rfc822");
+                send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                context.startActivity(send);
+            }
+        }
+
+        private void rawDownload(TupleMessageEx message) {
             Bundle args = new Bundle();
             args.putLong("id", message.id);
 
@@ -3785,7 +3823,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onExecuted(Bundle args, Void data) {
-                    ToastEx.makeText(context, R.string.title_executing, Toast.LENGTH_LONG).show();
+                    ToastEx.makeText(context, R.string.title_download_message, Toast.LENGTH_LONG).show();
                 }
 
                 @Override
@@ -3793,24 +3831,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:raw");
-        }
-
-        private void onMenuRawSave(TupleMessageEx message) {
-            LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
-            lbm.sendBroadcast(
-                    new Intent(FragmentMessages.ACTION_STORE_RAW)
-                            .putExtra("id", message.id));
-        }
-
-        private void onMenuRawSend(TupleMessageEx message) {
-            File file = message.getRawFile(context);
-            Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
-
-            Intent send = new Intent(Intent.ACTION_SEND);
-            send.putExtra(Intent.EXTRA_STREAM, uri);
-            send.setType("message/rfc822");
-            send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            context.startActivity(send);
         }
 
         ItemDetailsLookup.ItemDetails<Long> getItemDetails(@NonNull MotionEvent motionEvent) {
@@ -3989,6 +4009,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (ibAuth.getVisibility() == View.VISIBLE)
                     result.add(context.getString(R.string.title_legend_auth));
 
+                if (ivFound.getVisibility() == View.VISIBLE)
+                    result.add(context.getString(R.string.title_legend_found));
+
                 if (ibSnoozed.getVisibility() == View.VISIBLE)
                     result.add(context.getString(R.string.title_legend_snoozed));
 
@@ -4019,11 +4042,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     AdapterMessage(Fragment parentFragment,
-                   String type, ViewType viewType,
+                   String type, boolean found, ViewType viewType,
                    boolean compact, int zoom, String sort, boolean ascending, boolean filter_duplicates,
                    final IProperties properties) {
         this.parentFragment = parentFragment;
         this.type = type;
+        this.found = found;
         this.viewType = viewType;
         this.compact = compact;
         this.zoom = zoom;
@@ -4384,6 +4408,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Log.i("keywords changed id=" + next.id);
                     }
                     // notifying
+                    // fts
                     if (!prev.ui_seen.equals(next.ui_seen)) {
                         same = false;
                         Log.i("ui_seen changed id=" + next.id);

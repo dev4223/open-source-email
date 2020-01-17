@@ -326,6 +326,8 @@
     <string name="title_advanced_import_key">Importeer privé sleutel</string>
     <string name="title_advanced_manage_keys">Privé sleutels beheren</string>
     <string name="title_advanced_external_search">Andere apps mogen zoeken in berichten</string>
+    <string name="title_advanced_fts">Zoekindex opbouwen</string>
+    <string name="title_advanced_fts_indexed">%1$d / %2$d berichten geïndexeerd (%3$s)</string>
     <string name="title_advanced_english">Forceer Engelse taal</string>
     <string name="title_advanced_watchdog">Periodiek controleren of FairEmail nog actief is</string>
     <string name="title_advanced_updates">Controleren op updates</string>
@@ -343,8 +345,10 @@
     <string name="title_advanced_unseen_hint">Sommige providers ondersteunen dit niet goed, wat kan veroorzaken dat geen of alle berichten worden gesynchroniseerd</string>
     <string name="title_advanced_sync_kept_hint">Dit zal extra gegevens en extra batterijvermogen gebruiken, vooral als er veel berichten op het apparaat zijn opgeslagen</string>
     <string name="title_advanced_sync_folders_hint">Dit uitschakelen zal het gebruik van gegevens en batterij enigszins verminderen, maar zal ook het bijwerken van de lijst met mappen uitschakelen</string>
+    <string name="title_advanced_subscribed_only_hint">Dit inschakelen zal alle lokale mappen zonder abonnement verwijderen</string>
     <string name="title_advanced_sync_delay_hint">Dit zal de synchronisatie van berichten vertragen</string>
     <string name="title_advanced_suggest_local_hint">Naast contacten die door Android worden geleverd. Contactgegevens worden alleen opgeslagen voor nieuw verzonden of ontvangen berichten wanneer ingeschakeld.</string>
+    <string name="title_advanced_usenet_hint">Voeg \'-- \' in tussen de tekst en de handtekening</string>
     <string name="title_advanced_lookup_mx_hint">Dit zal controleren of DNS MX records bestaan</string>
     <string name="title_advanced_check_reply_hint">Dit controleert of de domeinnaam van de afzender en antwoordadressen hetzelfde zijn</string>
     <string name="title_advanced_metered_hint">Gemeten verbindingen zijn over het algemeen mobiele verbindingen of betaalde Wi-Fi hotspots</string>
@@ -375,7 +379,7 @@
     <string name="title_advanced_move_hint">De doelmap kan worden geconfigureerd in de accountinstellingen</string>
     <string name="title_advanced_notify_no_grouping">Deze Android-versie ondersteunt geen meldingsgroepering</string>
     <string name="title_advanced_notify_no_channels">Deze Android-versie ondersteunt geen meldingskanalen</string>
-    <string name="title_advanced_subscribed_only_hint">Dit inschakelen zal alle lokale mappen zonder abonnement verwijderen</string>
+    <string name="title_advanced_fts_hint">Dit inschakelen verbetert de zoekprestaties, maar verhoogt ook het batterij- en opslaggebruik</string>
     <string name="title_advanced_english_hint">Dit zal de app herstarten</string>
     <string name="title_advanced_experiments_hint">Lijst van huidige experimentele functies</string>
     <string name="title_advanced_debug_hint">Extra logging inschakelen en debug informatie tonen op verschillende plaatsen</string>
@@ -436,6 +440,7 @@
     <string name="title_no_inbox">Postvak in niet gevonden</string>
     <string name="title_no_primary_drafts">Geen primair account of geen map voor concepten</string>
     <string name="title_no_identities">Verzenden van e-mails vereist ten minste één identiteit</string>
+    <string name="title_no_standard">Deze provider gebruikt een eigen e-mailprotocol en daarom is het niet mogelijk om e-mailclients van derden te gebruiken</string>
     <string name="title_no_idle">Deze provider biedt geen ondersteuning voor push-berichten. Dit zal het ontvangen van nieuwe berichten vertragen en het gebruik van de batterij te verhogen.</string>
     <string name="title_no_utf8">Deze provider ondersteunt geen UTF-8</string>
     <string name="title_no_sync">Synchronisatiefouten sinds %1$s</string>
@@ -487,7 +492,7 @@
     <string name="title_download_folder">Berichtteksten en bijlagen automatisch downloaden</string>
     <string name="title_notify_folder">Melding bij nieuwe berichten</string>
     <string name="title_sync_days">Synchroniseren van berichten (dagen)</string>
-    <string name="title_sync_days_remark">Een hogere waarde verhoogt het batterij- en dataverbruik</string>
+    <string name="title_sync_days_remark">Een hogere waarde verhoogt het batterij- en datagebruik</string>
     <string name="title_keep_days">Bewaren van berichten (dagen)</string>
     <string name="title_keep_days_remark">Oude berichten worden verwijderd van het apparaat, maar blijven op de server</string>
     <string name="title_keep_all">Bewaar alle berichten</string>
@@ -529,7 +534,6 @@
     <string name="title_share">Delen</string>
     <string name="title_print">Afdrukken</string>
     <string name="title_show_headers">Toon koppen</string>
-    <string name="title_raw_download">Ruw bericht downloaden</string>
     <string name="title_raw_save">Ruw bericht opslaan</string>
     <string name="title_raw_send">Stuur als bijlage</string>
     <string name="title_manage_keywords">Trefwoorden beheren</string>
@@ -573,7 +577,7 @@
     <string name="title_no_image">Afbeelding kon niet gedecodeerd worden</string>
     <string name="title_no_search">Zoeken op server is niet beschikbaar voor dit account</string>
     <string name="title_unused_inline">Ongebruikte inline afbeeldingen worden verwijderd bij verzenden</string>
-    <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra dataverbruik</string>
+    <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra datagebruik</string>
     <string name="title_raw_saved">Ruw bericht opgeslagen</string>
     <string name="title_attachment_saved">Bijlage opgeslagen</string>
     <string name="title_attachments_saved">Bijlagen opgeslagen</string>
@@ -707,6 +711,7 @@
     <string name="title_answer_caption">Bewerk sjabloon</string>
     <string name="title_answer_reply">Antwoord sjabloon</string>
     <string name="title_answer_name">Sjabloonnaam</string>
+    <string name="title_answer_favorite">Favoriet</string>
     <string name="title_answer_hide">Verbergen in menu\'s</string>
     <string name="title_answer_text">Sjabloontekst</string>
     <string name="title_answer_template_name">$name$ zal worden vervangen door de volledige naam van de afzender</string>
@@ -798,6 +803,7 @@
     <string name="title_legend_signed">Is ondertekend</string>
     <string name="title_legend_encrypted">Is versleuteld</string>
     <string name="title_legend_auth">Authenticatie mislukt</string>
+    <string name="title_legend_found">Is gevonden</string>
     <string name="title_legend_snoozed">Is gesluimerd</string>
     <string name="title_legend_browsed">Is gebladerd of gezocht</string>
     <string name="title_legend_answered">Is beantwoord</string>
