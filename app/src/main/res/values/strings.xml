@@ -108,6 +108,7 @@
     <string name="menu_legend">Legend</string>
     <string name="menu_test">Test program</string>
     <string name="menu_faq">Support</string>
+    <string name="menu_translate">Help translate</string>
     <string name="menu_issue">Report issue</string>
     <string name="menu_attribution">Attribution</string>
     <string name="menu_privacy">Privacy</string>
@@ -268,6 +269,7 @@
     <string name="title_advanced_resize_images">Automatically resize embedded images</string>
     <string name="title_advanced_resize_attachments">Automatically resize image attachments</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_advanced_send_reminders">Show reminders</string>
     <string name="title_advanced_lookup_mx">Check recipient email addresses before sending</string>
     <string name="title_advanced_send_delayed">Delay sending messages</string>
 
@@ -289,6 +291,7 @@
     <string name="title_advanced_distinguish_contacts">Underline the sender when the sender is known as local \'to\' contact</string>
     <string name="title_advanced_color_stripe">Show color stripe</string>
     <string name="title_advanced_avatars">Show contact photos</string>
+    <string name="title_advanced_gravatars">Show Gravatars</string>
     <string name="title_advanced_generated_icons">Show generated icons</string>
     <string name="title_advanced_identicons">Show identicons</string>
     <string name="title_advanced_circular">Show round icons</string>
@@ -410,6 +413,7 @@
 
     <string name="title_advanced_suggest_local_hint">In addition to contacts provided by Android. Contact data will be stored for newly sent or received messages only when enabled.</string>
     <string name="title_advanced_usenet_hint">Insert \'-- \' between the text and the signature</string>
+    <string name="title_advanced_send_reminders_hint">Show a warning when the message text or the subject is empty or when an attachment might be missing</string>
     <string name="title_advanced_lookup_mx_hint">This will check if DNS MX records exist</string>
     <string name="title_advanced_check_reply_hint">This will check if domain name of the sender and reply addresses are the same</string>
 
@@ -517,7 +521,7 @@
     <string name="title_no_inbox">Inbox not found</string>
     <string name="title_no_primary_drafts">No primary account or no drafts folder</string>
     <string name="title_no_identities">Sending emails requires at least one identity</string>
-    <string name="title_no_standard">This provider uses a proprietary email protocol and therefore it is not possible to use third part email clients</string>
+    <string name="title_no_standard">This provider uses a proprietary email protocol and therefore it is not possible to use third party email clients</string>
     <string name="title_no_idle">This provider does not support push messages. This will delay reception of new messages and increase battery usage.</string>
     <string name="title_no_utf8">This provider does not support UTF-8</string>
     <string name="title_no_sync">Synchronization errors since %1$s</string>

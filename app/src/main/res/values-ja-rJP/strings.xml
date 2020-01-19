@@ -73,6 +73,7 @@
     <string name="menu_legend">記録</string>
     <string name="menu_test">テストプログラム</string>
     <string name="menu_faq">サポート</string>
+    <string name="menu_translate">翻訳を手伝う</string>
     <string name="menu_issue">問題を報告</string>
     <string name="menu_attribution">帰属</string>
     <string name="menu_privacy">プライバシー</string>
@@ -208,6 +209,7 @@
     <string name="title_advanced_resize_images">埋込画像のサイズを自動的に変更</string>
     <string name="title_advanced_resize_attachments">画像添付ファイルの自動サイズ変更</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_advanced_send_reminders">リマインダーを表示</string>
     <string name="title_advanced_lookup_mx">送信する前に受信者のメールアドレスを確認</string>
     <string name="title_advanced_send_delayed">メッセージ送信を遅延させます</string>
     <string name="title_advanced_metered">従量制課金接続を使用</string>
@@ -227,6 +229,7 @@
     <string name="title_advanced_distinguish_contacts">送信者がローカル(宛先)連絡先として知られている場合、送信者に下線を引く</string>
     <string name="title_advanced_color_stripe">カラーストライプを表示</string>
     <string name="title_advanced_avatars">連絡先の写真を表示</string>
+    <string name="title_advanced_gravatars">Gravatar(アバター)を表示</string>
     <string name="title_advanced_generated_icons">生成されたアイコンを表示</string>
     <string name="title_advanced_identicons">識別アイコンを表示</string>
     <string name="title_advanced_circular">丸いアイコンで表示</string>
@@ -334,6 +337,7 @@
     <string name="title_advanced_sync_delay_hint">メッセージの同期が遅くなります</string>
     <string name="title_advanced_suggest_local_hint">Android内の連絡先に加えます。連絡先データは有効にした場合のみ新しく送信又は受信メッセージへ保存されます</string>
     <string name="title_advanced_usenet_hint">テキストと署名の間に「-」を挿入</string>
+    <string name="title_advanced_send_reminders_hint">メッセージテキスト又は件名が空の場合や添付ファイルが無い場合に警告を表示</string>
     <string name="title_advanced_lookup_mx_hint">DNS MXレコードが存在するかどうか確認</string>
     <string name="title_advanced_check_reply_hint">送信者のドメイン名と返信アドレスが同じかどうかを確認</string>
     <string name="title_advanced_metered_hint">従量制課金接続とは一般的にモバイル接続または有料Wi-Fiホットスポットの事です</string>
@@ -695,6 +699,7 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_answer_caption">テンプレートを編集</string>
     <string name="title_answer_reply">テンプレートで返信</string>
     <string name="title_answer_name">テンプレート名</string>
+    <string name="title_answer_favorite">お気に入り</string>
     <string name="title_answer_hide">メニューに表示しません</string>
     <string name="title_answer_text">テンプレートテキスト</string>
     <string name="title_answer_template_name">$name$ は送信者のフルネームに置き換えられます</string>

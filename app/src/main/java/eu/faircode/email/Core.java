@@ -867,9 +867,14 @@ class Core {
             ifolder.expunge();
         }
 
+        boolean fetch =
+                (!target.synchronize || !"connected".equals(target.state) ||
+                        target.poll || !istore.hasCapability("IDLE"));
+
         // Fetch appended/copied when needed
-        if (draft || !target.synchronize || !istore.hasCapability("IDLE"))
+        if (draft || fetch)
             try {
+                Log.i(target.name + " moved message fetch=" + fetch);
                 itarget.open(READ_WRITE);
 
                 for (EntityMessage message : map.values())
@@ -892,7 +897,7 @@ class Core {
                                     icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
                                 }
 
-                                if (!target.synchronize || !istore.hasCapability("IDLE")) {
+                                if (fetch) {
                                     JSONArray fargs = new JSONArray();
                                     fargs.put(uid);
                                     onFetch(context, fargs, target, istore, itarget, state);
@@ -1511,6 +1516,7 @@ class Core {
                     message.total = helper.getSize();
                     message.content = false;
                     message.encrypt = parts.getEncryption();
+                    message.ui_encrypt = message.encrypt;
                     message.received = sent;
                     message.sent = sent;
                     message.seen = false;
@@ -1525,6 +1531,9 @@ class Core {
                     message.ui_found = false;
                     message.ui_ignored = false;
                     message.ui_browsed = false;
+
+                    if (message.size == null && message.total != null)
+                        message.size = message.total;
 
                     EntityIdentity identity = matchIdentity(context, folder, message);
                     message.identity = (identity == null ? null : identity.id);
@@ -1884,7 +1893,7 @@ class Core {
                                 istore, ifolder, (MimeMessage) isub[j],
                                 false, download,
                                 rules, state);
-                        ids[from + j] = (message == null ? null : message.id);
+                        ids[from + j] = (message == null || message.ui_hide ? null : message.id);
                     } catch (MessageRemovedException ex) {
                         Log.w(folder.name, ex);
                     } catch (FolderClosedException ex) {
@@ -1921,6 +1930,8 @@ class Core {
 
             int count = ifolder.getMessageCount();
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
+            account.last_connected = new Date().getTime();
+            db.account().setAccountConnected(account.id, account.last_connected);
 
             if (download && initialize == 0) {
                 db.folder().setFolderSyncState(folder.id, "downloading");
@@ -2096,6 +2107,7 @@ class Core {
             message.total = helper.getSize();
             message.content = false;
             message.encrypt = parts.getEncryption();
+            message.ui_encrypt = message.encrypt;
             message.received = (account.use_date ? (sent == null ? 0 : sent) : helper.getReceived());
             message.sent = sent;
             message.seen = seen;

@@ -77,6 +77,7 @@
     <string name="menu_legend">Legenda</string>
     <string name="menu_test">Testovací program</string>
     <string name="menu_faq">Podpora</string>
+    <string name="menu_translate">Pomozte s překladem</string>
     <string name="menu_issue">Nahlásit problém</string>
     <string name="menu_attribution">Zásluhy</string>
     <string name="menu_privacy">Soukromí</string>
@@ -214,6 +215,7 @@
     <string name="title_advanced_resize_images">Automaticky upravit velikost vložených obrázků</string>
     <string name="title_advanced_resize_attachments">Automaticky upravit velikost obrazových příloh</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixelů</string>
+    <string name="title_advanced_send_reminders">Zobrazit připomenutí</string>
     <string name="title_advanced_lookup_mx">Před odesláním zkontrolovat e-mailové adresy příjemců</string>
     <string name="title_advanced_send_delayed">Pozdržet odesílání zpráv</string>
     <string name="title_advanced_metered">Používat účtovaná připojení</string>
@@ -233,6 +235,7 @@
     <string name="title_advanced_distinguish_contacts">Podtrhnout odesílatele, když je odesílatel známý jako místní \"komu\" kontakt</string>
     <string name="title_advanced_color_stripe">Zobrazit barevný pruh</string>
     <string name="title_advanced_avatars">Zobrazit fotografie kontaktů</string>
+    <string name="title_advanced_gravatars">Zobrazit Gravatary</string>
     <string name="title_advanced_generated_icons">Zobrazit generované ikony</string>
     <string name="title_advanced_identicons">Zobrazit identikony</string>
     <string name="title_advanced_circular">Použít kulaté ikony</string>
@@ -341,6 +344,7 @@
     <string name="title_advanced_sync_delay_hint">Zpomalí synchronizaci zpráv</string>
     <string name="title_advanced_suggest_local_hint">Jako dodatek ke kontaktům poskytnutých Androidem. Údaje kontaktů budou ukládány pro nově odeslané či přijaté zprávy pouze pokud povoleno.</string>
     <string name="title_advanced_usenet_hint">Vložit \'-- \' mezi text a podpis</string>
+    <string name="title_advanced_send_reminders_hint">Zobrazit upozornění, je-li text zprávy či předmět prázdný nebo pokud může chybět příloha</string>
     <string name="title_advanced_lookup_mx_hint">Ověří existenci DNS MX záznamů</string>
     <string name="title_advanced_check_reply_hint">Ověří, zda jsou název domény odesílatele a adresy pro odpověď totožné</string>
     <string name="title_advanced_metered_hint">Účtovaná připojení jsou obecně mobilní připojení nebo placené Wi-Fi hotspoty</string>
@@ -703,6 +707,7 @@
     <string name="title_answer_caption">Upravit šablonu</string>
     <string name="title_answer_reply">Šablona odpovědi</string>
     <string name="title_answer_name">Název šablony</string>
+    <string name="title_answer_favorite">Oblíbená</string>
     <string name="title_answer_hide">Skrýt z nabídek</string>
     <string name="title_answer_text">Text šablony</string>
     <string name="title_answer_template_name">$name$ bude nahrazeno celým jménem odesílatele</string>

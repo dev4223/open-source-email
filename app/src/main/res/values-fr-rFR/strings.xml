@@ -85,6 +85,7 @@
     <string name="menu_legend">Légende</string>
     <string name="menu_test">Programme de test</string>
     <string name="menu_faq">Support</string>
+    <string name="menu_translate">Aider à traduire</string>
     <string name="menu_issue">Signaler un problème</string>
     <string name="menu_attribution">Attribution</string>
     <string name="menu_privacy">Confidentialité</string>
@@ -222,6 +223,7 @@
     <string name="title_advanced_resize_images">Redimensionner automatiquement les images incluses</string>
     <string name="title_advanced_resize_attachments">Redimensionner automatiquement les images en pièce jointe</string>
     <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_advanced_send_reminders">Afficher les rappels</string>
     <string name="title_advanced_lookup_mx">Vérifier les adresses e-mail des destinataires avant d\'envoyer</string>
     <string name="title_advanced_send_delayed">Retarder l\'envoi des messages</string>
     <string name="title_advanced_metered">Utiliser des connexions limitées</string>
@@ -241,6 +243,7 @@
     <string name="title_advanced_distinguish_contacts">Souligner l\'expéditeur lorsqu\'il est connu comme contact local</string>
     <string name="title_advanced_color_stripe">Afficher la bande de couleur</string>
     <string name="title_advanced_avatars">Afficher la photo des contacts</string>
+    <string name="title_advanced_gravatars">Afficher les Gravatars</string>
     <string name="title_advanced_generated_icons">Afficher les icônes générées</string>
     <string name="title_advanced_identicons">Afficher les identicônes</string>
     <string name="title_advanced_circular">Afficher des icônes rondes</string>
@@ -349,6 +352,7 @@
     <string name="title_advanced_sync_delay_hint">Cela ralentira la synchronisation des messages</string>
     <string name="title_advanced_suggest_local_hint">En plus des contacts fournis par Android. Les données de contact seront stockées pour les messages récemment envoyés ou reçus uniquement lorsque ceci est activé.</string>
     <string name="title_advanced_usenet_hint">Insérer \'-- \' entre le texte et la signature</string>
+    <string name="title_advanced_send_reminders_hint">Afficher un avertissement quand le texte du message ou l\'objet sont vides ou quand une pièce jointe semble être manquante</string>
     <string name="title_advanced_lookup_mx_hint">Ceci vérifiera si des enregistrements MX DNS existent</string>
     <string name="title_advanced_check_reply_hint">Ceci vérifiera que le nom de domaine de l\'expéditeur et celui de l\'adresse de réponse sont identiques</string>
     <string name="title_advanced_metered_hint">Les connexions limitées sont généralement des connexions mobiles ou des points d\'accès Wi-Fi payants</string>
