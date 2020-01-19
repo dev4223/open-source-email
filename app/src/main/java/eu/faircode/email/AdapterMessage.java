@@ -313,7 +313,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvBccTitle;
         private TextView tvIdentityTitle;
         private TextView tvSentTitle;
-        private TextView tvSizeExTitle;
 
         private TextView tvFromEx;
         private TextView tvTo;
@@ -471,7 +470,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle = vsBody.findViewById(R.id.tvBccTitle);
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
             tvSentTitle = vsBody.findViewById(R.id.tvSentTitle);
-            tvSizeExTitle = vsBody.findViewById(R.id.tvSizeExTitle);
 
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
             tvTo = vsBody.findViewById(R.id.tvTo);
@@ -1089,7 +1087,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle.setVisibility(View.GONE);
             tvIdentityTitle.setVisibility(View.GONE);
             tvSentTitle.setVisibility(View.GONE);
-            tvSizeExTitle.setVisibility(View.GONE);
 
             tvFromEx.setVisibility(View.GONE);
             tvTo.setVisibility(View.GONE);
@@ -1304,9 +1301,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
 
             // dev4223: show always
-            //tvSizeExTitle.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
             //tvSizeEx.setVisibility(!show_addresses || message.size == null ? View.GONE : View.VISIBLE);
-            tvSizeExTitle.setVisibility(View.VISIBLE);
             tvSizeEx.setVisibility(View.VISIBLE);
             StringBuilder size = new StringBuilder();
             size
@@ -1314,6 +1309,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .append("/")
                     .append(message.total == null ? "-" : Helper.humanReadableByteCount(message.total, true));
             tvSizeEx.setText(size.toString());
+
+            // dev4223: textsize when email is expanded
+            // from: small
+            // subject: bigger
+            if (textSize != 0) {
+                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, (font_size_sender == null ? textSize : font_size_sender) * 0.9f);
+                tvSubjectEx.setTextSize(TypedValue.COMPLEX_UNIT_PX, (font_size_subject == null ? textSize : font_size_subject));
+            }
 
             // dev4223: show always
             //tvSubjectEx.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
