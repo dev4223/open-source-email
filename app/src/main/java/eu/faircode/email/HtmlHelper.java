@@ -180,6 +180,8 @@ public class HtmlHelper {
                         switch (key) {
                             case "color":
                                 String c = value
+                                        .replace("none", "")
+                                        .replace("unset", "")
                                         .replace("inherit", "")
                                         .replace("initial", "")
                                         .replace("windowtext", "")
@@ -207,7 +209,11 @@ public class HtmlHelper {
                                     } else if (c.equals("orange"))
                                         color = 0Xffa500; // CSS Level 2
                                     else
-                                        color = Color.parseColor(c);
+                                        try {
+                                            color = Color.parseColor(c);
+                                        } catch (IllegalArgumentException ex) {
+                                            color = Integer.decode(c) | 0xFF000000;
+                                        }
                                 } catch (Throwable ex) {
                                     Log.e("Color=" + c);
                                 }
@@ -266,6 +272,14 @@ public class HtmlHelper {
         //for (Element br : document.select("br"))
         //    if (br.parent() != null && !hasVisibleContent(br.parent().childNodes()))
         //        br.tagName("span");
+
+        for (Element div : document.select("div"))
+            if (div.children().select("div").size() == 0 &&
+                    hasVisibleContent(div.childNodes())) {
+                Node last = div.childNode(div.childNodeSize() - 1);
+                if (last != null && "br".equals(last.nodeName()))
+                    last.remove();
+            }
 
         // Paragraphs
         for (Element p : document.select("p")) {

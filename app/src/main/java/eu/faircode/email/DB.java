@@ -34,6 +34,7 @@ import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
 
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
+import io.requery.android.database.sqlite.SQLiteDatabase;
 
 /*
     This file is part of FairEmail.
@@ -57,7 +58,7 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 132,
+        version = 133,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -104,24 +105,31 @@ public abstract class DB extends RoomDatabase {
             Helper.getBackgroundExecutor(1, "query");
 
     private static final String DB_NAME = "fairemail";
+    private static final int DB_CHECKPOINT = 100;
+
+    @Override
+    public void init(@NonNull DatabaseConfiguration configuration) {
+        // https://www.sqlite.org/pragma.html#pragma_wal_autocheckpoint
+        if (BuildConfig.DEBUG) {
+            File dbfile = configuration.context.getDatabasePath(DB_NAME);
+            if (dbfile.exists()) {
+                try (SQLiteDatabase db = SQLiteDatabase.openDatabase(dbfile.getPath(), null, SQLiteDatabase.OPEN_READWRITE)) {
+                    Log.i("DB checkpoint=" + DB_CHECKPOINT);
+                    try (Cursor cursor = db.rawQuery("PRAGMA wal_autocheckpoint=" + DB_CHECKPOINT + ";", null)) {
+                        cursor.moveToNext(); // required
+                    }
+                }
+            }
+        }
+
+        super.init(configuration);
+    }
 
     public static synchronized DB getInstance(Context context) {
         if (sInstance == null) {
             Context acontext = context.getApplicationContext();
 
-            sInstance = migrate(acontext, getBuilder(acontext));
-
-            // https://www.sqlite.org/lang_vacuum.html
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean vacuum = prefs.getBoolean("vacuum", false);
-            if (vacuum)
-                try {
-                    Log.i("Running VACUUM");
-                    sInstance.getOpenHelper().getWritableDatabase().execSQL("VACUUM;");
-                    prefs.edit().remove("vacuum").apply();
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
+            sInstance = migrate(acontext, getBuilder(acontext)).build();
 
             sInstance.getInvalidationTracker().addObserver(new InvalidationTracker.Observer(
                     EntityAccount.TABLE_NAME,
@@ -176,7 +184,7 @@ public abstract class DB extends RoomDatabase {
                 });
     }
 
-    private static DB migrate(final Context context, RoomDatabase.Builder<DB> builder) {
+    private static RoomDatabase.Builder<DB> migrate(final Context context, RoomDatabase.Builder<DB> builder) {
         // https://www.sqlite.org/lang_altertable.html
         return builder
                 .addMigrations(new Migration(1, 2) {
@@ -1264,7 +1272,15 @@ public abstract class DB extends RoomDatabase {
                         db.execSQL("UPDATE `message` SET `ui_encrypt` = `encrypt`");
                     }
                 })
-                .build();
+                .addMigrations(new Migration(132, 133) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `leave_on_server` INTEGER NOT NULL DEFAULT 1");
+                        db.execSQL("ALTER TABLE `account` ADD COLUMN `leave_on_device` INTEGER NOT NULL DEFAULT 0");
+                        db.execSQL("UPDATE `account` SET `leave_on_server` = `browse` WHERE `pop` = " + EntityAccount.TYPE_POP);
+                    }
+                });
     }
 
     @Override

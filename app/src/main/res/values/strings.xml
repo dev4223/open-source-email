@@ -503,6 +503,7 @@
     <string name="title_primary_account">Primary (default account)</string>
     <string name="title_primary_identity">Primary (default identity)</string>
     <string name="title_leave_on_server">Leave messages on server</string>
+    <string name="title_leave_on_device">Leave messages on device</string>
     <string name="title_keep_alive_interval">Keep-alive/poll interval (minutes)</string>
     <string name="title_partial_fetch" translatable="false">Partial fetch</string>
     <string name="title_ignore_size" translatable="false">Ignore bodystructure size</string>
@@ -688,6 +689,7 @@
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
+    <string name="title_reply_hint">You can reply to all, forward, etc via the double arrow action menu just below the message header</string>
 
     <string name="title_ask_review">Please review FairEmail</string>
     <string name="title_ask_review_rationale">
@@ -714,6 +716,7 @@
     <string name="title_discard">Discard</string>
     <string name="title_save">Save</string>
     <string name="title_send">Send</string>
+    <string name="title_send_now">Send now</string>
     <string name="title_send_via">Send via</string>
     <string name="title_send_with_options">Send &#8230;</string>
     <string name="title_send_at">Send at &#8230;</string>

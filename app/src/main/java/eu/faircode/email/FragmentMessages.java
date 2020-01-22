@@ -36,6 +36,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -52,8 +53,11 @@ import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.security.KeyChain;
+import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.text.style.RelativeSizeSpan;
+import android.text.style.StyleSpan;
 import android.util.Base64;
 import android.util.LongSparseArray;
 import android.util.Pair;
@@ -868,7 +872,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fabReply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onReply("reply");
+                boolean reply_hint = prefs.getBoolean("reply_hint", false);
+                if (reply_hint)
+                    onReply("reply");
+                else
+                    new AlertDialog.Builder(getContext())
+                            .setMessage(R.string.title_reply_hint)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    prefs.edit().putBoolean("reply_hint", true).apply();
+                                    onReply("reply");
+                                }
+                            })
+                            .show();
             }
         });
 
@@ -985,7 +1002,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
-                        popupMenu.getMenu().add(Menu.NONE, 0, 0, R.string.title_search_server)
+                        SpannableString ss = new SpannableString(getString(R.string.title_search_server));
+                        ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), 0);
+                        ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
+                        popupMenu.getMenu().add(Menu.NONE, 0, 0, ss)
                                 .setEnabled(false);
                         popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.title_search_text)
                                 .setCheckable(true).setChecked(search_text);
@@ -1072,9 +1092,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         else
             fabCompose.hide();
 
-        if (viewType == AdapterMessage.ViewType.SEARCH && !server)
-            fabSearch.show();
-        else
+        if (viewType == AdapterMessage.ViewType.SEARCH && !server) {
+            if (query != null && query.startsWith(getString(R.string.title_search_special_prefix) + ":")) {
+                String special = query.split(":")[1];
+                if (getString(R.string.title_search_special_snoozed).equals(special) ||
+                        getString(R.string.title_search_special_encrypted).equals(special))
+                    fabSearch.hide();
+                else
+                    fabSearch.show();
+            } else
+                fabSearch.show();
+        } else
             fabSearch.hide();
 
         fabMore.hide();
