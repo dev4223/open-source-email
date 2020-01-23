@@ -59,8 +59,10 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
+import android.text.style.StyleSpan;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -466,10 +468,65 @@ public class FragmentCompose extends FragmentBase {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            public void onTextChanged(CharSequence text, int start, int before, int count) {
                 Activity activity = getActivity();
                 if (activity != null)
                     activity.onUserInteraction();
+
+                if (before == 0 && count == 1 && text.charAt(start) == '\n') {
+                    // break block quotes
+                    boolean broken = false;
+                    SpannableStringBuilder ssb = new SpannableStringBuilder(text);
+                    StyledQuoteSpan[] spans = ssb.getSpans(start + 1, start + 1, StyledQuoteSpan.class);
+                    for (StyledQuoteSpan span : spans) {
+                        int s = ssb.getSpanStart(span);
+                        int e = ssb.getSpanEnd(span);
+                        int f = ssb.getSpanFlags(span);
+                        Log.i("Span " + s + "..." + e + " start=" + start);
+
+                        if (start - s > 0 && e - (start + 1) > 0 &&
+                                ssb.charAt(s - 1) == '\n' && ssb.charAt(start - 1) == '\n' &&
+                                ssb.charAt(start) == '\n' && ssb.charAt(e - 1) == '\n') {
+                            broken = true;
+
+                            StyledQuoteSpan q1 = new StyledQuoteSpan(getContext(), span.getColor());
+                            ssb.setSpan(q1, s, start, f);
+                            Log.i("Span " + s + "..." + start);
+
+                            StyledQuoteSpan q2 = new StyledQuoteSpan(getContext(), span.getColor());
+                            ssb.setSpan(q2, start + 1, e, f);
+                            Log.i("Span " + (start + 1) + "..." + e);
+
+                            ssb.removeSpan(span);
+                        }
+                    }
+
+                    if (broken) {
+                        StyleSpan[] sspan = ssb.getSpans(start, start, StyleSpan.class);
+                        for (StyleSpan span : sspan) {
+                            int s = ssb.getSpanStart(span);
+                            int e = ssb.getSpanEnd(span);
+                            int f = ssb.getSpanFlags(span);
+                            Log.i("Style span " + s + "..." + e + " start=" + start);
+
+                            StyleSpan s1 = new StyleSpan(span.getStyle());
+                            ssb.setSpan(s1, s, start, f);
+                            Log.i("Style span " + s + "..." + start);
+
+                            StyleSpan s2 = new StyleSpan(span.getStyle());
+                            ssb.setSpan(s2, start + 1, e, f);
+                            Log.i("Style span " + (start + 1) + "..." + e);
+
+                            ssb.removeSpan(span);
+                        }
+
+                        int color = Helper.resolveColor(getContext(), android.R.attr.textColorPrimary);
+                        ssb.setSpan(new ForegroundColorSpan(color), start, start, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+                        etBody.setText(ssb);
+                        etBody.setSelection(start);
+                    }
+                }
             }
 
             @Override
@@ -611,7 +668,7 @@ public class FragmentCompose extends FragmentBase {
                 getContext(),
                 R.layout.spinner_item2_dropdown,
                 null,
-                new String[]{"name", "email"},
+                new String[]{"display", "email"},
                 new int[]{android.R.id.text1, android.R.id.text2},
                 0);
 
@@ -644,7 +701,7 @@ public class FragmentCompose extends FragmentBase {
                 String wildcard = "%" + typed + "%";
                 List<Cursor> cursors = new ArrayList<>();
 
-                MatrixCursor provided = new MatrixCursor(new String[]{"_id", "name", "email"});
+                MatrixCursor provided = new MatrixCursor(new String[]{"_id", "name", "email", "display"});
                 boolean contacts = Helper.hasPermission(getContext(), Manifest.permission.READ_CONTACTS);
                 if (contacts) {
                     Cursor cursor = resolver.query(
@@ -666,7 +723,8 @@ public class FragmentCompose extends FragmentBase {
                         provided.newRow()
                                 .add(cursor.getLong(0))
                                 .add(cursor.getString(1))
-                                .add(cursor.getString(2));
+                                .add(cursor.getString(2))
+                                .add(cursor.getString(1));
                 }
                 cursors.add(provided);
 
