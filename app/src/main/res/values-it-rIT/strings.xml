@@ -115,6 +115,7 @@
     <string name="title_setup_quick_imap">Server IMAP per ricevere messaggi</string>
     <string name="title_setup_quick_smtp">Server SMTP per inviare messaggi</string>
     <string name="title_setup_wizard">Wizard</string>
+    <string name="title_setup_wizard_multiple">La procedura guidata di installazione può essere utilizzata più volte per impostare account multipli</string>
     <string name="title_setup_wizard_remark">Vai \'indietro\' per andare alla casella di posta in arrivo</string>
     <string name="title_setup_other">Altro provider</string>
     <string name="title_setup_gmail_support">L\'autorizzazione degli account Google funzionerà solo nelle versioni ufficiali, perché Android controlla la firma dell\'app</string>
@@ -366,6 +367,7 @@
     <string name="title_advanced_gravatars_hint">Potrebbe esserci un rischio per la privacy</string>
     <string name="title_advanced_name_email_hint">Quando disabilitati saranno mostrati solo i nomi quando disponibili</string>
     <string name="title_advanced_preview_hint">Disponibile solo quando è stato scaricato il testo del messaggio</string>
+    <string name="title_advanced_preview_issue">Lo scorrimento può essere lento a causa di un bug in alcune versioni di Android quando il numero di righe è più di uno</string>
     <string name="title_advanced_inline_hint">Le immagini in linea sono incluse nel messaggio</string>
     <string name="title_advanced_autoexpand_hint">Apri automaticamente il messaggio quando c\'è un solo messaggio o solo un messaggio da leggere in una conversazione</string>
     <string name="title_advanced_autoseen_hint">La marcatura automatica dei messaggi letti all\'apertura può essere disabilitata nelle impostazioni dei singoli account</string>
@@ -581,6 +583,7 @@
     <string name="title_no_format">Verrà incluso Il messaggio originale ricevuto</string>
     <string name="title_no_image">L\'immagine potrebbe non essere decodificata</string>
     <string name="title_no_search">La ricerca sul server non è disponibile per questo account</string>
+    <string name="title_too_large">Messaggio troppo grande per essere riformattato, prova a utilizzare la visualizzazione originale del messaggio tramite l\'icona a schermo intero</string>
     <string name="title_unused_inline">Le immagini in linea inutilizzate verranno rimosse all\'invio</string>
     <string name="title_accross_remark">I messaggi spostati tra gli account verranno scaricati di nuovo causando un ulteriore utilizzo dei dati</string>
     <string name="title_raw_saved">Messaggio non elaborato salvato</string>
@@ -682,6 +685,7 @@
     <string name="title_signature_valid">Firma messaggio valida</string>
     <string name="title_signature_unconfirmed">Firma del messaggio valida ma non confermata</string>
     <string name="title_signature_invalid">Firma messaggio non valida</string>
+    <string name="title_signature_certificate_invalid">Catena di certificati non valida</string>
     <string name="title_signature_sender">Indirizzo del mittente</string>
     <string name="title_signature_email">Indirizzo della firma</string>
     <string name="title_signature_mismatch">L\'indirizzo email del mittente e la firma non corrispondono</string>

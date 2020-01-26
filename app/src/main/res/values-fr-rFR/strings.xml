@@ -116,6 +116,7 @@
     <string name="title_setup_quick_imap">Serveur IMAP pour recevoir des messages</string>
     <string name="title_setup_quick_smtp">Serveur SMTP pour envoyer des messages</string>
     <string name="title_setup_wizard">Assistant</string>
+    <string name="title_setup_wizard_multiple">L\'assistant d\'installation peut être utilisé plusieurs fois pour configurer plusieurs comptes</string>
     <string name="title_setup_wizard_remark">Faites « Retour » pour aller à la boîte de réception</string>
     <string name="title_setup_other">Autre fournisseur</string>
     <string name="title_setup_gmail_support">L\'autorisation des comptes Google fonctionnera uniquement dans les versions officielles parce que Android vérifie la signature de l\'application</string>
@@ -367,6 +368,7 @@
     <string name="title_advanced_gravatars_hint">Il pourrait y avoir un risque pour la confidentialité</string>
     <string name="title_advanced_name_email_hint">Si désactivé, seuls les noms seront affichés si disponibles</string>
     <string name="title_advanced_preview_hint">Disponible uniquement lorsque le texte du message a été téléchargé</string>
+    <string name="title_advanced_preview_issue">Le défilement peut être lent en raison d\'un bug dans certaines versions d\'Android lorsque le nombre de lignes est supérieur à 1</string>
     <string name="title_advanced_inline_hint">Les images en ligne sont des images incluses dans le message</string>
     <string name="title_advanced_autoexpand_hint">Ouvrir automatiquement le message lorsqu’il n’y a qu’un seul message ou seulement un message non lu dans une conversation</string>
     <string name="title_advanced_autoseen_hint">Le marquage automatique des messages comme lus lors l\'ouverture peut être désactivé dans les paramètres de chaque compte</string>
@@ -582,6 +584,7 @@
     <string name="title_no_format">Le message reçu initialement sera inclus</string>
     <string name="title_no_image">L\'image n\'a pas pu être décodée</string>
     <string name="title_no_search">La recherche sur le serveur n\'est pas disponible pour ce compte</string>
+    <string name="title_too_large">Message trop volumineux pour être reformaté, essayez d\'utiliser l\'affichage du message d\'origine via l\'icône plein écran à la place</string>
     <string name="title_unused_inline">Les images incluses inutilisées seront supprimées lors de l\'envoi</string>
     <string name="title_accross_remark">Les messages déplacés entre comptes seront téléchargés à nouveau entraînant une utilisation supplémentaire des données</string>
     <string name="title_raw_saved">Message brut enregistré</string>
@@ -684,6 +687,7 @@
     <string name="title_signature_valid">Signature de message valide</string>
     <string name="title_signature_unconfirmed">Signature du message valide mais non confirmée</string>
     <string name="title_signature_invalid">Signature de message invalide</string>
+    <string name="title_signature_certificate_invalid">Chaîne de certificats invalide</string>
     <string name="title_signature_sender">Adresse de l\'expéditeur</string>
     <string name="title_signature_email">Adresse de la signature</string>
     <string name="title_signature_mismatch">Les adresses e-mail de l\'expéditeur et de la signature ne correspondent pas</string>

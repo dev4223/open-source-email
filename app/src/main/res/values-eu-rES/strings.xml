@@ -115,6 +115,7 @@
     <string name="title_setup_quick_imap">IMAP zerbitzaria mezuak jasotzeko</string>
     <string name="title_setup_quick_smtp">SMTP zerbitzaria mezuak igortzeko</string>
     <string name="title_setup_wizard">Morroia</string>
+    <string name="title_setup_wizard_multiple">Instalatzeko morroia hainbat aldiz erabil daiteke zenbait kontu konfiguratzeko</string>
     <string name="title_setup_wizard_remark">Jo \'atzera\' sarrera ontzira joateko</string>
     <string name="title_setup_other">Beste hornitzaile bat</string>
     <string name="title_setup_gmail_support">Google kontuak autorizatzea bertsio ofizialetan besterik ez dabil Androidek aplikazioaren sinadura egiaztatzen duelako</string>
@@ -365,6 +366,7 @@
     <string name="title_advanced_gravatars_hint">Pribatutasun-arriskua egon daiteke</string>
     <string name="title_advanced_name_email_hint">Desgaituta dagonean erabilgarri dauden izenak bakarrik erakutsiko dira</string>
     <string name="title_advanced_preview_hint">Eskuragarri soilik mezuaren testua deskargatu bada</string>
+    <string name="title_advanced_preview_issue">Desplazamendua motela izan daiteke, Android-en bertsio batzuetan errorea gertatu delako linea-kopurua bat baino gehiago denean</string>
     <string name="title_advanced_inline_hint">Lineako irudiak mezuan sartutako irudiak dira</string>
     <string name="title_advanced_autoexpand_hint">Ireki automatikoki mezua elkarrizketan mezu bakarra edo irakurri gabeko mezu bakarra dagoenean</string>
     <string name="title_advanced_autoseen_hint">Mezuak irekitzean automatikoki irakurrita gisa markatzea kontu bakoitzaren ezarpenetan desgaitu daiteke</string>
@@ -580,6 +582,7 @@
     <string name="title_no_format">Jasotako jatorrizko mezua gehituko da</string>
     <string name="title_no_image">Ezin izan da irudia deskodetu</string>
     <string name="title_no_search">Zerbitzariko bilaketa ez dago erabilgarri kontu honetarako</string>
+    <string name="title_too_large">Mezua handiegia da formateatzeko, saiatu haren ordez jatorrizko mezuaren ikuspegia erabiltzen pantaila osoaren ikonoaren bidez</string>
     <string name="title_unused_inline">Erabili gabeko txertatutako irudiak kenduko dira bidaltzean</string>
     <string name="title_accross_remark">Kontuen artean mugitutako mezuak berriro deskargatuko dira horrek dakarren datuen erabilera gehigarriarekin</string>
     <string name="title_raw_saved">Mezu gordina gorde da</string>
@@ -682,6 +685,7 @@ Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
     <string name="title_signature_valid">Mezuaren sinadura baliozkoa</string>
     <string name="title_signature_unconfirmed">Mezuaren sinadura baliozkoa da baina ez da baieztatu</string>
     <string name="title_signature_invalid">Mezuaren sinadura baliogabea</string>
+    <string name="title_signature_certificate_invalid">Ziurtagiri kate baliogabea</string>
     <string name="title_signature_sender">Igorlearen helbidea</string>
     <string name="title_signature_email">Sinaduraren helbidea</string>
     <string name="title_signature_mismatch">Igorlearen helbide elektronikoa eta sinadura ez datoz bat</string>

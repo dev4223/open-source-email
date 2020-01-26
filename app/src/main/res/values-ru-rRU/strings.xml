@@ -138,6 +138,7 @@
     <string name="title_setup_quick_imap">IMAP-сервер для получения сообщений</string>
     <string name="title_setup_quick_smtp">SMTP-сервер для отправки сообщений</string>
     <string name="title_setup_wizard">Мастер</string>
+    <string name="title_setup_wizard_multiple">Мастер установки может быть использован неоднократно для настройки разных аккаунтов</string>
     <string name="title_setup_wizard_remark">Переход \"назад\" приводит в папку \"Входящие\"</string>
     <string name="title_setup_other">Другой провайдер</string>
     <string name="title_setup_gmail_support">Авторизация учётных записей Google будет работать только в официальных версиях, так как Android проверяет подпись приложения</string>
@@ -389,6 +390,7 @@
     <string name="title_advanced_gravatars_hint">Возможен риск нарушения конфиденциальности</string>
     <string name="title_advanced_name_email_hint">Если отключено, будут показаны только имена (при наличии)</string>
     <string name="title_advanced_preview_hint">Доступно, только если был загружен текст сообщения</string>
+    <string name="title_advanced_preview_issue">Прокрутка может быть медленной из-за ошибки в некоторых версиях Android, когда строк больше чем одна</string>
     <string name="title_advanced_inline_hint">Встроенные изображения - это изображения, включённые в сообщение</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
     <string name="title_advanced_autoseen_hint">Автоматическая пометка сообщений прочитанными при развёртывании может быть отключена в настройках учётной записи</string>
@@ -604,6 +606,7 @@
     <string name="title_no_format">Оригинальное сообщение будет включено</string>
     <string name="title_no_image">Изображение не может быть декодировано</string>
     <string name="title_no_search">Поиск на сервере недоступен для этой учётной записи</string>
+    <string name="title_too_large">Сообщение слишком велико для переформатирования, попробуйте использовать оригинальный вид сообщения при помощи значка полноэкранного просмотра</string>
     <string name="title_unused_inline">Неиспользуемые встроенные изображения будут удалены при отправке</string>
     <string name="title_accross_remark">Сообщения, перемещаемые между учётными записями, будут загружены заново, порождая дополнительный трафик</string>
     <string name="title_raw_saved">Оригинал сообщения сохранён</string>
@@ -706,6 +709,7 @@
     <string name="title_signature_valid">Подпись сообщения действительна</string>
     <string name="title_signature_unconfirmed">Подпись сообщения действительна, но не подтверждена</string>
     <string name="title_signature_invalid">Подпись сообщения недействительна</string>
+    <string name="title_signature_certificate_invalid">Некорректная цепочка сертификатов</string>
     <string name="title_signature_sender">Адрес отправителя</string>
     <string name="title_signature_email">Адрес подписи</string>
     <string name="title_signature_mismatch">Адреса электронной почты отправителя и подписи не совпадают</string>

@@ -116,6 +116,7 @@
     <string name="title_setup_quick_imap">IMAP-server om berichten te ontvangen</string>
     <string name="title_setup_quick_smtp">SMTP-server om berichten te verzenden</string>
     <string name="title_setup_wizard">Wizard</string>
+    <string name="title_setup_wizard_multiple">De installatie-wizard kan meerdere keren worden gebruikt om meerdere accounts in te stellen</string>
     <string name="title_setup_wizard_remark">Ga \'terug\' om naar het postvak in te gaan</string>
     <string name="title_setup_other">Andere provider</string>
     <string name="title_setup_gmail_support">Het autoriseren van Google accounts werkt alleen in officiële versies omdat Android de app handtekening controleert</string>
@@ -367,6 +368,7 @@
     <string name="title_advanced_gravatars_hint">Er is mogelijk een privacyrisico</string>
     <string name="title_advanced_name_email_hint">Indien uitgeschakeld, worden alleen namen weergegeven als deze beschikbaar zijn</string>
     <string name="title_advanced_preview_hint">Alleen beschikbaar wanneer de berichttekst werd gedownload</string>
+    <string name="title_advanced_preview_issue">Scrollen kan langzaam zijn vanwege een fout in sommige Android-versies wanneer het aantal regels meer dan één is</string>
     <string name="title_advanced_inline_hint">Inline afbeeldingen zijn afbeeldingen opgenomen in het bericht</string>
     <string name="title_advanced_autoexpand_hint">Bericht automatisch openen als er slechts één bericht of slechts één ongelezen bericht in een gesprek is</string>
     <string name="title_advanced_autoseen_hint">Berichten automatisch markeren als gelezen bij uitvouwen, kan worden uitgeschakeld in de individuele accountinstellingen</string>
@@ -582,6 +584,7 @@
     <string name="title_no_format">Het oorspronkelijke ontvangen bericht zal worden opgenomen</string>
     <string name="title_no_image">Afbeelding kon niet gedecodeerd worden</string>
     <string name="title_no_search">Zoeken op server is niet beschikbaar voor dit account</string>
+    <string name="title_too_large">Bericht te groot om opnieuw te formatteren, probeer de oorspronkelijke berichtweergave te gebruiken via het volledige scherm icoon</string>
     <string name="title_unused_inline">Ongebruikte inline afbeeldingen worden verwijderd bij verzenden</string>
     <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra datagebruik</string>
     <string name="title_raw_saved">Ruw bericht opgeslagen</string>
@@ -684,6 +687,7 @@
     <string name="title_signature_valid">Handtekening bericht geldig</string>
     <string name="title_signature_unconfirmed">Handtekening bericht geldig maar niet bevestigd</string>
     <string name="title_signature_invalid">Handtekening bericht ongeldig</string>
+    <string name="title_signature_certificate_invalid">Certificaatketen ongeldig</string>
     <string name="title_signature_sender">Adres van de afzender</string>
     <string name="title_signature_email">Adres van de handtekening</string>
     <string name="title_signature_mismatch">Het e-mailadres van de afzender en de handtekening komen niet overeen</string>

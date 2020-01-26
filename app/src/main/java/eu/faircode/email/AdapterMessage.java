@@ -238,6 +238,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private static final ExecutorService executor =
             Helper.getBackgroundExecutor(2, "differ");
 
+    private static final int LARGE_MESSAGE_SIZE = 250 * 1024;
+
     // https://github.com/newhouse/url-tracking-stripper
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             "utm_source",
@@ -286,6 +288,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageView ivAnswered;
         private ImageView ivAttachments;
         private TextView tvSubject;
+        private TextView tvKeywords;
         private TextView tvFolder;
         private TextView tvCount;
         private ImageView ivThread;
@@ -326,7 +329,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private TextView tvSubjectEx;
         private TextView tvFlags;
-        private TextView tvKeywords;
+        private TextView tvKeywordsEx;
 
         private TextView tvHeaders;
         private ContentLoadingProgressBar pbHeaders;
@@ -389,6 +392,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private ScaleGestureDetector gestureDetector;
 
+        private SimpleTask taskContactInfo;
+
         ViewHolder(final View itemView, long viewType) {
             super(itemView);
 
@@ -414,6 +419,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivAnswered = itemView.findViewById(R.id.ivAnswered);
             ivAttachments = itemView.findViewById(R.id.ivAttachments);
             tvSubject = itemView.findViewById(subject_top ? R.id.tvFrom : R.id.tvSubject);
+            tvKeywords = itemView.findViewById(R.id.tvKeywords);
             tvExpand = itemView.findViewById(R.id.tvExpand);
             tvPreview = itemView.findViewById(R.id.tvPreview);
             tvFolder = itemView.findViewById(R.id.tvFolder);
@@ -483,7 +489,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             tvSubjectEx = vsBody.findViewById(R.id.tvSubjectEx);
             tvFlags = vsBody.findViewById(R.id.tvFlags);
-            tvKeywords = vsBody.findViewById(R.id.tvKeywords);
+            tvKeywordsEx = vsBody.findViewById(R.id.tvKeywordsEx);
 
             tvHeaders = vsBody.findViewById(R.id.tvHeaders);
             pbHeaders = vsBody.findViewById(R.id.pbHeaders);
@@ -717,6 +723,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ivAnswered.setVisibility(View.GONE);
             ivAttachments.setVisibility(View.GONE);
             tvSubject.setText(null);
+            tvKeywords.setVisibility(View.GONE);
             tvFolder.setText(null);
             tvCount.setText(null);
             ivThread.setVisibility(View.GONE);
@@ -762,6 +769,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
                 tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_subject);
+                tvKeywords.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvFolder.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
 
@@ -801,6 +809,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivAnswered.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivAttachments.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvSubject.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                tvKeywords.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvFolder.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvCount.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivThread.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -880,6 +889,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Line 2
             tvSubject.setText(message.subject);
 
+            tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+            tvKeywords.setText(TextUtils.join(" ", message.keywords));
+
             // Line 3
             int icon = (message.drafts > 0
                     ? R.drawable.baseline_edit_24
@@ -957,7 +969,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (tvPreview.getTag() == null || (int) tvPreview.getTag() != textColor) {
                 tvPreview.setTag(textColor);
                 tvPreview.setTextColor(textColor);
-                tvPreview.setMaxLines(preview_lines);
+                if (preview_lines == 1)
+                    tvPreview.setSingleLine(true);
+                else
+                    tvPreview.setMaxLines(preview_lines);
             }
             tvPreview.setTypeface(
                     monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT,
@@ -996,12 +1011,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Contact info
             ContactInfo info = ContactInfo.get(context, message.account, addresses, true);
             if (info == null) {
+                if (taskContactInfo != null)
+                    taskContactInfo.cancel(context);
+
                 Bundle aargs = new Bundle();
                 aargs.putLong("id", message.id);
                 aargs.putLong("account", message.account);
                 aargs.putSerializable("addresses", addresses);
 
-                new SimpleTask<ContactInfo>() {
+                taskContactInfo = new SimpleTask<ContactInfo>() {
                     @Override
                     protected ContactInfo onExecute(Context context, Bundle args) {
                         long account = args.getLong("account");
@@ -1012,6 +1030,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected void onExecuted(Bundle args, ContactInfo info) {
+                        taskContactInfo = null;
+
                         long id = args.getLong("id");
                         TupleMessageEx amessage = getMessage();
                         if (amessage == null || !amessage.id.equals(id))
@@ -1024,7 +1044,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     protected void onException(Bundle args, Throwable ex) {
                         Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                     }
-                }.setLog(false).execute(context, owner, aargs, "message:avatar");
+                }.setLog(false);
+                taskContactInfo.execute(context, owner, aargs, "message:avatar");
             } else
                 bindContactInfo(info, addresses, name_email);
 
@@ -1099,7 +1120,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSizeEx.setVisibility(View.GONE);
             tvSubjectEx.setVisibility(View.GONE);
             tvFlags.setVisibility(View.GONE);
-            tvKeywords.setVisibility(View.GONE);
+            tvKeywordsEx.setVisibility(View.GONE);
 
             pbHeaders.setVisibility(View.GONE);
             tvNoInternetHeaders.setVisibility(View.GONE);
@@ -1685,6 +1706,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         return document.html();
                     } else {
+                        if (body.length() > LARGE_MESSAGE_SIZE)
+                            return HtmlHelper.fromHtml("<em>" + context.getString(R.string.title_too_large) + "</em>");
+
                         // Cleanup message
                         document = HtmlHelper.sanitize(context, body, show_images, true);
 
@@ -1854,7 +1878,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (show_inline || !inline || !attachment.available)
                     a.add(attachment);
 
-                if (attachment.available && "text/calendar".equals(attachment.type)) {
+                if (attachment.available && "text/calendar".equals(attachment.getMimeType())) {
                     calendar = true;
                     bindCalendar(message, attachment);
                 }
@@ -2023,18 +2047,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     List<EntityAttachment> attachments = db.attachment().getAttachments(id);
                     for (EntityAttachment attachment : attachments)
-                        if (attachment.available && "text/calendar".equals(attachment.type)) {
+                        if (attachment.available && "text/calendar".equals(attachment.getMimeType())) {
                             File file = attachment.getFile(context);
                             ICalendar icalendar = Biweekly.parse(file).first();
                             VEvent event = icalendar.getEvents().get(0);
 
                             if (action == R.id.ibCalendar) {
-                                String summary = event.getSummary() == null ? null : event.getSummary().getValue();
+                                String summary = (event.getSummary() == null ? null : event.getSummary().getValue());
+                                String description = (event.getDescription() == null ? null : event.getDescription().getValue());
 
-                                ICalDate start = event.getDateStart() == null ? null : event.getDateStart().getValue();
-                                ICalDate end = event.getDateEnd() == null ? null : event.getDateEnd().getValue();
+                                ICalDate start = (event.getDateStart() == null ? null : event.getDateStart().getValue());
+                                ICalDate end = (event.getDateEnd() == null ? null : event.getDateEnd().getValue());
 
-                                String location = event.getLocation() == null ? null : event.getLocation().getValue();
+                                String location = (event.getLocation() == null ? null : event.getLocation().getValue());
 
                                 List<String> attendee = new ArrayList<>();
                                 for (Attendee a : event.getAttendees()) {
@@ -2050,6 +2075,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                 if (summary != null)
                                     intent.putExtra(CalendarContract.Events.TITLE, summary);
+
+                                if (description != null)
+                                    intent.putExtra(CalendarContract.Events.DESCRIPTION, description);
 
                                 if (start != null)
                                     intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start.getTime());

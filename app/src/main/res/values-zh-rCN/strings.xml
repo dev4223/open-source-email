@@ -103,6 +103,7 @@
     <string name="title_setup_quick_imap">接收邮件的IMAP服务器</string>
     <string name="title_setup_quick_smtp">发送邮件的SMTP服务器</string>
     <string name="title_setup_wizard">向导</string>
+    <string name="title_setup_wizard_multiple">安装向导可被多次使用来设置多个帐户</string>
     <string name="title_setup_wizard_remark">按返回键前往收件箱</string>
     <string name="title_setup_other">其他提供商</string>
     <string name="title_setup_gmail_support">授权谷歌帐户只能用于官方版本，因为Android检查应用签名</string>
@@ -351,8 +352,10 @@
     <string name="title_advanced_layout_hint">切换到更为紧凑的布局，改变消息文本大小可以在邮件视图中的顶部动作栏菜单中完成</string>
     <string name="title_advanced_date_hint">若按时间对消息排序，将仅按日期对消息分组</string>
     <string name="title_advanced_threading_hint">合并相同主题为一封会话</string>
+    <string name="title_advanced_gravatars_hint">可能存在隐私风险</string>
     <string name="title_advanced_name_email_hint">禁用该选项，将仅显示名称（如果可用）</string>
     <string name="title_advanced_preview_hint">只有当消息文本下载时才可用</string>
+    <string name="title_advanced_preview_issue">由于某些Android版本中的错误，当行数大于一时，滚动可能会较慢</string>
     <string name="title_advanced_inline_hint">内联图像是邮件中包含的图像</string>
     <string name="title_advanced_autoexpand_hint">当对话中只有一条消息或只是一条未读消息时，自动打开该消息</string>
     <string name="title_advanced_autoseen_hint">可以在单独的账户设置中禁用展开消息时自动标记消息为已读</string>
@@ -568,6 +571,7 @@
     <string name="title_no_format">将包含最初收到的消息</string>
     <string name="title_no_image">无法解码图像</string>
     <string name="title_no_search">在服务器上搜索对该账户不可用</string>
+    <string name="title_too_large">消息太大，无法重新重新格式化，请尝试通过全屏图标使用原始消息视图</string>
     <string name="title_unused_inline">未使用的内联图像将在发送时被删除</string>
     <string name="title_accross_remark">App会再次下载在不同账户间移动的消息，这将导致额外的数据使用</string>
     <string name="title_raw_saved">原始消息已保存</string>
@@ -670,6 +674,7 @@
     <string name="title_signature_valid">消息签名有效</string>
     <string name="title_signature_unconfirmed">消息签名有效但未确认</string>
     <string name="title_signature_invalid">消息签名无效</string>
+    <string name="title_signature_certificate_invalid">证书链无效</string>
     <string name="title_signature_sender">发件人地址：</string>
     <string name="title_signature_email">签名地址</string>
     <string name="title_signature_mismatch">发件人和签名的电子邮件地址不匹配</string>

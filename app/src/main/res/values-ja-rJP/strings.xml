@@ -103,6 +103,7 @@
     <string name="title_setup_quick_imap">メッセージを受信する為のIMAPサーバ</string>
     <string name="title_setup_quick_smtp">メッセージを送信する為のSMTPサーバ</string>
     <string name="title_setup_wizard">ウィザード</string>
+    <string name="title_setup_wizard_multiple">インストールウィザードを複数回使用し複数アカウントをセットアップ出来ます</string>
     <string name="title_setup_wizard_remark">受信トレイに戻る</string>
     <string name="title_setup_other">他のプロバイダー</string>
     <string name="title_setup_gmail_support">Androidがアプリの署名をチェックする為、Googleアカウントの承認は公式バージョンでのみ機能します</string>
@@ -349,8 +350,10 @@
     <string name="title_advanced_layout_hint">よりコンパクトなレイアウトへの切り替えとメッセージのテキストサイズの変更はメッセージビューの上部アクションバーメニューで行えます</string>
     <string name="title_advanced_date_hint">時間で並び替えをしている場合にのみ、メッセージは日付でグループ化されます</string>
     <string name="title_advanced_threading_hint">互いに関連するグループメッセージ</string>
+    <string name="title_advanced_gravatars_hint">プライバシーリスクが有るかもしれません</string>
     <string name="title_advanced_name_email_hint">無効にすると利用可能な場合にのみ名前が表示されます</string>
     <string name="title_advanced_preview_hint">メッセージテキストがダウンロードされた場合にのみ使用可能</string>
+    <string name="title_advanced_preview_issue">行数が複数の場合、一部のAndroidバージョンバグの為スクロールが遅くなる可能性が有ります</string>
     <string name="title_advanced_inline_hint">インライン画像はメッセージに含まれる画像です</string>
     <string name="title_advanced_autoexpand_hint">会話内のメッセージが1つだけの場合、又は未読メッセージが1つだけの場合に自動的にメッセージを開きます</string>
     <string name="title_advanced_autoseen_hint">開いたメッセージを自動的に既読にする機能は、個々のアカウント設定で無効に出来ます</string>
@@ -566,6 +569,7 @@
     <string name="title_no_format">受信したメッセージを引用しています</string>
     <string name="title_no_image">画像をデコード出来ませんでした</string>
     <string name="title_no_search">サーバでの検索はこのアカウントでは利用出来ません</string>
+    <string name="title_too_large">再フォーマットするには大き過ぎるメッセージです。代わりにフルスクリーンアイコンを使用し元のメッセージビューを使用して下さい</string>
     <string name="title_unused_inline">未使用のインライン画像は送信時に削除されます</string>
     <string name="title_accross_remark">アカウント間で移動されたメッセージは再度ダウンロードされる為、余分なデータが使用されます</string>
     <string name="title_raw_saved">素のメッセージを保存しました</string>
@@ -667,6 +671,7 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_signature_valid">メッセージ署名が有効</string>
     <string name="title_signature_unconfirmed">メッセージ署名は有効ですが確認されていません</string>
     <string name="title_signature_invalid">メッセージ署名が無効です</string>
+    <string name="title_signature_certificate_invalid">証明書が無効</string>
     <string name="title_signature_sender">差出人のメールアドレス</string>
     <string name="title_signature_email">署名のアドレス</string>
     <string name="title_signature_mismatch">送信者のメールアドレスと署名が一致しません</string>

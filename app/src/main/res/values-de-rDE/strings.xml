@@ -3,10 +3,10 @@
 <resources>
     <string name="app_search">FairEmail-Suche</string>
     <string name="app_changelog">Änderungsprotokoll</string>
-    <string name="app_welcome">FairEmail ist eine Open Source E-Mail-App mit dem Fokus auf Privatsphäre und Sicherheit. Aus diesem Grund können einige Funktionen anders funktionieren als Sie es gewohnt sind.</string>
+    <string name="app_welcome">FairEmail ist eine Open-Source-E-Mail-App, die sich auf Privatsphäre und Sicherheit konzentriert. Aus diesem Grund könnten einige Dinge anders funktionieren, als Sie es gewohnt sind.</string>
     <string name="app_limitations">Beispielsweise werden Nachrichten automatisch neu formatiert um unsichere Elemente zu entfernen und die Lesbarkeit zu erhöhen. Um die Sicherheit zusätzlich zu erhöhen, muss das Öffnen von Links vorab bestätigt werden.</string>
     <string name="app_crash">FairEmail wird auf diesem Gerät nicht unterstützt, da Fehler in der benutzten Android-Version Abstürze verursachen</string>
-    <string name="app_exit">„Zurück” erneut drücken, um zu beenden</string>
+    <string name="app_exit">Zum Beenden erneut „Zurück” drücken</string>
     <string name="channel_service">Dienst</string>
     <string name="channel_send">Senden</string>
     <string name="channel_notification">Benachrichtigungen</string>
@@ -115,6 +115,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_quick_imap">IMAP-Server für das Empfangen von Nachrichten</string>
     <string name="title_setup_quick_smtp">SMTP-Server zum Senden von Nachrichten</string>
     <string name="title_setup_wizard">Assistent</string>
+    <string name="title_setup_wizard_multiple">Der Installationsassistent kann mehrfach verwendet werden, um mehrere Konten einzurichten</string>
     <string name="title_setup_wizard_remark">„Zurück” führt zum Posteingang</string>
     <string name="title_setup_other">Anderer Anbieter</string>
     <string name="title_setup_gmail_support">Die Autorisierung von Google-Konten funktioniert nur in offiziellen Versionen, weil Android die App-Signatur überprüft</string>
@@ -180,7 +181,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_setup_theme_reverse">Farben umkehren</string>
     <string name="title_setup_theme_dark">Dunkler Hintergrund</string>
     <string name="title_setup_theme_black_background">Schwarzer Hintergrund</string>
-    <string name="title_setup_theme_system">System-Design</string>
+    <string name="title_setup_theme_system">Wie System-Design</string>
     <string name="title_setup_theme_system_hint">Das System-Design wird abhängig von der Tageszeit automatisch zwischen hell und dunkel wechseln, falls von Android unterstützt</string>
     <string name="title_setup_advanced">Erweitert</string>
     <string name="title_setup_options">Optionen</string>
@@ -366,6 +367,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_gravatars_hint">Es könnte ein Datenschutzrisiko geben</string>
     <string name="title_advanced_name_email_hint">Wenn deaktiviert, werden nur Namen angezeigt, sofern verfügbar</string>
     <string name="title_advanced_preview_hint">Nur verfügbar, wenn der E-Mail-Text heruntergeladen wurde</string>
+    <string name="title_advanced_preview_issue">Scrollen kann aufgrund eines Fehlers in einigen Android-Versionen langsam sein, wenn die Anzahl der Zeilen mehr als eine ist</string>
     <string name="title_advanced_inline_hint">Eingebettete Grafiken sind Grafiken, die innerhalb der Nachricht enthalten sind</string>
     <string name="title_advanced_autoexpand_hint">Eine (ungelesene) Nachricht wird automatisch geöffnet</string>
     <string name="title_advanced_autoseen_hint">Das automatische Markieren von Nachrichten bei ihrer Erweiterung als gelesen kann in den einzelnen Kontoeinstellungen deaktiviert werden</string>
@@ -582,6 +584,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_no_format">Die ursprünglich empfangene Nachricht wird miteinbezogen</string>
     <string name="title_no_image">Bild konnte nicht dekodiert werden</string>
     <string name="title_no_search">Die Suche auf dem Server ist für dieses Konto nicht verfügbar</string>
+    <string name="title_too_large">Nachricht zu groß zum Reformatieren, versuche stattdessen die Original-Nachrichtenansicht über das Vollbildsymbol zu verwenden</string>
     <string name="title_unused_inline">Ungenutzte Inline-Bilder werden beim Senden entfernt</string>
     <string name="title_accross_remark">E-Mails, die über unterschiedliche Konten verschoben werden, werden erneut heruntergeladen, was zu einem erhöhtem Datenverbrauch führt</string>
     <string name="title_raw_saved">Rohdaten gespeichert</string>
@@ -684,6 +687,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_signature_valid">Gültige Nachrichtensignatur</string>
     <string name="title_signature_unconfirmed">Die Signatur der Nachricht ist zwar gültig, aber nicht bestätigt</string>
     <string name="title_signature_invalid">Ungültige Nachrichtensignatur</string>
+    <string name="title_signature_certificate_invalid">Zertifikatskette ungültig</string>
     <string name="title_signature_sender">E-Mail-Adresse des Absenders</string>
     <string name="title_signature_email">E-Mail-Adresse der Unterschrift</string>
     <string name="title_signature_mismatch">Die E-Mail-Adresse des Absenders und der Signatur stimmen nicht überein</string>

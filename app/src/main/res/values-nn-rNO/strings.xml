@@ -116,6 +116,7 @@
     <string name="title_setup_quick_imap">IMAP-serveren til å motta meldinger</string>
     <string name="title_setup_quick_smtp">SMTP-server for å sende meldinger</string>
     <string name="title_setup_wizard">Veiviser</string>
+    <string name="title_setup_wizard_multiple">Installasjonsveiviseren kan brukes flere ganger for å sette opp flere kontoer</string>
     <string name="title_setup_wizard_remark">Gå \'tilbake\' for å gå til innboksen</string>
     <string name="title_setup_other">Annen leverandør</string>
     <string name="title_setup_gmail_support">Å autorisere Google kontoer fungerer bare i offisielle versjoner fordi Android sjekker appens signatur</string>
@@ -367,6 +368,7 @@
     <string name="title_advanced_gravatars_hint">Det kan være en personvernrisiko</string>
     <string name="title_advanced_name_email_hint">Når deaktivert, vil bare navn bli vist når det er tilgjengelig</string>
     <string name="title_advanced_preview_hint">Kun tilgjengelig når meldingstekst ble lastet ned</string>
+    <string name="title_advanced_preview_issue">Rullingen kan gå tregt på grunn av en feil i noen Android-versjoner når antall linjer er mer enn én</string>
     <string name="title_advanced_inline_hint">Innebygde bilder er bilder som er inkludert i meldingen</string>
     <string name="title_advanced_autoexpand_hint">Åpne automatisk melding når det bare er én melding eller bare en ulest melding i en samtale</string>
     <string name="title_advanced_autoseen_hint">Automatisk merking av meldinger som lest ved utvidelse, kan deaktiveres i de enkelte kontoinnstillingene</string>
@@ -582,6 +584,7 @@
     <string name="title_no_format">Den opprinnelig mottatte meldingen vil bli inkludert</string>
     <string name="title_no_image">Bildet kunne ikke dekodes</string>
     <string name="title_no_search">Søk på serveren er ikke tilgjengelig for denne kontoen</string>
+    <string name="title_too_large">Meldingen er for stor til å formatere på nytt, prøv å bruke den originale meldingsvisningen via ikonet på full skjerm i stedet</string>
     <string name="title_unused_inline">Ubrukte inline bilder blir fjernet ved sending</string>
     <string name="title_accross_remark">Meldinger som er flyttet over kontoer, lastes ned igjen, noe som resulterer i ekstra databruk</string>
     <string name="title_raw_saved">Rå melding lagret</string>
@@ -683,6 +686,7 @@ Dette vil bidra til å opprettholde en balanse mellom ugunstige og gunstige anme
     <string name="title_signature_valid">Meldings signatur gyldig</string>
     <string name="title_signature_unconfirmed">Meldingssignatur er gyldig, men ikke bekreftet</string>
     <string name="title_signature_invalid">Meldings signatur ugyldig</string>
+    <string name="title_signature_certificate_invalid">Sertifikatkjeden er ugyldig</string>
     <string name="title_signature_sender">Avsenders adresse</string>
     <string name="title_signature_email">Signaturens adresse</string>
     <string name="title_signature_mismatch">E-postadressen til avsenderen og signaturen stemmer ikke overens</string>

@@ -116,6 +116,7 @@
     <string name="title_setup_quick_imap">Servidor IMAP para recibir mensajes</string>
     <string name="title_setup_quick_smtp">Servidor SMTP para enviar mensajes</string>
     <string name="title_setup_wizard">Asistente</string>
+    <string name="title_setup_wizard_multiple">El asistente de instalación puede utilizarse varias veces para configurar varias cuentas</string>
     <string name="title_setup_wizard_remark">Ir \'atrás\' para ir a la bandeja de entrada</string>
     <string name="title_setup_other">Otro proveedor</string>
     <string name="title_setup_gmail_support">La autorización de cuentas de Google sólo funcionará en versiones oficiales ya que Android comprueba la firma de la aplicación</string>
@@ -367,6 +368,7 @@
     <string name="title_advanced_gravatars_hint">Puede haber un riesgo para la privacidad</string>
     <string name="title_advanced_name_email_hint">Si está desactivado, solo se mostrarán los nombres cuando estén disponibles</string>
     <string name="title_advanced_preview_hint">Sólo disponible cuando el texto del mensaje fue descargado</string>
+    <string name="title_advanced_preview_issue">El desplazamiento puede ser lento debido a un error en algunas versiones de Android cuando el número de líneas es más de una</string>
     <string name="title_advanced_inline_hint">Las imágenes embebidas son imágenes incluídas en el mensaje</string>
     <string name="title_advanced_autoexpand_hint">Abrir mensaje automáticamente cuando haya solo un mensaje o uno no leído en una conversación</string>
     <string name="title_advanced_autoseen_hint">El marcado automático de los mensajes como leídos al expandirlos se puede desactivar en la configuración individual de la cuenta</string>
@@ -582,6 +584,7 @@
     <string name="title_no_format">El mensaje recibido originalmente será incluido</string>
     <string name="title_no_image">La imagen no se pudo decodificar</string>
     <string name="title_no_search">La búsqueda en el servidor no está disponible para esta cuenta</string>
+    <string name="title_too_large">El mensaje es demasiado grande para reformatearlo, intente usar la vista original del mensaje a través del icono de pantalla completa</string>
     <string name="title_unused_inline">Las imágenes embebidas no usadas serán eliminadas al enviar</string>
     <string name="title_accross_remark">Los mensajes movidos a otras cuentas serán descargados nuevamente causando uso adicional de datos</string>
     <string name="title_raw_saved">Mensaje raw guardado</string>
@@ -684,6 +687,7 @@
     <string name="title_signature_valid">Firma de mensaje válida</string>
     <string name="title_signature_unconfirmed">Firma del mensaje válida pero no confirmada</string>
     <string name="title_signature_invalid">Firma de mensaje no válida</string>
+    <string name="title_signature_certificate_invalid">Cadena de certificado inválida</string>
     <string name="title_signature_sender">Dirección del remitente</string>
     <string name="title_signature_email">Dirección de la firma</string>
     <string name="title_signature_mismatch">La dirección de correo electrónico del remitente y la firma no coinciden</string>
