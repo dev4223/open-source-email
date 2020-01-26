@@ -1082,6 +1082,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cowner.stop();
 
             tvSubject.setVisibility(View.VISIBLE);
+            tvKeywords.setVisibility(View.VISIBLE);
             paddingAddressBottom.setMinimumHeight(0);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
@@ -1349,22 +1350,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else
                 tvSubjectEx.setTypeface(Typeface.DEFAULT);
 
-            // Flags
-            tvFlags.setText(debug ? message.flags : null);
-            tvFlags.setVisibility(show_addresses && debug ? View.VISIBLE : View.GONE);
-
-            // Keywords
-            tvKeywordsEx.setText(message.keywords.length > 0 ? TextUtils.join(" ", message.keywords) : null);
-            tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
-            
             // dev4223: show Flags and Keywords dependand on show addresses
             paddingAddressBottom.setMinimumHeight(show_addresses ? (compact ? 18 : 36) : 0);
             grpAddressMeta.setVisibility(View.VISIBLE);
-            if(BuildConfig.DEBUG || message.keywords.length > 0) {
+            if(debug || message.keywords.length > 0) {
                 grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             } else {
                 grpAddressMetaBottom.setVisibility(View.GONE);
             }
+
+            // Flags
+            tvFlags.setVisibility(show_addresses && debug ? View.VISIBLE : View.GONE);
+            tvFlags.setText(debug ? message.flags : null);
+
+            // Keywords
+            tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+            tvKeywordsEx.setText(TextUtils.join(" ", message.keywords));
 
             // Headers
             if (show_headers && message.headers != null)
