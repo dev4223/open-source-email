@@ -1356,7 +1356,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Keywords
             tvKeywordsEx.setText(message.keywords.length > 0 ? TextUtils.join(" ", message.keywords) : null);
             tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
-
+            
             // dev4223: show Flags and Keywords dependand on show addresses
             paddingAddressBottom.setMinimumHeight(show_addresses ? (compact ? 18 : 36) : 0);
             grpAddressMeta.setVisibility(View.VISIBLE);
