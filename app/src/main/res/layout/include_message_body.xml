@@ -167,7 +167,7 @@
         android:id="@+id/grpAddressMetaBottom"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:constraint_referenced_ids="tvFlags,tvKeywords" />
+        app:constraint_referenced_ids="tvFlags,tvKeywordsEx" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpDownloading"
