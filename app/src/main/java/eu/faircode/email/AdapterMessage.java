@@ -1240,8 +1240,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
             ibAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
 
-            // dev4223: if expanded dont show subjects and anwsered-icon
+            // dev4223: if expanded dont show subjects, keywords and anwsered-icon
             tvSubject.setVisibility(View.GONE);
+            tvKeywords.setVisibility(View.GONE);
             if(compact) {
                 ivAnswered.setVisibility(View.GONE);
             }
