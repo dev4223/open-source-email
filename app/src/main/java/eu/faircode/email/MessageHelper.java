@@ -48,6 +48,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -629,7 +630,9 @@ public class MessageHelper {
     }
 
     String[] getKeywords() throws MessagingException {
-        return imessage.getFlags().getUserFlags();
+        List<String> keywords = Arrays.asList(imessage.getFlags().getUserFlags());
+        Collections.sort(keywords);
+        return keywords.toArray(new String[0]);
     }
 
     String getMessageID() throws MessagingException {
@@ -751,7 +754,8 @@ public class MessageHelper {
             int sp = header.indexOf(" ");
             if (sp >= 0)
                 header = header.substring(0, sp); // "2 (High)"
-            header = header.trim();
+
+            header = header.replaceAll("[^A-Za-z0-9\\-]", "");
         }
 
         if ("high".equalsIgnoreCase(header) ||

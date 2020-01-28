@@ -138,7 +138,7 @@
     <string name="title_setup_quick_imap">IMAP-сервер для получения сообщений</string>
     <string name="title_setup_quick_smtp">SMTP-сервер для отправки сообщений</string>
     <string name="title_setup_wizard">Мастер</string>
-    <string name="title_setup_wizard_multiple">Мастер установки может быть использован неоднократно для настройки разных аккаунтов</string>
+    <string name="title_setup_wizard_multiple">Мастер установки может быть использован неоднократно для настройки разных учётных записей</string>
     <string name="title_setup_wizard_remark">Переход \"назад\" приводит в папку \"Входящие\"</string>
     <string name="title_setup_other">Другой провайдер</string>
     <string name="title_setup_gmail_support">Авторизация учётных записей Google будет работать только в официальных версиях, так как Android проверяет подпись приложения</string>
@@ -241,6 +241,7 @@
     <string name="title_advanced_prefix_once">Добавлять только один префикс темы при ответе или пересылке</string>
     <string name="title_advanced_extended_reply">Использовать расширенный заголовок для ответа/пересылки</string>
     <string name="title_advanced_quote_reply">Цитировать текст при ответе</string>
+    <string name="title_advanced_signature_end">Добавлять подпись после цитаты/пересылаемого сообщения</string>
     <string name="title_advanced_plain_only">По умолчанию отправлять простым текстом</string>
     <string name="title_advanced_usenet_signature">Стиль подписи Usenet</string>
     <string name="title_advanced_resize_images">Автоматически изменять размер встроенных изображений</string>
@@ -280,6 +281,7 @@
     <string name="title_advanced_subject_top">Показывать тему выше отправителя</string>
     <string name="title_advanced_subject_italic">Показывать тему курсивом</string>
     <string name="title_advanced_subject_elipsed">При необходимости сокращать тему</string>
+    <string name="title_advanced_keywords">Показывать ключевые слова в заголовке сообщения</string>
     <string name="title_advanced_flags">Показывать метки избранного</string>
     <string name="title_advanced_flags_background">Цветной фон вместо цветных меток избранного</string>
     <string name="title_advanced_preview">Показывать предпросмотр сообщения</string>
@@ -390,7 +392,7 @@
     <string name="title_advanced_gravatars_hint">Возможен риск нарушения конфиденциальности</string>
     <string name="title_advanced_name_email_hint">Если отключено, будут показаны только имена (при наличии)</string>
     <string name="title_advanced_preview_hint">Доступно, только если был загружен текст сообщения</string>
-    <string name="title_advanced_preview_issue">Прокрутка может быть медленной из-за ошибки в некоторых версиях Android, когда строк больше чем одна</string>
+    <string name="title_advanced_preview_issue">Прокрутка может быть медленной из-за ошибки в некоторых версиях Android, когда строк больше одной</string>
     <string name="title_advanced_inline_hint">Встроенные изображения - это изображения, включённые в сообщение</string>
     <string name="title_advanced_autoexpand_hint">Автоматически открывать сообщение, когда оно только одно или только одно непрочитанное сообщение в диалоге</string>
     <string name="title_advanced_autoseen_hint">Автоматическая пометка сообщений прочитанными при развёртывании может быть отключена в настройках учётной записи</string>
@@ -920,6 +922,8 @@
     <string name="title_enabled">Включено</string>
     <string name="title_executing">Выполнение</string>
     <string name="title_completed">Завершено</string>
+    <string name="title_clipboard_copy">Копировать в буфер</string>
+    <string name="title_clipboard_copied">Скопировано в буфер</string>
     <string name="title_ask_what">Спросить о действии</string>
     <string name="title_no_ask_again">Больше не спрашивать</string>
     <string name="title_no_ask_for_again">Больше не спрашивать для %1$s</string>

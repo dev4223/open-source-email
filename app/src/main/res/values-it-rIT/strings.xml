@@ -218,6 +218,7 @@
     <string name="title_advanced_prefix_once">Prefissa l\'oggetto solo una volta per rispondere o inoltrare</string>
     <string name="title_advanced_extended_reply">Usa intestazione estesa di risposta/inoltro</string>
     <string name="title_advanced_quote_reply">Cita il testo nella risposta</string>
+    <string name="title_advanced_signature_end">Aggiungi firma dopo il messaggio citato/inoltrato</string>
     <string name="title_advanced_plain_only">Invia solo in testo semplice per impostazione predefinita</string>
     <string name="title_advanced_usenet_signature">Convenzione firma Usenet</string>
     <string name="title_advanced_resize_images">Ridimensiona automaticamente le immagini incorporate</string>
@@ -257,6 +258,7 @@
     <string name="title_advanced_subject_top">Mostra oggetto sopra il mittente</string>
     <string name="title_advanced_subject_italic">Mostra soggetto in corsivo</string>
     <string name="title_advanced_subject_elipsed">Quando necessario, accorcia l\'oggetto</string>
+    <string name="title_advanced_keywords">Mostra parole chiave nell\'intestazione del messaggio</string>
     <string name="title_advanced_flags">Mostra stelle</string>
     <string name="title_advanced_flags_background">Mostra lo sfondo colorato invece delle stelle colorate</string>
     <string name="title_advanced_preview">Mostra l\'anteprima del messaggio</string>
@@ -896,6 +898,8 @@
     <string name="title_enabled">Abilitato</string>
     <string name="title_executing">Esecuzione</string>
     <string name="title_completed">Completato</string>
+    <string name="title_clipboard_copy">Copia negli appunti</string>
+    <string name="title_clipboard_copied">Copiato negli appunti</string>
     <string name="title_ask_what">Chiedi cosa fare</string>
     <string name="title_no_ask_again">Non chiedere di nuovo</string>
     <string name="title_no_ask_for_again">Non chiedere più per %1$s</string>

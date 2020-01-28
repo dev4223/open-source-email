@@ -27,6 +27,8 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -61,6 +63,7 @@ import android.text.format.DateUtils;
 import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.LinkMovementMethod;
 import android.text.style.DynamicDrawableSpan;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.URLSpan;
@@ -122,6 +125,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.github.chrisbanes.photoview.PhotoView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
@@ -177,6 +181,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private Context context;
     private LifecycleOwner owner;
     private LayoutInflater inflater;
+    private SharedPreferences prefs;
     private boolean accessibility;
 
     private boolean suitable;
@@ -209,6 +214,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean subject_italic;
     private String subject_ellipsize;
 
+    private boolean keywords_header;
     private boolean flags;
     private boolean flags_background;
     private boolean preview;
@@ -257,6 +263,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             "gclid",
             "fbclid"
+    ));
+
+    // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
+    private static final List<String> IMAP_KEYWORDS_BLACKLIST = Collections.unmodifiableList(Arrays.asList(
+            "$MDNSent".toLowerCase(),
+            "$Forwarded".toLowerCase(),
+            "$SubmitPending".toLowerCase(),
+            "$Submitted".toLowerCase(),
+            "$Junk".toLowerCase(),
+            "$NotJunk".toLowerCase(),
+            "$recent".toLowerCase(),
+            "DTAG_document".toLowerCase(),
+            "DTAG_image".toLowerCase(),
+            "$X-Me-Annot-1".toLowerCase(),
+            "$X-Me-Annot-2".toLowerCase()
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
@@ -359,6 +380,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private Group grpDownloading;
 
         private TextView tvCalendarSummary;
+        private TextView tvCalendarDescription;
+        private TextView tvCalendarLocation;
         private TextView tvCalendarStart;
         private TextView tvCalendarEnd;
         private TextView tvAttendees;
@@ -496,6 +519,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvNoInternetHeaders = vsBody.findViewById(R.id.tvNoInternetHeaders);
 
             tvCalendarSummary = vsBody.findViewById(R.id.tvCalendarSummary);
+            tvCalendarDescription = vsBody.findViewById(R.id.tvCalendarDescription);
+            tvCalendarLocation = vsBody.findViewById(R.id.tvCalendarLocation);
             tvCalendarStart = vsBody.findViewById(R.id.tvCalendarStart);
             tvCalendarEnd = vsBody.findViewById(R.id.tvCalendarEnd);
             tvAttendees = vsBody.findViewById(R.id.tvAttendees);
@@ -889,8 +914,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // Line 2
             tvSubject.setText(message.subject);
 
-            tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
-            tvKeywords.setText(TextUtils.join(" ", message.keywords));
+            if (keywords_header) {
+                SpannableStringBuilder keywords = new SpannableStringBuilder();
+                for (int i = 0; i < message.keywords.length; i++) {
+                    String k = message.keywords[i].toLowerCase();
+                    if (!IMAP_KEYWORDS_BLACKLIST.contains(k)) {
+                        if (keywords.length() > 0)
+                            keywords.append(" ");
+
+                        keywords.append(message.keywords[i]);
+
+                        if (message.keyword_colors[i] != null) {
+                            int len = keywords.length();
+                            keywords.setSpan(
+                                    new ForegroundColorSpan(message.keyword_colors[i]),
+                                    len - message.keywords[i].length(), len,
+                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+                    }
+                }
+
+                tvKeywords.setVisibility(keywords.length() > 0 ? View.VISIBLE : View.GONE);
+                tvKeywords.setText(keywords);
+            } else
+                tvKeywords.setVisibility(View.GONE);
 
             // Line 3
             int icon = (message.drafts > 0
@@ -1126,11 +1173,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbHeaders.setVisibility(View.GONE);
             tvNoInternetHeaders.setVisibility(View.GONE);
 
-            tvCalendarSummary.setVisibility(View.GONE);
-            tvCalendarStart.setVisibility(View.GONE);
-            tvCalendarEnd.setVisibility(View.GONE);
-            tvAttendees.setVisibility(View.GONE);
-            pbCalendarWait.setVisibility(View.GONE);
+            clearCalendar();
 
             cbInline.setVisibility(View.GONE);
             btnSaveAttachments.setVisibility(View.GONE);
@@ -1152,6 +1195,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbBody.setVisibility(View.GONE);
             tvNoInternetBody.setVisibility(View.GONE);
             grpDownloading.setVisibility(View.GONE);
+        }
+
+        private void clearCalendar() {
+            tvCalendarSummary.setVisibility(View.GONE);
+            tvCalendarDescription.setVisibility(View.GONE);
+            tvCalendarLocation.setVisibility(View.GONE);
+            tvCalendarStart.setVisibility(View.GONE);
+            tvCalendarEnd.setVisibility(View.GONE);
+            tvAttendees.setVisibility(View.GONE);
+            pbCalendarWait.setVisibility(View.GONE);
         }
 
         private void bindFlagged(TupleMessageEx message, boolean expanded) {
@@ -1488,7 +1541,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (!message.content)
                 return;
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             if (message.from != null)
                 for (Address sender : message.from) {
                     String from = ((InternetAddress) sender).getAddress();
@@ -1693,7 +1745,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (inline || show_images)
                             HtmlHelper.embedInlineImages(context, message.id, document);
 
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
                         if (disable_tracking)
                             HtmlHelper.removeTrackingPixels(context, document);
@@ -1812,7 +1863,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     // Show attachments
                     cowner.start();
 
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
                     if (auto_decrypt &&
                             (EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) ||
@@ -1888,11 +1938,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             adapterAttachment.set(a);
 
             if (!calendar) {
-                tvCalendarSummary.setVisibility(View.GONE);
-                tvCalendarStart.setVisibility(View.GONE);
-                tvCalendarEnd.setVisibility(View.GONE);
-                tvAttendees.setVisibility(View.GONE);
-                pbCalendarWait.setVisibility(View.GONE);
+                clearCalendar();
                 grpCalendar.setVisibility(View.GONE);
                 grpCalendarResponse.setVisibility(View.GONE);
             }
@@ -1962,11 +2008,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (icalendar == null ||
                             icalendar.getMethod() == null ||
                             icalendar.getEvents().size() == 0) {
-                        tvCalendarSummary.setVisibility(View.GONE);
-                        tvCalendarStart.setVisibility(View.GONE);
-                        tvCalendarEnd.setVisibility(View.GONE);
-                        tvAttendees.setVisibility(View.GONE);
-                        pbCalendarWait.setVisibility(View.GONE);
+                        clearCalendar();
                         grpCalendar.setVisibility(View.GONE);
                         grpCalendarResponse.setVisibility(View.GONE);
                         return;
@@ -1976,10 +2018,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     VEvent event = icalendar.getEvents().get(0);
 
-                    String summary = event.getSummary() == null ? null : event.getSummary().getValue();
+                    String summary = (event.getSummary() == null ? null : event.getSummary().getValue());
+                    String description = (event.getDescription() == null ? null : event.getDescription().getValue());
+                    String location = (event.getLocation() == null ? null : event.getLocation().getValue());
 
-                    ICalDate start = event.getDateStart() == null ? null : event.getDateStart().getValue();
-                    ICalDate end = event.getDateEnd() == null ? null : event.getDateEnd().getValue();
+                    ICalDate start = (event.getDateStart() == null ? null : event.getDateStart().getValue());
+                    ICalDate end = (event.getDateEnd() == null ? null : event.getDateEnd().getValue());
 
                     List<String> attendee = new ArrayList<>();
                     for (Attendee a : event.getAttendees()) {
@@ -2000,6 +2044,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     tvCalendarSummary.setText(summary);
                     tvCalendarSummary.setVisibility(summary == null ? View.GONE : View.VISIBLE);
+
+                    tvCalendarDescription.setText(description);
+                    tvCalendarDescription.setVisibility(description == null ? View.GONE : View.VISIBLE);
+
+                    tvCalendarLocation.setText(location);
+                    tvCalendarLocation.setVisibility(location == null ? View.GONE : View.VISIBLE);
 
                     tvCalendarStart.setText(start == null ? null : DTF.format(start.getTime()));
                     tvCalendarStart.setVisibility(start == null ? View.GONE : View.VISIBLE);
@@ -2057,11 +2107,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (action == R.id.ibCalendar) {
                                 String summary = (event.getSummary() == null ? null : event.getSummary().getValue());
                                 String description = (event.getDescription() == null ? null : event.getDescription().getValue());
+                                String location = (event.getLocation() == null ? null : event.getLocation().getValue());
 
                                 ICalDate start = (event.getDateStart() == null ? null : event.getDateStart().getValue());
                                 ICalDate end = (event.getDateEnd() == null ? null : event.getDateEnd().getValue());
-
-                                String location = (event.getLocation() == null ? null : event.getLocation().getValue());
 
                                 List<String> attendee = new ArrayList<>();
                                 for (Attendee a : event.getAttendees()) {
@@ -2073,7 +2122,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 // https://developer.android.com/guide/topics/providers/calendar-provider.html#intent-insert
                                 Intent intent = new Intent(Intent.ACTION_INSERT)
                                         .setData(CalendarContract.Events.CONTENT_URI)
-                                        .putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
+                                        .putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
+                                        .putExtra(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED);
 
                                 if (summary != null)
                                     intent.putExtra(CalendarContract.Events.TITLE, summary);
@@ -2081,16 +2131,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 if (description != null)
                                     intent.putExtra(CalendarContract.Events.DESCRIPTION, description);
 
+                                if (location != null)
+                                    intent.putExtra(CalendarContract.Events.EVENT_LOCATION, location);
+
                                 if (start != null)
                                     intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, start.getTime());
 
                                 if (end != null)
                                     intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, end.getTime());
-
-                                if (location != null)
-                                    intent.putExtra(CalendarContract.Events.EVENT_LOCATION, location);
-
-                                intent.putExtra(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED);
 
                                 if (attendee.size() > 0)
                                     intent.putExtra(Intent.EXTRA_EMAIL, TextUtils.join(",", attendee));
@@ -2100,17 +2148,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             // https://tools.ietf.org/html/rfc5546#section-4.2.2
                             VEvent ev = new VEvent();
+
                             ev.setOrganizer(event.getOrganizer());
+
                             ev.setUid(event.getUid());
                             if (event.getSequence() != null)
                                 ev.setSequence(event.getSequence());
+
+                            ev.setSummary(event.getSummary());
+                            ev.setDescription(event.getDescription());
+                            ev.setLocation(event.getLocation());
+
                             if (event.getDateStart() != null)
                                 ev.setDateStart(event.getDateStart());
                             if (event.getDateEnd() != null)
                                 ev.setDateEnd(event.getDateEnd());
-                            ev.setSummary(event.getSummary());
-                            ev.setDescription(event.getDescription());
-                            ev.setLocation(event.getLocation());
 
                             InternetAddress to = (InternetAddress) message.to[0];
                             Attendee attendee = new Attendee(to.getPersonal(), to.getAddress());
@@ -2322,7 +2374,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             .putExtra("id", message.id)
                             .putExtra("found", viewType == ViewType.SEARCH);
 
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean doubletap = prefs.getBoolean("doubletap", false);
 
                     if (!doubletap || message.folderReadOnly || EntityFolder.OUTBOX.equals(message.folderType)) {
@@ -2822,8 +2873,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onShow(final TupleMessageEx message, boolean full) {
-            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
             boolean current = properties.getValue(full ? "full" : "images", message.id);
             boolean asked = properties.getValue(full ? "full_asked" : "images_asked", message.id);
             if (current || asked) {
@@ -3631,38 +3680,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onMenuManageKeywords(TupleMessageEx message) {
             Bundle args = new Bundle();
             args.putLong("id", message.id);
-            args.putStringArray("keywords", message.keywords);
 
-            new SimpleTask<EntityFolder>() {
-                @Override
-                protected EntityFolder onExecute(Context context, Bundle args) {
-                    long id = args.getLong("id");
-
-                    DB db = DB.getInstance(context);
-                    EntityMessage message = db.message().getMessage(id);
-                    if (message == null)
-                        return null;
-
-                    return db.folder().getFolder(message.folder);
-                }
-
-                @Override
-                protected void onExecuted(final Bundle args, EntityFolder folder) {
-                    if (folder == null)
-                        return;
-
-                    args.putStringArray("fkeywords", folder.keywords);
-
-                    FragmentKeywordManage fragment = new FragmentKeywordManage();
-                    fragment.setArguments(args);
-                    fragment.show(parentFragment.getParentFragmentManager(), "keyword:manage");
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                }
-            }.execute(context, owner, args, "message:keywords");
+            FragmentDialogKeywordManage fragment = new FragmentDialogKeywordManage();
+            fragment.setArguments(args);
+            fragment.show(parentFragment.getParentFragmentManager(), "keyword:manage");
         }
 
         private void onMenuShare(TupleMessageEx message) {
@@ -3729,7 +3750,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putLong("id", message.id);
             args.putBoolean("headers", properties.getValue("headers", message.id));
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             if (prefs.getBoolean("print_html_confirmed", false)) {
                 Intent data = new Intent();
                 data.putExtra("args", args);
@@ -4090,6 +4110,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.context = parentFragment.getContext();
         this.owner = parentFragment.getViewLifecycleOwner();
         this.inflater = LayoutInflater.from(context);
+        this.prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
         this.accessibility = (am != null && am.isEnabled());
@@ -4109,7 +4130,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.textColorSecondary = Helper.resolveColor(context, android.R.attr.textColorSecondary);
         this.colorSubject = Helper.resolveColor(context, R.attr.colorSubject);
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean highlight_unread = prefs.getBoolean("highlight_unread", false);
 
         this.colorUnread = Helper.resolveColor(context, highlight_unread ? R.attr.colorUnreadHighlight : R.attr.colorUnread);
@@ -4144,6 +4164,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         this.subject_italic = prefs.getBoolean("subject_italic", true);
         this.subject_ellipsize = prefs.getString("subject_ellipsize", "middle");
+        this.keywords_header = prefs.getBoolean("keywords_header", false);
         this.flags = prefs.getBoolean("flags", true);
         this.flags_background = prefs.getBoolean("flags_background", false);
         this.preview = prefs.getBoolean("preview", false);
@@ -4212,6 +4233,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     void submitList(PagedList<TupleMessageEx> list) {
         keyPosition.clear();
+
+        if (keywords_header)
+            for (int i = 0; i < list.size(); i++) {
+                TupleMessageEx message = list.get(i);
+                if (message != null)
+                    message.resolveKeywordColors(context);
+            }
+
         differ.submitList(list);
     }
 
@@ -4565,6 +4594,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("duplicate changed id=" + next.id);
                     }
+                    if (!Arrays.equals(prev.keyword_colors, next.keyword_colors)) {
+                        same = false;
+                        Log.i("keyword colors changed id=" + next.id);
+                    }
 
                     return same;
                 }
@@ -4718,7 +4751,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final Uri uri = getArguments().getParcelable("uri");
-            String title = getArguments().getString("title");
+            final String title = getArguments().getString("title");
 
             final Uri sanitized;
             if (uri.isOpaque())
@@ -4743,6 +4776,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_open_link, null);
             TextView tvTitle = dview.findViewById(R.id.tvTitle);
+            ImageButton ibCopy = dview.findViewById(R.id.ibCopy);
             final EditText etLink = dview.findViewById(R.id.etLink);
             TextView tvDifferent = dview.findViewById(R.id.tvDifferent);
             final CheckBox cbSecure = dview.findViewById(R.id.cbSecure);
@@ -4753,6 +4787,20 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final TextView tvHost = dview.findViewById(R.id.tvHost);
             final TextView tvOwner = dview.findViewById(R.id.tvOwner);
             final Group grpOwner = dview.findViewById(R.id.grpOwner);
+
+            ibCopy.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ClipboardManager clipboard =
+                            (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        ClipData clip = ClipData.newPlainText(title, uri.toString());
+                        clipboard.setPrimaryClip(clip);
+
+                        ToastEx.makeText(getContext(), R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
 
             etLink.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -4967,110 +5015,66 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
     }
 
-    public static class FragmentKeywordManage extends FragmentDialogBase {
+    public static class FragmentDialogKeywordManage extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final long id = getArguments().getLong("id");
-            List<String> keywords = Arrays.asList(getArguments().getStringArray("keywords"));
-            List<String> fkeywords = Arrays.asList(getArguments().getStringArray("fkeywords"));
 
-            final List<String> items = new ArrayList<>(keywords);
-            for (String keyword : fkeywords)
-                if (!items.contains(keyword))
-                    items.add(keyword);
+            final View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_keyword_manage, null);
+            final RecyclerView rvKeyword = dview.findViewById(R.id.rvKeyword);
+            final TextView tvPro = dview.findViewById(R.id.tvPro);
+            final FloatingActionButton fabAdd = dview.findViewById(R.id.fabAdd);
+            final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
 
-            Collections.sort(items);
+            rvKeyword.setHasFixedSize(false);
+            final LinearLayoutManager llm = new LinearLayoutManager(getContext());
+            rvKeyword.setLayoutManager(llm);
 
-            final boolean[] selected = new boolean[items.size()];
-            final boolean[] dirty = new boolean[items.size()];
-            for (int i = 0; i < selected.length; i++) {
-                selected[i] = keywords.contains(items.get(i));
-                dirty[i] = false;
-            }
+            final AdapterKeyword adapter = new AdapterKeyword(getContext(), getViewLifecycleOwner());
+            rvKeyword.setAdapter(adapter);
+
+            Helper.linkPro(tvPro);
+
+            fabAdd.setEnabled(ActivityBilling.isPro(getContext()));
+            fabAdd.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", id);
+
+                    FragmentDialogKeywordAdd fragment = new FragmentDialogKeywordAdd();
+                    fragment.setArguments(args);
+                    fragment.show(getParentFragmentManager(), "keyword:add");
+                }
+            });
+
+            pbWait.setVisibility(View.VISIBLE);
+
+            DB db = DB.getInstance(getContext());
+            db.message().liveMessageKeywords(id).observe(getViewLifecycleOwner(), new Observer<TupleKeyword.Persisted>() {
+                @Override
+                public void onChanged(TupleKeyword.Persisted data) {
+                    pbWait.setVisibility(View.GONE);
+                    adapter.set(id, TupleKeyword.from(getContext(), data));
+                }
+            });
 
             return new AlertDialog.Builder(getContext())
                     .setTitle(R.string.title_manage_keywords)
-                    .setMultiChoiceItems(items.toArray(new String[0]), selected, new DialogInterface.OnMultiChoiceClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                            dirty[which] = true;
-                        }
-                    })
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            if (!ActivityBilling.isPro(getContext())) {
-                                startActivity(new Intent(getContext(), ActivityBilling.class));
-                                return;
-                            }
-
-                            Bundle args = new Bundle();
-                            args.putLong("id", id);
-                            args.putStringArray("keywords", items.toArray(new String[0]));
-                            args.putBooleanArray("selected", selected);
-                            args.putBooleanArray("dirty", dirty);
-
-                            new SimpleTask<Void>() {
-                                @Override
-                                protected Void onExecute(Context context, Bundle args) {
-                                    long id = args.getLong("id");
-                                    String[] keywords = args.getStringArray("keywords");
-                                    boolean[] selected = args.getBooleanArray("selected");
-                                    boolean[] dirty = args.getBooleanArray("dirty");
-
-                                    DB db = DB.getInstance(context);
-                                    try {
-                                        db.beginTransaction();
-
-                                        EntityMessage message = db.message().getMessage(id);
-                                        if (message == null)
-                                            return null;
-
-                                        for (int i = 0; i < selected.length; i++)
-                                            if (dirty[i])
-                                                EntityOperation.queue(context, message, EntityOperation.KEYWORD, keywords[i], selected[i]);
-
-                                        db.setTransactionSuccessful();
-                                    } finally {
-                                        db.endTransaction();
-                                    }
-
-                                    ServiceSynchronize.eval(context, "keywords");
-
-                                    return null;
-                                }
-
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    Log.unexpectedError(getParentFragmentManager(), ex);
-                                }
-                            }.execute(getContext(), getActivity(), args, "message:keywords:manage");
-                        }
-                    })
-                    .setNeutralButton(R.string.title_add, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Bundle args = new Bundle();
-                            args.putLong("id", id);
-
-                            FragmentKeywordAdd fragment = new FragmentKeywordAdd();
-                            fragment.setArguments(args);
-                            fragment.show(getParentFragmentManager(), "keyword:add");
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, null)
                     .create();
         }
     }
 
-    public static class FragmentKeywordAdd extends FragmentDialogBase {
+    public static class FragmentDialogKeywordAdd extends FragmentDialogBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final long id = getArguments().getLong("id");
 
-            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_keyword, null);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_keyword_add, null);
             final EditText etKeyword = view.findViewById(R.id.etKeyword);
             etKeyword.setText(null);
 
@@ -5079,11 +5083,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            if (!ActivityBilling.isPro(getContext())) {
-                                startActivity(new Intent(getContext(), ActivityBilling.class));
-                                return;
-                            }
-
                             String keyword = MessageHelper.sanitizeKeyword(etKeyword.getText().toString());
                             if (!TextUtils.isEmpty(keyword)) {
                                 Bundle args = new Bundle();
@@ -5120,7 +5119,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     protected void onException(Bundle args, Throwable ex) {
                                         Log.unexpectedError(getParentFragmentManager(), ex);
                                     }
-                                }.execute(getContext(), getActivity(), args, "message:keyword:add");
+                                }.execute(getContext(), getActivity(), args, "keyword:add");
                             }
                         }
                     })

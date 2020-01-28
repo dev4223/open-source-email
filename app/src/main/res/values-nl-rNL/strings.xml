@@ -219,6 +219,7 @@
     <string name="title_advanced_prefix_once">Prefix onderwerp slechts één keer bij beantwoorden of doorsturen</string>
     <string name="title_advanced_extended_reply">Gebruik uitgebreide kop bij antwoorden/doorsturen</string>
     <string name="title_advanced_quote_reply">Haal beantwoorde tekst aan</string>
+    <string name="title_advanced_signature_end">Handtekening toevoegen na geciteerd/doorgestuurd bericht</string>
     <string name="title_advanced_plain_only">Verstuur standaard alleen tekst</string>
     <string name="title_advanced_usenet_signature">Usenet handtekening conventie</string>
     <string name="title_advanced_resize_images">Automatisch ingesloten afbeeldingen verkleinen</string>
@@ -258,6 +259,7 @@
     <string name="title_advanced_subject_top">Toon onderwerp boven afzender</string>
     <string name="title_advanced_subject_italic">Toon onderwerp cursief</string>
     <string name="title_advanced_subject_elipsed">Wanneer nodig, verkort het onderwerp</string>
+    <string name="title_advanced_keywords">Toon trefwoorden in de berichtkop</string>
     <string name="title_advanced_flags">Toon sterren</string>
     <string name="title_advanced_flags_background">Toon gekleurde achtergrond in plaats van gekleurde sterren</string>
     <string name="title_advanced_preview">Toon berichtvoorbeeld</string>
@@ -898,6 +900,8 @@
     <string name="title_enabled">Ingeschakeld</string>
     <string name="title_executing">Aan het uitvoeren</string>
     <string name="title_completed">Voltooid</string>
+    <string name="title_clipboard_copy">Naar het klembord kopiëren</string>
+    <string name="title_clipboard_copied">Gekopieerd naar het klembord</string>
     <string name="title_ask_what">Vraag wat te doen</string>
     <string name="title_no_ask_again">Dit niet meer vragen</string>
     <string name="title_no_ask_for_again">Vraag dit niet opnieuw voor %1$s</string>
