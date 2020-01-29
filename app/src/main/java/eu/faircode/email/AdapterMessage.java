@@ -1129,7 +1129,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cowner.stop();
 
             tvSubject.setVisibility(View.VISIBLE);
-            tvKeywords.setVisibility(View.VISIBLE);
+            tvKeywords.setVisibility(message.keywords.length > 0 ? View.VISIBLE : View.GONE);
             paddingAddressBottom.setMinimumHeight(0);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
