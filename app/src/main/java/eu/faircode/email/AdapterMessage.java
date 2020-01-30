@@ -248,6 +248,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     // https://github.com/newhouse/url-tracking-stripper
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
+            // https://en.wikipedia.org/wiki/UTM_parameters
             "utm_source",
             "utm_medium",
             "utm_campaign",
@@ -261,8 +262,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             "utm_pubreferrer",
             "utm_swu",
 
-            "gclid",
-            "fbclid"
+            "icid", // Adobe
+            "gclid", // Google
+            "fbclid", // Facebook
+            "igshid", // Instagram
+
+            "mc_cid", // MailChimp
+            "mc_eid", // MailChimp
+
+            "kclickid" // https://support.freespee.com/hc/en-us/articles/202577831-Kenshoo-integration
     ));
 
     // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
@@ -330,6 +338,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibNotifyContact;
         private ImageButton ibAddContact;
 
+        private TextView tvSubmitterTitle;
         private TextView tvFromExTitle;
         private TextView tvToTitle;
         private TextView tvReplyToTitle;
@@ -338,6 +347,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvIdentityTitle;
         private TextView tvSentTitle;
 
+        private TextView tvSubmitter;
         private TextView tvFromEx;
         private TextView tvTo;
         private TextView tvReplyTo;
@@ -492,6 +502,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibNotifyContact = vsBody.findViewById(R.id.ibNotifyContact);
             ibAddContact = vsBody.findViewById(R.id.ibAddContact);
 
+            tvSubmitterTitle = vsBody.findViewById(R.id.tvSubmitterTitle);
             tvFromExTitle = vsBody.findViewById(R.id.tvFromExTitle);
             tvToTitle = vsBody.findViewById(R.id.tvToTitle);
             tvReplyToTitle = vsBody.findViewById(R.id.tvReplyToTitle);
@@ -500,6 +511,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
             tvSentTitle = vsBody.findViewById(R.id.tvSentTitle);
 
+            tvSubmitter = vsBody.findViewById(R.id.tvSubmitter);
             tvFromEx = vsBody.findViewById(R.id.tvFromEx);
             tvTo = vsBody.findViewById(R.id.tvTo);
             tvReplyTo = vsBody.findViewById(R.id.tvReplyTo);
@@ -1149,6 +1161,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibNotifyContact.setVisibility(View.GONE);
             ibAddContact.setVisibility(View.GONE);
 
+            tvSubmitterTitle.setVisibility(View.GONE);
             tvFromExTitle.setVisibility(View.GONE);
             tvToTitle.setVisibility(View.GONE);
             tvReplyToTitle.setVisibility(View.GONE);
@@ -1157,6 +1170,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentityTitle.setVisibility(View.GONE);
             tvSentTitle.setVisibility(View.GONE);
 
+            tvSubmitter.setVisibility(View.GONE);
             tvFromEx.setVisibility(View.GONE);
             tvTo.setVisibility(View.GONE);
             tvReplyTo.setVisibility(View.GONE);
@@ -1327,11 +1341,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibExpanderAddress.setImageLevel(show_addresses ? 0 /* less */ : 1 /* more */);
             ibExpanderAddress.setContentDescription(context.getString(show_addresses ? R.string.title_accessibility_hide_addresses : R.string.title_accessibility_show_addresses));
 
+            String submitter = MessageHelper.formatAddresses(message.submitter);
             String from = MessageHelper.formatAddresses(message.senders);
             String to = MessageHelper.formatAddresses(message.to);
             String replyto = MessageHelper.formatAddresses(message.reply);
             String cc = MessageHelper.formatAddresses(message.cc);
             String bcc = MessageHelper.formatAddresses(message.bcc);
+
+            tvSubmitterTitle.setVisibility(show_addresses && !TextUtils.isEmpty(submitter) ? View.VISIBLE : View.GONE);
+            tvSubmitter.setVisibility(show_addresses && !TextUtils.isEmpty(submitter) ? View.VISIBLE : View.GONE);
+            tvSubmitter.setText(submitter);
 
             tvFromExTitle.setVisibility(show_addresses && !TextUtils.isEmpty(from) ? View.VISIBLE : View.GONE);
             tvFromEx.setVisibility(show_addresses && !TextUtils.isEmpty(from) ? View.VISIBLE : View.GONE);
