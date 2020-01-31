@@ -280,6 +280,7 @@
     <string name="title_advanced_autoscroll">Faire défiler vers le haut lors de la réception de nouveaux messages</string>
     <string name="title_advanced_double_tap">Appuyer deux fois pour marquer le message lu/non lu</string>
     <string name="title_advanced_swipenav">Balayer vers la gauche/droite pour passer à la conversation suivante/précédente</string>
+    <string name="title_advanced_volumenav">Volume haut/bas pour passer à la conversation suivante/précédente</string>
     <string name="title_advanced_reversed">Inverser les directions de navigation</string>
     <string name="title_advanced_autoexpand">Développer automatiquement les messages</string>
     <string name="title_advanced_expand_all">Développer automatiquement tous les messages lus</string>
@@ -621,6 +622,7 @@
     <string name="title_expand_warning">Développer ce message téléchargera %1$s</string>
     <string name="title_download_message">Téléchargement&#8230;</string>
     <string name="title_compose">Rédiger</string>
+    <string name="title_submitter">Envoyé par :</string>
     <string name="title_from">De :</string>
     <string name="title_to">À :</string>
     <string name="title_reply_to">Répondre à :</string>

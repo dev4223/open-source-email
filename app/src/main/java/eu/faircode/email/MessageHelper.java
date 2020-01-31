@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1251,28 +1252,34 @@ public class MessageHelper {
 
             try {
                 ContentType ct = new ContentType(part.getContentType());
+
                 String charset = ct.getParameter("charset");
-
-                // Fix common mistakes
-                if (charset != null) {
+                if (charset == null)
+                    charset = StandardCharsets.ISO_8859_1.name();
+                else {
                     charset = charset.replace("\"", "");
-                    if ("ASCII".equals(charset.toUpperCase()))
-                        charset = "US-ASCII";
-                    else if (charset.toLowerCase().endsWith("8859-16")) // not supported by Android
-                        charset = null; // Use ISO8859-1 instead
-                }
+                    charset = MimeUtility.javaCharset(charset);
 
-                if (TextUtils.isEmpty(charset) || "US-ASCII".equals(charset.toUpperCase())) {
-                    // The first 127 characters are the same as in US-ASCII
-                    result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
-                } else {
-                    // See UnknownCharsetProvider class
-                    if ("US-ASCII".equals(Charset.forName(charset).name())) {
-                        Log.w("Unsupported encoding charset=" + charset);
+                    boolean supported = false;
+                    try {
+                        supported = Charset.isSupported(charset);
+                    } catch (IllegalCharsetNameException ex) {
+                        Log.e(charset, ex);
+                    }
+
+                    if (!supported) {
+                        // x-binaryenc
+                        // UseInqueCodePage
+                        // none
+                        // unknown-8bit
+                        // X-UNKNOWN
+                        Log.e("Unsupported encoding charset=" + charset);
                         warnings.add(context.getString(R.string.title_no_charset, charset));
-                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1));
+                        charset = StandardCharsets.ISO_8859_1.name();
                     }
                 }
+
+                result = new String(result.getBytes(Charset.forName(charset)));
             } catch (ParseException ex) {
                 Log.w(ex);
                 warnings.add(Log.formatThrowable(ex, false));
