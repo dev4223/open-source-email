@@ -306,6 +306,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibAuth;
         private ImageView ivPriorityHigh;
         private ImageView ivPriorityLow;
+        private ImageView ivImportance;
         private ImageView ivSigned;
         private ImageView ivEncrypted;
         private TextView tvFrom;
@@ -441,6 +442,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAuth = itemView.findViewById(R.id.ibAuth);
             ivPriorityHigh = itemView.findViewById(R.id.ivPriorityHigh);
             ivPriorityLow = itemView.findViewById(R.id.ivPriorityLow);
+            ivImportance = itemView.findViewById(R.id.ivImportance);
             ivSigned = itemView.findViewById(R.id.ivSigned);
             ivEncrypted = itemView.findViewById(R.id.ivEncrypted);
             tvFrom = itemView.findViewById(subject_top ? R.id.tvSubject : R.id.tvFrom);
@@ -749,6 +751,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAuth.setVisibility(View.GONE);
             ivPriorityHigh.setVisibility(View.GONE);
             ivPriorityLow.setVisibility(View.GONE);
+            ivImportance.setVisibility(View.GONE);
             ivSigned.setVisibility(View.GONE);
             ivEncrypted.setVisibility(View.GONE);
             tvFrom.setText(null);
@@ -835,6 +838,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibAuth.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityHigh.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivPriorityLow.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                ivImportance.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivSigned.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivEncrypted.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvFrom.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
@@ -911,14 +915,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Line 1
             ibAuth.setVisibility(authentication && !authenticated ? View.VISIBLE : View.GONE);
-            ivPriorityHigh.setVisibility(EntityMessage.PRIORITIY_HIGH.equals(message.priority) ? View.VISIBLE : View.GONE);
-            ivPriorityLow.setVisibility(EntityMessage.PRIORITIY_LOW.equals(message.priority) ? View.VISIBLE : View.GONE);
+            ivPriorityHigh.setVisibility(
+                    EntityMessage.PRIORITIY_HIGH.equals(message.ui_priority)
+                            ? View.VISIBLE : View.GONE);
+            ivPriorityLow.setVisibility(
+                    EntityMessage.PRIORITIY_LOW.equals(message.ui_priority)
+                            ? View.VISIBLE : View.GONE);
+            ivImportance.setImageLevel(
+                    EntityMessage.PRIORITIY_HIGH.equals(message.ui_importance) ? 0 : 1);
+            ivImportance.setVisibility(
+                    EntityMessage.PRIORITIY_LOW.equals(message.ui_importance) ||
+                            EntityMessage.PRIORITIY_HIGH.equals(message.ui_importance)
+                            ? View.VISIBLE : View.GONE);
             ivSigned.setVisibility(message.signed > 0 ? View.VISIBLE : View.GONE);
             ivEncrypted.setVisibility(message.encrypted > 0 ? View.VISIBLE : View.GONE);
             tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             tvSize.setText(message.totalSize == null ? null : Helper.humanReadableByteCount(message.totalSize, true));
-            tvSize.setVisibility(message.totalSize != null && "size".equals(sort) ? View.VISIBLE : View.GONE);
+            tvSize.setVisibility(
+                    message.totalSize != null && ("size".equals(sort) || "attachments".equals(sort))
+                            ? View.VISIBLE : View.GONE);
             tvTime.setText(date && "time".equals(sort)
                     ? TF.format(message.received)
                     : Helper.getRelativeTimeSpanString(context, message.received));
@@ -1573,6 +1589,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 }
 
+            boolean confirm_images = prefs.getBoolean("confirm_images", true);
+            if (!confirm_images && !properties.getValue("images_asked", message.id)) {
+                properties.setValue("images", message.id, true);
+                properties.setValue("images_asked", message.id, true);
+            }
+
+            boolean confirm_html = prefs.getBoolean("confirm_html", true);
+            if (!confirm_html && !properties.getValue("full_asked", message.id)) {
+                properties.setValue("full", message.id, true);
+                properties.setValue("full_asked", message.id, true);
+            }
+
             boolean show_full = properties.getValue("full", message.id);
             boolean show_images = properties.getValue("images", message.id);
             boolean show_quotes = (properties.getValue("quotes", message.id) || !collapse_quotes);
@@ -1658,22 +1686,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                             @Override
                             public boolean onOpenLink(String url) {
-                                Uri uri = Uri.parse(url);
-                                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
-                                    return false;
-
                                 if (parentFragment == null)
                                     return false;
 
-                                Bundle args = new Bundle();
-                                args.putParcelable("uri", uri);
-                                args.putString("title", null);
-
-                                FragmentDialogLink fragment = new FragmentDialogLink();
-                                fragment.setArguments(args);
-                                fragment.show(parentFragment.getParentFragmentManager(), "open:link");
-
-                                return true;
+                                Uri uri = Uri.parse(url);
+                                return AdapterMessage.ViewHolder.this.onOpenLink(uri, null);
                             }
                         });
                 webView.setOnTouchListener(ViewHolder.this);
@@ -3429,10 +3446,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (image.length > 0 && image[0].getSource() != null) {
                             ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
                             Uri uri = Uri.parse(a.getSource());
-                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) {
-                                onOpenLink(uri, null);
-                                return true;
-                            }
+                            if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                                if (onOpenLink(uri, null))
+                                    return true;
                         }
                     }
 
@@ -3450,8 +3466,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (url.equals(title))
                             title = null;
 
-                        onOpenLink(uri, title);
-                        return true;
+                        if (onOpenLink(uri, title))
+                            return true;
                     }
 
                     ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
@@ -3474,8 +3490,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private void onOpenLink(final Uri uri, String title) {
-            Log.i("Opening uri=" + uri);
+        private boolean onOpenLink(final Uri uri, String title) {
+            Log.i("Opening uri=" + uri + " title=" + title);
 
             if (BuildConfig.APPLICATION_ID.equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
                 try {
@@ -3487,17 +3503,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             } else {
-                if ("cid".equals(uri.getScheme()))
-                    return;
+                if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
+                    return false;
 
-                Bundle args = new Bundle();
-                args.putParcelable("uri", uri);
-                args.putString("title", title);
+                boolean confirm_links = prefs.getBoolean("confirm_links", true);
+                if (confirm_links) {
+                    Bundle args = new Bundle();
+                    args.putParcelable("uri", uri);
+                    args.putString("title", title);
 
-                FragmentDialogLink fragment = new FragmentDialogLink();
-                fragment.setArguments(args);
-                fragment.show(parentFragment.getParentFragmentManager(), "open:link");
+                    FragmentDialogLink fragment = new FragmentDialogLink();
+                    fragment.setArguments(args);
+                    fragment.show(parentFragment.getParentFragmentManager(), "open:link");
+                } else
+                    Helper.view(context, uri, false);
             }
+
+            return true;
         }
 
         private void onOpenImage(long id, String source) {
@@ -4049,9 +4071,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         result.add(context.getString(R.string.title_accessibility_flagged));
                 }
 
-                if (EntityMessage.PRIORITIY_HIGH.equals(message.priority))
+                if (EntityMessage.PRIORITIY_HIGH.equals(message.ui_priority))
                     result.add(context.getString(R.string.title_legend_priority));
-                else if (EntityMessage.PRIORITIY_LOW.equals(message.priority))
+                else if (EntityMessage.PRIORITIY_LOW.equals(message.ui_priority))
                     result.add(context.getString(R.string.title_legend_priority_low));
 
                 if (message.attachments > 0)
@@ -4366,9 +4388,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         same = false;
                         Log.i("thread changed id=" + next.id);
                     }
-                    if (!Objects.equals(prev.priority, next.priority)) {
+                    if (!Objects.equals(prev.ui_priority, next.ui_priority)) {
                         same = false;
-                        Log.i("priority changed id=" + next.id);
+                        Log.i("ui_priority changed id=" + next.id);
+                    }
+                    if (!Objects.equals(prev.ui_importance, next.ui_importance)) {
+                        same = false;
+                        Log.i("ui_importance changed id=" + next.id);
                     }
                     if (!Objects.equals(prev.receipt_request, next.receipt_request)) {
                         same = false;

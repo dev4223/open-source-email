@@ -228,6 +228,7 @@ public class Log {
 
         ignore.add("com.sun.mail.util.MailConnectException");
 
+        ignore.add("android.accounts.AuthenticatorException");
         ignore.add("android.accounts.OperationCanceledException");
         ignore.add("android.app.RemoteServiceException");
 
@@ -242,10 +243,11 @@ public class Log {
         ignore.add("java.net.UnknownHostException");
 
         ignore.add("javax.mail.AuthenticationFailedException");
-        ignore.add("javax.mail.FolderClosedException");
         ignore.add("javax.mail.internet.AddressException");
         ignore.add("javax.mail.MessageRemovedException");
+        ignore.add("javax.mail.FolderNotFoundException");
         ignore.add("javax.mail.ReadOnlyFolderException");
+        ignore.add("javax.mail.FolderClosedException");
         ignore.add("javax.mail.StoreClosedException");
 
         ignore.add("org.xmlpull.v1.XmlPullParserException");
@@ -253,6 +255,8 @@ public class Log {
         config.setIgnoreClasses(ignore.toArray(new String[0]));
 
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        String no_internet = context.getString(R.string.title_no_internet);
 
         config.beforeSend(new BeforeSend() {
             @Override
@@ -283,7 +287,8 @@ public class Log {
                     return false;
 
                 if (ex instanceof IllegalStateException &&
-                        ("Not connected".equals(ex.getMessage()) ||
+                        (no_internet.equals(ex.getMessage()) ||
+                                "Not connected".equals(ex.getMessage()) ||
                                 "This operation is not allowed on a closed folder".equals(ex.getMessage())))
                     return false;
 
@@ -295,7 +300,8 @@ public class Log {
                     return false;
 
                 if (ex instanceof IOException &&
-                        "Resetting to invalid mark".equals(ex.getMessage()))
+                        ("NetworkError".equals(ex.getMessage()) || // account manager
+                                "Resetting to invalid mark".equals(ex.getMessage())))
                     return false;
 
                 // Rate limit
