@@ -69,6 +69,7 @@
     <string name="title_ask_spam_who">Behandle melding fra %1$s som spam?</string>
     <string name="title_block">Blokkere %1$s</string>
     <string name="title_block_sender">Blokker avsender</string>
+    <string name="title_block_domain">Blokker avsenderdomenet</string>
     <string name="title_block_sender_hint">        Blokkering av avsender vil opprette en regel for automatisk å flytte fremtidige meldinger til spam-mappen.
         Å lage og bruke regler er en pro-funksjon.
     </string>
@@ -829,6 +830,8 @@ Dette vil bidra til å opprettholde en balanse mellom ugunstige og gunstige anme
     <string name="title_legend_draft">Kladd finnes</string>
     <string name="title_legend_priority">Har høy prioritet</string>
     <string name="title_legend_priority_low">Har lav prioritet</string>
+    <string name="title_legend_importance">Er viktig</string>
+    <string name="title_legend_importance_low">Er ikke viktig</string>
     <string name="title_legend_signed">Er signert</string>
     <string name="title_legend_encrypted">Er kryptert</string>
     <string name="title_legend_auth">Godkjenning mislyktes</string>
