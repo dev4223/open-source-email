@@ -69,7 +69,7 @@
     <string name="title_ask_spam_who">Nachricht von %1$s als Spam behandeln?</string>
     <string name="title_block">%1$s sperren</string>
     <string name="title_block_sender">Absender sperren</string>
-    <string name="title_block_domain">Gesamte Domain sperren</string>
+    <string name="title_block_domain">Absenderdomain sperren</string>
     <string name="title_block_sender_hint">        Das Sperren eines Absenders erstellt eine Regel, um zukünftige Nachrichten
         von dieser Absenderadresse automatisch in den Spam-Ordner zu verschieben.
         Regeln erstellen und verwenden ist eine Pro-Funktion.
@@ -84,12 +84,12 @@
     <string name="menu_operations">Vorgänge</string>
     <string name="menu_contacts">Lokale Kontakte</string>
     <string name="menu_setup">Einstellungen</string>
-    <string name="menu_legend">Legende</string>
+    <string name="menu_legend">Symbolerklärung</string>
     <string name="menu_test">Test-Programm</string>
-    <string name="menu_faq">Unterstützung</string>
+    <string name="menu_faq">FAQ</string>
     <string name="menu_translate">Hilf beim Übersetzen</string>
     <string name="menu_issue">Problem melden</string>
-    <string name="menu_attribution">Danksagung</string>
+    <string name="menu_attribution">Danksagungen</string>
     <string name="menu_privacy">Datenschutz</string>
     <string name="menu_about">Über</string>
     <string name="menu_pro">Pro-Funktionen</string>
@@ -367,7 +367,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_suggest_local_hint">Zusätzlich zu den von Android bereitgestellten Kontakten werden weitere Kontaktdaten für neue gesendete oder erhaltene Nachrichten nur dann gespeichert, wenn dies aktiviert ist.</string>
     <string name="title_advanced_usenet_hint">Signatur-Trenner (\'-- \') zwischen Text und Signatur einfügen</string>
     <string name="title_advanced_send_reminders_hint">Zeige eine Warnung, wenn der Nachrichtentext oder der Betreff leer ist oder wenn ein Anhang zu fehlen scheint</string>
-    <string name="title_advanced_lookup_mx_hint">Überprüft, ob DNS MX-Eintrag existiert</string>
+    <string name="title_advanced_lookup_mx_hint">Überprüft, ob DNS-MX-Einträge vorhanden sind</string>
     <string name="title_advanced_check_reply_hint">Überprüft, ob die Domain des Absenders und der Antwort-An-Adresse gleich sind</string>
     <string name="title_advanced_metered_hint">Getaktete Verbindungen sind in der Regel mobile Verbindungen oder bezahlte Wi-Fi Hotspots</string>
     <string name="title_advanced_metered_warning">Das Deaktivieren dieser Option deaktiviert das Empfangen und Senden von Nachrichten über mobile Internetverbindungen</string>
@@ -454,8 +454,8 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_trust">Serverzertifikat mit Fingerabdruck %1$s vertrauen</string>
     <string name="title_no_name">Name fehlt</string>
     <string name="title_no_email">E-Mail-Adresse fehlt</string>
-    <string name="title_email_invalid">E-Mail-Adresse ungültig: »%1$s«</string>
-    <string name="title_address_parse_error">Adresse »%1$s« ungültig: %2$s</string>
+    <string name="title_email_invalid">E-Mail-Adresse ungültig: \'%1$s\'</string>
+    <string name="title_address_parse_error">Adresse \'%1$s\' ungültig: %2$s</string>
     <string name="title_no_account">Konto fehlt</string>
     <string name="title_no_host">Hostname fehlt</string>
     <string name="title_no_user">Benutzername fehlt</string>
@@ -595,7 +595,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_receipt_text">Diese Lesebestätigung bestätigt nur, dass die Nachricht angezeigt wurde. Es gibt keine Garantie, dass der Empfänger den Nachrichteninhalt gelesen hat.</string>
     <string name="title_no_answers">Keine Antwortvorlagen definiert</string>
     <string name="title_no_viewer">Keine App zum Betrachten von %1$s</string>
-    <string name="title_no_recorder">Keine passende Audio-Recorder App verfügbar</string>
+    <string name="title_no_recorder">Keine geeignete App zur Audioaufnahme verfügbar</string>
     <string name="title_no_camera">Keine passende Kamera-App verfügbar</string>
     <string name="title_no_saf">Storage Access Framework nicht verfügbar</string>
     <string name="title_no_stream">Eine veraltete App verschickte den Dateinamen anstelle des Datenstroms</string>
@@ -796,7 +796,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_rule_cc">Den CC-Adressen antworten</string>
     <string name="title_rule_name_missing">Regelname fehlt</string>
     <string name="title_rule_condition_missing">Voraussetzung fehlt</string>
-    <string name="title_rule_automation_hint">Das wird die Absicht »%1$s« mit den Extras »%2$s« senden</string>
+    <string name="title_rule_automation_hint">Sende den Intent \'%1$s\' mit den Extras \'%2$s\'</string>
     <string name="title_rule_execute">Jetzt ausführen</string>
     <string name="title_rule_applied">Betroffene Nachrichten: %1$d</string>
     <string name="title_rule_check">Prüfen</string>

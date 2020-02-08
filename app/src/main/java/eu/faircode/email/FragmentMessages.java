@@ -1016,7 +1016,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     @Override
                     protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                        boolean search_text = prefs.getBoolean("search_text", true);
+                        boolean search_text = prefs.getBoolean("search_text", false);
 
                         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
@@ -1038,7 +1038,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             public boolean onMenuItemClick(MenuItem target) {
                                 if (target.getItemId() == 1) {
                                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                                    boolean search_text = prefs.getBoolean("search_text", true);
+                                    boolean search_text = prefs.getBoolean("search_text", false);
                                     prefs.edit().putBoolean("search_text", !search_text).apply();
                                     return true;
                                 }
@@ -1982,6 +1982,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         args.putLongArray("ids", getSelection());
 
         new SimpleTask<MoreResult>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                fabMore.setEnabled(false);
+            }
+
+            @Override
+            protected void onPostExecute(Bundle args) {
+                fabMore.setEnabled(true);
+            }
+
             @Override
             protected MoreResult onExecute(Context context, Bundle args) {
                 long[] ids = args.getLongArray("ids");
@@ -3927,8 +3937,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             return;
         }
 
+        String key = (result.size() == 1 ? "move_1_confirmed" : "move_n_confirmed");
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (prefs.getBoolean("automove", false)) {
+        if (prefs.getBoolean(key, false)) {
             if (canUndo)
                 moveUndo(result);
             else
@@ -3940,7 +3952,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         aargs.putString("question", getResources()
                 .getQuantityString(R.plurals.title_moving_messages,
                         result.size(), result.size(), getDisplay(result)));
-        aargs.putString("notagain", "automove");
+        aargs.putString("notagain", key);
         aargs.putParcelableArrayList("result", result);
 
         FragmentDialogAsk ask = new FragmentDialogAsk();
@@ -5712,15 +5724,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
-                ServiceSynchronize.eval(context, "copy");
+                if (copy)
+                    ServiceSynchronize.eval(context, "copy");
 
                 return result;
             }
 
             @Override
             protected void onExecuted(Bundle args, ArrayList<MessageTarget> result) {
-                boolean nocanundo = args.getBoolean("nocanundo");
-                moveAsk(result, false, !nocanundo);
+                moveAsk(result, false, !autoclose && onclose == null);
             }
 
             @Override

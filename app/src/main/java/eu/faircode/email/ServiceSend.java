@@ -401,7 +401,7 @@ public class ServiceSend extends ServiceBase {
                 if (body != null)
                     size = (long) body.length();
 
-                Long total = null;
+                Long total = size;
                 List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
                 for (EntityAttachment attachment : attachments)
                     if (attachment.size != null)
@@ -420,7 +420,7 @@ public class ServiceSend extends ServiceBase {
 
         // Create transport
         try (EmailService iservice = new EmailService(
-                this, ident.getProtocol(), ident.realm, ident.insecure, false, debug)) {
+                this, ident.getProtocol(), ident.realm, ident.insecure, debug)) {
             iservice.setUseIp(ident.use_ip);
 
             // Connect transport

@@ -750,8 +750,6 @@ public class FragmentIdentity extends FragmentBase {
                         return true;
                     if (!Objects.equals(identity.bcc, bcc))
                         return true;
-                    if (identity.error != null)
-                        return true;
 
                     return false;
                 }
@@ -776,7 +774,8 @@ public class FragmentIdentity extends FragmentBase {
                 if (check) {
                     // Create transport
                     String protocol = (starttls ? "smtp" : "smtps");
-                    try (EmailService iservice = new EmailService(context, protocol, realm, insecure, true, true)) {
+                    try (EmailService iservice = new EmailService(
+                            context, protocol, realm, insecure, EmailService.PURPOSE_CHECK, true)) {
                         iservice.setUseIp(use_ip);
                         iservice.connect(host, Integer.parseInt(port), auth, provider, user, password, fingerprint);
                     }

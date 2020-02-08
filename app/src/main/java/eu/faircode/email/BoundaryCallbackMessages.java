@@ -285,7 +285,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         DB db = DB.getInstance(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        final boolean search_text = prefs.getBoolean("search_text", true);
+        final boolean search_text = prefs.getBoolean("search_text", false);
         final boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.BETA_RELEASE);
 
         final EntityFolder browsable = db.folder().getBrowsableFolder(folder, query != null);
@@ -303,7 +303,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     throw new IllegalStateException(context.getString(R.string.title_no_internet));
 
                 Log.i("Boundary server connecting account=" + account.name);
-                state.iservice = new EmailService(context, account.getProtocol(), account.realm, account.insecure, false, debug);
+                state.iservice = new EmailService(
+                        context, account.getProtocol(), account.realm, account.insecure, EmailService.PURPOSE_SEARCH, debug);
                 state.iservice.setPartialFetch(account.partial_fetch);
                 state.iservice.setIgnoreBodyStructureSize(account.ignore_size);
                 state.iservice.connect(account);

@@ -615,8 +615,12 @@ public class FragmentAccount extends FragmentBase {
 
                 // Check IMAP server / get folders
                 String protocol = "imap" + (starttls ? "" : "s");
-                try (EmailService iservice = new EmailService(context, protocol, realm, insecure, true, true)) {
-                    iservice.connect(host, Integer.parseInt(port), auth, provider, user, password, fingerprint);
+                try (EmailService iservice = new EmailService(
+                        context, protocol, realm, insecure, EmailService.PURPOSE_CHECK, true)) {
+                    iservice.connect(
+                            host, Integer.parseInt(port),
+                            auth, provider,
+                            user, password, fingerprint);
 
                     result.idle = iservice.hasCapability("IDLE");
 
@@ -670,6 +674,7 @@ public class FragmentAccount extends FragmentBase {
                             }
                         if (!has) {
                             guess.type = gtype;
+                            guess.setProperties();
                             Log.i(guess.name + " guessed type=" + gtype);
                         }
                     }
@@ -953,9 +958,6 @@ public class FragmentAccount extends FragmentBase {
                     if (!Objects.equals(account.move_to, move == null ? null : move.id))
                         return true;
 
-                    if (account.error != null)
-                        return true;
-
                     return false;
                 }
 
@@ -982,8 +984,12 @@ public class FragmentAccount extends FragmentBase {
                 EntityFolder inbox = null;
                 if (check) {
                     String protocol = "imap" + (starttls ? "" : "s");
-                    try (EmailService iservice = new EmailService(context, protocol, realm, insecure, true, true)) {
-                        iservice.connect(host, Integer.parseInt(port), auth, provider, user, password, fingerprint);
+                    try (EmailService iservice = new EmailService(
+                            context, protocol, realm, insecure, EmailService.PURPOSE_CHECK, true)) {
+                        iservice.connect(
+                                host, Integer.parseInt(port),
+                                auth, provider,
+                                user, password, fingerprint);
 
                         for (Folder ifolder : iservice.getStore().getDefaultFolder().list("*")) {
                             // Check folder attributes
@@ -1147,6 +1153,8 @@ public class FragmentAccount extends FragmentBase {
                             folder.account = account.id;
                             EntityLog.log(context, "Added folder=" + folder.name + " type=" + folder.type);
                             folder.id = db.folder().insertFolder(folder);
+                            if (folder.synchronize)
+                                EntityOperation.sync(context, folder.id, false);
                         } else {
                             EntityLog.log(context, "Updated folder=" + folder.name + " type=" + folder.type);
                             db.folder().setFolderType(existing.id, folder.type);
