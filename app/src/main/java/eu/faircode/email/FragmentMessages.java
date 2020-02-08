@@ -2965,6 +2965,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 new FragmentDialogReporting().show(getParentFragmentManager(), "reporting");
             }
         });
+        snackbar.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                prefs.edit().putBoolean("crash_reports_asked", true).apply();
+            }
+        });
 
         snackbar.show();
 
@@ -3017,6 +3023,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             public void onClick(View v) {
                 snackbar.dismiss();
                 new FragmentDialogReview().show(getParentFragmentManager(), "review");
+            }
+        });
+        snackbar.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                prefs.edit().putLong("review_later", new Date().getTime()).apply();
             }
         });
 

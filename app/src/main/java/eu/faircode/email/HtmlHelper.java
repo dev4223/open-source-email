@@ -322,7 +322,7 @@ public class HtmlHelper {
         }
 
         Whitelist whitelist = Whitelist.relaxed()
-                .addTags("hr", "abbr", "big", "font")
+                .addTags("hr", "abbr", "big", "font", "dfn", "del", "s", "tt")
                 .removeTags("col", "colgroup", "thead", "tbody")
                 .removeAttributes("table", "width")
                 .removeAttributes("td", "colspan", "rowspan", "width")
@@ -367,15 +367,20 @@ public class HtmlHelper {
                             case "color":
                                 Integer color = parseColor(value, dark);
                                 if (color != null) {
-                                    String c = String.format("#%06x", color);
+                                    // fromHtml does not support transparency
+                                    String c = String.format("#%08x", color | 0xFF000000);
                                     sb.append("color:").append(c).append(";");
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
                                         element.attr("color", c);
                                 }
                                 break;
 
-                            case "background":
-                            case "background-color":
+                            case "font-weight":
+                                if ("bold".equals(value)) {
+                                    Element strong = new Element("strong");
+                                    element.replaceWith(strong);
+                                    strong.appendChild(element);
+                                }
                                 break;
 
                             case "line-through":
@@ -436,29 +441,47 @@ public class HtmlHelper {
             p.tagName("div");
         }
 
-        // Short quotes
+        // Short inline quotes
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q
         for (Element q : document.select("q")) {
-            q.prependText("\"");
-            q.appendText("\"");
-            q.tagName("em");
+            q.tagName("a");
+            q.attr("href", q.attr("cite"));
+            q.removeAttr("cite");
         }
 
+        // Citation
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/cite
+        for (Element cite : document.select("cite")) {
+            cite.prependText("\"");
+            cite.appendText("\"");
+            cite.tagName("em");
+        }
+
+        // Definition
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dfn
+        for (Element dfn : document.select("dfn"))
+            dfn.tagName("em");
+
         // Pre formatted text
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
         for (Element pre : document.select("pre")) {
             pre.html(formatPre(pre.wholeText()));
             pre.tagName("div");
         }
 
         // Code
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
         document.select("code").tagName("strong");
 
         // Lines
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr
         for (Element hr : document.select("hr")) {
             hr.tagName("div");
             hr.text("----------------------------------------");
         }
 
         // Descriptions
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dl
         document.select("dl").tagName("div");
         for (Element dt : document.select("dt")) {
             dt.tagName("strong");
@@ -470,9 +493,12 @@ public class HtmlHelper {
         }
 
         // Abbreviations
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/abbr
         document.select("abbr").tagName("u");
 
         // Subscript/Superscript
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sub
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/sup
         for (Element subp : document.select("sub,sup")) {
             Element small = document.createElement("small");
             small.html(subp.html());
@@ -480,6 +506,7 @@ public class HtmlHelper {
         }
 
         // Lists
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/li
         for (Element li : document.select("li")) {
             li.tagName("span");
             Element parent = li.parent();
@@ -493,6 +520,7 @@ public class HtmlHelper {
         document.select("ul").tagName("div");
 
         // Tables
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
         for (Element col : document.select("th,td")) {
             // separate columns
             if (hasVisibleContent(col.childNodes()))
@@ -527,6 +555,7 @@ public class HtmlHelper {
             removeTrackingPixels(context, document);
 
         // Images
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
         for (Element img : document.select("img")) {
             String alt = img.attr("alt");
             String src = img.attr("src");
@@ -691,9 +720,9 @@ public class HtmlHelper {
                 if (c.length() > 1) {
                     String code = c.substring(1);
                     if (x11ColorMap.containsKey(code)) // workaround
-                        color = x11ColorMap.get(code) | 0xFF000000;
+                        color = x11ColorMap.get(code);
                     else
-                        color = Integer.decode(c) | 0xFF000000;
+                        color = Integer.decode(c);
                 }
             } else if (c.startsWith("rgb") || c.startsWith("hsl")) {
                 int s = c.indexOf("(");
@@ -721,13 +750,13 @@ public class HtmlHelper {
                                 Integer.parseInt(component[2]) / 100f});
                 }
             } else if (x11ColorMap.containsKey(c))
-                color = x11ColorMap.get(c) | 0xFF000000;
+                color = x11ColorMap.get(c);
             else
                 try {
                     color = Color.parseColor(c);
                 } catch (IllegalArgumentException ex) {
                     // Workaround
-                    color = Integer.decode("#" + c) | 0xFF000000;
+                    color = Integer.decode("#" + c);
                 }
 
             if (BuildConfig.DEBUG)
