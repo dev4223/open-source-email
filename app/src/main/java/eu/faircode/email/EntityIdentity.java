@@ -77,6 +77,8 @@ public class EntityIdentity {
     public String user;
     @NonNull
     public String password;
+    @NonNull
+    public boolean certificate;
     public String realm;
     public String fingerprint;
     @NonNull
@@ -137,10 +139,6 @@ public class EntityIdentity {
         if (cother.length != 2 || cemail.length != 2)
             return false;
 
-        // Domain
-        if (!cother[1].equalsIgnoreCase(cemail[1]))
-            return false;
-
         // User
         if (TextUtils.isEmpty(sender_extra_regex)) {
             String user = (cother[0].contains("+") ? cother[0].split("\\+")[0] : cother[0]);
@@ -173,6 +171,7 @@ public class EntityIdentity {
         json.put("provider", provider);
         json.put("user", user);
         json.put("password", password);
+        json.put("certificate", certificate);
         json.put("realm", realm);
         json.put("fingerprint", fingerprint);
         json.put("use_ip", use_ip);
@@ -218,6 +217,7 @@ public class EntityIdentity {
             identity.provider = json.getString("provider");
         identity.user = json.getString("user");
         identity.password = json.getString("password");
+        identity.certificate = json.optBoolean("certificate");
         if (json.has("realm") && !json.isNull("realm"))
             identity.realm = json.getString("realm");
         if (json.has("fingerprint"))
