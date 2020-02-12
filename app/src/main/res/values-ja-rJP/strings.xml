@@ -426,7 +426,7 @@
     <string name="title_port">ポート番号</string>
     <string name="title_user">ユーザー名</string>
     <string name="title_password">パスワード</string>
-    <string name="title_use_certificate">クライアント証明書を使用</string>
+    <string name="title_client_certificate">クライアント証明書</string>
     <string name="title_realm">Realm(Ntlm認証に使用)</string>
     <string name="title_use_ip">ホスト名の代わりにローカルIPアドレスを使用</string>
     <string name="title_primary_account">基本(デフォルトアカウント)</string>
@@ -591,7 +591,8 @@
     <string name="title_no_format">受信したメッセージを引用しています</string>
     <string name="title_no_image">画像をデコード出来ませんでした</string>
     <string name="title_no_search">サーバでの検索はこのアカウントでは利用出来ません</string>
-    <string name="title_too_large">再フォーマットするには大き過ぎるメッセージです。代わりにフルスクリーンアイコンを使用し元のメッセージビューを使用して下さい</string>
+    <string name="title_too_large">メッセージが大き過ぎて完全に再フォーマット出来ません</string>
+    <string name="title_show_full">メッセージ全体を表示</string>
     <string name="title_unused_inline">未使用のインライン画像は送信時に削除されます</string>
     <string name="title_accross_remark">アカウント間で移動されたメッセージは再度ダウンロードされる為、余分なデータが使用されます</string>
     <string name="title_raw_saved">素のメッセージを保存しました</string>
@@ -699,6 +700,7 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_signature_unconfirmed_from">メッセージ署名は有効ですが確認されていません:%1$s</string>
     <string name="title_signature_invalid">メッセージ署名が無効です</string>
     <string name="title_signature_invalid_reason">メッセージ署名が無効です:%1$s</string>
+    <string name="title_signature_key_missing">キーが有りません</string>
     <string name="title_signature_certificate_invalid">証明書が無効</string>
     <string name="title_signature_sender">差出人のメールアドレス</string>
     <string name="title_signature_email">署名のアドレス</string>

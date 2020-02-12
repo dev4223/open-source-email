@@ -245,8 +245,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private static final ExecutorService executor =
             Helper.getBackgroundExecutor(2, "differ");
 
-    private static final int LARGE_MESSAGE_SIZE = 250 * 1024;
-
     // https://github.com/newhouse/url-tracking-stripper
     private static final List<String> PARANOID_QUERY = Collections.unmodifiableList(Arrays.asList(
             // https://en.wikipedia.org/wiki/UTM_parameters
@@ -1280,19 +1278,23 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibAvatar.setTag(lookupUri);
             ibAvatar.setEnabled(lookupUri != null);
 
+            if (addresses == null)
+                return;
+
             boolean known = false;
             boolean updated = false;
+            Address[] modified = Arrays.copyOf(addresses, addresses.length);
             for (int i = 0; i < info.length; i++) {
                 if (info[i].isKnown())
                     known = true;
                 String displayName = info[i].getDisplayName();
                 if (!TextUtils.isEmpty(displayName)) {
-                    String email = ((InternetAddress) addresses[i]).getAddress();
-                    String personal = ((InternetAddress) addresses[i]).getPersonal();
+                    String email = ((InternetAddress) modified[i]).getAddress();
+                    String personal = ((InternetAddress) modified[i]).getPersonal();
                     if (TextUtils.isEmpty(personal) ||
                             (prefer_contact && !personal.equals(displayName)))
                         try {
-                            addresses[i] = new InternetAddress(email, displayName, StandardCharsets.UTF_8.name());
+                            modified[i] = new InternetAddress(email, displayName, StandardCharsets.UTF_8.name());
                             updated = true;
                         } catch (UnsupportedEncodingException ex) {
                             Log.w(ex);
@@ -1300,7 +1302,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             }
             if (updated)
-                tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
+                tvFrom.setText(MessageHelper.formatAddresses(modified, name_email, false));
 
             if (distinguish_contacts && known)
                 tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -1832,9 +1834,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         return document.html();
                     } else {
-                        if (body.length() > LARGE_MESSAGE_SIZE)
-                            return HtmlHelper.fromHtml("<em>" + context.getString(R.string.title_too_large) + "</em>");
-
                         // Cleanup message
                         document = HtmlHelper.sanitize(context, body, show_images, true);
 
@@ -3564,6 +3563,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             } else {
+                if ("full".equals(uri.getScheme())) {
+                    TupleMessageEx message = getMessage();
+                    if (message != null)
+                        onShow(message, true);
+                    return (message != null);
+                }
+
                 if ("cid".equals(uri.getScheme()) || "data".equals(uri.getScheme()))
                     return false;
 

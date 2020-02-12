@@ -77,6 +77,7 @@ public class HtmlHelper {
     private static final float MIN_LUMINANCE = 0.5f;
     private static final int TAB_SIZE = 2;
     private static final int MAX_AUTO_LINK = 250;
+    private static final int MAX_TEXT_SIZE = 50 * 1024; // characters
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
 
     private static final List<String> heads = Collections.unmodifiableList(Arrays.asList(
@@ -379,22 +380,26 @@ public class HtmlHelper {
 
                             case "font-size":
                                 // https://developer.mozilla.org/en-US/docs/Web/CSS/font-size
-                                Float fsize = getFontSize(value);
-                                if (fsize != null && fsize != 0 &&
-                                        (fsize <= 0.8f || fsize >= 1.25)) {
-                                    Element e = new Element(fsize < 1 ? "small" : "big");
-                                    element.replaceWith(e);
-                                    e.appendChild(element);
+                                if (element.parent() != null) {
+                                    Float fsize = getFontSize(value);
+                                    if (fsize != null && fsize != 0 &&
+                                            (fsize <= 0.8f || fsize >= 1.25)) {
+                                        Element e = new Element(fsize < 1 ? "small" : "big");
+                                        element.replaceWith(e);
+                                        e.appendChild(element);
+                                    }
                                 }
                                 break;
 
                             case "font-weight":
                                 // https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight
-                                Integer fweight = getFontWeight(value);
-                                if (fweight != null && fweight >= 600) {
-                                    Element strong = new Element("strong");
-                                    element.replaceWith(strong);
-                                    strong.appendChild(element);
+                                if (element.parent() != null) {
+                                    Integer fweight = getFontWeight(value);
+                                    if (fweight != null && fweight >= 600) {
+                                        Element strong = new Element("strong");
+                                        element.replaceWith(strong);
+                                        strong.appendChild(element);
+                                    }
                                 }
                                 break;
 
@@ -406,9 +411,10 @@ public class HtmlHelper {
 
                             case "display":
                                 // https://developer.mozilla.org/en-US/docs/Web/CSS/display
-                                if (!display_hidden && "none".equals(value)) {
-                                    Log.i("Removing hidden element " + element.tagName());
-                                    element.empty();
+                                if (element.parent() != null &&
+                                        !display_hidden && "none".equals(value)) {
+                                    Log.i("Removing display none " + element.tagName());
+                                    element.remove();
                                 }
                                 if ("inline".equals(value) || "inline-block".equals(value)) {
                                     if (element.nextSibling() != null)
@@ -420,11 +426,11 @@ public class HtmlHelper {
                             case "width":
                                 //case "font-size":
                                 //case "line-height":
-                                if (!display_hidden) {
+                                if (element.parent() != null && !display_hidden) {
                                     Float s = getFontSize(value);
                                     if (s != null && s == 0) {
-                                        Log.i("Removing hidden element " + element.tagName());
-                                        element.empty();
+                                        Log.i("Removing no height/width " + element.tagName());
+                                        element.remove();
                                     }
                                 }
                                 break;
@@ -583,7 +589,7 @@ public class HtmlHelper {
 
             if (!show_images && !TextUtils.isEmpty(alt))
                 if (TextUtils.isEmpty(tracking))
-                    img.appendText(" " + alt + " ");
+                    img.appendText("[" + alt + "]");
                 else {
                     img.append("&nbsp;");
                     Element a = document.createElement("a");
@@ -710,9 +716,32 @@ public class HtmlHelper {
                 if (!TextUtils.isEmpty(span.attr("color")))
                     span.tagName("font");
 
+        int length = 0;
+        for (Element elm : document.select("*")) {
+            for (Node child : elm.childNodes())
+                if (child instanceof TextNode)
+                    length += ((TextNode) child).text().length();
+            if (length > MAX_TEXT_SIZE)
+                elm.remove();
+        }
+
         if (document.body() == null) {
             Log.e("Sanitize without body");
             document.normalise();
+        }
+
+        if (length > MAX_TEXT_SIZE) {
+            document.body()
+                    .appendElement("p")
+                    .appendElement("em")
+                    .text(context.getString(R.string.title_too_large));
+
+            document.body()
+                    .appendElement("p")
+                    .appendElement("big")
+                    .appendElement("a")
+                    .attr("href", "full:")
+                    .text(context.getString(R.string.title_show_full));
         }
 
         return document;
@@ -755,8 +784,8 @@ public class HtmlHelper {
                 return Float.parseFloat(value.substring(0, value.length() - 2).trim());
             if (value.endsWith("px"))
                 return Integer.parseInt(value.substring(0, value.length() - 2).trim()) / 16f;
+            return Integer.parseInt(value.trim()) / 16f;
         } catch (NumberFormatException ignored) {
-
         }
 
         return null;
@@ -768,6 +797,7 @@ public class HtmlHelper {
                 .replace("null", "")
                 .replace("none", "")
                 .replace("unset", "")
+                .replace("auto", "")
                 .replace("inherit", "")
                 .replace("initial", "")
                 .replace("windowtext", "")
@@ -1020,18 +1050,29 @@ public class HtmlHelper {
 
     static String getPreview(String body) {
         try {
-            return _getPreview(body);
+            return _getText(body, false);
         } catch (OutOfMemoryError ex) {
             Log.e(ex);
             return null;
         }
     }
 
-    private static String _getPreview(String body) {
+    static String getFullText(String body) {
+        try {
+            return _getText(body, true);
+        } catch (OutOfMemoryError ex) {
+            Log.e(ex);
+            return null;
+        }
+    }
+
+    private static String _getText(String body, boolean full) {
         if (body == null)
             return null;
 
         String text = JsoupEx.parse(body).text();
+        if (full)
+            return text;
 
         String preview = text.substring(0, Math.min(text.length(), PREVIEW_SIZE));
         if (preview.length() < text.length())
