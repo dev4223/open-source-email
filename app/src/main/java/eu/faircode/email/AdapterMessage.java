@@ -274,17 +274,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
     private static final List<String> IMAP_KEYWORDS_BLACKLIST = Collections.unmodifiableList(Arrays.asList(
-            "$MDNSent".toLowerCase(),
-            "$Forwarded".toLowerCase(),
-            "$SubmitPending".toLowerCase(),
-            "$Submitted".toLowerCase(),
-            "$Junk".toLowerCase(),
-            "$NotJunk".toLowerCase(),
-            "$recent".toLowerCase(),
-            "DTAG_document".toLowerCase(),
-            "DTAG_image".toLowerCase(),
-            "$X-Me-Annot-1".toLowerCase(),
-            "$X-Me-Annot-2".toLowerCase()
+            "$MDNSent".toLowerCase(Locale.ROOT),
+            "$Forwarded".toLowerCase(Locale.ROOT),
+            "$SubmitPending".toLowerCase(Locale.ROOT),
+            "$Submitted".toLowerCase(Locale.ROOT),
+            "$Junk".toLowerCase(Locale.ROOT),
+            "$NotJunk".toLowerCase(Locale.ROOT),
+            "$recent".toLowerCase(Locale.ROOT),
+            "DTAG_document".toLowerCase(Locale.ROOT),
+            "DTAG_image".toLowerCase(Locale.ROOT),
+            "$X-Me-Annot-1".toLowerCase(Locale.ROOT),
+            "$X-Me-Annot-2".toLowerCase(Locale.ROOT)
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
@@ -952,7 +952,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (keywords_header) {
                 SpannableStringBuilder keywords = new SpannableStringBuilder();
                 for (int i = 0; i < message.keywords.length; i++) {
-                    String k = message.keywords[i].toLowerCase();
+                    String k = message.keywords[i].toLowerCase(Locale.ROOT);
                     if (!IMAP_KEYWORDS_BLACKLIST.contains(k)) {
                         if (keywords.length() > 0)
                             keywords.append(" ");
@@ -1567,7 +1567,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.setLog(false).execute(context, owner, sargs, "message:actions");
 
             // Message text
-            pbBody.setVisibility(suitable || message.content ? View.VISIBLE : View.GONE);
             tvNoInternetBody.setVisibility(suitable || message.content ? View.GONE : View.VISIBLE);
 
             cowner.recreate();
@@ -1689,7 +1688,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     wvBody = webView;
                 }
 
-                int dp60 = Helper.dp2pixels(context, 60);
+                final int dp60 = Helper.dp2pixels(context, 60);
                 webView.setMinimumHeight(height == 0 ? dp60 : height);
 
                 webView.init(
@@ -1699,7 +1698,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         new WebViewEx.IWebView() {
                             @Override
                             public void onSizeChanged(int w, int h, int ow, int oh) {
-                                properties.setHeight(message.id, h);
+                                if (h > dp60)
+                                    properties.setHeight(message.id, h);
                             }
 
                             @Override
@@ -1747,6 +1747,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             new SimpleTask<Object>() {
                 @Override
+                protected void onPreExecute(Bundle args) {
+                    pbBody.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                protected void onPostExecute(Bundle args) {
+                    pbBody.setVisibility(View.GONE);
+                }
+
+                @Override
                 protected Object onExecute(final Context context, final Bundle args) throws IOException {
                     TupleMessageEx message = (TupleMessageEx) args.getSerializable("message");
                     final boolean show_full = args.getBoolean("show_full");
@@ -1777,6 +1787,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     args.putBoolean("signed_data", signed_data);
 
                     Document document = JsoupEx.parse(body);
+                    HtmlHelper.cleanup(document);
 
                     // Check for inline encryption
                     int begin = body.indexOf(Helper.PGP_BEGIN_MESSAGE);
@@ -1816,6 +1827,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     // Format message
                     if (show_full) {
+                        if (HtmlHelper.truncate(document, false))
+                            document.body()
+                                    .appendElement("br")
+                                    .appendElement("p")
+                                    .appendElement("em")
+                                    .text(context.getString(R.string.title_truncated));
+
                         HtmlHelper.setViewport(document);
                         if (inline || show_images)
                             HtmlHelper.embedInlineImages(context, message.id, document);
@@ -1835,7 +1853,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return document.html();
                     } else {
                         // Cleanup message
-                        document = HtmlHelper.sanitize(context, body, show_images, true);
+                        document = HtmlHelper.sanitize(context, document, show_images, true, true);
 
                         // Collapse quotes
                         if (!show_quotes) {
@@ -1930,8 +1948,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else
                         throw new IllegalStateException("Result=" + result);
 
-                    pbBody.setVisibility(View.GONE);
-
                     // Show attachments
                     cowner.start();
 
@@ -1958,9 +1974,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             EntityMessage.PGP_SIGNONLY.equals(message.encrypt) ||
                             EntityMessage.SMIME_SIGNONLY.equals(message.encrypt)
                             ? View.VISIBLE : View.GONE);
+                    ibDecrypt.setImageResource(false ||
+                            (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                                    !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt)) ||
+                            (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                                    !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
+                            ? R.drawable.baseline_lock_24 : R.drawable.baseline_lock_open_24
+                    );
                     ibDecrypt.setVisibility(args.getBoolean("inline_encrypted") ||
-                            EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) ||
-                            EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)
+                            EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) ||
+                            EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt)
                             ? View.VISIBLE : View.GONE);
 
                     boolean signed_data = args.getBoolean("signed_data");
@@ -1969,7 +1992,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    if (ex instanceof OutOfMemoryError)
+                        Snackbar.make(parentFragment.getView(), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    else
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:body");
         }
@@ -2408,8 +2434,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onActionJunk(message);
                         break;
                     case R.id.ibVerify:
-                    case R.id.ibDecrypt:
                         onActionDecrypt(message, false);
+                        break;
+                    case R.id.ibDecrypt:
+                        boolean lock =
+                                (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                                        !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt)) ||
+                                        (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
+                                                !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt));
+                        if (lock)
+                            onMenuResync(message);
+                        else
+                            onActionDecrypt(message, false);
                         break;
 
                     case R.id.ibDownloading:
@@ -3790,6 +3826,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
                 @Override
+                protected void onExecuted(Bundle args, Void data) {
+                    ToastEx.makeText(context, R.string.title_fetching_again, Toast.LENGTH_LONG).show();
+                }
+
+                @Override
                 protected void onException(Bundle args, Throwable ex) {
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
@@ -3842,7 +3883,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (message.from != null && message.from.length > 0)
                         from = ((InternetAddress) message.from[0]).getAddress();
 
-                    String text = HtmlHelper.getText(Helper.readText(file));
+                    String html = Helper.readText(file);
+                    String text = HtmlHelper.getText(html);
 
                     return new String[]{from, message.subject, text};
                 }

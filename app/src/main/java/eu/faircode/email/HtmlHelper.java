@@ -37,6 +37,7 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.text.HtmlCompat;
 import androidx.core.util.PatternsCompat;
@@ -56,9 +57,7 @@ import org.jsoup.select.NodeVisitor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,7 +76,8 @@ public class HtmlHelper {
     private static final float MIN_LUMINANCE = 0.5f;
     private static final int TAB_SIZE = 2;
     private static final int MAX_AUTO_LINK = 250;
-    private static final int MAX_TEXT_SIZE = 50 * 1024; // characters
+    private static final int MAX_FORMAT_TEXT_SIZE = 50 * 1024; // characters
+    private static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
 
     private static final List<String> heads = Collections.unmodifiableList(Arrays.asList(
@@ -239,8 +239,13 @@ public class HtmlHelper {
     }
 
     static Document sanitize(Context context, String html, boolean show_images, boolean autolink) {
+        Document parsed = JsoupEx.parse(html);
+        return sanitize(context, parsed, show_images, autolink, false);
+    }
+
+    static Document sanitize(Context context, Document parsed, boolean show_images, boolean autolink, boolean more) {
         try {
-            return _sanitize(context, html, show_images, autolink);
+            return _sanitize(context, parsed, show_images, autolink, more);
         } catch (Throwable ex) {
             // OutOfMemoryError
             Log.e(ex);
@@ -252,14 +257,13 @@ public class HtmlHelper {
         }
     }
 
-    private static Document _sanitize(Context context, String html, boolean show_images, boolean autolink) {
+    private static Document _sanitize(Context context, Document parsed, boolean show_images, boolean autolink, boolean more) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean text_color = prefs.getBoolean("text_color", true);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
 
         // https://chromium.googlesource.com/chromium/blink/+/master/Source/core/css/html.css
-        Document parsed = JsoupEx.parse(html);
 
         // <!--[if ...]><!--> ... <!--<![endif]-->
         // https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/compatibility/hh801214(v=vs.85)
@@ -323,6 +327,23 @@ public class HtmlHelper {
             }
         }
 
+        // Limit length
+        if (truncate(parsed, true)) {
+            parsed.body()
+                    .appendElement("br")
+                    .appendElement("p")
+                    .appendElement("em")
+                    .text(context.getString(R.string.title_too_large));
+
+            if (more)
+                parsed.body()
+                        .appendElement("p")
+                        .appendElement("big")
+                        .appendElement("a")
+                        .attr("href", "full:")
+                        .text(context.getString(R.string.title_show_full));
+        }
+
         Whitelist whitelist = Whitelist.relaxed()
                 .addTags("hr", "abbr", "big", "font", "dfn", "del", "s", "tt")
                 .removeTags("col", "colgroup", "thead", "tbody")
@@ -330,7 +351,8 @@ public class HtmlHelper {
                 .removeAttributes("td", "colspan", "rowspan", "width")
                 .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
-                .addProtocols("img", "src", "data");
+                .addProtocols("img", "src", "data")
+                .addProtocols("a", "href", "full");
         if (text_color)
             whitelist
                     .addAttributes(":all", "style")
@@ -371,7 +393,7 @@ public class HtmlHelper {
                                 Integer color = parseColor(value, dark);
                                 if (color != null) {
                                     // fromHtml does not support transparency
-                                    String c = String.format("#%08x", color | 0xFF000000);
+                                    String c = String.format("#%06x", color);
                                     sb.append("color:").append(c).append(";");
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N)
                                         element.attr("color", c);
@@ -716,32 +738,9 @@ public class HtmlHelper {
                 if (!TextUtils.isEmpty(span.attr("color")))
                     span.tagName("font");
 
-        int length = 0;
-        for (Element elm : document.select("*")) {
-            for (Node child : elm.childNodes())
-                if (child instanceof TextNode)
-                    length += ((TextNode) child).text().length();
-            if (length > MAX_TEXT_SIZE)
-                elm.remove();
-        }
-
         if (document.body() == null) {
             Log.e("Sanitize without body");
             document.normalise();
-        }
-
-        if (length > MAX_TEXT_SIZE) {
-            document.body()
-                    .appendElement("p")
-                    .appendElement("em")
-                    .text(context.getString(R.string.title_too_large));
-
-            document.body()
-                    .appendElement("p")
-                    .appendElement("big")
-                    .appendElement("a")
-                    .attr("href", "full:")
-                    .text(context.getString(R.string.title_show_full));
         }
 
         return document;
@@ -777,7 +776,10 @@ public class HtmlHelper {
         if (TextUtils.isEmpty(value))
             return null;
 
-        value = value.toLowerCase(Locale.ROOT).trim();
+        value = value
+                .toLowerCase(Locale.ROOT)
+                .trim()
+                .replace("rem", "em");
 
         try {
             if (value.endsWith("em"))
@@ -816,7 +818,7 @@ public class HtmlHelper {
                     if (x11ColorMap.containsKey(code)) // workaround
                         color = x11ColorMap.get(code);
                     else
-                        color = Integer.decode(c);
+                        color = Long.decode(c).intValue();
                 }
             } else if (c.startsWith("rgb") || c.startsWith("hsl")) {
                 int s = c.indexOf("(");
@@ -850,7 +852,7 @@ public class HtmlHelper {
                     color = Color.parseColor(c);
                 } catch (IllegalArgumentException ex) {
                     // Workaround
-                    color = Integer.decode("#" + c);
+                    color = Long.decode("#" + c).intValue();
                 }
 
             if (BuildConfig.DEBUG)
@@ -1019,6 +1021,10 @@ public class HtmlHelper {
                 EntityAttachment attachment = db.attachment().getAttachment(id, cid);
                 if (attachment != null && attachment.available) {
                     File file = attachment.getFile(context);
+                    Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+                    img.attr("src", uri.toString());
+                    Log.i("Inline image uri=" + uri);
+/*
                     try (InputStream is = new FileInputStream(file)) {
                         byte[] bytes = new byte[(int) file.length()];
                         if (is.read(bytes) != bytes.length)
@@ -1032,6 +1038,7 @@ public class HtmlHelper {
 
                         img.attr("src", sb.toString());
                     }
+*/
                 }
             }
         }
@@ -1070,7 +1077,11 @@ public class HtmlHelper {
         if (body == null)
             return null;
 
-        String text = JsoupEx.parse(body).text();
+        Document d = JsoupEx.parse(body);
+
+        truncate(d, !full);
+
+        String text = d.text();
         if (full)
             return text;
 
@@ -1085,6 +1096,10 @@ public class HtmlHelper {
         final StringBuilder sb = new StringBuilder();
 
         html = html.replace("<br> ", "<br>");
+
+        Document d = JsoupEx.parse(html);
+
+        truncate(d, true);
 
         NodeTraversor.traverse(new NodeVisitor() {
             private int qlevel = 0;
@@ -1164,7 +1179,7 @@ public class HtmlHelper {
                 for (int i = 0; i < qlevel; i++)
                     sb.append("> ");
             }
-        }, JsoupEx.parse(html));
+        }, d);
 
         sb.append("\n");
 
@@ -1184,6 +1199,54 @@ public class HtmlHelper {
             index += line.length() + 1;
         }
         return ssb;
+    }
+
+    static void cleanup(Document d) {
+        // https://www.chromestatus.com/feature/5756335865987072
+        // Some messages contain 100 thousands of Apple spaces
+        for (Element aspace : d.select(".Apple-converted-space")) {
+            Node next = aspace.nextSibling();
+            if (next instanceof TextNode) {
+                TextNode tnode = (TextNode) next;
+                tnode.text(" " + tnode.text());
+                aspace.remove();
+            } else
+                aspace.replaceWith(new TextNode(" "));
+        }
+    }
+
+    static boolean truncate(Document d, boolean reformat) {
+        int max = (reformat ? MAX_FORMAT_TEXT_SIZE : MAX_FULL_TEXT_SIZE);
+
+        int length = 0;
+        for (Element elm : d.select("*")) {
+            boolean skip = false;
+
+            for (Node child : elm.childNodes()) {
+                if (child instanceof TextNode) {
+                    TextNode tnode = ((TextNode) child);
+                    String text = tnode.getWholeText();
+
+                    if (length < max) {
+                        if (length + text.length() >= max) {
+                            text = text.substring(0, max - length) + " ...";
+                            tnode.text(text);
+                            skip = true;
+                        }
+                    } else {
+                        if (skip)
+                            tnode.text("");
+                    }
+
+                    length += text.length();
+                }
+            }
+
+            if (length >= max && !skip)
+                elm.remove();
+        }
+
+        return (length >= max);
     }
 
     static Spanned fromHtml(@NonNull String html) {

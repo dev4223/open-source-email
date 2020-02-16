@@ -13,12 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 960
-        versionName "1.960"
+        versionCode 971
+        versionName "1.971"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        buildConfigField "String", "RELEASE_NAME", "\"Pyroraptor\""
+        buildConfigField "String", "RELEASE_NAME", "\"Quetecsaurus\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -96,6 +96,7 @@ android {
         }
         play_beta {
             dimension "all"
+            minSdkVersion 23
             buildConfigField "boolean", "BETA_RELEASE", "true"
             buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
             buildConfigField "String", "INVITE_URI", "\"https://play.google.com/store/apps/details?id=eu.faircode.email\""
@@ -109,6 +110,7 @@ android {
         }
         play_release {
             dimension "all"
+            minSdkVersion 23
             buildConfigField "boolean", "BETA_RELEASE", "false"
             buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
             buildConfigField "String", "INVITE_URI", "\"https://play.google.com/store/apps/details?id=eu.faircode.email\""
@@ -343,7 +345,6 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on
     implementation "org.bouncycastle:bcpkix-jdk15to18:$bouncycastle_version"
-    //implementation "org.bouncycastle:bcmail-jdk15to18:$bouncycastle_version"
 
     // https://github.com/openid/AppAuth-Android
     // https://mvnrepository.com/artifact/net.openid/appauth?repo=bt-openid

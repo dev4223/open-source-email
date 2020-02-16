@@ -153,7 +153,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -476,7 +475,7 @@ public class FragmentCompose extends FragmentBase {
                 if (activity != null)
                     activity.onUserInteraction();
 
-                if (before == 0 && count == 1 && text.charAt(start) == '\n') {
+                if (before == 0 && count == 1 && start > 0 && text.charAt(start) == '\n') {
                     // break block quotes
                     boolean broken = false;
                     SpannableStringBuilder ssb = new SpannableStringBuilder(text);
@@ -817,7 +816,8 @@ public class FragmentCompose extends FragmentBase {
                         boolean plain = args.getBoolean("plain");
                         String body = args.getString("body");
 
-                        Document doc = JsoupEx.parse(Helper.readText(EntityMessage.getFile(context, id)));
+                        String rhtml = Helper.readText(EntityMessage.getFile(context, id));
+                        Document doc = JsoupEx.parse(rhtml);
                         Elements ref = doc.select("div[fairemail=reference]");
                         ref.removeAttr("fairemail");
 
@@ -1463,7 +1463,7 @@ public class FragmentCompose extends FragmentBase {
                     pgpUserIds = new String[recipients.size()];
                     for (int i = 0; i < recipients.size(); i++) {
                         InternetAddress recipient = (InternetAddress) recipients.get(i);
-                        pgpUserIds[i] = recipient.getAddress().toLowerCase(Locale.ROOT);
+                        pgpUserIds[i] = recipient.getAddress().toLowerCase();
                     }
 
                     Intent intent;
@@ -3078,7 +3078,8 @@ public class FragmentCompose extends FragmentBase {
                             div.appendChild(p);
 
                             // Get referenced message body
-                            Document d = JsoupEx.parse(Helper.readText(ref.getFile(context)));
+                            String rhtml = Helper.readText(ref.getFile(context));
+                            Document d = JsoupEx.parse(rhtml);
 
                             // Remove signature separators
                             boolean remove_signatures = prefs.getBoolean("remove_signatures", false);
@@ -3263,16 +3264,11 @@ public class FragmentCompose extends FragmentBase {
                         EntityIdentity identity = null;
                         if (data.draft.identity != null)
                             identity = db.identity().getIdentity(data.draft.identity);
-                        boolean signature_end = prefs.getBoolean("signature_end", false);
-
-                        if (!signature_end && identity != null)
-                            addSignature(context, document, data.draft, identity);
 
                         for (Element e : ref)
                             document.body().appendChild(e);
 
-                        if (signature_end && identity != null)
-                            addSignature(context, document, data.draft, identity);
+                        addSignature(context, document, data.draft, identity);
 
                         String html = JsoupEx.parse(document.html()).html();
                         Helper.writeText(file, html);
@@ -3654,15 +3650,20 @@ public class FragmentCompose extends FragmentBase {
 
                     String p = Helper.readText(draft.getFile(context));
                     Document doc = JsoupEx.parse(p);
-                    if ((body != null && !body.equals(doc.html())) ||
+                    doc.select("div[fairemail=signature]").remove();
+                    Elements ref = doc.select("div[fairemail=reference]");
+                    ref.remove();
+
+                    Document b;
+                    if (body == null)
+                        b = Document.createShell("");
+                    else
+                        b = HtmlHelper.sanitize(context, body, true, false);
+
+                    if (TextUtils.isEmpty(body) ||
+                            !b.body().html().equals(doc.body().html()) ||
                             (extras != null && extras.containsKey("html"))) {
                         dirty = true;
-
-                        doc.select("div[fairemail=signature]").remove();
-                        Elements ref = doc.select("div[fairemail=reference]");
-                        ref.remove();
-
-                        boolean signature_end = prefs.getBoolean("signature_end", false);
 
                         // Get saved body
                         Document d;
@@ -3670,14 +3671,10 @@ public class FragmentCompose extends FragmentBase {
                             // Save current revision
                             Document c = JsoupEx.parse(body);
 
-                            if (!signature_end)
-                                addSignature(context, c, draft, identity);
-
                             for (Element e : ref)
                                 c.body().appendChild(e);
 
-                            if (signature_end)
-                                addSignature(context, c, draft, identity);
+                            addSignature(context, c, draft, identity);
 
                             Helper.writeText(draft.getFile(context, draft.revision), c.html());
 
@@ -3685,14 +3682,10 @@ public class FragmentCompose extends FragmentBase {
                         } else {
                             d = JsoupEx.parse(body);
 
-                            if (!signature_end)
-                                addSignature(context, d, draft, identity);
-
                             for (Element e : ref)
                                 d.body().appendChild(e);
 
-                            if (signature_end)
-                                addSignature(context, d, draft, identity);
+                            addSignature(context, d, draft, identity);
                         }
 
                         body = d.html();
@@ -3704,7 +3697,8 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                         Helper.writeText(draft.getFile(context, draft.revision), body);
-                    }
+                    } else
+                        body = p;
 
                     if (action == R.id.action_undo || action == R.id.action_redo) {
                         if (action == R.id.action_undo) {
@@ -3741,7 +3735,7 @@ public class FragmentCompose extends FragmentBase {
                             action == R.id.action_undo ||
                             action == R.id.action_redo ||
                             action == R.id.action_check) {
-                        if (BuildConfig.DEBUG || dirty)
+                        if (dirty)
                             EntityOperation.queue(context, draft, EntityOperation.ADD);
 
                         if (action == R.id.action_check) {
@@ -3987,8 +3981,8 @@ public class FragmentCompose extends FragmentBase {
 
     private static String unprefix(String subject, String prefix) {
         subject = subject.trim();
-        prefix = prefix.trim().toLowerCase(Locale.ROOT);
-        while (subject.toLowerCase(Locale.ROOT).startsWith(prefix))
+        prefix = prefix.trim().toLowerCase();
+        while (subject.toLowerCase().startsWith(prefix))
             subject = subject.substring(prefix.length()).trim();
         return subject;
     }
@@ -3998,11 +3992,13 @@ public class FragmentCompose extends FragmentBase {
                 identity == null || TextUtils.isEmpty(identity.signature))
             return;
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        int signature_location = prefs.getInt("signature_location", 1);
+        boolean usenet = prefs.getBoolean("usenet_signature", false);
+
         Element div = document.createElement("div");
         div.attr("fairemail", "signature");
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean usenet = prefs.getBoolean("usenet_signature", false);
         if (usenet) {
             // https://www.ietf.org/rfc/rfc3676.txt
             Element span = document.createElement("span");
@@ -4012,7 +4008,14 @@ public class FragmentCompose extends FragmentBase {
         }
 
         div.append(identity.signature);
-        document.body().appendChild(div);
+
+        Elements ref = document.select("div[fairemail=reference]");
+        if (signature_location == 0)
+            document.body().prependChild(div);
+        else if (ref.size() == 0 || signature_location == 2)
+            document.body().appendChild(div);
+        else if (signature_location == 1)
+            ref.first().before(div);
     }
 
     private void showDraft(final EntityMessage draft) {

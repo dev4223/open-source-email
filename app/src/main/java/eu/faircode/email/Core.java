@@ -253,11 +253,9 @@ class Core {
                             if (message != null)
                                 db.message().setMessageError(message.id, null);
 
-                            if (!EntityOperation.SYNC.equals(op.name)) {
-                                db.operation().setOperationState(op.id, "executing");
-                                for (TupleOperationEx s : similar.keySet())
-                                    db.operation().setOperationState(s.id, "executing");
-                            }
+                            db.operation().setOperationState(op.id, "executing");
+                            for (TupleOperationEx s : similar.keySet())
+                                db.operation().setOperationState(s.id, "executing");
 
                             db.setTransactionSuccessful();
                         } finally {
@@ -844,7 +842,7 @@ class Core {
             itarget.appendMessages(icopies.toArray(new Message[0]));
         } else {
             for (Message imessage : map.keySet()) {
-                Log.i("Move seen=" + seen + " unflag=" + unflag);
+                Log.i("Move seen=" + seen + " unflag=" + unflag + " flags=" + imessage.getFlags());
 
                 // Mark read
                 if (seen && flags.contains(Flags.Flag.SEEN))
@@ -2458,14 +2456,14 @@ class Core {
                 addresses.addAll(Arrays.asList(message.cc));
             if (message.bcc != null)
                 addresses.addAll(Arrays.asList(message.bcc));
+            if (message.from != null)
+                addresses.addAll(Arrays.asList(message.from));
             if (message.deliveredto != null)
                 try {
                     addresses.add(new InternetAddress(message.deliveredto));
                 } catch (AddressException ex) {
                     Log.w(ex);
                 }
-            if (message.from != null)
-                addresses.addAll(Arrays.asList(message.from));
         }
 
         // Search for matching identity

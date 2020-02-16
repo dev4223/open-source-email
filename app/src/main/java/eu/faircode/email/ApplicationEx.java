@@ -236,6 +236,13 @@ public class ApplicationEx extends Application {
                 editor.putBoolean("move_1_confirmed", automove);
                 editor.remove("automove");
             }
+        } else if (version < 972) {
+            if (prefs.contains("signature_end")) {
+                boolean signature_end = prefs.getBoolean("signature_end", false);
+                if (signature_end)
+                    editor.putInt("signature_location", 2);
+                editor.remove("signature_end");
+            }
         }
 
         if (BuildConfig.DEBUG && false) {
@@ -272,6 +279,7 @@ public class ApplicationEx extends Application {
                     "send", getString(R.string.channel_send),
                     NotificationManager.IMPORTANCE_DEFAULT);
             send.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+            send.setShowBadge(false);
             send.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             nm.createNotificationChannel(send);
 
