@@ -1726,6 +1726,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return;
             }
 
+            message.update = true;
+
             if (message.accountProtocol != EntityAccount.TYPE_IMAP)
                 if (direction == ItemTouchHelper.LEFT) {
                     adapter.notifyItemChanged(pos);
@@ -3853,9 +3855,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (!message.content)
                             EntityOperation.queue(context, message, EntityOperation.BODY);
 
-                        int ops = db.operation().getOperationCount(message.folder, message.id, EntityOperation.SEEN);
-                        if (account.auto_seen && !folder.read_only && (!message.seen || ops > 0))
-                            EntityOperation.queue(context, message, EntityOperation.SEEN, true);
+                        if (!folder.read_only)
+                            if (account.auto_seen) {
+                                int ops = db.operation().getOperationCount(message.folder, message.id, EntityOperation.SEEN);
+                                if (!message.seen || ops > 0)
+                                    EntityOperation.queue(context, message, EntityOperation.SEEN, true);
+                            } else
+                                db.message().setMessageUiIgnored(message.id, true);
                     }
 
                     db.setTransactionSuccessful();
@@ -4177,7 +4183,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private ActivityBase.IKeyPressedListener onBackPressedListener = new ActivityBase.IKeyPressedListener() {
         @Override
-        public boolean onKeyPressed(int keyCode) {
+        public boolean onKeyPressed(KeyEvent event) {
             if (viewType != AdapterMessage.ViewType.THREAD)
                 return false;
 
@@ -4190,7 +4196,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (!volumenav)
                 return false;
 
-            switch (keyCode) {
+            switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_VOLUME_UP:
                     if (next == null) {
                         Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
@@ -5112,7 +5118,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                     result = cert;
                                     break;
-                                }
+                                } else
+                                    Log.w("Signature invalid");
                             } catch (CMSException ex) {
                                 Log.w(ex);
                                 args.putString("reason", ex.getMessage());
@@ -5626,6 +5633,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (wakeup < 0)
                     wakeup = null;
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean flag_snoozed = prefs.getBoolean("flag_snoozed", false);
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
@@ -5635,6 +5645,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     for (EntityMessage threaded : messages) {
                         db.message().setMessageSnoozed(threaded.id, wakeup);
                         db.message().setMessageUiIgnored(threaded.id, true);
+                        if (flag_snoozed)
+                            EntityOperation.queue(context, threaded, EntityOperation.FLAG, true);
                         EntityMessage.snooze(context, threaded.id, wakeup);
                     }
 
@@ -5680,6 +5692,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (wakeup < 0)
                     wakeup = null;
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean flag_snoozed = prefs.getBoolean("flag_snoozed", false);
+
                 DB db = DB.getInstance(context);
                 try {
                     db.beginTransaction();
@@ -5694,6 +5709,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         for (EntityMessage threaded : messages) {
                             db.message().setMessageSnoozed(threaded.id, wakeup);
                             db.message().setMessageUiIgnored(message.id, true);
+                            if (flag_snoozed)
+                                EntityOperation.queue(context, threaded, EntityOperation.FLAG, true);
                             EntityMessage.snooze(context, threaded.id, wakeup);
                         }
                     }
@@ -5788,8 +5805,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (!file.exists())
                     return null;
 
-                String html = Helper.readText(file);
-                Document document = JsoupEx.parse(html);
+                Document document = JsoupEx.parse(file);
                 HtmlHelper.truncate(document, false);
                 HtmlHelper.embedInlineImages(context, id, document);
 

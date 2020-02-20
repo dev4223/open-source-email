@@ -64,6 +64,7 @@ import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -630,7 +631,7 @@ public class FragmentCompose extends FragmentBase {
 
         //view.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
 
-        addKeyPressedListener(onBackPressedListener);
+        addKeyPressedListener(onKeyPressedListener);
 
         // Initialize
         setHasOptionsMenu(true);
@@ -816,8 +817,8 @@ public class FragmentCompose extends FragmentBase {
                         boolean plain = args.getBoolean("plain");
                         String body = args.getString("body");
 
-                        String rhtml = Helper.readText(EntityMessage.getFile(context, id));
-                        Document doc = JsoupEx.parse(rhtml);
+                        File rfile = EntityMessage.getFile(context, id);
+                        Document doc = JsoupEx.parse(rfile);
                         Elements ref = doc.select("div[fairemail=reference]");
                         ref.removeAttr("fairemail");
 
@@ -3078,8 +3079,7 @@ public class FragmentCompose extends FragmentBase {
                             div.appendChild(p);
 
                             // Get referenced message body
-                            String rhtml = Helper.readText(ref.getFile(context));
-                            Document d = JsoupEx.parse(rhtml);
+                            Document d = JsoupEx.parse(ref.getFile(context));
 
                             // Remove signature separators
                             boolean remove_signatures = prefs.getBoolean("remove_signatures", false);
@@ -3248,7 +3248,7 @@ public class FragmentCompose extends FragmentBase {
                     if (data.draft.content) {
                         File file = data.draft.getFile(context);
 
-                        Document doc = JsoupEx.parse(Helper.readText(file));
+                        Document doc = JsoupEx.parse(file);
                         doc.select("div[fairemail=signature]").remove();
                         Elements ref = doc.select("div[fairemail=reference]");
                         ref.remove();
@@ -3270,7 +3270,7 @@ public class FragmentCompose extends FragmentBase {
 
                         addSignature(context, document, data.draft, identity);
 
-                        String html = JsoupEx.parse(document.html()).html();
+                        String html = document.html();
                         Helper.writeText(file, html);
                         Helper.writeText(data.draft.getFile(context, data.draft.revision), html);
 
@@ -3648,8 +3648,7 @@ public class FragmentCompose extends FragmentBase {
                         db.message().updateMessage(draft);
                     }
 
-                    String p = Helper.readText(draft.getFile(context));
-                    Document doc = JsoupEx.parse(p);
+                    Document doc = JsoupEx.parse(draft.getFile(context));
                     doc.select("div[fairemail=signature]").remove();
                     Elements ref = doc.select("div[fairemail=reference]");
                     ref.remove();
@@ -3698,7 +3697,7 @@ public class FragmentCompose extends FragmentBase {
 
                         Helper.writeText(draft.getFile(context, draft.revision), body);
                     } else
-                        body = p;
+                        body = Helper.readText(draft.getFile(context));
 
                     if (action == R.id.action_undo || action == R.id.action_redo) {
                         if (action == R.id.action_undo) {
@@ -4058,7 +4057,7 @@ public class FragmentCompose extends FragmentBase {
                 if (draft == null || !draft.content)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_body));
 
-                Document doc = JsoupEx.parse(Helper.readText(draft.getFile(context)));
+                Document doc = JsoupEx.parse(draft.getFile(context));
                 doc.select("div[fairemail=signature]").remove();
                 Elements ref = doc.select("div[fairemail=reference]");
                 ref.remove();
@@ -4205,9 +4204,13 @@ public class FragmentCompose extends FragmentBase {
         }
     };
 
-    private ActivityBase.IKeyPressedListener onBackPressedListener = new ActivityBase.IKeyPressedListener() {
+    private ActivityBase.IKeyPressedListener onKeyPressedListener = new ActivityBase.IKeyPressedListener() {
         @Override
-        public boolean onKeyPressed(int keyCode) {
+        public boolean onKeyPressed(KeyEvent event) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.isCtrlPressed()) {
+                onActionSend(false);
+                return true;
+            }
             return false;
         }
 
