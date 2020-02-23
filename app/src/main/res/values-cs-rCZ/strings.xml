@@ -298,6 +298,7 @@
     <string name="title_advanced_contrast">Použít vysoký kontrast pro text zprávy</string>
     <string name="title_advanced_monospaced">Použít neproporcionální písmo pro text zprávy</string>
     <string name="title_advanced_text_color">Zobrazit barvy textu</string>
+    <string name="title_advanced_text_size">Zobrazit malé a velké texty</string>
     <string name="title_advanced_collapse_quotes">Sbalit citovaný text</string>
     <string name="title_advanced_images_inline">Automaticky zobrazit vložené obrázky</string>
     <string name="title_advanced_seekbar">Zobrazit relativní pozici v konverzaci puntíkem</string>
@@ -318,7 +319,9 @@
     <string name="title_advanced_quick_filter">Zobrazit neobtěžující ikony pro rychlé filtrování</string>
     <string name="title_advanced_quick_scroll">Zobrazit neobtěžující ikony pro rychlý posun nahoru/dolů</string>
     <string name="title_advanced_autoread">Při přesunu automaticky označit zprávy jako přečtené</string>
+    <string name="title_advanced_star_snoozed">Automaticky přidat hvězdičku při odložení zpráv</string>
     <string name="title_advanced_autounstar">Při přesunu automaticky odebrat zprávám hvězdičku</string>
+    <string name="title_advanced_auto_important">Automaticky činit zprávy s hvězdičkou důležitými</string>
     <string name="title_advanced_reset_importance">Obnovit důležitost při přesunu zpráv</string>
     <string name="title_advanced_discard_delete">Při zahození konceptu jej permanentně smazat</string>
     <string name="title_advanced_default_snooze">Výchozí délka odložení</string>
@@ -445,7 +448,6 @@
     <string name="title_account_name_hint">Použito k odlišení složek</string>
     <string name="title_account_interval_hint">Četnost obnovy spojení pro okamžité zprávy nebo četnost kontroly nových zpráv</string>
     <string name="title_account_partial_fetch_hint">Vypnout pouze v případě prázdných zpráv nebo poškozených příloh</string>
-    <string name="title_account_signature">Text podpisu</string>
     <string name="title_color">Barva</string>
     <string name="title_account_ondemand">Synchronizovat ručně</string>
     <string name="title_account_notify">Samostatná oznámení</string>
@@ -485,7 +487,7 @@
     <string name="title_no_password">Chybí heslo</string>
     <string name="title_no_inbox">Složka \"Doručené\" nenalezena</string>
     <string name="title_no_primary_drafts">Žádný hlavní účet nebo žádná složka konceptů</string>
-    <string name="title_no_identities">Odesílání e-mailů vyžaduje alespoň jednu identitu</string>
+    <string name="title_no_identities">Odesílání e-mailů vyžaduje alespoň jednu identitu a složku konceptů</string>
     <string name="title_no_standard">Tento poskytovatel používá proprietární e-mailový protokol, a proto není možné použít e-mailové klienty třetích stran</string>
     <string name="title_no_idle">Tento poskytovatel nepodporuje okamžité zprávy. Následkem bude opožděný příjem nových zpráv a zvýšená spotřeba baterie.</string>
     <string name="title_no_utf8">Tento poskytovatel nepodporuje UTF-8</string>
@@ -495,7 +497,6 @@
     <string name="title_drafts_required">Složka konceptů je nutná pro odesílání zpráv</string>
     <string name="title_account_delete">Trvale smazat tento účet?</string>
     <string name="title_identity_delete">Trvale smazat tuto identitu?</string>
-    <string name="title_edit_html">Upravit jako HTML</string>
     <string name="title_sign_key">Podpisový klíč: %1$s</string>
     <string name="title_last_connected">Poslední připojení: %1$s</string>
     <string name="title_storage_quota">Využití úložiště serveru: %1$s/%2$s</string>
@@ -631,6 +632,7 @@
     <string name="title_no_search">Vyhledávání na serveru není pro tento účet k dispozici</string>
     <string name="title_too_large">Zpráva je příliš velká pro úplné přeformátování</string>
     <string name="title_truncated">Zpráva je příliš velká pro úplné zobrazení</string>
+    <string name="title_insufficient_memory">Zpráva je příliš velká, nevejde se do dostupné paměti</string>
     <string name="title_show_full">Zobrazit celou zprávu</string>
     <string name="title_unused_inline">Nepoužité vložené obrázky budou při odeslání odebrány</string>
     <string name="title_accross_remark">Zprávy přesunuté napříč účty budou opětovně staženy, což povede ke spotřebě dat navíc</string>
@@ -739,7 +741,7 @@
     <string name="title_signature_unconfirmed_from">Podpis zprávy je platný, ale nepotvrzený: %1$s</string>
     <string name="title_signature_invalid">Neplatný podpis zprávy</string>
     <string name="title_signature_invalid_reason">Neplatný podpis zprávy: %1$s</string>
-    <string name="title_signature_key_missing">Chybí klíč</string>
+    <string name="title_signature_key_missing">Pro ověření podpisu chybí klíč</string>
     <string name="title_signature_certificate_invalid">Neplatný řetězec certifikátů</string>
     <string name="title_signature_sender">Adresa odesílatele</string>
     <string name="title_signature_email">Adresa podpisu</string>

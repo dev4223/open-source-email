@@ -4,6 +4,7 @@
     <attr name="colorUnread" format="reference" />
     <attr name="colorSubject" format="reference" />
     <attr name="colorUnreadHighlight" format="reference" />
+    <attr name="colorHighlight" format="reference" />
     <attr name="colorEncrypt" format="reference" />
     <attr name="colorSeparator" format="reference" />
     <attr name="colorWarning" format="reference" />
@@ -33,6 +34,8 @@
         <item name="colorSubject">@color/lightColorUnread</item>
         <item name="colorRead">@color/colorReadLight</item>
         <item name="colorUnread">@color/colorUnreadLight</item>
+
+        <item name="colorHighlight">@color/colorHighlightLight</item>
 
         <item name="colorEncrypt">@color/colorEncryptLight</item>
 
@@ -80,6 +83,8 @@
         <item name="colorSubject">@color/blackColorSubject</item>
         <item name="colorRead">@color/colorReadDark</item>
         <item name="colorUnread">@color/colorUnreadDark</item>
+
+        <item name="colorHighlight">@color/colorHighlightDark</item>
 
         <item name="colorEncrypt">@color/colorEncryptDark</item>
 

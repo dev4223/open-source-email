@@ -351,6 +351,7 @@
     <string name="title_advanced_fts_indexed">%1$d / %2$d mesaj indekslendi (%3$s)</string>
     <string name="title_advanced_english">İngilizce Diline Zorla</string>
     <string name="title_advanced_watchdog">Düzenli aralıklarla FairEmail hala etkin mi diye kontrol et</string>
+    <string name="title_advanced_optimize">Ayarları otomatik olarak optimize et</string>
     <string name="title_advanced_updates">Güncellemelere bak</string>
     <string name="title_advanced_experiments">Deneysel özellikleri deneyin</string>
     <string name="title_advanced_crash_reports">Hata raporları gönder</string>
@@ -428,7 +429,6 @@
     <string name="title_account_name_hint">Klasörleri ayırt etmek için kullanılır</string>
     <string name="title_account_interval_hint">Anlık mesajlar için bağlantı yenileme frekansı ya da yeni mesajlar için kontrol etme frekansı</string>
     <string name="title_account_partial_fetch_hint">Bunu yalnızca boş iletiler veya bozuk ekler olması durumunda devre dışı bırakın</string>
-    <string name="title_account_signature">İmza Metni</string>
     <string name="title_color">Renk</string>
     <string name="title_account_ondemand">Manuel olarak senkronize et</string>
     <string name="title_account_notify">Ayrı bildirimler</string>
@@ -468,7 +468,7 @@
     <string name="title_no_password">Parola Eksik</string>
     <string name="title_no_inbox">Gelen kutusu bulunamadı</string>
     <string name="title_no_primary_drafts">Birincil hesap veya taslak klasörü yok</string>
-    <string name="title_no_identities">E-posta göndermek için en az bir kimlik gereklidir</string>
+    <string name="title_no_identities">E-posta göndermek için en az bir kimlik ve bir taslaklar klasörü gerekmektedir</string>
     <string name="title_no_standard">Bu sağlayıcı, açık olmayan bir e-posta protokolü kullanıyor ve bu nedenle üçüncü taraf e-posta istemcilerini kullanmak mümkün değil</string>
     <string name="title_no_idle">Bu sağlayıcı anlık mesajları desteklemiyor. Bu, yeni mesajların alınmasını geciktirecek ve pil kullanımını artıracaktır.</string>
     <string name="title_no_utf8">Bu sağlayıcı UTF-8\'i desteklemiyor</string>
@@ -716,6 +716,7 @@
     <string name="title_user_interaction">OpenKeychain\'e gönderiliyor</string>
     <string name="title_signed_data">Mesaj metnini göstermek için imzayı doğrula</string>
     <string name="title_not_encrypted">Mesaj imzalı veya şifreli değil</string>
+    <string name="title_no_sign_key">Hiçbir imzalama anahtarı seçilmedi</string>
     <string name="title_reset_sign_key">İmzalama anahtarını sıfırla</string>
     <string name="title_signature_none">İleti imzalı değil</string>
     <string name="title_signature_valid">İleti imzası geçerli</string>
@@ -724,7 +725,7 @@
     <string name="title_signature_unconfirmed_from">Mesaj imzası geçerli ancak doğrulanmamış: %1$s</string>
     <string name="title_signature_invalid">İleti imzası geçersiz</string>
     <string name="title_signature_invalid_reason">Mesaj imzası geçersiz: %1$s</string>
-    <string name="title_signature_key_missing">Anahtar eksik</string>
+    <string name="title_signature_key_missing">İmza doğrulaması için anahtar eksik</string>
     <string name="title_signature_certificate_invalid">Sertifika zinciri geçersiz</string>
     <string name="title_signature_sender">Gönderenin adresi</string>
     <string name="title_signature_email">İmzanın adresi</string>
@@ -761,6 +762,9 @@
     <string name="title_force_sync">Eşzamanlamaya zorla</string>
     <string name="title_previous">Önceki</string>
     <string name="title_next">Sonraki</string>
+    <string name="title_edit_signature">İmzayı düzenle</string>
+    <string name="title_edit_signature_text">İmza metni</string>
+    <string name="title_edit_signature_image">Resim ekle</string>
     <string name="title_answer_caption">Kalıbı Düzenle</string>
     <string name="title_answer_reply">Yanıt kalıbı</string>
     <string name="title_answer_name">Kalıp adı</string>

@@ -263,6 +263,7 @@
     <string name="title_advanced_contrast">メッセージテキストにハイコントラストを使用</string>
     <string name="title_advanced_monospaced">メッセージテキストに等幅フォントを使用</string>
     <string name="title_advanced_text_color">テキストの色を表示</string>
+    <string name="title_advanced_text_size">大小のテキストを表示</string>
     <string name="title_advanced_collapse_quotes">引用テキストを折りたたむ</string>
     <string name="title_advanced_images_inline">インライン画像を自動的に表示</string>
     <string name="title_advanced_seekbar">ドットで相対的な会話の位置を表示</string>
@@ -285,6 +286,7 @@
     <string name="title_advanced_autoread">移動するメッセージを既読にします</string>
     <string name="title_advanced_star_snoozed">スヌーズメッセージにスターを自動的に追加</string>
     <string name="title_advanced_autounstar">移動するメッセージのスターを取り消します</string>
+    <string name="title_advanced_auto_important">スター付きメッセージを自動的に重要にする</string>
     <string name="title_advanced_reset_importance">移動メッセージの重要度をリセット</string>
     <string name="title_advanced_discard_delete">下書きを破棄する場合、下書きを完全に削除</string>
     <string name="title_advanced_default_snooze">デフォルトのスヌーズ時間</string>
@@ -335,6 +337,7 @@
     <string name="title_advanced_fts_indexed">%1$d/%2$d個のメッセージがインデックス付けされました(%3$s)</string>
     <string name="title_advanced_english">強制的に英語表示</string>
     <string name="title_advanced_watchdog">FairEmailがアクティブか定期的に確認</string>
+    <string name="title_advanced_optimize">設定を自動的に最適化する</string>
     <string name="title_advanced_updates">更新を確認</string>
     <string name="title_advanced_experiments">実験的な機能を試す</string>
     <string name="title_advanced_crash_reports">エラーレポートを送信</string>
@@ -411,7 +414,6 @@
     <string name="title_account_name_hint">フォルダを区別する為に使用</string>
     <string name="title_account_interval_hint">プッシュメッセージの接続を更新する頻度又は新しいメッセージを確認する頻度</string>
     <string name="title_account_partial_fetch_hint">空のメッセージ又は破損した添付ファイルの場合にのみ無効</string>
-    <string name="title_account_signature">署名のテキスト</string>
     <string name="title_color">カラー</string>
     <string name="title_account_ondemand">手動で同期</string>
     <string name="title_account_notify">個別の通知</string>
@@ -451,7 +453,7 @@
     <string name="title_no_password">パスワードを入力して下さい</string>
     <string name="title_no_inbox">受信トレイが見つかりません</string>
     <string name="title_no_primary_drafts">プライマリアカウントもドラフトフォルダも有りません</string>
-    <string name="title_no_identities">メールを送信するには少なくとも1つのIDが必要です</string>
+    <string name="title_no_identities">メールを送信するには少なくとも1つのIDと下書きフォルダーが必要です</string>
     <string name="title_no_standard">このプロバイダーは独自の電子メールプロトコルを使用している為、サードパーティの電子メールクライアントを使用することは出来ません</string>
     <string name="title_no_idle">このプロバイダーはプッシュメッセージをサポートしていません。 これにより新しいメッセージの受信が遅れバッテリーの使用量が増加します</string>
     <string name="title_no_utf8">このプロバイダーはUTF-8をサポートしていません</string>
@@ -461,7 +463,6 @@
     <string name="title_drafts_required">メッセージを送信するには下書きフォルダが必要です</string>
     <string name="title_account_delete">このアカウントを完全に削除しますか？</string>
     <string name="title_identity_delete">このIDを完全に削除しますか？</string>
-    <string name="title_edit_html">HTMLとして編集</string>
     <string name="title_sign_key">署名キー:%1$s</string>
     <string name="title_last_connected">最終接続:%1$s</string>
     <string name="title_storage_quota">サーバストレージ使用量:%1$s/%2$s</string>
@@ -706,7 +707,7 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_signature_unconfirmed_from">メッセージ署名は有効ですが確認されていません:%1$s</string>
     <string name="title_signature_invalid">メッセージ署名が無効です</string>
     <string name="title_signature_invalid_reason">メッセージ署名が無効です:%1$s</string>
-    <string name="title_signature_key_missing">キーが有りません</string>
+    <string name="title_signature_key_missing">署名検証にキーが有りません</string>
     <string name="title_signature_certificate_invalid">証明書が無効</string>
     <string name="title_signature_sender">差出人のメールアドレス</string>
     <string name="title_signature_email">署名のアドレス</string>

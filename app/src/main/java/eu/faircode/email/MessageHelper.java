@@ -25,12 +25,14 @@ import android.net.MailTo;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
 import com.sun.mail.util.FolderClosedIOException;
 import com.sun.mail.util.MessageRemovedIOException;
 
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -294,8 +296,11 @@ public class MessageHelper {
 
                         final ContentType cts = new ContentType(attachment.type);
                         String micalg = cts.getParameter("micalg");
+                        if (TextUtils.isEmpty(micalg))
+                            Log.e("PGP micalg missing");
                         ParameterList params = cts.getParameterList();
-                        params.remove("micalg");
+                        if (params != null)
+                            params.remove("micalg");
                         cts.setParameterList(params);
 
                         // Build signature
@@ -375,8 +380,13 @@ public class MessageHelper {
 
                         final ContentType cts = new ContentType(attachment.type);
                         String micalg = cts.getParameter("micalg");
+                        if (TextUtils.isEmpty(micalg)) {
+                            Log.e("S/MIME micalg missing");
+                            micalg = "sha-256";
+                        }
                         ParameterList params = cts.getParameterList();
-                        params.remove("micalg");
+                        if (params != null)
+                            params.remove("micalg");
                         cts.setParameterList(params);
 
                         // Build signature
@@ -488,8 +498,61 @@ public class MessageHelper {
         Document document = JsoupEx.parse(message.getFile(context));
 
         // When sending message
-        if (identity != null)
+        if (identity != null) {
             document.select("div[fairemail=signature],div[fairemail=reference]").removeAttr("fairemail");
+
+            DB db = DB.getInstance(context);
+            try {
+                db.beginTransaction();
+
+                for (Element img : document.select("img")) {
+                    String source = img.attr("src");
+                    if (!source.startsWith("content:"))
+                        continue;
+
+                    Uri uri = Uri.parse(source);
+                    DocumentFile dfile = DocumentFile.fromSingleUri(context, uri);
+                    if (dfile == null)
+                        continue;
+
+                    String name = dfile.getName();
+                    String type = dfile.getType();
+
+                    if (TextUtils.isEmpty(name))
+                        name = uri.getLastPathSegment();
+                    if (TextUtils.isEmpty(type))
+                        type = "image/*";
+
+                    EntityAttachment attachment = new EntityAttachment();
+                    attachment.message = message.id;
+                    attachment.sequence = db.attachment().getAttachmentSequence(message.id) + 1;
+                    attachment.name = name;
+                    attachment.type = type;
+                    attachment.disposition = Part.INLINE;
+                    attachment.cid = null;
+                    attachment.size = null;
+                    attachment.progress = 0;
+
+                    attachment.id = db.attachment().insertAttachment(attachment);
+
+                    String cid = BuildConfig.APPLICATION_ID + "." + attachment.id;
+                    attachment.cid = "<" + BuildConfig.APPLICATION_ID + "." + attachment.id + ">";
+                    db.attachment().setCid(attachment.id, attachment.cid);
+
+                    attachment.size = Helper.copy(context, uri, attachment.getFile(context));
+                    attachment.progress = null;
+                    attachment.available = true;
+                    db.attachment().setDownloaded(attachment.id, attachment.size);
+
+                    attachments.add(attachment);
+                    img.attr("src", "cid:" + cid);
+                }
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        }
 
         // multipart/mixed
         //   multipart/related
@@ -1221,78 +1284,90 @@ public class MessageHelper {
     }
 
     class MessageParts {
-        private Part plain = null;
-        private Part html = null;
+        private List<Part> plain = new ArrayList<>();
+        private List<Part> html = new ArrayList<>();
         private List<AttachmentPart> attachments = new ArrayList<>();
         private ArrayList<String> warnings = new ArrayList<>();
 
         Boolean isPlainOnly() {
-            if (plain == null && html == null)
+            if (plain.size() + html.size() == 0)
                 return null;
-            return (html == null);
+            return (html.size() == 0);
         }
 
         Long getBodySize() throws MessagingException {
-            Part part = (html == null ? plain : html);
-            if (part == null)
-                return null;
-            int size = part.getSize();
-            if (size < 0)
-                return null;
-            else
-                return (long) size;
+            Long size = null;
+
+            List<Part> all = new ArrayList<>();
+            all.addAll(plain);
+            all.addAll(html);
+            for (Part p : all) {
+                int s = p.getSize();
+                if (s >= 0)
+                    if (size == null)
+                        size = (long) s;
+                    else
+                        size += (long) s;
+            }
+            return size;
         }
 
         String getHtml(Context context) throws MessagingException, IOException {
-            if (plain == null && html == null) {
+            if (plain.size() + html.size() == 0) {
                 Log.i("No body part");
                 return null;
             }
 
-            String result;
-            Part part = (html == null ? plain : html);
-            if (part.getSize() > MAX_MESSAGE_SIZE) {
-                warnings.add(context.getString(R.string.title_insufficient_memory));
-                return null;
-            }
+            StringBuilder sb = new StringBuilder();
 
-            try {
-                Object content = part.getContent();
-                Log.i("Content class=" + (content == null ? null : content.getClass().getName()));
-
-                if (content == null) {
-                    warnings.add(context.getString(R.string.title_no_body));
+            for (Part part : html.size() > 0 ? html : plain) {
+                if (part.getSize() > MAX_MESSAGE_SIZE) {
+                    warnings.add(context.getString(R.string.title_insufficient_memory));
                     return null;
                 }
 
-                if (content instanceof String)
-                    result = (String) content;
-                else if (content instanceof InputStream)
-                    // Typically com.sun.mail.util.QPDecoderStream
-                    result = Helper.readStream((InputStream) content, StandardCharsets.UTF_8.name());
-                else
-                    result = content.toString();
-            } catch (IOException | FolderClosedException | MessageRemovedException ex) {
-                throw ex;
-            } catch (Throwable ex) {
-                Log.w(ex);
-                warnings.add(Log.formatThrowable(ex, false));
-                return null;
+                String result;
+
+                try {
+                    Object content = part.getContent();
+                    Log.i("Content class=" + (content == null ? null : content.getClass().getName()));
+
+                    if (content == null) {
+                        warnings.add(context.getString(R.string.title_no_body));
+                        return null;
+                    }
+
+                    if (content instanceof String)
+                        result = (String) content;
+                    else if (content instanceof InputStream)
+                        // Typically com.sun.mail.util.QPDecoderStream
+                        result = Helper.readStream((InputStream) content, StandardCharsets.UTF_8.name());
+                    else
+                        result = content.toString();
+                } catch (IOException | FolderClosedException | MessageRemovedException ex) {
+                    throw ex;
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                    warnings.add(Log.formatThrowable(ex, false));
+                    return null;
+                }
+
+                try {
+                    ContentType ct = new ContentType(part.getContentType());
+                    String charset = ct.getParameter("charset");
+                    if (UnknownCharsetProvider.charsetForMime(charset) == null)
+                        warnings.add(context.getString(R.string.title_no_charset, charset));
+                } catch (ParseException ex) {
+                    Log.e(ex);
+                }
+
+                if (part.isMimeType("text/plain"))
+                    result = "<div>" + HtmlHelper.formatPre(result) + "</div>";
+
+                sb.append(result);
             }
 
-            try {
-                ContentType ct = new ContentType(part.getContentType());
-                String charset = ct.getParameter("charset");
-                if (UnknownCharsetProvider.charsetForMime(charset) == null)
-                    warnings.add(context.getString(R.string.title_no_charset, charset));
-            } catch (ParseException ex) {
-                Log.e(ex);
-            }
-
-            if (part == plain)
-                result = "<div>" + HtmlHelper.formatPre(result) + "</div>";
-
-            return result;
+            return sb.toString();
         }
 
         List<AttachmentPart> getAttachmentParts() {
@@ -1637,14 +1712,11 @@ public class MessageHelper {
                         contentType = new ContentType(Helper.guessMimeType(filename));
                 }
 
-                if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) &&
-                        TextUtils.isEmpty(filename) &&
-                        ((parts.plain == null && "text/plain".equalsIgnoreCase(contentType.getBaseType())) ||
-                                (parts.html == null && "text/html".equalsIgnoreCase(contentType.getBaseType())))) {
-                    if ("text/html".equalsIgnoreCase(contentType.getBaseType()))
-                        parts.html = part;
-                    else
-                        parts.plain = part;
+                if (!Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename)) {
+                    if ("text/plain".equalsIgnoreCase(contentType.getBaseType()))
+                        parts.plain.add(part);
+                    else if ("text/html".equalsIgnoreCase(contentType.getBaseType()))
+                        parts.html.add(part);
                 } else {
                     AttachmentPart apart = new AttachmentPart();
                     apart.disposition = disposition;

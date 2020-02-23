@@ -351,6 +351,7 @@
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexés (%3$s)</string>
     <string name="title_advanced_english">Forcer la langue anglaise</string>
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
+    <string name="title_advanced_optimize">Optimiser automatiquement les paramètres</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
     <string name="title_advanced_experiments">Essayer les fonctionnalités expérimentales</string>
     <string name="title_advanced_crash_reports">Envoyer des rapports d\'erreur</string>
@@ -428,7 +429,6 @@
     <string name="title_account_name_hint">Utilisé pour différencier les dossiers</string>
     <string name="title_account_interval_hint">Fréquence de rafraîchissement de la connexion pour les messages push ou la fréquence de vérification des nouveaux messages</string>
     <string name="title_account_partial_fetch_hint">Désactiver ceci seulement dans le cas de messages vides ou de pièces jointes corrompues</string>
-    <string name="title_account_signature">Texte de la signature</string>
     <string name="title_color">Couleur</string>
     <string name="title_account_ondemand">Synchroniser manuellement</string>
     <string name="title_account_notify">Notifications séparées</string>
@@ -468,7 +468,7 @@
     <string name="title_no_password">Mot de passe manquant</string>
     <string name="title_no_inbox">Boîte de réception introuvable</string>
     <string name="title_no_primary_drafts">Pas de compte principal ou pas de dossier Brouillons</string>
-    <string name="title_no_identities">L\'envoi d\'e-mails nécessite au moins une identité</string>
+    <string name="title_no_identities">L\'envoi d\'e-mails nécessite au moins une identité et un dossier Brouillons</string>
     <string name="title_no_standard">Ce fournisseur utilise un protocole de messagerie propriétaire et il n\'est donc pas possible d\'utiliser des clients de messagerie tiers</string>
     <string name="title_no_idle">Ce fournisseur ne gère pas les messages en mode push. Cela va retarder la réception de nouveaux messages et augmenter l\'utilisation de la batterie.</string>
     <string name="title_no_utf8">Ce fournisseur ne prend pas en charge l\'UTF-8</string>
@@ -716,6 +716,7 @@
     <string name="title_user_interaction">Transfert vers OpenKeychain</string>
     <string name="title_signed_data">Vérifier la signature pour afficher le texte du message</string>
     <string name="title_not_encrypted">Le message n\'est pas signé ou chiffré</string>
+    <string name="title_no_sign_key">Aucune clé de signature sélectionnée</string>
     <string name="title_reset_sign_key">Réinitialiser la clé de signature</string>
     <string name="title_signature_none">Message non signé</string>
     <string name="title_signature_valid">Signature de message valide</string>
@@ -724,7 +725,7 @@
     <string name="title_signature_unconfirmed_from">Signature de message valide mais non confirmée : %1$s</string>
     <string name="title_signature_invalid">Signature de message invalide</string>
     <string name="title_signature_invalid_reason">Signature de message invalide : %1$s</string>
-    <string name="title_signature_key_missing">Clé manquante</string>
+    <string name="title_signature_key_missing">La clé est manquante pour la vérification de la signature</string>
     <string name="title_signature_certificate_invalid">Chaîne de certificats invalide</string>
     <string name="title_signature_sender">Adresse de l\'expéditeur</string>
     <string name="title_signature_email">Adresse de la signature</string>
@@ -761,6 +762,9 @@
     <string name="title_force_sync">Forcer la synchronisation</string>
     <string name="title_previous">Précédent</string>
     <string name="title_next">Suivant</string>
+    <string name="title_edit_signature">Modifier la signature</string>
+    <string name="title_edit_signature_text">Texte de la signature</string>
+    <string name="title_edit_signature_image">Insérer une image</string>
     <string name="title_answer_caption">Modifier le modèle</string>
     <string name="title_answer_reply">Modèle de réponse</string>
     <string name="title_answer_name">Nom du modèle</string>
