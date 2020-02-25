@@ -576,11 +576,11 @@
     <string name="title_snooze">打盹 &#8230;</string>
     <string name="title_archive">存档</string>
     <string name="title_reply">回复</string>
-    <string name="title_reply_to_sender">发件人</string>
-    <string name="title_reply_to_all">全部</string>
-    <string name="title_reply_list">列表</string>
-    <string name="title_reply_receipt">已读回执</string>
-    <string name="title_reply_template">模板</string>
+    <string name="title_reply_to_sender">回复给发件人</string>
+    <string name="title_reply_to_all">回复全部</string>
+    <string name="title_reply_list">回复列表</string>
+    <string name="title_reply_receipt">发送已读回执</string>
+    <string name="title_reply_template">使用模板回复</string>
     <string name="title_moving">移动到%1$s</string>
     <string name="title_open_with">打开方式</string>
     <string name="title_authentication_failed">%1$s 验证失败</string>
@@ -988,6 +988,7 @@ FairEmail会显示一条消息来提醒您这一点，这条消息在您购买�
     <string name="title_search_special_flagged">星标</string>
     <string name="title_search_special_snoozed">隐藏</string>
     <string name="title_search_special_encrypted">已加密</string>
+    <string name="title_search_special_attachments">附件</string>
     <string name="title_widget_title_count">新消息计数</string>
     <string name="title_widget_title_list">消息列表</string>
     <string name="title_widget_account">账户</string>
