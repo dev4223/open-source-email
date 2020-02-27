@@ -224,6 +224,8 @@ public class ActivitySignature extends ActivityBase {
     private void insertImage() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setType("image/*");
         Helper.openAdvanced(intent);
         startActivityForResult(intent, REQUEST_IMAGE);
@@ -268,15 +270,19 @@ public class ActivitySignature extends ActivityBase {
     }
 
     private void onImageSelected(Uri uri) {
-        getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        int start = etText.getSelectionStart();
-        SpannableStringBuilder ssb = new SpannableStringBuilder(etText.getText());
-        ssb.insert(start, " ");
-        ImageSpan is = new ImageSpan(getDrawableByUri(this, uri), uri.toString(), ImageSpan.ALIGN_BASELINE);
-        ssb.setSpan(is, start, start + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        etText.setText(ssb);
-        etText.setSelection(start + 1);
+            int start = etText.getSelectionStart();
+            SpannableStringBuilder ssb = new SpannableStringBuilder(etText.getText());
+            ssb.insert(start, " ");
+            ImageSpan is = new ImageSpan(getDrawableByUri(this, uri), uri.toString(), ImageSpan.ALIGN_BASELINE);
+            ssb.setSpan(is, start, start + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            etText.setText(ssb);
+            etText.setSelection(start + 1);
+        } catch (Throwable ex) {
+            Log.unexpectedError(getSupportFragmentManager(), ex);
+        }
     }
 
     static Drawable getDrawableByUri(Context context, Uri uri) {

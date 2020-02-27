@@ -99,6 +99,7 @@
     <string name="title_notification_failed">\"%1$s\" не удалось</string>
     <string name="title_notification_alert">\'%1$s\' предупреждение сервера</string>
     <string name="title_name_count">%1$s (%2$s)</string>
+    <string name="title_factor_minutes">%1$d мин.</string>
     <string name="menu_exit">Выход</string>
     <string name="menu_answers">Шаблоны</string>
     <string name="menu_operations">Операции</string>
@@ -379,6 +380,7 @@
     <string name="title_advanced_crash_reports">Отправлять отчёты об ошибках</string>
     <string name="title_advanced_debug">Режим отладки</string>
     <string name="title_advanced_cleanup">Очистка</string>
+    <string name="title_advanced_more">Другие возможности</string>
     <string name="title_advanced_last_cleanup">Последняя очистка: %1$s</string>
     <string name="title_advanced_enabled_hint">Глобальное включение/отключение получения сообщений</string>
     <string name="title_advanced_manual_hint">Если синхронизация отключена, она может быть произведена вручную, потянув вниз список сообщений.</string>
@@ -475,6 +477,7 @@
     <string name="title_primary_identity">Основной (идентификатор по умолчанию)</string>
     <string name="title_leave_on_server">Оставлять сообщения на сервере</string>
     <string name="title_leave_on_device">Оставлять сообщения на устройстве</string>
+    <string name="title_max_messages">Максимальное количество загружаемых сообщений (пусто для всех)</string>
     <string name="title_keep_alive_interval">Интервал поддержания активности/опроса (минуты)</string>
     <string name="title_use_date">Использовать время отправки вместо времени получения сервером</string>
     <string name="title_related_identity">Добавить связанный идентификатор</string>

@@ -955,26 +955,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvSubject.setText(message.subject);
 
             if (keywords_header) {
-                SpannableStringBuilder keywords = new SpannableStringBuilder();
-                for (int i = 0; i < message.keywords.length; i++) {
-                    String k = message.keywords[i].toLowerCase(Locale.ROOT);
-                    if (!IMAP_KEYWORDS_BLACKLIST.contains(k)) {
-                        if (keywords.length() > 0)
-                            keywords.append(" ");
-
-                        keywords.append(message.keywords[i]);
-
-                        if (message.keyword_colors != null &&
-                                message.keyword_colors[i] != null) {
-                            int len = keywords.length();
-                            keywords.setSpan(
-                                    new ForegroundColorSpan(message.keyword_colors[i]),
-                                    len - message.keywords[i].length(), len,
-                                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                        }
-                    }
-                }
-
+                SpannableStringBuilder keywords = getKeywords(message);
                 tvKeywords.setVisibility(keywords.length() > 0 ? View.VISIBLE : View.GONE);
                 tvKeywords.setText(keywords);
             } else
@@ -1485,8 +1466,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvFlags.setText(debug ? message.flags : null);
 
             // Keywords
-            tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
-            tvKeywordsEx.setText(TextUtils.join(" ", message.keywords));
+            if (keywords_header) {
+                tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
+                tvKeywordsEx.setText(TextUtils.join(" ", message.keywords));
+            } else {
+                message.resolveKeywordColors(context);
+                SpannableStringBuilder keywords = getKeywords(message);
+                tvKeywordsEx.setVisibility(show_addresses && keywords.length() > 0 ? View.VISIBLE : View.GONE);
+                tvKeywordsEx.setText(keywords);
+            }
 
             // Headers
             if (show_headers && message.headers != null)
@@ -4170,6 +4158,29 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.execute(context, owner, args, "message:raw");
         }
 
+        private SpannableStringBuilder getKeywords(TupleMessageEx message) {
+            SpannableStringBuilder keywords = new SpannableStringBuilder();
+            for (int i = 0; i < message.keywords.length; i++) {
+                String k = message.keywords[i].toLowerCase(Locale.ROOT);
+                if (!IMAP_KEYWORDS_BLACKLIST.contains(k)) {
+                    if (keywords.length() > 0)
+                        keywords.append(" ");
+
+                    keywords.append(message.keywords[i]);
+
+                    if (message.keyword_colors != null &&
+                            message.keyword_colors[i] != null) {
+                        int len = keywords.length();
+                        keywords.setSpan(
+                                new ForegroundColorSpan(message.keyword_colors[i]),
+                                len - message.keywords[i].length(), len,
+                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
+            return keywords;
+        }
+
         ItemDetailsLookup.ItemDetails<Long> getItemDetails(@NonNull MotionEvent motionEvent) {
             return new ItemDetailsMessage(this);
         }
@@ -5055,6 +5066,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final Uri uri = getArguments().getParcelable("uri");
             final String title = getArguments().getString("title");
+
+            Helper.customTabsWarmup(getContext());
 
             final Uri sanitized;
             if (uri.isOpaque())
