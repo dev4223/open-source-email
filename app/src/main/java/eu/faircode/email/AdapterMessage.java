@@ -817,7 +817,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (zoom == 0)
                     fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 1.0f;
                 else
-                    fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.8f;
+                    fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.9f;
 
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
                 tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_subject);
