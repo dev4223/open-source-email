@@ -128,7 +128,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
-        android:labelFor="@+id/tvFromEx"
+        android:labelFor="@+id/tvDeliveredTo"
         android:text="@string/title_delivered_to"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textStyle="bold"
@@ -328,7 +328,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="end"
-        app:constraint_referenced_ids="tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvSentTitle" />
+        app:constraint_referenced_ids="tvDeliveredToTitle,tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvSentTitle" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"
