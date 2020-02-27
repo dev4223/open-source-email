@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 989
-        versionName "1.989"
+        versionCode 993
+        versionName "1.993"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -29,6 +29,7 @@ android {
         // https://developer.android.com/guide/topics/graphics/vector-drawable-resources
         vectorDrawables.useSupportLibrary = true
 
+        ndkVersion "21.0.6113669"
         ndk {
             // Bugsnag
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
@@ -53,21 +54,37 @@ android {
     }
 
     signingConfigs {
-        release {
+        play {
             storeFile file(keystoreProperties['storeFile'])
             storePassword keystoreProperties['storePassword']
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
         }
+        github {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            v1SigningEnabled true
+            v2SigningEnabled false
+            v2SigningEnabled false
+        }
     }
 
     buildTypes {
-        release {
+        play {
             debuggable = false
             minifyEnabled = true
             useProguard = true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.play
+        }
+        github {
+            debuggable = false
+            minifyEnabled = true
+            useProguard = true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.github
         }
         debug {
             applicationIdSuffix '.debug'
@@ -124,6 +141,21 @@ android {
         }
     }
 
+    variantFilter { variant ->
+        def flavors = variant.flavors*.name
+        // Builds: play, github, debug
+        // Flavors: full, play_beta, play_release
+        if (variant.buildType.name == "play" && flavors.contains("full")) {
+            setIgnore(true)
+        }
+        if (variant.buildType.name == "github" && flavors.contains("play_beta")) {
+            setIgnore(true)
+        }
+        if (flavors.contains("play_release")) {
+            setIgnore(true)
+        }
+    }
+
     bugsnag {
         // https://docs.bugsnag.com/build-integrations/gradle/
         apiKey "9d2d57476a0614974449a3ec33f2604a"
@@ -171,7 +203,7 @@ repositories {
     maven { url "https://repo1.maven.org/maven2/" }
     maven { url "https://jitpack.io" }
     //maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-    maven { url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/" }
+    //maven { url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/" }
 }
 
 configurations.all {
@@ -296,8 +328,8 @@ dependencies {
     // https://javaee.github.io/javamail/
     // https://projects.eclipse.org/projects/ee4j.javamail
     // https://mvnrepository.com/artifact/com.sun.mail
-    implementation "com.sun.mail:android-mail:$javamail_version"
-    implementation "com.sun.mail:android-activation:$javamail_version"
+    //implementation "com.sun.mail:android-mail:$javamail_version"
+    //implementation "com.sun.mail:android-activation:$javamail_version"
 
     // https://jsoup.org/news/
     implementation "org.jsoup:jsoup:$jsoup_version"

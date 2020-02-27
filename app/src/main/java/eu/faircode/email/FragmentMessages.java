@@ -891,20 +891,68 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fabReply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean reply_hint = prefs.getBoolean("reply_hint", false);
-                if (reply_hint)
-                    onReply("reply");
-                else
-                    new AlertDialog.Builder(getContext())
-                            .setMessage(R.string.title_reply_hint)
-                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                if (values.containsKey("expanded") && values.get("expanded").size() > 0) {
+                    Bundle args = new Bundle();
+                    args.putLong("id", values.get("expanded").get(0));
+
+                    new SimpleTask<Integer>() {
+                        @Override
+                        protected Integer onExecute(Context context, Bundle args) {
+                            long id = args.getLong("id");
+
+                            DB db = DB.getInstance(context);
+                            EntityMessage message = db.message().getMessage(id);
+                            if (message == null)
+                                return null;
+
+                            List<TupleIdentityEx> identities = db.identity().getComposableIdentities(message.account);
+                            if (identities == null)
+                                return null;
+
+                            Address[] recipients = message.getAllRecipients(identities, message.account);
+                            return recipients.length;
+                        }
+
+                        @Override
+                        protected void onExecuted(Bundle args, Integer recipients) {
+                            if (recipients == null)
+                                return;
+
+                            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabReply);
+                            popupMenu.inflate(R.menu.popup_reply);
+                            for (int i = 0; i < popupMenu.getMenu().size(); i++)
+                                popupMenu.getMenu().getItem(i).setVisible(false);
+                            popupMenu.getMenu().findItem(R.id.menu_reply_to_sender).setVisible(true);
+                            popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients > 1);
+                            popupMenu.getMenu().findItem(R.id.menu_forward).setVisible(true);
+
+                            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                                 @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    prefs.edit().putBoolean("reply_hint", true).apply();
-                                    onReply("reply");
+                                public boolean onMenuItemClick(MenuItem target) {
+                                    switch (target.getItemId()) {
+                                        case R.id.menu_reply_to_sender:
+                                            onReply("reply");
+                                            return true;
+                                        case R.id.menu_reply_to_all:
+                                            onReply("reply_all");
+                                            return true;
+                                        case R.id.menu_forward:
+                                            onReply("forward");
+                                            return true;
+                                        default:
+                                            return false;
+                                    }
                                 }
-                            })
-                            .show();
+                            });
+                            popupMenu.show();
+                        }
+
+                        @Override
+                        protected void onException(Bundle args, Throwable ex) {
+                            Log.unexpectedError(getParentFragmentManager(), ex);
+                        }
+                    }.execute(FragmentMessages.this, args, "messages:reply");
+                }
             }
         });
 
@@ -2844,7 +2892,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             fabMore.hide();
 
         if (!checkReporting())
-            checkReview();
+            if (!checkReview())
+                checkFingerprint();
     }
 
     @Override
@@ -2986,7 +3035,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 prefs.edit().putBoolean("crash_reports_asked", true).apply();
             }
         });
-
         snackbar.show();
 
         return true;
@@ -3046,7 +3094,28 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 prefs.edit().putLong("review_later", new Date().getTime()).apply();
             }
         });
+        snackbar.show();
 
+        return true;
+    }
+
+    private boolean checkFingerprint() {
+        if (Helper.hasValidFingerprint(getContext()))
+            return false;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (prefs.getBoolean("third_party_notified", false))
+            return false;
+
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_third_party, Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction(R.string.title_info, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                snackbar.dismiss();
+                Helper.viewFAQ(getContext(), 147);
+                prefs.edit().putBoolean("third_party_notified", true).apply();
+            }
+        });
         snackbar.show();
 
         return true;
