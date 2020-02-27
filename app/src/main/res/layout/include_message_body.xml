@@ -159,18 +159,6 @@
         app:layout_constraintTop_toBottomOf="@id/inAttachmentsAlt" />
 
     <androidx.constraintlayout.widget.Group
-        android:id="@+id/grpAddressMeta"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:constraint_referenced_ids="paddingAddressBottom,tvSizeEx,tvSubjectEx" />
-
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/grpAddressMetaBottom"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:constraint_referenced_ids="tvFlags,tvKeywordsEx" />
-
-    <androidx.constraintlayout.widget.Group
         android:id="@+id/grpDownloading"
         android:layout_width="0dp"
         android:layout_height="0dp"
