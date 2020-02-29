@@ -941,7 +941,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             ? View.VISIBLE : View.GONE);
             ivSigned.setVisibility(message.signed > 0 ? View.VISIBLE : View.GONE);
             ivEncrypted.setVisibility(message.encrypted > 0 ? View.VISIBLE : View.GONE);
-            tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
+            setFrom(message, addresses);
             tvFrom.setPaintFlags(tvFrom.getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             tvSize.setText(message.totalSize == null ? null : Helper.humanReadableByteCount(message.totalSize, true));
             tvSize.setVisibility(
@@ -1106,7 +1106,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (amessage == null || !amessage.id.equals(id))
                             return;
 
-                        bindContactInfo(info, addresses, name_email);
+                        bindContactInfo(amessage, info, addresses, name_email);
                     }
 
                     @Override
@@ -1116,7 +1116,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }.setLog(false);
                 taskContactInfo.execute(context, owner, aargs, "message:avatar");
             } else
-                bindContactInfo(info, addresses, name_email);
+                bindContactInfo(message, info, addresses, name_email);
 
             if (viewType == ViewType.THREAD)
                 if (expanded)
@@ -1253,7 +1253,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFlagged.setVisibility(View.GONE);
         }
 
-        private void bindContactInfo(ContactInfo[] info, Address[] addresses, boolean name_email) {
+        private void bindContactInfo(TupleMessageEx message, ContactInfo[] info, Address[] addresses, boolean name_email) {
             if (info[0].hasPhoto()) {
                 ibAvatar.setImageBitmap(info[0].getPhotoBitmap());
                 ibAvatar.setVisibility(View.VISIBLE);
@@ -1288,10 +1288,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             }
             if (updated)
-                tvFrom.setText(MessageHelper.formatAddresses(modified, name_email, false));
+                setFrom(message, modified);
 
             if (distinguish_contacts && known)
                 tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        }
+
+        private void setFrom(TupleMessageEx message, Address[] addresses) {
+            int recipients = 0;
+            if (viewType == ViewType.THREAD) {
+                recipients = (message.to == null ? 0 : message.to.length) +
+                        (message.cc == null ? 0 : message.cc.length) + (message.bcc == null ? 0 : message.bcc.length);
+                if (message.to != null && message.to.length > 0)
+                    recipients--;
+            }
+
+            if (recipients == 0)
+                tvFrom.setText(MessageHelper.formatAddresses(addresses, name_email, false));
+            else
+                tvFrom.setText(context.getString(R.string.title_name_plus,
+                        MessageHelper.formatAddresses(addresses, name_email, false), recipients));
         }
 
         private void bindExpandWarning(TupleMessageEx message, boolean expanded) {
@@ -1470,7 +1486,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvKeywordsEx.setVisibility(show_addresses && message.keywords.length > 0 ? View.VISIBLE : View.GONE);
                 tvKeywordsEx.setText(TextUtils.join(" ", message.keywords));
             } else {
-                message.resolveKeywordColors(context);
                 SpannableStringBuilder keywords = getKeywords(message);
                 tvKeywordsEx.setVisibility(show_addresses && keywords.length() > 0 ? View.VISIBLE : View.GONE);
                 tvKeywordsEx.setText(keywords);
@@ -1566,8 +1581,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             bindBody(message);
 
             db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
-                private int lastInlineImages = 0;
-
                 @Override
                 public void onChanged(@Nullable List<EntityAttachment> attachments) {
                     bindAttachments(message, attachments);
@@ -1578,10 +1591,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (attachment.available && attachment.isInline() && attachment.isImage())
                                 inlineImages++;
 
-                    if (inlineImages != lastInlineImages) {
-                        lastInlineImages = inlineImages;
+                    int lastInlineImages = 0;
+                    List<EntityAttachment> lastAttachments = properties.getAttachments(message.id);
+                    if (lastAttachments != null)
+                        for (EntityAttachment attachment : lastAttachments)
+                            if (attachment.available && attachment.isInline() && attachment.isImage())
+                                lastInlineImages++;
+
+                    if (inlineImages != lastInlineImages)
                         bindBody(message);
-                    }
+
+                    properties.setAttachments(message.id, attachments);
 
                     if (scroll)
                         properties.scrollTo(getAdapterPosition());
@@ -1830,7 +1850,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                         HtmlHelper.setViewport(document);
                         if (inline || show_images)
-                            HtmlHelper.embedInlineImages(context, message.id, document);
+                            HtmlHelper.embedInlineImages(context, message.id, document, show_images || !inline);
 
                         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
                         if (disable_tracking)
@@ -2915,18 +2935,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 .putExtra("id", message.id));
             else {
                 boolean expanded = !properties.getValue("expanded", message.id);
-                properties.setValue("expanded", message.id, expanded);
-
-                ibExpander.setTag(expanded);
-                ibExpander.setImageLevel(expanded ? 0 /* less*/ : 1 /* more */);
-
-                if (expanded)
-                    bindExpanded(message, true);
-                else
-                    clearExpanded(message);
-
-                bindFlagged(message, expanded);
-                bindExpandWarning(message, expanded);
+                properties.setExpanded(message, expanded);
+                bindTo(message, getAdapterPosition());
 
                 // Needed for expand one
                 properties.scrollTo(getAdapterPosition());
@@ -3676,7 +3686,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (amessage == null || !amessage.id.equals(id))
                         return;
 
-                    properties.setValue("expanded", message.id, false);
+                    properties.setExpanded(message, false);
                     message.ui_seen = args.getBoolean("seen");
                     message.unseen = (message.ui_seen ? 0 : message.count);
                     bindTo(message, getAdapterPosition());
@@ -4477,7 +4487,323 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         debug = prefs.getBoolean("debug", false);
 
-        AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(DIFF_CALLBACK)
+        DiffUtil.ItemCallback<TupleMessageEx> callback = new DiffUtil.ItemCallback<TupleMessageEx>() {
+            @Override
+            public boolean areItemsTheSame(
+                    @NonNull TupleMessageEx prev, @NonNull TupleMessageEx next) {
+                return prev.id.equals(next.id);
+            }
+
+            @Override
+            public boolean areContentsTheSame(
+                    @NonNull TupleMessageEx prev, @NonNull TupleMessageEx next) {
+                boolean same = true;
+
+                // id
+                // account
+                // folder
+                if (!Objects.equals(prev.identity, next.identity)) {
+                    // via
+                    same = false;
+                    log("Entity changed", next.id);
+                }
+                // extra
+                if (!Objects.equals(prev.uid, next.uid)) {
+                    same = false;
+                    log("uid changed", next.id);
+                }
+                if (!Objects.equals(prev.msgid, next.msgid)) {
+                    // debug info
+                    same = false;
+                    log("msgid changed", next.id);
+                }
+                // references
+                // deliveredto
+                // inreplyto
+                if (!Objects.equals(prev.thread, next.thread)) {
+                    same = false;
+                    log("thread changed", next.id);
+                }
+                if (!Objects.equals(prev.ui_priority, next.ui_priority)) {
+                    same = false;
+                    log("ui_priority changed", next.id);
+                }
+                if (!Objects.equals(prev.ui_importance, next.ui_importance)) {
+                    same = false;
+                    log("ui_importance changed", next.id);
+                }
+                if (!Objects.equals(prev.receipt_request, next.receipt_request)) {
+                    same = false;
+                    log("receipt_request changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.receipt_to, next.receipt_to)) {
+                    same = false;
+                    log("receipt_to changed", next.id);
+                }
+                if (!Objects.equals(prev.dkim, next.dkim)) {
+                    same = false;
+                    log("dkim changed", next.id);
+                }
+                if (!Objects.equals(prev.spf, next.spf)) {
+                    same = false;
+                    log("spf changed", next.id);
+                }
+                if (!Objects.equals(prev.dmarc, next.dmarc)) {
+                    same = false;
+                    log("dmarc changed", next.id);
+                }
+                if (!Objects.equals(prev.mx, next.mx)) {
+                    same = false;
+                    log("mx changed", next.id);
+                }
+                if (!Objects.equals(prev.avatar, next.avatar)) {
+                    same = false;
+                    log("avatar changed", next.id);
+                }
+                if (!Objects.equals(prev.sender, next.sender)) {
+                    same = false;
+                    log("sender changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.from, next.from)) {
+                    same = false;
+                    log("from changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.to, next.to)) {
+                    same = false;
+                    log("to changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.cc, next.cc)) {
+                    same = false;
+                    log("cc changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.bcc, next.bcc)) {
+                    same = false;
+                    log("bcc changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.reply, next.reply)) {
+                    same = false;
+                    log("reply changed", next.id);
+                }
+                if (!MessageHelper.equal(prev.list_post, next.list_post)) {
+                    same = false;
+                    log("list_post changed", next.id);
+                }
+                if (!Objects.equals(prev.headers, next.headers)) {
+                    same = false;
+                    log("headers changed", next.id);
+                }
+                if (!Objects.equals(prev.raw, next.raw)) {
+                    same = false;
+                    log("raw changed", next.id);
+                }
+                if (!Objects.equals(prev.subject, next.subject)) {
+                    same = false;
+                    log("subject changed", next.id);
+                }
+                if (!Objects.equals(prev.size, next.size)) {
+                    same = false;
+                    log("size changed", next.id);
+                }
+                if (!Objects.equals(prev.total, next.total)) {
+                    same = false;
+                    log("total changed", next.id);
+                }
+                if (!Objects.equals(prev.attachments, next.attachments)) {
+                    same = false;
+                    log("attachments changed", next.id);
+                }
+                if (!prev.content.equals(next.content)) {
+                    same = false;
+                    log("content changed", next.id);
+                }
+                if (!Objects.equals(prev.plain_only, next.plain_only)) {
+                    same = false;
+                    log("plain_only changed", next.id);
+                }
+                if (!Objects.equals(prev.encrypt, next.encrypt)) {
+                    same = false;
+                    log("encrypt changed", next.id);
+                }
+                if (!Objects.equals(prev.preview, next.preview)) {
+                    same = false;
+                    log("preview changed", next.id);
+                }
+                if (!Objects.equals(prev.sent, next.sent)) {
+                    same = false;
+                    log("sent changed", next.id);
+                }
+                if (!prev.received.equals(next.received)) {
+                    same = false;
+                    log("received changed", next.id);
+                }
+                if (!prev.stored.equals(next.stored)) {
+                    // updated after decryption
+                    same = false;
+                    log("stored changed", next.id);
+                }
+                // seen
+                // answered
+                // flagged
+                if (debug && !Objects.equals(prev.flags, next.flags)) {
+                    same = false;
+                    log("flags changed", next.id);
+                }
+                if (!Helper.equal(prev.keywords, next.keywords)) {
+                    same = false;
+                    log("keywords changed", next.id);
+                }
+                // notifying
+                // fts
+                if (!prev.ui_seen.equals(next.ui_seen)) {
+                    same = false;
+                    log("ui_seen changed " + prev.ui_seen + "/" + next.ui_seen, next.id);
+                }
+                if (!prev.ui_answered.equals(next.ui_answered)) {
+                    same = false;
+                    log("ui_answer changed", next.id);
+                }
+                if (!prev.ui_flagged.equals(next.ui_flagged)) {
+                    same = false;
+                    log("ui_flagged changed", next.id);
+                }
+                if (!prev.ui_hide.equals(next.ui_hide)) {
+                    same = false;
+                    log("ui_hide changed", next.id);
+                }
+                if (!prev.ui_found.equals(next.ui_found)) {
+                    same = false;
+                    log("ui_found changed", next.id);
+                }
+                // ui_ignored
+                if (!prev.ui_browsed.equals(next.ui_browsed)) {
+                    same = false;
+                    log("ui_browsed changed", next.id);
+                }
+                if (!Objects.equals(prev.ui_busy, next.ui_busy)) {
+                    same = false;
+                    log("ui_busy changed " + prev.ui_busy + "/" + next.ui_busy, next.id);
+                }
+                if (!Objects.equals(prev.ui_snoozed, next.ui_snoozed)) {
+                    same = false;
+                    log("ui_snoozed changed", next.id);
+                }
+                if (!Objects.equals(prev.color, next.color)) {
+                    same = false;
+                    log("color changed", next.id);
+                }
+                // revision
+                // revisions
+                if (!Objects.equals(prev.warning, next.warning)) {
+                    same = false;
+                    log("warning changed", next.id);
+                }
+                if (!Objects.equals(prev.error, next.error)) {
+                    same = false;
+                    log("error changed", next.id);
+                }
+                // last_attempt
+
+                // accountPop
+                if (!Objects.equals(prev.accountName, next.accountName)) {
+                    same = false;
+                    log("accountName changed", next.id);
+                }
+                if (!Objects.equals(prev.accountColor, next.accountColor)) {
+                    same = false;
+                    log("accountColor changed", next.id);
+                }
+                // accountNotify
+                // accountAutoSeen
+                if (!prev.folderName.equals(next.folderName)) {
+                    same = false;
+                    log("folderName changed", next.id);
+                }
+                if (!Objects.equals(prev.folderDisplay, next.folderDisplay)) {
+                    same = false;
+                    log("folderDisplay changed", next.id);
+                }
+                if (!prev.folderType.equals(next.folderType)) {
+                    same = false;
+                    log("folderType changed", next.id);
+                }
+                if (prev.folderReadOnly != next.folderReadOnly) {
+                    same = false;
+                    log("folderReadOnly changed", next.id);
+                }
+                if (!Objects.equals(prev.identityName, next.identityName)) {
+                    same = false;
+                    log("identityName changed", next.id);
+                }
+                if (!Objects.equals(prev.identityEmail, next.identityEmail)) {
+                    same = false;
+                    log("identityEmail changed", next.id);
+                }
+                if (!Objects.equals(prev.identitySynchronize, next.identitySynchronize)) {
+                    same = false;
+                    log("identitySynchronize changed", next.id);
+                }
+                // senders
+                if (prev.count != next.count) {
+                    same = false;
+                    log("count changed " + prev.count + "/" + next.count, next.id);
+                }
+                if (prev.unseen != next.unseen) {
+                    same = false;
+                    log("unseen changed " + prev.unseen + "/" + next.unseen, next.id);
+                }
+                if (prev.unflagged != next.unflagged) {
+                    same = false;
+                    log("unflagged changed", next.id);
+                }
+                if (prev.drafts != next.drafts) {
+                    same = false;
+                    log("drafts changed", next.id);
+                }
+                if (prev.signed != next.signed) {
+                    same = false;
+                    log("signed changed", next.id);
+                }
+                if (prev.encrypted != next.encrypted) {
+                    same = false;
+                    log("encrypted changed", next.id);
+                }
+                if (prev.visible != next.visible) {
+                    same = false;
+                    log("visible changed " + prev.visible + "/" + next.visible, next.id);
+                }
+                if (!Objects.equals(prev.totalSize, next.totalSize)) {
+                    same = false;
+                    log("totalSize changed", next.id);
+                }
+                if (prev.duplicate != next.duplicate) {
+                    same = false;
+                    log("duplicate changed", next.id);
+                }
+                if (!Arrays.equals(prev.keyword_colors, next.keyword_colors)) {
+                    same = false;
+                    log("keyword colors changed", next.id);
+                }
+
+                return same;
+            }
+
+            private void log(String msg, long id) {
+                Log.i(msg + " id=" + id);
+                if (debug)
+                    parentFragment.getView().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (properties.getValue("expanded", id)) {
+                                Context context = parentFragment.getContext();
+                                if (context != null)
+                                    ToastEx.makeText(context, msg, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+            }
+        };
+
+        AsyncDifferConfig<TupleMessageEx> config = new AsyncDifferConfig.Builder<>(callback)
                 .setBackgroundThreadExecutor(executor)
                 .build();
         this.differ = new AsyncPagedListDiffer<>(new AdapterListUpdateCallback(this), config);
@@ -4532,12 +4858,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     void submitList(PagedList<TupleMessageEx> list) {
         keyPosition.clear();
 
-        if (keywords_header)
-            for (int i = 0; i < list.size(); i++) {
-                TupleMessageEx message = list.get(i);
-                if (message != null)
-                    message.resolveKeywordColors(context);
-            }
+        for (int i = 0; i < list.size(); i++) {
+            TupleMessageEx message = list.get(i);
+            if (message != null)
+                message.resolveKeywordColors(context);
+        }
 
         differ.submitList(list);
     }
@@ -4606,308 +4931,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     public int getItemCount() {
         return differ.getItemCount();
     }
-
-    private static final DiffUtil.ItemCallback<TupleMessageEx> DIFF_CALLBACK =
-            new DiffUtil.ItemCallback<TupleMessageEx>() {
-                @Override
-                public boolean areItemsTheSame(
-                        @NonNull TupleMessageEx prev, @NonNull TupleMessageEx next) {
-                    return prev.id.equals(next.id);
-                }
-
-                @Override
-                public boolean areContentsTheSame(
-                        @NonNull TupleMessageEx prev, @NonNull TupleMessageEx next) {
-                    boolean same = true;
-
-                    // id
-                    // account
-                    // folder
-                    if (!Objects.equals(prev.identity, next.identity)) {
-                        // via
-                        same = false;
-                        Log.i("Entity changed id=" + next.id);
-                    }
-                    // extra
-                    if (!Objects.equals(prev.uid, next.uid)) {
-                        same = false;
-                        Log.i("uid changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.msgid, next.msgid)) {
-                        // debug info
-                        same = false;
-                        Log.i("msgid changed id=" + next.id);
-                    }
-                    // references
-                    // deliveredto
-                    // inreplyto
-                    if (!Objects.equals(prev.thread, next.thread)) {
-                        same = false;
-                        Log.i("thread changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.ui_priority, next.ui_priority)) {
-                        same = false;
-                        Log.i("ui_priority changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.ui_importance, next.ui_importance)) {
-                        same = false;
-                        Log.i("ui_importance changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.receipt_request, next.receipt_request)) {
-                        same = false;
-                        Log.i("receipt_request changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.receipt_to, next.receipt_to)) {
-                        same = false;
-                        Log.i("receipt_to changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.dkim, next.dkim)) {
-                        same = false;
-                        Log.i("dkim changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.spf, next.spf)) {
-                        same = false;
-                        Log.i("spf changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.dmarc, next.dmarc)) {
-                        same = false;
-                        Log.i("dmarc changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.mx, next.mx)) {
-                        same = false;
-                        Log.i("mx changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.avatar, next.avatar)) {
-                        same = false;
-                        Log.i("avatar changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.sender, next.sender)) {
-                        same = false;
-                        Log.i("sender changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.from, next.from)) {
-                        same = false;
-                        Log.i("from changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.to, next.to)) {
-                        same = false;
-                        Log.i("to changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.cc, next.cc)) {
-                        same = false;
-                        Log.i("cc changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.bcc, next.bcc)) {
-                        same = false;
-                        Log.i("bcc changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.reply, next.reply)) {
-                        same = false;
-                        Log.i("reply changed id=" + next.id);
-                    }
-                    if (!MessageHelper.equal(prev.list_post, next.list_post)) {
-                        same = false;
-                        Log.i("list_post changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.headers, next.headers)) {
-                        same = false;
-                        Log.i("headers changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.raw, next.raw)) {
-                        same = false;
-                        Log.i("raw changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.subject, next.subject)) {
-                        same = false;
-                        Log.i("subject changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.size, next.size)) {
-                        same = false;
-                        Log.i("size changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.total, next.total)) {
-                        same = false;
-                        Log.i("total changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.attachments, next.attachments)) {
-                        same = false;
-                        Log.i("attachments changed id=" + next.id);
-                    }
-                    if (!prev.content.equals(next.content)) {
-                        same = false;
-                        Log.i("content changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.plain_only, next.plain_only)) {
-                        same = false;
-                        Log.i("plain_only changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.encrypt, next.encrypt)) {
-                        same = false;
-                        Log.i("encrypt changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.preview, next.preview)) {
-                        same = false;
-                        Log.i("preview changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.sent, next.sent)) {
-                        same = false;
-                        Log.i("sent changed id=" + next.id);
-                    }
-                    if (!prev.received.equals(next.received)) {
-                        same = false;
-                        Log.i("received changed id=" + next.id);
-                    }
-                    if (!prev.stored.equals(next.stored)) {
-                        // updated after decryption
-                        same = false;
-                        Log.i("stored changed id=" + next.id);
-                    }
-                    // seen
-                    // answered
-                    // flagged
-                    if (debug && !Objects.equals(prev.flags, next.flags)) {
-                        same = false;
-                        Log.i("flags changed id=" + next.id);
-                    }
-                    if (!Helper.equal(prev.keywords, next.keywords)) {
-                        same = false;
-                        Log.i("keywords changed id=" + next.id);
-                    }
-                    // notifying
-                    // fts
-                    if (!prev.ui_seen.equals(next.ui_seen)) {
-                        same = false;
-                        Log.i("ui_seen changed id=" + next.id);
-                    }
-                    if (!prev.ui_answered.equals(next.ui_answered)) {
-                        same = false;
-                        Log.i("ui_answer changed id=" + next.id);
-                    }
-                    if (!prev.ui_flagged.equals(next.ui_flagged)) {
-                        same = false;
-                        Log.i("ui_flagged changed id=" + next.id);
-                    }
-                    if (!prev.ui_hide.equals(next.ui_hide)) {
-                        same = false;
-                        Log.i("ui_hide changed id=" + next.id);
-                    }
-                    if (!prev.ui_found.equals(next.ui_found)) {
-                        same = false;
-                        Log.i("ui_found changed id=" + next.id);
-                    }
-                    // ui_ignored
-                    if (!prev.ui_browsed.equals(next.ui_browsed)) {
-                        same = false;
-                        Log.i("ui_browsed changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.ui_busy, next.ui_busy)) {
-                        same = false;
-                        Log.i("ui_busy changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.ui_snoozed, next.ui_snoozed)) {
-                        same = false;
-                        Log.i("ui_snoozed changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.color, next.color)) {
-                        same = false;
-                        Log.i("color changed id=" + next.id);
-                    }
-                    // revision
-                    // revisions
-                    if (!Objects.equals(prev.warning, next.warning)) {
-                        same = false;
-                        Log.i("warning changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.error, next.error)) {
-                        same = false;
-                        Log.i("error changed id=" + next.id);
-                    }
-                    // last_attempt
-
-                    // accountPop
-                    if (!Objects.equals(prev.accountName, next.accountName)) {
-                        same = false;
-                        Log.i("accountName changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.accountColor, next.accountColor)) {
-                        same = false;
-                        Log.i("accountColor changed id=" + next.id);
-                    }
-                    // accountNotify
-                    // accountAutoSeen
-                    if (!prev.folderName.equals(next.folderName)) {
-                        same = false;
-                        Log.i("folderName changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.folderDisplay, next.folderDisplay)) {
-                        same = false;
-                        Log.i("folderDisplay changed id=" + next.id);
-                    }
-                    if (!prev.folderType.equals(next.folderType)) {
-                        same = false;
-                        Log.i("folderType changed id=" + next.id);
-                    }
-                    if (prev.folderReadOnly != next.folderReadOnly) {
-                        same = false;
-                        Log.i("folderReadOnly changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.identityName, next.identityName)) {
-                        same = false;
-                        Log.i("identityName changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.identityEmail, next.identityEmail)) {
-                        same = false;
-                        Log.i("identityEmail changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.identitySynchronize, next.identitySynchronize)) {
-                        same = false;
-                        Log.i("identitySynchronize changed id=" + next.id);
-                    }
-                    // senders
-                    if (prev.count != next.count) {
-                        same = false;
-                        Log.i("count changed id=" + next.id);
-                    }
-                    if (prev.unseen != next.unseen) {
-                        same = false;
-                        Log.i("unseen changed id=" + next.id);
-                    }
-                    if (prev.unflagged != next.unflagged) {
-                        same = false;
-                        Log.i("unflagged changed id=" + next.id);
-                    }
-                    if (prev.drafts != next.drafts) {
-                        same = false;
-                        Log.i("drafts changed id=" + next.id);
-                    }
-                    if (prev.signed != next.signed) {
-                        same = false;
-                        Log.i("signed changed id=" + next.id);
-                    }
-                    if (prev.encrypted != next.encrypted) {
-                        same = false;
-                        Log.i("encrypted changed id=" + next.id);
-                    }
-                    if (prev.visible != next.visible) {
-                        same = false;
-                        Log.i("visible changed id=" + next.id);
-                    }
-                    if (!Objects.equals(prev.totalSize, next.totalSize)) {
-                        same = false;
-                        Log.i("totalSize changed id=" + next.id);
-                    }
-                    if (prev.duplicate != next.duplicate) {
-                        same = false;
-                        Log.i("duplicate changed id=" + next.id);
-                    }
-                    if (!Arrays.equals(prev.keyword_colors, next.keyword_colors)) {
-                        same = false;
-                        Log.i("keyword colors changed id=" + next.id);
-                    }
-
-                    return same;
-                }
-            };
 
     @Override
     public int getItemViewType(int position) {
@@ -5034,6 +5057,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void setValue(String name, long id, boolean enabled);
 
         boolean getValue(String name, long id);
+
+        void setExpanded(TupleMessageEx message, boolean expanded);
 
         void setSize(long id, Float size);
 

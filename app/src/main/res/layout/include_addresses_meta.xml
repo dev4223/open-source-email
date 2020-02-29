@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <TextView
+    <eu.faircode.email.FixedTextView
         android:id="@+id/tvReceived"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/paddingAddressBottom" />
 
-    <TextView
+    <eu.faircode.email.FixedTextView
         android:id="@+id/tvSizeEx"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -30,7 +30,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/paddingAddressBottom" />
 
-    <TextView
+    <eu.faircode.email.FixedTextView
         android:id="@+id/tvSubjectEx"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

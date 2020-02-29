@@ -77,6 +77,7 @@
     <string name="title_notification_failed">\'%1$s\' mislyktes</string>
     <string name="title_notification_alert">\'%1$s\' servervarsling</string>
     <string name="title_name_count">%1$s (%2$s)</string>
+    <string name="title_name_plus">%1$s +%2$d</string>
     <string name="title_factor_minutes">%1$d minutter</string>
     <string name="menu_exit">Avslutt</string>
     <string name="menu_answers">Maler</string>
@@ -367,6 +368,7 @@
     <string name="title_advanced_check_mx">Sjekk avsenderens e-postadresser når meldinger synkroniseres</string>
     <string name="title_advanced_check_reply">Sjekk avsenderens e-postadresser når meldinger synkroniseres</string>
     <string name="title_advanced_unseen_hint">Noen leverandører støtter ikke dette ordentlig, noe som kan føre til synkronisering av ingen eller alle meldinger</string>
+    <string name="title_advanced_deleted_unseen">Når den er deaktivert, lagres uleste meldinger på enheten for alltid</string>
     <string name="title_advanced_sync_kept_hint">Dette vil overføre ekstra data og bruke ekstra batteristrøm, spesielt hvis det er lagret mange meldinger på enheten</string>
     <string name="title_advanced_sync_folders_hint">Deaktivering av dette vil redusere data og batteribruk noe, men deaktiverer også oppdateringen av listen over mapper</string>
     <string name="title_advanced_subscribed_only_hint">Aktivering av dette vil slette alle lokale mapper uten abonnement</string>
@@ -437,6 +439,7 @@
     <string name="title_account_left">Sveip mot venstre</string>
     <string name="title_account_right">Sveip mot høyre</string>
     <string name="title_account_move">Standard flytt til</string>
+    <string name="title_account_gmail">For pålitelig synkronisering av en Gmail-konto, skal hurtigveiviseren for Gmail brukes når det er mulig</string>
     <string name="title_domain">Domenenavn</string>
     <string name="title_autoconfig">Hent innstillinger</string>
     <string name="title_aliases">Aliaser</string>
