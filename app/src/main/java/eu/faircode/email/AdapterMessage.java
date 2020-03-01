@@ -379,14 +379,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibFull;
         private ImageButton ibImages;
         private ImageButton ibUnsubscribe;
-        private ImageButton ibJunk;
         private ImageButton ibDecrypt;
         private ImageButton ibVerify;
         private ImageButton ibUndo;
+        private ImageButton ibRemove;
         private ImageButton ibMore;
         private TextView tvSignedData;
-        private ImageButton ibActionBarHint;
-        private Group grpActionBarHint;
 
         private TextView tvBody;
         private View wvBody;
@@ -425,9 +423,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private TwoStateOwner cowner = new TwoStateOwner(owner, "MessageAttachments");
         private TwoStateOwner powner = new TwoStateOwner(owner, "MessagePopup");
-
-        private boolean hasJunk;
-        private boolean delete;
 
         private ScaleGestureDetector gestureDetector;
 
@@ -568,14 +563,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFull = vsBody.findViewById(R.id.ibFull);
             ibImages = vsBody.findViewById(R.id.ibImages);
             ibUnsubscribe = vsBody.findViewById(R.id.ibUnsubscribe);
-            ibJunk = vsBody.findViewById(R.id.ibJunk);
             ibDecrypt = vsBody.findViewById(R.id.ibDecrypt);
             ibVerify = vsBody.findViewById(R.id.ibVerify);
             ibUndo = vsBody.findViewById(R.id.ibUndo);
+            ibRemove = vsBody.findViewById(R.id.ibRemove);
             ibMore = vsBody.findViewById(R.id.ibMore);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
-            ibActionBarHint = vsBody.findViewById(R.id.ibActionBarHint);
-            grpActionBarHint = vsBody.findViewById(R.id.grpActionBarHint);
 
             tvBody = vsBody.findViewById(R.id.tvBody);
             wvBody = vsBody.findViewById(R.id.wvBody);
@@ -652,12 +645,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFull.setOnClickListener(this);
                 ibImages.setOnClickListener(this);
                 ibUnsubscribe.setOnClickListener(this);
-                ibJunk.setOnClickListener(this);
                 ibDecrypt.setOnClickListener(this);
                 ibVerify.setOnClickListener(this);
                 ibUndo.setOnClickListener(this);
+                ibRemove.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
-                ibActionBarHint.setOnClickListener(this);
 
                 ibDownloading.setOnClickListener(this);
 
@@ -721,12 +713,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFull.setOnClickListener(null);
                 ibImages.setOnClickListener(null);
                 ibUnsubscribe.setOnClickListener(null);
-                ibJunk.setOnClickListener(null);
                 ibDecrypt.setOnClickListener(null);
                 ibVerify.setOnClickListener(null);
                 ibUndo.setOnClickListener(null);
+                ibRemove.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
-                ibActionBarHint.setOnClickListener(null);
 
                 ibDownloading.setOnClickListener(null);
 
@@ -1204,13 +1195,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFull.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
             ibUnsubscribe.setVisibility(View.GONE);
-            ibJunk.setVisibility(View.GONE);
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(View.GONE);
+            ibRemove.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
-            grpActionBarHint.setVisibility(View.GONE);
 
             tvBody.setVisibility(View.GONE);
             wvBody.setVisibility(View.GONE);
@@ -1365,14 +1355,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFull.setVisibility(View.VISIBLE);
             ibImages.setVisibility(View.GONE);
             ibUnsubscribe.setVisibility(View.GONE);
-            ibJunk.setEnabled(false);
-            ibJunk.setVisibility(View.GONE);
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.VISIBLE : View.GONE);
+            ibRemove.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) || message.folderReadOnly ? View.GONE : View.VISIBLE);
             ibMore.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.GONE : View.VISIBLE);
             tvSignedData.setVisibility(View.GONE);
-            grpActionBarHint.setVisibility(View.GONE);
 
             // Addresses
             ibExpanderAddress.setImageLevel(show_addresses ? 0 /* less */ : 1 /* more */);
@@ -1494,52 +1482,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Attachments
             bindAttachments(message, properties.getAttachments(message.id));
-
-            // Setup actions
-            Bundle sargs = new Bundle();
-            sargs.putLong("id", message.id);
-            sargs.putLong("account", message.account);
-
-            new SimpleTask<List<EntityFolder>>() {
-                @Override
-                protected List<EntityFolder> onExecute(Context context, Bundle args) {
-                    long account = args.getLong("account");
-                    return DB.getInstance(context).folder().getSystemFolders(account);
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, List<EntityFolder> folders) {
-                    long id = args.getLong("id");
-                    TupleMessageEx amessage = getMessage();
-                    if (amessage == null || !amessage.id.equals(id))
-                        return;
-
-                    boolean hasArchive = false;
-                    boolean hasTrash = false;
-                    hasJunk = false;
-                    if (folders != null)
-                        for (EntityFolder folder : folders) {
-                            if (EntityFolder.ARCHIVE.equals(folder.type))
-                                hasArchive = true;
-                            else if (EntityFolder.TRASH.equals(folder.type))
-                                hasTrash = true;
-                            else if (EntityFolder.JUNK.equals(folder.type))
-                                hasJunk = true;
-                        }
-
-                    boolean inOutbox = EntityFolder.OUTBOX.equals(message.folderType);
-                    boolean inTrash = EntityFolder.TRASH.equals(message.folderType);
-
-                    delete = (inTrash || !hasTrash || inOutbox);
-
-                    ibJunk.setEnabled(hasJunk);
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                }
-            }.setLog(false).execute(context, owner, sargs, "message:actions");
 
             // Message text
             tvNoInternetBody.setVisibility(suitable || message.content ? View.GONE : View.VISIBLE);
@@ -1945,10 +1887,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibImages.setVisibility(has_images && !(show_full && always_images) ? View.VISIBLE : View.GONE);
 
                     ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
-                    ibJunk.setVisibility(
-                            message.uid == null || message.folderReadOnly ||
-                                    EntityFolder.JUNK.equals(message.folderType)
-                                    ? View.GONE : View.VISIBLE);
 
                     // Show encrypt actions
                     ibVerify.setVisibility(false ||
@@ -1969,10 +1907,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     boolean signed_data = args.getBoolean("signed_data");
                     tvSignedData.setVisibility(signed_data ? View.VISIBLE : View.GONE);
-
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    boolean message_bar_removed = prefs.getBoolean("message_bar_removed", true);
-                    grpActionBarHint.setVisibility(message_bar_removed ? View.GONE : View.VISIBLE);
                 }
 
                 @Override
@@ -2415,9 +2349,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.ibUnsubscribe:
                         onActionUnsubscribe(message);
                         break;
-                    case R.id.ibJunk:
-                        onActionJunk(message);
-                        break;
                     case R.id.ibDecrypt:
                         boolean lock =
                                 (EntityMessage.PGP_SIGNENCRYPT.equals(message.ui_encrypt) &&
@@ -2435,11 +2366,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.ibUndo:
                         onActionUndo(message);
                         break;
+                    case R.id.ibRemove:
+                        onActionRemove(message);
+                        break;
                     case R.id.ibMore:
                         onActionMore(message);
-                        break;
-                    case R.id.ibActionBarHint:
-                        onActionBarHint();
                         break;
 
                     case R.id.ibDownloading:
@@ -3066,17 +2997,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             onOpenLink(uri, context.getString(R.string.title_legend_show_unsubscribe));
         }
 
-        private void onActionJunk(TupleMessageEx message) {
-            Bundle aargs = new Bundle();
-            aargs.putLong("id", message.id);
-            aargs.putString("from", MessageHelper.formatAddresses(message.from));
-
-            FragmentDialogJunk ask = new FragmentDialogJunk();
-            ask.setArguments(aargs);
-            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
-            ask.show(parentFragment.getParentFragmentManager(), "message:junk");
-        }
-
         private void onActionDecrypt(TupleMessageEx message, boolean auto) {
             int encrypt = (message.encrypt == null ? EntityMessage.PGP_SIGNENCRYPT /* Inline */ : message.encrypt);
 
@@ -3172,6 +3092,102 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onActionNoJunk(TupleMessageEx message) {
             properties.move(message.id, EntityFolder.INBOX);
+        }
+
+        private void onActionRemove(TupleMessageEx message) {
+            // Setup actions
+            Bundle sargs = new Bundle();
+            sargs.putLong("id", message.id);
+            sargs.putLong("account", message.account);
+
+            new SimpleTask<List<EntityFolder>>() {
+                @Override
+                protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                    long account = args.getLong("account");
+                    return DB.getInstance(context).folder().getSystemFolders(account);
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, List<EntityFolder> folders) {
+                    long id = args.getLong("id");
+                    TupleMessageEx amessage = getMessage();
+                    if (amessage == null || !amessage.id.equals(id))
+                        return;
+
+                    boolean hasArchive = false;
+                    boolean hasTrash = false;
+                    boolean hasJunk = false;
+                    if (folders != null)
+                        for (EntityFolder folder : folders)
+                            if (EntityFolder.ARCHIVE.equals(folder.type))
+                                hasArchive = true;
+                            else if (EntityFolder.TRASH.equals(folder.type))
+                                hasTrash = true;
+                            else if (EntityFolder.JUNK.equals(folder.type))
+                                hasJunk = true;
+
+                    boolean inArchive = EntityFolder.ARCHIVE.equals(message.folderType);
+                    boolean inTrash = EntityFolder.TRASH.equals(message.folderType);
+                    boolean inJunk = EntityFolder.JUNK.equals(message.folderType);
+                    final boolean delete = (inTrash || !hasTrash);
+
+                    PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibMore);
+                    popupMenu.inflate(R.menu.popup_message_move);
+                    popupMenu.getMenu().findItem(R.id.menu_archive).setEnabled(message.uid != null && (hasArchive && !inArchive));
+                    popupMenu.getMenu().findItem(R.id.menu_trash).setEnabled(message.uid != null);
+                    popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(message.uid != null && (hasJunk && !inJunk));
+
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem target) {
+                            switch (target.getItemId()) {
+                                case R.id.menu_archive:
+                                    properties.move(message.id, EntityFolder.ARCHIVE);
+                                    return true;
+                                case R.id.menu_trash:
+                                    if (delete)
+                                        onActionDelete(message);
+                                    else
+                                        properties.move(message.id, EntityFolder.TRASH);
+                                    return true;
+                                case R.id.menu_junk:
+                                    onActionJunk(message);
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        }
+                    });
+                    popupMenu.show();
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                }
+            }.setLog(false).execute(context, owner, sargs, "message:actions");
+        }
+
+        private void onActionDelete(TupleMessageEx message) {
+            Bundle aargs = new Bundle();
+            aargs.putString("question", context.getString(R.string.title_ask_delete));
+            aargs.putLong("id", message.id);
+
+            FragmentDialogAsk ask = new FragmentDialogAsk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_DELETE);
+            ask.show(parentFragment.getParentFragmentManager(), "message:delete");
+        }
+
+        private void onActionJunk(TupleMessageEx message) {
+            Bundle aargs = new Bundle();
+            aargs.putLong("id", message.id);
+            aargs.putString("from", MessageHelper.formatAddresses(message.from));
+
+            FragmentDialogJunk ask = new FragmentDialogJunk();
+            ask.setArguments(aargs);
+            ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
+            ask.show(parentFragment.getParentFragmentManager(), "message:junk");
         }
 
         private void onActionMore(TupleMessageEx message) {
@@ -3301,12 +3317,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
             popupMenu.show();
-        }
-
-        private void onActionBarHint() {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            prefs.edit().putBoolean("message_bar_removed", true).apply();
-            grpActionBarHint.setVisibility(View.GONE);
         }
 
         private class TouchHandler extends ArrowKeyMovementMethod {
