@@ -376,6 +376,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvNoInternetAttachments;
 
         private View vSeparator;
+        private View vSeparatorBottom;
         private ImageButton ibFull;
         private ImageButton ibImages;
         private ImageButton ibUnsubscribe;
@@ -560,6 +561,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnDownloadAttachments = attachments.findViewById(R.id.btnDownloadAttachments);
             tvNoInternetAttachments = attachments.findViewById(R.id.tvNoInternetAttachments);
             vSeparator = vsBody.findViewById(R.id.vSeparator);
+            vSeparatorBottom = vsBody.findViewById(R.id.vSeparatorBottom);
             ibFull = vsBody.findViewById(R.id.ibFull);
             ibImages = vsBody.findViewById(R.id.ibImages);
             ibUnsubscribe = vsBody.findViewById(R.id.ibUnsubscribe);
@@ -1192,6 +1194,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvNoInternetAttachments.setVisibility(View.GONE);
 
             vSeparator.setVisibility(View.GONE);
+            vSeparatorBottom.setVisibility(View.GONE);
             ibFull.setVisibility(View.GONE);
             ibImages.setVisibility(View.GONE);
             ibUnsubscribe.setVisibility(View.GONE);
@@ -1351,6 +1354,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             vSeparator.setVisibility(View.VISIBLE);
+            vSeparatorBottom.setVisibility(View.VISIBLE);
             ibFull.setEnabled(false);
             ibFull.setVisibility(View.VISIBLE);
             ibImages.setVisibility(View.GONE);
