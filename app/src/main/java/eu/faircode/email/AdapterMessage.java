@@ -564,19 +564,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnSaveAttachments = attachments.findViewById(R.id.btnSaveAttachments);
             btnDownloadAttachments = attachments.findViewById(R.id.btnDownloadAttachments);
             tvNoInternetAttachments = attachments.findViewById(R.id.tvNoInternetAttachments);
-
-            bnvActions = vsBody.findViewById(R.id.bnvActions);
-            // dev4223: always show small action bar
-            if (true || compact) {
-                bnvActions.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_UNLABELED);
-                ViewGroup.LayoutParams lparam = bnvActions.getLayoutParams();
-                lparam.height = dp36;
-                bnvActions.setLayoutParams(lparam);
-            }
-            grpActions = vsBody.findViewById(R.id.grpActions);
-
             vSeparator = vsBody.findViewById(R.id.vSeparator);
-
             ibFull = vsBody.findViewById(R.id.ibFull);
             ibImages = vsBody.findViewById(R.id.ibImages);
             ibUnsubscribe = vsBody.findViewById(R.id.ibUnsubscribe);
