@@ -677,6 +677,8 @@
     <string name="title_more">More</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Move</string>
+    <string name="title_no_junk">Not spam</string>
+    <string name="title_move_to">Move to &#8230;</string>
     <string name="title_move_to_folder">Move to &#8230;</string>
     <string name="title_move_to_account">Move to %1$s &#8230;</string>
     <string name="title_snooze">Snooze &#8230;</string>
@@ -732,7 +734,7 @@
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
-    <string name="title_reply_hint">You can reply to all, forward, etc via the double arrow action menu just below the message header</string>
+    <string name="title_message_bar_hint">The actions for archiving and trashing messages were merged in the bottom action bar and all answer actions have been made available via the answer button</string>
 
     <string name="title_ask_review">Please review FairEmail</string>
     <string name="title_ask_review_rationale">

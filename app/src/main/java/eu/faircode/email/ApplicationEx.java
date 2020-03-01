@@ -247,6 +247,9 @@ public class ApplicationEx extends Application {
             if (!prefs.contains("poll_interval"))
                 editor.putInt("poll_interval", 0);
             editor.remove("first");
+        } else if (version < 999) {
+            editor.remove("actionbar");
+            editor.putBoolean("message_bar_removed", false);
         }
 
         if (BuildConfig.DEBUG && false) {
