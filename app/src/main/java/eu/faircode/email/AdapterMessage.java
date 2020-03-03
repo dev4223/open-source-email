@@ -391,6 +391,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibMore;
         private TextView tvSignedData;
         private TextView tvCrossHint;
+        private ImageButton ibAnswerHint;
+        private TextView tvAnswerHint;
 
         private TextView tvBody;
         private View wvBody;
@@ -580,6 +582,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibMore = vsBody.findViewById(R.id.ibMore);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
             tvCrossHint = vsBody.findViewById(R.id.tvCrossHint);
+            ibAnswerHint = vsBody.findViewById(R.id.ibAnswerHint);
+            tvAnswerHint = vsBody.findViewById(R.id.tvAnswerHint);
 
             tvBody = vsBody.findViewById(R.id.tvBody);
             wvBody = vsBody.findViewById(R.id.wvBody);
@@ -664,6 +668,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibJunk.setOnClickListener(this);
                 ibRemove.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
+                ibAnswerHint.setOnClickListener(this);
 
                 ibDownloading.setOnClickListener(this);
 
@@ -735,6 +740,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibJunk.setOnClickListener(null);
                 ibRemove.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
+                ibAnswerHint.setOnClickListener(null);
 
                 ibDownloading.setOnClickListener(null);
 
@@ -1223,6 +1229,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibMore.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
             tvCrossHint.setVisibility(View.GONE);
+            ibAnswerHint.setVisibility(View.GONE);
+            tvAnswerHint.setVisibility(View.GONE);
 
             tvBody.setVisibility(View.GONE);
             wvBody.setVisibility(View.GONE);
@@ -1374,6 +1382,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean cross_hint = prefs.getBoolean("cross_hint", true);
+            boolean answer_hint = prefs.getBoolean("answer_hint", false);
             boolean normal = context.getResources().getConfiguration()
                     .isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL);
 
@@ -1392,6 +1401,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibJunk.setVisibility(View.GONE);
             ibRemove.setVisibility(normal || message.folderReadOnly ? View.GONE : View.VISIBLE);
             tvCrossHint.setVisibility(!normal && cross_hint ? View.VISIBLE : View.GONE);
+            ibAnswerHint.setVisibility(answer_hint ? View.VISIBLE : View.GONE);
+            tvAnswerHint.setVisibility(answer_hint ? View.VISIBLE : View.GONE);
 
             if (normal)
                 onActionRemove(message, true);
@@ -2410,13 +2421,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onActionTrash(message, (Boolean) ibTrash.getTag());
                         break;
                     case R.id.ibJunk:
-                        onActionJunk(message);
+                        if (EntityFolder.JUNK.equals(message.folderType))
+                            onActionUnjunk(message);
+                        else
+                            onActionJunk(message);
                         break;
                     case R.id.ibRemove:
                         onActionRemove(message, false);
                         break;
                     case R.id.ibMore:
                         onActionMore(message);
+                        break;
+                    case R.id.ibAnswerHint:
+                        onActionAnswerHint();
                         break;
 
                     case R.id.ibDownloading:
@@ -3191,15 +3208,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean archive = (!message.folderReadOnly && message.uid != null && (hasArchive && !inArchive));
                     boolean trash = ((!message.folderReadOnly && message.uid != null) || outbox || debug);
                     boolean junk = (!message.folderReadOnly && message.uid != null && (hasJunk && !inJunk));
+                    boolean unjunk = (!message.folderReadOnly && message.uid != null && inJunk);
 
                     final boolean delete = (inTrash || !hasTrash || outbox || message.uid == null);
 
                     if (normal) {
                         ibTrash.setTag(delete);
+                        ibJunk.setImageResource(unjunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_flag_24);
+                        String title = context.getString(unjunk ? R.string.title_no_junk : R.string.title_spam);
+                        ibJunk.setContentDescription(title);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                            ibJunk.setTooltipText(title);
 
                         ibArchive.setVisibility(archive ? View.VISIBLE : View.GONE);
                         ibTrash.setVisibility(trash ? View.VISIBLE : View.GONE);
-                        ibJunk.setVisibility(junk ? View.VISIBLE : View.GONE);
+                        ibJunk.setVisibility(junk || unjunk ? View.VISIBLE : View.GONE);
                     } else {
                         if (!hasArchive && !hasJunk) {
                             if (delete)
@@ -3276,6 +3299,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ask.setArguments(aargs);
             ask.setTargetFragment(parentFragment, FragmentMessages.REQUEST_MESSAGE_JUNK);
             ask.show(parentFragment.getParentFragmentManager(), "message:junk");
+        }
+
+        private void onActionUnjunk(TupleMessageEx message) {
+            properties.move(message.id, EntityFolder.INBOX);
         }
 
         private void onActionMore(TupleMessageEx message) {
@@ -3405,6 +3432,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
             popupMenu.show();
+        }
+
+        private void onActionAnswerHint() {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            prefs.edit().putBoolean("answer_hint", false).apply();
+            ibAnswerHint.setVisibility(View.GONE);
+            tvAnswerHint.setVisibility(View.GONE);
         }
 
         private class TouchHandler extends ArrowKeyMovementMethod {

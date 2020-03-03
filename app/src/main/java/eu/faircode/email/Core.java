@@ -150,7 +150,7 @@ class Core {
             Log.i(folder.name + " executing operations=" + ops.size());
             while (retry < LOCAL_RETRY_MAX && ops.size() > 0 &&
                     state.batchCanRun(folder.id, priority, sequence) &&
-                    state.isRunning() && state.isRecoverable()) {
+                    state.isRunning() && ifolder.isOpen()) {
                 TupleOperationEx op = ops.get(0);
 
                 try {
@@ -497,8 +497,6 @@ class Core {
 
             if (ops.size() == 0)
                 state.batchCompleted(folder.id, priority, sequence);
-            else // abort
-                state.error(new OperationCanceledException());
         } finally {
             Log.i(folder.name + " end process state=" + state + " pending=" + ops.size());
         }
