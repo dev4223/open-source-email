@@ -277,6 +277,7 @@
     <string name="title_advanced_signature_location">Signature position</string>
     <string name="title_advanced_signature_end">Add signature after quoted/forwarded message</string>
     <string name="title_advanced_plain_only">Send plain text only by default</string>
+    <string name="title_advanced_receipt">When requesting a receipt</string>
     <string name="title_advanced_usenet_signature">Usenet signature convention</string>
     <string name="title_advanced_remove_signatures">Remove recognized signatures</string>
     <string name="title_advanced_resize_images">Automatically resize embedded images</string>
@@ -743,7 +744,6 @@
     <string name="title_ask_help">Help improve FairEmail</string>
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
-    <string name="title_message_bar_hint">Tap the cross icon to archive, delete or report a message as spam and to remove this notice</string>
 
     <string name="title_ask_review">Please review FairEmail</string>
     <string name="title_ask_review_rationale">
@@ -770,6 +770,7 @@
     <string name="title_received">Received:</string>
     <string name="title_size">Size:</string>
     <string name="title_subject">Subject:</string>
+    <string name="title_attachment">Attachment:</string>
     <string name="title_body_hint">Your message</string>
     <string name="title_discard">Discard</string>
     <string name="title_save">Save</string>
@@ -807,7 +808,7 @@
     <string name="title_no_key">No private key</string>
     <string name="title_invalid_key">Invalid private key</string>
     <string name="title_send_plain_text">Plain text only</string>
-    <string name="title_send_receipt">Request delivery/read receipt</string>
+    <string name="title_send_receipt">Request receipt</string>
     <string name="title_send_receipt_remark">Most providers and email clients ignore receipt requests</string>
 
     <string name="title_from_missing">Sender missing</string>
@@ -1355,6 +1356,12 @@
         <item>Small</item>
         <item>Medium</item>
         <item>Large</item>
+    </string-array>
+
+    <string-array name="receiptNames">
+        <item>Read receipt</item>
+        <item>Delivery receipt</item>
+        <item>Read+delivery receipt</item>
     </string-array>
 
     <string-array name="signatureNames">

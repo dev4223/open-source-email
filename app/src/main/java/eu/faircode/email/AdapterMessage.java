@@ -388,10 +388,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibArchive;
         private ImageButton ibTrash;
         private ImageButton ibJunk;
-        private ImageButton ibRemove;
         private ImageButton ibMore;
         private TextView tvSignedData;
-        private TextView tvCrossHint;
 
         private TextView tvBody;
         private View wvBody;
@@ -580,10 +578,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibArchive = vsBody.findViewById(R.id.ibArchive);
             ibTrash = vsBody.findViewById(R.id.ibTrash);
             ibJunk = vsBody.findViewById(R.id.ibJunk);
-            ibRemove = vsBody.findViewById(R.id.ibRemove);
             ibMore = vsBody.findViewById(R.id.ibMore);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
-            tvCrossHint = vsBody.findViewById(R.id.tvCrossHint);
 
             tvBody = vsBody.findViewById(R.id.tvBody);
             wvBody = vsBody.findViewById(R.id.wvBody);
@@ -669,7 +665,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibArchive.setOnClickListener(this);
                 ibTrash.setOnClickListener(this);
                 ibJunk.setOnClickListener(this);
-                ibRemove.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
 
                 ibDownloading.setOnClickListener(this);
@@ -743,7 +738,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibArchive.setOnClickListener(null);
                 ibTrash.setOnClickListener(null);
                 ibJunk.setOnClickListener(null);
-                ibRemove.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
 
                 ibDownloading.setOnClickListener(null);
@@ -1232,10 +1226,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibArchive.setVisibility(View.GONE);
             ibTrash.setVisibility(View.GONE);
             ibJunk.setVisibility(View.GONE);
-            ibRemove.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
-            tvCrossHint.setVisibility(View.GONE);
 
             tvBody.setVisibility(View.GONE);
             wvBody.setVisibility(View.GONE);
@@ -1386,10 +1378,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvNoInternetHeaders.setVisibility(View.GONE);
             }
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean cross_hint = prefs.getBoolean("cross_hint", true);
-            boolean normal = (context.getResources().getConfiguration().screenWidthDp >= 9 * 39 - 3);
-
             vSeparator.setVisibility(View.VISIBLE);
             vSeparatorBottom.setVisibility(View.VISIBLE);
             ibFull.setEnabled(false);
@@ -1399,17 +1387,80 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.VISIBLE : View.GONE);
 
-            ibUnsubscribe.setVisibility(normal || message.unsubscribe == null ? View.GONE : View.VISIBLE);
-            ibAnswer.setVisibility(normal || EntityFolder.OUTBOX.equals(message.folderType) ? View.GONE : View.VISIBLE);
-            ibMove.setVisibility(normal || message.folderReadOnly || message.uid == null ? View.GONE : View.VISIBLE);
-            ibArchive.setVisibility(View.GONE);
-            ibTrash.setVisibility(View.GONE);
-            ibJunk.setVisibility(View.GONE);
-            ibRemove.setVisibility(normal || message.folderReadOnly ? View.GONE : View.VISIBLE);
-            tvCrossHint.setVisibility(!normal && cross_hint ? View.VISIBLE : View.GONE);
+            // Setup actions
+            Bundle sargs = new Bundle();
+            sargs.putLong("id", message.id);
+            sargs.putLong("account", message.account);
 
-            if (normal)
-                onActionRemove(message, true);
+            new SimpleTask<List<EntityFolder>>() {
+                @Override
+                protected void onPreExecute(Bundle args) {
+                    ibUnsubscribe.setVisibility(View.GONE);
+                    ibAnswer.setVisibility(View.GONE);
+                    ibMove.setVisibility(View.GONE);
+                    ibArchive.setVisibility(View.GONE);
+                    ibTrash.setVisibility(View.GONE);
+                    ibJunk.setVisibility(View.GONE);
+                }
+
+                @Override
+                protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                    long account = args.getLong("account");
+                    return DB.getInstance(context).folder().getSystemFolders(account);
+                }
+
+                @Override
+                protected void onExecuted(Bundle args, List<EntityFolder> folders) {
+                    long id = args.getLong("id");
+                    TupleMessageEx amessage = getMessage();
+                    if (amessage == null || !amessage.id.equals(id))
+                        return;
+
+                    boolean hasArchive = false;
+                    boolean hasTrash = false;
+                    boolean hasJunk = false;
+                    if (folders != null)
+                        for (EntityFolder folder : folders)
+                            if (EntityFolder.ARCHIVE.equals(folder.type))
+                                hasArchive = true;
+                            else if (EntityFolder.TRASH.equals(folder.type))
+                                hasTrash = true;
+                            else if (EntityFolder.JUNK.equals(folder.type))
+                                hasJunk = true;
+
+                    boolean inArchive = EntityFolder.ARCHIVE.equals(message.folderType);
+                    boolean inTrash = EntityFolder.TRASH.equals(message.folderType);
+                    boolean inJunk = EntityFolder.JUNK.equals(message.folderType);
+                    boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
+
+                    boolean move = !(message.folderReadOnly || message.uid == null);
+                    boolean archive = (move && (hasArchive && !inArchive));
+                    boolean trash = (move || outbox || debug);
+                    boolean junk = (move && (hasJunk && !inJunk));
+                    boolean unjunk = (move && inJunk);
+
+                    final boolean delete = (inTrash || !hasTrash || outbox || message.uid == null);
+
+                    ibTrash.setTag(delete);
+                    ibJunk.setImageResource(unjunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_flag_24);
+                    String title = context.getString(unjunk ? R.string.title_no_junk : R.string.title_spam);
+                    ibJunk.setContentDescription(title);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        ibJunk.setTooltipText(title);
+
+                    ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
+                    ibAnswer.setVisibility(outbox ? View.GONE : View.VISIBLE);
+                    ibMove.setVisibility(move ? View.VISIBLE : View.GONE);
+                    ibArchive.setVisibility(archive ? View.VISIBLE : View.GONE);
+                    ibTrash.setVisibility(trash ? View.VISIBLE : View.GONE);
+                    ibJunk.setVisibility(junk || unjunk ? View.VISIBLE : View.GONE);
+                }
+
+                @Override
+                protected void onException(Bundle args, Throwable ex) {
+                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                }
+            }.setLog(false).execute(context, owner, sargs, "message:more");
 
             ibMore.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.GONE : View.VISIBLE);
             tvSignedData.setVisibility(View.GONE);
@@ -1574,6 +1625,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBody.setText(null);
             grpDownloading.setVisibility(message.content ? View.GONE : View.VISIBLE);
 
+            ibSeen.setImageResource(message.ui_seen
+                    ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
+            ibSeen.setContentDescription(context.getString(message.ui_seen
+                    ? R.string.title_unseen : R.string.title_seen));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ibSeen.setTooltipText(context.getString(message.ui_seen
+                        ? R.string.title_unseen : R.string.title_seen));
+            ibSeen.setVisibility(message.folderReadOnly || message.uid == null
+                    ? View.GONE : View.VISIBLE);
+
             if (!message.content)
                 return;
 
@@ -1711,16 +1772,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvBody.setVisibility(View.VISIBLE);
                 wvBody.setVisibility(View.GONE);
             }
-
-            ibSeen.setImageResource(message.ui_seen
-                    ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
-            ibSeen.setContentDescription(context.getString(message.ui_seen
-                    ? R.string.title_unseen : R.string.title_seen));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                ibSeen.setTooltipText(context.getString(message.ui_seen
-                        ? R.string.title_unseen : R.string.title_seen));
-            ibSeen.setVisibility(message.folderReadOnly || message.uid == null
-                    ? View.GONE : View.VISIBLE);
 
             final Bundle args = new Bundle();
             args.putSerializable("message", message);
@@ -2423,6 +2474,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.ibVerify:
                         onActionDecrypt(message, false);
                         break;
+
                     case R.id.ibUndo:
                         onActionUndo(message);
                         break;
@@ -2443,9 +2495,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             onActionUnjunk(message);
                         else
                             onActionJunk(message);
-                        break;
-                    case R.id.ibRemove:
-                        onActionRemove(message, false);
                         break;
                     case R.id.ibMore:
                         onActionMore(message);
@@ -3178,121 +3227,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onActionNoJunk(TupleMessageEx message) {
             properties.move(message.id, EntityFolder.INBOX);
-        }
-
-        private void onActionRemove(TupleMessageEx message, boolean normal) {
-            if (!normal) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                prefs.edit().putBoolean("cross_hint", false).apply();
-                tvCrossHint.setVisibility(View.GONE);
-
-                if (EntityFolder.OUTBOX.equals(message.folderType)) {
-                    onActionDelete(message);
-                    return;
-                }
-            }
-
-            // Setup actions
-            Bundle sargs = new Bundle();
-            sargs.putLong("id", message.id);
-            sargs.putLong("account", message.account);
-
-            new SimpleTask<List<EntityFolder>>() {
-                @Override
-                protected List<EntityFolder> onExecute(Context context, Bundle args) {
-                    long account = args.getLong("account");
-                    return DB.getInstance(context).folder().getSystemFolders(account);
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, List<EntityFolder> folders) {
-                    long id = args.getLong("id");
-                    TupleMessageEx amessage = getMessage();
-                    if (amessage == null || !amessage.id.equals(id))
-                        return;
-
-                    boolean hasArchive = false;
-                    boolean hasTrash = false;
-                    boolean hasJunk = false;
-                    if (folders != null)
-                        for (EntityFolder folder : folders)
-                            if (EntityFolder.ARCHIVE.equals(folder.type))
-                                hasArchive = true;
-                            else if (EntityFolder.TRASH.equals(folder.type))
-                                hasTrash = true;
-                            else if (EntityFolder.JUNK.equals(folder.type))
-                                hasJunk = true;
-
-                    boolean inArchive = EntityFolder.ARCHIVE.equals(message.folderType);
-                    boolean inTrash = EntityFolder.TRASH.equals(message.folderType);
-                    boolean inJunk = EntityFolder.JUNK.equals(message.folderType);
-                    boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
-
-                    boolean move = !(message.folderReadOnly || message.uid == null);
-                    boolean archive = (move && (hasArchive && !inArchive));
-                    boolean trash = (move || outbox || debug);
-                    boolean junk = (move && (hasJunk && !inJunk));
-                    boolean unjunk = (move && inJunk);
-
-                    final boolean delete = (inTrash || !hasTrash || outbox || message.uid == null);
-
-                    if (normal) {
-                        ibTrash.setTag(delete);
-                        ibJunk.setImageResource(unjunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_flag_24);
-                        String title = context.getString(unjunk ? R.string.title_no_junk : R.string.title_spam);
-                        ibJunk.setContentDescription(title);
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                            ibJunk.setTooltipText(title);
-
-                        ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
-                        ibAnswer.setVisibility(outbox ? View.GONE : View.VISIBLE);
-                        ibMove.setVisibility(move ? View.VISIBLE : View.GONE);
-                        ibArchive.setVisibility(archive ? View.VISIBLE : View.GONE);
-                        ibTrash.setVisibility(trash ? View.VISIBLE : View.GONE);
-                        ibJunk.setVisibility(junk || unjunk ? View.VISIBLE : View.GONE);
-                    } else {
-                        if (!hasArchive && !hasJunk) {
-                            if (delete)
-                                onActionDelete(message);
-                            else
-                                properties.move(message.id, EntityFolder.TRASH);
-                            return;
-                        }
-
-                        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibMore);
-                        popupMenu.inflate(R.menu.popup_message_remove);
-                        popupMenu.getMenu().findItem(R.id.menu_archive).setEnabled(archive);
-                        popupMenu.getMenu().findItem(R.id.menu_trash).setEnabled(trash);
-                        popupMenu.getMenu().findItem(R.id.menu_junk).setEnabled(junk);
-
-                        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                            @Override
-                            public boolean onMenuItemClick(MenuItem target) {
-                                switch (target.getItemId()) {
-                                    case R.id.menu_archive:
-                                        onActionArchive(message);
-                                        return true;
-                                    case R.id.menu_trash:
-                                        onActionTrash(message, delete);
-                                        return true;
-                                    case R.id.menu_junk:
-                                        onActionJunk(message);
-                                        return true;
-                                    default:
-                                        return false;
-                                }
-                            }
-                        });
-
-                        popupMenu.show();
-                    }
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
-                }
-            }.setLog(false).execute(context, owner, sargs, "message:more");
         }
 
         private void onActionArchive(TupleMessageEx message) {

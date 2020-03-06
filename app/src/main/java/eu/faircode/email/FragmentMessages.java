@@ -5138,7 +5138,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     .getCertificate(certHolder);
                             try {
                                 Date signingTime;
-                                Attribute attr = signer.getSignedAttributes().get(CMSAttributes.signingTime);
+                                AttributeTable at = signer.getSignedAttributes();
+                                Attribute attr = (at == null ? null : at.get(CMSAttributes.signingTime));
                                 if (attr != null && attr.getAttrValues().size() == 1)
                                     signingTime = Time.getInstance(attr.getAttrValues()
                                             .getObjectAt(0).toASN1Primitive()).getDate();
@@ -5979,11 +5980,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (!file.exists())
                     return null;
 
+                List<EntityAttachment> attachments = db.attachment().getAttachments(message.id);
+                if (attachments == null)
+                    return null;
+
                 Document document = JsoupEx.parse(file);
                 HtmlHelper.truncate(document, false);
                 HtmlHelper.embedInlineImages(context, id, document, true);
 
-                Element p = document.createElement("p");
+                Element header = document.createElement("p");
 
                 if (message.from != null && message.from.length > 0) {
                     Element span = document.createElement("span");
@@ -5992,7 +5997,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.from));
                     span.appendElement("br");
-                    p.appendChild(span);
+                    header.appendChild(span);
                 }
 
                 if (message.to != null && message.to.length > 0) {
@@ -6002,7 +6007,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.to));
                     span.appendElement("br");
-                    p.appendChild(span);
+                    header.appendChild(span);
                 }
 
                 if (message.cc != null && message.cc.length > 0) {
@@ -6012,7 +6017,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.cc));
                     span.appendElement("br");
-                    p.appendChild(span);
+                    header.appendChild(span);
                 }
 
                 {
@@ -6024,26 +6029,45 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     span.appendChild(strong);
                     span.appendText(" " + DTF.format(message.received));
                     span.appendElement("br");
-                    p.appendChild(span);
+                    header.appendChild(span);
                 }
 
                 if (!TextUtils.isEmpty(message.subject)) {
                     Element span = document.createElement("span");
                     span.appendText(message.subject);
                     span.appendElement("br");
-                    p.appendChild(span);
+                    header.appendChild(span);
                 }
 
                 if (headers && message.headers != null) {
-                    p.appendElement("hr");
+                    header.appendElement("hr");
                     Element pre = document.createElement("pre");
                     pre.text(message.headers);
-                    p.appendChild(pre);
+                    header.appendChild(pre);
                 }
 
-                p.appendElement("hr").appendElement("br");
+                header.appendElement("hr").appendElement("br");
 
-                document.prependChild(p);
+                document.prependChild(header);
+
+                boolean hasAttachments = false;
+                Element footer = document.createElement("p");
+                footer.appendElement("br").appendElement("hr");
+                for (EntityAttachment attachment : attachments)
+                    if (!attachment.isInline()) {
+                        hasAttachments = true;
+                        Element strong = document.createElement("strong");
+                        strong.text(getString(R.string.title_attachment));
+                        footer.appendChild(strong);
+                        if (!TextUtils.isEmpty(attachment.name))
+                            footer.appendText(" " + attachment.name);
+                        if (attachment.size != null)
+                            footer.appendText(" " + Helper.humanReadableByteCount(attachment.size, true));
+                        footer.appendElement("br");
+                    }
+
+                if (hasAttachments)
+                    document.appendChild(footer);
 
                 return new String[]{message.subject, document.html()};
             }
