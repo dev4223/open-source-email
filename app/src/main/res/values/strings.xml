@@ -258,6 +258,7 @@
     <string name="title_advanced_when">When</string>
     <string name="title_advanced_always">Always synchronize these accounts</string>
     <string name="title_advanced_schedule">Schedule</string>
+    <string name="title_advanced_advanced">Advanced</string>
     <string name="title_advanced_unseen">All unread messages</string>
     <string name="title_advanced_flagged">All starred messages</string>
     <string name="title_advanced_delete_unseen">Delete old unread messages</string>
@@ -343,7 +344,6 @@
 
     <string name="title_advanced_double_back">Double \'back\' to exit</string>
     <string name="title_advanced_pull_refresh">Pull down to refresh</string>
-    <string name="title_advanced_hide_actionbar">Hide action bar on scrolling down</string>
     <string name="title_advanced_autoscroll">Scroll to top on receiving new messages</string>
     <string name="title_advanced_double_tap">Double tap to mark message read/unread</string>
     <string name="title_advanced_swipenav">Swipe left/right to go to next/previous conversation</string>
@@ -744,7 +744,6 @@
     <string name="title_ask_reporting">Send error reports?</string>
     <string name="title_reporting_why">Error reporting will help improve FairEmail</string>
     <string name="title_message_bar_hint">Tap the cross icon to archive, delete or report a message as spam and to remove this notice</string>
-    <string name="title_answer_hint">Reply to all, forwarding, etc. have been moved to the reply button at the bottom</string>
 
     <string name="title_ask_review">Please review FairEmail</string>
     <string name="title_ask_review_rationale">
