@@ -97,11 +97,9 @@ public class EmailService implements AutoCloseable {
     static final int PURPOSE_USE = 2;
     static final int PURPOSE_SEARCH = 3;
 
+    final static int DEFAULT_CONNECT_TIMEOUT = 20; // seconds
+
     private final static int SEARCH_TIMEOUT = 2 * 60 * 1000; // milliseconds
-    private final static int CONNECT_TIMEOUT = 60 * 1000; // milliseconds
-    private final static int CONNECT_TIMEOUT_CHECK = 30 * 1000; // milliseconds
-    private final static int WRITE_TIMEOUT = 60 * 1000; // milliseconds
-    private final static int READ_TIMEOUT = 60 * 1000; // milliseconds
     private final static int FETCH_SIZE = 1024 * 1024; // bytes, default 16K
     private final static int POOL_TIMEOUT = 45 * 1000; // milliseconds, default 45 sec
 
@@ -155,20 +153,17 @@ public class EmailService implements AutoCloseable {
         properties.put("mail." + protocol + ".sasl.realm", realm == null ? "" : realm);
         properties.put("mail." + protocol + ".auth.ntlm.domain", realm == null ? "" : realm);
 
-        // TODO: make timeouts configurable?
         // writetimeout: one thread overhead
+        int timeout = prefs.getInt("timeout", DEFAULT_CONNECT_TIMEOUT) * 1000;
+        Log.i("Timeout=" + timeout);
         if (purpose == PURPOSE_SEARCH) {
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
+            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(timeout));
             properties.put("mail." + protocol + ".writetimeout", Integer.toString(SEARCH_TIMEOUT));
             properties.put("mail." + protocol + ".timeout", Integer.toString(SEARCH_TIMEOUT));
-        } else if (purpose == PURPOSE_CHECK) {
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT_CHECK));
-            properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT));
-            properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
         } else {
-            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(CONNECT_TIMEOUT));
-            properties.put("mail." + protocol + ".writetimeout", Integer.toString(WRITE_TIMEOUT));
-            properties.put("mail." + protocol + ".timeout", Integer.toString(READ_TIMEOUT));
+            properties.put("mail." + protocol + ".connectiontimeout", Integer.toString(timeout));
+            properties.put("mail." + protocol + ".writetimeout", Integer.toString(timeout * 2));
+            properties.put("mail." + protocol + ".timeout", Integer.toString(timeout * 2));
         }
 
         if (debug && BuildConfig.DEBUG)
@@ -377,10 +372,25 @@ public class EmailService implements AutoCloseable {
             if (ioError) {
                 try {
                     // Some devices resolve IPv6 addresses while not having IPv6 connectivity
+                    InetAddress main = InetAddress.getByName(host);
                     InetAddress[] iaddrs = InetAddress.getAllByName(host);
-                    Log.i("Fallback count=" + iaddrs.length);
+                    boolean ip4 = (main instanceof Inet4Address);
+                    boolean ip6 = (main instanceof Inet6Address);
+                    Log.i("Fallback count=" + iaddrs.length + " ip4=" + ip4 + " ip6=" + ip6);
                     if (iaddrs.length > 1)
-                        for (InetAddress iaddr : iaddrs)
+                        for (InetAddress iaddr : iaddrs) {
+                            if (iaddr instanceof Inet4Address) {
+                                if (ip4)
+                                    continue;
+                                ip4 = true;
+                            }
+
+                            if (iaddr instanceof Inet6Address) {
+                                if (ip6)
+                                    continue;
+                                ip6 = true;
+                            }
+
                             try {
                                 Log.i("Falling back to " + iaddr.getHostAddress());
                                 _connect(iaddr.getHostAddress(), port, user, password, factory);
@@ -388,6 +398,7 @@ public class EmailService implements AutoCloseable {
                             } catch (MessagingException ex1) {
                                 Log.w(ex1);
                             }
+                        }
                 } catch (Throwable ex1) {
                     Log.w(ex1);
                 }

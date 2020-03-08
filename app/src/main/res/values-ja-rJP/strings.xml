@@ -215,6 +215,7 @@
     <string name="title_advanced_signature_location">署名の場所</string>
     <string name="title_advanced_signature_end">引用/転送されたメッセージの後に署名を追加</string>
     <string name="title_advanced_plain_only">デフォルトでプレーンテキストのみを送信</string>
+    <string name="title_advanced_flow">プレーンテキストの \'フォーマットフロー\'</string>
     <string name="title_advanced_receipt">受取をリクエストする時</string>
     <string name="title_advanced_usenet_signature">署名の区切</string>
     <string name="title_advanced_remove_signatures">認識された署名を削除</string>
@@ -1123,7 +1124,7 @@ FairEmailは、Pro機能購入の為に上部に小さなメッセージを表�
     <string-array name="receiptNames">
         <item>受取を読む</item>
         <item>送達通知</item>
-        <item>送達通知</item>
+        <item>読み取り+配信確認</item>
     </string-array>
     <string-array name="signatureNames">
         <item>テキスト上</item>

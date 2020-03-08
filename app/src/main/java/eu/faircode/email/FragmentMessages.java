@@ -3868,7 +3868,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             boolean expand_all = prefs.getBoolean("expand_all", false);
             if (expand_all)
                 for (TupleMessageEx message : messages)
-                    if (message != null && message.ui_seen)
+                    if (message != null && message.ui_seen && !message.duplicate)
                         iProperties.setExpanded(message, true);
         } else {
             if (autoCloseCount > 0 && (autoclose || onclose != null)) {
@@ -5552,7 +5552,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException)
+                if (ex instanceof IllegalArgumentException || ex instanceof CMSException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
