@@ -1503,6 +1503,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             // Actions
             vSeparator.setVisibility(View.VISIBLE);
+            vSeparatorBottom.setVisibility(View.VISIBLE);
             ibFull.setEnabled(false);
             ibFull.setVisibility(View.VISIBLE);
             ibImages.setVisibility(View.GONE);
