@@ -416,6 +416,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private View paddingAddressBottom;
         private Group grpAddressMeta;
         private Group grpAddressMetaBottom;
+        private View paddingSubjectBottom;
 
         private Group grpAddresses;
         private Group grpHeaders;
@@ -600,6 +601,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             paddingAddressBottom = itemView.findViewById(R.id.paddingAddressBottom);
             grpAddressMeta = itemView.findViewById(R.id.grpAddressMeta);
             grpAddressMetaBottom = itemView.findViewById(R.id.grpAddressMetaBottom);
+            paddingSubjectBottom = itemView.findViewById(R.id.paddingSubjectBottom);
 
             grpAddresses = vsBody.findViewById(R.id.grpAddresses);
             grpHeaders = vsBody.findViewById(R.id.grpHeaders);
@@ -794,6 +796,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             paddingAddressBottom.setMinimumHeight(0);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
+            paddingSubjectBottom.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
             grpAttachments.setVisibility(View.GONE);
         }
@@ -1162,6 +1165,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             paddingAddressBottom.setMinimumHeight(0);
             grpAddressMeta.setVisibility(View.GONE);
             grpAddressMetaBottom.setVisibility(View.GONE);
+            paddingSubjectBottom.setVisibility(View.GONE);
 
             grpAddresses.setVisibility(View.GONE);
             grpHeaders.setVisibility(View.GONE);
@@ -1463,6 +1467,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // dev4223: show Flags and Keywords dependand on show addresses
             paddingAddressBottom.setMinimumHeight(show_addresses ? (compact ? 18 : 36) : 0);
             grpAddressMeta.setVisibility(View.VISIBLE);
+            paddingSubjectBottom.setVisibility(View.VISIBLE);
             if(debug || message.keywords.length > 0) {
                 grpAddressMetaBottom.setVisibility(show_addresses ? View.VISIBLE : View.GONE);
             } else {
