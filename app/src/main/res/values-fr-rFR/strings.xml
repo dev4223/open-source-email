@@ -108,10 +108,6 @@
     <string name="title_edit_folder">Modifier le dossier</string>
     <string name="title_setup">Paramètres</string>
     <string name="title_setup_help">Aide</string>
-    <string name="title_setup_welcome">        Recevoir et envoyer des messages nécessite la création d\'un compte et d\'une identité comme dans toute autre application de messagerie.
-        La configuration rapide créera à la fois un compte et une identité en demandant simplement votre nom, votre adresse e-mail et votre mot de passe.
-        Les comptes et identités (alias) peuvent être configurés manuellement si nécessaire.
-    </string>
     <string name="title_setup_quick">Configuration rapide</string>
     <string name="title_setup_quick_remark">Pour configurer rapidement un compte et une identité pour la plupart des fournisseurs</string>
     <string name="title_setup_quick_hint">La configuration rapide récupérera les informations de configuration de autoconfig.thunderbird.net</string>
@@ -229,7 +225,7 @@
     <string name="title_advanced_signature_location">Emplacement de la signature</string>
     <string name="title_advanced_signature_end">Ajouter la signature après le message cité/transféré</string>
     <string name="title_advanced_plain_only">Envoyer le texte brut uniquement par défaut</string>
-    <string name="title_advanced_flow">\'format flowed\' pour le texte brut</string>
+    <string name="title_advanced_flow">Utiliser \'format flowed\' pour le texte brut</string>
     <string name="title_advanced_receipt">Lorsque vous demandez une confirmation</string>
     <string name="title_advanced_usenet_signature">Utiliser la convention de signature Usenet</string>
     <string name="title_advanced_remove_signatures">Supprimer les signatures reconnues</string>
@@ -396,6 +392,7 @@
     <string name="title_advanced_roaming_hint">Les en-têtes des messages seront toujours récupérés en itinérance. Vous pouvez utiliser le paramètre d\'itinérance de l\'appareil pour désactiver internet pendant l\'itinérance.</string>
     <string name="title_advanced_browse_hint">Télécharger plus de messages en faisant défiler vers le bas</string>
     <string name="title_advanced_layout_hint">Passer à une disposition plus compacte et changer la taille du texte des messages peut être fait dans le menu de la barre d\'action en haut dans la vue message</string>
+    <string name="title_advanced_startup_hint">Appuyez longuement sur n\'importe quel dossier de la liste de dossiers pour l\'ajouter ou le supprimer de la liste des dossiers unifiés</string>
     <string name="title_advanced_date_hint">Les messages ne sont regroupés par date que s\'ils sont triés par ordre chronologique</string>
     <string name="title_advanced_navbar_colorize_hint">Ceci fonctionne suivant la version et la variante d\'Android</string>
     <string name="title_advanced_threading_hint">Grouper les messages liés les uns aux autres</string>
@@ -1082,6 +1079,7 @@
     <string-array name="startupNames">
         <item>Boîte de réception unifiée</item>
         <item>Dossiers unifiés</item>
+        <item>Dossiers du compte principal</item>
         <item>Comptes</item>
     </string-array>
     <string-array name="downloadNames">

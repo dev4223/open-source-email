@@ -118,10 +118,6 @@
     <string name="title_edit_folder">Editare dosar</string>
     <string name="title_setup">Setări</string>
     <string name="title_setup_help">Ajutor</string>
-    <string name="title_setup_welcome">        Primirea și trimiterea de mesaje necesită configurarea unui cont și a unei identități ca în orice altă aplicație de e-mail.
-        Configurarea rapidă v-a crea atât un cont cât și o identitate folosindu-vă doar numele, adresa de e-mail și parola.
-        Conturile și identitățile (alias) pot fi setate și manual dacă se dorește.
-    </string>
     <string name="title_setup_quick">Configurare rapidă</string>
     <string name="title_setup_quick_remark">Permite setarea rapidă a unui cont și a unei identități pentru majoritatea furnizorilor</string>
     <string name="title_setup_quick_hint">Se vor descărca informațiile necesare de pe autoconfig.thunderbird.net</string>
@@ -239,6 +235,8 @@
     <string name="title_advanced_signature_location">Poziție semnătură</string>
     <string name="title_advanced_signature_end">Adaugă semnătură după mesajul citat/redirecționat</string>
     <string name="title_advanced_plain_only">Trimite implicit ca text simplu</string>
+    <string name="title_advanced_flow">\'format fluent\' pentru text simplu</string>
+    <string name="title_advanced_receipt">Când se cere o confirmare</string>
     <string name="title_advanced_usenet_signature">Semnatură conform Usenet</string>
     <string name="title_advanced_remove_signatures">Elimină semnăturile cunoscute</string>
     <string name="title_advanced_resize_images">Redimensionează automat imaginile încorporate</string>
@@ -251,6 +249,7 @@
     <string name="title_advanced_download">Descarcă automat mesajele și atașamentele, folosind o conexiune contorizată, până în</string>
     <string name="title_advanced_roaming">Descărcarea mesajelor și a atașamentelor prin conexiuni roaming</string>
     <string name="title_advanced_rlah">Consideră roamingul ca național</string>
+    <string name="title_advanced_timeout">Expirarea conexiunii (secunde)</string>
     <string name="title_advanced_ssl_harden">Întârire conexiuni SSL</string>
     <string name="title_advanced_socks">Utilizați proxy SOCKS</string>
     <string name="title_advanced_manage_connectivity">Gestionare conexiuni</string>
@@ -397,11 +396,14 @@
     <string name="title_advanced_metered_hint">Conexiunile contorizate sunt în general cele mobile sau punctele de acces Wi-Fi cu plată</string>
     <string name="title_advanced_metered_warning">Dezactivarea acestei opțiuni va opri primirea și trimiterea mesajelor pe conexiunile mobile de internet</string>
     <string name="title_advanced_rlah_hint">În zona UE nu se tratează ca roaming</string>
+    <string name="title_advanced_timeout_hint">Timpul de expirare a citirii/scrierii va fi setat la dublul intervalului de expirare a conexiunii. Valori mai mari au ca rezultat o utilizare mai mare a bateriei.</string>
+    <string name="title_advanced_ssl_harden_hint">Activând această setare se vor dezactiva protocoalele și cifrările SSL slabe, putând duce la probleme de conectare</string>
     <string name="title_advanced_socks_hint">Este nesigură folosirea unui server proxy pentru că aceste conexiuni nu sunt criptate</string>
     <string name="title_advanced_roaming_hint">Antetele mesajelor vor fi mereu descărcate și în roaming. Puteți folosi setările roaming ale dispozitivului pentru a dezactiva internetul atunci când sunteți în roaming.</string>
     <string name="title_advanced_browse_hint">Descarcă mai multe mesaje când se derulează în jos</string>
     <string name="title_advanced_layout_hint">Selectarea unui aspect mai compact și mărimea textului se poate face din meniul paginii de mesaje</string>
     <string name="title_advanced_date_hint">Mesajele sunt grupate după dată doar dacă sunt sortate așa</string>
+    <string name="title_advanced_navbar_colorize_hint">Depinde de versiunea de Android și de variantă dacă va funcționa</string>
     <string name="title_advanced_threading_hint">Grupează mesajele asociate</string>
     <string name="title_advanced_gravatars_hint">S-ar putea să existe un risc de confidențialitate</string>
     <string name="title_advanced_name_email_hint">Dacă este dezactivată, doar numele va fi afișat atunci când este disponibil</string>
@@ -681,6 +683,7 @@
     <string name="title_received">Primit:</string>
     <string name="title_size">Mărime:</string>
     <string name="title_subject">Subiect:</string>
+    <string name="title_attachment">Atașament:</string>
     <string name="title_body_hint">Mesajul dumneavoastră</string>
     <string name="title_discard">Renunță</string>
     <string name="title_save">Salvează</string>
@@ -716,6 +719,7 @@
     <string name="title_no_key">Nici o cheie privată</string>
     <string name="title_invalid_key">Cheie privată invalidă</string>
     <string name="title_send_plain_text">Doar text simplu</string>
+    <string name="title_send_receipt">Solicitare confirmare</string>
     <string name="title_send_receipt_remark">Majoritatea furnizorilor și clienților de email ignoră cererile de confirmare</string>
     <string name="title_from_missing">Expeditor lipsă</string>
     <string name="title_to_missing">Destinatar lipsă</string>
@@ -1085,7 +1089,8 @@
     <string-array name="startupNames">
         <item>Căsuță poștală comună</item>
         <item>Dosare unificate</item>
-        <item>Conturi</item>
+        <item>Primary account folders</item>
+        <item>Accounts</item>
     </string-array>
     <string-array name="downloadNames">
         <item>16 Ko</item>
@@ -1144,6 +1149,11 @@
         <item>Mică</item>
         <item>Medie</item>
         <item>Mare</item>
+    </string-array>
+    <string-array name="receiptNames">
+        <item>Doar confirmare de citire</item>
+        <item>Doar confirmare de livrare</item>
+        <item>Confirmare de citire+livrare</item>
     </string-array>
     <string-array name="signatureNames">
         <item>Deasupra textului</item>

@@ -96,9 +96,6 @@
     <string name="title_edit_folder">フォルダの編集</string>
     <string name="title_setup">設定</string>
     <string name="title_setup_help">ヘルプ</string>
-    <string name="title_setup_welcome">メッセージの送受信には他のメールアプリと同様にアカウントとIDを設定する必要があります。
-クイックセットアップでは、名前、メールアドレス、パスワードを要求するだけでアカウントとIDの両方が作成されます。
-必要に応じてアカウントとID(エイリアス)も手動でセットアップできます。</string>
     <string name="title_setup_quick">クイックセットアップ</string>
     <string name="title_setup_quick_remark">殆どのプロバイダーでアカウントとIDを素早く設定します</string>
     <string name="title_setup_quick_hint">クイックセットアップはautoconfig.thunderbird.netから構成情報を取得します</string>
@@ -381,6 +378,7 @@
     <string name="title_advanced_roaming_hint">ローミング時メッセージヘッダーが常に取得されます。 デバイスのローミング設定を使用して、ローミング中にインターネットを無効にする事が出来ます</string>
     <string name="title_advanced_browse_hint">下にスクロール時に、更にメッセージを取得</string>
     <string name="title_advanced_layout_hint">よりコンパクトなレイアウトへの切り替えとメッセージのテキストサイズの変更はメッセージビューの上部アクションバーメニューで行えます</string>
+    <string name="title_advanced_startup_hint">フォルダーリストの任意のフォルダーを長押して統合フォルダーのリストに追加又は削除します</string>
     <string name="title_advanced_date_hint">時間で並び替えをしている場合にのみ、メッセージは日付でグループ化されます</string>
     <string name="title_advanced_navbar_colorize_hint">これが機能するかはAndroidのバージョンとバリアントによって異なります</string>
     <string name="title_advanced_threading_hint">互いに関連するグループメッセージ</string>
@@ -1064,6 +1062,7 @@ FairEmailは、Pro機能購入の為に上部に小さなメッセージを表�
     <string-array name="startupNames">
         <item>統合受信トレイ</item>
         <item>統合フォルダー</item>
+        <item>プライマリアカウントフォルダー</item>
         <item>アカウント</item>
     </string-array>
     <string-array name="downloadNames">

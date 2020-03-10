@@ -109,9 +109,11 @@
     <string name="title_edit_folder">Ordner bearbeiten</string>
     <string name="title_setup">Einstellungen</string>
     <string name="title_setup_help">Hilfe</string>
-    <string name="title_setup_welcome">Das Empfangen und Senden von Nachrichten erfordert die Einrichtung eines Kontos und einer Identität wie in jeder anderen E-Mail-Anwendung.
-Die Schnelleinrichtung erstellt sowohl ein Konto als auch eine Identität, indem sie lediglich nach Ihrem Namen, Ihrer E-Mail-Adresse und Ihrem Passwort fragt.
-Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet werden.    </string>
+    <string name="title_setup_welcome">        Das Empfangen und Senden von Nachrichten erfordert die Einrichtung eines Kontos und einer Identität, wie in jeder anderen E-Mail-App.
+        Der Assistent erstellt sowohl ein Konto als auch eine Identität, indem er Sie einfach nach Ihrem Namen, Ihrer e-Mail-Adresse und Ihrem Passwort fragt.
+        Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet werden.
+        Nicht-Standard-Protokolle wie Microsoft Exchange Web Services und Microsoft ActiveSync werden nicht unterstützt, siehe auch die Beschreibung der App.
+    </string>
     <string name="title_setup_quick">Schnelleinrichtung</string>
     <string name="title_setup_quick_remark">Um schnell ein Konto und eine Identität für die meisten Anbieter einzurichten</string>
     <string name="title_setup_quick_hint">Die Schnelleinrichtung wird Konfigurationsinformationen von autoconfig.thunderbird.net laden</string>
@@ -396,6 +398,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgeholt. Sie können die Roaming-Einstellung des Geräts verwenden, um das Internet während des Roaming zu deaktivieren.</string>
     <string name="title_advanced_browse_hint">Durch Herunterziehen weitere Nachrichten abholen</string>
     <string name="title_advanced_layout_hint">Das Wechseln zu einem kompakteren Layout und Ändern der Nachrichtentextgröße kann im oberen Aktionsleisten-Menü in der Nachrichtenansicht vorgenommen werden</string>
+    <string name="title_advanced_startup_hint">Einen beliebigen Ordner in der Ordnerliste lange gedrückt halten, um ihn der Liste der Sammelordner hinzuzufügen oder ihn daraus zu entfernen</string>
     <string name="title_advanced_date_hint">Nachrichten werden nur nach Datum gruppiert, wenn sie nach Zeit sortiert sind</string>
     <string name="title_advanced_navbar_colorize_hint">Ob dies funktioniert, hängt von der Android-Version und Variante ab</string>
     <string name="title_advanced_threading_hint">E-Mails gruppieren, die miteinander verwandt sind</string>
@@ -1083,6 +1086,7 @@ Konten und Identitäten (Aliase) können bei Bedarf auch manuell eingerichtet we
     <string-array name="startupNames">
         <item>Sammeleingang</item>
         <item>Sammelordner</item>
+        <item>Ordner des primären Kontos</item>
         <item>Konten</item>
     </string-array>
     <string-array name="downloadNames">

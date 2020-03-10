@@ -106,10 +106,6 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_edit_folder">Könyvtár szerkesztése</string>
     <string name="title_setup">Beállítások</string>
     <string name="title_setup_help">Súgó</string>
-    <string name="title_setup_welcome">        Az üzenetek küldéséhez és fogadásához be kell állítania egy fiókot és egy identitást (fedőnevet).
-        A gyors beállítás funkció a fiókot és az identitást is létrehozza az Ön neve, email címe és jelszava alapján.
-        Mindkettőt hozzáadhat manuálisan később is.
-    </string>
     <string name="title_setup_quick">Gyors beállítás</string>
     <string name="title_setup_quick_remark">Adjon hozzá egyszerűen egy fiókot és egy hozzá tartozó identitást</string>
     <string name="title_setup_quick_hint">A gyors beállítás alkalmazza az autoconfig.thunderbird.net-en található konfigurációs információkat</string>
@@ -841,7 +837,8 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string-array name="startupNames">
         <item>Összesített bejövő mappa</item>
         <item>Összesített mappák</item>
-        <item>Fiókok</item>
+        <item>Primary account folders</item>
+        <item>Accounts</item>
     </string-array>
     <string-array name="downloadNames">
         <item>16 KB</item>
