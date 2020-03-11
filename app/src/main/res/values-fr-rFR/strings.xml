@@ -72,8 +72,9 @@
     <string name="title_block_sender_hint">        Bloquer un expéditeur créera une règle pour déplacer automatiquement les futurs messages vers le dossier spam.
         La création et l\'utilisation des règles sont des fonctionnalités Pro.
     </string>
-    <string name="title_notification_waiting">En attente d\'une connexion réseau suffisante</string>
     <string name="title_notification_sending">Envoi des messages en cours</string>
+    <string name="title_notification_waiting">En attente d\'une connexion réseau suffisante</string>
+    <string name="title_notification_idle">Inactif</string>
     <string name="title_notification_failed">\'%1$s\' a échoué</string>
     <string name="title_notification_alert">Alerte serveur \'%1$s\'</string>
     <string name="title_name_count">%1$s (%2$s)</string>
@@ -89,7 +90,7 @@
     <string name="menu_faq">Support</string>
     <string name="menu_translate">Aider à traduire</string>
     <string name="menu_issue">Signaler un problème</string>
-    <string name="menu_attribution">Attribution</string>
+    <string name="menu_attribution">Crédits</string>
     <string name="menu_privacy">Confidentialité</string>
     <string name="menu_about">À propos</string>
     <string name="menu_pro">Fonctionnalités Pro</string>
@@ -108,6 +109,11 @@
     <string name="title_edit_folder">Modifier le dossier</string>
     <string name="title_setup">Paramètres</string>
     <string name="title_setup_help">Aide</string>
+    <string name="title_setup_welcome">        La réception et l\'envoi de messages nécessitent la mise en place d\'un compte et d\'une identité comme dans toute autre application de messagerie.
+        La configuration rapide créera à la fois un compte et une identité en demandant simplement votre nom, votre adresse e-mail et votre mot de passe.
+        Les comptes et les identités (alias) peuvent aussi être configurés manuellement si nécessaire.
+        Les protocoles non standard comme Microsoft Exchange Web Services et Microsoft ActiveSync ne sont pas pris en charge ; voir également la description de l\'application.
+    </string>
     <string name="title_setup_quick">Configuration rapide</string>
     <string name="title_setup_quick_remark">Pour configurer rapidement un compte et une identité pour la plupart des fournisseurs</string>
     <string name="title_setup_quick_hint">La configuration rapide récupérera les informations de configuration de autoconfig.thunderbird.net</string>
@@ -245,7 +251,8 @@
     <string name="title_advanced_manage_connectivity">Gérer la connectivité</string>
     <string name="title_advanced_caption_general">Général</string>
     <string name="title_advanced_caption_conversation">Conversation</string>
-    <string name="title_advanced_caption_message">Message</string>
+    <string name="title_advanced_caption_message_header">En-tête du message</string>
+    <string name="title_advanced_caption_message_body">Contenu du message</string>
     <string name="title_advanced_landscape">Utiliser deux colonnes en mode paysage</string>
     <string name="title_advanced_landscape3">Afficher le menu de navigation fixe en mode paysage</string>
     <string name="title_advanced_startup">Afficher sur l\'écran de démarrage</string>
@@ -500,6 +507,8 @@
     <string name="title_oauth_support">OAuth n\'est pas pris en charge</string>
     <string name="title_review">Récapitulatif</string>
     <string name="title_hint_alias">Appuyer longuement pour les options, comme copier pour créer des identités alias</string>
+    <string name="title_service_vpn">Ceci pourrait être dû au VPN utilisé</string>
+    <string name="title_service_port">Veuillez vérifier le numéro de port</string>
     <string name="title_advanced_browse">Parcourir les messages sur le serveur</string>
     <string name="title_advanced_expand_read">Marquer les messages comme lus à l\'ouverture</string>
     <string name="title_synchronize_now">Synchroniser maintenant</string>
@@ -709,6 +718,7 @@
     <string name="title_certificate_invalid">La clé publique de %1$s est invalide</string>
     <string name="title_no_key">Aucune clé privée</string>
     <string name="title_invalid_key">Clé privée invalide</string>
+    <string name="title_unknown_key">La clé privée ne correspond à aucune clé de chiffrement</string>
     <string name="title_send_plain_text">Texte brut seulement</string>
     <string name="title_send_receipt">Demander une confirmation</string>
     <string name="title_send_receipt_remark">La plupart des fournisseurs et des clients de messagerie ignorent les demandes d\'accusé de réception</string>
@@ -1091,7 +1101,7 @@
         <item>512 ko</item>
         <item>1 Mo</item>
         <item>2 Mo</item>
-        <item>&#8734;</item>
+        <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">
         <item>Ne rien faire</item>

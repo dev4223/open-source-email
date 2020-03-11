@@ -72,8 +72,8 @@
     <string name="title_block_sender_hint">        Göndereni engellemek, gelecekteki iletileri otomatik olarak spam klasörüne taşımak için bir kural oluşturacaktır.
         Kural oluşturma ve kullanma, pro sürümüne has bir özelliktir.
     </string>
-    <string name="title_notification_waiting">Uygun bağlantı bekleniyor</string>
     <string name="title_notification_sending">İletileri gönderiliyor</string>
+    <string name="title_notification_waiting">Uygun bağlantı bekleniyor</string>
     <string name="title_notification_failed">\'%1$s\' başarısız oldu</string>
     <string name="title_notification_alert">\'%1$s\' sunucu uyarısı</string>
     <string name="title_name_count">%1$s (%2$s)</string>
@@ -1061,7 +1061,7 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
-        <item>&#8734;</item>
+        <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">
         <item>Hiç bir şey yapma</item>

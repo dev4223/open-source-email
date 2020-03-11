@@ -93,8 +93,9 @@
         Creating and using rules is a pro feature.
     </string>
 
-    <string name="title_notification_waiting">Waiting for suitable connection</string>
     <string name="title_notification_sending">Sending messages</string>
+    <string name="title_notification_waiting">Waiting for suitable connection</string>
+    <string name="title_notification_idle">Idle</string>
     <string name="title_notification_failed">\'%1$s\' failed</string>
     <string name="title_notification_alert">\'%1$s\' server alert</string>
 
@@ -141,9 +142,9 @@
     <string name="title_setup_help">Help</string>
     <string name="title_setup_welcome">
         Receiving and sending messages requires setting up an account and an identity like in any other email app.
-        The quick setup will create both an account and identity by just asking for your name, email address and password.
-        Accounts and identities (aliases) can be setup manually too if needed.
-        Non-standard protocols, like Microsoft Exchange Web Services and Microsoft ActiveSync, are not supported, see also the description of the app.
+        The quick setup will create both an account and an identity by just asking for your name, email address, and password.
+        Accounts and identities (aliases) can be set up manually too if needed.
+        Non-standard protocols, such as Microsoft Exchange Web Services and Microsoft ActiveSync, are not supported, also see the app description.
     </string>
     <string name="title_setup_quick">Quick setup</string>
     <string name="title_setup_quick_remark">To quickly setup an account and an identity for most providers</string>
@@ -300,7 +301,8 @@
 
     <string name="title_advanced_caption_general">General</string>
     <string name="title_advanced_caption_conversation">Conversation</string>
-    <string name="title_advanced_caption_message">Message</string>
+    <string name="title_advanced_caption_message_header">Message header</string>
+    <string name="title_advanced_caption_message_body">Message body</string>
 
     <string name="title_advanced_landscape">Use two columns in landscape mode</string>
     <string name="title_advanced_landscape3">Allow fixed navigation menu in landscape mode</string>
@@ -587,6 +589,8 @@
     <string name="title_oauth_support">OAuth is not supported</string>
     <string name="title_review">Review</string>
     <string name="title_hint_alias">Long press for options, like copy to create alias identities</string>
+    <string name="title_service_vpn">This might be caused by the VPN that is being used</string>
+    <string name="title_service_port">Please double check the port number</string>
 
     <string name="title_advanced_browse">Browse messages on the server</string>
     <string name="title_advanced_expand_read">Mark messages read on expanding</string>
@@ -813,6 +817,7 @@
     <string name="title_certificate_invalid">Public key of %1$s is invalid</string>
     <string name="title_no_key">No private key</string>
     <string name="title_invalid_key">Invalid private key</string>
+    <string name="title_unknown_key">Private key does not match any encryption keys</string>
     <string name="title_send_plain_text">Plain text only</string>
     <string name="title_send_receipt">Request receipt</string>
     <string name="title_send_receipt_remark">Most providers and email clients ignore receipt requests</string>
@@ -1262,7 +1267,7 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
-        <item>&#8734;</item>
+        <item>∞</item>
     </string-array>
 
     <integer-array name="downloadValues" translatable="false">
