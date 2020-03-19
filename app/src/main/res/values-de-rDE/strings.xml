@@ -364,6 +364,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_import_key">Privaten Schlüssel importieren</string>
     <string name="title_advanced_manage_keys">Private Schlüssel verwalten</string>
     <string name="title_advanced_external_search">Anderen Apps erlauben in Nachrichten zu suchen</string>
+    <string name="title_advanced_conversation_actions">Konversationsaktionen anzeigen</string>
     <string name="title_advanced_fts">Suchindex erstellen</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d Nachrichten indiziert (%3$s)</string>
     <string name="title_advanced_english">Englische Sprache erzwingen</string>
@@ -562,7 +563,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_folder_all">Archiv</string>
     <string name="title_folder_drafts">Entwürfe</string>
     <string name="title_folder_trash">Papierkorb</string>
-    <string name="title_folder_junk">Spam</string>
+    <string name="title_folder_junk">Spam-Ordner</string>
     <string name="title_folder_sent">Gesendet</string>
     <string name="title_folder_system">System</string>
     <string name="title_folder_user">Benutzer</string>
@@ -615,6 +616,8 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_move_to">Verschieben nach &#8230;</string>
     <string name="title_move_to_folder">Verschieben nach &#8230;</string>
     <string name="title_move_to_account">Verschieben nach %1$s &#8230;</string>
+    <string name="title_report_spam">Als Spam behandeln</string>
+    <string name="title_delete_permanently">Dauerhaft löschen</string>
     <string name="title_snooze">Zurückstellen &#8230;</string>
     <string name="title_archive">Archivieren</string>
     <string name="title_reply">Antworten</string>

@@ -202,6 +202,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
 import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
+import static android.view.KeyEvent.ACTION_UP;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_KEY_MISSING;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_NO_SIGNATURE;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_VALID_KEY_CONFIRMED;
@@ -907,20 +908,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         fabCompose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean identities_asked = prefs.getBoolean("identities_asked", false);
-                if (identities_asked)
-                    startActivity(new Intent(getContext(), ActivityCompose.class)
-                            .putExtra("action", "new")
-                            .putExtra("account", account)
-                    );
-                else {
-                    Bundle args = new Bundle();
-                    args.putLong("account", account);
-
-                    FragmentDialogIdentity fragment = new FragmentDialogIdentity();
-                    fragment.setArguments(args);
-                    fragment.show(getParentFragmentManager(), "messages:identities");
-                }
+                onCompose();
             }
         });
 
@@ -1927,6 +1915,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         private void onSwipeJunk(final @NonNull TupleMessageEx message) {
             Bundle aargs = new Bundle();
             aargs.putLong("id", message.id);
+            aargs.putLong("account", message.account);
+            aargs.putLong("folder", message.folder);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
 
             AdapterMessage.FragmentDialogJunk ask = new AdapterMessage.FragmentDialogJunk();
@@ -2170,6 +2160,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(getContext(), getViewLifecycleOwner(), new Bundle(), "message:answer");
+    }
+
+    private void onCompose() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean identities_asked = prefs.getBoolean("identities_asked", false);
+        if (identities_asked)
+            startActivity(new Intent(getContext(), ActivityCompose.class)
+                    .putExtra("action", "new")
+                    .putExtra("account", account)
+            );
+        else {
+            Bundle args = new Bundle();
+            args.putLong("account", account);
+
+            FragmentDialogIdentity fragment = new FragmentDialogIdentity();
+            fragment.setArguments(args);
+            fragment.show(getParentFragmentManager(), "messages:identities");
+        }
     }
 
     private void onMore() {
@@ -3131,11 +3139,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if ("pro".equals(key) || "banner".equals(key)) {
+        if ("pro".equals(key) || "banner_hidden".equals(key)) {
             boolean pro = ActivityBilling.isPro(getContext());
-            boolean banner = prefs.getBoolean("banner", true);
+            long banner_hidden = prefs.getLong("banner_hidden", 0);
             grpSupport.setVisibility(
-                    !pro && banner && viewType == AdapterMessage.ViewType.UNIFIED
+                    !pro && banner_hidden == 0 && viewType == AdapterMessage.ViewType.UNIFIED
                             ? View.VISIBLE : View.GONE);
         }
     }
@@ -3907,7 +3915,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
 
                 if (!(EntityFolder.OUTBOX.equals(message.folderType) && message.ui_snoozed != null) &&
-                        !EntityFolder.ARCHIVE.equals(message.folderType) &&
+                        !(EntityFolder.ARCHIVE.equals(message.folderType) && filter_archive) &&
                         !EntityFolder.SENT.equals(message.folderType) &&
                         !EntityFolder.TRASH.equals(message.folderType) &&
                         !EntityFolder.JUNK.equals(message.folderType))
@@ -3946,7 +3954,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (message == null)
                         continue;
                     if (!(EntityFolder.OUTBOX.equals(message.folderType) && message.ui_snoozed != null) &&
-                            !EntityFolder.ARCHIVE.equals(message.folderType) &&
+                            !(EntityFolder.ARCHIVE.equals(message.folderType) && filter_archive) &&
                             !EntityFolder.SENT.equals(message.folderType) &&
                             !EntityFolder.TRASH.equals(message.folderType) &&
                             !EntityFolder.JUNK.equals(message.folderType))
@@ -4422,33 +4430,25 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private ActivityBase.IKeyPressedListener onBackPressedListener = new ActivityBase.IKeyPressedListener() {
         @Override
         public boolean onKeyPressed(KeyEvent event) {
-            if (viewType != AdapterMessage.ViewType.THREAD)
-                return false;
-
             Context context = getContext();
             if (context == null)
                 return false;
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean volumenav = prefs.getBoolean("volumenav", false);
-            if (!volumenav)
-                return false;
+            boolean up = (event.getAction() == ACTION_UP);
 
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_VOLUME_UP:
-                    if (next == null) {
-                        Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
-                        view.startAnimation(bounce);
-                    } else
-                        navigate(next, false);
-                    return true;
+                    return !up || onNext(context);
                 case KeyEvent.KEYCODE_VOLUME_DOWN:
-                    if (prev == null) {
-                        Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_right);
-                        view.startAnimation(bounce);
-                    } else
-                        navigate(prev, true);
-                    return true;
+                    return !up || onPrevious(context);
+                case KeyEvent.KEYCODE_A:
+                    return up && onArchive(context);
+                case KeyEvent.KEYCODE_C:
+                    return up && onCompose(context);
+                case KeyEvent.KEYCODE_D:
+                    return up && onDelete(context);
+                case KeyEvent.KEYCODE_R:
+                    return up && onReply(context);
                 default:
                     return false;
             }
@@ -4480,6 +4480,69 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             return false;
+        }
+
+        private boolean onNext(Context context) {
+            if (!canNavigate(context))
+                return false;
+            if (next == null) {
+                Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_left);
+                view.startAnimation(bounce);
+            } else
+                navigate(next, false);
+            return true;
+        }
+
+        private boolean onPrevious(Context context) {
+            if (!canNavigate(context))
+                return false;
+            if (prev == null) {
+                Animation bounce = AnimationUtils.loadAnimation(getContext(), R.anim.bounce_right);
+                view.startAnimation(bounce);
+            } else
+                navigate(prev, true);
+            return true;
+        }
+
+        private boolean canNavigate(Context context) {
+            if (viewType != AdapterMessage.ViewType.THREAD)
+                return false;
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            return prefs.getBoolean("volumenav", false);
+        }
+
+        private boolean onArchive(Context context) {
+            if (bottom_navigation == null)
+                return false;
+            MenuItem archive = bottom_navigation.getMenu().findItem(R.id.action_archive);
+            if (archive == null || !archive.isVisible() || !archive.isEnabled())
+                return false;
+            bottom_navigation.getMenu().performIdentifierAction(R.id.action_archive, 0);
+            return true;
+        }
+
+        private boolean onDelete(Context context) {
+            if (bottom_navigation == null)
+                return false;
+            MenuItem delete = bottom_navigation.getMenu().findItem(R.id.action_delete);
+            if (delete == null || !delete.isVisible() || !delete.isEnabled())
+                return false;
+            bottom_navigation.getMenu().performIdentifierAction(R.id.action_delete, 0);
+            return true;
+        }
+
+        private boolean onReply(Context context) {
+            if (!fabReply.isOrWillBeShown())
+                return false;
+            fabReply.performClick();
+            return true;
+        }
+
+        private boolean onCompose(Context context) {
+            if (!fabCompose.isOrWillBeShown())
+                return false;
+            fabCompose.performClick();
+            return true;
         }
     };
 
