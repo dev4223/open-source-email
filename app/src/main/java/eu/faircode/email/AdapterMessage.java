@@ -2056,7 +2056,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             LinearLayout.LayoutParams lparam = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
 
                             List<ConversationAction> actions = cactions.getConversationActions();
-                            for (ConversationAction action : actions) {
+                            for (final ConversationAction action : actions) {
                                 final RemoteAction raction = action.getAction();
                                 final CharSequence title = (raction == null
                                         ? context.getString(R.string.title_conversation_action_reply, action.getTextReply())
@@ -2074,7 +2074,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                                 Intent reply = new Intent(context, ActivityCompose.class)
                                                         .putExtra("action", "reply")
                                                         .putExtra("reference", message.id)
-                                                        .putExtra("text", title);
+                                                        .putExtra("text", action.getTextReply());
                                                 context.startActivity(reply);
                                             } else
                                                 raction.getActionIntent().send();
@@ -2139,6 +2139,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 private ConversationActions getConversationActions(TupleMessageEx message, Document document) {
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     boolean conversation_actions = prefs.getBoolean("conversation_actions", true);
+                    boolean conversation_actions_replies = prefs.getBoolean("conversation_actions_replies", true);
                     if (!conversation_actions)
                         return null;
 
@@ -2146,38 +2147,39 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (tcm == null)
                         return null;
 
-                    Person person = isOutgoing(message)
+                    Person author = isOutgoing(message)
                             ? ConversationActions.Message.PERSON_USER_SELF
                             : ConversationActions.Message.PERSON_USER_OTHERS;
                     ZonedDateTime dt = new Date(message.received)
                             .toInstant()
                             .atZone(ZoneId.systemDefault());
-                    Set<String> included = Collections.unmodifiableSet(
-                            new HashSet<>(Arrays.asList(
-                                    ConversationAction.TYPE_TEXT_REPLY
-                            )));
-                    Set<String> excluded = Collections.unmodifiableSet(
-                            new HashSet<>(Arrays.asList(
-                                    ConversationAction.TYPE_OPEN_URL,
-                                    ConversationAction.TYPE_SEND_EMAIL
-                            )));
+                    List<ConversationActions.Message> input = new ArrayList<>();
+                    if (!TextUtils.isEmpty(message.subject))
+                        input.add(new ConversationActions.Message.Builder(author)
+                                .setReferenceTime(dt)
+                                .setText(message.subject)
+                                .build());
+                    input.add(new ConversationActions.Message.Builder(author)
+                            .setReferenceTime(dt)
+                            .setText(document.text())
+                            .build());
+
+                    Set<String> excluded = new HashSet<>(Arrays.asList(
+                            ConversationAction.TYPE_OPEN_URL,
+                            ConversationAction.TYPE_SEND_EMAIL
+                    ));
+                    if (!conversation_actions_replies)
+                        excluded.add(ConversationAction.TYPE_TEXT_REPLY);
+                    TextClassifier.EntityConfig config =
+                            new TextClassifier.EntityConfig.Builder()
+                                    .setExcludedTypes(excluded)
+                                    .build();
+
                     List<String> hints = Collections.unmodifiableList(Arrays.asList(
                             ConversationActions.Request.HINT_FOR_IN_APP
                     ));
-                    ConversationActions.Message cmessage =
-                            new ConversationActions.Message.Builder(person)
-                                    .setReferenceTime(dt)
-                                    .setText(document.text())
-                                    .build();
-                    TextClassifier.EntityConfig config =
-                            new TextClassifier.EntityConfig.Builder()
-                                    //.setIncludedTypes(included)
-                                    .setExcludedTypes(excluded)
-                                    //.includeTypesFromTextClassifier(false)
-                                    //.setHints(included)
-                                    .build();
                     ConversationActions.Request crequest =
-                            new ConversationActions.Request.Builder(Arrays.asList(cmessage))
+                            new ConversationActions.Request.Builder(input)
                                     .setTypeConfig(config)
                                     .setHints(hints)
                                     .build();
