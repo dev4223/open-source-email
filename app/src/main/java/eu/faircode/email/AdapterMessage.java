@@ -212,7 +212,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int colorUnread;
     private int colorSubject;
     private int colorRead;
-    private int colorSubject;
     private int colorSeparator;
 
     private boolean hasWebView;
