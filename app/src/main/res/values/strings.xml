@@ -198,6 +198,7 @@
 
     <string name="title_setup_export">Export settings</string>
     <string name="title_setup_import">Import settings</string>
+    <string name="title_setup_export_do">Gmail accounts linked to on-device Google accounts cannot be exported</string>
     <string name="title_setup_import_do">Imported accounts will be added without overwriting any existing ones</string>
     <string name="title_setup_password">Password</string>
     <string name="title_setup_password_chars">Password contains control or whitespace characters</string>
@@ -607,8 +608,8 @@
     <string name="title_synchronize_enabled">Synchronize</string>
     <string name="title_delete_local">Delete local messages</string>
     <string name="title_delete_browsed">Delete browsed/searched messages</string>
-    <string name="title_empty_trash">Empty trash</string>
-    <string name="title_empty_spam">Empty spam</string>
+    <string name="title_empty_trash">Empty local trash</string>
+    <string name="title_empty_spam">Empty local spam</string>
     <string name="title_edit_properties">Edit properties</string>
     <string name="title_edit_rules">Edit rules</string>
     <string name="title_create_channel">Create notification channel</string>
@@ -616,10 +617,10 @@
     <string name="title_delete_channel">Delete notification channel</string>
     <string name="title_create_sub_folder">Create sub folder</string>
 
-    <string name="title_empty_trash_ask">Delete all trashed messages permanently?</string>
-    <string name="title_empty_spam_ask">Delete all spam messages permanently?</string>
-    <string name="title_empty_trash_all_ask">Delete all trashed messages of all accounts permanently?</string>
-    <string name="title_empty_spam_all_ask">Delete all spam messages of all accounts permanently?</string>
+    <string name="title_empty_trash_ask">Delete all local trashed messages permanently?</string>
+    <string name="title_empty_spam_ask">Delete all local spam messages permanently?</string>
+    <string name="title_empty_trash_all_ask">Delete all local trashed messages of all accounts permanently?</string>
+    <string name="title_empty_spam_all_ask">Delete all local spam messages of all accounts permanently?</string>
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
@@ -973,6 +974,7 @@
     <string name="title_legend_section_folders">Folders</string>
     <string name="title_legend_section_messages">Messages</string>
     <string name="title_legend_section_compose">Compose</string>
+    <string name="title_legend_section_keyboard">Keyboard</string>
 
     <string name="title_legend_oauth">OAuth authorization</string>
     <string name="title_legend_primary_connected">Account connected</string>
@@ -1068,6 +1070,17 @@
     <string name="title_legend_delete">Delete</string>
     <string name="title_legend_count">Count</string>
     <string name="title_legend_folder_type">Folder type</string>
+
+    <string name="title_legend_enter">Open</string>
+    <string name="title_legend_a">Archive</string>
+    <string name="title_legend_c">Compose</string>
+    <string name="title_legend_d">Trash (delete)</string>
+    <string name="title_legend_m">Menu (multiple select)</string>
+    <string name="title_legend_n">Next</string>
+    <string name="title_legend_p">Previous</string>
+    <string name="title_legend_r">Reply</string>
+    <string name="title_legend_s">Select/deselect</string>
+    <string name="title_legend_t">Focus text</string>
 
     <string name="title_hint_folder_actions">Long press a folder for options, like adding a folder to the navigation menu for quick access</string>
     <string name="title_hint_folder_sync">To limit battery and network usage not all folders and not all messages will be synchronized by default</string>

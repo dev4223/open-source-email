@@ -43,6 +43,7 @@
     <color name="lightColorUnread">#ffc233</color>
     <color name="lightColorItemSelected">#ccc</color>
     <color name="lightColorSeparator">#ccc</color>
+    <color name="lightColorThumb">#ccc</color>
     <color name="lightColorWarning">#ffff0000</color>
 
     <color name="lightColorDrawerScrim">#99000000</color>
@@ -58,6 +59,8 @@
 
     <color name="darkColorItemSelected">#444</color>
     <color name="darkColorSeparator">#444</color>
+
+    <color name="darkColorThumb">#555</color>
     <color name="darkColorWarning">#ffffb300</color>
 
     <color name="darkColorDrawerScrim">#997f7f7f</color>
