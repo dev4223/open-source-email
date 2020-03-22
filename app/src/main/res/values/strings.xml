@@ -315,6 +315,7 @@
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
+    <string name="title_advanced_highlight_subject">Highlight subject</string>
     <string name="title_advanced_color_stripe">Show color stripe</string>
     <string name="title_advanced_avatars">Show contact photos</string>
     <string name="title_advanced_gravatars">Show Gravatars</string>
@@ -490,6 +491,7 @@
     <string name="title_advanced_autoseen_hint">Automatically marking messages read on expanding can be disabled in the individual account settings</string>
     <string name="title_advanced_autoclose_hint">Automatically close conversations when all messages are archived, sent or trashed</string>
     <string name="title_advanced_sender_hint">Most providers do not allow modified sender addresses</string>
+    <string name="title_advanced_bcc_hint">The address won\'t be shown, but will be added on sending</string>
 
     <string name="title_advanced_display_harmful_hint">Disabling this option might be harmful to your privacy</string>
     <string name="title_advanced_display_hidden_hint">This can result in odd looking and double texts</string>
@@ -686,6 +688,7 @@
     <string name="title_editasnew">Edit as new</string>
     <string name="title_create_rule">Create rule &#8230;</string>
     <string name="title_share">Share</string>
+    <string name="title_pin">Add shortcut</string>
     <string name="title_print">Print</string>
     <string name="title_show_headers">Show headers</string>
     <string name="title_raw_save">Save raw message</string>
@@ -1143,6 +1146,7 @@
 
     <string name="title_conversation_actions">Actions</string>
     <string name="title_conversation_action_reply">Reply with: \'%1$s\'</string>
+    <string name="title_conversation_action_copy">Copy: \'%1$s\'</string>
 
     <string name="title_icalendar_accept">Accept</string>
     <string name="title_icalendar_decline">Decline</string>

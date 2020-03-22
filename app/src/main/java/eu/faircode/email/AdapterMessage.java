@@ -101,7 +101,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -115,6 +114,8 @@ import androidx.constraintlayout.helper.widget.Flow;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.FileProvider;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
@@ -203,7 +204,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean suitable;
     private boolean unmetered;
 
-    private int dp36;
     private int colorPrimary;
     private int colorPrimaryDark;
     private int colorAccent;
@@ -212,9 +212,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private int colorUnread;
     private int colorSubject;
     private int colorRead;
+    private int colorSubject;
     private int colorSeparator;
 
     private boolean hasWebView;
+    private boolean pin;
     private boolean contacts;
     private float textSize;
 
@@ -315,7 +317,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
-            View.OnKeyListener,
             View.OnClickListener,
             View.OnLongClickListener,
             View.OnTouchListener,
@@ -362,6 +363,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private ImageButton ibSearchContact;
         private ImageButton ibNotifyContact;
+        private ImageButton ibPinContact;
         private ImageButton ibAddContact;
 
         private TextView tvSubmitterTitle;
@@ -498,7 +500,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibHelp = itemView.findViewById(R.id.ibHelp);
 
             if (tvSubject != null) {
-                tvSubject.setTextColor(colorRead);
+                tvSubject.setTextColor(colorSubject);
 
                 if (compact)
                     if ("start".equals(subject_ellipsize))
@@ -536,6 +538,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibSearchContact = vsBody.findViewById(R.id.ibSearchContact);
             ibNotifyContact = vsBody.findViewById(R.id.ibNotifyContact);
+            ibPinContact = vsBody.findViewById(R.id.ibPinContact);
             ibAddContact = vsBody.findViewById(R.id.ibAddContact);
 
             tvSubmitterTitle = vsBody.findViewById(R.id.tvSubmitterTitle);
@@ -666,7 +669,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         header.setTouchDelegate(new TouchDelegate(rect, touch));
                     }
                 });
-            header.setOnKeyListener(this);
 
             ibAvatar.setOnClickListener(this);
             ibAuth.setOnClickListener(this);
@@ -680,6 +682,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibExpanderAddress.setOnClickListener(this);
                 ibSearchContact.setOnClickListener(this);
                 ibNotifyContact.setOnClickListener(this);
+                ibPinContact.setOnClickListener(this);
                 ibAddContact.setOnClickListener(this);
 
                 btnSaveAttachments.setOnClickListener(this);
@@ -739,7 +742,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void unwire() {
             final View touch = (viewType == ViewType.THREAD ? ibExpander : header);
             touch.setOnClickListener(null);
-            header.setOnKeyListener(null);
 
             ibAvatar.setOnClickListener(null);
             ibAuth.setOnClickListener(null);
@@ -753,6 +755,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibExpanderAddress.setOnClickListener(null);
                 ibSearchContact.setOnClickListener(null);
                 ibNotifyContact.setOnClickListener(null);
+                ibPinContact.setOnClickListener(null);
                 ibAddContact.setOnClickListener(null);
 
                 btnSaveAttachments.setOnClickListener(null);
@@ -1210,6 +1213,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibSearchContact.setVisibility(View.GONE);
             ibNotifyContact.setVisibility(View.GONE);
+            ibPinContact.setVisibility(View.GONE);
             ibAddContact.setVisibility(View.GONE);
 
             tvSubmitterTitle.setVisibility(View.GONE);
@@ -1418,6 +1422,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibSearchContact.setVisibility(show_addresses && (hasFrom || hasTo) ? View.VISIBLE : View.GONE);
             ibNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
+            ibPinContact.setVisibility(show_addresses && pin && hasFrom ? View.VISIBLE : View.GONE);
             ibAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
 
             // dev4223: if expanded dont show subjects, keywords and anwsered-icon
@@ -2072,41 +2077,81 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         throw new IllegalStateException("Result=" + result);
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        clearActions();
-
                         boolean has = false;
                         ConversationActions cactions = args.getParcelable("actions");
                         if (cactions != null) {
-                            LinearLayout.LayoutParams lparam = new LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-
                             List<ConversationAction> actions = cactions.getConversationActions();
                             for (final ConversationAction action : actions) {
+                                final CharSequence text;
+                                final CharSequence title;
                                 final RemoteAction raction = action.getAction();
-                                final CharSequence title = (raction == null
-                                        ? context.getString(R.string.title_conversation_action_reply, action.getTextReply())
-                                        : raction.getTitle());
+
+                                switch (action.getType()) {
+                                    case ConversationAction.TYPE_TEXT_REPLY:
+                                        text = action.getTextReply();
+                                        title = context.getString(R.string.title_conversation_action_reply, text);
+                                        break;
+                                    case "copy":
+                                        Bundle extras = action.getExtras().getParcelable("entities-extras");
+                                        if (extras == null)
+                                            continue;
+                                        text = extras.getString("text");
+                                        title = context.getString(R.string.title_conversation_action_copy, text);
+                                        break;
+                                    default:
+                                        if (raction == null) {
+                                            Log.e("Unknown action type=" + action.getType());
+                                            continue;
+                                        }
+                                        text = null;
+                                        title = raction.getTitle();
+                                        if (TextUtils.isEmpty(title)) {
+                                            Log.e("Empty action type=" + action.getType());
+                                            continue;
+                                        }
+                                }
 
                                 Button button = new Button(context, null, android.R.attr.buttonStyleSmall);
                                 button.setId(View.generateViewId());
-                                button.setLayoutParams(lparam);
                                 button.setText(title);
                                 button.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
                                         try {
-                                            if (raction == null) {
-                                                Intent reply = new Intent(context, ActivityCompose.class)
-                                                        .putExtra("action", "reply")
-                                                        .putExtra("reference", message.id)
-                                                        .putExtra("text", action.getTextReply());
-                                                context.startActivity(reply);
-                                            } else
-                                                raction.getActionIntent().send();
+                                            switch (action.getType()) {
+                                                case ConversationAction.TYPE_TEXT_REPLY:
+                                                    onReply();
+                                                    break;
+                                                case "copy":
+                                                    onCopy();
+                                                    break;
+                                                default:
+                                                    raction.getActionIntent().send();
+                                            }
                                         } catch (Throwable ex) {
                                             Log.e(ex);
                                         }
                                     }
+
+                                    private void onReply() {
+                                        Intent reply = new Intent(context, ActivityCompose.class)
+                                                .putExtra("action", "reply")
+                                                .putExtra("reference", message.id)
+                                                .putExtra("text", action.getTextReply());
+                                        context.startActivity(reply);
+                                    }
+
+                                    private void onCopy() {
+                                        ClipboardManager clipboard =
+                                                (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                        if (clipboard != null) {
+                                            ClipData clip = ClipData.newPlainText(title, text);
+                                            clipboard.setPrimaryClip(clip);
+                                            ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+                                        }
+                                    }
                                 });
+
                                 ((ConstraintLayout) flow.getParent()).addView(button);
                                 flow.addView(button);
                                 has = true;
@@ -2600,6 +2645,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 onSearchContact(message);
             else if (view.getId() == R.id.ibNotifyContact)
                 onNotifyContact(message);
+            else if (view.getId() == R.id.ibPinContact)
+                onPinContact(message);
             else if (view.getId() == R.id.ibAddContact)
                 onAddContact(message);
             else if (viewType == ViewType.THREAD) {
@@ -2803,16 +2850,41 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        @Override
-        public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
-            if (keyEvent.getAction() == KeyEvent.ACTION_DOWN &&
-                    (keyCode == KeyEvent.KEYCODE_ENTER ||
-                            keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
-                            keyCode == KeyEvent.KEYCODE_BUTTON_A)) {
-                onClick(view);
-                return true;
-            } else
-                return false;
+        public boolean onKeyPressed(KeyEvent event) {
+            TupleMessageEx message = getMessage();
+            switch (event.getKeyCode()) {
+                case KeyEvent.KEYCODE_ENTER:
+                case KeyEvent.KEYCODE_DPAD_CENTER:
+                case KeyEvent.KEYCODE_BUTTON_A:
+                    onClick(view);
+                    return true;
+                case KeyEvent.KEYCODE_A:
+                    onActionArchive(message);
+                    return false;
+                case KeyEvent.KEYCODE_D:
+                    onActionTrash(message, false);
+                    return false;
+                case KeyEvent.KEYCODE_S:
+                    if (message == null || selectionTracker == null)
+                        return false;
+                    if (selectionTracker.isSelected(message.id))
+                        selectionTracker.deselect(message.id);
+                    else
+                        selectionTracker.select(message.id);
+                    return true;
+                case KeyEvent.KEYCODE_T:
+                    if (tvBody != null && tvBody.getVisibility() == View.VISIBLE) {
+                        tvBody.requestFocus();
+                        return true;
+                    }
+                    if (wvBody != null && wvBody.getVisibility() == View.VISIBLE) {
+                        wvBody.requestFocus();
+                        return true;
+                    }
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         private void onViewContact(TupleMessageEx message) {
@@ -2988,7 +3060,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             final String channelId = message.getNotificationChannelId();
 
-            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibAddContact);
+            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibNotifyContact);
             NotificationChannel channel = nm.getNotificationChannel(channelId);
             if (channel == null)
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_create_channel, 1, R.string.title_create_channel);
@@ -3053,6 +3125,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.show();
         }
 
+        private void onPinContact(TupleMessageEx message) {
+            ShortcutInfoCompat.Builder builder =
+                    Shortcuts.getShortcut(context, (InternetAddress) message.from[0]);
+            ShortcutManagerCompat.requestPinShortcut(context, builder.build(), null);
+        }
+
         private void onAddContact(TupleMessageEx message) {
             for (Address address : message.from) {
                 InternetAddress ia = (InternetAddress) address;
@@ -3108,11 +3186,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 .putExtra("id", message.id));
             else {
                 boolean expanded = !properties.getValue("expanded", message.id);
+
+                // Prevent flicker
+                if (expanded &&
+                        (message.accountProtocol != EntityAccount.TYPE_IMAP ||
+                                (message.accountAutoSeen && !message.ui_seen && !message.folderReadOnly))) {
+                    message.unseen = 0;
+                    message.ui_seen = true;
+                }
+                properties.setValue("expanded", message.id, expanded);
+                bindTo(message, expanded);
+
                 properties.setExpanded(message, expanded);
+
                 // Needed to scroll to item after collapsing other items
                 if (expanded)
                     properties.scrollTo(getAdapterPosition(), 0);
-                bindTo(message, expanded);
             }
         }
 
@@ -4445,7 +4534,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.suitable = state.isSuitable();
         this.unmetered = state.isUnmetered();
 
-        this.dp36 = Helper.dp2pixels(context, 36);
         this.colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
         this.colorPrimaryDark = Helper.resolveColor(context, R.attr.colorPrimaryDark);
         this.colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
@@ -4454,13 +4542,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.colorSubject = Helper.resolveColor(context, R.attr.colorSubject);
 
         boolean highlight_unread = prefs.getBoolean("highlight_unread", true);
+        boolean highlight_subject = prefs.getBoolean("highlight_subject", false);
 
         this.colorUnread = Helper.resolveColor(context, highlight_unread ? R.attr.colorUnreadHighlight : R.attr.colorUnread);
         this.colorRead = Helper.resolveColor(context, R.attr.colorRead);
+        this.colorSubject = Helper.resolveColor(context, highlight_subject ? R.attr.colorUnreadHighlight : R.attr.colorRead);
 
         this.colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
 
         this.hasWebView = Helper.hasWebView(context);
+        this.pin = ShortcutManagerCompat.isRequestPinShortcutSupported(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
 
@@ -4996,13 +5087,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         TupleMessageEx message = getItemAtPosition(position);
         if (message != null)
             holder.clearExpanded(message);
-    }
-
-    public void focusBody(@NonNull ViewHolder holder, int position) {
-        if (holder.tvBody != null && holder.tvBody.getVisibility() == View.VISIBLE)
-            holder.tvBody.requestFocus();
-        if (holder.wvBody != null && holder.wvBody.getVisibility() == View.VISIBLE)
-            holder.wvBody.requestFocus();
     }
 
     public void onItemSelected(@NonNull ViewHolder holder, boolean selected) {
