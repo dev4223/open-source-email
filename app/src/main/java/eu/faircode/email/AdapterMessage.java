@@ -1422,7 +1422,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSearchContact.setVisibility(show_addresses && (hasFrom || hasTo) ? View.VISIBLE : View.GONE);
             ibNotifyContact.setVisibility(show_addresses && hasChannel && hasFrom ? View.VISIBLE : View.GONE);
             ibPinContact.setVisibility(show_addresses && pin && hasFrom ? View.VISIBLE : View.GONE);
-            ibAddContact.setVisibility(show_addresses && contacts && hasFrom ? View.VISIBLE : View.GONE);
+            ibAddContact.setVisibility(show_addresses && hasFrom ? View.VISIBLE : View.GONE);
 
             // dev4223: if expanded dont show subjects, keywords and anwsered-icon
             tvSubject.setVisibility(View.GONE);
@@ -3133,26 +3133,22 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onAddContact(TupleMessageEx message) {
-            for (Address address : message.from) {
-                InternetAddress ia = (InternetAddress) address;
-                String name = ia.getPersonal();
-                String email = ia.getAddress();
+            InternetAddress ia = (InternetAddress) message.from[0];
+            String name = ia.getPersonal();
+            String email = ia.getAddress();
 
-                // https://developer.android.com/training/contacts-provider/modify-data
-                Intent edit = new Intent();
-                if (!TextUtils.isEmpty(name))
-                    edit.putExtra(ContactsContract.Intents.Insert.NAME, name);
-                if (!TextUtils.isEmpty(email))
-                    edit.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
-
+            Uri lookupUri = null;
+            if (contacts) {
+                String like = "%" + (name == null ? email : name) + "%";
                 ContentResolver resolver = context.getContentResolver();
                 try (Cursor cursor = resolver.query(ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                         new String[]{
                                 ContactsContract.CommonDataKinds.Photo.CONTACT_ID,
                                 ContactsContract.Contacts.LOOKUP_KEY
                         },
-                        ContactsContract.CommonDataKinds.Email.ADDRESS + " = ?",
-                        new String[]{email}, null)) {
+                        ContactsContract.CommonDataKinds.Email.ADDRESS + " = ?" +
+                                " OR " + ContactsContract.Contacts.DISPLAY_NAME + " LIKE ?",
+                        new String[]{email, like}, null)) {
                     if (cursor != null && cursor.moveToNext()) {
                         int colContactId = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Photo.CONTACT_ID);
                         int colLookupKey = cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY);
@@ -3160,23 +3156,30 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         long contactId = cursor.getLong(colContactId);
                         String lookupKey = cursor.getString(colLookupKey);
 
-                        Uri lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
-
-                        edit.setAction(Intent.ACTION_EDIT);
-                        edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
-                    } else {
-                        edit.setAction(Intent.ACTION_INSERT);
-                        edit.setType(ContactsContract.Contacts.CONTENT_TYPE);
+                        lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
                     }
                 }
-
-                PackageManager pm = context.getPackageManager();
-                if (edit.resolveActivity(pm) == null)
-                    Snackbar.make(parentFragment.getView(),
-                            R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
-                else
-                    context.startActivity(edit);
             }
+
+            // https://developer.android.com/training/contacts-provider/modify-data
+            Intent edit = new Intent();
+            edit.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
+            if (!TextUtils.isEmpty(name))
+                edit.putExtra(ContactsContract.Intents.Insert.NAME, name);
+            if (lookupUri == null) {
+                edit.setAction(Intent.ACTION_INSERT);
+                edit.setType(ContactsContract.Contacts.CONTENT_TYPE);
+            } else {
+                edit.setAction(Intent.ACTION_EDIT);
+                edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+            }
+
+            PackageManager pm = context.getPackageManager();
+            if (edit.resolveActivity(pm) == null)
+                Snackbar.make(parentFragment.getView(),
+                        R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
+            else
+                context.startActivity(edit);
         }
 
         private void onToggleMessage(TupleMessageEx message) {
@@ -3394,7 +3397,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionAnswer(TupleMessageEx message, View anchor) {
-            ((FragmentMessages) parentFragment).onReply(message, anchor);
+            ((FragmentMessages) parentFragment).onReply(message, getSelectedText(), anchor);
         }
 
         private void onActionMove(TupleMessageEx message, final boolean copy) {
@@ -4319,6 +4322,29 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         Long getKey() {
             return getKeyAtPosition(getAdapterPosition());
+        }
+
+        String getSelectedText() {
+            if (tvBody == null)
+                return null;
+
+            int start = tvBody.getSelectionStart();
+            int end = tvBody.getSelectionEnd();
+            if (start == end)
+                return null;
+
+            if (start < 0)
+                start = 0;
+            if (end < 0)
+                end = 0;
+
+            if (start > end) {
+                int tmp = start;
+                start = end;
+                end = tmp;
+            }
+
+            return tvBody.getText().subSequence(start, end).toString();
         }
 
         private View.AccessibilityDelegate accessibilityDelegateHeader = new View.AccessibilityDelegate() {

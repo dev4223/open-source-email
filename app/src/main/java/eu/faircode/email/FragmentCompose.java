@@ -971,6 +971,7 @@ public class FragmentCompose extends FragmentBase {
                 args.putString("subject", a.getString("subject"));
                 args.putString("body", a.getString("body"));
                 args.putString("text", a.getString("text"));
+                args.putString("selected", a.getString("selected"));
                 args.putParcelableArrayList("attachments", a.getParcelableArrayList("attachments"));
                 draftLoader.execute(this, args, "compose:new");
             } else {
@@ -3101,13 +3102,14 @@ public class FragmentCompose extends FragmentBase {
                             }
                         }
 
+                        String s = args.getString("selected");
                         if (ref.content &&
                                 !"editasnew".equals(action) &&
-                                !"list".equals(action) &&
+                                !("list".equals(action) && TextUtils.isEmpty(s)) &&
                                 !"receipt".equals(action)) {
                             // Reply/forward
-                            Element div = document.createElement("div");
-                            div.attr("fairemail", "reference");
+                            Element reply = document.createElement("div");
+                            reply.attr("fairemail", "reference");
 
                             // Build reply header
                             Element p = document.createElement("p");
@@ -3152,53 +3154,69 @@ public class FragmentCompose extends FragmentBase {
                             } else
                                 p.text(DF.format(new Date(ref.received)) + " " + MessageHelper.formatAddresses(ref.from) + ":");
 
-                            div.appendChild(p);
+                            reply.appendChild(p);
 
-                            // Get referenced message body
-                            Document d = JsoupEx.parse(ref.getFile(context));
+                            Document d;
+                            if (TextUtils.isEmpty(s)) {
+                                // Get referenced message body
+                                d = JsoupEx.parse(ref.getFile(context));
 
-                            // Remove signature separators
-                            boolean remove_signatures = prefs.getBoolean("remove_signatures", false);
-                            if (remove_signatures)
-                                d.body().filter(new NodeFilter() {
-                                    private boolean remove = false;
+                                // Remove signature separators
+                                boolean remove_signatures = prefs.getBoolean("remove_signatures", false);
+                                if (remove_signatures)
+                                    d.body().filter(new NodeFilter() {
+                                        private boolean remove = false;
 
-                                    @Override
-                                    public FilterResult head(Node node, int depth) {
-                                        if (node instanceof TextNode) {
-                                            TextNode tnode = (TextNode) node;
-                                            String text = tnode.getWholeText()
-                                                    .replaceAll("[\r\n]+$", "")
-                                                    .replaceAll("^[\r\n]+", "");
-                                            if ("-- ".equals(text)) {
-                                                if (tnode.getWholeText().endsWith("\n"))
-                                                    remove = true;
-                                                else {
-                                                    Node next = node.nextSibling();
-                                                    if (next != null && "br".equals(next.nodeName()))
+                                        @Override
+                                        public FilterResult head(Node node, int depth) {
+                                            if (node instanceof TextNode) {
+                                                TextNode tnode = (TextNode) node;
+                                                String text = tnode.getWholeText()
+                                                        .replaceAll("[\r\n]+$", "")
+                                                        .replaceAll("^[\r\n]+", "");
+                                                if ("-- ".equals(text)) {
+                                                    if (tnode.getWholeText().endsWith("\n"))
                                                         remove = true;
+                                                    else {
+                                                        Node next = node.nextSibling();
+                                                        if (next != null && "br".equals(next.nodeName()))
+                                                            remove = true;
+                                                    }
                                                 }
                                             }
+
+                                            return (remove ? FilterResult.REMOVE : FilterResult.CONTINUE);
                                         }
 
-                                        return (remove ? FilterResult.REMOVE : FilterResult.CONTINUE);
-                                    }
+                                        @Override
+                                        public FilterResult tail(Node node, int depth) {
+                                            return FilterResult.CONTINUE;
+                                        }
+                                    });
+                            } else {
+                                // Selected text
+                                d = Document.createShell("");
 
-                                    @Override
-                                    public FilterResult tail(Node node, int depth) {
-                                        return FilterResult.CONTINUE;
-                                    }
-                                });
+                                Element div = d.createElement("div");
+                                for (String line : s.split("\\r?\\n")) {
+                                    Element span = document.createElement("span");
+                                    span.text(line);
+                                    div.appendChild(span);
+                                    div.appendElement("br");
+                                }
+                                d.body().appendChild(div);
+                            }
 
                             // Quote referenced message body
                             Element e = d.body();
                             boolean quote_reply = prefs.getBoolean("quote_reply", true);
-                            boolean quote = (quote_reply && ("reply".equals(action) || "reply_all".equals(action)));
+                            boolean quote = (quote_reply &&
+                                    ("reply".equals(action) || "reply_all".equals(action) || "list".equals(action)));
 
                             e.tagName(quote ? "blockquote" : "p");
-                            div.appendChild(e);
+                            reply.appendChild(e);
 
-                            document.body().appendChild(div);
+                            document.body().appendChild(reply);
 
                             addSignature(context, document, data.draft, selected);
                         }
@@ -3821,6 +3839,10 @@ public class FragmentCompose extends FragmentBase {
                             if (draft.to == null && draft.cc == null && draft.bcc == null)
                                 args.putBoolean("remind_to", true);
 
+                            if (TextUtils.isEmpty(draft.extra) &&
+                                    identity != null && identity.sender_extra)
+                                args.putBoolean("remind_extra", true);
+
                             if (TextUtils.isEmpty(draft.subject))
                                 args.putBoolean("remind_subject", true);
 
@@ -3978,6 +4000,7 @@ public class FragmentCompose extends FragmentBase {
             } else if (action == R.id.action_check) {
                 boolean dialog = args.getBundle("extras").getBoolean("dialog");
                 boolean remind_to = args.getBoolean("remind_to", false);
+                boolean remind_extra = args.getBoolean("remind_extra", false);
                 boolean remind_subject = args.getBoolean("remind_subject", false);
                 boolean remind_text = args.getBoolean("remind_text", false);
                 boolean remind_attachment = args.getBoolean("remind_attachment", false);
@@ -3988,7 +4011,7 @@ public class FragmentCompose extends FragmentBase {
                         (draft.cc == null ? 0 : draft.cc.length) +
                         (draft.bcc == null ? 0 : draft.bcc.length);
                 if (dialog || (send_reminders &&
-                        (remind_to || remind_subject || remind_text || remind_attachment ||
+                        (remind_to || remind_extra || remind_subject || remind_text || remind_attachment ||
                                 recipients > RECIPIENTS_WARNING))) {
                     setBusy(false);
 
@@ -4405,6 +4428,7 @@ public class FragmentCompose extends FragmentBase {
             Bundle args = getArguments();
             boolean dialog = args.getBundle("extras").getBoolean("dialog");
             boolean remind_to = args.getBoolean("remind_to", false);
+            boolean remind_extra = args.getBoolean("remind_extra", false);
             boolean remind_subject = args.getBoolean("remind_subject", false);
             boolean remind_text = args.getBoolean("remind_text", false);
             boolean remind_attachment = args.getBoolean("remind_attachment", false);
@@ -4419,6 +4443,7 @@ public class FragmentCompose extends FragmentBase {
 
             final ViewGroup dview = (ViewGroup) LayoutInflater.from(getContext()).inflate(R.layout.dialog_send, null);
             final TextView tvRemindTo = dview.findViewById(R.id.tvRemindTo);
+            final TextView tvRemindExtra = dview.findViewById(R.id.tvRemindExtra);
             final TextView tvRemindSubject = dview.findViewById(R.id.tvRemindSubject);
             final TextView tvRemindText = dview.findViewById(R.id.tvRemindText);
             final TextView tvRemindAttachment = dview.findViewById(R.id.tvRemindAttachment);
@@ -4435,6 +4460,7 @@ public class FragmentCompose extends FragmentBase {
             final TextView tvNotAgain = dview.findViewById(R.id.tvNotAgain);
 
             tvRemindTo.setVisibility(remind_to ? View.VISIBLE : View.GONE);
+            tvRemindExtra.setVisibility(remind_extra ? View.VISIBLE : View.GONE);
             tvRemindSubject.setVisibility(remind_subject ? View.VISIBLE : View.GONE);
             tvRemindText.setVisibility(remind_text ? View.VISIBLE : View.GONE);
             tvRemindAttachment.setVisibility(remind_attachment ? View.VISIBLE : View.GONE);

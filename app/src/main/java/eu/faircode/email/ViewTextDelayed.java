@@ -21,22 +21,26 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatTextView;
 
-public class ContentLoadingProgressBar extends ProgressBar {
+public class ViewTextDelayed extends AppCompatTextView {
     private int visibility;
 
-    private static final int VISIBILITY_DELAY = 500; // milliseconds
+    private static final int VISIBILITY_DELAY = 1000; // milliseconds
 
-    public ContentLoadingProgressBar(@NonNull Context context) {
-        this(context, null);
+    public ViewTextDelayed(@NonNull Context context) {
+        super(context);
     }
 
-    public ContentLoadingProgressBar(@NonNull Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs, 0);
+    public ViewTextDelayed(@NonNull Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+    }
+
+    public ViewTextDelayed(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
     }
 
     @Override
@@ -55,7 +59,7 @@ public class ContentLoadingProgressBar extends ProgressBar {
         @Override
         public void run() {
             if (visibility == VISIBLE)
-                ContentLoadingProgressBar.super.setVisibility(VISIBLE);
+                ViewTextDelayed.super.setVisibility(VISIBLE);
         }
     };
 }

@@ -481,6 +481,7 @@
     <string name="title_primary_account">Primair account (standaard account)</string>
     <string name="title_primary_identity">Primaire identiteit (standaard identiteit)</string>
     <string name="title_leave_on_server">Laat berichten achter op de server</string>
+    <string name="title_leave_deleted">Laat verwijderde berichten achter op de server</string>
     <string name="title_leave_on_device">Laat berichten achter op apparaat</string>
     <string name="title_max_messages">Maximum aantal berichten om te downloaden (leeg voor allen)</string>
     <string name="title_keep_alive_interval">Keep-alive/periodieke controle interval (minuten)</string>
@@ -1041,6 +1042,8 @@
     <string name="title_pro_valid">Alle pro-functies geactiveerd</string>
     <string name="title_pro_invalid">Ongeldige reactie</string>
     <string name="title_pro_support">FairEmail heeft uw hulp nodig. Tik hier om pro functies te kopen om het project gaande te houden.</string>
+    <string name="title_boundary_error">Fout bij het downloaden van berichten van de e-mailserver</string>
+    <string name="title_boundary_retry">Probeer opnieuw</string>
     <string name="title_unexpected_error">Onverwachte fout</string>
     <string name="title_log">Logboek</string>
     <string name="title_auto_scroll">Automatisch scrollen</string>

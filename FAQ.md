@@ -2051,8 +2051,14 @@ The sender might use [this tool](https://www.mail-tester.com/) to check authenti
 **(93) Can you allow installation/data storage on external storage media (sdcard)?**
 
 FairEmail uses services and alarms, provides widgets and listens for the boot completed event to be started on device start,
-so it is not possible to store FairEmail or its data on external storage media, like an sdcard.
+so it is not possible to store the app on external storage media, like an sdcard.
 See also [here](https://developer.android.com/guide/topics/data/install-location).
+
+Messages, attachments, etc stored on external storage media, like an scard, can be accessed by other apps and is therefore not safe.
+See [here](https://developer.android.com/training/data-storage) for the details.
+
+When needed you can save (raw) messages via the three-dots menu just above the message text
+and save attachments by tapping on the floppy icon.
 
 If you need to save on storage space, you can limit the number of days messages are being synchronized and kept for.
 You can change these settings by long pressing a folder in the folder list and selecting *Edit properties*.
@@ -2826,6 +2832,9 @@ When using two-factor authentication you might need to use an [app-specific pass
 <br />
 
 ## Support
+
+Only the latest Play store version and latest GitHub release are supported.
+This also means that downgrading is not supported.
 
 Requested features should:
 
