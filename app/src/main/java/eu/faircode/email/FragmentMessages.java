@@ -24,6 +24,7 @@ import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -52,10 +53,12 @@ import android.os.Parcelable;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
+import android.provider.ContactsContract;
 import android.security.KeyChain;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.util.Base64;
@@ -285,6 +288,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private Long closeId = null;
     private int autoCloseCount = 0;
     private boolean autoExpanded = true;
+    private Map<String, String> kv = new HashMap<>();
     private Map<String, List<Long>> values = new HashMap<>();
     private LongSparseArray<Float> sizes = new LongSparseArray<>();
     private LongSparseArray<Integer> heights = new LongSparseArray<>();
@@ -317,6 +321,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private static final int REQUEST_ACCOUNT = 19;
     private static final int REQUEST_EMPTY_FOLDER = 20;
     private static final int REQUEST_BOUNDARY_RETRY = 21;
+    static final int REQUEST_PICK_CONTACT = 22;
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
@@ -1389,6 +1394,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private AdapterMessage.IProperties iProperties = new AdapterMessage.IProperties() {
         @Override
+        public void setValue(String key, String value) {
+            kv.put(key, value);
+        }
+
+        @Override
         public void setValue(String name, long id, boolean enabled) {
             if (!values.containsKey(name))
                 values.put(name, new ArrayList<Long>());
@@ -2368,9 +2378,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     popupMenu.getMenu().add(Menu.NONE, R.string.title_spam, order++, R.string.title_spam);
 
                 for (EntityAccount account : result.accounts) {
-                    MenuItem item = popupMenu.getMenu()
-                            .add(Menu.NONE, R.string.title_move_to_account, order++,
-                                    getString(R.string.title_move_to_account, account.name));
+                    String title = getString(R.string.title_move_to_account, account.name);
+                    SpannableString ss = new SpannableString(title);
+                    if (account.name != null && account.color != null) {
+                        int i = title.indexOf(account.name);
+                        ss.setSpan(new ForegroundColorSpan(account.color), i, i + 1, 0);
+                    }
+                    MenuItem item = popupMenu.getMenu().add(Menu.NONE, R.string.title_move_to_account, order++, ss);
                     item.setIntent(new Intent().putExtra("account", account.id));
                 }
 
@@ -3784,13 +3798,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public void onLoading() {
             loading = true;
-            updateListState("Loading");
+            updateListState("Loading", SimpleTask.getCount(), adapter.getItemCount());
         }
 
         @Override
         public void onLoaded() {
             loading = false;
-            updateListState("Loaded");
+            updateListState("Loaded", SimpleTask.getCount(), adapter.getItemCount());
         }
 
         @Override
@@ -3844,13 +3858,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             });
 
             initialized = true;
-            updateListState("Observed");
+            updateListState("Observed", SimpleTask.getCount(), messages.size());
 
             grpReady.setVisibility(View.VISIBLE);
         }
     };
 
-    private void updateListState(String reason) {
+    private void updateListState(String reason, int tasks, int items) {
         Context context = getContext();
         if (context == null)
             return;
@@ -3858,9 +3872,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             return;
         if (!getViewLifecycleOwner().getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
             return;
-
-        int tasks = SimpleTask.getCount();
-        int items = adapter.getItemCount();
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean filter_seen = prefs.getBoolean("filter_seen", false);
@@ -3903,13 +3914,18 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 Collections.sort(dups, new Comparator<TupleMessageEx>() {
                     @Override
                     public int compare(TupleMessageEx d1, TupleMessageEx d2) {
-                        int o1 = DUPLICATE_ORDER.indexOf(d1.folderType);
-                        int o2 = DUPLICATE_ORDER.indexOf(d2.folderType);
-                        return ((Integer) o1).compareTo(o2);
+                        Integer o1 = DUPLICATE_ORDER.indexOf(d1.folderType);
+                        Integer o2 = DUPLICATE_ORDER.indexOf(d2.folderType);
+                        return o1.compareTo(o2);
                     }
                 });
-                for (int i = 1; i < dups.size(); i++)
-                    dups.get(i).duplicate = true;
+
+                TupleMessageEx first = dups.get(0);
+                for (int i = 1; i < dups.size(); i++) {
+                    TupleMessageEx dup = dups.get(i);
+                    if (!Objects.equals(first.folderType, dup.folderType))
+                        dup.duplicate = true;
+                }
             }
         }
 
@@ -4648,7 +4664,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     };
 
     private void onTaskCount(Intent intent) {
-        updateListState("Tasks");
+        updateListState("Tasks", intent.getIntExtra("count", 0), adapter.getItemCount());
     }
 
     private void onNewMessage(Intent intent) {
@@ -4867,6 +4883,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 case REQUEST_BOUNDARY_RETRY:
                     if (resultCode == RESULT_OK)
                         onBoundaryRetry();
+                    break;
+                case REQUEST_PICK_CONTACT:
+                    if (resultCode == RESULT_OK && data != null)
+                        onPickContact(data.getData());
                     break;
             }
         } catch (Throwable ex) {
@@ -5378,7 +5398,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         target.setCertificate(cert);
 
                                         // Load/store intermediate certificates
-                                        List<X509Certificate> local = new ArrayList<>();
+                                        List<X509Certificate> local = new ArrayList<>(certs);
                                         try {
                                             List<EntityCertificate> ecs = db.certificate().getIntermediateCertificate();
                                             for (EntityCertificate ec : ecs)
@@ -5407,7 +5427,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             }
                                         } catch (Throwable ex) {
                                             Log.e(ex);
-                                            local = certs;
                                         }
 
                                         // Intermediate certificates
@@ -6364,6 +6383,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private void onBoundaryRetry() {
         ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
         model.retry(viewType);
+    }
+
+    private void onPickContact(Uri contactUri) {
+        String name = kv.get("name");
+        String email = kv.get("email");
+
+        // This requires contacts permission
+        ContentResolver resolver = getContext().getContentResolver();
+        Uri lookupUri = ContactsContract.Contacts.getLookupUri(resolver, contactUri);
+
+        Intent edit = new Intent();
+        edit.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
+        if (!TextUtils.isEmpty(name))
+            edit.putExtra(ContactsContract.Intents.Insert.NAME, name);
+        edit.setAction(Intent.ACTION_EDIT);
+        edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
+        startActivity(edit);
     }
 
     static void search(

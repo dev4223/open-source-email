@@ -277,6 +277,7 @@
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
     <string name="title_advanced_quote_reply">Quote replied text</string>
+    <string name="title_advanced_resize_reply">Resize images in replied text</string>
     <string name="title_advanced_signature_location">Signature position</string>
     <string name="title_advanced_signature_end">Add signature after quoted/forwarded message</string>
     <string name="title_advanced_plain_only">Send plain text only by default</string>
@@ -284,9 +285,6 @@
     <string name="title_advanced_receipt">When requesting a receipt</string>
     <string name="title_advanced_usenet_signature">Usenet signature convention</string>
     <string name="title_advanced_remove_signatures">Remove recognized signatures</string>
-    <string name="title_advanced_resize_images">Automatically resize embedded images</string>
-    <string name="title_advanced_resize_attachments">Automatically resize image attachments</string>
-    <string name="title_advanced_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_advanced_send_reminders">Show reminders</string>
     <string name="title_advanced_lookup_mx">Check recipient email addresses before sending</string>
     <string name="title_advanced_send_delayed">Delay sending messages</string>
@@ -620,6 +618,8 @@
     <string name="title_create_channel">Create notification channel</string>
     <string name="title_edit_channel">Edit notification channel</string>
     <string name="title_delete_channel">Delete notification channel</string>
+    <string name="title_insert_contact">Add contact</string>
+    <string name="title_edit_contact">Edit contact</string>
     <string name="title_create_sub_folder">Create sub folder</string>
 
     <string name="title_empty_trash_ask">Delete all local trashed messages permanently?</string>
@@ -804,7 +804,6 @@
     <string name="title_send">Send</string>
     <string name="title_send_now">Send now</string>
     <string name="title_send_via">Send via</string>
-    <string name="title_send_with_options">Send &#8230;</string>
     <string name="title_send_at">Send at &#8230;</string>
     <string name="title_send_encryption">Encryption</string>
     <string name="title_send_priority">Priority</string>
@@ -817,13 +816,20 @@
     <string name="title_style_color">Color</string>
     <string name="title_style_clear">Clear formatting</string>
     <string name="title_style_link">Insert link</string>
-    <string name="title_style_image">Insert image</string>
+    <string name="title_add_image">Add image</string>
+    <string name="title_add_image_inline">Insert</string>
+    <string name="title_add_image_attach">Attach</string>
+    <string name="title_add_image_resize">Resize</string>
+    <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
+    <string name="title_add_image_select">Select file</string>
     <string name="title_add_attachment">Add attachment</string>
     <string name="title_attachment_file">Attach file</string>
     <string name="title_attachment_photo">Take photo</string>
     <string name="title_attachment_audio">Record audio</string>
     <string name="title_show_addresses">Show CC/BCC</string>
 
+    <string name="title_send_dialog">Show send options</string>
+    <string name="title_image_dialog">Show image options</string>
     <string name="title_media_toolbar">Media toolbar</string>
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
@@ -847,7 +853,7 @@
     <string name="title_attachment_keywords">attached,attachment,attachments,included</string>
     <string name="title_attachment_reminder">Did you intend to add an attachment?</string>
     <string name="title_attachments_missing">Not all attachments are downloaded</string>
-    <string name="title_send_dialog_hint">This dialog will still be available via the three-dots overflow menu in the action bar</string>
+    <string name="title_dialog_hint">This dialog can be enabled again via the three-dots menu in the top action bar</string>
     <string name="title_draft_deleted">Draft discarded</string>
     <string name="title_draft_saved">Draft saved</string>
     <string name="title_ask_send_via">Send message to %1$s via %2$s?</string>
@@ -1178,7 +1184,7 @@
     <string name="title_pro_invalid">Invalid response</string>
     <string name="title_pro_support">FairEmail needs your help. Tap to purchase pro features to keep the project going.</string>
 
-    <string name="title_boundary_error">Error on downloading messages from the email server</string>
+    <string name="title_boundary_error">Error downloading messages from the mail server</string>
     <string name="title_boundary_retry">Try again</string>
 
     <string name="title_unexpected_error">Unexpected error</string>
