@@ -169,12 +169,7 @@ public class Log {
     public static int w(String prefix, Throwable ex) {
         if (BuildConfig.BETA_RELEASE)
             try {
-                Bugsnag.notify(ex.getClass().getName(), prefix + ": " + ex.getMessage(), ex.getStackTrace(), new Callback() {
-                    @Override
-                    public void beforeNotify(@NonNull Report report) {
-                        report.getError().setSeverity(Severity.INFO);
-                    }
-                });
+                Bugsnag.notify(ex, Severity.INFO);
             } catch (Throwable ex1) {
                 ex1.printStackTrace();
             }
@@ -184,12 +179,7 @@ public class Log {
     public static int e(String prefix, Throwable ex) {
         if (BuildConfig.BETA_RELEASE)
             try {
-                Bugsnag.notify(ex.getClass().getName(), prefix + ": " + ex.getMessage(), ex.getStackTrace(), new Callback() {
-                    @Override
-                    public void beforeNotify(@NonNull Report report) {
-                        report.getError().setSeverity(Severity.WARNING);
-                    }
-                });
+                Bugsnag.notify(ex, Severity.WARNING);
             } catch (Throwable ex1) {
                 ex1.printStackTrace();
             }
@@ -830,8 +820,9 @@ public class Log {
             Helper.writeText(file, body);
             db.message().setMessageContent(draft.id,
                     true,
+                    HtmlHelper.getLanguage(context, body),
                     false,
-                    HtmlHelper.getPreview(file),
+                    HtmlHelper.getPreview(body),
                     null);
 
             attachSettings(context, draft.id, 1);
@@ -988,7 +979,8 @@ public class Log {
 
         sb.append("\r\n");
 
-        sb.append(new Date().toString()).append("\r\n");
+        sb.append(new Date(Helper.getInstallTime(context))).append("\r\n");
+        sb.append(new Date()).append("\r\n");
 
         sb.append("\r\n");
 

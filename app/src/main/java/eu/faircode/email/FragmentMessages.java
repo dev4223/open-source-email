@@ -31,7 +31,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -260,6 +259,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private boolean swipenav;
     private boolean seekbar;
     private boolean actionbar;
+    private boolean actionbar_color;
     private boolean autoexpand;
     private boolean autoclose;
     private String onclose;
@@ -372,6 +372,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         threading = prefs.getBoolean("threading", true);
         seekbar = prefs.getBoolean("seekbar", false);
         actionbar = prefs.getBoolean("actionbar", true);
+        actionbar_color = prefs.getBoolean("actionbar_color", false);
         autoexpand = prefs.getBoolean("autoexpand", true);
         autoclose = prefs.getBoolean("autoclose", true);
         onclose = (autoclose ? null : prefs.getString("onclose", null));
@@ -1414,8 +1415,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         public boolean getValue(String name, long id) {
             if (values.containsKey(name))
                 return values.get(name).contains(id);
-            else if ("addresses".equals(name))
-                return !addresses;
+            else {
+                if ("addresses".equals(name))
+                    return addresses;
+            }
             return false;
         }
 
@@ -3244,15 +3247,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         long now = new Date().getTime();
         long later = prefs.getLong("review_later", -1);
         if (later < 0) {
-            long installed = 0;
-            try {
-                PackageInfo pi = pm.getPackageInfo(BuildConfig.APPLICATION_ID, 0);
-                if (pi != null)
-                    installed = pi.firstInstallTime;
-            } catch (Throwable ex) {
-                Log.e(ex);
-            }
-
+            long installed = Helper.getInstallTime(getContext());
             Log.i("Review installed=" + new Date(installed));
 
             if (installed + REVIEW_ASK_DELAY > now)
@@ -4025,17 +4020,21 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             new SimpleTask<Boolean[]>() {
                 @Override
                 protected Boolean[] onExecute(Context context, Bundle args) {
-                    long account = args.getLong("account");
+                    long aid = args.getLong("account");
                     String thread = args.getString("thread");
                     long id = args.getLong("id");
 
                     DB db = DB.getInstance(context);
 
-                    EntityFolder trash = db.folder().getFolderByType(account, EntityFolder.TRASH);
-                    EntityFolder archive = db.folder().getFolderByType(account, EntityFolder.ARCHIVE);
+                    EntityAccount account = db.account().getAccount(aid);
+                    if (account != null && account.color != null)
+                        args.putInt("color", account.color);
+
+                    EntityFolder trash = db.folder().getFolderByType(aid, EntityFolder.TRASH);
+                    EntityFolder archive = db.folder().getFolderByType(aid, EntityFolder.ARCHIVE);
 
                     List<EntityMessage> messages = db.message().getMessagesByThread(
-                            account, thread, threading ? null : id, null);
+                            aid, thread, threading ? null : id, null);
 
                     boolean trashable = false;
                     boolean snoozable = false;
@@ -4071,6 +4070,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, Boolean[] data) {
+                    if (actionbar_color && args.containsKey("color"))
+                        bottom_navigation.setBackgroundColor(args.getInt("color"));
+
                     bottom_navigation.setTag(data[0]);
                     bottom_navigation.getMenu().findItem(R.id.action_delete).setVisible(data[1]);
                     bottom_navigation.getMenu().findItem(R.id.action_snooze).setVisible(data[2]);
@@ -5478,6 +5480,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         args.putBoolean("valid", valid);
                                     } catch (Throwable ex) {
                                         Log.w(ex);
+                                        args.putString("reason", ex.getMessage());
 
                                         ArrayList<String> trace = new ArrayList<>();
                                         for (X509Certificate c : certs) {
@@ -5640,6 +5643,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             Date time = (Date) args.getSerializable("time");
                             boolean known = args.getBoolean("known");
                             boolean valid = args.getBoolean("valid");
+                            String reason = args.getString("reason");
                             final ArrayList<String> trace = args.getStringArrayList("trace");
                             EntityCertificate record = EntityCertificate.from(cert, null);
 
@@ -5660,6 +5664,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 LayoutInflater inflator = LayoutInflater.from(getContext());
                                 View dview = inflator.inflate(R.layout.dialog_certificate, null);
                                 TextView tvCertificateInvalid = dview.findViewById(R.id.tvCertificateInvalid);
+                                TextView tvCertificateReason = dview.findViewById(R.id.tvCertificateReason);
                                 TextView tvSender = dview.findViewById(R.id.tvSender);
                                 TextView tvEmail = dview.findViewById(R.id.tvEmail);
                                 TextView tvEmailInvalid = dview.findViewById(R.id.tvEmailInvalid);
@@ -5669,6 +5674,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 TextView tvExpired = dview.findViewById(R.id.tvExpired);
 
                                 tvCertificateInvalid.setVisibility(valid ? View.GONE : View.VISIBLE);
+                                tvCertificateReason.setText(reason);
+                                tvCertificateReason.setVisibility(reason == null ? View.GONE : View.VISIBLE);
                                 tvSender.setText(sender);
                                 tvEmail.setText(TextUtils.join(",", emails));
                                 tvEmailInvalid.setVisibility(match ? View.GONE : View.VISIBLE);
@@ -5698,7 +5705,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
                                         .setView(dview)
-                                        .setNegativeButton(android.R.string.cancel, null);
+                                        .setNegativeButton(android.R.string.cancel, null)
+                                        .setNeutralButton(R.string.title_info, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Helper.viewFAQ(getContext(), 12);
+                                            }
+                                        });
 
                                 if (!TextUtils.isEmpty(sender) && !known && emails.size() > 0)
                                     builder.setPositiveButton(R.string.title_signature_store, new DialogInterface.OnClickListener() {

@@ -350,6 +350,7 @@
     <string name="title_advanced_images_inline">Automatically show inline images</string>
     <string name="title_advanced_seekbar">Show relative conversation position with a dot</string>
     <string name="title_advanced_actionbar">Show conversation action bar</string>
+    <string name="title_advanced_actionbar_color">Use account color as background color for conversation action bar</string>
     <string name="title_advanced_navbar_colorize">Colorize the Android navigation bar</string>
 
     <string name="title_advanced_double_back">Double \'back\' to exit</string>
@@ -431,6 +432,7 @@
     <string name="title_advanced_shortcuts">Show frequently used contacts in Android share menu</string>
     <string name="title_advanced_conversation_actions">Suggest actions</string>
     <string name="title_advanced_conversation_actions_replies">Suggest reply texts</string>
+    <string name="title_advanced_language_detection">Detect message text language</string>
     <string name="title_advanced_fts">Build search index</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexed (%3$s)</string>
     <string name="title_advanced_english">Force English language</string>
@@ -611,8 +613,8 @@
     <string name="title_synchronize_enabled">Synchronize</string>
     <string name="title_delete_local">Delete local messages</string>
     <string name="title_delete_browsed">Delete browsed/searched messages</string>
-    <string name="title_empty_trash">Empty local trash</string>
-    <string name="title_empty_spam">Empty local spam</string>
+    <string name="title_empty_trash">Empty trash</string>
+    <string name="title_empty_spam">Empty spam</string>
     <string name="title_edit_properties">Edit properties</string>
     <string name="title_edit_rules">Edit rules</string>
     <string name="title_create_channel">Create notification channel</string>
@@ -622,10 +624,10 @@
     <string name="title_edit_contact">Edit contact</string>
     <string name="title_create_sub_folder">Create sub folder</string>
 
-    <string name="title_empty_trash_ask">Delete all local trashed messages permanently?</string>
-    <string name="title_empty_spam_ask">Delete all local spam messages permanently?</string>
-    <string name="title_empty_trash_all_ask">Delete all local trashed messages of all accounts permanently?</string>
-    <string name="title_empty_spam_all_ask">Delete all local spam messages of all accounts permanently?</string>
+    <string name="title_empty_trash_ask">Delete all trashed messages permanently?</string>
+    <string name="title_empty_spam_ask">Delete all spam messages permanently?</string>
+    <string name="title_empty_trash_all_ask">Delete all trashed messages of all accounts permanently?</string>
+    <string name="title_empty_spam_all_ask">Delete all spam messages of all accounts permanently?</string>
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
@@ -796,6 +798,7 @@
     <string name="title_sent">Sent:</string>
     <string name="title_received">Received:</string>
     <string name="title_size">Size:</string>
+    <string name="title_language">Language:</string>
     <string name="title_subject">Subject:</string>
     <string name="title_attachment">Attachment:</string>
     <string name="title_body_hint">Your message</string>

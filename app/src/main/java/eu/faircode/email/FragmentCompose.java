@@ -65,6 +65,7 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.StyleSpan;
+import android.text.style.URLSpan;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -1409,12 +1410,27 @@ public class FragmentCompose extends FragmentBase {
     private void onActionLink() {
         Uri uri = null;
 
-        ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-        if (cbm != null && cbm.hasPrimaryClip()) {
-            String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
-            uri = Uri.parse(link);
-            if (uri.getScheme() == null)
-                uri = null;
+        if (etBody.hasSelection()) {
+            int start = etBody.getSelectionStart();
+            URLSpan[] spans = etBody.getText().getSpans(start, start, URLSpan.class);
+            if (spans.length > 0) {
+                String url = spans[0].getURL();
+                if (url != null) {
+                    uri = Uri.parse(url);
+                    if (uri.getScheme() == null)
+                        uri = null;
+                }
+            }
+        }
+
+        if (uri == null) {
+            ClipboardManager cbm = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cbm != null && cbm.hasPrimaryClip()) {
+                String link = cbm.getPrimaryClip().getItemAt(0).coerceToText(getContext()).toString();
+                uri = Uri.parse(link);
+                if (uri.getScheme() == null)
+                    uri = null;
+            }
         }
 
         Bundle args = new Bundle();
@@ -3081,7 +3097,7 @@ public class FragmentCompose extends FragmentBase {
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action)) {
                             if (prefix_once)
-                                for (String re : Helper.getStrings(context, R.string.title_subject_reply, ""))
+                                for (String re : Helper.getStrings(context, ref.language, R.string.title_subject_reply, ""))
                                     subject = unprefix(subject, re);
                             data.draft.subject = context.getString(R.string.title_subject_reply, subject);
 
@@ -3098,7 +3114,7 @@ public class FragmentCompose extends FragmentBase {
                             }
                         } else if ("forward".equals(action)) {
                             if (prefix_once)
-                                for (String fwd : Helper.getStrings(context, R.string.title_subject_forward, ""))
+                                for (String fwd : Helper.getStrings(context, ref.language, R.string.title_subject_forward, ""))
                                     subject = unprefix(subject, fwd);
                             data.draft.subject = context.getString(R.string.title_subject_forward, subject);
                         } else if ("editasnew".equals(action)) {
@@ -3288,6 +3304,7 @@ public class FragmentCompose extends FragmentBase {
 
                     db.message().setMessageContent(data.draft.id,
                             true,
+                            HtmlHelper.getLanguage(context, html),
                             data.draft.plain_only,
                             HtmlHelper.getPreview(html),
                             null);
@@ -3408,6 +3425,7 @@ public class FragmentCompose extends FragmentBase {
 
                         db.message().setMessageContent(data.draft.id,
                                 true,
+                                HtmlHelper.getLanguage(context, html),
                                 data.draft.plain_only,
                                 HtmlHelper.getPreview(html),
                                 null);
@@ -3849,6 +3867,7 @@ public class FragmentCompose extends FragmentBase {
 
                     db.message().setMessageContent(draft.id,
                             true,
+                            HtmlHelper.getLanguage(context, body),
                             draft.plain_only, // unchanged
                             HtmlHelper.getPreview(body),
                             null);
