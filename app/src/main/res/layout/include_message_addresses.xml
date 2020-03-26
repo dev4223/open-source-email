@@ -345,7 +345,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSizeEx" />
+        app:layout_constraintTop_toBottomOf="@id/tvSent" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvLanguage"
@@ -358,14 +358,14 @@
         android:textIsSelectable="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
-        app:layout_constraintTop_toBottomOf="@id/tvSizeEx" />
+        app:layout_constraintTop_toBottomOf="@id/tvSent" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_addresses"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="end"
-        app:constraint_referenced_ids="tvDeliveredToTitle,tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvSentTitle, tvLanguageTitle" />
+        app:constraint_referenced_ids="tvSubmitterTitle, tvDeliveredToTitle,tvFromExTitle,tvToTitle,tvReplyToTitle,tvCcTitle,tvBccTitle,tvIdentityTitle,tvSentTitle, tvLanguageTitle" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/grpAddresses"
