@@ -561,6 +561,7 @@
     <string name="title_client_certificate">Client certificate</string>
     <string name="title_realm">Realm</string>
     <string name="title_use_ip">Use local IP address instead of host name</string>
+    <string name="title_primary">Primary</string>
     <string name="title_primary_account">Primary (default account)</string>
     <string name="title_primary_identity">Primary (default identity)</string>
     <string name="title_leave_on_server">Leave messages on server</string>
@@ -917,9 +918,12 @@
 
     <string name="title_compact">Compact view</string>
     <string name="title_zoom">Text size</string>
+    <string name="title_select_language">Select language</string>
     <string name="title_select_all">Select all</string>
     <string name="title_select_found">Select found</string>
     <string name="title_force_sync">Force sync</string>
+
+    <string name="title_language_all">All</string>
 
     <string name="title_previous">Previous</string>
     <string name="title_next">Next</string>

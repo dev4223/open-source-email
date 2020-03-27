@@ -244,6 +244,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean inline;
     private boolean collapse_quotes;
     private boolean authentication;
+    private boolean language_detection;
     private static boolean debug;
 
     private boolean gotoTop = false;
@@ -1507,8 +1508,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSubjectEx.setTextSize(TypedValue.COMPLEX_UNIT_PX, (font_size_subject == null ? textSize : font_size_subject));
             }
 
-            tvLanguageTitle.setVisibility(show_addresses && message.language != null ? View.VISIBLE : View.GONE);
-            tvLanguage.setVisibility(show_addresses && message.language != null ? View.VISIBLE : View.GONE);
+            tvLanguageTitle.setVisibility(
+                    show_addresses && language_detection && message.language != null
+                            ? View.VISIBLE : View.GONE);
+            tvLanguage.setVisibility(
+                    show_addresses && language_detection && message.language != null
+                            ? View.VISIBLE : View.GONE);
             tvLanguage.setText(message.language == null ? null : new Locale(message.language).getDisplayLanguage());
 
             // dev4223: show always
@@ -4679,6 +4684,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.inline = prefs.getBoolean("inline_images", false);
         this.collapse_quotes = prefs.getBoolean("collapse_quotes", false);
         this.authentication = prefs.getBoolean("authentication", true);
+        this.language_detection = prefs.getBoolean("language_detection", false);
 
         debug = prefs.getBoolean("debug", false);
 

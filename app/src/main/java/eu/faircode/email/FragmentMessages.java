@@ -3355,6 +3355,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         boolean filter_unknown = prefs.getBoolean("filter_unknown", false);
         boolean filter_snoozed = prefs.getBoolean("filter_snoozed", true);
         boolean filter_duplicates = prefs.getBoolean("filter_duplicates", true);
+        boolean language_detection = prefs.getBoolean("language_detection", false);
         boolean compact = prefs.getBoolean("compact", false);
         boolean quick_filter = prefs.getBoolean("quick_filter", false);
 
@@ -3427,15 +3428,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
-        menu.findItem(R.id.menu_select_all).setVisible(!outbox &&
-                (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER));
+        boolean list = (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
+
+        menu.findItem(R.id.menu_select_language).setVisible(
+                language_detection && list && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
+        menu.findItem(R.id.menu_select_all).setVisible(!outbox && list);
         menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
-        menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) &&
-                (viewType == AdapterMessage.ViewType.UNIFIED ||
-                        viewType == AdapterMessage.ViewType.FOLDER));
-        menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) &&
-                (viewType == AdapterMessage.ViewType.UNIFIED ||
-                        viewType == AdapterMessage.ViewType.FOLDER));
+        menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) && list);
+        menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) && list);
 
         menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
 
@@ -3535,6 +3535,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 onMenuCompact();
                 return true;
 
+            case R.id.menu_select_language:
+                onMenuSelectLanguage();
+                return true;
+
             case R.id.menu_select_all:
             case R.id.menu_select_found:
                 onMenuSelectAll();
@@ -3624,6 +3628,65 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
         getActivity().invalidateOptionsMenu();
+    }
+
+    private void onMenuSelectLanguage() {
+        Bundle args = new Bundle();
+        args.putLong("account", account);
+        args.putLong("folder", folder);
+
+        new SimpleTask<List<String>>() {
+            @Override
+            protected List<String> onExecute(Context context, Bundle args) {
+                long account = args.getLong("account");
+                long folder = args.getLong("folder");
+
+                DB db = DB.getInstance(context);
+                return db.message().getLanguages(account < 0 ? null : account, folder < 0 ? null : folder);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, List<String> languages) {
+                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                String current = prefs.getString("filter_language", null);
+
+                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), vwAnchor);
+
+                String all = getString(R.string.title_language_all) + (current == null ? " ★" : "");
+                popupMenu.getMenu().add(Menu.NONE, 0, 0, all);
+
+                for (int i = 0; i < languages.size(); i++) {
+                    String language = languages.get(i);
+                    Locale locale = new Locale(language);
+                    String title = locale.getDisplayLanguage() + (language.equals(current) ? " ★" : "");
+                    popupMenu.getMenu()
+                            .add(Menu.NONE, i + 1, i + 1, title)
+                            .setIntent(new Intent().putExtra("locale", locale));
+                }
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (item.getItemId() == 0) // all
+                            prefs.edit().remove("filter_language").apply();
+                        else {
+                            Locale locale = (Locale) item.getIntent().getSerializableExtra("locale");
+                            prefs.edit().putString("filter_language", locale.getLanguage()).apply();
+                        }
+
+                        loadMessages(true);
+
+                        return true;
+                    }
+                });
+                popupMenu.show();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex);
+            }
+        }.execute(this, args, "menu:language");
     }
 
     private void onMenuSelectAll() {
@@ -3872,7 +3935,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         boolean filter_seen = prefs.getBoolean("filter_seen", false);
         boolean filter_unflagged = prefs.getBoolean("filter_unflagged", false);
         boolean filter_unknown = prefs.getBoolean("filter_unknown", false);
-        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown);
+        String filter_language = prefs.getString("filter_language", null);
+        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown || !TextUtils.isEmpty(filter_language));
 
         boolean none = (items == 0 && !loading && tasks == 0 && initialized);
         boolean filtered = (filter_active && viewType != AdapterMessage.ViewType.SEARCH);
@@ -6346,6 +6410,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected Void onExecute(Context context, Bundle args) {
                 long aid = args.getLong("account");
                 String type = args.getString("type");
+                EntityLog.log(context, "Empty account=" + account + " type=" + type);
 
                 DB db = DB.getInstance(context);
                 try {
@@ -6363,13 +6428,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     for (EntityAccount account : accounts) {
                         EntityFolder folder = db.folder().getFolderByType(account.id, type);
+                        EntityLog.log(context,
+                                "Empty account=" + account.name + " folder=" + (folder == null ? null : folder.name));
                         if (folder == null)
                             continue;
 
                         List<Long> ids = db.message().getMessageByFolder(folder.id);
                         for (Long id : ids) {
                             EntityMessage message = db.message().getMessage(id);
-                            if (message.uid != null || !TextUtils.isEmpty(message.msgid)) {
+                            if (message != null &&
+                                    (message.uid != null || !TextUtils.isEmpty(message.msgid))) {
                                 Log.i("Deleting account=" + account.id + " folder=" + folder.id + " message=" + message.id);
                                 EntityOperation.queue(context, message, EntityOperation.DELETE);
                             }
