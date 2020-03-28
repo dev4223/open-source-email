@@ -397,7 +397,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
         else {
             viewType = AdapterMessage.ViewType.SEARCH;
-            setTitle(R.string.title_search);
+            setTitle(server ? R.string.title_search_server : R.string.title_search_device);
         }
     }
 
@@ -972,11 +972,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             public void onClick(View v) {
                 Bundle args = new Bundle();
                 args.putLong("account", account);
+                args.putLong("folder", folder);
 
                 new SimpleTask<List<EntityAccount>>() {
                     @Override
                     protected List<EntityAccount> onExecute(Context context, Bundle args) {
                         long aid = args.getLong("account");
+                        long fid = args.getLong("folder");
 
                         List<EntityAccount> result = new ArrayList<>();
                         DB db = DB.getInstance(context);
@@ -989,6 +991,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             EntityAccount account = db.account().getAccount(aid);
                             if (account != null && account.protocol == EntityAccount.TYPE_IMAP)
                                 result.add(account);
+                        }
+
+                        if (folder > 0) {
+                            EntityFolder folder = db.folder().getFolder(fid);
+                            if (folder != null)
+                                args.putString("folderName", folder.getDisplayName(context));
                         }
 
                         if (result.size() == 0)
@@ -1004,17 +1012,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
+                        int order = 0;
+
                         SpannableString ss = new SpannableString(getString(R.string.title_search_server));
                         ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), 0);
                         ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
-                        popupMenu.getMenu().add(Menu.NONE, 0, 0, ss)
+                        popupMenu.getMenu().add(Menu.NONE, 0, order++, ss)
                                 .setEnabled(false);
-                        popupMenu.getMenu().add(Menu.NONE, 1, 1, R.string.title_search_text)
+                        popupMenu.getMenu().add(Menu.NONE, 1, order++, R.string.title_search_text)
                                 .setCheckable(true).setChecked(search_text);
 
-                        int order = 2;
+                        String folderName = args.getString("folderName", null);
+                        if (!TextUtils.isEmpty(folderName))
+                            popupMenu.getMenu().add(Menu.NONE, 2, order++, folderName);
+
                         for (EntityAccount account : accounts)
-                            popupMenu.getMenu().add(Menu.NONE, 2, order++, account.name)
+                            popupMenu.getMenu().add(Menu.NONE, 3, order++, account.name)
                                     .setIntent(new Intent().putExtra("account", account.id));
 
                         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -1024,6 +1037,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                                     boolean search_text = prefs.getBoolean("search_text", false);
                                     prefs.edit().putBoolean("search_text", !search_text).apply();
+                                    return true;
+                                }
+
+                                if (target.getItemId() == 2) {
+                                    search(
+                                            getContext(), getViewLifecycleOwner(), getParentFragmentManager(),
+                                            account, folder,
+                                            true,
+                                            query);
                                     return true;
                                 }
 
@@ -1039,7 +1061,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                                 FragmentDialogFolder fragment = new FragmentDialogFolder();
                                 fragment.setArguments(args);
-                                fragment.setTargetFragment(FragmentMessages.this, FragmentMessages.REQUEST_SEARCH);
+                                fragment.setTargetFragment(FragmentMessages.this, REQUEST_SEARCH);
                                 fragment.show(getParentFragmentManager(), "messages:search");
 
                                 return true;
@@ -3359,14 +3381,13 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         boolean compact = prefs.getBoolean("compact", false);
         boolean quick_filter = prefs.getBoolean("quick_filter", false);
 
+        boolean drafts = EntityFolder.DRAFTS.equals(type);
         boolean outbox = EntityFolder.OUTBOX.equals(type);
+        boolean sent = EntityFolder.SENT.equals(type);
+
         boolean folder =
                 (viewType == AdapterMessage.ViewType.UNIFIED ||
                         (viewType == AdapterMessage.ViewType.FOLDER && !outbox));
-
-        boolean canSnooze =
-                (viewType == AdapterMessage.ViewType.UNIFIED && !EntityFolder.DRAFTS.equals(type)) ||
-                        (viewType == AdapterMessage.ViewType.FOLDER && !EntityFolder.DRAFTS.equals(type));
 
         MenuItem menuSearch = menu.findItem(R.id.menu_search);
         menuSearch.setVisible(
@@ -3415,11 +3436,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         menu.findItem(R.id.menu_ascending).setChecked(ascending);
 
         menu.findItem(R.id.menu_filter).setVisible(viewType != AdapterMessage.ViewType.SEARCH && !outbox);
-        menu.findItem(R.id.menu_filter_seen).setVisible(viewType != AdapterMessage.ViewType.THREAD);
-        menu.findItem(R.id.menu_filter_unflagged).setVisible(viewType != AdapterMessage.ViewType.THREAD);
-        menu.findItem(R.id.menu_filter_unknown).setVisible(viewType != AdapterMessage.ViewType.THREAD);
-        menu.findItem(R.id.menu_filter_snoozed).setVisible(viewType != AdapterMessage.ViewType.THREAD && canSnooze);
+        menu.findItem(R.id.menu_filter_seen).setVisible(folder);
+        menu.findItem(R.id.menu_filter_unflagged).setVisible(folder);
+        menu.findItem(R.id.menu_filter_unknown).setVisible(folder && !drafts && !sent);
+        menu.findItem(R.id.menu_filter_snoozed).setVisible(folder && !drafts);
         menu.findItem(R.id.menu_filter_duplicates).setVisible(viewType == AdapterMessage.ViewType.THREAD);
+
         menu.findItem(R.id.menu_filter_seen).setChecked(filter_seen);
         menu.findItem(R.id.menu_filter_unflagged).setChecked(filter_unflagged);
         menu.findItem(R.id.menu_filter_unknown).setChecked(filter_unknown);
@@ -3428,14 +3450,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
-        boolean list = (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER);
-
         menu.findItem(R.id.menu_select_language).setVisible(
-                language_detection && list && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
-        menu.findItem(R.id.menu_select_all).setVisible(!outbox && list);
+                language_detection && folder && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
+        menu.findItem(R.id.menu_select_all).setVisible(folder);
         menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
-        menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) && list);
-        menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) && list);
+        menu.findItem(R.id.menu_empty_trash).setVisible(EntityFolder.TRASH.equals(type) && folder);
+        menu.findItem(R.id.menu_empty_spam).setVisible(EntityFolder.JUNK.equals(type) && folder);
 
         menu.findItem(R.id.menu_force_sync).setVisible(viewType == AdapterMessage.ViewType.UNIFIED);
 
@@ -3445,7 +3465,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         ibSeen.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
         ibUnflagged.setVisibility(quick_filter && folder ? View.VISIBLE : View.GONE);
-        ibSnoozed.setVisibility(quick_filter && folder && canSnooze ? View.VISIBLE : View.GONE);
+        ibSnoozed.setVisibility(quick_filter && folder && !drafts ? View.VISIBLE : View.GONE);
 
         super.onPrepareOptionsMenu(menu);
     }

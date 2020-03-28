@@ -136,7 +136,7 @@ public interface DaoMessage {
             " AND (NOT :filter_unknown OR SUM(message.avatar IS NOT NULL AND message.sender <> identity.email) > 0" +
             "   OR " + is_outbox + " OR " + is_drafts + " OR " + is_sent + ")" +
             " AND (NOT :filter_snoozed OR message.ui_snoozed IS NULL OR " + is_outbox + " OR " + is_drafts + ")" +
-            " AND (:filter_language IS NULL OR SUM(message.language = :filter_language) > 0)" +
+            " AND (:filter_language IS NULL OR SUM(message.language = :filter_language) > 0 OR " + is_outbox + ")" +
             " ORDER BY -IFNULL(MAX(message.importance), 1)" +
             ", CASE" +
             "   WHEN 'unread' = :sort THEN SUM(1 - message.ui_seen) = 0" +
@@ -351,29 +351,6 @@ public interface DaoMessage {
     LiveData<TupleKeyword.Persisted> liveMessageKeywords(long id);
 
     @Transaction
-    @Query("SELECT account.id AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
-            " FROM message" +
-            " JOIN account_view AS account ON account.id = message.account" +
-            " JOIN folder_view AS folder ON folder.id = message.folder" +
-            " WHERE (:account IS NULL OR account.id = :account)" +
-            " AND account.`synchronize`" +
-            " AND folder.notify" +
-            " AND NOT (message.ui_seen OR message.ui_hide)" +
-            " GROUP BY account.id" +
-            " ORDER BY account.id")
-    LiveData<List<TupleMessageStats>> liveUnseenWidget(Long account);
-
-    @Query("SELECT :account AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
-            " FROM message" +
-            " JOIN account_view AS account ON account.id = message.account" +
-            " JOIN folder_view AS folder ON folder.id = message.folder" +
-            " WHERE (:account IS NULL OR account.id = :account)" +
-            " AND account.`synchronize`" +
-            " AND folder.notify" +
-            " AND NOT (message.ui_seen OR message.ui_hide)")
-    TupleMessageStats getUnseenWidget(Long account);
-
-    @Transaction
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
@@ -400,6 +377,29 @@ public interface DaoMessage {
             " AND (notifying <> 0 OR NOT (message.ui_seen OR message.ui_hide))" +
             " ORDER BY message.received")
     LiveData<List<TupleMessageEx>> liveUnseenNotify();
+
+    @Transaction
+    @Query("SELECT account.id AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
+            " FROM message" +
+            " JOIN account_view AS account ON account.id = message.account" +
+            " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " WHERE (:account IS NULL OR account.id = :account)" +
+            " AND account.`synchronize`" +
+            " AND folder.notify" +
+            " AND NOT (message.ui_seen OR message.ui_hide)" +
+            " GROUP BY account.id" +
+            " ORDER BY account.id")
+    LiveData<List<TupleMessageStats>> liveWidgetUnseen(Long account);
+
+    @Query("SELECT :account AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
+            " FROM message" +
+            " JOIN account_view AS account ON account.id = message.account" +
+            " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " WHERE (:account IS NULL OR account.id = :account)" +
+            " AND account.`synchronize`" +
+            " AND folder.notify" +
+            " AND NOT (message.ui_seen OR message.ui_hide)")
+    TupleMessageStats getWidgetUnseen(Long account);
 
     @Transaction
     @Query("SELECT folder, COUNT(*) AS total" +

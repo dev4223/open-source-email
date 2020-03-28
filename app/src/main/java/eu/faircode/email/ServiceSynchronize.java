@@ -433,50 +433,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
         });
 
-        db.message().liveUnseenWidget(null).observe(cowner, new Observer<List<TupleMessageStats>>() {
-            private List<TupleMessageStats> last = null;
-
-            @Override
-            public void onChanged(List<TupleMessageStats> stats) {
-                if (stats == null)
-                    stats = new ArrayList<>();
-
-                boolean changed = false;
-                if (last == null || last.size() != stats.size())
-                    changed = true;
-                else
-                    for (int i = 0; i < stats.size(); i++)
-                        if (!last.get(i).equals(stats.get(i))) {
-                            changed = true;
-                            break;
-                        }
-
-                if (!changed)
-                    return;
-
-                Widget.update(ServiceSynchronize.this);
-
-                boolean badge = prefs.getBoolean("badge", true);
-                boolean unseen_ignored = prefs.getBoolean("unseen_ignored", false);
-
-                int count = 0;
-                for (TupleMessageStats stat : stats) {
-                    Integer unseen = (unseen_ignored ? stat.notifying : stat.unseen);
-                    if (unseen != null)
-                        count += unseen;
-                }
-
-                try {
-                    if (count == 0 || !badge)
-                        ShortcutBadger.removeCount(ServiceSynchronize.this);
-                    else
-                        ShortcutBadger.applyCount(ServiceSynchronize.this, count);
-                } catch (Throwable ex) {
-                    Log.e(ex);
-                }
-            }
-        });
-
         Map<Long, List<Long>> groupNotifying = new HashMap<>();
 
         // Get existing notifications
@@ -532,6 +488,50 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         }
                     }
                 });
+            }
+        });
+
+        db.message().liveWidgetUnseen(null).observe(cowner, new Observer<List<TupleMessageStats>>() {
+            private List<TupleMessageStats> last = null;
+
+            @Override
+            public void onChanged(List<TupleMessageStats> stats) {
+                if (stats == null)
+                    stats = new ArrayList<>();
+
+                boolean changed = false;
+                if (last == null || last.size() != stats.size())
+                    changed = true;
+                else
+                    for (int i = 0; i < stats.size(); i++)
+                        if (!last.get(i).equals(stats.get(i))) {
+                            changed = true;
+                            break;
+                        }
+
+                if (!changed)
+                    return;
+
+                Widget.update(ServiceSynchronize.this);
+
+                boolean badge = prefs.getBoolean("badge", true);
+                boolean unseen_ignored = prefs.getBoolean("unseen_ignored", false);
+
+                int count = 0;
+                for (TupleMessageStats stat : stats) {
+                    Integer unseen = (unseen_ignored ? stat.notifying : stat.unseen);
+                    if (unseen != null)
+                        count += unseen;
+                }
+
+                try {
+                    if (count == 0 || !badge)
+                        ShortcutBadger.removeCount(ServiceSynchronize.this);
+                    else
+                        ShortcutBadger.applyCount(ServiceSynchronize.this, count);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
             }
         });
 
@@ -1599,7 +1599,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
         @Override
         public void onAvailable(@NonNull Network network) {
-            EntityLog.log(ServiceSynchronize.this, "Available network=" + network);
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo ni = cm.getNetworkInfo(network);
+                EntityLog.log(ServiceSynchronize.this, "Available network=" + network + " info=" + ni);
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
             updateState(network, null);
         }
 
@@ -1612,9 +1618,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         public void onLost(@NonNull Network network) {
             try {
                 ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo active = cm.getActiveNetworkInfo();
-                EntityLog.log(ServiceSynchronize.this, "Lost network=" + network + " active=" + active);
-                if (active == null)
+                NetworkInfo ani = cm.getActiveNetworkInfo();
+                EntityLog.log(ServiceSynchronize.this, "Lost network=" + network + " active=" + ani);
+                if (ani == null)
                     lastLost = new Date().getTime();
             } catch (Throwable ex) {
                 Log.w(ex);
