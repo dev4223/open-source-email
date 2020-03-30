@@ -248,6 +248,7 @@
     <string name="title_advanced_suggest_local">Предлагать локальные контакты</string>
     <string name="title_advanced_suggest_sent">Предлагать адреса, найденные в отправленных сообщениях</string>
     <string name="title_advanced_suggest_received">Предлагать адреса, найденные в полученных сообщениях</string>
+    <string name="title_advanced_suggest_frequently">Сортировать предложенные адреса по частоте использования</string>
     <string name="title_advanced_prefix_once">Добавлять только один префикс темы при ответе или пересылке</string>
     <string name="title_advanced_extended_reply">Использовать расширенный заголовок для ответа/пересылки</string>
     <string name="title_advanced_quote_reply">Цитировать текст при ответе</string>
@@ -460,10 +461,13 @@
     <string name="title_advanced_notify_no_channels">Эта версия Android не поддерживает каналы уведомлений</string>
     <string name="title_advanced_fts_hint">Включение этой функции улучшит скорость поиска, но также увеличит расход батареи и занимаемое место в хранилище</string>
     <string name="title_advanced_english_hint">Произойдёт перезапуск приложения</string>
+    <string name="title_advanced_optimize_hint">Включение этого параметра автоматически изменит настройки получения, чтобы уменьшить расход заряда батареи</string>
     <string name="title_advanced_experiments_hint">Список текущих экспериментальных функций</string>
     <string name="title_advanced_debug_hint">Включить дополнительное журналирование и показывать отладочную информацию в различных местах</string>
     <string name="title_advanced_cleanup_hint">Это действие удалит все временные файлы</string>
     <string name="title_advanced_never_favorite">Никогда не помечать избранным</string>
+    <string name="title_advanced_swipe_actions">Настройка жестов</string>
+    <string name="title_advanced_swipe_actions_hint">Данная настройка определяет действия жестов вправо и влево для всех учётных записей IMAP</string>
     <string name="title_select">Выбор&#8230;</string>
     <string name="title_identity_name">Ваше имя</string>
     <string name="title_identity_email">Ваш адрес электронной почты</string>

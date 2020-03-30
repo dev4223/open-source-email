@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 1064
-        versionName "1.1064"
+        versionCode 1067
+        versionName "1.1067"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -114,7 +114,7 @@ android {
         }
         play_beta {
             dimension "all"
-            minSdkVersion 23
+            //minSdkVersion 23
             buildConfigField "boolean", "BETA_RELEASE", "true"
             buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
             buildConfigField "String", "INVITE_URI", "\"https://play.google.com/store/apps/details?id=eu.faircode.email\""
@@ -128,7 +128,7 @@ android {
         }
         play_release {
             dimension "all"
-            minSdkVersion 23
+            //minSdkVersion 23
             buildConfigField "boolean", "BETA_RELEASE", "false"
             buildConfigField "boolean", "PLAY_STORE_RELEASE", "true"
             buildConfigField "String", "INVITE_URI", "\"https://play.google.com/store/apps/details?id=eu.faircode.email\""

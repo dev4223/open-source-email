@@ -274,6 +274,7 @@
     <string name="title_advanced_suggest_local">Suggest locally stored contacts</string>
     <string name="title_advanced_suggest_sent">Suggest addresses found in sent messages</string>
     <string name="title_advanced_suggest_received">Suggest addresses found in received messages</string>
+    <string name="title_advanced_suggest_frequently">Sort suggested addresses on frequency of use</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
     <string name="title_advanced_quote_reply">Quote replied text</string>
@@ -513,11 +514,15 @@
 
     <string name="title_advanced_fts_hint">Enabling this improves search performance, but also increases battery and storage space usage</string>
     <string name="title_advanced_english_hint">This will restart the app</string>
+    <string name="title_advanced_optimize_hint">Enabling this can automatically change the receive settings to reduce battery usage</string>
     <string name="title_advanced_experiments_hint">List of current experimental features</string>
     <string name="title_advanced_debug_hint">Enable extra logging and show debug information at various places</string>
     <string name="title_advanced_cleanup_hint">This will delete all temporary files</string>
 
     <string name="title_advanced_never_favorite">Never favorite</string>
+
+    <string name="title_advanced_swipe_actions">Set swipe actions</string>
+    <string name="title_advanced_swipe_actions_hint">This will set the swipe left and right action for all IMAP accounts</string>
 
     <string name="title_select">Select &#8230;</string>
     <string name="title_identity_name">Your name</string>

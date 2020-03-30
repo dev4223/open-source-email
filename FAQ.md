@@ -133,7 +133,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
 * [(12) How does encryption/decryption work?](#user-content-faq12)
 * [(13) How does search on device/server work?](#user-content-faq13)
-* [(14) How can I setup Outlook / Hotmail with 2FA?](#user-content-faq14)
+* [(14) How can I setup Outlook / Live / Hotmail with 2FA?](#user-content-faq14)
 * [(15) Why does the message text keep loading?](#user-content-faq15)
 * [(16) Why are messages not being synchronized?](#user-content-faq16)
 * [~~(17) Why does manual synchronize not work?~~](#user-content-faq17)
@@ -723,9 +723,9 @@ Searching messages on the device is a free feature, searching messages on the se
 <br />
 
 <a name="faq14"></a>
-**(14) How can I setup Outlook / Hotmail with 2FA?**
+**(14) How can I setup Outlook / Live / Hotmail with 2FA?**
 
-To use Outlook or Hotmail with two factor authentication enabled, you need to create an app password.
+To use an Outlook, Live or Hotmail account with two factor authentication enabled, you need to create an app password.
 See [here](https://support.microsoft.com/en-us/help/12409/microsoft-account-app-passwords-two-step-verification) for the details.
 
 See [here](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040) for Microsoft's instructions.
@@ -945,9 +945,10 @@ Possible causes are:
 * The same email client is connected multiple times to the same account
 * Previous connections were terminated abruptly for example by abruptly losing internet connectivity
 
-First try to wait some time to see if the problem resolves itself,
-else try to enable the folder setting *Poll instead of synchronize* for some folders (long press folder in the folder list, edit properties).
-The poll interval can be configured in the account settings.
+First try to wait some time to see if the problem resolves itself, else:
+
+* either switch to periodically checking for messages in the receive settings, which will result in opening folders one at a time
+* or set some folders to poll instead of synchronize (long press folder in the folder list, edit properties)
 
 The maximum number of simultaneous folder connections for Gmail is 15,
 so you can synchronize at most 15 folders simultaneously on *all* your devices at the same time.
@@ -2432,6 +2433,8 @@ The widget is designed to look good on most home/launcher screens by making it m
 This way the widget will nicely blend in, while still being properly readable.
 
 Adding (account) colors will cause problems with some backgrounds and will cause readability problems, which is why this won't be added.
+
+Due to Android limitations it is not possible to dynamically set the opacity of the background and to have rounded corners at the same time.
 
 <br />
 
