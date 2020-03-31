@@ -504,6 +504,8 @@ class Core {
 
             if (ops.size() == 0)
                 state.batchCompleted(folder.id, priority, sequence);
+            else
+                state.error(new FolderClosedException(ifolder));
         } finally {
             Log.i(folder.name + " end process state=" + state + " pending=" + ops.size());
         }
@@ -1203,7 +1205,6 @@ class Core {
         DB db = DB.getInstance(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean subscribed_only = prefs.getBoolean("subscribed_only", false);
         boolean sync_folders = prefs.getBoolean("sync_folders", true);
 
         // Get folder names
@@ -1277,28 +1278,20 @@ class Core {
 
         // Get remote folders
         long start = new Date().getTime();
-        Folder[] ifolders = (subscribed_only
-                ? defaultFolder.listSubscribed("*")
-                : defaultFolder.list("*"));
+        Folder[] ifolders = defaultFolder.list("*");
 
-        // Get subscribed folders
         List<String> subscription = new ArrayList<>();
         try {
-            Folder[] isubscribed = (subscribed_only ? ifolders : defaultFolder.listSubscribed("*"));
+            Folder[] isubscribed = defaultFolder.listSubscribed("*");
             for (Folder ifolder : isubscribed)
                 subscription.add(ifolder.getFullName());
         } catch (MessagingException ex) {
             Log.e(account.name, ex);
         }
 
-        if (subscribed_only && ifolders.length == 0) {
-            Log.i("No subscribed folders");
-            ifolders = defaultFolder.list("*");
-        }
         long duration = new Date().getTime() - start;
 
         Log.i("Remote folder count=" + ifolders.length +
-                " subscribed=" + subscription.size() +
                 " separator=" + separator +
                 " fetched in " + duration + " ms");
 
@@ -1659,6 +1652,7 @@ class Core {
                 keep_days++;
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean sync_nodate = prefs.getBoolean("sync_nodate", false);
             boolean sync_unseen = prefs.getBoolean("sync_unseen", false);
             boolean sync_flagged = prefs.getBoolean("sync_flagged", false);
             boolean sync_kept = prefs.getBoolean("sync_kept", true);
@@ -1733,6 +1727,8 @@ class Core {
             // Reduce list of local uids
             Flags flags = ifolder.getPermanentFlags();
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
+            if (sync_nodate)
+                searchTerm = new OrTerm(searchTerm, new ReceivedDateTerm(ComparisonTerm.LT, new Date(365 * 24 * 3600 * 1000L)));
             if (sync_unseen && flags.contains(Flags.Flag.SEEN))
                 searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
             if (sync_flagged && flags.contains(Flags.Flag.FLAGGED))

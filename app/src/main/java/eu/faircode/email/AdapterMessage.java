@@ -2632,7 +2632,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return false;
             } else {
                 view.getParent().requestDisallowInterceptTouchEvent(false);
-                return false;
+                return (view.getId() == R.id.wvBody && ev.getAction() == MotionEvent.ACTION_MOVE);
             }
         }
 
