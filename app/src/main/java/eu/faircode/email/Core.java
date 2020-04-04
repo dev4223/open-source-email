@@ -117,6 +117,7 @@ import javax.mail.search.MessageIDTerm;
 import javax.mail.search.OrTerm;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
+import javax.mail.search.SentDateTerm;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
@@ -318,7 +319,7 @@ class Core {
                                     break;
 
                                 case EntityOperation.ADD:
-                                    onAdd(context, jargs, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder);
+                                    onAdd(context, jargs, folder, message, (IMAPStore) istore, (IMAPFolder) ifolder, state);
                                     break;
 
                                 case EntityOperation.MOVE:
@@ -683,7 +684,7 @@ class Core {
         imessage.setFlags(flags, set);
     }
 
-    private static void onAdd(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder) throws MessagingException, IOException {
+    private static void onAdd(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPStore istore, IMAPFolder ifolder, State state) throws MessagingException, IOException {
         // Add message
         DB db = DB.getInstance(context);
 
@@ -715,7 +716,7 @@ class Core {
             if (!message.content)
                 throw new IllegalArgumentException("Message body missing");
 
-            imessage = MessageHelper.from(context, message, null, isession);
+            imessage = MessageHelper.from(context, message, null, isession, false);
         } else {
             // Cross account move
             File file = message.getRawFile(context);
@@ -764,19 +765,14 @@ class Core {
         if (folder.id.equals(message.folder)) {
             // Some providers do not list the new message yet
             Long newuid = findUid(ifolder, message.msgid, true);
-            if (newuid != null && (message.uid == null || newuid > message.uid)) {
-                message.uid = newuid;
-                Log.i(folder.name + " appended uid=" + message.uid);
-                db.message().setMessageUid(message.id, message.uid);
-
-                EntityIdentity identity = matchIdentity(context, folder, message);
-                message.identity = (identity == null ? null : identity.id);
-                db.message().setMessageIdentity(message.id, message.identity);
-
-                List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
-                runRules(context, imessage, message, rules);
-                updateContactInfo(context, folder, message);
-            }
+            if (newuid != null && (message.uid == null || newuid > message.uid))
+                try {
+                    JSONArray fargs = new JSONArray();
+                    fargs.put(newuid);
+                    onFetch(context, fargs, folder, istore, ifolder, state);
+                } catch (JSONException ex) {
+                    Log.e(ex);
+                }
 
             ifolder.expunge();
         } else {
@@ -875,11 +871,9 @@ class Core {
             ifolder.expunge();
         }
 
-        boolean fetch =
-                (!target.synchronize || !"connected".equals(target.state) ||
-                        target.poll || !istore.hasCapability("IDLE"));
 
         // Fetch appended/copied when needed
+        boolean fetch = !"connected".equals(target.state);
         if (draft || fetch)
             try {
                 Log.i(target.name + " moved message fetch=" + fetch);
@@ -1727,6 +1721,7 @@ class Core {
             // Reduce list of local uids
             Flags flags = ifolder.getPermanentFlags();
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
+            searchTerm = new OrTerm(searchTerm, new SentDateTerm(ComparisonTerm.GE, new Date(sync_time)));
             if (sync_nodate)
                 searchTerm = new OrTerm(searchTerm, new ReceivedDateTerm(ComparisonTerm.LT, new Date(365 * 24 * 3600 * 1000L)));
             if (sync_unseen && flags.contains(Flags.Flag.SEEN))
@@ -2133,6 +2128,7 @@ class Core {
             if (TextUtils.isEmpty(message.msgid))
                 Log.w("No Message-ID id=" + message.id + " uid=" + message.uid);
 
+            message.hash = helper.getHash();
             message.references = TextUtils.join(" ", helper.getReferences());
             message.inreplyto = helper.getInReplyTo();
             // Local address contains control or whitespace in string ``mailing list someone@example.org''
@@ -2409,6 +2405,17 @@ class Core {
                 message.keywords = keywords;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid +
                         " keywords=" + TextUtils.join(" ", keywords));
+            }
+
+            if (message.hash == null || process) {
+                update = true;
+                message.hash = helper.getHash();
+                Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " hash=" + message.hash);
+
+                // Update archive to prevent visible > 1
+                if (EntityFolder.DRAFTS.equals(folder.type))
+                    for (EntityMessage dup : db.message().getMessagesByMsgId(message.account, message.msgid))
+                        db.message().setMessageHash(dup.id, message.hash);
             }
 
             if (message.ui_hide &&
@@ -2864,6 +2871,7 @@ class Core {
             for (NotificationCompat.Builder builder : notifications) {
                 long id = builder.getExtras().getLong("id", 0);
                 if ((id == 0 && add.size() + remove.size() > 0) || add.contains(id)) {
+                    // https://developer.android.com/training/wearables/notifications/creating
                     if (id == 0) {
                         if (!notify_summary)
                             builder.setLocalOnly(true);
@@ -3067,6 +3075,7 @@ class Core {
                 thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 thread.putExtra("account", message.account);
                 thread.putExtra("id", message.id);
+                thread.putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(message.folderType));
                 piContent = PendingIntent.getActivity(context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
             }
 

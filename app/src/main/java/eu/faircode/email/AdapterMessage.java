@@ -1111,6 +1111,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         " unseen=" + message.unseen +
                         " ignored=" + message.ui_ignored +
                         " found=" + message.ui_found +
+                        "\nhash=" + message.hash +
                         "\nmsgid=" + message.msgid +
                         "\nthread=" + message.thread +
                         "\nsender=" + message.sender;
@@ -1731,13 +1732,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
 
             boolean confirm_images = prefs.getBoolean("confirm_images", true);
-            if (!confirm_images && !properties.getValue("images_asked", message.id)) {
+            if (!confirm_images &&
+                    !EntityFolder.JUNK.equals(message.folderType) &&
+                    !properties.getValue("images_asked", message.id)) {
                 properties.setValue("images", message.id, true);
                 properties.setValue("images_asked", message.id, true);
             }
 
             boolean confirm_html = prefs.getBoolean("confirm_html", true);
-            if (!confirm_html && !properties.getValue("full_asked", message.id)) {
+            if (!confirm_html &&
+                    !EntityFolder.JUNK.equals(message.folderType) &&
+                    !properties.getValue("full_asked", message.id)) {
                 properties.setValue("full", message.id, true);
                 properties.setValue("full_asked", message.id, true);
             }
@@ -2766,7 +2771,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     card.setClickable(false);
                 }
 
-                if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1)
+                if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1 &&
+                        !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) &&
+                        !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
                     context.startActivity(
                             new Intent(context, ActivityCompose.class)
                                     .putExtra("action", "edit")
@@ -3253,7 +3260,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onToggleMessage(TupleMessageEx message) {
-            if (EntityFolder.DRAFTS.equals(message.folderType))
+            if (EntityFolder.DRAFTS.equals(message.folderType) &&
+                    !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) &&
+                    !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
                 context.startActivity(
                         new Intent(context, ActivityCompose.class)
                                 .putExtra("action", "edit")

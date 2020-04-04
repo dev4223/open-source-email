@@ -54,6 +54,7 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.ContactsContract;
 import android.security.KeyChain;
+import android.security.KeyChainException;
 import android.text.SpannableString;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -1631,12 +1632,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (EntityFolder.OUTBOX.equals(message.folderType))
                 return 0;
 
-            if (message.accountProtocol != EntityAccount.TYPE_IMAP)
-                return makeMovementFlags(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
-
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
             if (swipes == null)
                 return 0;
+
+            if (message.accountProtocol != EntityAccount.TYPE_IMAP)
+                return makeMovementFlags(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
 
             int flags = 0;
             if (swipes.swipe_left != null &&
@@ -1683,16 +1684,21 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (message == null)
                 return;
 
-            TupleAccountSwipes swipes;
+            TupleAccountSwipes swipes = accountSwipes.get(message.account);
+            if (swipes == null)
+                return;
+
             if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
-                swipes = new TupleAccountSwipes();
                 swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
-                swipes.swipe_left = 0L;
-                swipes.left_type = EntityFolder.TRASH;
-            } else {
-                swipes = accountSwipes.get(message.account);
-                if (swipes == null)
-                    return;
+                if (swipes.leave_deleted) {
+                    if (message.ui_snoozed != null && message.ui_snoozed == Long.MAX_VALUE)
+                        swipes.swipe_left = FragmentAccount.SWIPE_ACTION_HIDE; // show
+                    else {
+                        swipes.swipe_left = 0L;
+                        swipes.left_type = EntityFolder.TRASH; // hide
+                    }
+                } else
+                    swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
             }
 
             Long action = (dX > 0 ? swipes.swipe_right : swipes.swipe_left);
@@ -1726,12 +1732,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 icon = R.drawable.baseline_delete_forever_24;
             else
                 icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
+
             Drawable d = getResources().getDrawable(icon, getContext().getTheme()).mutate();
             d.setTint(Helper.resolveColor(getContext(), android.R.attr.textColorSecondary));
 
             if (dX > 0) {
                 // Right swipe
                 d.setAlpha(Math.round(255 * Math.min(dX / (2 * margin + size), 1.0f)));
+                if (swipes.right_color != null)
+                    d.setTint(swipes.right_color);
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + margin,
@@ -1742,6 +1751,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             } else if (dX < 0) {
                 // Left swipe
                 d.setAlpha(Math.round(255 * Math.min(-dX / (2 * margin + size), 1.0f)));
+                if (swipes.left_color != null)
+                    d.setTint(swipes.left_color);
                 int padding = (rect.height() - size);
                 d.setBounds(
                         rect.left + rect.width() - size - margin,
@@ -1772,16 +1783,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return;
             }
 
-            if (message.accountProtocol != EntityAccount.TYPE_IMAP)
-                if (direction == ItemTouchHelper.LEFT) {
-                    adapter.notifyItemChanged(pos);
-                    onSwipeDelete(message);
-                } else
-                    onActionSeenSelection(!message.ui_seen, message.id);
-
             TupleAccountSwipes swipes = accountSwipes.get(message.account);
             if (swipes == null) {
                 adapter.notifyDataSetChanged();
+                return;
+            }
+
+            if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
+                if (direction == ItemTouchHelper.LEFT) {
+                    if (swipes.leave_deleted)
+                        onActionHide(message);
+                    else {
+                        adapter.notifyItemChanged(pos);
+                        onSwipeDelete(message);
+                    }
+                } else
+                    onActionSeenSelection(!message.ui_seen, message.id);
                 return;
             }
 
@@ -3066,7 +3083,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 break;
 
             case THREAD:
-                db.message().liveThreadStats(account, thread, null).observe(getViewLifecycleOwner(), new Observer<TupleThreadStats>() {
+                db.message().liveThreadStats(account, thread, null, filter_archive).observe(getViewLifecycleOwner(), new Observer<TupleThreadStats>() {
                     @Override
                     public void onChanged(TupleThreadStats stats) {
                         if (stats == null)
@@ -5864,7 +5881,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException || ex instanceof CMSException)
+                if (ex instanceof IllegalArgumentException ||
+                        ex instanceof CMSException || ex instanceof KeyChainException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
