@@ -1948,10 +1948,10 @@ public class FragmentCompose extends FragmentBase {
                     etBody.setText(body);
                     if (start < body.length())
                         etBody.setSelection(start);
-                }
 
-                // Save text & update remote draft
-                onAction(R.id.action_save, "addattachment");
+                    // Save text with image
+                    onAction(R.id.action_save, "image");
+                }
             }
 
             @Override
@@ -3434,8 +3434,6 @@ public class FragmentCompose extends FragmentBase {
                         File file = attachment.getFile(context);
                         ics.renameTo(file);
 
-                        last_available++;
-
                         ICalendar icalendar = Biweekly.parse(file).first();
                         VEvent event = icalendar.getEvents().get(0);
                         Organizer organizer = event.getOrganizer();
@@ -3490,8 +3488,6 @@ public class FragmentCompose extends FragmentBase {
 
                                     File target = attachment.getFile(context);
                                     Helper.copy(source, target);
-
-                                    last_available++;
 
                                     if (resize_reply && !"forward".equals(action))
                                         resizeAttachment(context, attachment, REDUCED_IMAGE_SIZE);
@@ -3548,16 +3544,16 @@ public class FragmentCompose extends FragmentBase {
                         EntityOperation.queue(context, data.draft, EntityOperation.BODY);
                     }
 
-                    List<EntityAttachment> attachments = db.attachment().getAttachments(data.draft.id);
-                    for (EntityAttachment attachment : attachments)
-                        if (attachment.available) {
-                            if (attachment.encryption == null)
-                                last_available++;
-                        } else
-                            EntityOperation.queue(context, data.draft, EntityOperation.ATTACHMENT, attachment.id);
-
                     args.putBoolean("saved", true);
                 }
+
+                List<EntityAttachment> attachments = db.attachment().getAttachments(data.draft.id);
+                for (EntityAttachment attachment : attachments)
+                    if (attachment.available) {
+                        if (attachment.encryption == null)
+                            last_available++;
+                    } else
+                        EntityOperation.queue(context, data.draft, EntityOperation.ATTACHMENT, attachment.id);
 
                 db.setTransactionSuccessful();
             } finally {
@@ -3619,8 +3615,6 @@ public class FragmentCompose extends FragmentBase {
 
             db.attachment().liveAttachments(data.draft.id).observe(getViewLifecycleOwner(),
                     new Observer<List<EntityAttachment>>() {
-                        private int last_available = 0;
-
                         @Override
                         public void onChanged(@Nullable List<EntityAttachment> attachments) {
                             if (attachments == null)
@@ -3629,28 +3623,18 @@ public class FragmentCompose extends FragmentBase {
                             adapter.set(attachments);
                             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
-                            int available = 0;
                             boolean downloading = false;
                             boolean inline_images = false;
                             for (EntityAttachment attachment : attachments) {
                                 if (attachment.encryption != null)
                                     continue;
-                                if (attachment.available)
-                                    available++;
                                 if (attachment.progress != null)
                                     downloading = true;
                                 if (attachment.isInline() && attachment.isImage())
                                     inline_images = true;
                             }
 
-                            Log.i("Attachments=" + attachments.size() +
-                                    " available=" + available + " downloading=" + downloading);
-
-                            // Attachment deleted: update remote draft
-                            if (available < last_available)
-                                onAction(R.id.action_save, "delattachment");
-
-                            last_available = available;
+                            Log.i("Attachments=" + attachments.size() + " downloading=" + downloading);
 
                             rvAttachment.setTag(downloading);
                             checkInternet();
@@ -4080,12 +4064,16 @@ public class FragmentCompose extends FragmentBase {
                                     Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY_IDS);
                                     intent.putExtra(OpenPgpApi.EXTRA_USER_IDS, userIds);
 
-                                    OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
-                                    Intent result = api.executeApi(intent, (InputStream) null, (OutputStream) null);
-                                    int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
-                                    if (resultCode == OpenPgpApi.RESULT_CODE_SUCCESS) {
-                                        long[] keyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
-                                        args.putBoolean("remind_pgp", keyIds.length > 0);
+                                    try {
+                                        OpenPgpApi api = new OpenPgpApi(context, pgpService.getService());
+                                        Intent result = api.executeApi(intent, (InputStream) null, (OutputStream) null);
+                                        int resultCode = result.getIntExtra(OpenPgpApi.RESULT_CODE, OpenPgpApi.RESULT_CODE_ERROR);
+                                        if (resultCode == OpenPgpApi.RESULT_CODE_SUCCESS) {
+                                            long[] keyIds = result.getLongArrayExtra(OpenPgpApi.EXTRA_KEY_IDS);
+                                            args.putBoolean("remind_pgp", keyIds.length > 0);
+                                        }
+                                    } catch (Throwable ex) {
+                                        Log.w(ex);
                                     }
                                 }
                             }
