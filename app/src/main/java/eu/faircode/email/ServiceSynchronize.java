@@ -36,6 +36,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 
@@ -149,6 +150,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         iif.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         registerReceiver(connectionChangedReceiver, iif);
 
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
         DB db = DB.getInstance(this);
 
         db.account().liveAccountState().observe(this, new Observer<List<TupleAccountState>>() {
@@ -191,6 +194,17 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     coreStates.clear();
                     liveAccountNetworkState.removeObserver(this);
                 } else {
+                    // Check init
+                    long now = new Date().getTime();
+                    long init = prefs.getLong("last_init", 0);
+                    long boot = now - SystemClock.elapsedRealtime();
+                    if (init < boot) {
+                        EntityLog.log(ServiceSynchronize.this, "Boot=" + new Date(boot));
+                        EntityLog.log(ServiceSynchronize.this, "Last init=" + new Date(init));
+                        prefs.edit().putLong("last_init", now).apply();
+                        init();
+                    }
+
                     int accounts = 0;
                     int operations = 0;
                     boolean runService = false;
@@ -296,6 +310,52 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     if (!runService)
                         quit(lastStartId);
                 }
+            }
+
+            private void init() {
+                EntityLog.log(ServiceSynchronize.this, "Service reset");
+
+                queue.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            DB db = DB.getInstance(ServiceSynchronize.this);
+                            try {
+                                db.beginTransaction();
+
+                                // Reset accounts
+                                for (EntityAccount account : db.account().getAccounts())
+                                    db.account().setAccountState(account.id, null);
+
+                                // reset folders
+                                for (EntityFolder folder : db.folder().getFolders()) {
+                                    db.folder().setFolderState(folder.id, null);
+                                    db.folder().setFolderSyncState(folder.id, null);
+                                }
+
+                                // Reset operations
+                                db.operation().resetOperationStates();
+
+                                // Restore notifications
+                                db.message().clearNotifyingMessages();
+
+                                // Restore snooze timers
+                                for (EntityMessage message : db.message().getSnoozed(null))
+                                    EntityMessage.snooze(ServiceSynchronize.this, message.id, message.ui_snoozed);
+
+                                db.setTransactionSuccessful();
+                            } finally {
+                                db.endTransaction();
+                            }
+
+                            // Restore schedule
+                            schedule(ServiceSynchronize.this);
+
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        }
+                    }
+                });
             }
 
             private void start(final TupleAccountNetworkState accountNetworkState, boolean sync) {
@@ -416,7 +476,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             }
         });
 
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         final TwoStateOwner cowner = new TwoStateOwner(this, "liveUnseenNotify");
 
@@ -1750,38 +1809,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             public void run() {
                 try {
                     DB db = DB.getInstance(context);
-                    try {
-                        db.beginTransaction();
-
-                        // Reset accounts
-                        for (EntityAccount account : db.account().getAccounts())
-                            db.account().setAccountState(account.id, null);
-
-                        // reset folders
-                        for (EntityFolder folder : db.folder().getFolders()) {
-                            db.folder().setFolderState(folder.id, null);
-                            db.folder().setFolderSyncState(folder.id, null);
-                        }
-
-                        // Reset operations
-                        db.operation().resetOperationStates();
-
-                        // Restore notifications
-                        db.message().clearNotifyingMessages();
-
-                        // Restore snooze timers
-                        for (EntityMessage message : db.message().getSnoozed(null))
-                            EntityMessage.snooze(context, message.id, message.ui_snoozed);
-
-                        db.setTransactionSuccessful();
-                    } finally {
-                        db.endTransaction();
-                    }
-
-                    // Restore schedule
-                    schedule(context);
-
-                    // Init service
                     int accounts = db.account().getSynchronizingAccounts().size();
                     if (accounts > 0)
                         eval(context, "boot");
