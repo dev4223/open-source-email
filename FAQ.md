@@ -53,7 +53,7 @@ Related questions:
 * Add a folder to the unified inbox: long press the folder in the folder list and check *Show in unified inbox*
 * Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
 * Load more messages: long press a folder in the folder list, select *Synchronize more messages*
-* Delete a message, skipping trash: in the 3-dots menu of the action bar just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
+* Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Delete a folder: long press the folder in the folder list, Edit properties, three-dots menu, Delete
 * Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
@@ -267,6 +267,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(147) What should I know about third party versions?](#user-content-faq147)
 * [(148) How can I use an Apple iCloud account?](#user-content-faq148)
 * [(149) How does the unread message count widget work?](#user-content-faq149)
+* [(150) Can you add cancelling calendar invites?](#user-content-faq150)
 
 [I have another question.](#user-content-support)
 
@@ -2828,6 +2829,10 @@ The F-Droid build is supported, but any other unofficial build is not supported.
 F-Droid builds irregularly, which can be problematic when there is an important update.
 Therefore you are advised to switch to the GitHub release.
 
+The F-Droid version is built from the same source code, but signed differently.
+This means that all features are available in the F-Droid version too,
+except for using the Gmail quick setup wizard because Google approved (and allows) one signature only.
+
 Note that you'll need to uninstall the F-Droid build first before you can install a GitHub release
 because Android refuses to install the same app with a different signature for security reasons.
 
@@ -2860,6 +2865,20 @@ Tapping on the notification will synchronize all folders for which synchronizati
 * the start screen when all accounts were selected
 * a folder list when a specific account was selected and when new message notifications are enabled for multiple folders
 * a list of messages when a specific account was selected and when new message notifications are enabled for one folder
+
+<br />
+
+<a name="faq150"></a>
+**(150) Can you add cancelling calendar invites?**
+
+Cancelling calendar invites (removing calendar events) requires write calendar permission,
+which will result in effectively granting permission to read and write *all* calendar events of *all* calendars.
+
+Given the goal of FairEmail, privacy and security, and given that it is easy to remove a calendar event manually,
+it is not a good idea to request this permission for just this reason.
+
+Inserting new calendar events can be done without permissions with special [intents](https://developer.android.com/guide/topics/providers/calendar-provider.html#intents).
+Unfortunately, there exists no intent to delete existing calendar events.
 
 <br />
 
