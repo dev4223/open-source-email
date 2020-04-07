@@ -1481,16 +1481,8 @@ public class MessageHelper {
                     warnings.add(context.getString(R.string.title_no_charset, charset));
 
                 if (part.isMimeType("text/plain")) {
-                    // https://tools.ietf.org/html/rfc3676
-                    if ("flowed".equalsIgnoreCase(ct.getParameter("format"))) {
-                        StringBuilder flowed = new StringBuilder();
-                        for (String line : result.split("\\r?\\n")) {
-                            flowed.append(line);
-                            if (!line.endsWith(" ") || "-- ".equals(line))
-                                flowed.append("\r\n");
-                        }
-                        result = flowed.toString();
-                    }
+                    if ("flowed".equalsIgnoreCase(ct.getParameter("format")))
+                        result = HtmlHelper.flow(result);
                     result = "<div>" + HtmlHelper.formatPre(result) + "</div>";
                 } else if (part.isMimeType("text/html")) {
                     if (TextUtils.isEmpty(charset)) {
@@ -1873,16 +1865,16 @@ public class MessageHelper {
 
                 ContentType contentType;
                 try {
-                    String c = part.getContentType();
-                    contentType = new ContentType(c == null ? "" : c);
+                    contentType = new ContentType(part.getContentType());
                 } catch (ParseException ex) {
                     Log.w(ex);
-                    parts.warnings.add(Log.formatThrowable(ex, false));
 
                     if (part instanceof MimeMessage)
                         contentType = new ContentType("text/html");
                     else
                         contentType = new ContentType(Helper.guessMimeType(filename));
+
+                    Log.i("Content type guessed=" + contentType);
                 }
 
                 boolean plain = "text/plain".equalsIgnoreCase(contentType.getBaseType());
