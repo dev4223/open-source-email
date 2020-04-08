@@ -26,6 +26,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
@@ -52,8 +53,10 @@ public class Widget extends AppWidgetProvider {
                 NumberFormat nf = NumberFormat.getIntegerInstance();
 
                 for (int appWidgetId : appWidgetIds) {
-                    long account = prefs.getLong("widget." + appWidgetId + ".account", -1L);
                     String name = prefs.getString("widget." + appWidgetId + ".name", null);
+                    long account = prefs.getLong("widget." + appWidgetId + ".account", -1L);
+                    boolean semi = prefs.getBoolean("widget." + appWidgetId + ".semi", true);
+                    int layout = prefs.getInt("widget." + appWidgetId + ".layout", 0);
 
                     List<EntityFolder> folders = db.folder().getNotifyingFolders(account);
                     if (folders == null)
@@ -89,9 +92,13 @@ public class Widget extends AppWidgetProvider {
                     if (unseen == null)
                         unseen = 0;
 
-                    RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget);
+                    RemoteViews views = new RemoteViews(context.getPackageName(),
+                            layout == 0 ? R.layout.widget : R.layout.widget_new);
 
                     views.setOnClickPendingIntent(R.id.widget, pi);
+
+                    if (!semi)
+                        views.setInt(R.id.widget, "setBackgroundColor", Color.TRANSPARENT);
 
                     views.setImageViewResource(R.id.ivMessage, unseen == 0
                             ? R.drawable.baseline_mail_outline_24

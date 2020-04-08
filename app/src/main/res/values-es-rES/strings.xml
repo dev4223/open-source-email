@@ -1092,6 +1092,7 @@
     <string name="title_widget_folder_unified">Carpetas de bandeja de entrada unificadas</string>
     <string name="title_widget_unseen">Sólo mensajes no leídos</string>
     <string name="title_widget_flagged">Sólo mensajes destacados</string>
+    <string name="title_widget_semi_transparent">Fondo semi transparente</string>
     <string name="title_accessibility_collapsed">Oculto</string>
     <string name="title_accessibility_expanded">Expandido</string>
     <string name="title_accessibility_seen">Leído</string>
@@ -1100,6 +1101,12 @@
         <item quantity="one">%1$d mensaje</item>
         <item quantity="other">%1$d mensajes</item>
     </plurals>
+    <!-- Thunderbird -->
+    <string name="title_keyword_label1">Importante</string>
+    <string name="title_keyword_label2">Trabajo</string>
+    <string name="title_keyword_label3">Personal</string>
+    <string name="title_keyword_label4">Pendiente</string>
+    <string name="title_keyword_label5">Más tarde</string>
     <string name="title_accessibility_flagged">Destacado</string>
     <string name="title_accessibility_unflagged">No destacado</string>
     <string name="title_accessibility_collapse">Ocultar</string>

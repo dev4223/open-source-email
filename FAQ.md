@@ -670,6 +670,10 @@ Common errors:
 
 The use of expired keys, inline encrypted/signed messages and hardware security tokens is not supported.
 
+If you are looking for a free (test) S/MIME certificate, see [here](http://kb.mozillazine.org/Getting_an_SMIME_certificate) for the options.
+Please be sure to [read this first](https://davidroessli.com/logs/2019/09/free-smime-certificates-in-2019/#update20191219)
+if you want to request an S/MIME Actalis certificate.
+
 How to extract a public key from a S/MIME certificate:
 
 ```
@@ -883,6 +887,8 @@ see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/)
 The errors *... Read error ...*, *... Write error ...*, *... Read timed out ...* mean that the email server is not responding anymore or that the internet connection is bad.
 
 The error *... Unexpected end of zlib input stream ...* means that not all data was received, possibly due to a bad or interrupted connection.
+
+The error *... connection failure ...* could indicate [Too many simultaneous connections](#user-content-faq23).
 
 The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported.
 FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.

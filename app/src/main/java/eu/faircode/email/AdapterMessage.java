@@ -1687,6 +1687,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void bindBody(TupleMessageEx message, final boolean scroll) {
             tvBody.setText(null);
+            clearActions();
 
             ibSeen.setImageResource(message.ui_seen
                     ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
@@ -4378,14 +4379,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (keywords.length() > 0)
                         keywords.append(" ");
 
-                    keywords.append(message.keywords[i]);
+                    // Thunderbird
+                    String keyword = EntityMessage.getKeywordAlias(context, message.keywords[i]);
+                    keywords.append(keyword);
 
                     if (message.keyword_colors != null &&
                             message.keyword_colors[i] != null) {
                         int len = keywords.length();
                         keywords.setSpan(
                                 new ForegroundColorSpan(message.keyword_colors[i]),
-                                len - message.keywords[i].length(), len,
+                                len - keyword.length(), len,
                                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
                 }
