@@ -798,7 +798,6 @@
     <string name="title_search">Søg</string>
     <string name="title_search_device">Søg på enhed</string>
     <string name="title_search_server">Søg på server</string>
-    <string name="title_search_text">Søg i tekst</string>
     <string name="title_search_in">Søg i</string>
     <string name="title_sort_on">Sortér efter</string>
     <string name="title_sort_on_time">Tid</string>
@@ -995,6 +994,7 @@
     <string name="title_hint_important">Vigtigt</string>
     <string name="title_hint_sync">Download af beskeder kan tage noget tid afhængigt af hastigheden hos udbyderen, dataforbindelsen, enheden samt beskedantallet. Under besked-download kan app\'en muligvis reagerer langsommere.</string>
     <string name="title_hint_battery">Da FairEmail som standard altid modtager beskeder, rapporterer Android FairEmail som altid aktiv. Det kan derfor se ud som om FairEmail altid forbruger batteristrøm, selvom dette faktisk ikke er tilfældet.</string>
+    <string name="title_hint_reformat">Af fortrolighedshensyn og sikkerhedsårsager omformaterer FairEmail som standard beskeder. For at se den originale besked, tryk på ikonet \"fuldskærm\" over beskedteksten.</string>
     <string name="title_hint_contact_actions">Langt tryk for valgmuligheder</string>
     <string name="title_hint_eml">Dette er en oversigt over indholdet af en råformatsbeskedfil. Gem den rå besked med Gem-ikonet i handlingsbjælken for at se alt indhold.</string>
     <string name="title_open_link">Åbn link</string>
@@ -1076,12 +1076,6 @@
     <string name="title_debug_info">Fejlretningsinfo</string>
     <string name="title_debug_info_remark">Beskriv venligst problemet og angiv tidspunktet for problemet:</string>
     <string name="title_crash_info_remark">Beskriv venligst, hvad du foretog dig, da app\'en gik ned:</string>
-    <string name="title_search_special_prefix">speciel</string>
-    <string name="title_search_special_unseen">ulæst</string>
-    <string name="title_search_special_flagged">stjernemarkeret</string>
-    <string name="title_search_special_snoozed">skjult</string>
-    <string name="title_search_special_encrypted">krypteret</string>
-    <string name="title_search_special_attachments">vedhæftninger</string>
     <string name="title_widget_title_count">Ny besked-tæller</string>
     <string name="title_widget_title_list">Beskedliste</string>
     <string name="title_widget_account">Konto</string>
@@ -1090,6 +1084,7 @@
     <string name="title_widget_folder_unified">Samlede Indbakkemapper</string>
     <string name="title_widget_unseen">Kun ulæste beskeder</string>
     <string name="title_widget_flagged">Kun stjerne-beskeder</string>
+    <string name="title_widget_semi_transparent">Halvgennemsigtig baggrund</string>
     <string name="title_accessibility_collapsed">Sammenfoldet</string>
     <string name="title_accessibility_expanded">Udfoldet</string>
     <string name="title_accessibility_seen">Læst</string>
@@ -1099,6 +1094,11 @@
         <item quantity="other">%1$d beskeder</item>
     </plurals>
     <!-- Thunderbird -->
+    <string name="title_keyword_label1">Vigtigt</string>
+    <string name="title_keyword_label2">Arbejde</string>
+    <string name="title_keyword_label3">Personlig</string>
+    <string name="title_keyword_label4">Resterer</string>
+    <string name="title_keyword_label5">Senere</string>
     <string name="title_accessibility_flagged">Stjernemarkeret</string>
     <string name="title_accessibility_unflagged">Ikke-stjernemarkeret</string>
     <string name="title_accessibility_collapse">Sammenfold</string>
