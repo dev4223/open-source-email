@@ -283,6 +283,7 @@ public interface DaoMessage {
             " OR `from` LIKE :find COLLATE NOCASE" +
             " OR `to` LIKE :find COLLATE NOCASE" +
             " OR `cc` LIKE :find COLLATE NOCASE" +
+            " OR `bcc` LIKE :find COLLATE NOCASE" +
             " OR `subject` LIKE :find COLLATE NOCASE" +
             " OR `keywords` LIKE :find COLLATE NOCASE" +
             " OR `preview` LIKE :find COLLATE NOCASE) AS matched" +
@@ -295,11 +296,14 @@ public interface DaoMessage {
             " AND (NOT :hidden OR NOT ui_snoozed IS NULL)" +
             " AND (NOT :encrypted OR ui_encrypt > 0)" +
             " AND (NOT :attachments OR attachments > 0)" +
+            " AND (:after IS NULL OR received > :after)" +
+            " AND (:before IS NULL OR received < :before)" +
             " ORDER BY received DESC" +
             " LIMIT :limit OFFSET :offset")
     List<TupleMatch> matchMessages(
             Long account, Long folder, String find,
             boolean unseen, boolean flagged, boolean hidden, boolean encrypted, boolean attachments,
+            Long after, Long before,
             int limit, int offset);
 
     @Query("SELECT id" +

@@ -44,6 +44,7 @@ import java.io.Serializable;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -60,11 +61,12 @@ import javax.mail.UIDFolder;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.AndTerm;
 import javax.mail.search.BodyTerm;
+import javax.mail.search.ComparisonTerm;
 import javax.mail.search.FlagTerm;
 import javax.mail.search.FromStringTerm;
 import javax.mail.search.OrTerm;
+import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.RecipientStringTerm;
-import javax.mail.search.SearchException;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
@@ -113,23 +115,26 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     @Override
     public void onZeroItemsLoaded() {
         Log.i("Boundary zero loaded");
-        queue_load();
+        queue_load(state);
     }
 
     @Override
     public void onItemAtEndLoaded(@NonNull final TupleMessageEx itemAtEnd) {
         Log.i("Boundary at end");
-        queue_load();
+        queue_load(state);
     }
 
     void retry() {
-        state.reset();
-        queue_load();
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                close(state);
+            }
+        });
+        queue_load(state);
     }
 
-    private void queue_load() {
-        final State state = this.state;
-
+    private void queue_load(final State state) {
         executor.submit(new Runnable() {
             @Override
             public void run() {
@@ -152,8 +157,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                 throw ex;
 
                             Log.w("Boundary", ex);
-                            close();
-                            state.reset();
+                            close(state);
 
                             // Retry
                             load_server(state);
@@ -194,7 +198,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         if (fts && pro && criteria.isQueryOnly()) {
             if (state.ids == null) {
                 SQLiteDatabase sdb = FtsDbHelper.getInstance(context);
-                state.ids = FtsDbHelper.match(sdb, account, folder, criteria.query);
+                state.ids = FtsDbHelper.match(sdb, account, folder, criteria);
             }
 
             try {
@@ -227,6 +231,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                             criteria.with_hidden,
                             criteria.with_encrypted,
                             criteria.with_attachments,
+                            criteria.after,
+                            criteria.before,
                             SEARCH_LIMIT, state.offset);
                     Log.i("Boundary device folder=" + folder +
                             " criteria=" + criteria +
@@ -386,7 +392,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
                                         if (!protocol.supportsUtf8()) {
                                             search = search.replace("ß", "ss"); // Eszett
-                                            search = Normalizer.normalize(search, Normalizer.Form.NFD)
+                                            search = Normalizer.normalize(search, Normalizer.Form.NFKD)
                                                     .replaceAll("[^\\p{ASCII}]", "");
                                         }
 
@@ -403,6 +409,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                         if (criteria.in_receipients) {
                                             or.add(new RecipientStringTerm(Message.RecipientType.TO, search));
                                             or.add(new RecipientStringTerm(Message.RecipientType.CC, search));
+                                            or.add(new RecipientStringTerm(Message.RecipientType.BCC, search));
                                         }
                                         if (criteria.in_subject)
                                             or.add(new SubjectTerm(search));
@@ -419,6 +426,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                             state.ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED))
                                         and.add(new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
 
+                                    if (criteria.after != null)
+                                        and.add(new ReceivedDateTerm(ComparisonTerm.GT, new Date(criteria.after)));
+                                    if (criteria.before != null)
+                                        and.add(new ReceivedDateTerm(ComparisonTerm.LT, new Date(criteria.before)));
+
                                     SearchTerm term = null;
 
                                     if (or.size() > 0)
@@ -431,12 +443,15 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                             term = new AndTerm(term, new AndTerm(and.toArray(new SearchTerm[0])));
 
                                     if (term == null)
-                                        throw new SearchException();
+                                        return new Message[0];
 
                                     return state.ifolder.search(term);
                                 }
                             } catch (MessagingException ex) {
-                                throw new ProtocolException("Search", ex);
+                                ProtocolException pex = new ProtocolException(
+                                        "Search " + account.host + " " + criteria, ex);
+                                Log.e(pex);
+                                throw pex;
                             }
                         }
                     });
@@ -539,32 +554,37 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     void destroy() {
-        final State state = this.state;
+        final State old = this.state;
+        old.destroyed = true;
+
         this.state = new State();
-        state.destroyed = true;
 
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                close();
+                close(old);
             }
         });
     }
 
-    private void close() {
+    private void close(State state) {
         Log.i("Boundary close");
+
         try {
             if (state.ifolder != null)
                 state.ifolder.close();
         } catch (Throwable ex) {
             Log.e("Boundary", ex);
         }
+
         try {
             if (state.iservice != null)
                 state.iservice.close();
         } catch (Throwable ex) {
             Log.e("Boundary", ex);
         }
+
+        state.reset();
     }
 
     private class State {
@@ -605,6 +625,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         boolean with_hidden;
         boolean with_encrypted;
         boolean with_attachments;
+        Long after = null;
+        Long before = null;
 
         SearchCriteria() {
         }
@@ -662,7 +684,9 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         this.with_flagged == other.with_flagged &&
                         this.with_hidden == other.with_hidden &&
                         this.with_encrypted == other.with_encrypted &&
-                        this.with_attachments == other.with_attachments);
+                        this.with_attachments == other.with_attachments &&
+                        Objects.equals(this.after, other.after) &&
+                        Objects.equals(this.before, other.before));
             } else
                 return false;
         }
@@ -680,7 +704,9 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     " flagged=" + with_flagged +
                     " hidden=" + with_hidden +
                     " encrypted=" + with_encrypted +
-                    " attachments=" + with_attachments;
+                    " attachments=" + with_attachments +
+                    " after=" + (after == null ? "" : new Date(after)) +
+                    " before=" + (before == null ? "" : new Date(before));
         }
     }
 }

@@ -1,5 +1,6 @@
 package eu.faircode.email;
 
+import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,8 +15,10 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.FilterQueryProvider;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -23,8 +26,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.Group;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.preference.PreferenceManager;
+
+import java.text.DateFormat;
+import java.util.Calendar;
 
 public class FragmentDialogSearch extends FragmentDialogBase {
     @NonNull
@@ -34,6 +41,8 @@ public class FragmentDialogSearch extends FragmentDialogBase {
 
         final AutoCompleteTextView etQuery = dview.findViewById(R.id.etQuery);
         final ImageButton ibInfo = dview.findViewById(R.id.ibInfo);
+        final ImageButton ibMore = dview.findViewById(R.id.ibMore);
+        final TextView tvMore = dview.findViewById(R.id.tvMore);
         final CheckBox cbSearchIndex = dview.findViewById(R.id.cbSearchIndex);
         final CheckBox cbSenders = dview.findViewById(R.id.cbSenders);
         final CheckBox cbRecipients = dview.findViewById(R.id.cbRecipients);
@@ -45,6 +54,11 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         final CheckBox cbHidden = dview.findViewById(R.id.cbHidden);
         final CheckBox cbEncrypted = dview.findViewById(R.id.cbEncrypted);
         final CheckBox cbAttachments = dview.findViewById(R.id.cbAttachments);
+        final Button btnBefore = dview.findViewById(R.id.btnBefore);
+        final Button btnAfter = dview.findViewById(R.id.btnAfter);
+        final TextView tvBefore = dview.findViewById(R.id.tvBefore);
+        final TextView tvAfter = dview.findViewById(R.id.tvAfter);
+        final Group grpMore = dview.findViewById(R.id.grpMore);
 
         boolean pro = ActivityBilling.isPro(getContext());
 
@@ -101,6 +115,25 @@ public class FragmentDialogSearch extends FragmentDialogBase {
 
         etQuery.setAdapter(adapter);
 
+        View.OnClickListener onMore = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                imm.hideSoftInputFromWindow(etQuery.getWindowToken(), 0);
+
+                if (grpMore.getVisibility() == View.VISIBLE) {
+                    ibMore.setImageLevel(1);
+                    grpMore.setVisibility(View.GONE);
+                } else {
+                    ibMore.setImageLevel(0);
+                    grpMore.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+
+        ibMore.setOnClickListener(onMore);
+
+        tvMore.setOnClickListener(onMore);
+
         cbSearchIndex.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -152,6 +185,21 @@ public class FragmentDialogSearch extends FragmentDialogBase {
             }
         });
 
+        btnAfter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickDate(tvAfter);
+            }
+        });
+
+        btnBefore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pickDate(tvBefore);
+            }
+        });
+
+        ibMore.setImageLevel(1);
         cbSearchIndex.setChecked(fts && pro);
         cbSearchIndex.setEnabled(pro);
         cbSenders.setChecked(last_search_senders);
@@ -161,6 +209,10 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         cbMessage.setChecked(last_search_message);
         cbUnseen.setChecked(filter_seen);
         cbFlagged.setChecked(filter_unflagged);
+        tvAfter.setText(null);
+        tvBefore.setText(null);
+
+        grpMore.setVisibility(View.GONE);
 
         if (!TextUtils.isEmpty(last_search)) {
             etQuery.setText(last_search);
@@ -199,6 +251,14 @@ public class FragmentDialogSearch extends FragmentDialogBase {
                             criteria.with_attachments = cbAttachments.isChecked();
                         }
 
+                        Object after = tvAfter.getTag();
+                        Object before = tvBefore.getTag();
+
+                        if (after != null)
+                            criteria.after = ((Calendar) after).getTimeInMillis();
+                        if (before != null)
+                            criteria.before = ((Calendar) before).getTimeInMillis();
+
                         imm.hideSoftInputFromWindow(etQuery.getWindowToken(), 0);
 
                         FragmentMessages.search(
@@ -231,5 +291,37 @@ public class FragmentDialogSearch extends FragmentDialogBase {
         });
 
         return dialog;
+    }
+
+    private void pickDate(TextView tv) {
+        Object tag = tv.getTag();
+        final Calendar cal = (tag == null ? Calendar.getInstance() : (Calendar) tag);
+
+        DatePickerDialog picker = new DatePickerDialog(getContext(),
+                new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int day) {
+                        cal.set(Calendar.YEAR, year);
+                        cal.set(Calendar.MONTH, month);
+                        cal.set(Calendar.DAY_OF_MONTH, day);
+
+                        DateFormat DF = Helper.getDateInstance(getContext());
+
+                        tv.setTag(cal);
+                        tv.setText(DF.format(cal.getTime()));
+                    }
+                },
+                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+        picker.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                tv.setTag(null);
+                tv.setText(null);
+            }
+        });
+
+        picker.show();
+
     }
 }

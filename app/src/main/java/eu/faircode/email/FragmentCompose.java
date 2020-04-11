@@ -3693,7 +3693,8 @@ public class FragmentCompose extends FragmentBase {
         @Override
         protected void onPostExecute(Bundle args) {
             int action = args.getInt("action");
-            if (action != R.id.action_check)
+            boolean needsEncryption = args.getBoolean("needsEncryption");
+            if (action != R.id.action_check || needsEncryption)
                 setBusy(false);
         }
 
@@ -4551,9 +4552,11 @@ public class FragmentCompose extends FragmentBase {
 
         @Override
         public boolean onBackPressed() {
-            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
+            if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
                 onExit();
-            return true;
+                return true;
+            } else
+                return false;
         }
     };
 
