@@ -289,6 +289,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             "$Submitted".toLowerCase(Locale.ROOT),
             "$Junk".toLowerCase(Locale.ROOT),
             "$NotJunk".toLowerCase(Locale.ROOT),
+            "Junk".toLowerCase(Locale.ROOT),
+            "NonJunk".toLowerCase(Locale.ROOT),
             "$recent".toLowerCase(Locale.ROOT),
             "DTAG_document".toLowerCase(Locale.ROOT),
             "DTAG_image".toLowerCase(Locale.ROOT),
@@ -3473,7 +3475,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionAnswer(TupleMessageEx message, View anchor) {
-            ((FragmentMessages) parentFragment).onReply(message, getSelectedText(), anchor);
+            properties.reply(message, getSelectedText(), anchor);
         }
 
         private void onActionMove(TupleMessageEx message, final boolean copy) {
@@ -5295,6 +5297,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void scrollTo(int pos, int y);
 
         void move(long id, String type);
+
+        void reply(TupleMessageEx message, String selected, View anchor);
 
         void finish();
     }

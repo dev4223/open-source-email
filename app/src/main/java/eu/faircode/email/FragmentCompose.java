@@ -3504,12 +3504,12 @@ public class FragmentCompose extends FragmentBase {
 
                         Document document = HtmlHelper.sanitizeCompose(context, doc.html(), true);
 
+                        for (Element e : ref)
+                            document.body().appendChild(e);
+
                         EntityIdentity identity = null;
                         if (data.draft.identity != null)
                             identity = db.identity().getIdentity(data.draft.identity);
-
-                        for (Element e : ref)
-                            document.body().appendChild(e);
 
                         addSignature(context, document, data.draft, identity);
 
@@ -4476,17 +4476,17 @@ public class FragmentCompose extends FragmentBase {
 
                 final Context context = getContext();
 
+                final View target;
+                if (TextUtils.isEmpty(etTo.getText().toString().trim()))
+                    target = etTo;
+                else if (TextUtils.isEmpty(etSubject.getText().toString()))
+                    target = etSubject;
+                else
+                    target = etBody;
+
                 new Handler().post(new Runnable() {
                     @Override
                     public void run() {
-                        View target;
-                        if (TextUtils.isEmpty(etTo.getText().toString().trim()))
-                            target = etTo;
-                        else if (TextUtils.isEmpty(etSubject.getText().toString()))
-                            target = etSubject;
-                        else
-                            target = etBody;
-
                         target.requestFocus();
 
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

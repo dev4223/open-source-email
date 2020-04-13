@@ -268,6 +268,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(148) How can I use an Apple iCloud account?](#user-content-faq148)
 * [(149) How does the unread message count widget work?](#user-content-faq149)
 * [(150) Can you add cancelling calendar invites?](#user-content-faq150)
+* [(151) Can you add backup/restore messages?](#user-content-faq150)
 
 [I have another question.](#user-content-support)
 
@@ -1761,6 +1762,8 @@ it is not possible to preview which messages would match the header rule conditi
 
 In the *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
 
+Rules are available for IMAP accounts only because the POP3 protocol allows downloading and permanently deleting messages from the inbox only.
+
 Using rules is a pro feature.
 
 <br />
@@ -2889,6 +2892,15 @@ it is not a good idea to request this permission for just this reason.
 
 Inserting new calendar events can be done without permissions with special [intents](https://developer.android.com/guide/topics/providers/calendar-provider.html#intents).
 Unfortunately, there exists no intent to delete existing calendar events.
+
+<br />
+
+<a name="faq151"></a>
+**(151) Can you add backup/restore messages?**
+
+An email client is meant to read and write messages, not to backup and restore messages.
+The email server is responsible for backups.
+If you want to make a backup yourself, you could use a tool like [imapsync](https://imapsync.lamiral.info/).
 
 <br />
 
