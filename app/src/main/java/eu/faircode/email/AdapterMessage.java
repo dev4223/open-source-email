@@ -1583,8 +1583,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             db.attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
                 @Override
                 public void onChanged(@Nullable List<EntityAttachment> attachments) {
-                    bindAttachments(message, attachments);
-
                     int inlineImages = 0;
                     if (attachments != null)
                         for (EntityAttachment attachment : attachments)
@@ -1598,10 +1596,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (attachment.available && attachment.isInline() && attachment.isImage())
                                 lastInlineImages++;
 
-                    if (inlineImages != lastInlineImages)
+                    if (inlineImages > lastInlineImages)
                         bindBody(message, false);
 
-                    properties.setAttachments(message.id, attachments);
+                    bindAttachments(message, attachments);
                 }
             });
 
@@ -4922,7 +4920,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("error changed", next.id);
                 }
-                // last_attempt
+                if (!Objects.equals(prev.last_attempt, next.last_attempt)) {
+                    same = false;
+                    log("last_attempt changed " +
+                            (prev.last_attempt % 10000) + "/" + (next.last_attempt % 10000), next.id);
+                }
 
                 // accountPop
                 if (!Objects.equals(prev.accountName, next.accountName)) {
@@ -5010,7 +5012,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             private void log(String msg, long id) {
                 Log.i(msg + " id=" + id);
-                if (debug)
+                if (BuildConfig.DEBUG || debug)
                     parentFragment.getView().post(new Runnable() {
                         @Override
                         public void run() {
