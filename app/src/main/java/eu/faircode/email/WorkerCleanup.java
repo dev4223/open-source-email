@@ -91,11 +91,6 @@ public class WorkerCleanup extends Worker {
                     }
                 }
 
-                if (cleanup_attachments) {
-                    int purged = db.attachment().purge(new Date().getTime());
-                    Log.i("Attachments purged=" + purged);
-                }
-
                 // Check attachments files
                 Log.i("Checking attachments files");
                 List<Long> aids = db.attachment().getAttachmentAvailable();
@@ -108,6 +103,13 @@ public class WorkerCleanup extends Worker {
                             db.attachment().setAvailable(aid, false);
                         }
                     }
+                }
+
+                // Delete old attachments
+                if (cleanup_attachments) {
+                    int purged = db.attachment().purge(
+                            new Date().getTime(), BuildConfig.DEBUG);
+                    Log.i("Attachments purged=" + purged);
                 }
 
                 // Clear raw headers

@@ -135,6 +135,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
+import org.openintents.openpgp.IOpenPgpService2;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
@@ -882,9 +883,22 @@ public class FragmentCompose extends FragmentBase {
         tvNoInternetAttachments.setVisibility(View.GONE);
         grpUnusedImagesHint.setVisibility(View.GONE);
 
-        String pkg = Helper.getOpenKeychainPackage(getContext());
-        Log.i("Binding to " + pkg);
-        pgpService = new OpenPgpServiceConnection(getContext(), pkg);
+        final String pkg = Helper.getOpenKeychainPackage(getContext());
+        Log.i("PGP binding to " + pkg);
+        pgpService = new OpenPgpServiceConnection(getContext(), pkg, new OpenPgpServiceConnection.OnBound() {
+            @Override
+            public void onBound(IOpenPgpService2 service) {
+                Log.i("PGP bound to " + pkg);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                if ("bindService() returned false!".equals(ex.getMessage()))
+                    Log.i(ex);
+                else
+                    Log.e("PGP", ex);
+            }
+        });
         pgpService.bindToService();
 
         return view;
@@ -2001,7 +2015,7 @@ public class FragmentCompose extends FragmentBase {
                     // Get/clean attachments
                     List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);
                     for (EntityAttachment attachment : new ArrayList<>(attachments))
-                        if (attachment.encryption != null) {
+                        if (attachment.isEncryption()) {
                             db.attachment().deleteAttachment(attachment.id);
                             attachments.remove(attachment);
                         }
@@ -3449,7 +3463,7 @@ public class FragmentCompose extends FragmentBase {
                         int sequence = 0;
                         List<EntityAttachment> attachments = db.attachment().getAttachments(ref.id);
                         for (EntityAttachment attachment : attachments)
-                            if (attachment.encryption == null &&
+                            if (!attachment.isEncryption() &&
                                     ("forward".equals(action) || "editasnew".equals(action) ||
                                             (cid.contains(attachment.cid) ||
                                                     (attachment.isInline() && attachment.isImage())))) {
@@ -3526,7 +3540,7 @@ public class FragmentCompose extends FragmentBase {
                 List<EntityAttachment> attachments = db.attachment().getAttachments(data.draft.id);
                 for (EntityAttachment attachment : attachments)
                     if (attachment.available) {
-                        if (attachment.encryption == null)
+                        if (!attachment.isEncryption())
                             last_available++;
                     } else
                         EntityOperation.queue(context, data.draft, EntityOperation.ATTACHMENT, attachment.id);
@@ -3600,7 +3614,7 @@ public class FragmentCompose extends FragmentBase {
                             boolean downloading = false;
                             boolean inline_images = false;
                             for (EntityAttachment attachment : attachments) {
-                                if (attachment.encryption != null)
+                                if (attachment.isEncryption())
                                     continue;
                                 if (attachment.progress != null)
                                     downloading = true;
@@ -3804,7 +3818,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : ato)
                                     address.validate();
                                 if (lookup_mx)
-                                    ConnectionHelper.lookupMx(ato, context);
+                                    DNSHelper.lookupMx(context, ato);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -3818,7 +3832,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : acc)
                                     address.validate();
                                 if (lookup_mx)
-                                    ConnectionHelper.lookupMx(acc, context);
+                                    DNSHelper.lookupMx(context, acc);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -3832,7 +3846,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : abcc)
                                     address.validate();
                                 if (lookup_mx)
-                                    ConnectionHelper.lookupMx(abcc, context);
+                                    DNSHelper.lookupMx(context, abcc);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -3846,10 +3860,10 @@ public class FragmentCompose extends FragmentBase {
                     List<Integer> eparts = new ArrayList<>();
                     for (EntityAttachment attachment : attachments)
                         if (attachment.available)
-                            if (attachment.encryption == null)
-                                available++;
-                            else
+                            if (attachment.isEncryption())
                                 eparts.add(attachment.encryption);
+                            else
+                                available++;
 
                     if (EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt)) {
                         if (!eparts.contains(EntityAttachment.PGP_KEY) ||
@@ -4021,8 +4035,6 @@ public class FragmentCompose extends FragmentBase {
                             if (pgpService.isBound() &&
                                     !EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt)) {
                                 List<Address> recipients = new ArrayList<>();
-                                if (draft.from != null)
-                                    recipients.addAll(Arrays.asList(draft.from));
                                 if (draft.to != null)
                                     recipients.addAll(Arrays.asList(draft.to));
                                 if (draft.cc != null)
@@ -4063,7 +4075,7 @@ public class FragmentCompose extends FragmentBase {
                             for (EntityAttachment attachment : attachments)
                                 if (!attachment.available)
                                     throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
-                                else if (!attachment.isInline() && attachment.encryption == null)
+                                else if (!attachment.isInline() && !attachment.isEncryption())
                                     attached++;
 
                             // Check for missing attachments

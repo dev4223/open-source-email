@@ -145,6 +145,7 @@ import org.json.JSONException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.openintents.openpgp.AutocryptPeerUpdate;
+import org.openintents.openpgp.IOpenPgpService2;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.OpenPgpSignatureResult;
 import org.openintents.openpgp.util.OpenPgpApi;
@@ -1251,9 +1252,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
         });
 
-        String pkg = Helper.getOpenKeychainPackage(getContext());
-        Log.i("Binding to " + pkg);
-        pgpService = new OpenPgpServiceConnection(getContext(), pkg);
+        final String pkg = Helper.getOpenKeychainPackage(getContext());
+        Log.i("PGP binding to " + pkg);
+        pgpService = new OpenPgpServiceConnection(getContext(), pkg, new OpenPgpServiceConnection.OnBound() {
+            @Override
+            public void onBound(IOpenPgpService2 service) {
+                Log.i("PGP bound to " + pkg);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                if ("bindService() returned false!".equals(ex.getMessage()))
+                    Log.i("PGP", ex);
+                else
+                    Log.e("PGP", ex);
+            }
+        });
         pgpService.bindToService();
 
         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
@@ -6363,7 +6377,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 Element footer = document.createElement("p");
                 footer.appendElement("br").appendElement("hr");
                 for (EntityAttachment attachment : attachments)
-                    if (!attachment.isInline()) {
+                    if (attachment.isAttachment()) {
                         hasAttachments = true;
                         Element strong = document.createElement("strong");
                         strong.text(getString(R.string.title_attachment));
