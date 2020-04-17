@@ -1912,17 +1912,18 @@ public class FragmentCompose extends FragmentBase {
                     Drawable d = Drawable.createFromPath(file.getAbsolutePath());
                     if (d == null)
                         throw new IllegalArgumentException(context.getString(R.string.title_no_image));
-                    d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
 
-                    s.insert(start, "   ");
+                    s.insert(start, " \uFFFC"); // Object replacement character
                     ImageSpan is = new ImageSpan(context, cid);
                     s.setSpan(is, start + 1, start + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                    start += 3;
+                    start += 2;
                 }
 
                 if (!image)
                     return null;
+
+                args.putInt("start", start);
 
                 return HtmlHelper.fromHtml(HtmlHelper.toHtml(s), new Html.ImageGetter() {
                     @Override
@@ -3818,7 +3819,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : ato)
                                     address.validate();
                                 if (lookup_mx)
-                                    DNSHelper.lookupMx(context, ato);
+                                    DnsHelper.checkMx(context, ato);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -3832,7 +3833,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : acc)
                                     address.validate();
                                 if (lookup_mx)
-                                    DNSHelper.lookupMx(context, acc);
+                                    DnsHelper.checkMx(context, acc);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -3846,7 +3847,7 @@ public class FragmentCompose extends FragmentBase {
                                 for (InternetAddress address : abcc)
                                     address.validate();
                                 if (lookup_mx)
-                                    DNSHelper.lookupMx(context, abcc);
+                                    DnsHelper.checkMx(context, abcc);
                             }
                         } catch (AddressException ex) {
                             throw new AddressException(context.getString(R.string.title_address_parse_error,
@@ -4075,7 +4076,7 @@ public class FragmentCompose extends FragmentBase {
                             for (EntityAttachment attachment : attachments)
                                 if (!attachment.available)
                                     throw new IllegalArgumentException(context.getString(R.string.title_attachments_missing));
-                                else if (!attachment.isInline() && !attachment.isEncryption())
+                                else if (attachment.isAttachment())
                                     attached++;
 
                             // Check for missing attachments
@@ -4115,14 +4116,15 @@ public class FragmentCompose extends FragmentBase {
                             }
 
                             for (EntityAttachment attachment : new ArrayList<>(attachments))
-                                if (attachment.isInline() && !cids.contains(attachment.cid)) {
+                                if (attachment.isInline() && attachment.isImage() &&
+                                        !cids.contains(attachment.cid)) {
                                     Log.i("Removing unused inline attachment cid=" + attachment.cid);
                                     db.attachment().deleteAttachment(attachment.id);
                                 }
                         } else {
                             // Convert inline images to attachments
                             for (EntityAttachment attachment : new ArrayList<>(attachments))
-                                if (attachment.isInline()) {
+                                if (attachment.isInline() && attachment.isImage()) {
                                     Log.i("Converting to attachment cid=" + attachment.cid);
                                     attachment.disposition = Part.ATTACHMENT;
                                     db.attachment().setDisposition(attachment.id, attachment.disposition);
@@ -4225,7 +4227,9 @@ public class FragmentCompose extends FragmentBase {
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(draft.revision < draft.revisions);
 
             if (needsEncryption) {
-                if (ActivityBilling.isPro(getContext())) {
+                if (ActivityBilling.isPro(getContext()) ||
+                        EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt) ||
+                        EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt)) {
                     boolean interactive = args.getBoolean("interactive");
                     onEncrypt(draft, action, interactive);
                 } else
