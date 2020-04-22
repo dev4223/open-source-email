@@ -1458,6 +1458,18 @@ public class MessageHelper {
             return (html.size() == 0);
         }
 
+        boolean hasBody() throws MessagingException {
+            List<Part> all = new ArrayList<>();
+            all.addAll(plain);
+            all.addAll(html);
+
+            for (Part p : all)
+                if (p.getSize() > 0)
+                    return true;
+
+            return false;
+        }
+
         Long getBodySize() throws MessagingException {
             Long size = null;
 

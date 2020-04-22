@@ -39,6 +39,7 @@ import android.os.DeadObjectException;
 import android.os.Debug;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.os.TransactionTooLargeException;
 import android.text.TextUtils;
 import android.view.Display;
 import android.view.OrientationEventListener;
@@ -599,9 +600,15 @@ public class Log {
             return false;
 
         if (ex instanceof RuntimeException &&
+                ex.getCause() instanceof TransactionTooLargeException)
+            // Some Android versions (Samsung) send images as clip data
+            return false;
+
+        if (ex instanceof RuntimeException &&
                 ex.getMessage() != null &&
                 (ex.getMessage().startsWith("Could not get application info") ||
                         ex.getMessage().startsWith("Unable to create service") ||
+                        ex.getMessage().startsWith("Unable to start service") ||
                         ex.getMessage().startsWith("Unable to resume activity") ||
                         ex.getMessage().startsWith("Failure delivering result")))
             return false;

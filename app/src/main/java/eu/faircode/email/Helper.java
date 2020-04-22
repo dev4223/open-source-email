@@ -48,8 +48,6 @@ import android.provider.DocumentsContract;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
-import android.text.Spannable;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
@@ -710,20 +708,6 @@ public class Helper {
             return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
         else
             return DateUtils.getRelativeTimeSpanString(context, millis);
-    }
-
-    static String ellipsize(String text, int maxLen) {
-        if (text == null || text.length() < maxLen) {
-            return text;
-        }
-        return text.substring(0, maxLen) + "...";
-    }
-
-    static void clearComposingText(Spannable text) {
-        Object[] spans = text.getSpans(0, text.length(), Object.class);
-        for (Object span : spans)
-            if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0)
-                text.removeSpan(span);
     }
 
     static String localizeFolderType(Context context, String type) {

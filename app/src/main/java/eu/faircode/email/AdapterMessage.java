@@ -400,6 +400,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibArchive;
         private ImageButton ibTrash;
         private ImageButton ibJunk;
+        private ImageButton ibInbox;
         private ImageButton ibMore;
         private TextView tvSignedData;
 
@@ -598,6 +599,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibArchive = vsBody.findViewById(R.id.ibArchive);
             ibTrash = vsBody.findViewById(R.id.ibTrash);
             ibJunk = vsBody.findViewById(R.id.ibJunk);
+            ibInbox = vsBody.findViewById(R.id.ibInbox);
             ibMore = vsBody.findViewById(R.id.ibMore);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
 
@@ -690,6 +692,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibArchive.setOnClickListener(this);
                 ibTrash.setOnClickListener(this);
                 ibJunk.setOnClickListener(this);
+                ibInbox.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
 
                 ibDownloading.setOnClickListener(this);
@@ -765,6 +768,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibArchive.setOnClickListener(null);
                 ibTrash.setOnClickListener(null);
                 ibJunk.setOnClickListener(null);
+                ibInbox.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
 
                 ibDownloading.setOnClickListener(null);
@@ -1264,12 +1268,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibArchive.setVisibility(View.GONE);
             ibTrash.setVisibility(View.GONE);
             ibJunk.setVisibility(View.GONE);
+            ibInbox.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
 
             tvNoInternetBody.setVisibility(View.GONE);
             grpDownloading.setVisibility(View.GONE);
+            tvBody.setText(null);
             tvBody.setVisibility(View.GONE);
+            // TO DO: clear web view?
             wvBody.setVisibility(View.GONE);
             pbBody.setVisibility(View.GONE);
             grpAction.setVisibility(View.GONE);
@@ -1578,6 +1585,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibArchive.setVisibility(View.GONE);
             ibTrash.setVisibility(View.GONE);
             ibJunk.setVisibility(View.GONE);
+            ibInbox.setVisibility(View.GONE);
             ibMore.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.GONE : View.VISIBLE);
             tvSignedData.setVisibility(View.GONE);
 
@@ -1676,7 +1684,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean trash = (move || outbox || debug ||
                             message.accountProtocol == EntityAccount.TYPE_POP);
                     boolean junk = (move && (hasJunk && !inJunk));
-                    boolean unjunk = (move && inJunk);
+                    boolean inbox = (move && (inArchive || inJunk));
 
                     final boolean delete = (inTrash || !hasTrash || inJunk || outbox ||
                             message.uid == null || message.accountProtocol == EntityAccount.TYPE_POP);
@@ -1688,18 +1696,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean expand_one = prefs.getBoolean("expand_one", true);
 
                     ibTrash.setTag(delete);
-                    ibJunk.setImageResource(unjunk ? R.drawable.baseline_inbox_24 : R.drawable.baseline_flag_24);
-                    String title = context.getString(unjunk ? R.string.title_no_junk : R.string.title_spam);
-                    ibJunk.setContentDescription(title);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                        ibJunk.setTooltipText(title);
 
                     ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
                     ibAnswer.setVisibility(outbox || (!expand_all && expand_one) ? View.GONE : View.VISIBLE);
                     ibMove.setVisibility(move && button_move ? View.VISIBLE : View.GONE);
                     ibArchive.setVisibility(archive && button_archive_trash ? View.VISIBLE : View.GONE);
                     ibTrash.setVisibility(trash && button_archive_trash ? View.VISIBLE : View.GONE);
-                    ibJunk.setVisibility(junk || unjunk ? View.VISIBLE : View.GONE);
+                    ibJunk.setVisibility(junk ? View.VISIBLE : View.GONE);
+                    ibInbox.setVisibility(inbox ? View.VISIBLE : View.GONE);
 
                     ibTrashBottom.setVisibility(trash && button_archive_trash ? View.VISIBLE : View.GONE);
                     ibArchiveBottom.setVisibility(archive && button_archive_trash ? View.VISIBLE : View.GONE);
@@ -2757,10 +2761,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         onActionTrash(message, (Boolean) ibTrash.getTag());
                         break;
                     case R.id.ibJunk:
-                        if (EntityFolder.JUNK.equals(message.folderType))
-                            onActionUnjunk(message);
-                        else
-                            onActionJunk(message);
+                        onActionJunk(message);
+                        break;
+                    case R.id.ibInbox:
+                        onActionInbox(message);
                         break;
                     case R.id.ibMore:
                         onActionMore(message);
@@ -3632,7 +3636,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ask.show(parentFragment.getParentFragmentManager(), "message:junk");
         }
 
-        private void onActionUnjunk(TupleMessageEx message) {
+        private void onActionInbox(TupleMessageEx message) {
             properties.move(message.id, EntityFolder.INBOX);
         }
 
@@ -3856,7 +3860,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     return false;
 
                 boolean confirm_links = prefs.getBoolean("confirm_links", true);
-                if (confirm_links) {
+                boolean confirm_link =
+                        !"https".equals(uri.getScheme()) || TextUtils.isEmpty(uri.getHost()) ||
+                                prefs.getBoolean(uri.getHost() + ".confirm_link", true);
+                if (confirm_links && confirm_link) {
                     Bundle args = new Bundle();
                     args.putParcelable("uri", uri);
                     args.putString("title", title);
@@ -5241,16 +5248,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         holder.wire();
     }
 
-    public void collapse(@NonNull ViewHolder holder, int position) {
-        int type = holder.getItemViewType();
-        if (type != R.layout.item_message_compact && type != R.layout.item_message_normal)
-            return;
-
-        TupleMessageEx message = getItemAtPosition(position);
-        if (message != null)
-            holder.clearExpanded(message);
-    }
-
     public void onItemSelected(@NonNull ViewHolder holder, boolean selected) {
         if (accessibility && holder.view != null)
             try {
@@ -5407,6 +5404,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final ContentLoadingProgressBar pbWait = dview.findViewById(R.id.pbWait);
             final TextView tvHost = dview.findViewById(R.id.tvHost);
             final TextView tvOwner = dview.findViewById(R.id.tvOwner);
+            final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
             final Group grpDifferent = dview.findViewById(R.id.grpDifferent);
             final Group grpOwner = dview.findViewById(R.id.grpOwner);
 
@@ -5508,7 +5506,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
 
+            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    prefs.edit().putBoolean(uri.getHost() + ".confirm_link", !isChecked).apply();
+                }
+            });
+
             tvOwnerRemark.setMovementMethod(LinkMovementMethod.getInstance());
+            cbNotAgain.setText(getContext().getString(R.string.title_no_ask_for_again, uri.getHost()));
+            cbNotAgain.setVisibility(
+                    "https".equals(uri.getScheme()) && !TextUtils.isEmpty(uri.getHost())
+                            ? View.VISIBLE : View.GONE);
             pbWait.setVisibility(View.GONE);
             grpOwner.setVisibility(View.GONE);
 

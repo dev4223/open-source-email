@@ -77,6 +77,7 @@ public class FragmentFolder extends FragmentBase {
     private ContentLoadingProgressBar pbWait;
     private Group grpParent;
     private Group grpPoll;
+    private Group grpAutoDelete;
 
     private long id = -1;
     private long account = -1;
@@ -132,6 +133,7 @@ public class FragmentFolder extends FragmentBase {
         pbWait = view.findViewById(R.id.pbWait);
         grpParent = view.findViewById(R.id.grpParent);
         grpPoll = view.findViewById(R.id.grpPoll);
+        grpAutoDelete = view.findViewById(R.id.grpAutoDelete);
 
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -154,7 +156,6 @@ public class FragmentFolder extends FragmentBase {
                 cbPoll.setEnabled(isChecked);
                 etPoll.setEnabled(isChecked);
                 tvPoll.setEnabled(isChecked);
-                cbDownload.setEnabled(isChecked);
             }
         });
 
@@ -204,7 +205,7 @@ public class FragmentFolder extends FragmentBase {
         tvParent.setText(parent);
         grpParent.setVisibility(parent == null ? View.GONE : View.VISIBLE);
         Helper.setViewsEnabled(view, false);
-        cbAutoDelete.setVisibility(View.GONE);
+        grpAutoDelete.setVisibility(View.GONE);
         btnSave.setEnabled(false);
         pbSave.setVisibility(View.GONE);
         pbWait.setVisibility(View.VISIBLE);
@@ -260,13 +261,13 @@ public class FragmentFolder extends FragmentBase {
                     else
                         etKeepDays.setText(Integer.toString(folder == null ? EntityFolder.DEFAULT_KEEP : folder.keep_days));
 
-                    if (folder == null || folder.read_only)
-                        cbAutoDelete.setVisibility(View.GONE);
+                    if (folder != null && folder.read_only)
+                        grpAutoDelete.setVisibility(View.GONE);
                     else {
-                        cbAutoDelete.setText(EntityFolder.TRASH.equals(folder.type)
+                        cbAutoDelete.setText(folder != null && EntityFolder.TRASH.equals(folder.type)
                                 ? R.string.title_auto_delete : R.string.title_auto_trash);
-                        cbAutoDelete.setChecked(folder.auto_delete);
-                        cbAutoDelete.setVisibility(View.VISIBLE);
+                        cbAutoDelete.setChecked(folder != null && folder.auto_delete);
+                        grpAutoDelete.setVisibility(View.VISIBLE);
                     }
                 }
 
@@ -279,7 +280,6 @@ public class FragmentFolder extends FragmentBase {
                 cbPoll.setEnabled(cbSynchronize.isChecked());
                 etPoll.setEnabled(cbSynchronize.isChecked());
                 tvPoll.setEnabled(cbSynchronize.isChecked());
-                cbDownload.setEnabled(cbSynchronize.isChecked());
                 etKeepDays.setEnabled(!cbKeepAll.isChecked());
                 cbAutoDelete.setEnabled(!cbKeepAll.isChecked());
                 btnSave.setEnabled(true);

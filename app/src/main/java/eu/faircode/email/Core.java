@@ -575,27 +575,6 @@ class Core {
         return uid;
     }
 
-    private static void noop(IMAPFolder ifolder) throws MessagingException {
-        // https://tools.ietf.org/html/rfc3501#section-6.3.11
-        ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
-            @Override
-            public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
-                protocol.noop();
-                return null;
-            }
-        });
-    }
-
-    static boolean isAlive(IMAPFolder ifolder) {
-        try {
-            noop(ifolder);
-        } catch (MessagingException ex) {
-            Log.i(ifolder.getFullName(), ex);
-            return false;
-        }
-        return true;
-    }
-
     private static void onSeen(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, JSONException {
         // Mark message (un)seen
         DB db = DB.getInstance(context);
@@ -766,9 +745,6 @@ class Core {
         // Add message
         ifolder.appendMessages(new Message[]{imessage});
 
-        // Send no operation
-        noop(ifolder);
-
         // Delete previous (external) version
         if (message.uid != null) {
             db.message().setMessageUid(message.id, null);
@@ -869,11 +845,7 @@ class Core {
                 icopies.add(icopy);
             }
 
-            // Add message
             itarget.appendMessages(icopies.toArray(new Message[0]));
-
-            // Send no operation
-            noop(itarget);
         } else {
             for (Message imessage : map.keySet()) {
                 Log.i("Move seen=" + seen + " unflag=" + unflag + " flags=" + imessage.getFlags());
@@ -1425,7 +1397,7 @@ class Core {
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
                         folder.synchronize = false;
                         folder.subscribed = subscribed;
-                        folder.poll = account.shouldPoll();
+                        folder.poll = true;
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                         folder.selectable = selectable;
@@ -1541,6 +1513,10 @@ class Core {
             Message[] imessages = ifolder.getMessages();
             Log.i(folder.name + " POP messages=" + imessages.length);
 
+            if (account.max_messages != null && imessages.length > account.max_messages)
+                imessages = Arrays.copyOfRange(imessages,
+                        imessages.length - account.max_messages, imessages.length);
+
             if (caps.containsKey("UIDL")) {
                 FetchProfile ifetch = new FetchProfile();
                 ifetch.add(UIDFolder.FetchProfileItem.UID);
@@ -1557,9 +1533,6 @@ class Core {
                 try {
                     if (!state.isRunning())
                         return;
-
-                    if (account.max_messages != null && ++count > account.max_messages)
-                        break;
 
                     MessageHelper helper = new MessageHelper((MimeMessage) imessage);
 
@@ -1818,9 +1791,10 @@ class Core {
             // Reduce list of local uids
             Flags flags = ifolder.getPermanentFlags();
             SearchTerm searchTerm = new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time));
-            searchTerm = new OrTerm(searchTerm, new SentDateTerm(ComparisonTerm.GE, new Date(sync_time)));
-            if (sync_nodate)
+            if (sync_nodate) {
+                searchTerm = new OrTerm(searchTerm, new SentDateTerm(ComparisonTerm.GE, new Date(sync_time)));
                 searchTerm = new OrTerm(searchTerm, new ReceivedDateTerm(ComparisonTerm.LT, new Date(365 * 24 * 3600 * 1000L)));
+            }
             if (sync_unseen && flags.contains(Flags.Flag.SEEN))
                 searchTerm = new OrTerm(searchTerm, new FlagTerm(new Flags(Flags.Flag.SEEN), false));
             if (sync_flagged && flags.contains(Flags.Flag.FLAGGED))
@@ -2375,9 +2349,6 @@ class Core {
                 }
             }
 
-            if (message.total != null && message.total == 0)
-                reportEmptyMessage(context, state, account, istore);
-
             try {
                 db.beginTransaction();
 
@@ -2448,8 +2419,7 @@ class Core {
                     Log.i(folder.name + " inline downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    Long size = parts.getBodySize();
-                    if (TextUtils.isEmpty(body) && size != null && size > 0)
+                    if (TextUtils.isEmpty(body) && parts.hasBody())
                         reportEmptyMessage(context, state, account, istore);
                 }
             }
@@ -2796,8 +2766,7 @@ class Core {
                     Log.i(folder.name + " downloaded message id=" + message.id +
                             " size=" + message.size + "/" + (body == null ? null : body.length()));
 
-                    Long size = parts.getBodySize();
-                    if (TextUtils.isEmpty(body) && size != null && size > 0)
+                    if (TextUtils.isEmpty(body) && parts.hasBody())
                         reportEmptyMessage(context, state, account, istore);
                 }
             }

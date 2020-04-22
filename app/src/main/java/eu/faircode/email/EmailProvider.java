@@ -99,6 +99,22 @@ public class EmailProvider {
             throw new UnknownHostException(this.name + " invalid");
     }
 
+    static List<String> getDomainNames(Context context) {
+        List<String> result = new ArrayList<>();
+
+        for (String domain : PROPRIETARY)
+            result.add(domain.replace(".", "\\."));
+
+        List<EmailProvider> providers = loadProfiles(context);
+        for (EmailProvider provider : providers)
+            if (provider.domain != null)
+                for (String domain : provider.domain)
+                    if (!result.contains(domain))
+                        result.add(domain);
+
+        return result;
+    }
+
     static List<EmailProvider> loadProfiles(Context context) {
         List<EmailProvider> result = null;
         try {
@@ -501,6 +517,8 @@ public class EmailProvider {
             try {
                 // Identifies an IMAP server where TLS is initiated directly upon connection to the IMAP server.
                 DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_imaps._tcp." + domain, "srv");
+                if (records.length == 0)
+                    throw new UnknownHostException(domain);
                 // ... service is not supported at all at a particular domain by setting the target of an SRV RR to "."
                 provider.imap.host = records[0].name;
                 provider.imap.port = records[0].port;
@@ -508,6 +526,8 @@ public class EmailProvider {
             } catch (UnknownHostException ex) {
                 // Identifies an IMAP server that MAY ... require the MUA to use the "STARTTLS" command
                 DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_imap._tcp." + domain, "srv");
+                if (records.length == 0)
+                    throw new UnknownHostException(domain);
                 provider.imap.host = records[0].name;
                 provider.imap.port = records[0].port;
                 provider.imap.starttls = (provider.imap.port == 143);
@@ -517,6 +537,8 @@ public class EmailProvider {
         if (discover == Discover.ALL || discover == Discover.SMTP) {
             // Note that this covers connections both with and without Transport Layer Security (TLS)
             DnsHelper.DnsRecord[] records = DnsHelper.lookup(context, "_submission._tcp." + domain, "srv");
+            if (records.length == 0)
+                throw new UnknownHostException(domain);
             provider.smtp.host = records[0].name;
             provider.smtp.port = records[0].port;
             provider.smtp.starttls = (provider.smtp.port == 587);
