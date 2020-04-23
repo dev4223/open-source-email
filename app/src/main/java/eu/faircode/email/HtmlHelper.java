@@ -28,6 +28,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.text.Html;
+import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -476,12 +477,6 @@ public class HtmlHelper {
         for (Element element : document.select("*")) {
             String style = null;
             String clazz = element.attr("class");
-
-            // Workaround TextView not supporting nested colors
-            List<Element> parents = element.parents();
-            Collections.reverse(parents);
-            for (Element parent : parents)
-                style = mergeStyles(style, parent.attr("style"), "color");
 
             // Class style
             style = processStyles(element.tagName(), clazz, style, sheets);
@@ -1106,7 +1101,7 @@ public class HtmlHelper {
 
         try {
             if (value.endsWith("%"))
-                return Integer.parseInt(value.substring(0, value.length() - 1).trim()) / 100f * _current;
+                return Float.parseFloat(value.substring(0, value.length() - 1).trim()) / 100 * _current;
             if (value.endsWith("em"))
                 return Float.parseFloat(value.substring(0, value.length() - 2).trim()) * _current;
             if (value.endsWith("rem"))
@@ -1766,7 +1761,7 @@ public class HtmlHelper {
         if (i != spanned.length())
             spanned = (Spanned) spanned.subSequence(0, i);
 
-        return spanned;
+        return reverseSpans(spanned);
     }
 
     static String toHtml(Spanned spanned) {
@@ -1792,5 +1787,18 @@ public class HtmlHelper {
         }
 
         return doc.html();
+    }
+
+    static Spanned reverseSpans(Spanned spanned) {
+        Object[] spans = spanned.getSpans(0, spanned.length(), Object.class);
+        Spannable reverse = Spannable.Factory.getInstance().newSpannable(spanned.toString());
+        if (spans != null && spans.length > 0)
+            for (int i = spans.length - 1; i >= 0; --i)
+                reverse.setSpan(
+                        spans[i],
+                        spanned.getSpanStart(spans[i]),
+                        spanned.getSpanEnd(spans[i]),
+                        spanned.getSpanFlags(spans[i]));
+        return reverse;
     }
 }
