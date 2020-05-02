@@ -947,7 +947,7 @@ public class FragmentCompose extends FragmentBase {
 
                         Document document = JsoupEx.parse(body);
                         if (plain) {
-                            String text = HtmlHelper.getText(ref.outerHtml());
+                            String text = HtmlHelper.getText(context, ref.outerHtml());
                             String[] line = text.split("\\r?\\n");
                             for (int i = 0; i < line.length; i++)
                                 line[i] = Html.escapeHtml(line[i]);
@@ -4783,7 +4783,6 @@ public class FragmentCompose extends FragmentBase {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     prefs.edit().putBoolean("privacy_images", isChecked).apply();
-                    spResize.setEnabled(isChecked);
                 }
             });
 

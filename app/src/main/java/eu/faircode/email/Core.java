@@ -42,6 +42,7 @@ import androidx.core.app.RemoteInput;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
+import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.iap.BadCommandException;
 import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
@@ -982,6 +983,8 @@ class Core {
                 //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
                 fp.add(FetchProfile.Item.SIZE);
                 fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
+                if (account.isGmail())
+                    fp.add(GmailFolder.FetchProfileItem.THRID);
                 ifolder.fetch(new Message[]{imessage}, fp);
 
                 EntityMessage message = synchronizeMessage(context, account, folder, istore, ifolder, imessage, false, download, rules, state);
@@ -1092,7 +1095,8 @@ class Core {
                 db.message().deleteMessage(folder.id, message.id);
         }
 
-        if (!EntityFolder.TRASH.equals(folder.type)) {
+        if (!EntityFolder.DRAFTS.equals(folder.type) &&
+                !EntityFolder.TRASH.equals(folder.type)) {
             EntityFolder trash = db.folder().getFolderByType(message.account, EntityFolder.TRASH);
             if (trash == null) {
                 trash = new EntityFolder();
@@ -1822,7 +1826,8 @@ class Core {
             long fetch = SystemClock.elapsedRealtime();
             Log.i(folder.name + " remote fetched=" + (SystemClock.elapsedRealtime() - fetch) + " ms");
 
-            // Sort for finding references messages
+            // Sort for finding referenced/replied-to messages
+            // Sorting on date/time would be better, but requires fetching the headers
             Arrays.sort(imessages, new Comparator<Message>() {
                 @Override
                 public int compare(Message m1, Message m2) {
@@ -1943,6 +1948,8 @@ class Core {
             //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
             fp.add(FetchProfile.Item.SIZE);
             fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
+            if (account.isGmail())
+                fp.add(GmailFolder.FetchProfileItem.THRID);
 
             // Add/update local messages
             Long[] ids = new Long[imessages.length];
@@ -2746,6 +2753,8 @@ class Core {
             //fp.add(IMAPFolder.FetchProfileItem.MESSAGE);
             //fp.add(FetchProfile.Item.SIZE);
             //fp.add(IMAPFolder.FetchProfileItem.INTERNALDATE);
+            //if (account.isGmail())
+            //    fp.add(GmailFolder.FetchProfileItem.THRID);
             //ifolder.fetch(new Message[]{imessage}, fp);
 
             MessageHelper helper = new MessageHelper(imessage);

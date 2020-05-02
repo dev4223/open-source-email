@@ -60,14 +60,14 @@ public interface DaoMessage {
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
             "   ELSE message.id END) AS visible" +
             ", SUM(message.total) AS totalSize" +
-            ", MAX(message.priority) AS ui_priority" +
-            ", MAX(message.importance) AS ui_importance" +
+            ", message.priority AS ui_priority" +
+            ", message.importance AS ui_importance" +
             ", MAX(CASE WHEN" +
             "   ((:found AND folder.type <> '" + EntityFolder.ARCHIVE + "' AND folder.type <> '" + EntityFolder.DRAFTS + "')" +
             "   OR (NOT :found AND :type IS NULL AND folder.unified)" +
             "   OR (NOT :found AND folder.type = :type))" +
             "   THEN message.received ELSE 0 END) AS dummy" +
-            " FROM (SELECT * FROM message ORDER BY received DESC) AS message" +
+            " FROM message" +
             " JOIN account_view AS account ON account.id = message.account" +
             " LEFT JOIN identity_view AS identity ON identity.id = message.identity" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
@@ -75,20 +75,24 @@ public interface DaoMessage {
             " AND (:threading OR (:type IS NULL AND (folder.unified OR :found)) OR (:type IS NOT NULL AND folder.type = :type))" +
             " AND (NOT message.ui_hide OR :debug)" +
             " AND (NOT :found OR message.ui_found = :found)" +
+            " AND message.thread IN" +
+            "  (SELECT DISTINCT mm.thread FROM folder ff" +
+            "   JOIN message mm ON mm.folder = ff.id" +
+            "   WHERE ((:found AND mm.ui_found)" +
+            "   OR (NOT :found AND :type IS NULL AND ff.unified)" +
+            "   OR (NOT :found AND :type IS NOT NULL AND ff.type = :type))" +
+            "   AND (NOT mm.ui_hide OR :debug))" +
             " GROUP BY account.id, CASE WHEN message.thread IS NULL OR NOT :threading THEN message.id ELSE message.thread END" +
-            " HAVING (:found OR" +
-            "   CASE WHEN :type IS NULL THEN SUM(folder.unified) > 0" +
-            "   ELSE SUM(CASE WHEN folder.type = :type THEN 1 ELSE 0 END) > 0 END)" +
-            " AND (NOT :filter_seen OR SUM(1 - message.ui_seen) > 0)" +
+            " HAVING (NOT :filter_seen OR SUM(1 - message.ui_seen) > 0)" +
             " AND (NOT :filter_unflagged OR COUNT(message.id) - SUM(1 - message.ui_flagged) > 0)" +
             " AND (NOT :filter_unknown OR SUM(message.avatar IS NOT NULL AND message.sender <> identity.email) > 0)" +
             " AND (NOT :filter_snoozed OR message.ui_snoozed IS NULL OR " + is_drafts + ")" +
             " AND (:filter_language IS NULL OR SUM(message.language = :filter_language) > 0)" +
-            " ORDER BY -IFNULL(MAX(message.importance), 1)" +
+            " ORDER BY -IFNULL(message.importance, 1)" +
             ", CASE" +
             "   WHEN 'unread' = :sort THEN SUM(1 - message.ui_seen) = 0" +
             "   WHEN 'starred' = :sort THEN COUNT(message.id) - SUM(1 - message.ui_flagged) = 0" +
-            "   WHEN 'priority' = :sort THEN -IFNULL(MAX(message.priority), 1)" +
+            "   WHEN 'priority' = :sort THEN -IFNULL(message.priority, 1)" +
             "   WHEN 'sender' = :sort THEN LOWER(message.sender)" +
             "   WHEN 'subject' = :sort THEN LOWER(message.subject)" +
             "   WHEN 'size' = :sort THEN -SUM(message.total)" +
@@ -123,10 +127,10 @@ public interface DaoMessage {
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
             "   ELSE message.id END) AS visible" +
             ", SUM(message.total) AS totalSize" +
-            ", MAX(message.priority) AS ui_priority" +
-            ", MAX(message.importance) AS ui_importance" +
+            ", message.priority AS ui_priority" +
+            ", message.importance AS ui_importance" +
             ", MAX(CASE WHEN folder.id = :folder THEN message.received ELSE 0 END) AS dummy" +
-            " FROM (SELECT * FROM message ORDER BY received DESC) AS message" +
+            " FROM message" +
             " JOIN account_view AS account ON account.id = message.account" +
             " LEFT JOIN identity_view AS identity ON identity.id = message.identity" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
@@ -135,19 +139,23 @@ public interface DaoMessage {
             " AND (:threading OR folder.id = :folder)" +
             " AND (NOT message.ui_hide OR :debug)" +
             " AND (NOT :found OR message.ui_found = :found)" +
+            " AND message.thread IN" +
+            "  (SELECT DISTINCT mm.thread FROM message mm" +
+            "   WHERE mm.folder = :folder" +
+            "   AND (NOT mm.ui_hide OR :debug)" +
+            "   AND (NOT :found OR mm.ui_found))" +
             " GROUP BY CASE WHEN message.thread IS NULL OR NOT :threading THEN message.id ELSE message.thread END" +
-            " HAVING SUM(CASE WHEN folder.id = :folder THEN 1 ELSE 0 END) > 0" +
-            " AND (NOT :filter_seen OR SUM(1 - message.ui_seen) > 0 OR " + is_outbox + ")" +
+            " HAVING (NOT :filter_seen OR SUM(1 - message.ui_seen) > 0 OR " + is_outbox + ")" +
             " AND (NOT :filter_unflagged OR COUNT(message.id) - SUM(1 - message.ui_flagged) > 0 OR " + is_outbox + ")" +
             " AND (NOT :filter_unknown OR SUM(message.avatar IS NOT NULL AND message.sender <> identity.email) > 0" +
             "   OR " + is_outbox + " OR " + is_drafts + " OR " + is_sent + ")" +
             " AND (NOT :filter_snoozed OR message.ui_snoozed IS NULL OR " + is_outbox + " OR " + is_drafts + ")" +
             " AND (:filter_language IS NULL OR SUM(message.language = :filter_language) > 0 OR " + is_outbox + ")" +
-            " ORDER BY -IFNULL(MAX(message.importance), 1)" +
+            " ORDER BY -IFNULL(message.importance, 1)" +
             ", CASE" +
             "   WHEN 'unread' = :sort THEN SUM(1 - message.ui_seen) = 0" +
             "   WHEN 'starred' = :sort THEN COUNT(message.id) - SUM(1 - message.ui_flagged) = 0" +
-            "   WHEN 'priority' = :sort THEN -IFNULL(MAX(message.priority), 1)" +
+            "   WHEN 'priority' = :sort THEN -IFNULL(message.priority, 1)" +
             "   WHEN 'sender' = :sort THEN LOWER(message.sender)" +
             "   WHEN 'subject' = :sort THEN LOWER(message.subject)" +
             "   WHEN 'size' = :sort THEN -SUM(message.total)" +
@@ -328,6 +336,11 @@ public interface DaoMessage {
             " WHERE account = :account" +
             " AND msgid = :msgid")
     List<EntityMessage> getMessagesByMsgId(long account, String msgid);
+
+    @Query("SELECT * FROM message" +
+            " WHERE account = :account" +
+            " AND inreplyto = :inreplyto")
+    List<EntityMessage> getMessagesByInReplyTo(long account, String inreplyto);
 
     @Query("SELECT * FROM message" +
             " WHERE account = :account" +
@@ -515,8 +528,9 @@ public interface DaoMessage {
     @Update
     int updateMessage(EntityMessage message);
 
-    @Query("UPDATE message SET identity = :identity WHERE id = :id")
-    int setMessageIdentity(long id, Long identity);
+    @Query("UPDATE message SET thread = :thread" +
+            " WHERE account = :account AND thread = :old")
+    int updateMessageThread(long account, String old, String thread);
 
     @Query("UPDATE message SET uid = :uid WHERE id = :id")
     int setMessageUid(long id, Long uid);

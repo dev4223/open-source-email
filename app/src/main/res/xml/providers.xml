@@ -79,7 +79,21 @@
             enabled="false"
             redirectUri="https://oauth.faircode.eu/"
             scopes="mail-w"
-            tokenEndpoint="https://api.login.aol.com/oauth2/get_token" />
+            tokenEndpoint="https://api.login.yahoo.com/oauth2/get_token" />
+    </provider>
+    <provider
+        name="Sky.com"
+        appPassword="true"
+        domain="sky\\.com"
+        link="https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail">
+        <imap
+            host="imap.tools.sky.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="smtp.tools.sky.com"
+            port="465"
+            starttls="false" />
     </provider>
     <provider
         name="Posteo.de"
@@ -723,6 +737,18 @@
             starttls="false" />
         <smtp
             host="smtp.laposte.net"
+            port="465"
+            starttls="false" />
+    </provider>
+    <provider
+        name="One.com"
+        link="https://help.one.com/hc/en-us/articles/115005586769-Setting-up-a-Mobile-Phone">
+        <imap
+            host="imap.one.com"
+            port="993"
+            starttls="false" />
+        <smtp
+            host="send.one.com"
             port="465"
             starttls="false" />
     </provider>
