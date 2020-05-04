@@ -38,10 +38,12 @@ import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.imap.protocol.IMAPResponse;
+import com.sun.mail.imap.protocol.SearchSequence;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -386,67 +388,53 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                 } else {
                                     Log.i("Boundary server search=" + criteria);
 
-                                    List<SearchTerm> or = new ArrayList<>();
-                                    List<SearchTerm> and = new ArrayList<>();
-                                    if (criteria.query != null) {
-                                        String search = criteria.query;
+                                    try {
+                                        if (protocol.supportsUtf8())
+                                            return (Message[]) state.ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+                                                @Override
+                                                public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
+                                                    SearchTerm terms = criteria.getTerms(
+                                                            true,
+                                                            state.ifolder.getPermanentFlags(),
+                                                            browsable.keywords);
 
-                                        if (!protocol.supportsUtf8()) {
-                                            search = search.replace("ß", "ss"); // Eszett
-                                            search = Normalizer.normalize(search, Normalizer.Form.NFKD)
-                                                    .replaceAll("[^\\p{ASCII}]", "");
-                                        }
+                                                    try {
+                                                        SearchSequence ss = new SearchSequence(protocol);
+                                                        Argument args = ss.generateSequence(terms, StandardCharsets.UTF_8.name());
+                                                        args.writeAtom("ALL");
 
-                                        // Yahoo! does not support keyword search, but uses the flags $Forwarded $Junk $NotJunk
-                                        boolean keywords = false;
-                                        for (String keyword : browsable.keywords)
-                                            if (!keyword.startsWith("$")) {
-                                                keywords = true;
-                                                break;
-                                            }
+                                                        Response[] responses = protocol.command("SEARCH", args);
+                                                        if (responses.length == 0)
+                                                            throw new ProtocolException("No response");
+                                                        if (!responses[responses.length - 1].isOK())
+                                                            throw new ProtocolException(responses[responses.length - 1]);
 
-                                        if (criteria.in_senders)
-                                            or.add(new FromStringTerm(search));
-                                        if (criteria.in_receipients) {
-                                            or.add(new RecipientStringTerm(Message.RecipientType.TO, search));
-                                            or.add(new RecipientStringTerm(Message.RecipientType.CC, search));
-                                            or.add(new RecipientStringTerm(Message.RecipientType.BCC, search));
-                                        }
-                                        if (criteria.in_subject)
-                                            or.add(new SubjectTerm(search));
-                                        if (criteria.in_keywords && keywords)
-                                            or.add(new FlagTerm(new Flags(MessageHelper.sanitizeKeyword(search)), true));
-                                        if (criteria.in_message)
-                                            or.add(new BodyTerm(search));
+                                                        List<Integer> msgnums = new ArrayList<>();
+                                                        for (Response response : responses)
+                                                            if (((IMAPResponse) response).keyEquals("SEARCH")) {
+                                                                int msgnum;
+                                                                while ((msgnum = response.readNumber()) != -1)
+                                                                    msgnums.add(msgnum);
+                                                            }
+                                                        Message[] imessages = new Message[msgnums.size()];
+                                                        for (int i = 0; i < msgnums.size(); i++)
+                                                            imessages[i] = state.ifolder.getMessage(msgnums.get(i));
+
+                                                        return imessages;
+                                                    } catch (Throwable ex) {
+                                                        throw new ProtocolException("Search", ex);
+                                                    }
+                                                }
+                                            });
+                                    } catch (MessagingException ex) {
+                                        Log.w(ex);
                                     }
 
-                                    if (criteria.with_unseen &&
-                                            state.ifolder.getPermanentFlags().contains(Flags.Flag.SEEN))
-                                        and.add(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-                                    if (criteria.with_flagged &&
-                                            state.ifolder.getPermanentFlags().contains(Flags.Flag.FLAGGED))
-                                        and.add(new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
-
-                                    if (criteria.after != null)
-                                        and.add(new ReceivedDateTerm(ComparisonTerm.GT, new Date(criteria.after)));
-                                    if (criteria.before != null)
-                                        and.add(new ReceivedDateTerm(ComparisonTerm.LT, new Date(criteria.before)));
-
-                                    SearchTerm term = null;
-
-                                    if (or.size() > 0)
-                                        term = new OrTerm(or.toArray(new SearchTerm[0]));
-
-                                    if (and.size() > 0)
-                                        if (term == null)
-                                            term = new AndTerm(and.toArray(new SearchTerm[0]));
-                                        else
-                                            term = new AndTerm(term, new AndTerm(and.toArray(new SearchTerm[0])));
-
-                                    if (term == null)
-                                        return new Message[0];
-
-                                    return state.ifolder.search(term);
+                                    SearchTerm terms = criteria.getTerms(
+                                            false,
+                                            state.ifolder.getPermanentFlags(),
+                                            browsable.keywords);
+                                    return state.ifolder.search(terms);
                                 }
                             } catch (MessagingException ex) {
                                 ProtocolException pex = new ProtocolException(
@@ -654,6 +642,65 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     with_hidden ||
                     with_encrypted ||
                     with_attachments);
+        }
+
+        SearchTerm getTerms(boolean utf8, Flags flags, String[] keywords) {
+            List<SearchTerm> or = new ArrayList<>();
+            List<SearchTerm> and = new ArrayList<>();
+            if (query != null) {
+                String search = query;
+
+                if (!utf8) {
+                    search = search.replace("ß", "ss"); // Eszett
+                    search = Normalizer.normalize(search, Normalizer.Form.NFKD)
+                            .replaceAll("[^\\p{ASCII}]", "");
+                }
+
+                // Yahoo! does not support keyword search, but uses the flags $Forwarded $Junk $NotJunk
+                boolean hasKeywords = false;
+                for (String keyword : keywords)
+                    if (!keyword.startsWith("$")) {
+                        hasKeywords = true;
+                        break;
+                    }
+
+                if (in_senders)
+                    or.add(new FromStringTerm(search));
+                if (in_receipients) {
+                    or.add(new RecipientStringTerm(Message.RecipientType.TO, search));
+                    or.add(new RecipientStringTerm(Message.RecipientType.CC, search));
+                    or.add(new RecipientStringTerm(Message.RecipientType.BCC, search));
+                }
+                if (in_subject)
+                    or.add(new SubjectTerm(search));
+                if (in_keywords && hasKeywords)
+                    or.add(new FlagTerm(new Flags(MessageHelper.sanitizeKeyword(search)), true));
+                if (in_message)
+                    or.add(new BodyTerm(search));
+            }
+
+            if (with_unseen && flags.contains(Flags.Flag.SEEN))
+                and.add(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+            if (with_flagged && flags.contains(Flags.Flag.FLAGGED))
+                and.add(new FlagTerm(new Flags(Flags.Flag.FLAGGED), true));
+
+            if (after != null)
+                and.add(new ReceivedDateTerm(ComparisonTerm.GT, new Date(after)));
+            if (before != null)
+                and.add(new ReceivedDateTerm(ComparisonTerm.LT, new Date(before)));
+
+            SearchTerm term = null;
+
+            if (or.size() > 0)
+                term = new OrTerm(or.toArray(new SearchTerm[0]));
+
+            if (and.size() > 0)
+                if (term == null)
+                    term = new AndTerm(and.toArray(new SearchTerm[0]));
+                else
+                    term = new AndTerm(term, new AndTerm(and.toArray(new SearchTerm[0])));
+
+            return term;
         }
 
         String getTitle(Context context) {

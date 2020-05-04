@@ -67,9 +67,11 @@ public class ServiceSend extends ServiceBase {
     private boolean lastSuitable = false;
 
     private PowerManager.WakeLock wlOutbox;
+    private TwoStateOwner owner = new TwoStateOwner("send");
     private ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
 
     private static final int PI_SEND = 1;
+    private static final long CONNECTIVITY_DELAY = 5000L; // milliseconds
     private static final int IDENTITY_ERROR_AFTER = 30; // minutes
 
     @Override
@@ -100,7 +102,7 @@ public class ServiceSend extends ServiceBase {
         });
 
         // Observe send operations
-        db.operation().liveOperations(null).observe(this, new Observer<List<TupleOperationEx>>() {
+        db.operation().liveOperations(null).observe(owner, new Observer<List<TupleOperationEx>>() {
             private List<Long> handling = new ArrayList<>();
 
             @Override
@@ -240,6 +242,19 @@ public class ServiceSend extends ServiceBase {
             } catch (Throwable ex) {
                 Log.w(ex);
             }
+
+            // Wait for stabilization of connection
+            if (suitable)
+                try {
+                    Thread.sleep(CONNECTIVITY_DELAY);
+                } catch (InterruptedException ex) {
+                    Log.w(ex);
+                }
+
+            if (suitable)
+                owner.start();
+            else
+                owner.stop();
         }
 
         if (suitable)

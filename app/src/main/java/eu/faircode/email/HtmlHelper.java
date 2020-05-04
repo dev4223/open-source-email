@@ -36,6 +36,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.style.AlignmentSpan;
 import android.text.style.BulletSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
@@ -50,6 +51,7 @@ import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Base64;
+import android.view.View;
 import android.view.textclassifier.TextClassificationManager;
 import android.view.textclassifier.TextLanguage;
 
@@ -313,6 +315,7 @@ public class HtmlHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean text_color = prefs.getBoolean("text_color", true);
         boolean text_size = prefs.getBoolean("text_size", true);
+        boolean text_align = prefs.getBoolean("text_align", true);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
         boolean parse_classes = prefs.getBoolean("parse_classes", false);
@@ -449,6 +452,8 @@ public class HtmlHelper {
                 .addProtocols("a", "href", "full");
         if (text_color)
             whitelist.addAttributes("font", "color");
+        if (text_align)
+            whitelist.addTags("center").addAttributes(":all", "align");
         if (!view)
             whitelist.addProtocols("img", "src", "content");
 
@@ -506,6 +511,19 @@ public class HtmlHelper {
             // Element style
             style = mergeStyles(style, element.attr("style"));
 
+            if (text_align) {
+                // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/center
+                if ("center".equals(element.tagName())) {
+                    style = mergeStyles(style, "text-align:center");
+                    element.tagName("div");
+                }
+
+                // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
+                String align = element.attr("align");
+                if (!TextUtils.isEmpty(align))
+                    style = mergeStyles(style, "text-align:" + align);
+            }
+
             // Process style
             if (!TextUtils.isEmpty(style)) {
                 StringBuilder sb = new StringBuilder();
@@ -526,7 +544,9 @@ public class HtmlHelper {
                                     continue;
 
                                 Integer color = parseColor(value, dark);
-                                if (color != null) {
+                                if (color == null)
+                                    element.removeAttr("color");
+                                else {
                                     // fromHtml does not support transparency
                                     String c = String.format("#%06x", color);
                                     sb.append("color:").append(c).append(";");
@@ -637,6 +657,12 @@ public class HtmlHelper {
                                         element.attr("line-after", "true");
                                 }
                                 break;
+
+                            case "text-align":
+                                // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
+                                if (text_align)
+                                    sb.append(key).append(':').append(value).append(';');
+                                break;
                         }
                     }
                 }
@@ -697,11 +723,10 @@ public class HtmlHelper {
 
         // Pre formatted text
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/pre
-        if (!view)
-            for (Element pre : document.select("pre")) {
-                pre.html(formatPre(pre.wholeText()));
-                pre.tagName("div");
-            }
+        for (Element pre : document.select("pre")) {
+            pre.html(formatPre(pre.wholeText()));
+            pre.tagName("div");
+        }
 
         // Code
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/code
@@ -1275,9 +1300,9 @@ public class HtmlHelper {
             for (int j = 0; j < line.length(); j++) {
                 char kar = line.charAt(j);
                 if (kar == '\t') {
-                    l.append(' ');
+                    l.append('\u00A0');
                     while (l.length() % TAB_SIZE != 0)
-                        l.append(' ');
+                        l.append('\u00A0');
                 } else
                     l.append(kar);
             }
@@ -1717,42 +1742,40 @@ public class HtmlHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean debug = prefs.getBoolean("debug", false);
 
-        int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
-        int dp3 = Helper.dp2pixels(context, 3);
-        int dp6 = Helper.dp2pixels(context, 6);
-        int dp24 = Helper.dp2pixels(context, 24);
+        final int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+        final int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
+        final int dp3 = Helper.dp2pixels(context, 3);
+        final int dp6 = Helper.dp2pixels(context, 6);
+        final int dp24 = Helper.dp2pixels(context, 24);
+        final boolean ltr = (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR);
 
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
         NodeTraversor.traverse(new NodeVisitor() {
-            private int pre = 0;
             private Element element;
             private List<TextNode> block = new ArrayList<>();
 
-            private String WHITESPACE = " \t\f\u00A0";
+            private String WHITESPACE = " \t\f";
             private String WHITESPACE_NL = WHITESPACE + "\r\n";
             private Pattern TRIM_WHITESPACE_NL =
                     Pattern.compile("[" + WHITESPACE + "]*\\r?\\n[" + WHITESPACE + "]*");
 
             private List<String> BLOCK_START = Collections.unmodifiableList(Arrays.asList(
-                    "body", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul", "pre"
+                    "body", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul"
             ));
             private List<String> BLOCK_END = Collections.unmodifiableList(Arrays.asList(
-                    "body", "blockquote", "br", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul", "pre"
+                    "body", "blockquote", "br", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul"
             ));
 
             @Override
             public void head(Node node, int depth) {
-                if (node instanceof TextNode) {
-                    if (pre == 0)
-                        block.add((TextNode) node);
-                } else if (node instanceof Element) {
+                if (node instanceof TextNode)
+                    block.add((TextNode) node);
+                else if (node instanceof Element) {
                     element = (Element) node;
                     if (BLOCK_START.contains(element.tagName())) {
                         normalizeText(block);
                         block.clear();
                     }
-                    if ("pre".equals(element.tagName()))
-                        pre++;
                 }
             }
 
@@ -1764,8 +1787,6 @@ public class HtmlHelper {
                         normalizeText(block);
                         block.clear();
                     }
-                    if ("pre".equals(element.tagName()))
-                        pre--;
                 }
             }
 
@@ -1783,7 +1804,7 @@ public class HtmlHelper {
                     }
 
                     // Remove whitespace before/after newlines
-                    TRIM_WHITESPACE_NL.matcher(text).replaceAll(" ");
+                    text = TRIM_WHITESPACE_NL.matcher(text).replaceAll(" ");
 
                     if (i == 0 || endsWithWhitespace(block.get(i - 1).text()))
                         while (startsWithWhiteSpace(text))
@@ -1803,8 +1824,10 @@ public class HtmlHelper {
 
                 if (debug) {
                     if (block.size() > 0) {
-                        block.get(0).text("(" + block.get(0));
-                        block.get(block.size() - 1).text(block.get(block.size() - 1) + ")");
+                        TextNode first = block.get(0);
+                        TextNode last = block.get(block.size() - 1);
+                        first.text("(" + first.getWholeText());
+                        last.text(last.getWholeText() + ")");
                     }
                 }
             }
@@ -1875,6 +1898,22 @@ public class HtmlHelper {
                                     if ("line-through".equals(value))
                                         ssb.setSpan(new StrikethroughSpan(), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                     break;
+                                case "text-align":
+                                    Layout.Alignment alignment = null;
+                                    switch (value) {
+                                        case "left":
+                                            alignment = (ltr ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE);
+                                            break;
+                                        case "center":
+                                            alignment = Layout.Alignment.ALIGN_CENTER;
+                                            break;
+                                        case "right":
+                                            alignment = (ltr ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL);
+                                            break;
+                                    }
+                                    if (alignment != null)
+                                        ssb.setSpan(new AlignmentSpan.Standard(alignment), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    break;
                             }
                         }
                     }
@@ -1902,7 +1941,12 @@ public class HtmlHelper {
                         case "blockquote":
                             if (start > 0 && ssb.charAt(start - 1) != '\n')
                                 ssb.insert(start++, "\n");
-                            ssb.setSpan(new QuoteSpan(), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+                                ssb.setSpan(new QuoteSpan(colorPrimary), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            else
+                                ssb.setSpan(new QuoteSpan(colorPrimary, dp3, dp6), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
                             if (ssb.length() > 1 && ssb.charAt(ssb.length() - 1) != '\n')
                                 ssb.append("\n");
                             break;
@@ -1974,9 +2018,6 @@ public class HtmlHelper {
                             newline(start);
                             newline(ssb.length());
                             break;
-                        case "pre":
-                            // Do nothing
-                            break;
                         case "small":
                             ssb.setSpan(new RelativeSizeSpan(FONT_SMALL), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             break;
@@ -2014,12 +2055,19 @@ public class HtmlHelper {
             }
 
             private void newline(int index) {
-                int len = ssb.length();
-                if (len > 2 &&
-                        ssb.charAt(len - 1) == '\n' &&
-                        ssb.charAt(len - 2) == '\n')
-                    return;
-                ssb.insert(index, "\n");
+                int count = 0;
+                int i = Math.min(index, ssb.length() - 1);
+                while (i >= 0) {
+                    char kar = ssb.charAt(i);
+                    if (kar == '\n')
+                        count++;
+                    else if (kar != ' ' && kar != '\u00A0')
+                        break;
+                    i--;
+                }
+
+                if (count < 2)
+                    ssb.insert(index, "\n");
             }
         }, document.body());
 
@@ -2027,6 +2075,10 @@ public class HtmlHelper {
             for (int i = ssb.length() - 1; i >= 0; i--)
                 if (ssb.charAt(i) == '\n')
                     ssb.insert(i, "|");
+                else if (ssb.charAt(i) == ' ')
+                    ssb.replace(i, i + 1, "_");
+                else if (ssb.charAt(i) == '\u00A0')
+                    ssb.replace(i, i + 1, "•");
 
         Object[] spans = ssb.getSpans(0, ssb.length(), Object.class);
         Map<Object, Integer> start = new HashMap<>();
@@ -2038,7 +2090,7 @@ public class HtmlHelper {
             flags.put(span, ssb.getSpanFlags(span));
             ssb.removeSpan(span);
         }
-        for (int i = spans.length - 1; i >= 0; --i)
+        for (int i = spans.length - 1; i >= 0; i--)
             ssb.setSpan(spans[i], start.get(spans[i]), end.get(spans[i]), flags.get(spans[i]));
 
         return ssb;
@@ -2089,7 +2141,7 @@ public class HtmlHelper {
         Object[] spans = spanned.getSpans(0, spanned.length(), Object.class);
         Spannable reverse = Spannable.Factory.getInstance().newSpannable(spanned.toString());
         if (spans != null && spans.length > 0)
-            for (int i = spans.length - 1; i >= 0; --i)
+            for (int i = spans.length - 1; i >= 0; i--)
                 reverse.setSpan(
                         spans[i],
                         spanned.getSpanStart(spans[i]),

@@ -296,6 +296,7 @@
     <string name="title_advanced_monospaced">Gebruik vaste breedte lettertype voor berichttekst</string>
     <string name="title_advanced_text_color">Tekstkleuren weergeven</string>
     <string name="title_advanced_text_size">Kleine en grote teksten weergeven</string>
+    <string name="title_advanced_text_align">Links/midden/rechts uitgelijnde teksten weergeven</string>
     <string name="title_advanced_collapse_quotes">Geciteerde tekst samenvouwen</string>
     <string name="title_advanced_images_inline">Automatisch inline afbeeldingen weergeven</string>
     <string name="title_advanced_seekbar">Toon relatieve gesprekspositie met een punt</string>
@@ -811,6 +812,7 @@
         Tik op de \'Opnieuw zoeken\' knop om ook op de server te zoeken.
     </string>
     <string name="title_search_index_hint">Zoeken via de zoekindex is snel, maar zal alleen hele woorden vinden</string>
+    <string name="title_search_text_hint">Sommige e-mailservers hebben problemen met het vinden van tekst in veel berichten</string>
     <string name="title_search_more">Meer opties</string>
     <string name="title_search_use_index">Gebruik zoekindex</string>
     <string name="title_search_in_senders">In afzenders (van)</string>

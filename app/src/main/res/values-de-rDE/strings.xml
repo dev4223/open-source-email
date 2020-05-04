@@ -222,7 +222,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_flagged">Alle markierten Nachrichten</string>
     <string name="title_advanced_delete_unseen">Alte ungelesene Nachrichten löschen</string>
     <string name="title_advanced_kept_removed">Überprüfen, ob alte Nachrichten vom Server entfernt wurden</string>
-    <string name="title_advanced_gmail_thread">Nachrichten im Stil von Gmail-Konten gruppieren</string>
+    <string name="title_advanced_gmail_thread">Die Nachrichten in Gmail-Konten im Stil von Gmail gruppieren</string>
     <string name="title_advanced_sync_folders">Ordnerliste synchronisieren</string>
     <string name="title_advanced_subscriptions">Abonnierte Ordner verwalten</string>
     <string name="title_advanced_keyboard">Tastatur immer anzeigen</string>
@@ -298,6 +298,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_monospaced">Unproportionale Schriftart für den Nachrichtentext verwenden</string>
     <string name="title_advanced_text_color">Textfarben anzeigen</string>
     <string name="title_advanced_text_size">Kleine und große Texte anzeigen</string>
+    <string name="title_advanced_text_align">Texte linksbündig/zentriert/rechtsbündig ausgerichtetet anzeigen</string>
     <string name="title_advanced_collapse_quotes">Zitierten Text ausblenden</string>
     <string name="title_advanced_images_inline">Eingebettete Grafiken automatisch anzeigen</string>
     <string name="title_advanced_seekbar">Relative Unterhaltungsposition mit einem Punkt kennzeichnen</string>
@@ -743,7 +744,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_add_image_inline">Einfügen</string>
     <string name="title_add_image_attach">Anhängen</string>
     <string name="title_add_image_resize">Größe ändern</string>
-    <string name="title_add_image_privacy">Geografischen Standort entfernen</string>
+    <string name="title_add_image_privacy">Aufnahmeort entfernen</string>
     <string name="title_add_resize_pixels">&lt; %1$d Pixel</string>
     <string name="title_add_image_select">Datei auswählen</string>
     <string name="title_add_attachment">Anhang hinzufügen</string>
@@ -812,6 +813,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_search_for_hint">Text eingeben</string>
     <string name="title_search_hint">Bei der Suche werden zunächst die auf Ihrem Gerät gespeicherten Nachrichten durchsucht. Um auch die Nachrichten auf dem Server zu durchsuchen, tippen Sie auf die Schaltfläche „Erneut suchen“.    </string>
     <string name="title_search_index_hint">Die Suche über den Suchindex ist schnell, wird aber nur für ganze Wörter durchgeführt</string>
+    <string name="title_search_text_hint">Einige E-Mail-Server haben Probleme, Text in einer großen Anzahl von Nachrichten zu finden</string>
     <string name="title_search_more">Weitere Optionen</string>
     <string name="title_search_use_index">Suchindex verwenden</string>
     <string name="title_search_in_senders">In Absendern (von)</string>
