@@ -340,8 +340,9 @@ public class MessageHelper {
                 Log.i("Sending PGP encrypted message");
 
                 // Build header
+                // https://tools.ietf.org/html/rfc3156
                 BodyPart bpHeader = new MimeBodyPart();
-                bpHeader.setContent("", "application/pgp-encrypted");
+                bpHeader.setContent("Version: 1\n", "application/pgp-encrypted");
 
                 // Build content
                 BodyPart bpContent = new MimeBodyPart();
@@ -1590,7 +1591,7 @@ public class MessageHelper {
                 if (part.isMimeType("text/plain")) {
                     if ("flowed".equalsIgnoreCase(ct.getParameter("format")))
                         result = HtmlHelper.flow(result);
-                    result = "<div>" + HtmlHelper.formatPre(result) + "</div>";
+                    result = "<div x-plain=\"true\">" + HtmlHelper.formatPre(result) + "</div>";
                 } else if (part.isMimeType("text/html")) {
                     if (TextUtils.isEmpty(charset)) {
                         // <meta charset="utf-8" />

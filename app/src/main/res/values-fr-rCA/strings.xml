@@ -79,6 +79,7 @@
     <string name="title_notification_alert">Alerte serveur \'%1$s\'</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
+    <string name="title_from_to">%1$s ➤ %2$s</string>
     <string name="title_factor_minutes">%1$d minutes</string>
     <string name="menu_exit">Quitter</string>
     <string name="menu_answers">Modèles</string>
@@ -258,7 +259,7 @@
     <string name="title_advanced_caption_message_header">En-tête du message</string>
     <string name="title_advanced_caption_message_body">Contenu du message</string>
     <string name="title_advanced_landscape">Utiliser deux colonnes en mode paysage</string>
-    <string name="title_advanced_landscape3">Toujours afficher le menu de navigation en mode paysage</string>
+    <string name="title_advanced_landscape3">Afficher le menu de navigation en mode paysage par défaut</string>
     <string name="title_advanced_startup">Afficher sur l’écran de démarrage</string>
     <string name="title_advanced_cards">Utiliser le style carte au lieu du style tableau</string>
     <string name="title_advanced_date_header">Grouper par date</string>
@@ -278,6 +279,7 @@
     <string name="title_advanced_name_email">Afficher les noms et les adresses courriel</string>
     <string name="title_advanced_replace_name">Préférer un nom de contact à un nom d’envoi</string>
     <string name="title_advanced_distinguish_contacts">Souligner l’expéditeur quand il est connu comme contact local</string>
+    <string name="title_advanced_show_recipients">Afficher les destinataires dans l\'en-tête du message</string>
     <string name="title_advanced_font_size_sender">Taille de police de l’expéditeur</string>
     <string name="title_advanced_font_size_subject">Taille de police de l’objet</string>
     <string name="title_advanced_subject_top">Afficher l’objet au dessus de l’expéditeur</string>
@@ -860,6 +862,7 @@
     <string name="title_select_all">Tout sélectionner</string>
     <string name="title_select_found">Sélectionner les messages trouvés</string>
     <string name="title_force_sync">Forcer la synchronisation</string>
+    <string name="title_force_send">Forcer l’envoi</string>
     <string name="title_language_all">Toutes</string>
     <string name="title_previous">Précédent</string>
     <string name="title_next">Suivant</string>

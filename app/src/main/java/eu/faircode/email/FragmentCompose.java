@@ -1538,7 +1538,7 @@ public class FragmentCompose extends FragmentBase {
         }
     }
 
-    private void onEncrypt(final EntityMessage draft, final int action, final boolean interactive) {
+    private void onEncrypt(final EntityMessage draft, final int action, final Bundle extras, final boolean interactive) {
         if (EntityMessage.SMIME_SIGNONLY.equals(draft.ui_encrypt) ||
                 EntityMessage.SMIME_SIGNENCRYPT.equals(draft.ui_encrypt)) {
             Bundle args = new Bundle();
@@ -1575,7 +1575,7 @@ public class FragmentCompose extends FragmentBase {
                     boolean available = args.getBoolean("available");
                     if (available) {
                         args.putString("alias", identity.sign_key_alias);
-                        onSmime(args, action);
+                        onSmime(args, action, extras);
                         return;
                     }
 
@@ -1585,7 +1585,7 @@ public class FragmentCompose extends FragmentBase {
                             public void onSelected(String alias) {
                                 args.putString("alias", alias);
                                 if (alias != null)
-                                    onSmime(args, action);
+                                    onSmime(args, action, extras);
                             }
 
                             @Override
@@ -1643,6 +1643,7 @@ public class FragmentCompose extends FragmentBase {
                     Bundle largs = new Bundle();
                     largs.putLong("id", working);
                     largs.putInt("action", action);
+                    largs.putBundle("extras", extras);
                     largs.putBoolean("interactive", interactive);
                     intent.putExtra(BuildConfig.APPLICATION_ID, largs);
 
@@ -2209,12 +2210,14 @@ public class FragmentCompose extends FragmentBase {
 
                                 // send message
                                 args.putInt("action", largs.getInt("action"));
+                                args.putBundle("extras", largs.getBundle("extras"));
                                 return null;
                             } else if (OpenPgpApi.ACTION_SIGN_AND_ENCRYPT.equals(data.getAction())) {
                                 input.delete();
 
                                 // send message
                                 args.putInt("action", largs.getInt("action"));
+                                args.putBundle("extras", largs.getBundle("extras"));
                                 return null;
                             } else
                                 throw new IllegalStateException("Unknown action=" + data.getAction());
@@ -2245,7 +2248,7 @@ public class FragmentCompose extends FragmentBase {
                 Log.i("Result= " + result);
                 if (result == null) {
                     int action = args.getInt("action");
-                    Bundle extras = new Bundle();
+                    Bundle extras = args.getBundle("extras");
                     extras.putBoolean("encrypted", true);
                     onAction(action, extras, "pgp");
                 } else if (result instanceof Intent) {
@@ -2283,7 +2286,7 @@ public class FragmentCompose extends FragmentBase {
         }.execute(this, args, "compose:pgp");
     }
 
-    private void onSmime(Bundle args, final int action) {
+    private void onSmime(Bundle args, final int action, final Bundle extras) {
         new SimpleTask<Void>() {
             @Override
             protected Void onExecute(Context context, Bundle args) throws Throwable {
@@ -2431,23 +2434,30 @@ public class FragmentCompose extends FragmentBase {
                 certs.add(chain[0]); // Allow sender to decrypt own message
 
                 for (Address address : addresses) {
+                    boolean found = false;
+                    Throwable cex = null;
                     String email = ((InternetAddress) address).getAddress();
-
                     List<EntityCertificate> acertificates = db.certificate().getCertificateByEmail(email);
-                    if (acertificates == null || acertificates.size() == 0)
-                        throw new IllegalArgumentException(
-                                context.getString(R.string.title_certificate_missing, email), new CertificateException());
-
-                    for (EntityCertificate acertificate : acertificates) {
-                        X509Certificate cert = acertificate.getCertificate();
-                        try {
-                            cert.checkValidity();
-                        } catch (CertificateException ex) {
-                            throw new IllegalArgumentException(
-                                    context.getString(R.string.title_certificate_invalid, email), ex);
+                    if (acertificates != null)
+                        for (EntityCertificate acertificate : acertificates) {
+                            X509Certificate cert = acertificate.getCertificate();
+                            try {
+                                cert.checkValidity();
+                                certs.add(cert);
+                                found = true;
+                            } catch (CertificateException ex) {
+                                Log.w(ex);
+                                cex = ex;
+                            }
                         }
-                        certs.add(cert);
-                    }
+
+                    if (!found)
+                        if (cex == null)
+                            throw new IllegalArgumentException(
+                                    context.getString(R.string.title_certificate_missing, email));
+                        else
+                            throw new IllegalArgumentException(
+                                    context.getString(R.string.title_certificate_invalid, email), cex);
                 }
 
                 // Build signature
@@ -2510,7 +2520,6 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onExecuted(Bundle args, Void result) {
-                Bundle extras = new Bundle();
                 extras.putBoolean("encrypted", true);
                 onAction(action, extras, "smime");
             }
@@ -2526,7 +2535,7 @@ public class FragmentCompose extends FragmentBase {
                             public void onClick(View v) {
                                 startActivity(
                                         new Intent(getContext(), ActivitySetup.class)
-                                                .putExtra("tab", "privacy"));
+                                                .putExtra("tab", "encryption"));
                             }
                         });
                     snackbar.show();
@@ -3222,8 +3231,11 @@ public class FragmentCompose extends FragmentBase {
                                 data.draft.receipt_request = false;
                             }
 
-                        } else if ("forward".equals(action) || "editasnew".equals(action))
+                        } else if ("forward".equals(action)) {
                             data.draft.thread = data.draft.msgid; // new thread
+                            data.draft.wasforwardedfrom = ref.msgid;
+                        } else if ("editasnew".equals(action))
+                            data.draft.thread = data.draft.msgid;
 
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action)) {
@@ -3438,7 +3450,7 @@ public class FragmentCompose extends FragmentBase {
                     data.draft.from = new InternetAddress[]{new InternetAddress(selected.email, selected.name)};
 
                     data.draft.sender = MessageHelper.getSortKey(data.draft.from);
-                    Uri lookupUri = ContactInfo.getLookupUri(context, data.draft.from);
+                    Uri lookupUri = ContactInfo.getLookupUri(data.draft.from);
                     data.draft.avatar = (lookupUri == null ? null : lookupUri.toString());
 
                     data.draft.received = new Date().getTime();
@@ -3923,7 +3935,7 @@ public class FragmentCompose extends FragmentBase {
                         draft.subject = subject;
                         draft.signature = signature;
                         draft.sender = MessageHelper.getSortKey(draft.from);
-                        Uri lookupUri = ContactInfo.getLookupUri(context, draft.from);
+                        Uri lookupUri = ContactInfo.getLookupUri(draft.from);
                         draft.avatar = (lookupUri == null ? null : lookupUri.toString());
                         db.message().updateMessage(draft);
                     }
@@ -4255,7 +4267,7 @@ public class FragmentCompose extends FragmentBase {
                         EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt) ||
                         EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt)) {
                     boolean interactive = args.getBoolean("interactive");
-                    onEncrypt(draft, action, interactive);
+                    onEncrypt(draft, action, extras, interactive);
                 } else
                     startActivity(new Intent(getContext(), ActivityBilling.class));
                 return;

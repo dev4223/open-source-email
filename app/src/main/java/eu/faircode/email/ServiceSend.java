@@ -68,7 +68,8 @@ public class ServiceSend extends ServiceBase {
 
     private PowerManager.WakeLock wlOutbox;
     private TwoStateOwner owner = new TwoStateOwner("send");
-    private ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
+
+    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "send");
 
     private static final int PI_SEND = 1;
     private static final long CONNECTIVITY_DELAY = 5000L; // milliseconds
@@ -269,6 +270,9 @@ public class ServiceSend extends ServiceBase {
     private void processOperations() {
         try {
             wlOutbox.acquire();
+
+            if (!ConnectionHelper.getNetworkState(this).isSuitable())
+                return;
 
             DB db = DB.getInstance(this);
             EntityFolder outbox = db.folder().getOutbox();
@@ -515,6 +519,12 @@ public class ServiceSend extends ServiceBase {
                     List<EntityMessage> replieds = db.message().getMessagesByMsgId(message.account, message.inreplyto);
                     for (EntityMessage replied : replieds)
                         EntityOperation.queue(this, replied, EntityOperation.ANSWERED, true);
+                }
+
+                if (message.wasforwardedfrom != null) {
+                    List<EntityMessage> forwardeds = db.message().getMessagesByMsgId(message.account, message.wasforwardedfrom);
+                    for (EntityMessage forwarded : forwardeds)
+                        EntityOperation.queue(this, forwarded, EntityOperation.KEYWORD, "$Forwarded", true);
                 }
 
                 // Check sent message

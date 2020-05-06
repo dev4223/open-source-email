@@ -80,6 +80,7 @@
     <string name="title_notification_alert">\'%1$s\' Server-Warnung</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
+    <string name="title_from_to">%1$s ➤ %2$s</string>
     <string name="title_factor_minutes">%1$d Minuten</string>
     <string name="menu_exit">Beenden</string>
     <string name="menu_answers">Vorlagen</string>
@@ -259,7 +260,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_caption_message_header">Nachrichtenkopfzeilen</string>
     <string name="title_advanced_caption_message_body">Nachrichtentext</string>
     <string name="title_advanced_landscape">Zwei Spalten im Querformat verwenden</string>
-    <string name="title_advanced_landscape3">Festes Navigationsmenü im Querformat erlauben</string>
+    <string name="title_advanced_landscape3">Navigationsmenü standardmäßig im Querformat anzeigen</string>
     <string name="title_advanced_startup">Auf Startbildschirm anzeigen:</string>
     <string name="title_advanced_cards">Ordner und Unterhaltungen mit Rahmen (breit) statt in Tabellendesign (schmal) zeigen</string>
     <string name="title_advanced_date_header">Nach Datum gruppieren</string>
@@ -279,6 +280,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_name_email">Namen und E-Mail-Adressen anzeigen</string>
     <string name="title_advanced_replace_name">Einen Kontaktnamen gegenüber einem gesendeten Namen bevorzugen</string>
     <string name="title_advanced_distinguish_contacts">Den Sender unterstrichen darstellen, wenn er ein bekannter lokaler \'An\'-Kontakt ist</string>
+    <string name="title_advanced_show_recipients">Empfänger im Nachrichtenkopf anzeigen</string>
     <string name="title_advanced_font_size_sender">Schriftgröße für den Absender</string>
     <string name="title_advanced_font_size_subject">Schriftgröße für den Betreff</string>
     <string name="title_advanced_subject_top">Betreff oberhalb des Absenders anzeigen</string>
@@ -298,7 +300,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_monospaced">Unproportionale Schriftart für den Nachrichtentext verwenden</string>
     <string name="title_advanced_text_color">Textfarben anzeigen</string>
     <string name="title_advanced_text_size">Kleine und große Texte anzeigen</string>
-    <string name="title_advanced_text_align">Texte linksbündig/zentriert/rechtsbündig ausgerichtetet anzeigen</string>
+    <string name="title_advanced_text_align">links-/rechtsbündige/zentrierte Texte anzeigen</string>
     <string name="title_advanced_collapse_quotes">Zitierten Text ausblenden</string>
     <string name="title_advanced_images_inline">Eingebettete Grafiken automatisch anzeigen</string>
     <string name="title_advanced_seekbar">Relative Unterhaltungsposition mit einem Punkt kennzeichnen</string>
@@ -744,7 +746,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_add_image_inline">Einfügen</string>
     <string name="title_add_image_attach">Anhängen</string>
     <string name="title_add_image_resize">Größe ändern</string>
-    <string name="title_add_image_privacy">Aufnahmeort entfernen</string>
+    <string name="title_add_image_privacy">Standort entfernen</string>
     <string name="title_add_resize_pixels">&lt; %1$d Pixel</string>
     <string name="title_add_image_select">Datei auswählen</string>
     <string name="title_add_attachment">Anhang hinzufügen</string>
@@ -860,6 +862,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_select_all">Alle auswählen</string>
     <string name="title_select_found">Alle gefundenen Nachrichten auswählen</string>
     <string name="title_force_sync">Synchronisation erzwingen</string>
+    <string name="title_force_send">Senden erzwingen</string>
     <string name="title_language_all">Alle</string>
     <string name="title_previous">Vorherige</string>
     <string name="title_next">Nächste</string>
