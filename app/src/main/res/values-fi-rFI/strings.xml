@@ -78,6 +78,7 @@
     <string name="title_notification_alert">Palvelimen \'%1$s\' hälytys</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
+    <string name="title_from_to">%1$s ➤ %2$s</string>
     <string name="title_factor_minutes">%1$d minuuttia</string>
     <string name="menu_exit">Poistu</string>
     <string name="menu_answers">Viestipohjat</string>
@@ -133,7 +134,7 @@
     <string name="title_setup_no_settings">Asetuksia ei löytynyt verkkotunnukselle \'%1$s\'</string>
     <string name="title_setup_no_settings_hint">Yritä asettaa tili ja identiteetti asetusvaiheissa 1 ja 2 käyttäen sähköpostipalveluntarjoajasi antamia asetuksia</string>
     <string name="title_setup_no_auth_hint">Tarkista sähköpostiosoitteesi ja salasanasi ja varmista, että ulkopuolinen yhteys (IMAP/SMTP) on käytössä tilillesi</string>
-    <string name="title_setup_app_password_hint">Tämä palveluntarjoaja vaatii sovelluksen salasanan tilin salasanan sijaan</string>
+    <string name="title_setup_app_password_hint">Tämä palveluntarjoaja vaatii sovellussalasanan tilin salasanan sijaan, ole hyvä ja tarkista palveluntarjoajan ohjeet</string>
     <string name="title_setup_no_system_folders">Saapuneet- tai luonnokset-kansiota ei löytynyt</string>
     <string name="title_setup_quick_success">Tili ja identiteetti on lisätty onnistuneesti</string>
     <string name="title_setup_quick_failed">Voit yrittää määrittää tilin ja identiteetin alla</string>
@@ -276,6 +277,7 @@
     <string name="title_advanced_name_email">Näytä nimet ja sähköpostiosoitteet</string>
     <string name="title_advanced_replace_name">Käytä ensisijaisesti yhteystiedon nimeä lähettäjän nimen sijaan</string>
     <string name="title_advanced_distinguish_contacts">Alleviivaa lähettäjä tämän ollessa paikallisesti tunnettu vastaanottaja</string>
+    <string name="title_advanced_show_recipients">Näytä vastaanottajat viestin tunnistetiedoissa</string>
     <string name="title_advanced_font_size_sender">Viestin lähettäjän kirjaisimen koko</string>
     <string name="title_advanced_font_size_subject">Viestin aiheen kirjaisimen koko</string>
     <string name="title_advanced_subject_top">Näytä aihe lähettäjän yläpuolella</string>
@@ -968,6 +970,7 @@
     <string name="title_legend_snoozed">Torkutettu</string>
     <string name="title_legend_browsed">Selattu tai haettu</string>
     <string name="title_legend_answered">Vastattu</string>
+    <string name="title_legend_forwarded">Edelleenlähetetty</string>
     <string name="title_legend_plain_only">Muotoilematon teksti</string>
     <string name="title_legend_receipt">Kuittaus pyydetty</string>
     <string name="title_legend_attachment">Sisältää liitteen</string>

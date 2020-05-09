@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
@@ -61,7 +60,7 @@ import io.requery.android.database.sqlite.SQLiteDatabase;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 157,
+        version = 158,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -1566,6 +1565,13 @@ public abstract class DB extends RoomDatabase {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `wasforwardedfrom` TEXT");
                     }
+                })
+                .addMigrations(new Migration(157, 158) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `uidl` TEXT");
+                    }
                 });
     }
 
@@ -1631,24 +1637,27 @@ public abstract class DB extends RoomDatabase {
             return jaddresses.toString();
         }
 
-        private static String JSPLIT = Pattern.quote("}],[{");
-
         @TypeConverter
         public static Address[] decodeAddresses(String json) {
             if (json == null)
                 return null;
-            else if (json.startsWith("[[")) {
-                // [[{"address":"...","personal":"..."}],[{... ...}]]
-                // There is a slim chance somebody uses the split pattern in an email address
-                String[] parts = json.substring(3, json.length() - 3).split(JSPLIT);
-                Address[] addresses = new Address[parts.length];
-                for (int i = 0; i < parts.length; i++)
-                    addresses[i] = InternetAddressJson.from(parts[i]);
-                return addresses;
-            } else {
-                // [{"address":"...","personal":"..."}]
-                return new Address[]{InternetAddressJson.from(json.substring(2, json.length() - 2))};
+
+            List<Address> result = new ArrayList<>();
+            try {
+                JSONArray jroot = new JSONArray(json);
+                for (int i = 0; i < jroot.length(); i++) {
+                    Object item = jroot.get(i);
+                    if (jroot.get(i) instanceof JSONArray)
+                        for (int j = 0; j < ((JSONArray) item).length(); j++)
+                            result.add(InternetAddressJson.from((JSONObject) ((JSONArray) item).get(j)));
+                    else
+                        result.add(InternetAddressJson.from((JSONObject) item));
+                }
+            } catch (Throwable ex) {
+                // Compose can store invalid addresses
+                Log.w(ex);
             }
+            return result.toArray(new Address[0]);
         }
     }
 }

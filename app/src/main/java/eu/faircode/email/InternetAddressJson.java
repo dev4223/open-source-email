@@ -2,20 +2,16 @@ package eu.faircode.email;
 
 /*
     This file is part of FairEmail.
-
     FairEmail is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     FairEmail is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
-
     Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
@@ -31,7 +27,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 public class InternetAddressJson extends InternetAddress {
-    private String json;
+    private JSONObject json;
 
     private InternetAddressJson() {
     }
@@ -48,7 +44,7 @@ public class InternetAddressJson extends InternetAddress {
     private InternetAddressJson(String address, String personal, String charset) throws UnsupportedEncodingException {
     }
 
-    public static Address from(String json) {
+    public static Address from(JSONObject json) {
         InternetAddressJson result = new InternetAddressJson();
         result.json = json;
         return result;
@@ -105,13 +101,12 @@ public class InternetAddressJson extends InternetAddress {
     private void ensureParsed() {
         if (this.json != null) {
             try {
-                JSONObject jaddress = new JSONObject("{" + this.json + "}");
-                String address = jaddress.getString("address");
-                String personal = jaddress.optString("personal");
-                if (!TextUtils.isEmpty(address))
-                    super.setAddress(address);
-                if (!TextUtils.isEmpty(personal))
-                    super.setPersonal(personal, StandardCharsets.UTF_8.name());
+                String email = json.getString("address");
+                String personal = json.optString("personal");
+                if (TextUtils.isEmpty(personal))
+                    personal = null;
+                this.setAddress(email);
+                this.setPersonal(personal, StandardCharsets.UTF_8.name());
             } catch (Throwable ex) {
                 Log.e(ex);
             }

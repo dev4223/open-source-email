@@ -102,6 +102,7 @@ public class EntityMessage implements Serializable {
     public Long replying; // obsolete
     public Long forwarding; // obsolete
     public Long uid; // compose/moved = null
+    public String uidl; // POP3
     public String msgid;
     public String hash; // headers hash
     public String references;
@@ -314,6 +315,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.references, other.references) &&
                     Objects.equals(this.deliveredto, other.deliveredto) &&
                     Objects.equals(this.inreplyto, other.inreplyto) &&
+                    Objects.equals(this.wasforwardedfrom, other.wasforwardedfrom) &&
                     Objects.equals(this.thread, other.thread) &&
                     Objects.equals(this.priority, other.priority) &&
                     Objects.equals(this.receipt, other.receipt) &&
