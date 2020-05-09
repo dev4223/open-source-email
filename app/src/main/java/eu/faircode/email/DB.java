@@ -26,7 +26,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +60,7 @@ import io.requery.android.database.sqlite.SQLiteDatabase;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 157,
+        version = 158,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -1566,6 +1565,13 @@ public abstract class DB extends RoomDatabase {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `wasforwardedfrom` TEXT");
                     }
+                })
+                .addMigrations(new Migration(157, 158) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `message` ADD COLUMN `uidl` TEXT");
+                    }
                 });
     }
 
@@ -1635,25 +1641,17 @@ public abstract class DB extends RoomDatabase {
         public static Address[] decodeAddresses(String json) {
             if (json == null)
                 return null;
+
             List<Address> result = new ArrayList<>();
             try {
                 JSONArray jroot = new JSONArray(json);
-                JSONArray jaddresses = new JSONArray();
                 for (int i = 0; i < jroot.length(); i++) {
                     Object item = jroot.get(i);
                     if (jroot.get(i) instanceof JSONArray)
                         for (int j = 0; j < ((JSONArray) item).length(); j++)
-                            jaddresses.put(((JSONArray) item).get(j));
+                            result.add(InternetAddressJson.from((JSONObject) ((JSONArray) item).get(j)));
                     else
-                        jaddresses.put(item);
-                }
-                for (int i = 0; i < jaddresses.length(); i++) {
-                    JSONObject jaddress = (JSONObject) jaddresses.get(i);
-                    String email = jaddress.getString("address");
-                    String personal = jaddress.optString("personal");
-                    if (TextUtils.isEmpty(personal))
-                        personal = null;
-                    result.add(new InternetAddress(email, personal, StandardCharsets.UTF_8.name()));
+                        result.add(InternetAddressJson.from((JSONObject) item));
                 }
             } catch (Throwable ex) {
                 // Compose can store invalid addresses

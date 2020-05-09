@@ -149,6 +149,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -2277,7 +2278,8 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof OperationCanceledException)
                     ; // Do nothing
-                else if (ex instanceof IllegalArgumentException) {
+                else if (ex instanceof IllegalArgumentException
+                        || ex instanceof GeneralSecurityException /* InvalidKeyException */) {
                     Log.i(ex);
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
                 } else
@@ -4108,6 +4110,9 @@ public class FragmentCompose extends FragmentBase {
                             if (empty && d.select("div[fairemail=reference]").isEmpty())
                                 args.putBoolean("remind_text", true);
 
+                            if (draft.plain_only != null && draft.plain_only)
+                                args.putBoolean("remind_plain", true);
+
                             int attached = 0;
                             for (EntityAttachment attachment : attachments)
                                 if (!attachment.available)
@@ -4294,6 +4299,7 @@ public class FragmentCompose extends FragmentBase {
                 boolean remind_pgp = args.getBoolean("remind_pgp", false);
                 boolean remind_subject = args.getBoolean("remind_subject", false);
                 boolean remind_text = args.getBoolean("remind_text", false);
+                boolean remind_plain = args.getBoolean("remind_plain", false);
                 boolean remind_attachment = args.getBoolean("remind_attachment", false);
 
                 int recipients = (draft.to == null ? 0 : draft.to.length) +
@@ -4301,7 +4307,7 @@ public class FragmentCompose extends FragmentBase {
                         (draft.bcc == null ? 0 : draft.bcc.length);
                 if (send_dialog || (send_reminders &&
                         (address_error != null || remind_to || remind_extra || remind_pgp ||
-                                remind_subject || remind_text || remind_attachment ||
+                                remind_subject || remind_text || remind_plain || remind_attachment ||
                                 recipients > RECIPIENTS_WARNING))) {
                     setBusy(false);
 
