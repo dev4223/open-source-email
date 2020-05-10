@@ -1534,7 +1534,9 @@ class Core {
 
             Map<String, TupleUidl> uidls = new HashMap<>();
             for (TupleUidl id : ids)
-                if (id.uidl != null)
+                if (id.uidl == null)
+                    db.message().deleteMessage(id.id);
+                else
                     uidls.put(id.uidl, id);
 
             for (Message imessage : imessages)
