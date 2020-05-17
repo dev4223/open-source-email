@@ -1519,6 +1519,8 @@ public class FragmentCompose extends FragmentBase {
 
         Bundle args = new Bundle();
         args.putParcelable("uri", uri);
+        args.putInt("start", etBody.getSelectionStart());
+        args.putInt("end", etBody.getSelectionEnd());
 
         FragmentDialogLink fragment = new FragmentDialogLink();
         fragment.setArguments(args);
@@ -2674,6 +2676,9 @@ public class FragmentCompose extends FragmentBase {
 
     private void onLinkSelected(Bundle args) {
         String link = args.getString("link");
+        int start = args.getInt("start");
+        int end = args.getInt("end");
+        etBody.setSelection(start, end);
         StyleHelper.apply(R.id.menu_link, etBody, link);
     }
 
@@ -4662,8 +4667,8 @@ public class FragmentCompose extends FragmentBase {
                             ContactsContract.Groups.ACCOUNT_NAME,
                             ContactsContract.Groups.ACCOUNT_TYPE,
                     },
-                    ContactsContract.Groups.GROUP_VISIBLE + " = 1" +
-                            " AND " + ContactsContract.Groups.DELETED + " = 0" +
+                    // ContactsContract.Groups.GROUP_VISIBLE + " = 1" + " AND " +
+                    ContactsContract.Groups.DELETED + " = 0" +
                             " AND " + ContactsContract.Groups.SUMMARY_COUNT + " > 0",
                     null,
                     ContactsContract.Groups.TITLE

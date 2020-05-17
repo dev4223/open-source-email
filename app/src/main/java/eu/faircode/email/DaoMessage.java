@@ -459,13 +459,14 @@ public interface DaoMessage {
     LiveData<List<TupleMessageWidgetCount>> liveWidgetUnified();
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName" +
+            ", account.name AS accountName, account.color AS accountColor" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", COUNT(message.id) - SUM(message.ui_flagged) AS unflagged" +
             ", MAX(message.received) AS dummy" +
             " FROM message" +
             " JOIN account_view AS account ON account.id = message.account" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " LEFT JOIN identity ON identity.id = message.identity" +
             " WHERE account.`synchronize`" +
             " AND (:account IS NULL OR account.id = :account)" +
             " AND ((:folder IS NULL AND folder.unified) OR folder.id = :folder)" +
