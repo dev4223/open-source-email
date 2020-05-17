@@ -327,6 +327,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     static final String ACTION_STORE_RAW = BuildConfig.APPLICATION_ID + ".STORE_RAW";
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
+    static final String ACTION_KEYWORDS = BuildConfig.APPLICATION_ID + ".KEYWORDS";
 
     private static final long REVIEW_ASK_DELAY = 21 * 24 * 3600 * 1000L; // milliseconds
     private static final long REVIEW_LATER_DELAY = 3 * 24 * 3600 * 1000L; // milliseconds
@@ -1444,6 +1445,21 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     values.get(name).add(id);
             } else
                 values.get(name).remove(id);
+
+            if ("selected".equals(name) && enabled) {
+                int pos = adapter.getPositionForKey(id);
+                if (pos != NO_POSITION)
+                    adapter.notifyItemChanged(pos);
+
+                for (Long other : new ArrayList<>(values.get("selected")))
+                    if (!other.equals(id)) {
+                        values.get(name).remove(other);
+
+                        pos = adapter.getPositionForKey(other);
+                        if (pos != NO_POSITION)
+                            adapter.notifyItemChanged(pos);
+                    }
+            }
         }
 
         @Override
@@ -3011,11 +3027,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             autoExpanded = savedInstanceState.getBoolean("fair:autoExpanded");
             autoCloseCount = savedInstanceState.getInt("fair:autoCloseCount");
 
-            for (String name : savedInstanceState.getStringArray("fair:values")) {
-                values.put(name, new ArrayList<Long>());
-                for (Long value : savedInstanceState.getLongArray("fair:name:" + name))
-                    values.get(name).add(value);
-            }
+            for (String name : savedInstanceState.getStringArray("fair:values"))
+                if (!"selected".equals(name)) {
+                    values.put(name, new ArrayList<>());
+                    for (Long value : savedInstanceState.getLongArray("fair:name:" + name))
+                        values.get(name).add(value);
+                }
 
             if (rvMessage != null) {
                 Parcelable rv = savedInstanceState.getParcelable("fair:rv");
@@ -3168,6 +3185,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         IntentFilter iff = new IntentFilter();
         iff.addAction(ACTION_STORE_RAW);
         iff.addAction(ACTION_DECRYPT);
+        iff.addAction(ACTION_KEYWORDS);
         lbm.registerReceiver(receiver, iff);
 
         ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -4813,6 +4831,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     onStoreRaw(intent);
                 else if (ACTION_DECRYPT.equals(action))
                     onDecrypt(intent);
+                else if (ACTION_KEYWORDS.equals(action))
+                    adapter.notifyDataSetChanged();
             }
         }
     };
