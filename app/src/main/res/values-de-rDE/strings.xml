@@ -568,6 +568,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_folder_name">Ordnername</string>
     <string name="title_display_name">Anzeigename</string>
     <string name="title_show_folders">Ausgeblendete Ordner anzeigen</string>
+    <string name="title_show_flagged">Anzahl markierter Nachrichten anzeigen</string>
     <string name="title_subscribed_only">Nur abonnierte</string>
     <string name="title_apply_to_all">Auf alle anwenden &#8230;</string>
     <string name="title_hide_folder">Ordner ausblenden</string>
@@ -627,6 +628,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_editasnew">Als neu bearbeiten</string>
     <string name="title_create_rule">Regel erstellen &#8230;</string>
     <string name="title_share">Teilen</string>
+    <string name="title_event">Zum Kalender hinzufügen</string>
     <string name="title_pin">Verknüpfung hinzufügen</string>
     <string name="title_print">Drucken</string>
     <string name="title_show_headers">Kopfzeilen anzeigen</string>
@@ -1102,7 +1104,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
         Um FairEmail langfristig mit Support verfügbar zu halten, sind einige Komfort- und erweiterte Funktionen nicht kostenlos.
         Zur Erinnerung zeigt FairEmail ein kleines Banner an, dies verschwindet beim Kauf der Pro-Funktionen.
     </string>
-    <string name="title_pro_hide">Kleine Hinweisnachricht für eine Woche ausblenden</string>
+    <string name="title_pro_hide">Kleine Hinweisnachricht für zwei Wochen ausblenden</string>
     <string name="title_pro_hint">Der Erwerb der Pro-Funktionen erlaubt es Ihnen alle momentan und zukünftig verfügbaren Pro-Funktionen zu nutzen und ermöglicht die Weiterentwicklung und Pflege der App.</string>
     <string name="title_pro_price">Informationen zum Preis der Pro-Funktionen finden Sie in der <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">Hilfe</a></string>
     <string name="title_pro_pending">Kauf ausstehend</string>

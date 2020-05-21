@@ -611,10 +611,17 @@ So, unless your provider can enable this extension, you cannot use FairEmail for
 
 *General*
 
-Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works. In short:
+Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
 
-* **Outgoing** messages are encrypted with the **public key** of the other party
-* **Incoming** messages are decrypted with your own **private key**
+Encryption in short:
+
+* **Outgoing** messages are encrypted with the **public key** of the recipient
+* **Incoming** messages are decrypted with the **private key** of the recipient
+
+Signing in short:
+
+* **Outgoing** messages are signed with the **private key** of the sender
+* **Incoming** messages are verified with the **public key** of the sender
 
 To sign/encrypt a message, just select the appropriate method in the send dialog.
 You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
@@ -2531,6 +2538,9 @@ for example when the internet connection is bad or a firewall or a VPN is blocki
 FairEmail will wait 8, 16 and 32 seconds while keeping the device awake (=use battery power) and try again to connect.
 If this fails, FairEmail will schedule an alarm to retry after 15, 30 and 60 minutes and let the device sleep (=no battery usage).
 
+Between connectivity changes there is a wait of 90 seconds to give the email server the opportunity to discover the old connection is broken.
+This is necessary because the internet connection of a mobile device is often lost abruptly and will prevent the problem described in [this FAQ](#user-content-faq23).
+
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby)
 does not allow to wake the device earlier than after 15 minutes.
 
@@ -2983,11 +2993,12 @@ Requested features should:
 * be useful to most people
 * not complicate the usage of FairEmail
 * fit within the philosophy of FairEmail (privacy oriented, security minded)
+* comply with common standards (IMAP, SMTP, etc)
 
 Features not fulfilling these requirements will likely be rejected.
 
-If you have another question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
+If you have a question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
 
-GitHub issues have been disabled due to frequent abuse.
+GitHub issues are disabled due to frequent misusage.
 
 Copyright &copy; 2018-2020 Marcel Bokhorst.

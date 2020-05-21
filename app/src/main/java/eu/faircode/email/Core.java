@@ -1070,7 +1070,8 @@ class Core {
                         msgid = helper.getMessageID();
 
                     Log.i("POP searching=" + message.msgid + " iterate=" + msgid);
-                    if (msgid != null && msgid.equals(message.msgid)) {
+                    if (msgid != null &&
+                            (msgid.equals(message.uidl) || msgid.equals(message.msgid))) {
                         found = true;
                         Log.i(folder.name + " POP delete=" + msgid);
                         imessage.setFlag(Flags.Flag.DELETED, true);
@@ -3648,7 +3649,8 @@ class Core {
         }
 
         long getIdleTime() {
-            return (lastActivity == null ? 0 : SystemClock.elapsedRealtime() - lastActivity);
+            Long last = lastActivity;
+            return (last == null ? 0 : SystemClock.elapsedRealtime() - last);
         }
 
         long getSequence(long folder, int priority) {

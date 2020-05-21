@@ -795,7 +795,7 @@ public class HtmlHelper {
             // separate columns
             if (hasVisibleContent(col.childNodes()))
                 if (col.nextElementSibling() != null)
-                    col.appendText("\u2003"); // em space
+                    col.appendText(" ");
 
             if ("th".equals(col.tagName()))
                 col.tagName("strong");
@@ -1299,6 +1299,7 @@ public class HtmlHelper {
         String[] lines = text.split("\\r?\\n");
         for (String line : lines) {
             // Opening quotes
+            // https://tools.ietf.org/html/rfc3676#section-4.5
             int tlevel = 0;
             while (line.startsWith(">")) {
                 tlevel++;
@@ -1307,9 +1308,12 @@ public class HtmlHelper {
 
                 line = line.substring(1); // >
 
-                if (line.startsWith(" "))
+                if (line.startsWith(" >"))
                     line = line.substring(1);
             }
+            if (tlevel > 0)
+                if (line.length() > 0 && line.charAt(0) == ' ')
+                    line = line.substring(1);
 
             // Closing quotes
             for (int i = 0; i < level - tlevel; i++)
@@ -1567,14 +1571,19 @@ public class HtmlHelper {
             ssb.insert(end, "[" + source + "]");
         }
 
+        // https://tools.ietf.org/html/rfc3676#section-4.5
         for (QuoteSpan span : ssb.getSpans(0, ssb.length(), QuoteSpan.class)) {
             int start = ssb.getSpanStart(span);
             int end = ssb.getSpanEnd(span);
+
             for (int i = end - 1; i >= start; i--)
                 if (ssb.charAt(i) == '\n')
-                    ssb.insert(i + 1, "> ");
-            if (ssb.charAt(start) != '\n')
-                ssb.insert(start, "> ");
+                    if (i + 1 < ssb.length() && ssb.charAt(i + 1) == '>')
+                        ssb.insert(i + 1, ">");
+                    else
+                        ssb.insert(i + 1, "> ");
+
+            ssb.insert(start, ssb.charAt(start) == '>' ? ">" : "> ");
         }
 
         for (BulletSpan span : ssb.getSpans(0, ssb.length(), BulletSpan.class)) {
@@ -1849,7 +1858,7 @@ public class HtmlHelper {
                     // Remove multiple trailing whitespace
                     index = text.length() - 1;
                     while (isWhiteSpace(text, index) &&
-                            (i == block.size() - 1 || index == 0 || isWhiteSpace(text, index - 1)))
+                            (isWhiteSpace(text, index - 1) || i == block.size() - 1))
                         index--;
 
                     text = text.substring(0, index + 1);
@@ -2004,9 +2013,9 @@ public class HtmlHelper {
                                 ssb.insert(start++, "\n");
 
                             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                ssb.setSpan(new QuoteSpan(colorPrimary), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                ssb.setSpan(new QuoteSpan(colorPrimary), start, ssb.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
                             else
-                                ssb.setSpan(new QuoteSpan(colorPrimary, dp3, dp6), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                ssb.setSpan(new QuoteSpan(colorPrimary, dp3, dp6), start, ssb.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
 
                             if (ssb.length() > 1 && ssb.charAt(ssb.length() - 1) != '\n')
                                 ssb.append("\n");

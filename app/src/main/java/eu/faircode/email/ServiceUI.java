@@ -476,6 +476,7 @@ public class ServiceUI extends IntentService {
                                 .renameTo(message.getFile(this));
                 }
                 db.message().setMessageSnoozed(message.id, null);
+                db.message().setMessageUnsnoozed(message.id, true);
                 EntityOperation.queue(this, message, EntityOperation.SEEN, false, false);
             }
 
@@ -564,7 +565,7 @@ public class ServiceUI extends IntentService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         if (set) {
             long now = new Date().getTime();
-            long interval = AlarmManager.INTERVAL_DAY * 7;
+            long interval = AlarmManager.INTERVAL_DAY * 14;
             long due = interval - (now % interval);
             long trigger = now + due;
             Log.i("Set banner alarm at " + new Date(trigger) + " due=" + due);

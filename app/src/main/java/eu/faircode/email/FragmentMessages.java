@@ -213,7 +213,7 @@ import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_VALID_KEY_UN
 
 public class FragmentMessages extends FragmentBase implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ViewGroup view;
-    private SwipeRefreshLayout swipeRefresh;
+    private SwipeRefreshLayoutEx swipeRefresh;
     private TextView tvSupport;
     private ImageButton ibHintSupport;
     private ImageButton ibHintSwipe;
@@ -1334,20 +1334,21 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onSwipeRefresh() {
+        swipeRefresh.onRefresh();
+
         Bundle args = new Bundle();
         args.putLong("folder", folder);
         args.putString("type", type);
 
-        new SimpleTask<Integer>() {
+        new SimpleTask<Void>() {
             @Override
-            protected Integer onExecute(Context context, Bundle args) {
+            protected Void onExecute(Context context, Bundle args) {
                 long fid = args.getLong("folder");
                 String type = args.getString("type");
 
                 if (!ConnectionHelper.getNetworkState(context).isSuitable())
                     throw new IllegalStateException(context.getString(R.string.title_no_internet));
 
-                int count;
                 boolean now = true;
                 boolean force = false;
 
@@ -1369,8 +1370,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (folder != null)
                             folders.add(folder);
                     }
-
-                    count = folders.size();
 
                     for (EntityFolder folder : folders) {
                         EntityOperation.sync(context, folder.id, true);
@@ -1399,13 +1398,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (!now)
                     throw new IllegalArgumentException(context.getString(R.string.title_no_connection));
 
-                return count;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, Integer count) {
-                if (count > 0)
-                    swipeRefresh.setRefreshing(true);
+                return null;
             }
 
             @Override
@@ -1480,6 +1473,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             (message.accountAutoSeen && !message.ui_seen && !message.folderReadOnly))) {
                 message.unseen = 0;
                 message.ui_seen = true;
+                message.ui_unsnoozed = false;
             }
 
             setValue("expanded", message.id, value);
@@ -3200,10 +3194,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         adapter.setZoom(zoom);
 
         // Restart spinner
-        if (swipeRefresh.isRefreshing()) {
-            swipeRefresh.setRefreshing(false);
-            swipeRefresh.setRefreshing(true);
-        }
+        swipeRefresh.resetRefreshing();
 
         prefs.registerOnSharedPreferenceChangeListener(this);
         onSharedPreferenceChanged(prefs, "pro");
@@ -3839,10 +3830,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (folder.error != null && folder.account != null /* outbox */)
                 errors = true;
             if (folder.sync_state != null &&
-                    (folder.account == null || "connected".equals(folder.accountState))) {
+                    (folder.account == null || "connected".equals(folder.accountState)))
                 refreshing = true;
-                break;
-            }
         }
 
         // Get name
@@ -3872,8 +3861,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         else
             fabError.hide();
 
-        if (refreshing != swipeRefresh.isRefreshing())
-            swipeRefresh.setRefreshing(refreshing);
+        swipeRefresh.setRefreshing(refreshing);
     }
 
     private void loadMessages(final boolean top) {
@@ -4300,6 +4288,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (account == null)
                         return null;
 
+                    if (message.ui_unsnoozed)
+                        db.message().setMessageUnsnoozed(message.id, false);
+
                     if (account.protocol != EntityAccount.TYPE_IMAP) {
                         if (!message.ui_seen)
                             EntityOperation.queue(context, message, EntityOperation.SEEN, true);
@@ -4312,8 +4303,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 int ops = db.operation().getOperationCount(message.folder, message.id, EntityOperation.SEEN);
                                 if (!message.seen || ops > 0)
                                     EntityOperation.queue(context, message, EntityOperation.SEEN, true);
-                            } else
-                                db.message().setMessageUiIgnored(message.id, true);
+                            } else {
+                                if (!message.ui_ignored)
+                                    db.message().setMessageUiIgnored(message.id, true);
+                            }
                     }
 
                     db.setTransactionSuccessful();

@@ -567,6 +567,7 @@
     <string name="title_folder_name">Nom du dossier</string>
     <string name="title_display_name">Nom affiché</string>
     <string name="title_show_folders">Afficher les dossiers cachés</string>
+    <string name="title_show_flagged">Afficher le nombre de messages suivis</string>
     <string name="title_subscribed_only">Abonnés uniquement</string>
     <string name="title_apply_to_all">Appliquer à tous&#8230;</string>
     <string name="title_hide_folder">Masquer le dossier</string>
@@ -625,6 +626,7 @@
     <string name="title_editasnew">Modifier comme nouveau message</string>
     <string name="title_create_rule">Créer une règle&#8230;</string>
     <string name="title_share">Partager</string>
+    <string name="title_event">Ajouter au calendrier</string>
     <string name="title_pin">Ajouter un raccourci</string>
     <string name="title_print">Imprimer</string>
     <string name="title_show_headers">Afficher les en-têtes</string>
@@ -1102,7 +1104,7 @@
         Pour rendre FairEmail durable à long terme, certaines fonctionnalités pratiques et avancées ne sont pas gratuites.
         FairEmail affiche une bannière pour vous le rappeler, laquelle sera retirée si vous achetez les fonctionnalités pro.
     </string>
-    <string name="title_pro_hide">Masquer la bannière pendant une semaine</string>
+    <string name="title_pro_hide">Masquer la bannière pendant deux semaines</string>
     <string name="title_pro_hint">L’achat des fonctionnalités pro vous autorisera à utiliser toutes les fonctionnalités Pro actuelles et futures et permettra de maintenir et de soutenir cette application.</string>
     <string name="title_pro_price">Veuillez voir <a href="https://github.com/M66B/open-source-email/blob/master/FAQ.md#user-content-faq19">cette FAQ</a> à propos du prix des fonctionnalités pro</string>
     <string name="title_pro_pending">Achat en attente</string>

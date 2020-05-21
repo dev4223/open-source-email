@@ -719,15 +719,24 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarMaybe.setOnLongClickListener(this);
 
                 gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    private float scale = 1.0f;
+                    private Toast toast = null;
+
                     @Override
                     public boolean onScale(ScaleGestureDetector detector) {
                         TupleMessageEx message = getMessage();
                         if (message != null) {
                             float factor = detector.getScaleFactor();
                             float size = tvBody.getTextSize() * factor;
-                            //Log.i("Gesture factor=" + factor + " size=" + size);
                             properties.setSize(message.id, size);
                             tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+
+                            scale = scale * factor;
+                            String perc = Math.round(scale * 100) + " %";
+                            if (toast != null)
+                                toast.cancel();
+                            toast = ToastEx.makeText(context, perc, Toast.LENGTH_SHORT);
+                            toast.show();
                         }
                         return true;
                     }
@@ -1039,8 +1048,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSnoozed.setImageResource(
                     message.ui_snoozed != null && message.ui_snoozed == Long.MAX_VALUE
                             ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_timelapse_24);
+            if (message.ui_unsnoozed)
+                ibSnoozed.setColorFilter(colorAccent);
+            else
+                ibSnoozed.clearColorFilter();
 
-            ibSnoozed.setVisibility(message.ui_snoozed == null ? View.GONE : View.VISIBLE);
+            ibSnoozed.setVisibility(message.ui_snoozed == null && !message.ui_unsnoozed ? View.GONE : View.VISIBLE);
             ivAnswered.setVisibility(message.ui_answered ? View.VISIBLE : View.GONE);
             ivForwarded.setVisibility(message.isForwarded() ? View.VISIBLE : View.GONE);
             ivAttachments.setVisibility(message.attachments > 0 ? View.VISIBLE : View.GONE);
@@ -2859,13 +2872,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 if (EntityFolder.DRAFTS.equals(message.folderType) && message.visible == 1 &&
                         !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt) &&
-                        !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt)) {
+                        !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt))
                     context.startActivity(
                             new Intent(context, ActivityCompose.class)
                                     .putExtra("action", "edit")
                                     .putExtra("id", message.id));
-                    properties.setValue("selected", message.id, true);
-                } else {
+                else {
                     final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     final Intent viewThread = new Intent(ActivityView.ACTION_VIEW_THREAD)
                             .putExtra("account", message.account)
@@ -3745,6 +3757,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
+            popupMenu.getMenu().findItem(R.id.menu_event).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setEnabled(hasWebView && message.content);
             popupMenu.getMenu().findItem(R.id.menu_print).setVisible(Helper.canPrint(context));
 
@@ -3805,7 +3818,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             onMenuManageKeywords(message);
                             return true;
                         case R.id.menu_share:
-                            onMenuShare(message);
+                            onMenuShare(message, false);
+                            return true;
+                        case R.id.menu_event:
+                            if (ActivityBilling.isPro(context))
+                                onMenuShare(message, true);
+                            else
+                                context.startActivity(new Intent(context, ActivityBilling.class));
                             return true;
                         case R.id.menu_print:
                             onMenuPrint(message);
@@ -4285,14 +4304,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             fragment.show(parentFragment.getParentFragmentManager(), "keyword:manage");
         }
 
-        private void onMenuShare(TupleMessageEx message) {
+        private void onMenuShare(TupleMessageEx message, final boolean event) {
             Bundle args = new Bundle();
             args.putLong("id", message.id);
 
-            new SimpleTask<String[]>() {
+            new SimpleTask<Map<String, String>>() {
                 @Override
-                protected String[] onExecute(Context context, Bundle args) throws Throwable {
+                protected Map<String, String> onExecute(Context context, Bundle args) throws Throwable {
                     long id = args.getLong("id");
+
+                    Map<String, String> result = new HashMap<>();
 
                     DB db = DB.getInstance(context);
                     EntityMessage message = db.message().getMessage(id);
@@ -4303,39 +4324,61 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!file.exists())
                         return null;
 
-                    String from = null;
+                    if (message.identity != null) {
+                        EntityIdentity identity = db.identity().getIdentity(message.identity);
+                        if (identity != null)
+                            result.put("me", identity.email);
+                    }
+
                     if (message.from != null && message.from.length > 0)
-                        from = ((InternetAddress) message.from[0]).getAddress();
+                        result.put("from", ((InternetAddress) message.from[0]).getAddress());
+
+                    if (!TextUtils.isEmpty(message.subject))
+                        result.put("subject", message.subject);
 
                     String html = Helper.readText(file);
                     String text = HtmlHelper.getText(context, html);
 
-                    return new String[]{from, message.subject, text};
+                    if (!TextUtils.isEmpty(text))
+                        result.put("text", text);
+
+                    return result;
                 }
 
                 @Override
-                protected void onExecuted(Bundle args, String[] text) {
-                    if (text == null)
+                protected void onExecuted(Bundle args, Map<String, String> data) {
+                    if (data == null)
                         return;
 
-                    Intent share = new Intent();
-                    share.setAction(Intent.ACTION_SEND);
-                    share.setType("text/plain");
-                    if (!TextUtils.isEmpty(text[0]))
-                        share.putExtra(Intent.EXTRA_EMAIL, new String[]{text[0]});
-                    if (!TextUtils.isEmpty(text[1]))
-                        share.putExtra(Intent.EXTRA_SUBJECT, text[1]);
-                    if (!TextUtils.isEmpty(text[2]))
-                        share.putExtra(Intent.EXTRA_TEXT, text[2]);
+                    Intent intent = new Intent();
+                    if (event) {
+                        intent.setAction(Intent.ACTION_INSERT);
+                        intent.setData(CalendarContract.Events.CONTENT_URI);
+                        if (data.containsKey("me"))
+                            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{data.get("me")});
+                        if (data.containsKey("subject"))
+                            intent.putExtra(CalendarContract.Events.TITLE, data.get("subject"));
+                        if (data.containsKey("text"))
+                            intent.putExtra(CalendarContract.Events.DESCRIPTION, data.get("text"));
+                    } else {
+                        intent.setAction(Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        if (data.containsKey("from"))
+                            intent.putExtra(Intent.EXTRA_EMAIL, new String[]{data.get("from")});
+                        if (data.containsKey("subject"))
+                            intent.putExtra(Intent.EXTRA_SUBJECT, data.get("subject"));
+                        if (data.containsKey("text"))
+                            intent.putExtra(Intent.EXTRA_TEXT, data.get("text"));
+                    }
 
                     PackageManager pm = context.getPackageManager();
-                    if (share.resolveActivity(pm) == null)
+                    if (intent.resolveActivity(pm) == null)
                         Snackbar.make(parentFragment.getView(),
-                                context.getString(R.string.title_no_viewer, share.getAction()),
+                                context.getString(R.string.title_no_viewer, intent.getAction()),
                                 Snackbar.LENGTH_LONG).
                                 show();
                     else
-                        context.startActivity(Helper.getChooser(context, share));
+                        context.startActivity(Helper.getChooser(context, intent));
                 }
 
                 @Override
@@ -5017,6 +5060,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!Objects.equals(prev.ui_snoozed, next.ui_snoozed)) {
                     same = false;
                     log("ui_snoozed changed", next.id);
+                }
+                if (!Objects.equals(prev.ui_unsnoozed, next.ui_unsnoozed)) {
+                    same = false;
+                    log("ui_unsnoozed changed", next.id);
                 }
                 if (!Objects.equals(prev.color, next.color)) {
                     same = false;
