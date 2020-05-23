@@ -39,6 +39,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
@@ -137,15 +138,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.github.chrisbanes.photoview.PhotoView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -2344,7 +2347,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     return tcm.getTextClassifier().suggestConversationActions(crequest);
                 }
-            }.execute(context, owner, args, "message:body");
+            }.setCount(false).execute(context, owner, args, "message:body");
         }
 
         private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments) {
@@ -2733,8 +2736,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 } else
                     return false;
             } else {
-                view.getParent().requestDisallowInterceptTouchEvent(false);
-                return (view.getId() == R.id.wvBody && ev.getAction() == MotionEvent.ACTION_MOVE);
+                if (view.getId() == R.id.tvBody)
+                    view.getParent().requestDisallowInterceptTouchEvent(false);
+                else {
+                    boolean xm = view.canScrollHorizontally(-1);
+                    boolean xp = view.canScrollHorizontally(1);
+                    boolean ym = view.canScrollVertically(-1);
+                    boolean yp = view.canScrollVertically(1);
+                    boolean zoomed = (xm || xp || ym || yp);
+                    view.getParent().requestDisallowInterceptTouchEvent(zoomed);
+                }
+                return false;
             }
         }
 
@@ -3902,7 +3914,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ImageSpan[] image = buffer.getSpans(off, off, ImageSpan.class);
                     if (image.length > 0) {
                         String source = image[0].getSource();
-                        if (source != null) {
+                        if (!TextUtils.isEmpty(source)) {
                             onOpenImage(message.id, source);
                             return true;
                         }
@@ -3963,17 +3975,77 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             return true;
         }
 
-        private void onOpenImage(long id, String source) {
+        private void onOpenImage(long id, @NonNull String source) {
             Log.i("Viewing image source=" + source);
+
+            ImageHelper.AnnotatedSource annotated = new ImageHelper.AnnotatedSource(source);
+            Uri uri = Uri.parse(annotated.getSource());
+            String scheme = uri.getScheme();
 
             Bundle args = new Bundle();
             args.putLong("id", id);
-            args.putString("source", source);
+            args.putString("source", annotated.getSource());
             args.putInt("zoom", zoom);
 
-            FragmentDialogImage fragment = new FragmentDialogImage();
-            fragment.setArguments(args);
-            fragment.show(parentFragment.getParentFragmentManager(), "view:image");
+            if ("cid".equals(scheme))
+                new SimpleTask<EntityAttachment>() {
+                    @Override
+                    protected EntityAttachment onExecute(Context context, Bundle args) {
+                        long id = args.getLong("id");
+                        String source = args.getString("source");
+
+                        DB db = DB.getInstance(context);
+                        String cid = "<" + source.substring(4) + ">";
+                        return db.attachment().getAttachment(id, cid);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, EntityAttachment attachment) {
+                        if (attachment != null)
+                            Helper.share(context, attachment.getFile(context), attachment.getMimeType(), attachment.name);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    }
+                }.execute(context, owner, args, "view:cid");
+
+            else if ("http".equals(scheme) || "https".equals(scheme))
+                onOpenLink(uri, null);
+
+            else if ("data".equals(scheme))
+                new SimpleTask<File>() {
+                    @Override
+                    protected File onExecute(Context context, Bundle args) throws IOException {
+                        long id = args.getLong("id");
+                        String source = args.getString("source");
+
+                        Bitmap bm = ImageHelper.getDataBitmap(source);
+                        if (bm == null)
+                            return null;
+
+                        File file = ImageHelper.getCacheFile(context, id, source);
+                        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                            bm.compress(Bitmap.CompressFormat.PNG, 90, os);
+                        }
+
+                        return file;
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, File file) {
+                        Helper.share(context, file, "image/png", file.getName());
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    }
+                }.execute(context, owner, args, "view:cid");
+
+            else
+                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
         }
 
         private void onMenuUnseen(final TupleMessageEx message) {
@@ -5775,43 +5847,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
 
             return (changed ? builder.build() : null);
-        }
-    }
-
-    public static class FragmentDialogImage extends FragmentDialogBase {
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final PhotoView pv = new PhotoView(getContext());
-
-            new SimpleTask<Drawable>() {
-                @Override
-                protected Drawable onExecute(Context context, Bundle args) throws Throwable {
-                    long id = args.getLong("id");
-                    String source = args.getString("source");
-                    int zoom = args.getInt("zoom");
-                    return ImageHelper.decodeImage(context, id, source, true, zoom, null);
-                }
-
-                @Override
-                protected void onExecuted(Bundle args, Drawable drawable) {
-                    pv.setImageDrawable(drawable);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        if (drawable instanceof AnimatedImageDrawable)
-                            ((AnimatedImageDrawable) drawable).start();
-                    }
-                }
-
-                @Override
-                protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(getParentFragmentManager(), ex);
-                }
-            }.execute(this, getArguments(), "view:image");
-
-            final Dialog dialog = new Dialog(getContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
-            dialog.setContentView(pv);
-
-            return dialog;
         }
     }
 

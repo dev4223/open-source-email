@@ -364,7 +364,6 @@
     <string name="title_advanced_secure">Masquer FairEmail de la liste des applications récentes et empêcher la prise de captures d’écran</string>
     <string name="title_advanced_pin">Code NIP</string>
     <string name="title_advanced_biometrics_timeout">Délai d’expiration de l’authentification biométrique</string>
-    <string name="title_advanced_encrypt_method">Méthode de chiffrement par défaut</string>
     <string name="title_advanced_sign_default">Signer par défaut</string>
     <string name="title_advanced_encrypt_default">Chiffrer par défaut</string>
     <string name="title_advanced_auto_decrypt">Déchiffrer automatiquement les messages</string>
@@ -585,6 +584,9 @@
     <string name="title_auto_trash">Déplacer automatiquement les anciens messages vers la corbeille</string>
     <string name="title_auto_delete">Supprimer automatiquement et définitivement les anciens messages</string>
     <string name="title_auto_delete_hint">Les anciens messages sont ceux qui ne sont plus conservés sur l\'appareil</string>
+    <string name="title_inbox_root_hint">        Certains fournisseurs exigent que les nouveaux dossiers soient créés dans la boîte de réception.
+        Dans ce cas, vous pouvez appuyer longuement sur la boîte de réception dans la liste des dossiers et sélectionner « Créer un sous-dossier ».
+    </string>
     <string name="title_folder_name_missing">Nom de dossier manquant</string>
     <string name="title_folder_exists">Le dossier %1$s existe</string>
     <string name="title_folder_delete">Supprimer définitivement ce dossier et tous les messages qu’il contient?</string>

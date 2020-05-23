@@ -103,7 +103,6 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1294,31 +1293,37 @@ public class HtmlHelper {
     }
 
     static String formatPre(String text) {
+        return formatPre(text, true);
+    }
+
+    static String formatPre(String text, boolean quote) {
         int level = 0;
         StringBuilder sb = new StringBuilder();
         String[] lines = text.split("\\r?\\n");
         for (String line : lines) {
             // Opening quotes
             // https://tools.ietf.org/html/rfc3676#section-4.5
-            int tlevel = 0;
-            while (line.startsWith(">")) {
-                tlevel++;
-                if (tlevel > level)
-                    sb.append("<blockquote>");
+            if (quote) {
+                int tlevel = 0;
+                while (line.startsWith(">")) {
+                    tlevel++;
+                    if (tlevel > level)
+                        sb.append("<blockquote>");
 
-                line = line.substring(1); // >
+                    line = line.substring(1); // >
 
-                if (line.startsWith(" >"))
-                    line = line.substring(1);
+                    if (line.startsWith(" >"))
+                        line = line.substring(1);
+                }
+                if (tlevel > 0)
+                    if (line.length() > 0 && line.charAt(0) == ' ')
+                        line = line.substring(1);
+
+                // Closing quotes
+                for (int i = 0; i < level - tlevel; i++)
+                    sb.append("</blockquote>");
+                level = tlevel;
             }
-            if (tlevel > 0)
-                if (line.length() > 0 && line.charAt(0) == ' ')
-                    line = line.substring(1);
-
-            // Closing quotes
-            for (int i = 0; i < level - tlevel; i++)
-                sb.append("</blockquote>");
-            level = tlevel;
 
             // Tabs characters
             StringBuilder l = new StringBuilder();
@@ -1792,12 +1797,6 @@ public class HtmlHelper {
                     Pattern.compile("[" + WHITESPACE + "]*\\r?\\n[" + WHITESPACE + "]*");
 
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
-            private List<String> BLOCK_START = Collections.unmodifiableList(Arrays.asList(
-                    "body", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul"
-            ));
-            private List<String> BLOCK_END = Collections.unmodifiableList(Arrays.asList(
-                    "body", "blockquote", "br", "hr", "h1", "h2", "h3", "h4", "h5", "h6", "li", "ol", "ul"
-            ));
 
             @Override
             public void head(Node node, int depth) {
@@ -1808,7 +1807,7 @@ public class HtmlHelper {
                     element = (Element) node;
                     if ("true".equals(element.attr("x-plain")))
                         plain++;
-                    if (BLOCK_START.contains(element.tagName())) {
+                    if (element.isBlock()) {
                         normalizeText(block);
                         block.clear();
                     }
@@ -1821,7 +1820,7 @@ public class HtmlHelper {
                     element = (Element) node;
                     if ("true".equals(element.attr("x-plain")))
                         plain--;
-                    if (BLOCK_END.contains(element.tagName())) {
+                    if (element.isBlock() || "br".equals(element.tagName())) {
                         normalizeText(block);
                         block.clear();
                     }
@@ -1875,7 +1874,7 @@ public class HtmlHelper {
                 if (block.size() > 0) {
                     tnode = block.get(block.size() - 1);
                     text = tnode.getWholeText();
-                    if (endsWithWhitespace(text)) {
+                    if (!"-- ".equals(text) && endsWithWhitespace(text)) {
                         text = text.substring(0, text.length() - 1);
                         tnode.text(text);
                     }
@@ -2021,6 +2020,11 @@ public class HtmlHelper {
                                 ssb.append("\n");
                             break;
                         case "br":
+                            newline(ssb.length());
+                            break;
+                        case "div": // compose
+                        case "p": // compose
+                            newline(ssb.length());
                             newline(ssb.length());
                             break;
                         case "i":
