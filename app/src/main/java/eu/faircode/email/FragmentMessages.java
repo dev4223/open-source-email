@@ -5557,9 +5557,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         Log.w(ex);
                                     }
 
+                                    KeyStore ks = null;
                                     try {
                                         // https://tools.ietf.org/html/rfc3852#section-10.2.3
-                                        KeyStore ks = KeyStore.getInstance("AndroidCAStore");
+                                        ks = KeyStore.getInstance("AndroidCAStore");
                                         ks.load(null, null);
 
                                         // https://docs.oracle.com/javase/7/docs/technotes/guides/security/certpath/CertPathProgGuide.html
@@ -5612,27 +5613,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
                                         cpv.validate(path.getCertPath(), params);
 
-                                        List<Certificate> pcerts = new ArrayList<>();
-                                        pcerts.addAll(path.getCertPath().getCertificates());
+                                        List<X509Certificate> pcerts = new ArrayList<>();
+                                        for (Certificate c : path.getCertPath().getCertificates())
+                                            if (c instanceof X509Certificate)
+                                                pcerts.add((X509Certificate) c);
                                         if (path instanceof PKIXCertPathValidatorResult) {
                                             X509Certificate root = ((PKIXCertPathValidatorResult) path).getTrustAnchor().getTrustedCert();
                                             if (root != null)
                                                 pcerts.add(root);
                                         }
 
-                                        ArrayList<String> trace = new ArrayList<>();
-                                        for (Certificate pcert : pcerts)
-                                            if (pcert instanceof X509Certificate) {
-                                                // https://tools.ietf.org/html/rfc5280#section-4.2.1.3
-                                                X509Certificate c = (X509Certificate) pcert;
-                                                boolean[] usage = c.getKeyUsage();
-                                                boolean root = (usage != null && usage[5]);
-                                                boolean selfSigned = c.getIssuerX500Principal().equals(c.getSubjectX500Principal());
-                                                EntityCertificate record = EntityCertificate.from(c, null);
-                                                trace.add((root ? "* " : "") + (selfSigned ? "# " : "") + record.subject);
-                                            }
-
-                                        args.putStringArrayList("trace", trace);
+                                        args.putStringArrayList("trace", getTrace(pcerts, ks));
 
                                         boolean valid = true;
                                         for (Certificate pcert : pcerts)
@@ -5648,16 +5639,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                     } catch (Throwable ex) {
                                         Log.w(ex);
                                         args.putString("reason", ex.getMessage());
-
-                                        ArrayList<String> trace = new ArrayList<>();
-                                        for (X509Certificate c : certs) {
-                                            boolean[] usage = c.getKeyUsage();
-                                            boolean root = (usage != null && usage[5]);
-                                            boolean selfSigned = c.getIssuerX500Principal().equals(c.getSubjectX500Principal());
-                                            EntityCertificate record = EntityCertificate.from(c, null);
-                                            trace.add((root ? "* " : "") + (selfSigned ? "# " : "") + record.subject);
-                                        }
-                                        args.putStringArrayList("trace", trace);
+                                        args.putStringArrayList("trace", getTrace(certs, ks));
                                     }
 
                                     result = cert;
@@ -5805,6 +5787,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 TextView tvEmail = dview.findViewById(R.id.tvEmail);
                                 TextView tvEmailInvalid = dview.findViewById(R.id.tvEmailInvalid);
                                 TextView tvSubject = dview.findViewById(R.id.tvSubject);
+                                ImageButton ibInfo = dview.findViewById(R.id.ibInfo);
                                 TextView tvAfter = dview.findViewById(R.id.tvAfter);
                                 TextView tvBefore = dview.findViewById(R.id.tvBefore);
                                 TextView tvExpired = dview.findViewById(R.id.tvExpired);
@@ -5822,22 +5805,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 tvBefore.setText(record.before == null ? null : TF.format(record.before));
                                 tvExpired.setVisibility(record.isExpired(time) ? View.VISIBLE : View.GONE);
 
-                                if (trace != null && trace.size() > 0)
-                                    tvSubject.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View v) {
-                                            StringBuilder sb = new StringBuilder();
-                                            for (int i = 0; i < trace.size(); i++) {
-                                                if (i > 0)
-                                                    sb.append("\n\n");
-                                                sb.append(i + 1).append(") ").append(trace.get(i));
-                                            }
-
-                                            new AlertDialog.Builder(getContext())
-                                                    .setMessage(sb.toString())
-                                                    .show();
+                                ibInfo.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        StringBuilder sb = new StringBuilder();
+                                        for (int i = 0; i < trace.size(); i++) {
+                                            if (i > 0)
+                                                sb.append("\n\n");
+                                            sb.append(i + 1).append(") ").append(trace.get(i));
                                         }
-                                    });
+
+                                        new AlertDialog.Builder(getContext())
+                                                .setMessage(sb.toString())
+                                                .show();
+                                    }
+                                });
+                                ibInfo.setVisibility(trace != null && trace.size() > 0 ? View.VISIBLE : View.GONE);
 
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
                                         .setView(dview)
@@ -5964,6 +5947,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 WorkerFts.init(context, false);
             }
 
+            private ArrayList<String> getTrace(List<X509Certificate> certs, KeyStore ks) {
+                // https://tools.ietf.org/html/rfc5280#section-4.2.1.3
+                ArrayList<String> trace = new ArrayList<>();
+                for (Certificate c : certs)
+                    try {
+                        X509Certificate cert = (X509Certificate) c;
+                        boolean[] usage = cert.getKeyUsage();
+                        boolean keyCertSign = (usage != null && usage[5]);
+                        boolean selfSigned = cert.getIssuerX500Principal().equals(cert.getSubjectX500Principal());
+                        EntityCertificate record = EntityCertificate.from(cert, null);
+                        trace.add(record.subject +
+                                " (" + (selfSigned ? "selfSigned" : cert.getIssuerX500Principal()) + ")" +
+                                (keyCertSign ? " (keyCertSign)" : "") +
+                                (ks != null && ks.getCertificateAlias(cert) != null ? " (Android)" : ""));
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                        trace.add(ex.toString());
+                    }
+                return trace;
+            }
         }.execute(this, args, "decrypt:s/mime");
     }
 
