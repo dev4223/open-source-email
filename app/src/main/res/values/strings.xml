@@ -434,6 +434,7 @@
     <string name="title_advanced_manage_certificates">Manage public keys</string>
     <string name="title_advanced_import_key">Import private key</string>
     <string name="title_advanced_manage_keys">Manage private keys</string>
+    <string name="title_advanced_ca">Installed CA certificates</string>
     <string name="title_advanced_aes_key_size" translatable="false">Max AES key size: %1$d</string>
 
     <string name="title_advanced_external_search">Allow other apps to search in messages</string>
@@ -1038,6 +1039,7 @@
     <string name="title_rule_identity">Identity</string>
     <string name="title_rule_template">Reply template</string>
     <string name="title_rule_cc">Reply to CC addresses</string>
+    <string name="title_rule_answer_remark">Only one reply will be sent for any conversation, to avoid reply loops</string>
     <string name="title_rule_name_missing">Rule name missing</string>
     <string name="title_rule_condition_missing">Condition missing</string>
     <string name="title_rule_automation_hint">This will send the intent \'%1$s\' with the extras \'%2$s\'</string>
@@ -1273,6 +1275,8 @@
     <string name="title_widget_folder_unified">Unified inbox folders</string>
     <string name="title_widget_unseen">Unread messages only</string>
     <string name="title_widget_flagged">Starred messages only</string>
+    <string name="title_widget_font_size">Font size</string>
+    <string name="title_widget_padding">Padding</string>
     <string name="title_widget_semi_transparent">Semi transparent background</string>
 
     <string name="title_accessibility_collapsed">Collapsed</string>
