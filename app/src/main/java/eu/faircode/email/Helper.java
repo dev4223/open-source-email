@@ -44,7 +44,6 @@ import android.os.LocaleList;
 import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.StatFs;
-import android.provider.DocumentsContract;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
@@ -1079,7 +1078,7 @@ public class Helper {
         return false;
     }
 
-    static void authenticate(final FragmentActivity activity,
+    static void authenticate(final FragmentActivity activity, final LifecycleOwner owner,
                              Boolean enabled, final
                              Runnable authenticated, final Runnable cancelled) {
         final Handler handler = new Handler();
@@ -1104,7 +1103,7 @@ public class Helper {
                     ? R.string.title_setup_biometrics_disable
                     : R.string.title_setup_biometrics_enable));
 
-            BiometricPrompt prompt = new BiometricPrompt(activity, executor,
+            final BiometricPrompt prompt = new BiometricPrompt(activity, executor,
                     new BiometricPrompt.AuthenticationCallback() {
                         @Override
                         public void onAuthenticationError(final int errorCode, @NonNull final CharSequence errString) {
@@ -1140,6 +1139,27 @@ public class Helper {
                     });
 
             prompt.authenticate(info.build());
+
+            final Runnable cancelPrompt = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        prompt.cancelAuthentication();
+                    } catch (Throwable ex) {
+                        Log.e(ex);
+                    }
+                }
+            };
+
+            handler.postDelayed(cancelPrompt, 60 * 1000L);
+
+            owner.getLifecycle().addObserver(new LifecycleObserver() {
+                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+                public void onDestroy() {
+                    handler.post(cancelPrompt);
+                }
+            });
+
         } else {
             final View dview = LayoutInflater.from(activity).inflate(R.layout.dialog_pin_ask, null);
             final EditText etPin = dview.findViewById(R.id.etPin);

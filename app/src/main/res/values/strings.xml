@@ -449,6 +449,7 @@
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexed (%3$s)</string>
     <string name="title_advanced_english">Use US country settings</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
+    <string name="title_advanced_sasl" translatable="false">CRAM-MD5</string>
     <string name="title_advanced_optimize">Automatically optimize settings</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_experiments">Try experimental features</string>
@@ -1145,7 +1146,7 @@
     <string name="title_legend_show_junk">Treat as spam</string>
     <string name="title_legend_show_unsubscribe">Unsubscribe from list</string>
     <string name="title_legend_show_images">Show images</string>
-    <string name="title_legend_show_full">Show fullscreen</string>
+    <string name="title_legend_show_full">Show original message</string>
     <string name="title_legend_edit">Edit</string>
     <string name="title_legend_default_color">Default color</string>
     <string name="title_legend_close_hint">Close hint</string>
