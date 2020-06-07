@@ -436,9 +436,13 @@ public class Helper {
 
         // Check if viewer available
         if (ris.size() == 0) {
-            String message = context.getString(R.string.title_no_viewer,
-                    type != null ? type : name != null ? name : file.getName());
-            ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
+            if ("application/ms-tnef".equals(type))
+                viewFAQ(context, 155);
+            else {
+                String message = context.getString(R.string.title_no_viewer,
+                        type != null ? type : name != null ? name : file.getName());
+                ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
+            }
         } else
             context.startActivity(intent);
     }
@@ -712,23 +716,6 @@ public class Helper {
             return getTimeInstance(context, SimpleDateFormat.SHORT).format(millis);
         else
             return DateUtils.getRelativeTimeSpanString(context, millis);
-    }
-
-    static String localizeFolderType(Context context, String type) {
-        int resid = context.getResources().getIdentifier(
-                "title_folder_" + type.toLowerCase(Locale.ROOT),
-                "string",
-                context.getPackageName());
-        return (resid > 0 ? context.getString(resid) : type);
-    }
-
-    static String localizeFolderName(Context context, String name) {
-        if (name != null && "INBOX".equals(name.toUpperCase(Locale.ROOT)))
-            return context.getString(R.string.title_folder_inbox);
-        else if ("OUTBOX".equals(name))
-            return context.getString(R.string.title_folder_outbox);
-        else
-            return name;
     }
 
     static void linkPro(final TextView tv) {

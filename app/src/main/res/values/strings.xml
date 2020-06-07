@@ -99,6 +99,7 @@
     <string name="title_notification_failed">\'%1$s\' failed</string>
     <string name="title_notification_alert">\'%1$s\' server alert</string>
 
+    <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
     <string name="title_from_to">%1$s ➤ %2$s</string>
@@ -316,6 +317,7 @@
     <string name="title_advanced_cards">Use card style instead of tabular style</string>
     <string name="title_advanced_date_header">Group by date</string>
     <string name="title_advanced_threading">Conversation threading</string>
+    <string name="title_advanced_threading_unread">Show number of unread messages in conversations</string>
     <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
     <string name="title_advanced_highlight_unread">Highlight unread messages</string>
     <string name="title_advanced_highlight_subject">Highlight subject</string>
@@ -392,6 +394,7 @@
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_unseen_ignored">Let the number of new messages match the number of notifications</string>
+    <string name="title_advanced_notify_known">Show notifications for contacts only</string>
     <string name="title_advanced_notify_summary">Show summary notification only</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_notify_preview_all">Preview all text</string>
@@ -449,7 +452,7 @@
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexed (%3$s)</string>
     <string name="title_advanced_english">Use US country settings</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
-    <string name="title_advanced_sasl" translatable="false">CRAM-MD5</string>
+    <string name="title_advanced_auth_sasl" translatable="false">SASL</string>
     <string name="title_advanced_optimize">Automatically optimize settings</string>
     <string name="title_advanced_updates">Check for updates</string>
     <string name="title_advanced_experiments">Try experimental features</string>
@@ -458,6 +461,7 @@
     <string name="title_advanced_cleanup_attachments">Delete attachments of old messages</string>
     <string name="title_advanced_cleanup">Cleanup</string>
     <string name="title_advanced_last_cleanup">Last cleanup: %1$s</string>
+    <string name="title_advanced_app">App settings</string>
     <string name="title_advanced_more">More options</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
@@ -468,6 +472,7 @@
     <string name="title_advanced_enabled_hint">Globally disable or enable receiving of messages</string>
     <string name="title_advanced_manual_hint">If synchronization is disabled, it is still possible to synchronize manually by pulling down the message list.</string>
     <string name="title_advanced_poll_hint">Synchronizing periodically will compare local and remote messages each and every time, which is an expensive operation possibly resulting in extra battery usage, especially when there are a lot of messages to synchronize. Always synchronizing will avoid this by continuous monitoring for changes only.</string>
+    <string name="title_advanced_optimized_hint">This option can be optimized automatically (miscellaneous settings)</string>
     <string name="title_advanced_schedule_hint">Tap on a time to set a time</string>
     <string name="title_advanced_check_mx">Check sender email addresses on synchronizing messages</string>
     <string name="title_advanced_check_reply">Check reply email addresses on synchronizing messages</string>
@@ -828,6 +833,7 @@
     <string name="title_reply_to">Reply to:</string>
     <string name="title_cc">CC:</string>
     <string name="title_bcc">BCC:</string>
+    <string name="title_recipients">%1$d recipients</string>
     <string name="title_via_identity">Via:</string>
     <string name="title_sent">Sent:</string>
     <string name="title_received">Received:</string>
@@ -1245,11 +1251,12 @@
     <string name="title_pro_purchase">Buy</string>
     <string name="title_pro_once">Only once</string>
     <string name="title_pro_info">
-        Developing FairEmail took literally thousands of hours and despite that most features are free to use.
-        To make FairEmail sustainable in the long term, some convenience and advanced features are not free to use.
-        FairEmail displays a small message to remind you of this, which will be removed if you purchase the pro features.
+        Developing FairEmail took literally thousands of hours and, despite that, most of the features are free to use.
+        FairEmail takes your privacy seriously and doesn\'t show ads and doesn\'t use tracking or analytics to earn money.
+        To maintain and support FairEmail in the long run, some convenience and advanced features are not free to use.
+        FairEmail shows a small message to remind you of this, which will be removed if you purchase the pro features.
     </string>
-    <string name="title_pro_hide">Hide small message for two weeks</string>
+    <string name="title_pro_hide">Hide small message for %1$d weeks</string>
     <string name="title_pro_hint">Buying pro features will allow you to use all current and future pro features, will keep this app maintained, and supported.</string>
     <string name="title_pro_price">Please see <a href="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq19">this FAQ</a> about the price of the pro features</string>
     <string name="title_pro_pending">Purchase pending</string>
@@ -1456,12 +1463,14 @@
         <item>start</item>
         <item>middle</item>
         <item>end</item>
+        <item>full</item>
     </string-array>
 
     <string-array name="ellipsizeNames">
         <item>At the start</item>
         <item>In the middle</item>
         <item>At the end</item>
+        <item>Show untruncated</item>
     </string-array>
 
     <string-array name="priorityNames">

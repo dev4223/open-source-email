@@ -62,6 +62,8 @@ public class ServiceUI extends IntentService {
     static final int PI_SYNC = 13;
     static final int PI_BANNER = 14;
 
+    static final int HIDE_BANNER = 3; // weeks
+
     public ServiceUI() {
         this(ServiceUI.class.getName());
     }
@@ -553,7 +555,7 @@ public class ServiceUI extends IntentService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         if (set) {
             long now = new Date().getTime();
-            long interval = AlarmManager.INTERVAL_DAY * 14;
+            long interval = AlarmManager.INTERVAL_DAY * HIDE_BANNER * 7;
             long due = interval - (now % interval);
             long trigger = now + due;
             Log.i("Set banner alarm at " + new Date(trigger) + " due=" + due);

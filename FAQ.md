@@ -47,6 +47,7 @@ Related questions:
 
 * Change the account name: Setup, step 1, Manage, tap account
 * Change the swipe left/right target: Setup, Behavior, Set swipe actions
+* Change password: Setup, step 1, Manage, tap account, change password
 * Set a signature: Setup, step 2, Manage, tap identity, Edit signature.
 * Add CC and BCC addresses: tap the people's icon at the end of the subject
 * Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
@@ -272,6 +273,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(152) How can I insert a contact group?](#user-content-faq152)
 * [(153) Why does permanently deleting Gmail message not work?](#user-content-faq153)
 * [(154) Can you add favicons as contact photos?](#user-content-faq154)
+* [(155) What is a winmail.dat file?](#user-content-faq155)
 
 [I have another question.](#user-content-support)
 
@@ -474,9 +476,10 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 
 You can use the quick setup wizard to easily setup a Gmail account and identity.
 
-If you don't want to use an on device Gmail account,
+If you don't want to use an on-device Gmail account,
 you can either enable access for "less secure apps" and use your account password
 or enable two factor authentication and use an app specific password.
+Please see [this FAQ](#user-content-faq111) about why it is not possible to non on-device accounts.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
@@ -659,6 +662,7 @@ To let apps like FairEmail reliably connect to the OpenKeychain service to encry
 it might be necessary to disable battery optimizations for the OpenKeychain app.
 On some Android versions / devices it is necessary to enable *Show popups while running in background*
 in the additional permissions of the Android app settings of the OpenKeychain app.
+Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
 FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients
 and send received Autocrypt headers to the OpenKeychain app for storage.
@@ -1779,7 +1783,7 @@ The following rule conditions are available:
 * Subject contains
 * Has attachments
 * Header contains
-* Time between
+* Day/time between
 
 All the conditions of a rule need to be true for the rule action to be executed.
 All conditions are optional, but there needs to be at least one condition, to prevent matching all messages.
@@ -1807,17 +1811,20 @@ You can select one of these actions to apply to matching messages:
 * Add keyword
 * Move
 * Copy (Gmail: label)
-* Reply template
+* Answer (with template)
 * Automation (Tasker, etc)
 
 Rules are applied directly after the message header has been fetched, but before the message text has been downloaded,
 so it is not possible to apply conditions and actions to the message text.
-Note that large message texts are downloaded on demand on a metered connection to save data.
+Note that large message texts are downloaded on demand on a metered connection to save on data usage.
+
+If you want to forward a message, consider to use the move action instead.
+This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
-it is not possible to preview which messages would match the header rule condition.
+it is not possible to preview which messages would match a header rule condition.
 
-In the *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
+In the three-dots *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
 
 Rules are available for IMAP accounts only because the POP3 protocol allows downloading and permanently deleting messages from the inbox only.
 
@@ -2329,6 +2336,14 @@ despite FairEmail explicitly requesting not to show a badge for this notificatio
 
 Note that Tesla Unread is [not supported anymore](https://forum.xda-developers.com/android/general/bad-news-tesla-unread-devoloper-t3920415).
 
+FairEmail does send a new message count intent as well:
+
+```
+eu.faircode.email.NEW_MESSAGE_COUNT
+```
+
+The number of new, unread messages will be in an integer "*count*" parameter.
+
 <br />
 
 <a name="faq107"></a>
@@ -2400,8 +2415,7 @@ because Google requires a [yearly security audit](https://support.google.com/clo
 
 OAuth for Yandex is supported via the quick setup wizard.
 
-Outlook, Live and Hotmail do not yet support OAuth for IMAP/SMTP connections, but
-"*[We are actively working on OAuth support for IMAP connections to O365 mailboxes. We will make a public announcement once the same is available.](https://stackoverflow.com/a/58072053)*" (September 24, 2019).
+OAuth for Office365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
 
 OAuth access for Yahoo! was requested, but Yahoo! never responded to the request.
 OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL.
@@ -3010,6 +3024,18 @@ Some background: Gmail seems to have an additional message view for IMAP, which 
 
 Besides that a [favicon](https://en.wikipedia.org/wiki/Favicon) might be shared by many email addresses with the same domain name
 and therefore is not directly related to an email address, favicons can be used to track you.
+
+<br />
+
+<a name="faq155"></a>
+**(155) What is a winmail.dat file?**
+
+A *winmail.dat* file is sent by an incorrectly configured Outlook client.
+It is a Microsoft specific file format ([TNEF](https://en.wikipedia.org/wiki/Transport_Neutral_Encapsulation_Format)) containing a message and possibly attachments.
+
+You can find some more information about this file [here](https://support.mozilla.org/en-US/kb/what-winmaildat-attachment).
+
+You can view it with for example the Android app [Letter Opener](https://play.google.com/store/apps/details?id=app.letteropener).
 
 <br />
 

@@ -43,6 +43,8 @@ public interface DaoMessage {
     String is_outbox = "folder.type = '" + EntityFolder.OUTBOX + "'";
     String is_sent = "folder.type = '" + EntityFolder.SENT + "'";
 
+    @Transaction
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
@@ -60,6 +62,11 @@ public interface DaoMessage {
             "   CASE WHEN NOT message.hash IS NULL THEN message.hash" +
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
             "   ELSE message.id END) AS visible" +
+            ", COUNT(DISTINCT" +
+            "   CASE WHEN message.ui_seen THEN NULL" +
+            "   WHEN NOT message.hash IS NULL THEN message.hash" +
+            "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
+            "   ELSE message.id END) AS visible_unseen" +
             ", SUM(message.total) AS totalSize" +
             ", message.priority AS ui_priority" +
             ", message.importance AS ui_importance" +
@@ -106,7 +113,6 @@ public interface DaoMessage {
             "   ELSE 0" +
             "  END" +
             ", CASE WHEN :ascending THEN message.received ELSE -message.received END")
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     DataSource.Factory<Integer, TupleMessageEx> pagedUnified(
             String type,
             boolean threading,
@@ -115,6 +121,8 @@ public interface DaoMessage {
             boolean found,
             boolean debug);
 
+    @Transaction
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
@@ -132,6 +140,11 @@ public interface DaoMessage {
             "   CASE WHEN NOT message.hash IS NULL THEN message.hash" +
             "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
             "   ELSE message.id END) AS visible" +
+            ", COUNT(DISTINCT" +
+            "   CASE WHEN message.ui_seen THEN NULL" +
+            "   WHEN NOT message.hash IS NULL THEN message.hash" +
+            "   WHEN NOT message.msgid IS NULL THEN message.msgid" +
+            "   ELSE message.id END) AS visible_unseen" +
             ", SUM(message.total) AS totalSize" +
             ", message.priority AS ui_priority" +
             ", message.importance AS ui_importance" +
@@ -171,7 +184,6 @@ public interface DaoMessage {
             "   ELSE 0" +
             "  END" +
             ", CASE WHEN :ascending THEN message.received ELSE -message.received END")
-    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     DataSource.Factory<Integer, TupleMessageEx> pagedFolder(
             long folder, boolean threading,
             String sort, boolean ascending,
@@ -179,6 +191,7 @@ public interface DaoMessage {
             boolean found,
             boolean debug);
 
+    @Transaction
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", account.notify AS accountNotify, account.auto_seen AS accountAutoSeen" +
@@ -193,6 +206,7 @@ public interface DaoMessage {
             ", (message.ui_encrypt IN (2, 4)) AS signed" +
             ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
+            ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +
             ", message.priority AS ui_priority" +
             ", message.importance AS ui_importance" +
@@ -360,8 +374,13 @@ public interface DaoMessage {
     int countMessageByMsgId(long folder, String msgid);
 
     @Query("SELECT COUNT(*) FROM message" +
-            " WHERE id = :id AND NOT ui_hide")
-    int countVisible(long id);
+            " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " WHERE message.id = :id" +
+            " AND NOT message.ui_hide" +
+            " AND (NOT :filter_seen OR NOT message.ui_seen)" +
+            " AND (NOT :filter_unflagged OR message.ui_flagged)" +
+            " AND (NOT :filter_snoozed OR message.ui_snoozed IS NULL OR " + is_drafts + ")")
+    int countVisible(long id, boolean filter_seen, boolean filter_unflagged, boolean filter_snoozed);
 
     @Query("SELECT message.*" +
             ", account.pop AS accountProtocol, account.name AS accountName, identity.color AS accountColor" +
@@ -377,6 +396,7 @@ public interface DaoMessage {
             ", (message.ui_encrypt IN (2, 4)) AS signed" +
             ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
+            ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +
             ", message.priority AS ui_priority" +
             ", message.importance AS ui_importance" +
@@ -408,6 +428,7 @@ public interface DaoMessage {
             ", (message.ui_encrypt IN (2, 4)) AS signed" +
             ", (message.ui_encrypt IN (1, 3)) AS encrypted" +
             ", 1 AS visible" +
+            ", NOT message.ui_seen AS visible_unseen" +
             ", message.total AS totalSize" +
             ", message.priority AS ui_priority" +
             ", message.importance AS ui_importance" +
@@ -645,6 +666,9 @@ public interface DaoMessage {
 
     @Query("UPDATE message SET ui_encrypt = :ui_encrypt WHERE id = :id")
     int setMessageUiEncrypt(long id, Integer ui_encrypt);
+
+    @Query("UPDATE message SET verified = :verified WHERE id = :id")
+    int setMessageVerified(long id, boolean verified);
 
     @Query("UPDATE message SET last_attempt = :last_attempt WHERE id = :id")
     int setMessageLastAttempt(long id, long last_attempt);

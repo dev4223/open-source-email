@@ -332,7 +332,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     static final String ACTION_DECRYPT = BuildConfig.APPLICATION_ID + ".DECRYPT";
     static final String ACTION_KEYWORDS = BuildConfig.APPLICATION_ID + ".KEYWORDS";
 
-    private static final long REVIEW_ASK_DELAY = 21 * 24 * 3600 * 1000L; // milliseconds
+    private static final long REVIEW_ASK_DELAY = 14 * 24 * 3600 * 1000L; // milliseconds
     private static final long REVIEW_LATER_DELAY = 3 * 24 * 3600 * 1000L; // milliseconds
 
     static final List<String> SORT_DATE_HEADER = Collections.unmodifiableList(Arrays.asList(
@@ -3842,7 +3842,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (type == null)
                 name = getString(R.string.title_folder_unified);
             else
-                name = Helper.localizeFolderType(getContext(), type);
+                name = EntityFolder.localizeType(getContext(), type);
         else {
             name = (folders.size() > 0 ? folders.get(0).getDisplayName(getContext()) : "");
             if (folders.size() == 1) {
@@ -5423,6 +5423,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             ? R.string.title_signature_unconfirmed
                                             : R.string.title_signature_valid);
                                 args.putString("sigresult", text);
+                                if (sresult == RESULT_VALID_KEY_CONFIRMED)
+                                    db.message().setMessageVerified(message.id, true);
                             } else if (sresult == RESULT_KEY_MISSING)
                                 args.putString("sigresult", context.getString(R.string.title_signature_key_missing));
                             else {
@@ -5696,6 +5698,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                             }
 
                                         args.putBoolean("valid", valid);
+                                        if (known)
+                                            db.message().setMessageVerified(message.id, true);
                                     } catch (Throwable ex) {
                                         Log.w(ex);
                                         args.putString("reason", ex.getMessage());
@@ -5928,6 +5932,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                                                 record.id = db.certificate().insertCertificate(record);
                                                             }
                                                         }
+
+                                                        db.message().setMessageVerified(message.id, true);
 
                                                         return null;
                                                     }

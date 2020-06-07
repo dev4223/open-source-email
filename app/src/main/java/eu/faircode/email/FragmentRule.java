@@ -55,7 +55,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -472,7 +471,7 @@ public class FragmentRule extends FragmentBase {
                             if (folders.size() > 0)
                                 Collections.sort(folders, folders.get(0).getComparator(null));
                             for (EntityFolder folder : folders)
-                                data.folders.add(new AccountFolder(account, folder));
+                                data.folders.add(new AccountFolder(account, folder, context));
                         }
                     }
 
@@ -553,11 +552,11 @@ public class FragmentRule extends FragmentBase {
                     break;
                 case REQUEST_SCHEDULE_START:
                     if (resultCode == RESULT_OK)
-                        onScheduleStart(data);
+                        onScheduleStart(data.getBundleExtra("args"));
                     break;
                 case REQUEST_SCHEDULE_END:
                     if (resultCode == RESULT_OK)
-                        onScheduleEnd(data);
+                        onScheduleEnd(data.getBundleExtra("args"));
                     break;
             }
         } catch (Throwable ex) {
@@ -618,15 +617,15 @@ public class FragmentRule extends FragmentBase {
         }.execute(this, args, "rule:delete");
     }
 
-    private void onScheduleStart(Intent data) {
-        int minutes = data.getIntExtra("minutes", 0);
+    private void onScheduleStart(Bundle args) {
+        int minutes = args.getInt("minutes", 0);
         tvScheduleHourStart.setTag(minutes);
         tvScheduleHourStart.setText(formatHour(getContext(), minutes));
         cbScheduleEnd.setChecked(true);
     }
 
-    private void onScheduleEnd(Intent data) {
-        int minutes = data.getIntExtra("minutes", 0);
+    private void onScheduleEnd(Bundle args) {
+        int minutes = args.getInt("minutes", 0);
         tvScheduleHourEnd.setTag(minutes);
         tvScheduleHourEnd.setText(formatHour(getContext(), minutes));
         cbScheduleEnd.setChecked(true);
@@ -1059,30 +1058,30 @@ public class FragmentRule extends FragmentBase {
         return jaction;
     }
 
-    private class AccountFolder {
-        EntityAccount account;
+    private static class AccountFolder {
         EntityFolder folder;
+        String name;
 
-        public AccountFolder(EntityAccount account, EntityFolder folder) {
-            this.account = account;
+        public AccountFolder(EntityAccount account, EntityFolder folder, Context context) {
             this.folder = folder;
+            this.name = account.name + "/" + EntityFolder.localizeName(context, folder.name);
         }
 
         @NonNull
         @Override
         public String toString() {
-            return account.name + "/" + folder.name;
+            return name;
         }
     }
 
-    private class RefData {
+    private static class RefData {
         EntityFolder folder;
         List<AccountFolder> folders;
         List<EntityIdentity> identities;
         List<EntityAnswer> answers;
     }
 
-    private class Action {
+    private static class Action {
         int type;
         String name;
 
@@ -1127,12 +1126,8 @@ public class FragmentRule extends FragmentBase {
         }
 
         public void onTimeSet(TimePicker view, int hour, int minute) {
-            Fragment target = getTargetFragment();
-            if (target != null) {
-                Intent data = new Intent();
-                data.putExtra("minutes", hour * 60 + minute);
-                target.onActivityResult(getTargetRequestCode(), RESULT_OK, data);
-            }
+            getArguments().putInt("minutes", hour * 60 + minute);
+            sendResult(RESULT_OK);
         }
     }
 

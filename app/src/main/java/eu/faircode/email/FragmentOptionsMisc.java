@@ -28,7 +28,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Paint;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -77,11 +79,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private SwitchCompat swCrashReports;
     private TextView tvUuid;
     private SwitchCompat swDebug;
-    private SwitchCompat swSasl;
+    private SwitchCompat swAuthSasl;
     private Button btnReset;
     private SwitchCompat swCleanupAttachments;
     private Button btnCleanup;
     private TextView tvLastCleanup;
+    private Button btnApp;
     private Button btnMore;
 
     private TextView tvProcessors;
@@ -95,7 +98,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private final static String[] RESET_OPTIONS = new String[]{
             "shortcuts", "fts", "english", "watchdog", "auto_optimize", "updates",
-            "experiments", "crash_reports", "debug", "sasl", "cleanup_attachments"
+            "experiments", "crash_reports", "debug", "auth_sasl", "cleanup_attachments"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -132,11 +135,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swCrashReports = view.findViewById(R.id.swCrashReports);
         tvUuid = view.findViewById(R.id.tvUuid);
         swDebug = view.findViewById(R.id.swDebug);
-        swSasl = view.findViewById(R.id.swSasl);
+        swAuthSasl = view.findViewById(R.id.swAuthSasl);
         btnReset = view.findViewById(R.id.btnReset);
         swCleanupAttachments = view.findViewById(R.id.swCleanupAttachments);
         btnCleanup = view.findViewById(R.id.btnCleanup);
         tvLastCleanup = view.findViewById(R.id.tvLastCleanup);
+        btnApp = view.findViewById(R.id.btnApp);
         btnMore = view.findViewById(R.id.btnMore);
 
         tvProcessors = view.findViewById(R.id.tvProcessors);
@@ -279,11 +283,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
-        swSasl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        swAuthSasl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                prefs.edit().putBoolean("sasl", checked).apply();
-                ServiceSynchronize.reload(getContext(), -1L, false, "sasl=" + checked);
+                prefs.edit().putBoolean("auth_sasl", checked).apply();
+                ServiceSynchronize.reload(getContext(), -1L, false, "auth_sasl=" + checked);
             }
         });
 
@@ -305,6 +309,20 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onClick(View view) {
                 onCleanup();
+            }
+        });
+
+        final Intent app = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        app.setData(Uri.parse("package:" + getContext().getPackageName()));
+        btnApp.setEnabled(app.resolveActivity(getContext().getPackageManager()) != null);
+        btnApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    getContext().startActivity(app);
+                } catch (Throwable ex) {
+                    ToastEx.makeText(getContext(), getString(R.string.title_no_viewer, app.getAction()), Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -527,7 +545,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
         tvUuid.setText(prefs.getString("uuid", null));
         swDebug.setChecked(prefs.getBoolean("debug", false));
-        swSasl.setChecked(prefs.getBoolean("sasl", true));
+        swAuthSasl.setChecked(prefs.getBoolean("auth_sasl", true));
         swCleanupAttachments.setChecked(prefs.getBoolean("cleanup_attachments", false));
 
         tvProcessors.setText(getString(R.string.title_advanced_processors, Runtime.getRuntime().availableProcessors()));
