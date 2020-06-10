@@ -1482,6 +1482,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             (message.accountAutoSeen && !message.ui_seen && !message.folderReadOnly))) {
                 message.unseen = 0;
                 message.ui_seen = true;
+                message.visible_unseen = 0;
                 message.ui_unsnoozed = false;
             }
 
@@ -5135,6 +5136,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 InputStream is = null;
                 try {
                     pfd = context.getContentResolver().openFileDescriptor(uri, "w");
+                    if (pfd == null)
+                        throw new FileNotFoundException(uri.toString());
                     os = new FileOutputStream(pfd.getFileDescriptor());
                     is = new FileInputStream(file);
 

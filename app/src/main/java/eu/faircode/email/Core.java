@@ -112,8 +112,10 @@ import javax.mail.UIDFolder;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.search.AndTerm;
 import javax.mail.search.ComparisonTerm;
 import javax.mail.search.FlagTerm;
+import javax.mail.search.HeaderTerm;
 import javax.mail.search.MessageIDTerm;
 import javax.mail.search.OrTerm;
 import javax.mail.search.ReceivedDateTerm;
@@ -1261,6 +1263,16 @@ class Core {
 
         Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
         if (imessages == null || imessages.length == 0)
+            try {
+                // Needed for Outlook
+                imessages = ifolder.search(
+                        new AndTerm(
+                                new SentDateTerm(ComparisonTerm.GE, new Date()),
+                                new HeaderTerm("X-Correlation-ID", message.msgid)));
+            } catch (MessagingException ex) {
+                Log.e(ex);
+            }
+        if (imessages == null || imessages.length == 0)
             EntityOperation.queue(context, message, EntityOperation.ADD);
         else {
             long uid = ifolder.getUID(imessages[0]);
@@ -1273,6 +1285,7 @@ class Core {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean sync_folders = prefs.getBoolean("sync_folders", true);
+        boolean sync_shared_folders = prefs.getBoolean("sync_shared_folders", false);
 
         // Get folder names
         Map<String, EntityFolder> local = new HashMap<>();
@@ -1327,7 +1340,7 @@ class Core {
 
             } else {
                 local.put(folder.name, folder);
-                if (folder.initialize != 0)
+                if (folder.synchronize && folder.initialize != 0)
                     sync_folders = true;
             }
         Log.i("Local folder count=" + local.size());
@@ -1345,7 +1358,8 @@ class Core {
 
         // Get remote folders
         long start = new Date().getTime();
-        Folder[] ifolders = defaultFolder.list("*");
+        List<Folder> ifolders = new ArrayList<>();
+        ifolders.addAll(Arrays.asList(defaultFolder.list("*")));
 
         List<String> subscription = new ArrayList<>();
         try {
@@ -1356,9 +1370,33 @@ class Core {
             Log.e(account.name, ex);
         }
 
+        if (sync_shared_folders) {
+            Folder[] namespaces = istore.getSharedNamespaces();
+            Log.i("Namespaces=" + namespaces.length);
+            for (Folder namespace : namespaces) {
+                Log.i("Namespace=" + namespace.getFullName());
+                if (namespace.getSeparator() == separator) {
+                    try {
+                        ifolders.addAll(Arrays.asList(namespace.list("*")));
+                    } catch (FolderNotFoundException ex) {
+                        Log.w(ex);
+                    }
+
+                    try {
+                        Folder[] isubscribed = namespace.listSubscribed("*");
+                        for (Folder ifolder : isubscribed)
+                            subscription.add(ifolder.getFullName());
+                    } catch (MessagingException ex) {
+                        Log.e(account.name, ex);
+                    }
+                } else
+                    Log.e("Namespace separator=" + namespace.getSeparator() + " default=" + separator);
+            }
+        }
+
         long duration = new Date().getTime() - start;
 
-        Log.i("Remote folder count=" + ifolders.length +
+        Log.i("Remote folder count=" + ifolders.size() +
                 " separator=" + separator +
                 " fetched in " + duration + " ms");
 

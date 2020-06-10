@@ -1201,21 +1201,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Address[] senders = (Address[]) args.getSerializable("senders");
                         Address[] recipients = (Address[]) args.getSerializable("recipients");
 
-                        Map<String, Address> map = new HashMap<>();
-                        if (senders != null)
-                            for (Address a : senders) {
-                                String email = ((InternetAddress) a).getAddress();
-                                if (!TextUtils.isEmpty(email))
-                                    map.put(email, a);
-                            }
-                        if (recipients != null)
-                            for (Address a : recipients) {
-                                String email = ((InternetAddress) a).getAddress();
-                                if (!TextUtils.isEmpty(email))
-                                    map.put(email, a);
-                            }
+                        if (senders == null)
+                            senders = new Address[0];
+                        if (recipients == null)
+                            recipients = new Address[0];
 
-                        return ContactInfo.get(context, account, map.values().toArray(new Address[0]));
+                        Address[] all = new Address[senders.length + recipients.length];
+                        System.arraycopy(senders, 0, all, 0, senders.length);
+                        System.arraycopy(recipients, 0, all, senders.length, recipients.length);
+
+                        return ContactInfo.get(context, account, all);
                     }
 
                     @Override
@@ -1404,18 +1399,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindContactInfo(TupleMessageEx message, ContactInfo[] info, Address[] senders, Address[] recipients) {
-            Map<String, ContactInfo> map = new HashMap<>();
-            for (ContactInfo c : info)
-                map.put(c.getEmailAddress(), c);
-
             if (avatars) {
-                ContactInfo main = null;
-                if (senders != null && senders.length > 0) {
-                    String email = ((InternetAddress) senders[0]).getAddress();
-                    if (!TextUtils.isEmpty(email))
-                        main = map.get(email);
-                }
-
+                ContactInfo main = (info.length > 0 ? info[0] : null);
                 if (main == null || !main.hasPhoto()) {
                     ibAvatar.setImageDrawable(null);
                     ibAvatar.setTag(null);
@@ -1432,14 +1417,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (distinguish_contacts) {
                 boolean known = false;
                 if (senders != null)
-                    for (Address sender : senders) {
-                        String email = ((InternetAddress) sender).getAddress();
-                        if (!TextUtils.isEmpty(email) &&
-                                map.containsKey(email) && map.get(email).isKnown()) {
+                    for (int i = 0; i < senders.length; i++)
+                        if (info[i].isKnown()) {
                             known = true;
                             break;
                         }
-                    }
                 if (known)
                     tvFrom.setPaintFlags(tvFrom.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
             }
@@ -3407,6 +3389,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 (message.accountAutoSeen && !message.folderReadOnly))) {
                     message.unseen = 0;
                     message.ui_seen = true;
+                    message.visible_unseen = 0;
+                    message.ui_unsnoozed = false;
                 }
                 properties.setValue("expanded", message.id, expanded);
                 bindTo(message, expanded);
