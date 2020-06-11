@@ -1661,15 +1661,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvReplyTo.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
             tvReplyTo.setText(replyto);
 
-            tvCcTitle.setVisibility(!TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
-            tvCc.setVisibility(!TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
+            tvCcTitle.setVisibility(show_addresses && !TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
+            tvCc.setVisibility(show_addresses && !TextUtils.isEmpty(cc) ? View.VISIBLE : View.GONE);
             if (show_addresses || (message.cc == null || message.cc.length < MAX_RECIPIENTS))
                 tvCc.setText(cc);
             else
                 tvCc.setText(context.getString(R.string.title_recipients, message.cc.length));
 
-            tvBccTitle.setVisibility(!TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
-            tvBcc.setVisibility(!TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
+            tvBccTitle.setVisibility(show_addresses && !TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
+            tvBcc.setVisibility(show_addresses && !TextUtils.isEmpty(bcc) ? View.VISIBLE : View.GONE);
             if (show_addresses || (message.bcc == null || message.bcc.length < MAX_RECIPIENTS))
                 tvBcc.setText(bcc);
             else
