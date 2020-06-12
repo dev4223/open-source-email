@@ -414,14 +414,6 @@ class Core {
                             continue;
                         }
 
-                        if (op.tries >= TOTAL_RETRY_MAX) {
-                            // Giving up
-                            op.cleanup(context);
-                            db.operation().deleteOperation(op.id);
-                            ops.remove(op);
-                            continue;
-                        }
-
                         try {
                             db.beginTransaction();
 
@@ -436,7 +428,8 @@ class Core {
                             db.endTransaction();
                         }
 
-                        if (ex instanceof OutOfMemoryError ||
+                        if (op.tries >= TOTAL_RETRY_MAX ||
+                                ex instanceof OutOfMemoryError ||
                                 ex instanceof MessageRemovedException ||
                                 ex instanceof MessageRemovedIOException ||
                                 ex instanceof FileNotFoundException ||
@@ -1371,6 +1364,7 @@ class Core {
         }
 
         if (sync_shared_folders) {
+            // https://tools.ietf.org/html/rfc2342
             Folder[] namespaces = istore.getSharedNamespaces();
             Log.i("Namespaces=" + namespaces.length);
             for (Folder namespace : namespaces) {
@@ -1620,7 +1614,7 @@ class Core {
                         if (sent == null)
                             sent = 0L;
 
-                        String authentication = helper.getAuthentication();
+                        String[] authentication = helper.getAuthentication();
                         MessageHelper.MessageParts parts = helper.getMessageParts();
 
                         EntityMessage message = new EntityMessage();
@@ -2245,7 +2239,7 @@ class Core {
                         received = sent;
             }
 
-            String authentication = helper.getAuthentication();
+            String[] authentication = helper.getAuthentication();
             MessageHelper.MessageParts parts = helper.getMessageParts();
 
             message = new EntityMessage();
