@@ -27,6 +27,7 @@
     <style name="AppThemeBaseLight" parent="Base.Theme.AppCompat.Light.DarkActionBar">
         <item name="themeName">light</item>
         <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@style/activityAnimationStyle</item>
 
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -74,6 +75,7 @@
     <style name="AppThemeBaseDark" parent="Base.Theme.AppCompat">
         <item name="themeName">dark</item>
         <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowAnimationStyle">@style/activityAnimationStyle</item>
 
         <item name="android:navigationBarColor">@color/black</item>
 
@@ -413,6 +415,19 @@
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowAnimationStyle">@android:style/Animation</item>
+    </style>
+
+    <style name="activityAnimationStyle" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/activity_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/activity_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/activity_close_exit</item>
+        <!--item name="android:fragmentOpenEnterAnimation">@anim/fragment_open_enter</item>
+        <item name="android:fragmentOpenExitAnimation">@anim/fragment_open_exit</item>
+        <item name="android:fragmentCloseEnterAnimation">@anim/fragment_close_enter</item>
+        <item name="android:fragmentCloseExitAnimation">@anim/fragment_close_exit</item>
+        <item name="android:fragmentFadeEnterAnimation">@anim/fragment_fade_enter</item>
+        <item name="android:fragmentFadeExitAnimation">@anim/fragment_fade_exit</item-->
     </style>
 
     <style name="checkboxStyle" parent="Base.Widget.AppCompat.CompoundButton.CheckBox">
