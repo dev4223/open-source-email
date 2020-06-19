@@ -131,7 +131,6 @@
     <string name="title_setup_gmail_rationale">Por favor, conceda permisos para seleccionar una cuenta y leer su nombre</string>
     <string name="title_setup_gmail_permissions">Google solicitará permisos para leer, redactar, enviar y eliminar permanentemente todo su correo electrónico. FairEmail nunca eliminará sus mensajes sin su consentimiento explícito.</string>
     <string name="title_setup_gmail_drafts">Si la carpeta de borradores no es accesible por IMAP, esto se puede arreglar en la configuración de etiquetas de Gmail</string>
-    <string name="title_setup_office_auth">El error \'AUTHENTICATE failed\' puede ser causado por IMAP/SMTP desactivado en forma administrativa</string>
     <string name="title_setup_oauth_rationale">Autorizar acceso a su cuenta %1$s</string>
     <string name="title_setup_oauth_authorize">Autorizar</string>
     <string name="title_setup_select_account">Seleccionar cuenta</string>
@@ -505,6 +504,7 @@
     <string name="title_port">Puerto</string>
     <string name="title_user">Nombre de usuario</string>
     <string name="title_password">Contraseña</string>
+    <string name="title_case_sensitive">Los nombres de usuario y contraseñas por lo general distinguen mayúsculas y minúsculas</string>
     <string name="title_client_certificate">Certificado de cliente</string>
     <string name="title_realm">Dominio</string>
     <string name="title_use_ip">Usar dirección IP local en lugar de nombre de dominio</string>
@@ -783,6 +783,7 @@
     <string name="title_no_key">Ninguna clave privada</string>
     <string name="title_invalid_key">Clave privada inválida</string>
     <string name="title_unknown_key">La clave privada no coincide con ninguna clave de cifrado</string>
+    <string name="title_send_reminder_remark">Los recordatorios pueden ser activados de nuevo en la configuración de envío</string>
     <string name="title_send_plain_text">Sólo en texto plano</string>
     <string name="title_send_receipt">Solicitar acuse</string>
     <string name="title_send_receipt_remark">La mayoría de los clientes y proveedores de email ignoran los pedidos de recibos</string>
@@ -882,6 +883,7 @@
     <string name="title_select_language">Seleccionar idioma</string>
     <string name="title_select_all">Seleccionar todo</string>
     <string name="title_select_found">Seleccionar lo encontrado</string>
+    <string name="title_mark_all_read">Marcar todos como leídos</string>
     <string name="title_force_sync">Forzar sincronización</string>
     <string name="title_force_send">Forzar envío</string>
     <string name="title_language_all">Todos</string>

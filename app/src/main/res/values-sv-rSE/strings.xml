@@ -130,7 +130,7 @@
     <string name="title_setup_gmail_rationale">Vänligen bevilja behörigheter för att välja ett konto och läsa ditt namn</string>
     <string name="title_setup_gmail_permissions">Google kommer att be om behörighet att läsa, komponera, skicka och permanent ta bort all din e-post. FairEmail kommer aldrig att ta bort dina meddelanden utan ditt uttryckliga medgivande.</string>
     <string name="title_setup_gmail_drafts">Om mappen för utkast inte är åtkomlig för IMAP kan detta lösas under inställningarna för Gmail-etiketten</string>
-    <string name="title_setup_office_auth">Felet \"AUTHENTICATE failed\" kan orsakas av att IMAP/SMTP har inaktiveras på servernivå</string>
+    <string name="title_setup_office_auth">Felet \"AUTHENTICATE failed\" kan orsakas av att IMAP/SMTP inaktiveras av systemadministratören</string>
     <string name="title_setup_oauth_rationale">Auktorisera åtkomst till ditt %1$s konto</string>
     <string name="title_setup_oauth_authorize">Auktorisera</string>
     <string name="title_setup_select_account">Välj konto</string>
@@ -237,6 +237,7 @@
     <string name="title_advanced_suggest_sent">Föreslå adresser som finns i skickade meddelanden</string>
     <string name="title_advanced_suggest_received">Föreslå adresser som finns i mottagna meddelanden</string>
     <string name="title_advanced_suggest_frequently">Sortera föreslagna adresser vid användningsfrekvens</string>
+    <string name="title_advanced_auto_list">Skapa automatiskt listor</string>
     <string name="title_advanced_prefix_once">Prefix i ämnet endast när du svarar eller vidarebefordrar</string>
     <string name="title_advanced_extended_reply">Använd förlängd svars-/framåtriktad sidhuvud</string>
     <string name="title_advanced_quote_reply">Citera svarstext</string>
@@ -399,6 +400,7 @@
     <string name="title_advanced_optimize">Optimera automatiskt</string>
     <string name="title_advanced_updates">Sök efter uppdateringar</string>
     <string name="title_advanced_experiments">Prova experimentella funktioner</string>
+    <string name="title_advanced_query_threads">Begränsa parallell åtkomst till databas</string>
     <string name="title_advanced_crash_reports">Skicka felrapporter</string>
     <string name="title_advanced_debug">Felsökningsläge</string>
     <string name="title_advanced_cleanup_attachments">Ta bort bilagor på gamla meddelanden</string>
@@ -503,6 +505,7 @@
     <string name="title_port">Portnummer</string>
     <string name="title_user">Användarnamn</string>
     <string name="title_password">Lösenord</string>
+    <string name="title_case_sensitive">Användarnamn och lösenord är oftast skiftlägeskänsliga</string>
     <string name="title_client_certificate">Klientcertifikat</string>
     <string name="title_realm">Domän</string>
     <string name="title_use_ip">Använd lokal IP-adress istället för värdnamn</string>
@@ -781,6 +784,7 @@
     <string name="title_no_key">Ingen privat nyckel</string>
     <string name="title_invalid_key">Ogiltig privat nyckel</string>
     <string name="title_unknown_key">Privat nyckel matchar inte några krypteringsnycklar</string>
+    <string name="title_send_reminder_remark">Påminnelser kan aktiveras igen i sändningsinställningarna</string>
     <string name="title_send_plain_text">Endast oformaterad text</string>
     <string name="title_send_receipt">Begär läskvitto</string>
     <string name="title_send_receipt_remark">De flesta leverantörer och e-postklienter ignorerar kvittonförfrågningar</string>
@@ -880,6 +884,7 @@
     <string name="title_select_language">Välj språk</string>
     <string name="title_select_all">Markera alla</string>
     <string name="title_select_found">Välj hittade</string>
+    <string name="title_mark_all_read">Markera alla lästa</string>
     <string name="title_force_sync">Tvinga synkronisering</string>
     <string name="title_force_send">Tvinga skickning</string>
     <string name="title_language_all">Alla</string>

@@ -152,7 +152,6 @@
     <string name="title_setup_gmail_rationale">Pro zvolení účtu a přečtení vašeho jména prosím udělte oprávnění</string>
     <string name="title_setup_gmail_permissions">Google bude požadovat udělení oprávnění ke čtení, psaní, odesílání a trvalému odstranění všech vašich e-mailů. FairEmail nikdy neodstraní vaše zprávy bez vašeho výslovného souhlasu.</string>
     <string name="title_setup_gmail_drafts">Není-li složka s koncepty přístupná skrze IMAP, lze to v Gmailu napravit v nastavení štítků</string>
-    <string name="title_setup_office_auth">Chyba \'AUTHENTICATE failed\' může být způsobena administrativně zakázaným IMAP/SMTP</string>
     <string name="title_setup_oauth_rationale">Autorizovat přístup k vašemu účtu %1$s</string>
     <string name="title_setup_oauth_authorize">Autorizovat</string>
     <string name="title_setup_select_account">Vybrat účet</string>
@@ -421,6 +420,7 @@
     <string name="title_advanced_optimize">Automaticky optimalizovat</string>
     <string name="title_advanced_updates">Kontrolovat aktualizace</string>
     <string name="title_advanced_experiments">Vyzkoušet experimentální funkce</string>
+    <string name="title_advanced_query_threads">Omezit paralelní přístup k databázi</string>
     <string name="title_advanced_crash_reports">Odesílat zprávy o chybách</string>
     <string name="title_advanced_debug">Režim ladění</string>
     <string name="title_advanced_cleanup_attachments">Odstranit přílohy starých zpráv</string>
@@ -525,6 +525,7 @@
     <string name="title_port">Číslo portu</string>
     <string name="title_user">Uživatelské jméno</string>
     <string name="title_password">Heslo</string>
+    <string name="title_case_sensitive">Uživatelská jména a hesla obvykle vyžadují rozlišit velká a malá písmena</string>
     <string name="title_client_certificate">Klientský certifikát</string>
     <string name="title_realm">Sféra</string>
     <string name="title_use_ip">Použít lokální IP adresu namísto názvu hostitele</string>
@@ -803,6 +804,7 @@
     <string name="title_no_key">Žádný privátní klíč</string>
     <string name="title_invalid_key">Neplatný privátní klíč</string>
     <string name="title_unknown_key">Privátní klíč neodpovídá žádnému z šifrovacích klíčů</string>
+    <string name="title_send_reminder_remark">Připomenutí lze znovu zapnout v nastavení odesílání</string>
     <string name="title_send_plain_text">Pouze prostý text</string>
     <string name="title_send_receipt">Požádat o potvrzení</string>
     <string name="title_send_receipt_remark">Většina poskytovatelů a e-mailových klientů ignoruje žádosti o potvrzení</string>
@@ -902,6 +904,7 @@
     <string name="title_select_language">Vybrat jazyk</string>
     <string name="title_select_all">Vybrat vše</string>
     <string name="title_select_found">Vybrat nalezené</string>
+    <string name="title_mark_all_read">Označit vše jako přečtené</string>
     <string name="title_force_sync">Vynutit synchronizaci</string>
     <string name="title_force_send">Vynutit odeslání</string>
     <string name="title_language_all">Všechny</string>

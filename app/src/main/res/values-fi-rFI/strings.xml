@@ -80,6 +80,7 @@
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
     <string name="title_from_to">%1$s ➤ %2$s</string>
+    <string name="title_title_description">%1$s: %2$s</string>
     <string name="title_factor_minutes">%1$d minuuttia</string>
     <string name="menu_exit">Poistu</string>
     <string name="menu_answers">Viestipohjat</string>
@@ -224,6 +225,7 @@
     <string name="title_advanced_kept_removed">Tarkista onko vanhoja viestejä poistettu palvelimelta</string>
     <string name="title_advanced_gmail_thread">Gmailin viestiryhmittelytyyli Gmail-tileille</string>
     <string name="title_advanced_sync_folders">Synkronoi kansiolista</string>
+    <string name="title_advanced_sync_shared_folders">Synkronoi jaettujen kansioiden lista</string>
     <string name="title_advanced_subscriptions">Hallinnoi tilattuja kansioita</string>
     <string name="title_advanced_check_mx">Tarkista lähettäjien sähköpostiosoitteet viestejä synkronoitaessa</string>
     <string name="title_advanced_check_reply">Tarkista vastaussähköpostiosoitteet viestejä synkronoitaessa</string>
@@ -499,6 +501,7 @@
     <string name="title_port">Porttinumero</string>
     <string name="title_user">Käyttäjätunnus</string>
     <string name="title_password">Salasana</string>
+    <string name="title_case_sensitive">Käyttäjätunnukset ja salasanat ovat yleensä merkkikokoriippuvaisia</string>
     <string name="title_client_certificate">Asiakasvarmenne</string>
     <string name="title_realm">Toimialue</string>
     <string name="title_use_ip">Käytä paikallista IP-osoitetta verkkotunnuksen sijaan</string>
@@ -777,6 +780,7 @@
     <string name="title_no_key">Ei yksityistä avainta</string>
     <string name="title_invalid_key">Virheellinen yksityinen avain</string>
     <string name="title_unknown_key">Yksityinen avain ei vastaa mitään salausavainta</string>
+    <string name="title_send_reminder_remark">Muistutukset voidaan ottaa uudelleen käyttöön lähetysasetuksissa</string>
     <string name="title_send_plain_text">Lähetä muotoilemattomana tekstinä</string>
     <string name="title_send_receipt">Pyydä kuittausta</string>
     <string name="title_send_receipt_remark">Useimmat palveluntarjoajat ja sähköpostisovellukset jättävät kuittauspyynnöt huomioimatta</string>
@@ -876,6 +880,7 @@
     <string name="title_select_language">Valitse kieli</string>
     <string name="title_select_all">Valitse kaikki</string>
     <string name="title_select_found">Valitse löytyneet</string>
+    <string name="title_mark_all_read">Merkitse kaikki luetuiksi</string>
     <string name="title_force_sync">Pakota synkronointi</string>
     <string name="title_force_send">Pakota lähetys</string>
     <string name="title_language_all">Kaikki</string>

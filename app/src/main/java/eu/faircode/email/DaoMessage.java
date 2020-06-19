@@ -303,7 +303,7 @@ public interface DaoMessage {
             " ORDER BY message.received")
     Cursor getMessageFts();
 
-    @Query("SELECT id, account, thread, (:find IS NULL" +
+    @Query("SELECT message.id, account, thread, (:find IS NULL" +
             " OR (:senders AND `from` LIKE :find COLLATE NOCASE)" + // no index
             " OR (:recipients AND `to` LIKE :find COLLATE NOCASE)" + // no index
             " OR (:recipients AND `cc` LIKE :find COLLATE NOCASE)" + // no index
@@ -312,6 +312,7 @@ public interface DaoMessage {
             " OR (:keywords AND `keywords` LIKE :find COLLATE NOCASE)" + // no index
             " OR (:message AND `preview` LIKE :find COLLATE NOCASE)) AS matched" + // no index
             " FROM message" +
+            " LEFT JOIN attachment ON attachment.message = message.id" +
             " WHERE NOT ui_hide" +
             " AND (:account IS NULL OR account = :account)" +
             " AND (:folder IS NULL OR folder = :folder)" +
@@ -320,6 +321,7 @@ public interface DaoMessage {
             " AND (NOT :hidden OR NOT ui_snoozed IS NULL)" +
             " AND (NOT :encrypted OR ui_encrypt > 0)" +
             " AND (NOT :attachments OR attachments > 0)" +
+            " AND (:type_count = 0 OR attachment.type IN (:types))" +
             " AND (:size IS NULL OR total > :size)" +
             " AND (:after IS NULL OR received > :after)" +
             " AND (:before IS NULL OR received < :before)" +
@@ -329,6 +331,8 @@ public interface DaoMessage {
             Long account, Long folder, String find,
             boolean senders, boolean recipients, boolean subject, boolean keywords, boolean message,
             boolean unseen, boolean flagged, boolean hidden, boolean encrypted, boolean attachments,
+            int type_count,
+            String[] types,
             Integer size,
             Long after, Long before,
             int limit, int offset);
@@ -338,6 +342,26 @@ public interface DaoMessage {
             " WHERE content" +
             " ORDER BY message.received DESC")
     List<Long> getMessageWithContent();
+
+    @Query("SELECT message.id" +
+            " FROM message" +
+            " JOIN account ON account.id = message.account" +
+            " LEFT JOIN identity_view AS identity ON identity.id = message.identity" +
+            " JOIN folder_view AS folder ON folder.id = message.folder" +
+            " WHERE account.`synchronize`" +
+            " AND CASE" +
+            "  WHEN :folder IS NOT NULL THEN folder.id = :folder" +
+            "  WHEN :type IS NOT NULL THEN folder.type = :type" +
+            "  ELSE folder.unified" +
+            " END" +
+            " AND NOT ui_seen" +
+            " AND (NOT :filter_unflagged OR message.ui_flagged)" +
+            " AND (NOT :filter_unknown OR (message.avatar IS NOT NULL AND message.sender <> identity.email))" +
+            " AND (NOT :filter_snoozed OR message.ui_snoozed IS NULL OR " + is_drafts + ")" +
+            " AND (:filter_language IS NULL OR message.language = :filter_language)")
+    List<Long> getMessageUnseen(
+            Long folder, String type,
+            boolean filter_unflagged, boolean filter_unknown, boolean filter_snoozed, String filter_language);
 
     @Query("SELECT message.*" +
             " FROM message" +
@@ -480,7 +504,7 @@ public interface DaoMessage {
     LiveData<List<TupleMessageWidgetCount>> liveWidgetUnified();
 
     @Query("SELECT message.*" +
-            ", account.name AS accountName, account.color AS accountColor" +
+            ", account.name AS accountName, COALESCE(identity.color, folder.color, account.color) AS accountColor" +
             ", SUM(1 - message.ui_seen) AS unseen" +
             ", COUNT(message.id) - SUM(message.ui_flagged) AS unflagged" +
             ", MAX(message.received) AS dummy" +

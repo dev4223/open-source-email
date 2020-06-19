@@ -151,7 +151,6 @@
     <string name="title_setup_gmail_rationale">Przyznaj uprawnienia, aby wybrać konto i odczytać twoje imię</string>
     <string name="title_setup_gmail_permissions">Google poprosi o uprawnienia do odczytu, tworzenia, wysyłania i trwałego usuwania wszystkich wiadomości e-mail. FairEmail nigdy nie usunie twoich wiadomości bez Twojej wyraźnej zgody.</string>
     <string name="title_setup_gmail_drafts">Jeśli folder wersji roboczych nie jest dostępny przez IMAP, można to naprawić w ustawieniach etykiety Gmail</string>
-    <string name="title_setup_office_auth">Błąd „AUTHENTICATE failed” może być spowodowany administracyjnym wyłączeniem IMAP / SMTP</string>
     <string name="title_setup_oauth_rationale">Autoryzuj dostęp do Twojego konta %1$s</string>
     <string name="title_setup_oauth_authorize">Autoryzuj</string>
     <string name="title_setup_select_account">Wybierz konto</string>
@@ -259,6 +258,7 @@
     <string name="title_advanced_suggest_sent">Proponuj adresy znalezione w wysłanych wiadomościach</string>
     <string name="title_advanced_suggest_received">Proponuj adresy znalezione w otrzymanych wiadomościach</string>
     <string name="title_advanced_suggest_frequently">Sortuj sugerowane adresy według częstotliwości używania</string>
+    <string name="title_advanced_auto_list">Automatycznie twórz listy</string>
     <string name="title_advanced_prefix_once">Prefiksuj temat tylko raz przy odpowiedzi lub przesyłaniu dalej</string>
     <string name="title_advanced_extended_reply">Użyj rozszerzonego nagłówka odpowiedzi/przesyłania dalej</string>
     <string name="title_advanced_quote_reply">Cytuj treść w odpowiedzi</string>
@@ -421,6 +421,7 @@
     <string name="title_advanced_optimize">Automatycznie optymalizuj</string>
     <string name="title_advanced_updates">Sprawdź aktualizacje</string>
     <string name="title_advanced_experiments">Wypróbuj funkcje eksperymentalne</string>
+    <string name="title_advanced_query_threads">Ogranicz równoległy dostęp do bazy danych</string>
     <string name="title_advanced_crash_reports">Wyślij raport o błędach</string>
     <string name="title_advanced_debug">Debuguj</string>
     <string name="title_advanced_cleanup_attachments">Usuń załączniki starych wiadomości</string>
@@ -525,6 +526,7 @@
     <string name="title_port">Numer portu</string>
     <string name="title_user">Nazwa użytkownika</string>
     <string name="title_password">Hasło</string>
+    <string name="title_case_sensitive">W nazwach użytkowników i hasłach rozróżniane są małe i wielkie litery</string>
     <string name="title_client_certificate">Certyfikat klienta</string>
     <string name="title_realm">Realm</string>
     <string name="title_use_ip">Użyj lokalnego adresu IP zamiast nazwy hosta</string>
@@ -803,6 +805,7 @@
     <string name="title_no_key">Brak klucza prywatnego</string>
     <string name="title_invalid_key">Nieprawidłowy klucz prywatny</string>
     <string name="title_unknown_key">Klucz prywatny nie pasuje do żadnych kluczy szyfrowania</string>
+    <string name="title_send_reminder_remark">Przypomnienia można włączyć ponownie w ustawieniach wysyłania</string>
     <string name="title_send_plain_text">Tylko zwykły tekst</string>
     <string name="title_send_receipt">Poproś o potwierdzenie</string>
     <string name="title_send_receipt_remark">Większość dostawców i klientów e-mail ignoruje prośby o potwierdzenie</string>
@@ -902,6 +905,7 @@
     <string name="title_select_language">Wybierz język</string>
     <string name="title_select_all">Wybierz wszystkie</string>
     <string name="title_select_found">Wybierz znalezione</string>
+    <string name="title_mark_all_read">Oznacz wszystko jako przeczytane</string>
     <string name="title_force_sync">Wymuś synchronizację</string>
     <string name="title_force_send">Wymuś wysłanie</string>
     <string name="title_language_all">Wszystkie</string>
