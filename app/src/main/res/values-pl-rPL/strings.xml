@@ -151,6 +151,7 @@
     <string name="title_setup_gmail_rationale">Przyznaj uprawnienia, aby wybrać konto i odczytać twoje imię</string>
     <string name="title_setup_gmail_permissions">Google poprosi o uprawnienia do odczytu, tworzenia, wysyłania i trwałego usuwania wszystkich wiadomości e-mail. FairEmail nigdy nie usunie twoich wiadomości bez Twojej wyraźnej zgody.</string>
     <string name="title_setup_gmail_drafts">Jeśli folder wersji roboczych nie jest dostępny przez IMAP, można to naprawić w ustawieniach etykiety Gmail</string>
+    <string name="title_setup_office_auth">Błąd \"AUTHENTICATE failed\" może być spowodowany wyłączeniem protokołu IMAP/SMTP przez administratora systemu</string>
     <string name="title_setup_oauth_rationale">Autoryzuj dostęp do Twojego konta %1$s</string>
     <string name="title_setup_oauth_authorize">Autoryzuj</string>
     <string name="title_setup_select_account">Wybierz konto</string>
@@ -573,6 +574,7 @@
     <string name="title_hint_alias">Naciśnij i przytrzymaj tożsamość, aby wyświetlić opcje, np. kopiuj, aby utworzyć tożsamość aliasu</string>
     <string name="title_service_vpn">Może to być spowodowane przez używany VPN</string>
     <string name="title_service_port">Zweryfikuj dokładnie numer portu</string>
+    <string name="title_service_protocol">Sprawdź dokładnie protokół (SSL/TLS lub STARTTLS)</string>
     <string name="title_advanced_browse">Przeglądaj wiadomości na serwerze</string>
     <string name="title_advanced_expand_read">Oznacz wiadomości jako przeczytane przy rozwijaniu</string>
     <string name="title_synchronize_now">Synchronizuj teraz</string>
@@ -879,6 +881,7 @@
     <string name="title_search_flag_hidden">ukryte</string>
     <string name="title_search_flag_encrypted">zaszyfrowane</string>
     <string name="title_search_flag_attachments">załączniki</string>
+    <string name="title_search_flag_invite">zaproszenie</string>
     <string name="title_search_flag_size">rozmiar &gt; %1$s</string>
     <string name="title_search_device">Szukaj na urządzeniu</string>
     <string name="title_search_server">Szukaj na serwerze</string>

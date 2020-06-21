@@ -92,6 +92,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.jetbrains.annotations.NotNull;
+import org.openintents.openpgp.util.OpenPgpApi;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -408,6 +409,18 @@ public class Helper {
         return (biometrics || !TextUtils.isEmpty(pin));
     }
 
+    static boolean isOpenKeychainInstalled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String provider = prefs.getString("openpgp_provider", "org.sufficientlysecure.keychain");
+
+        PackageManager pm = context.getPackageManager();
+        Intent intent = new Intent(OpenPgpApi.SERVICE_INTENT_2);
+        intent.setPackage(provider);
+        List<ResolveInfo> ris = pm.queryIntentServices(intent, 0);
+
+        return (ris.size() > 0);
+    }
+
     // View
 
     static Intent getChooser(Context context, Intent intent) {
@@ -478,7 +491,7 @@ public class Helper {
                 context.startActivity(intent);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
+                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
             }
     }
 
@@ -515,7 +528,7 @@ public class Helper {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
+                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
             } catch (Throwable ex) {
                 Log.e(ex);
                 ToastEx.makeText(context, Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();

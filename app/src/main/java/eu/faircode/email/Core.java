@@ -1364,10 +1364,22 @@ class Core {
         try {
             Folder[] isubscribed = defaultFolder.listSubscribed("*");
             for (Folder ifolder : isubscribed) {
-                subscription.add(ifolder.getFullName());
-                Log.i("Subscribed " + defaultFolder.getFullName() + ":" + ifolder.getFullName());
+                String fullName = ifolder.getFullName();
+                if (TextUtils.isEmpty(fullName)) {
+                    Log.e("Subscribed folder name empty namespace=" + defaultFolder.getFullName());
+                    continue;
+                }
+                subscription.add(fullName);
+                Log.i("Subscribed " + defaultFolder.getFullName() + ":" + fullName);
             }
-        } catch (MessagingException ex) {
+        } catch (Throwable ex) {
+            /*
+                06-21 10:02:38.035  9927 10024 E fairemail: java.lang.NullPointerException: Folder name is null
+                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:372)
+                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPFolder.<init>(SourceFile:411)
+                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.IMAPStore.newIMAPFolder(SourceFile:1809)
+                06-21 10:02:38.035  9927 10024 E fairemail: 	at com.sun.mail.imap.DefaultFolder.listSubscribed(SourceFile:89)
+             */
             Log.e(account.name, ex);
         }
 
@@ -1387,10 +1399,15 @@ class Core {
                     try {
                         Folder[] isubscribed = namespace.listSubscribed("*");
                         for (Folder ifolder : isubscribed) {
-                            subscription.add(ifolder.getFullName());
-                            Log.i("Subscribed " + namespace.getFullName() + ":" + ifolder.getFullName());
+                            String fullName = ifolder.getFullName();
+                            if (TextUtils.isEmpty(fullName)) {
+                                Log.e("Subscribed folder name empty namespace=" + namespace.getFullName());
+                                continue;
+                            }
+                            subscription.add(fullName);
+                            Log.i("Subscribed " + namespace.getFullName() + ":" + fullName);
                         }
-                    } catch (MessagingException ex) {
+                    } catch (Throwable ex) {
                         Log.e(account.name, ex);
                     }
                 } else
@@ -1409,6 +1426,11 @@ class Core {
         Map<String, List<EntityFolder>> parentFolders = new HashMap<>();
         for (Folder ifolder : ifolders) {
             String fullName = ifolder.getFullName();
+            if (TextUtils.isEmpty(fullName)) {
+                Log.e("Folder name empty");
+                continue;
+            }
+
             String[] attrs = ((IMAPFolder) ifolder).getAttributes();
             String type = EntityFolder.getType(attrs, fullName, false);
             boolean subscribed = subscription.contains(fullName);
@@ -3239,6 +3261,7 @@ class Core {
                 thread.setAction("thread:" + message.thread);
                 thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 thread.putExtra("account", message.account);
+                thread.putExtra("folder", message.folder);
                 thread.putExtra("id", message.id);
                 thread.putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(message.folderType));
                 piContent = PendingIntent.getActivity(context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);

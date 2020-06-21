@@ -252,6 +252,8 @@ public class FragmentCompose extends FragmentBase {
     private State state = State.NONE;
     private boolean show_images = false;
     private int last_available = 0; // attachments
+    private boolean saved = false;
+    private String subject = null;
 
     private Uri photoURI = null;
 
@@ -664,6 +666,10 @@ public class FragmentCompose extends FragmentBase {
                         break;
                     case R.id.action_send:
                         onAction(R.id.action_check, "check");
+                        break;
+                    case R.id.action_save:
+                        saved = true;
+                        onAction(action, "save");
                         break;
                     default:
                         onAction(action, "navigation");
@@ -1488,7 +1494,7 @@ public class FragmentCompose extends FragmentBase {
                 startActivityForResult(intent, REQUEST_RECORD_AUDIO);
             } catch (SecurityException ex) {
                 Log.w(ex);
-                Snackbar.make(view, getString(R.string.title_no_viewer, intent.getAction()), Snackbar.LENGTH_INDEFINITE).show();
+                Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_INDEFINITE).show();
             }
     }
 
@@ -1898,7 +1904,7 @@ public class FragmentCompose extends FragmentBase {
                     startActivityForResult(intent, REQUEST_TAKE_PHOTO);
                 } catch (SecurityException ex) {
                     Log.w(ex);
-                    Snackbar.make(view, getString(R.string.title_no_viewer, intent.getAction()), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_LONG).show();
                 }
             }
         } else {
@@ -2755,7 +2761,7 @@ public class FragmentCompose extends FragmentBase {
     private void onExit() {
         if (state == State.LOADED) {
             state = State.NONE;
-            if (isEmpty())
+            if (!saved && isEmpty())
                 onAction(R.id.action_delete, "empty");
             else {
                 Bundle extras = new Bundle();
@@ -2768,10 +2774,15 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private boolean isEmpty() {
+        if (!etSubject.getText().toString().equals(subject))
+            return false;
+
         if (!TextUtils.isEmpty(JsoupEx.parse(HtmlHelper.toHtml(etBody.getText())).text().trim()))
             return false;
+
         if (rvAttachment.getAdapter().getItemCount() > 0)
             return false;
+
         return true;
     }
 
@@ -3377,7 +3388,7 @@ public class FragmentCompose extends FragmentBase {
 
                         // Encryption
                         if (ref.ui_encrypt != null && !EntityMessage.ENCRYPT_NONE.equals(ref.ui_encrypt)) {
-                            if (ActivityBilling.isPro(context))
+                            if (ActivityBilling.isPro(context) && Helper.isOpenKeychainInstalled(context))
                                 data.draft.ui_encrypt = ref.ui_encrypt;
                         }
 
@@ -3642,6 +3653,8 @@ public class FragmentCompose extends FragmentBase {
                             }
                     }
                 } else {
+                    args.putBoolean("saved", true);
+
                     if (data.draft.revision == null) {
                         data.draft.revision = 1;
                         data.draft.revisions = 1;
@@ -3719,6 +3732,9 @@ public class FragmentCompose extends FragmentBase {
             working = data.draft.id;
             encrypt = data.draft.ui_encrypt;
             getActivity().invalidateOptionsMenu();
+
+            subject = data.draft.subject;
+            saved = args.getBoolean("saved");
 
             // Show identities
             AdapterIdentitySelect iadapter = new AdapterIdentitySelect(getContext(), data.identities);
@@ -4770,10 +4786,29 @@ public class FragmentCompose extends FragmentBase {
     private ActivityBase.IKeyPressedListener onKeyPressedListener = new ActivityBase.IKeyPressedListener() {
         @Override
         public boolean onKeyPressed(KeyEvent event) {
-            if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.isCtrlPressed()) {
-                onAction(R.id.action_send, "enter");
-                return true;
+            if (event.isCtrlPressed() && event.getAction() == KeyEvent.ACTION_DOWN) {
+                switch (event.getKeyCode()) {
+                    case KeyEvent.KEYCODE_ENTER:
+                        onAction(R.id.action_check, "enter");
+                        return true;
+                    case KeyEvent.KEYCODE_B:
+                        if (etBody.hasSelection())
+                            return StyleHelper.apply(R.id.menu_bold, etBody);
+                        else
+                            return false;
+                    case KeyEvent.KEYCODE_I:
+                        if (etBody.hasSelection())
+                            return StyleHelper.apply(R.id.menu_italic, etBody);
+                        else
+                            return false;
+                    case KeyEvent.KEYCODE_U:
+                        if (etBody.hasSelection())
+                            return StyleHelper.apply(R.id.menu_underline, etBody);
+                        else
+                            return false;
+                }
             }
+
             return false;
         }
 

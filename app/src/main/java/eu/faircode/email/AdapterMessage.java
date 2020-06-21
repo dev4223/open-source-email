@@ -2892,6 +2892,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
                     final Intent viewThread = new Intent(ActivityView.ACTION_VIEW_THREAD)
                             .putExtra("account", message.account)
+                            .putExtra("folder", message.folder)
                             .putExtra("thread", message.thread)
                             .putExtra("id", message.id)
                             .putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(message.folderType))
@@ -3039,7 +3040,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 } catch (ActivityNotFoundException ex) {
                     Log.w(ex);
                     ToastEx.makeText(context,
-                            context.getString(R.string.title_no_viewer, intent.getAction()),
+                            context.getString(R.string.title_no_viewer, intent),
                             Toast.LENGTH_LONG).show();
                 }
             }
@@ -4052,7 +4053,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }.execute(context, owner, args, "view:cid");
 
             else
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri.toString()), Toast.LENGTH_LONG).show();
+                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
         }
 
         private void onMenuUnseen(final TupleMessageEx message) {
@@ -4110,6 +4111,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = new Bundle();
             args.putString("title", context.getString(R.string.title_snooze));
             args.putLong("account", message.account);
+            args.putLong("folder", message.folder);
             args.putString("thread", message.thread);
             args.putLong("id", message.id);
             args.putBoolean("finish", true);
@@ -4453,7 +4455,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     PackageManager pm = context.getPackageManager();
                     if (intent.resolveActivity(pm) == null) // system whitelisted
                         Snackbar.make(parentFragment.getView(),
-                                context.getString(R.string.title_no_viewer, intent.getAction()),
+                                context.getString(R.string.title_no_viewer, intent),
                                 Snackbar.LENGTH_LONG).
                                 show();
                     else
@@ -5286,8 +5288,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             @Override
             public void onCurrentListChanged(@Nullable PagedList<TupleMessageEx> previousList, @Nullable PagedList<TupleMessageEx> currentList) {
                 if (gotoTop && previousList != null) {
-                    gotoTop = false;
-                    properties.scrollTo(0, 0);
+                    if (ascending) {
+                        if (currentList != null && currentList.size() > 0) {
+                            properties.scrollTo(currentList.size() - 1, 0);
+                            gotoTop = false;
+                        }
+                    } else {
+                        gotoTop = false;
+                        properties.scrollTo(0, 0);
+                    }
                 }
 
                 if (selectionTracker != null && selectionTracker.hasSelection()) {
@@ -5371,7 +5380,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     }
 
     void gotoTop() {
-        properties.scrollTo(0, 0);
+        if (ascending) {
+            PagedList<TupleMessageEx> list = getCurrentList();
+            if (list != null && list.size() > 0)
+                properties.scrollTo(list.size() - 1, 0);
+        } else
+            properties.scrollTo(0, 0);
         this.gotoTop = true;
     }
 

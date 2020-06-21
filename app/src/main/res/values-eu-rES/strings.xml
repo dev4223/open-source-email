@@ -856,6 +856,7 @@ Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
     <string name="title_search_flag_hidden">ezkutuan</string>
     <string name="title_search_flag_encrypted">zifratuta</string>
     <string name="title_search_flag_attachments">eranskinak</string>
+    <string name="title_search_flag_invite">gonbidapena</string>
     <string name="title_search_flag_size">neurria &gt; %1$s</string>
     <string name="title_search_device">Bilatu gailuan</string>
     <string name="title_search_server">Bilatu zerbitzarian</string>
