@@ -215,7 +215,7 @@ public class FragmentCompose extends FragmentBase {
     private ImageButton ibCcBcc;
     private RecyclerView rvAttachment;
     private TextView tvNoInternetAttachments;
-    private ImageButton ibCloseUnusedImagesHint;
+    private TextView tvPlainTextOnly;
     private EditTextCompose etBody;
     private TextView tvNoInternet;
     private TextView tvSignature;
@@ -233,7 +233,6 @@ public class FragmentCompose extends FragmentBase {
     private Group grpExtra;
     private Group grpAddresses;
     private Group grpAttachments;
-    private Group grpUnusedImagesHint;
     private Group grpBody;
     private Group grpSignature;
     private Group grpReferenceHint;
@@ -317,7 +316,7 @@ public class FragmentCompose extends FragmentBase {
         ibCcBcc = view.findViewById(R.id.ivCcBcc);
         rvAttachment = view.findViewById(R.id.rvAttachment);
         tvNoInternetAttachments = view.findViewById(R.id.tvNoInternetAttachments);
-        ibCloseUnusedImagesHint = view.findViewById(R.id.ibCloseUnusedImagesHint);
+        tvPlainTextOnly = view.findViewById(R.id.tvPlainTextOnly);
         etBody = view.findViewById(R.id.etBody);
         tvNoInternet = view.findViewById(R.id.tvNoInternet);
         tvSignature = view.findViewById(R.id.tvSignature);
@@ -337,7 +336,6 @@ public class FragmentCompose extends FragmentBase {
         grpAddresses = view.findViewById(R.id.grpAddresses);
         grpAttachments = view.findViewById(R.id.grpAttachments);
         grpBody = view.findViewById(R.id.grpBody);
-        grpUnusedImagesHint = view.findViewById(R.id.grpUnusedImagesHint);
         grpSignature = view.findViewById(R.id.grpSignature);
         grpReferenceHint = view.findViewById(R.id.grpReferenceHint);
 
@@ -454,15 +452,6 @@ public class FragmentCompose extends FragmentBase {
         ibBccAdd.setOnClickListener(onPick);
 
         setZoom();
-
-        ibCloseUnusedImagesHint.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                prefs.edit().putBoolean("inline_image_hint", false).apply();
-                grpUnusedImagesHint.setVisibility(View.GONE);
-            }
-        });
 
         etBody.setInputContentListener(new EditTextCompose.IInputContentListener() {
             @Override
@@ -685,6 +674,7 @@ public class FragmentCompose extends FragmentBase {
 
         etExtra.setHint("");
         tvDomain.setText(null);
+        tvPlainTextOnly.setVisibility(View.GONE);
         etBody.setText(null);
 
         grpHeader.setVisibility(View.GONE);
@@ -936,7 +926,6 @@ public class FragmentCompose extends FragmentBase {
         rvAttachment.setAdapter(adapter);
 
         tvNoInternetAttachments.setVisibility(View.GONE);
-        grpUnusedImagesHint.setVisibility(View.GONE);
 
         final String pkg = Helper.getOpenKeychainPackage(getContext());
         Log.i("PGP binding to " + pkg);
@@ -3775,6 +3764,8 @@ public class FragmentCompose extends FragmentBase {
 
             db.attachment().liveAttachments(data.draft.id).observe(getViewLifecycleOwner(),
                     new Observer<List<EntityAttachment>>() {
+                        private Integer count = null;
+
                         @Override
                         public void onChanged(@Nullable List<EntityAttachment> attachments) {
                             if (attachments == null)
@@ -3784,14 +3775,11 @@ public class FragmentCompose extends FragmentBase {
                             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
                             boolean downloading = false;
-                            boolean inline_images = false;
                             for (EntityAttachment attachment : attachments) {
                                 if (attachment.isEncryption())
                                     continue;
                                 if (attachment.progress != null)
                                     downloading = true;
-                                if (attachment.isInline() && attachment.isImage())
-                                    inline_images = true;
                             }
 
                             Log.i("Attachments=" + attachments.size() + " downloading=" + downloading);
@@ -3799,11 +3787,43 @@ public class FragmentCompose extends FragmentBase {
                             rvAttachment.setTag(downloading);
                             checkInternet();
 
-                            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                            boolean inline_image_hint = prefs.getBoolean("inline_image_hint", true);
-                            grpUnusedImagesHint.setVisibility(inline_images && inline_image_hint ? View.VISIBLE : View.GONE);
+                            if (count != null && count > attachments.size()) {
+                                boolean updated = false;
+                                Editable edit = etBody.getEditableText();
+
+                                ImageSpan[] spans = edit.getSpans(0, edit.length(), ImageSpan.class);
+                                for (int i = 0; i < spans.length && !updated; i++) {
+                                    ImageSpan span = spans[i];
+                                    String source = span.getSource();
+                                    if (source != null && source.startsWith("cid:")) {
+                                        String cid = "<" + source.substring(4) + ">";
+                                        boolean found = false;
+                                        for (EntityAttachment attachment : attachments)
+                                            if (cid.equals(attachment.cid)) {
+                                                found = true;
+                                                break;
+                                            }
+
+                                        if (!found) {
+                                            updated = true;
+                                            int start = edit.getSpanStart(span);
+                                            int end = edit.getSpanEnd(span);
+                                            edit.removeSpan(span);
+                                            edit.delete(start, end);
+                                        }
+                                    }
+                                }
+
+                                if (updated)
+                                    etBody.setText(edit);
+                            }
+
+                            count = attachments.size();
                         }
                     });
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            final boolean plain_only = prefs.getBoolean("plain_only", false);
 
             db.message().liveMessage(data.draft.id).observe(getViewLifecycleOwner(), new Observer<EntityMessage>() {
                 @Override
@@ -3818,6 +3838,9 @@ public class FragmentCompose extends FragmentBase {
                         Log.i("Draft content=" + draft.content);
                         if (draft.content && state == State.NONE)
                             showDraft(draft, false);
+
+                        tvPlainTextOnly.setVisibility(
+                                draft.plain_only != null && draft.plain_only && !plain_only ? View.VISIBLE : View.GONE);
 
                         tvNoInternet.setTag(draft.content);
                         checkInternet();
@@ -4218,9 +4241,6 @@ public class FragmentCompose extends FragmentBase {
                             if (empty && d.select("div[fairemail=reference]").isEmpty())
                                 args.putBoolean("remind_text", true);
 
-                            if (draft.plain_only != null && draft.plain_only)
-                                args.putBoolean("remind_plain", true);
-
                             int attached = 0;
                             for (EntityAttachment attachment : attachments)
                                 if (!attachment.available)
@@ -4407,14 +4427,13 @@ public class FragmentCompose extends FragmentBase {
                 boolean remind_pgp = args.getBoolean("remind_pgp", false);
                 boolean remind_subject = args.getBoolean("remind_subject", false);
                 boolean remind_text = args.getBoolean("remind_text", false);
-                boolean remind_plain = args.getBoolean("remind_plain", false);
                 boolean remind_attachment = args.getBoolean("remind_attachment", false);
 
                 int recipients = (draft.to == null ? 0 : draft.to.length) +
                         (draft.cc == null ? 0 : draft.cc.length) +
                         (draft.bcc == null ? 0 : draft.bcc.length);
                 if (send_dialog || address_error != null || recipients > RECIPIENTS_WARNING || (send_reminders &&
-                        (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_plain || remind_attachment))) {
+                        (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_attachment))) {
                     setBusy(false);
 
                     FragmentDialogSend fragment = new FragmentDialogSend();
@@ -5092,7 +5111,6 @@ public class FragmentCompose extends FragmentBase {
             final boolean remind_pgp = args.getBoolean("remind_pgp", false);
             final boolean remind_subject = args.getBoolean("remind_subject", false);
             final boolean remind_text = args.getBoolean("remind_text", false);
-            final boolean remind_plain = args.getBoolean("remind_plain", false);
             final boolean remind_attachment = args.getBoolean("remind_attachment", false);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -5149,7 +5167,7 @@ public class FragmentCompose extends FragmentBase {
 
             Helper.setViewsEnabled(dview, false);
 
-            boolean reminder = (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_plain || remind_attachment);
+            boolean reminder = (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_attachment);
             swSendReminders.setChecked(send_reminders);
             swSendReminders.setVisibility(send_reminders && reminder ? View.VISIBLE : View.GONE);
             tvSendRemindersHint.setVisibility(View.GONE);
@@ -5164,9 +5182,6 @@ public class FragmentCompose extends FragmentBase {
                     tvRemindText.setVisibility(checked && remind_text ? View.VISIBLE : View.GONE);
                     tvRemindAttachment.setVisibility(checked && remind_attachment ? View.VISIBLE : View.GONE);
                     tvSendRemindersHint.setVisibility(checked ? View.GONE : View.VISIBLE);
-
-                    cbPlainOnly.setTextColor(Helper.resolveColor(getContext(),
-                            checked && cbPlainOnly.isChecked() ? R.attr.colorWarning : android.R.attr.textColorSecondary));
                 }
             });
 
@@ -5181,9 +5196,6 @@ public class FragmentCompose extends FragmentBase {
             cbPlainOnly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                    cbPlainOnly.setTextColor(Helper.resolveColor(getContext(),
-                            checked ? R.attr.colorWarning : android.R.attr.textColorSecondary));
-
                     Bundle args = new Bundle();
                     args.putLong("id", id);
                     args.putBoolean("plain_only", checked);

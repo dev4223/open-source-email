@@ -196,6 +196,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 import javax.mail.Address;
+import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
@@ -4198,7 +4199,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 }
 
-                if (message.folder == folder)
+                if (message.folder == folder &&
+                        !EntityFolder.OUTBOX.equals(message.folderType))
                     autoCloseCount++;
             }
 
@@ -4214,6 +4216,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     expand = see;
                 else if (messages.size() == 1)
                     expand = messages.get(0);
+                else if (messages.size() > 0) {
+                    TupleMessageEx first = messages.get(adapter.getAscending() ? messages.size() - 1 : 0);
+                    if (first != null && EntityFolder.OUTBOX.equals(first.folderType))
+                        expand = first;
+                }
 
                 if (expand != null &&
                         (expand.content || unmetered || (expand.size != null && expand.size < download)))
@@ -4677,7 +4684,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 // Show undo snackbar
                 final Snackbar snackbar = Snackbar.make(
                         content,
-                        getString(R.string.title_moving, getDisplay(result)),
+                        getString(R.string.title_move_undo, getDisplay(result), result.size()),
                         Snackbar.LENGTH_INDEFINITE);
                 snackbar.setAction(R.string.title_undo, new View.OnClickListener() {
                     @Override
@@ -5252,7 +5259,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 DB db = DB.getInstance(context);
                 EntityMessage message = db.message().getMessage(id);
                 if (message == null)
-                    throw new FileNotFoundException("message gone");
+                    throw new MessageRemovedException();
                 File file = message.getRawFile(context);
                 Log.i("Raw file=" + file);
 
@@ -5303,7 +5310,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException || ex instanceof FileNotFoundException)
                     Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
-                else
+                else if (!(ex instanceof MessageRemovedException))
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "raw:save");

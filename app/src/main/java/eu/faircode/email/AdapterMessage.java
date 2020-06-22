@@ -5441,6 +5441,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.ascending = ascending;
     }
 
+    boolean getAscending() {
+        return ascending;
+    }
+
     void setFilterDuplicates(boolean filter_duplicates) {
         if (this.filter_duplicates != filter_duplicates) {
             this.filter_duplicates = filter_duplicates;
