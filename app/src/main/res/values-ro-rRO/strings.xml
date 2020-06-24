@@ -313,6 +313,7 @@
     <string name="title_advanced_preview_lines">Numărul de linii de previzualizat</string>
     <string name="title_advanced_archive_trash">Arată butoanele de arhivare sau mutare la gunoi a unui mesaj</string>
     <string name="title_advanced_move">Arată butonul pentru a muta un mesaj</string>
+    <string name="title_advanced_create_rule">Arată butonul pentru a crea o regulă pentru un mesaj</string>
     <string name="title_advanced_addresses">Implicit arată detaliile adreselor</string>
     <string name="title_advanced_attachments_alt">Arată atașamentele după textul mesajului</string>
     <string name="title_advanced_contrast">Folosește contrast ridicat pentru text</string>
@@ -688,7 +689,7 @@
     <string name="title_reply_list">Răspunde listei</string>
     <string name="title_reply_receipt">Trimite confirmare de citire</string>
     <string name="title_reply_template">Răspunde cu șablon</string>
-    <string name="title_move_undo" comment="title_move_undo&#10;&#10;Moving to &lt;folder name&gt; (&lt;number of messages&gt;)">Se mută la %1$s (%2$d)</string>
+    <string name="title_move_undo">Se mută la %1$s (%2$d)</string>
     <string name="title_open_with">Deschide cu</string>
     <string name="title_authentication_failed">Autentificare %1$s eșuată</string>
     <string name="title_receipt_subject">Confirmare de citire: %1$s</string>
@@ -1043,6 +1044,7 @@
     <string name="title_legend_avatar">Poză de profil</string>
     <string name="title_legend_show_quotes">Arată citate</string>
     <string name="title_legend_show_junk">Tratează ca spam</string>
+    <string name="title_legend_create_rule">Creați o regulă</string>
     <string name="title_legend_show_unsubscribe">Dezabonare de la listă</string>
     <string name="title_legend_show_images">Afișare imagini</string>
     <string name="title_legend_show_full">Arată mesajul original</string>

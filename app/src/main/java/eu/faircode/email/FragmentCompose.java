@@ -61,10 +61,10 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
+import android.text.method.LinkMovementMethod;
+import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
-import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -440,7 +440,8 @@ public class FragmentCompose extends FragmentBase {
 
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
                 PackageManager pm = getContext().getPackageManager();
-                if (pick.resolveActivity(pm) == null) // system whitelisted
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&  // should be system whitelisted
+                        pick.resolveActivity(pm) == null)
                     Snackbar.make(view, R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
                 else
                     startActivityForResult(Helper.getChooser(getContext(), pick), request);
@@ -516,27 +517,27 @@ public class FragmentCompose extends FragmentBase {
                     }
 
                     if (broken) {
-                        StyleSpan[] sspan = ssb.getSpans(start, start, StyleSpan.class);
-                        for (StyleSpan span : sspan) {
+                        CharacterStyle[] sspan = ssb.getSpans(start + 1, start + 1, CharacterStyle.class);
+                        for (CharacterStyle span : sspan) {
                             int s = ssb.getSpanStart(span);
                             int e = ssb.getSpanEnd(span);
                             int f = ssb.getSpanFlags(span);
                             Log.i("Style span " + s + "..." + e + " start=" + start);
 
-                            StyleSpan s1 = new StyleSpan(span.getStyle());
+                            CharacterStyle s1 = CharacterStyle.wrap(span);
                             ssb.setSpan(s1, s, start, f);
                             Log.i("Style span " + s + "..." + start);
 
-                            StyleSpan s2 = new StyleSpan(span.getStyle());
+                            CharacterStyle s2 = CharacterStyle.wrap(span);
                             ssb.setSpan(s2, start + 1, e, f);
                             Log.i("Style span " + (start + 1) + "..." + e);
 
                             ssb.removeSpan(span);
                         }
 
-                        int color = Helper.resolveColor(getContext(), android.R.attr.textColorPrimary);
-                        int flags = (Spanned.SPAN_INCLUSIVE_INCLUSIVE | Spanned.SPAN_COMPOSING);
-                        ssb.setSpan(new ForegroundColorSpan(color), start, start, flags);
+                        //int color = Helper.resolveColor(getContext(), android.R.attr.textColorPrimary);
+                        //int flags = (Spanned.SPAN_INCLUSIVE_INCLUSIVE | Spanned.SPAN_COMPOSING);
+                        //ssb.setSpan(new ForegroundColorSpan(color), start, start, flags);
 
                         etBody.setText(ssb);
                         etBody.setSelection(start);
@@ -609,6 +610,7 @@ public class FragmentCompose extends FragmentBase {
 
         etBody.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
         tvReference.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
+        tvReference.setMovementMethod(LinkMovementMethod.getInstance());
 
         style_bar.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -1474,7 +1476,7 @@ public class FragmentCompose extends FragmentBase {
             snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Helper.view(getContext(), Uri.parse(BuildConfig.RECORDER_URI), false);
+                    Helper.viewFAQ(getContext(), 158);
                 }
             });
             snackbar.show();
@@ -1696,14 +1698,12 @@ public class FragmentCompose extends FragmentBase {
                 }
             else {
                 Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
-                PackageManager pm = getContext().getPackageManager();
-                if (Helper.getIntentOpenKeychain().resolveActivity(pm) != null) // package whitelisted
-                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            startActivity(Helper.getIntentOpenKeychain());
-                        }
-                    });
+                snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Helper.viewFAQ(getContext(), 12);
+                    }
+                });
                 snackbar.show();
             }
         }
@@ -1878,7 +1878,7 @@ public class FragmentCompose extends FragmentBase {
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Helper.view(getContext(), Uri.parse(BuildConfig.CAMERA_URI), false);
+                        Helper.viewFAQ(getContext(), 158);
                     }
                 });
                 snackbar.show();

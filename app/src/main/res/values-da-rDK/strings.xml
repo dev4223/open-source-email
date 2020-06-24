@@ -304,6 +304,7 @@
     <string name="title_advanced_preview_lines">Antal forhåndsvisningslinier</string>
     <string name="title_advanced_archive_trash">Vis knapper til arkivering eller sletning af en besked</string>
     <string name="title_advanced_move">Vis knap til flytning af en besked</string>
+    <string name="title_advanced_create_rule">Vis knap til oprettelse af en beskedregel</string>
     <string name="title_advanced_addresses">Vis adresseoplysninger som standard</string>
     <string name="title_advanced_attachments_alt">Vis vedhæftninger efter beskedteksten</string>
     <string name="title_advanced_contrast">Benyt høj kontrast til beskedtekst</string>
@@ -679,6 +680,7 @@
     <string name="title_reply_list">Besvar liste</string>
     <string name="title_reply_receipt">Send læst-kvittering</string>
     <string name="title_reply_template">Besvar med skabelon</string>
+    <string name="title_move_undo">Flytter til %1$s (%2$d)</string>
     <string name="title_open_with">Åbn med</string>
     <string name="title_authentication_failed">%1$s godkendelse mislykkedes</string>
     <string name="title_receipt_subject">Læsningskvittering: %1$s</string>
@@ -1033,6 +1035,7 @@
     <string name="title_legend_avatar">Avatar</string>
     <string name="title_legend_show_quotes">Vis citater</string>
     <string name="title_legend_show_junk">Håndtér som spam</string>
+    <string name="title_legend_create_rule">Opret regel</string>
     <string name="title_legend_show_unsubscribe">Afabonnér fra liste</string>
     <string name="title_legend_show_images">Vis billeder</string>
     <string name="title_legend_show_full">Vis oprindelig besked</string>

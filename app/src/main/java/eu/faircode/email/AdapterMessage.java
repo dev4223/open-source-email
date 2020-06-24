@@ -409,6 +409,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibDecrypt;
         private ImageButton ibVerify;
         private ImageButton ibUndo;
+        private ImageButton ibRule;
         private ImageButton ibUnsubscribe;
         private ImageButton ibAnswer;
         private ImageButton ibMove;
@@ -417,6 +418,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibJunk;
         private ImageButton ibInbox;
         private ImageButton ibMore;
+        private ImageButton ibTools;
         private TextView tvSignedData;
 
         private TextView tvBody;
@@ -611,6 +613,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibDecrypt = vsBody.findViewById(R.id.ibDecrypt);
             ibVerify = vsBody.findViewById(R.id.ibVerify);
             ibUndo = vsBody.findViewById(R.id.ibUndo);
+            ibRule = vsBody.findViewById(R.id.ibRule);
             ibUnsubscribe = vsBody.findViewById(R.id.ibUnsubscribe);
             ibAnswer = vsBody.findViewById(R.id.ibAnswer);
             ibMove = vsBody.findViewById(R.id.ibMove);
@@ -619,6 +622,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibJunk = vsBody.findViewById(R.id.ibJunk);
             ibInbox = vsBody.findViewById(R.id.ibInbox);
             ibMore = vsBody.findViewById(R.id.ibMore);
+            ibTools = vsBody.findViewById(R.id.ibTools);
             tvSignedData = vsBody.findViewById(R.id.tvSignedData);
 
             tvBody = vsBody.findViewById(R.id.tvBody);
@@ -701,6 +705,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibFull.setOnClickListener(this);
                 ibImages.setOnClickListener(this);
+                ibRule.setOnClickListener(this);
                 ibUnsubscribe.setOnClickListener(this);
                 ibDecrypt.setOnClickListener(this);
                 ibVerify.setOnClickListener(this);
@@ -712,6 +717,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibJunk.setOnClickListener(this);
                 ibInbox.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
+                ibTools.setOnClickListener(this);
 
                 ibDownloading.setOnClickListener(this);
                 ibTrashBottom.setOnClickListener(this);
@@ -786,6 +792,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibFull.setOnClickListener(null);
                 ibImages.setOnClickListener(null);
+                ibRule.setOnClickListener(null);
                 ibUnsubscribe.setOnClickListener(null);
                 ibDecrypt.setOnClickListener(null);
                 ibVerify.setOnClickListener(null);
@@ -797,6 +804,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibJunk.setOnClickListener(null);
                 ibInbox.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
+                ibTools.setOnClickListener(null);
 
                 ibDownloading.setOnClickListener(null);
                 ibTrashBottom.setOnClickListener(null);
@@ -865,7 +873,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
             boolean outgoing = isOutgoing(message);
-            boolean reverse = (outgoing && (viewType != ViewType.THREAD || !threading) && !show_recipients);
+            boolean reverse = (outgoing &&
+                    (viewType != ViewType.THREAD || !threading) &&
+                    !show_recipients && !"sender".equals(sort));
             Address[] senders = ContactInfo.fillIn(reverse ? message.to : message.senders, prefer_contact);
             Address[] recipients = ContactInfo.fillIn(reverse ? message.from : message.recipients, prefer_contact);
             boolean authenticated =
@@ -1337,6 +1347,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(View.GONE);
+            ibRule.setVisibility(View.GONE);
             ibUnsubscribe.setVisibility(View.GONE);
             ibAnswer.setVisibility(View.GONE);
             ibMove.setVisibility(View.GONE);
@@ -1345,6 +1356,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibJunk.setVisibility(View.GONE);
             ibInbox.setVisibility(View.GONE);
             ibMore.setVisibility(View.GONE);
+            ibTools.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
 
             tvNoInternetBody.setVisibility(View.GONE);
@@ -1466,6 +1478,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibDecrypt.setVisibility(View.GONE);
             ibVerify.setVisibility(View.GONE);
             ibUndo.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.VISIBLE : View.GONE);
+            ibRule.setVisibility(View.GONE);
             ibUnsubscribe.setVisibility(View.GONE);
             ibAnswer.setVisibility(View.GONE);
             ibMove.setVisibility(View.GONE);
@@ -1473,7 +1486,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibTrash.setVisibility(View.GONE);
             ibJunk.setVisibility(View.GONE);
             ibInbox.setVisibility(View.GONE);
-            ibMore.setVisibility(EntityFolder.OUTBOX.equals(message.folderType) ? View.GONE : View.VISIBLE);
+            ibMore.setVisibility(View.GONE);
+            ibTools.setVisibility(View.GONE);
             tvSignedData.setVisibility(View.GONE);
 
             // Message text
@@ -1529,6 +1543,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             });
 
             // Setup actions
+            setupTools(message, scroll, true);
+        }
+
+        private void setupTools(final TupleMessageEx message, final boolean scroll, final boolean bind) {
             Bundle sargs = new Bundle();
             sargs.putLong("id", message.id);
             sargs.putLong("account", message.account);
@@ -1581,25 +1599,31 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             message.uid == null || message.accountProtocol == EntityAccount.TYPE_POP);
 
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    boolean button_archive_trash = prefs.getBoolean("button_archive_trash", true);
-                    boolean button_move = prefs.getBoolean("button_move", true);
+                    boolean experiments = prefs.getBoolean("experiments", false);
                     boolean expand_all = prefs.getBoolean("expand_all", false);
                     boolean expand_one = prefs.getBoolean("expand_one", true);
+                    boolean tools = prefs.getBoolean("message_tools", true);
 
                     ibTrash.setTag(delete);
 
-                    ibUnsubscribe.setVisibility(message.unsubscribe == null ? View.GONE : View.VISIBLE);
-                    ibAnswer.setVisibility(outbox || (!expand_all && expand_one) ? View.GONE : View.VISIBLE);
-                    ibMove.setVisibility(move && button_move ? View.VISIBLE : View.GONE);
-                    ibArchive.setVisibility(archive && button_archive_trash ? View.VISIBLE : View.GONE);
-                    ibTrash.setVisibility(trash && button_archive_trash ? View.VISIBLE : View.GONE);
-                    ibJunk.setVisibility(junk ? View.VISIBLE : View.GONE);
-                    ibInbox.setVisibility(inbox ? View.VISIBLE : View.GONE);
+                    ibRule.setVisibility(tools && experiments && !outbox &&
+                            message.accountProtocol == EntityAccount.TYPE_IMAP ? View.VISIBLE : View.GONE);
+                    ibUnsubscribe.setVisibility(!tools || message.unsubscribe == null ? View.GONE : View.VISIBLE);
+                    ibAnswer.setVisibility(!tools || outbox || (!expand_all && expand_one) ? View.GONE : View.VISIBLE);
+                    ibMove.setVisibility(tools && move ? View.VISIBLE : View.GONE);
+                    ibArchive.setVisibility(tools && archive ? View.VISIBLE : View.GONE);
+                    ibTrash.setVisibility(tools && trash ? View.VISIBLE : View.GONE);
+                    ibJunk.setVisibility(tools && junk ? View.VISIBLE : View.GONE);
+                    ibInbox.setVisibility(tools && inbox ? View.VISIBLE : View.GONE);
+                    ibMore.setVisibility(!tools || outbox ? View.GONE : View.VISIBLE);
+                    ibTools.setImageLevel(tools ? 0 : 1);
+                    ibTools.setVisibility(View.VISIBLE);
 
-                    ibTrashBottom.setVisibility(trash && button_archive_trash ? View.VISIBLE : View.GONE);
-                    ibArchiveBottom.setVisibility(archive && button_archive_trash ? View.VISIBLE : View.GONE);
+                    ibTrashBottom.setVisibility(tools && trash ? View.VISIBLE : View.GONE);
+                    ibArchiveBottom.setVisibility(tools && archive ? View.VISIBLE : View.GONE);
 
-                    bindBody(message, scroll);
+                    if (bind)
+                        bindBody(message, scroll);
                 }
 
                 @Override
@@ -2802,6 +2826,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     case R.id.ibImages:
                         onShow(message, false);
                         break;
+                    case R.id.ibRule:
+                        onMenuCreateRule(message);
+                        break;
                     case R.id.ibUnsubscribe:
                         onActionUnsubscribe(message);
                         break;
@@ -2845,6 +2872,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         break;
                     case R.id.ibMore:
                         onActionMore(message);
+                        break;
+                    case R.id.ibTools:
+                        onActionTools(message);
                         break;
 
                     case R.id.ibDownloading:
@@ -3693,10 +3723,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.execute(context, owner, args, "message:move:draft");
         }
 
-        private void onActionNoJunk(TupleMessageEx message) {
-            properties.move(message.id, EntityFolder.INBOX);
-        }
-
         private void onActionArchive(TupleMessageEx message) {
             properties.move(message.id, EntityFolder.ARCHIVE);
         }
@@ -3736,6 +3762,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             properties.move(message.id, EntityFolder.INBOX);
         }
 
+        private void onActionTools(TupleMessageEx message) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean message_tools = !prefs.getBoolean("message_tools", true);
+            prefs.edit().putBoolean("message_tools", message_tools).apply();
+            setupTools(message, false, false);
+        }
+
         private void onActionMore(TupleMessageEx message) {
             boolean show_headers = properties.getValue("headers", message.id);
             boolean full = properties.getValue("full", message.id);
@@ -3756,9 +3789,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_set_importance_low).setEnabled(!EntityMessage.PRIORITIY_LOW.equals(i));
             popupMenu.getMenu().findItem(R.id.menu_set_importance_normal).setEnabled(!EntityMessage.PRIORITIY_NORMAL.equals(i));
             popupMenu.getMenu().findItem(R.id.menu_set_importance_high).setEnabled(!EntityMessage.PRIORITIY_HIGH.equals(i));
-
-            popupMenu.getMenu().findItem(R.id.menu_no_junk).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_no_junk).setVisible(EntityFolder.JUNK.equals(message.folderType));
 
             popupMenu.getMenu().findItem(R.id.menu_copy).setEnabled(message.uid != null && !message.folderReadOnly);
             popupMenu.getMenu().findItem(R.id.menu_copy).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
@@ -3815,9 +3845,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_set_importance_high:
                             onMenuSetImportance(message, EntityMessage.PRIORITIY_HIGH);
-                            return true;
-                        case R.id.menu_no_junk:
-                            onActionNoJunk(message);
                             return true;
                         case R.id.menu_copy:
                             onActionMove(message, true);

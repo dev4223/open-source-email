@@ -59,6 +59,7 @@ Related questions:
 * Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Delete a folder: long press the folder in the folder list, Edit properties, three-dots menu, Delete
+* Undo send: Outbox, tap message, tap undo icon button
 * Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
 * Change system folders: Setup, step 1, Manage, tap account, at the bottom
 * Export/import settings: Setup, navigation/hamburger menu
@@ -279,6 +280,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(155) What is a winmail.dat file?](#user-content-faq155)
 * [(156) How can I set up an Office365 account?](#user-content-faq156)
 * [(157) How can I set up an Free.fr account?](#user-content-faq157)
+* [(158) Which camera / audio recorder do you recommend?](#user-content-faq158)
 
 [I have another question.](#user-content-support)
 
@@ -2620,7 +2622,7 @@ Reformatting and displaying such messages will take too long. You can try to use
 <a name="faq125"></a>
 **(125) What are the current experimental features?**
 
-* ~~Custom rendering of reformatted messages~~
+* Showing an icon button to create a rule for a message
 
 <br />
 
@@ -3082,6 +3084,13 @@ Veuillez [voir ici](http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/confi
 
 <br />
 
+<a name="faq158"></a>
+**(158) Which camera / audio recorder do you recommend**
+
+* [Open Camera](https://play.google.com/store/apps/details?id=net.sourceforge.opencamera) ([F-Droid](https://f-droid.org/en/packages/net.sourceforge.opencamera/))
+* [Audio Recorder](https://play.google.com/store/apps/details?id=com.github.axet.audiorecorder) ([F-Droid](https://f-droid.org/packages/com.github.axet.audiorecorder/))
+
+<br />
 
 ## Support
 
