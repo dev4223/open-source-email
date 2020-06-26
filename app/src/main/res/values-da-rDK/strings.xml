@@ -6,7 +6,7 @@
     <string name="app_limitations">Eksempelvis vil beskeder altid blive omformateret for at fjerne usikre elementer samt for at øge læsbarheden, og åbning af links skal af sikkerhedsårsager bekræftes.</string>
     <string name="app_crash">FairEmail er ikke understøttet på denne enhed, da fejl i Android forårsager nedbrud</string>
     <string name="app_exit">Tryk \'Tilbage\' igen for at afslutte</string>
-    <string name="channel_service">Service</string>
+    <string name="channel_service">Modtage</string>
     <string name="channel_send">Send</string>
     <string name="channel_notification">Notifikationer</string>
     <string name="channel_update">Opdateringer</string>
@@ -77,6 +77,7 @@
     <string name="title_notification_idle">Inaktiv</string>
     <string name="title_notification_failed">\'%1$s\' mislykkedes</string>
     <string name="title_notification_alert">\'%1$s\'-serveradvarsel</string>
+    <string name="title_notification_sending_failed">Afsendelse til %1$s mislykkedes</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
@@ -97,9 +98,7 @@
     <string name="menu_privacy">Privatliv</string>
     <string name="menu_about">Om</string>
     <string name="menu_pro">Pro-funktioner</string>
-    <string name="menu_invite">Invitér</string>
     <string name="menu_rate">Bedøm denne app</string>
-    <string name="menu_other">Andre apps</string>
     <string name="title_welcome">Velkommen</string>
     <string name="title_eula">Slutbrugerlicensaftale</string>
     <string name="title_agree">Jeg accepterer</string>
@@ -260,7 +259,6 @@
     <string name="title_advanced_rlah">Roam, som var du hjemme</string>
     <string name="title_advanced_timeout">Forbindelses-timeout (sekunder)</string>
     <string name="title_advanced_ssl_harden">Hærd SSL-forbindelser</string>
-    <string name="title_advanced_socks">Benyt SOCKS-proxy</string>
     <string name="title_advanced_manage_connectivity">Håndtér konnektivitet</string>
     <string name="title_advanced_caption_general">Generelt</string>
     <string name="title_advanced_caption_list">Liste</string>
@@ -297,14 +295,12 @@
     <string name="title_advanced_subject_italic">Vis emnet med kursiv</string>
     <string name="title_advanced_subject_elipsed">Når nødvendigt, afkort emnet</string>
     <string name="title_advanced_keywords">Vis nøgleord i beskedhovedet</string>
+    <string name="title_advanced_labels">Vis Gmail-etiketter i beskedhoved</string>
     <string name="title_advanced_flags">Vis stjernemarkeringer</string>
     <string name="title_advanced_flags_background">Vis farvet baggrund i stedet for farvede stjerner</string>
     <string name="title_advanced_preview">Forhåndsvisning af beskeder</string>
     <string name="title_advanced_preview_italic">Vis beskedforhåndsvisning med kursiv</string>
     <string name="title_advanced_preview_lines">Antal forhåndsvisningslinier</string>
-    <string name="title_advanced_archive_trash">Vis knapper til arkivering eller sletning af en besked</string>
-    <string name="title_advanced_move">Vis knap til flytning af en besked</string>
-    <string name="title_advanced_create_rule">Vis knap til oprettelse af en beskedregel</string>
     <string name="title_advanced_addresses">Vis adresseoplysninger som standard</string>
     <string name="title_advanced_attachments_alt">Vis vedhæftninger efter beskedteksten</string>
     <string name="title_advanced_contrast">Benyt høj kontrast til beskedtekst</string>
@@ -429,7 +425,6 @@
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
     <string name="title_advanced_timeout_hint">Læse-/skrive-timeout indstilles til det dobbelte af forbindelses-timeout. Højere værdier vil resultere i øget batteriforbrug.</string>
     <string name="title_advanced_ssl_harden_hint">Aktivering af dette vil deaktivere svage SSL-protokoller og algoritmer, hvilket kan føre til forbindelsesproblemer</string>
-    <string name="title_advanced_socks_hint">Brug af en ekstern proxyserver er usikkert, da proxyforbindelser er ukrypterede</string>
     <string name="title_advanced_roaming_hint">Beskedoverskrifter hentes altid under roaming. Du kan benytte enhedens roamingindstilling til at deaktivere mobilnetværk under roaming.</string>
     <string name="title_advanced_browse_hint">Hent flere beskeder, når du ruller nedad</string>
     <string name="title_advanced_layout_hint">Skift til et mere kompakt layout og ændring af beskedtekststørrelse kan ske via den øverste handlingsbjælkemenu fra beskedvisning</string>
@@ -629,6 +624,7 @@
     <string name="title_duplicate_in">Dubletbeskeder i %1$s</string>
     <string name="title_subject_reply">Sv: %1$s</string>
     <string name="title_subject_forward">Vs: %1$s</string>
+    <string name="title_buttons">Knapper</string>
     <string name="title_seen">Markér som læst</string>
     <string name="title_unseen">Markér som ulæst</string>
     <string name="title_hide">Skjul</string>
@@ -653,6 +649,7 @@
     <string name="title_raw_save">Gem besked i råformat</string>
     <string name="title_raw_send">Send som vedhæftning</string>
     <string name="title_manage_keywords">Håndtér stikord</string>
+    <string name="title_manage_labels">Håndtér Gmail-etiketter</string>
     <string name="title_add_keyword">Tilføj stikord</string>
     <string name="title_show_inline">Vis indlejrede vedhæftninger</string>
     <string name="title_download_all">Download alle</string>
@@ -1115,7 +1112,6 @@
     <string name="title_dismiss">Afvis</string>
     <string name="title_snooze_now">Udsæt</string>
     <string name="title_loading">Indlæser &#8230;</string>
-    <string name="title_set">Indstil</string>
     <string name="title_fetching_again">Henter beskeder igen fra server</string>
     <string name="title_conversation_actions">Handlinger</string>
     <string name="title_conversation_action_reply">Svar med: \'%1$s\'</string>
@@ -1124,7 +1120,6 @@
     <string name="title_icalendar_decline">Afvis</string>
     <string name="title_icalendar_maybe">Måske</string>
     <string name="title_icalendar_calendar">Kalender</string>
-    <string name="title_try">Prøv FairEmail - en open source og privatlivsvenlig e-mail app til Android</string>
     <string name="title_pro_feature">Dette er en Pro-funktion</string>
     <string name="title_pro_list">Liste over Pro-funktioner</string>
     <string name="title_pro_purchase">Køb</string>

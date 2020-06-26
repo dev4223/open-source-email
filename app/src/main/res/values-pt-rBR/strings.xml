@@ -6,7 +6,6 @@
     <string name="app_limitations">Por exemplo, as mensagens serão sempre reformatadas para remover elementos inseguros e para melhorar a legibilidade, e a abertura de links devem ser confirmadas por questão de segurança.</string>
     <string name="app_crash">O FairEmail não é suportado neste dispositivo porque bugs do Android causam tais falhas</string>
     <string name="app_exit">Pressione \'voltar\' novamente para sair</string>
-    <string name="channel_service">Serviço</string>
     <string name="channel_send">Enviar</string>
     <string name="channel_notification">Notificações</string>
     <string name="channel_update">Atualizações</string>
@@ -95,9 +94,7 @@
     <string name="menu_privacy">Privacidade</string>
     <string name="menu_about">Sobre</string>
     <string name="menu_pro">Recursos Pro</string>
-    <string name="menu_invite">Convidar</string>
     <string name="menu_rate">Avalie este aplicativo</string>
-    <string name="menu_other">Outros aplicativos</string>
     <string name="title_welcome">Bem-vindo(a)</string>
     <string name="title_eula">Contrato de Licença de Usuário Final</string>
     <string name="title_agree">Eu concordo</string>
@@ -250,7 +247,6 @@
     <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_timeout">Conexão expira em (segundos)</string>
     <string name="title_advanced_ssl_harden">Reforçar conexões SSL</string>
-    <string name="title_advanced_socks">Usar proxy SOCKS</string>
     <string name="title_advanced_manage_connectivity">Gerenciar conectividade</string>
     <string name="title_advanced_caption_general">Geral</string>
     <string name="title_advanced_caption_list">Lista</string>
@@ -291,8 +287,6 @@
     <string name="title_advanced_preview">Mostrar pré-visualização da mensagem</string>
     <string name="title_advanced_preview_italic">Mostrar visualização de mensagem em itálicos</string>
     <string name="title_advanced_preview_lines">Número de linhas de visualização</string>
-    <string name="title_advanced_archive_trash">Mostrar botões para arquivar ou apagar uma mensagem</string>
-    <string name="title_advanced_move">Mostrar botão para mover uma mensagem</string>
     <string name="title_advanced_addresses">Mostrar detalhes do endereço por padrão</string>
     <string name="title_advanced_attachments_alt">Mostrar anexos após o texto da mensagem</string>
     <string name="title_advanced_contrast">Usar alto contraste para o texto da mensagem</string>
@@ -410,7 +404,6 @@
     <string name="title_advanced_rlah_hint">Não assumindo roaming na UE</string>
     <string name="title_advanced_timeout_hint">O tempo limite de leitura/escrita será definido para o dobro do tempo limite de conexão. Valores mais altos resultarão em mais uso da bateria.</string>
     <string name="title_advanced_ssl_harden_hint">Habilitar isso irá desabilitar protocolos SSL fracos e cifras, o que pode levar a problemas de conexão</string>
-    <string name="title_advanced_socks_hint">Usar um servidor proxy remoto é inseguro porque as conexões de proxy não estão criptografadas</string>
     <string name="title_advanced_roaming_hint">Os cabeçalhos de mensagens serão sempre buscados quando estiver em roaming. Você pode usar a configuração de roaming do dispositivo para desativar a internet enquanto estiver em roaming.</string>
     <string name="title_advanced_browse_hint">Obter mais mensagens ao rolar para baixo</string>
     <string name="title_advanced_layout_hint">Mudar para um layout mais compacto e alterar o tamanho do texto da mensagem pode ser feito no menu da barra de ação superior na exibição de mensagem</string>
@@ -1034,14 +1027,12 @@
     <string name="title_dismiss">Descartar</string>
     <string name="title_snooze_now">Adiar</string>
     <string name="title_loading">Carregando &#8230;</string>
-    <string name="title_set">Set</string>
     <string name="title_conversation_action_reply">Resposta com: \'%1$s\'</string>
     <string name="title_conversation_action_copy">Copiar: \'%1$s\'</string>
     <string name="title_icalendar_accept">Aceitar</string>
     <string name="title_icalendar_decline">Recusar</string>
     <string name="title_icalendar_maybe">Talvez</string>
     <string name="title_icalendar_calendar">Calendário</string>
-    <string name="title_try">Experimente o FairEmail, um aplicativo de e-mail aberto e amigo da privacidade para Android</string>
     <string name="title_pro_feature">Esta é uma funcionalidade Pro</string>
     <string name="title_pro_list">Lista de recursos Pro</string>
     <string name="title_pro_purchase">Comprar</string>

@@ -440,7 +440,7 @@ public class FragmentCompose extends FragmentBase {
 
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
                 PackageManager pm = getContext().getPackageManager();
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&  // should be system whitelisted
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && // should be system whitelisted
                         pick.resolveActivity(pm) == null)
                     Snackbar.make(view, R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
                 else
@@ -2708,7 +2708,11 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void onAnswerSelected(Bundle args) {
+        String name = args.getString("name");
         String answer = args.getString("answer");
+
+        if (etSubject.getText().length() == 0)
+            etSubject.setText(name);
 
         InternetAddress[] to = null;
         try {
@@ -2724,6 +2728,7 @@ public class FragmentCompose extends FragmentBase {
                 return ImageHelper.decodeImage(getContext(), working, source, true, zoom, etBody);
             }
         }, null);
+
         etBody.getText().insert(etBody.getSelectionStart(), spanned);
     }
 
@@ -4285,8 +4290,8 @@ public class FragmentCompose extends FragmentBase {
                             }
 
                             for (EntityAttachment attachment : new ArrayList<>(attachments))
-                                if (attachment.isInline() && attachment.isImage() &&
-                                        !cids.contains(attachment.cid)) {
+                                if (!attachment.isAttachment() && attachment.isImage() &&
+                                        attachment.cid != null && !cids.contains(attachment.cid)) {
                                     Log.i("Removing unused inline attachment cid=" + attachment.cid);
                                     db.attachment().deleteAttachment(attachment.id);
                                 }
@@ -4959,6 +4964,7 @@ public class FragmentCompose extends FragmentBase {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             EntityAnswer answer = adapter.getItem(which);
+                            getArguments().putString("name", answer.name);
                             getArguments().putString("answer", answer.text);
 
                             sendResult(RESULT_OK);

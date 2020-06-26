@@ -380,6 +380,7 @@ The low priority status bar notification shows the number of pending operations,
 * *answered*: mark message as answered in remote folder
 * *flag*: add/remove star in remote folder
 * *keyword*: add/remove IMAP flag in remote folder
+* *label*: set/reset Gmail label in remote folder
 * *headers*: download message headers
 * *raw*: download raw message
 * *body*: download message text
@@ -2622,7 +2623,7 @@ Reformatting and displaying such messages will take too long. You can try to use
 <a name="faq125"></a>
 **(125) What are the current experimental features?**
 
-* Showing an icon button to create a rule for a message
+* ...
 
 <br />
 
@@ -3085,10 +3086,17 @@ Veuillez [voir ici](http://jc.etiemble.free.fr/abc/index.php/trucs-astuces/confi
 <br />
 
 <a name="faq158"></a>
-**(158) Which camera / audio recorder do you recommend**
+**(158) Which camera / audio recorder do you recommend?**
+
+To take photos and to record audio a camera and an audio recorder app are needed.
+The following apps are open source cameras and audio recorders:
 
 * [Open Camera](https://play.google.com/store/apps/details?id=net.sourceforge.opencamera) ([F-Droid](https://f-droid.org/en/packages/net.sourceforge.opencamera/))
 * [Audio Recorder](https://play.google.com/store/apps/details?id=com.github.axet.audiorecorder) ([F-Droid](https://f-droid.org/packages/com.github.axet.audiorecorder/))
+
+To record voice notes, etc, the audio recorder needs to support
+[MediaStore.Audio.Media.RECORD_SOUND_ACTION](https://developer.android.com/reference/android/provider/MediaStore.Audio.Media#RECORD_SOUND_ACTION).
+Oddly, most audio recorders seem not to support this standard Android action.
 
 <br />
 

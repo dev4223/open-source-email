@@ -3,7 +3,6 @@
     <string name="app_search">FairEmail axtarışı</string>
     <string name="app_changelog">Dəyişiklik jurnalı</string>
     <string name="app_welcome">FairEmail, gizlilik və təhlükəsizliyə fokuslanmış bir açıq mənbə e-poçt tətbiqidir. Buna görə də bəzi xüsusiyyətlər, istifadə etdiyinizdən fərqli şəkildə işləyə bilər.</string>
-    <string name="channel_service">Xidmət</string>
     <string name="channel_send">Göndər</string>
     <string name="channel_notification">Bildirişlər</string>
     <string name="channel_update">Yenilənmələr</string>
@@ -77,9 +76,7 @@
     <string name="menu_privacy">Gizlilik</string>
     <string name="menu_about">Haqqında</string>
     <string name="menu_pro">Pro xüsusiyyətlər</string>
-    <string name="menu_invite">Dəvət et</string>
     <string name="menu_rate">Bu tətbiqi qiymətləndir</string>
-    <string name="menu_other">Digər tətbiqlər</string>
     <string name="title_welcome">Xoş Gəldiniz</string>
     <string name="title_eula">Son istifadəçi lisenziya müqaviləsi</string>
     <string name="title_agree">Razıyam</string>
@@ -381,7 +378,6 @@
     <string name="title_report">Bildir</string>
     <string name="title_fix">Düzəlt</string>
     <string name="title_no_ask_again">Bunu bir də soruşma</string>
-    <string name="title_try">Android üçün açıq mənbəli, gizlilik dostu, e-poçt tətbiqi olan FairEmail-ı sınayın</string>
     <string name="title_pro_feature">Bu Pro xüsusiyyətidir</string>
     <string name="title_pro_list">Pro xüsusiyyətlərinin siyahısı</string>
     <string name="title_pro_purchase">Satın al</string>

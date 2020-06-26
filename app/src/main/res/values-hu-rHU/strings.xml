@@ -6,7 +6,6 @@
     <string name="app_limitations">Többek között: formázással mindig eltávolítja az üzenetkből a nem biztonságos elemeket és javítja az olvashatóságot, valamint a hivatkozások megnyitása megerősítést fog igényelni.</string>
     <string name="app_crash">FairEmail nem támogatott ezen az eszközön, az Android hibái miatt</string>
     <string name="app_exit">A kilépéshez használja újra a \'vissza\' opciót</string>
-    <string name="channel_service">Szolgáltatás</string>
     <string name="channel_send">Küldés</string>
     <string name="channel_notification">Értesítések</string>
     <string name="channel_update">Frissítések</string>
@@ -97,9 +96,7 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="menu_privacy">Adatvédelem</string>
     <string name="menu_about">Névjegy</string>
     <string name="menu_pro">Pro szolgáltatások</string>
-    <string name="menu_invite">Meghívás</string>
     <string name="menu_rate">Alkalmazás értékelése</string>
-    <string name="menu_other">Egyéb alkalmazások</string>
     <string name="title_welcome">Üdvözöljük</string>
     <string name="title_eula">Végfelhasználói licencszerződés</string>
     <string name="title_agree">Elfogadom</string>
@@ -236,6 +233,7 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_advanced_suggest_sent">Elküldött üzenetekben szereplő címek felajánlása</string>
     <string name="title_advanced_suggest_received">Fogadott üzenetekben szereplő címek felajánlása</string>
     <string name="title_advanced_suggest_frequently">A felajánlott címek rendezése gyakoriság alapján</string>
+    <string name="title_advanced_auto_list">Listák automatikus létrehozása</string>
     <string name="title_advanced_prefix_once">Válasz vagy továbbítás esetén tárgy előtaggal jelzése csak egyszer</string>
     <string name="title_advanced_extended_reply">Kiterjesztett válasz/továbbítás fejléc használata</string>
     <string name="title_advanced_quote_reply">Megválaszolt szöveg idézése</string>
@@ -257,7 +255,6 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_advanced_rlah">Roaming mint otthon</string>
     <string name="title_advanced_timeout">Kapcsolat időtúllépés (másodpercben)</string>
     <string name="title_advanced_ssl_harden">SSL kapcsolatok megerősítése</string>
-    <string name="title_advanced_socks">SOCKS proxy használata</string>
     <string name="title_advanced_manage_connectivity">Adatkapcsolat kezelése</string>
     <string name="title_advanced_caption_general">Általános</string>
     <string name="title_advanced_caption_list">Lista</string>
@@ -294,13 +291,12 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_advanced_subject_italic">Tárgy megjelnítése dőlt betűvel</string>
     <string name="title_advanced_subject_elipsed">Tárgy rövidítése szükség esetén</string>
     <string name="title_advanced_keywords">Kulcsszavak megjelenítése az üzenetek fejlécében</string>
+    <string name="title_advanced_labels">Gmail címkék mutatása az üzenet fejlécében</string>
     <string name="title_advanced_flags">Csillagok megjelenítése</string>
     <string name="title_advanced_flags_background">Színes háttér megjelenítése színes csillagok helyett</string>
     <string name="title_advanced_preview">Üzenetek előnézetének megjelenítése</string>
     <string name="title_advanced_preview_italic">Üzenetek előnézetének megjelenítése dőlt betűvel</string>
     <string name="title_advanced_preview_lines">Előnézeti sorok száma</string>
-    <string name="title_advanced_archive_trash">Jelenítsen meg gombokat egy üzenet archiválásához vagy törléséhez</string>
-    <string name="title_advanced_move">Jelenítse meg a gombot az üzenet mozgatáshoz</string>
     <string name="title_advanced_addresses">Cím részleteinek alapértelmezett megjelenítése</string>
     <string name="title_advanced_attachments_alt">Csatolmányok megjelenítése a szöveg után</string>
     <string name="title_advanced_contrast">Magas kontraszt használata az üzenetek szövegéhez</string>
@@ -420,7 +416,6 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_advanced_rlah_hint">Roaming figyelmen kívül hagyása az EU-n belül</string>
     <string name="title_advanced_timeout_hint">Az olvasás/írás időtúllépés be lesz állítva a kapcsolat időtúllépés duplájára. Nagyobb értékek több akkumulátor használatot eredményezhetnek.</string>
     <string name="title_advanced_ssl_harden_hint">Ennek a bekapcsolása kikapcsolja a gyenge SSL protokollokat és ciphereket ami csatlakozási problémákat okozhat</string>
-    <string name="title_advanced_socks_hint">Távoli proxy szerver használata nem biztonságos, mert a proxy kapcsolatok nem titkosítottak</string>
     <string name="title_advanced_roaming_hint">Az üzenetek fejléce roamingoláskor minden esetben letöltésre kerül. A készülék beállításai között kikapcsolhatja a roaming internet használatot.</string>
     <string name="title_advanced_browse_hint">Több üzenet letöltése lefelé görgetéssel</string>
     <string name="title_advanced_layout_hint">Váltás egy kompaktabb elrendezésre és az üzenet szövegméret módosítása elvégezhető a felső műveletsáv menüjében az üzenet nézetben</string>
@@ -639,6 +634,7 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_raw_save">Nyers üzenet mentése</string>
     <string name="title_raw_send">Küldés mellékletként</string>
     <string name="title_manage_keywords">Kulcsszavak kezelése</string>
+    <string name="title_manage_labels">Gmail címkék kezelése</string>
     <string name="title_add_keyword">Kulcsszó hozzáadása</string>
     <string name="title_show_inline">Beágyazott mellékletek megjelenítése</string>
     <string name="title_download_all">Összes letöltése</string>
@@ -835,6 +831,7 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_search_with_hidden">Rejtett (csak az eszközön)</string>
     <string name="title_search_with_encrypted">Titkosított (csak az eszközön)</string>
     <string name="title_search_with_attachments">Csatolmányokkal (csak az eszközön)</string>
+    <string name="title_search_with_size">Üzenetméret nagyobb, mint</string>
     <string name="title_search_with_before">Előtt</string>
     <string name="title_search_with_after">Után</string>
     <string name="title_search_flag_unseen">olvasatlan</string>
@@ -1014,6 +1011,7 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_legend_avatar">Profilkép</string>
     <string name="title_legend_show_quotes">Idézetek megjelenítése</string>
     <string name="title_legend_show_junk">Megjelölés spamként</string>
+    <string name="title_legend_create_rule">Szabály létrehozása</string>
     <string name="title_legend_show_unsubscribe">Leiratkozás listáról</string>
     <string name="title_legend_show_images">Képek megjelenítése</string>
     <string name="title_legend_show_full">Eredeti szöveg megjelenítése</string>
@@ -1093,7 +1091,6 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_dismiss">Elvetés</string>
     <string name="title_snooze_now">Szundi</string>
     <string name="title_loading">Betöltés &#8230;</string>
-    <string name="title_set">Beállíítás</string>
     <string name="title_fetching_again">Üzenet letöltése újra a szerverről</string>
     <string name="title_conversation_actions">Műveletek</string>
     <string name="title_conversation_action_reply">Válaszolás ezzel: \'%1$s\'</string>
@@ -1102,7 +1099,6 @@ A szabályokkal kapcsolatos funkciók csak pro verzióban érhetők el.
     <string name="title_icalendar_decline">Elutasítás</string>
     <string name="title_icalendar_maybe">Talán</string>
     <string name="title_icalendar_calendar">Naptár</string>
-    <string name="title_try">Próbáld ki a FairEmailt, egy nyílt forráskódú, adatvédelem-barát email alkalmazást Androidra</string>
     <string name="title_pro_feature">Ez egy pro funkció</string>
     <string name="title_pro_list">Pro szolgáltatások listája</string>
     <string name="title_pro_purchase">Vásárlás</string>

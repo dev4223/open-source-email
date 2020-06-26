@@ -6,7 +6,7 @@
     <string name="app_limitations">Par exemple, les messages seront toujours reformatés afin d’en retirer les éléments non sûrs tout en améliorant leur lisibilité et l’ouverture des liens devra être confirmée par sécurité.</string>
     <string name="app_crash">FairEmail n\'est pas pris en charge sur cet appareil parce que des bogues dans Android provoquent des plantages</string>
     <string name="app_exit">Faites de nouveau « Retour » pour quitter</string>
-    <string name="channel_service">Service</string>
+    <string name="channel_service">Réception</string>
     <string name="channel_send">Envoyer</string>
     <string name="channel_notification">Notifications</string>
     <string name="channel_update">Mises à jour</string>
@@ -77,6 +77,7 @@
     <string name="title_notification_idle">Inactif</string>
     <string name="title_notification_failed">\'%1$s\' a échoué</string>
     <string name="title_notification_alert">Alerte serveur \'%1$s\'</string>
+    <string name="title_notification_sending_failed">L\'envoi à %1$s a échoué</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
@@ -97,9 +98,7 @@
     <string name="menu_privacy">Confidentialité</string>
     <string name="menu_about">À propos</string>
     <string name="menu_pro">Fonctionnalités pro</string>
-    <string name="menu_invite">Inviter</string>
     <string name="menu_rate">Noter cette appli</string>
-    <string name="menu_other">Autres applis</string>
     <string name="title_welcome">Bienvenue</string>
     <string name="title_eula">Contrat de licence d’utilisateur final</string>
     <string name="title_agree">J’accepte</string>
@@ -260,7 +259,6 @@
     <string name="title_advanced_rlah">Ignorer l’itinérance chez soi</string>
     <string name="title_advanced_timeout">Délai d’expiration de la connexion (secondes)</string>
     <string name="title_advanced_ssl_harden">Renforcer les connexions SSL</string>
-    <string name="title_advanced_socks">Utiliser un serveur mandataire SOCKS</string>
     <string name="title_advanced_manage_connectivity">Gérer la connectivité</string>
     <string name="title_advanced_caption_general">Général</string>
     <string name="title_advanced_caption_list">Liste</string>
@@ -297,14 +295,12 @@
     <string name="title_advanced_subject_italic">Afficher l’objet en italique</string>
     <string name="title_advanced_subject_elipsed">Raccourcir l’objet si nécessaire</string>
     <string name="title_advanced_keywords">Afficher les mots-clés dans l’en-tête du message</string>
+    <string name="title_advanced_labels">Afficher les libellés Gmail dans l\'en-tête du message</string>
     <string name="title_advanced_flags">Afficher les étoiles de suivi</string>
     <string name="title_advanced_flags_background">Mettre le fond en surbrillance quand le message est marqué comme suivi</string>
     <string name="title_advanced_preview">Afficher l’aperçu du message</string>
     <string name="title_advanced_preview_italic">Afficher l’aperçu du message en italique</string>
     <string name="title_advanced_preview_lines">Nombre de lignes d’aperçu</string>
-    <string name="title_advanced_archive_trash">Afficher les boutons pour archiver ou mettre à la corbeille un message</string>
-    <string name="title_advanced_move">Afficher le bouton pour déplacer un message</string>
-    <string name="title_advanced_create_rule">Afficher le bouton pour créer une règle pour un message</string>
     <string name="title_advanced_addresses">Afficher les détails de l’adresse par défaut</string>
     <string name="title_advanced_attachments_alt">Afficher les pièces jointes après le texte du message</string>
     <string name="title_advanced_contrast">Utiliser un contraste élevé pour le texte du message</string>
@@ -429,7 +425,6 @@
     <string name="title_advanced_rlah_hint">Considérer qu’il n’y a pas d’itinérance au sein de l’UE</string>
     <string name="title_advanced_timeout_hint">Le délai d’expiration de la connexion sera doublé s’il reste encore des opérations de lecture/écriture. Des valeurs plus élevées entraîneront une utilisation acrue de la pile.</string>
     <string name="title_advanced_ssl_harden_hint">Activer ceci désactivera les protocoles et algorithmes SSL faibles, ce qui peut entraîner des problèmes de connexion</string>
-    <string name="title_advanced_socks_hint">L’utilisation d’un serveur mandataire distant n’est pas sécurisée car les connexions mandataires ne sont pas chiffrées</string>
     <string name="title_advanced_roaming_hint">Les en-têtes des messages seront toujours récupérés en itinérance. Vous pouvez utiliser les paramètres d’itinérance de l’appareil pour désactiver l’accès Internet en itinérance.</string>
     <string name="title_advanced_browse_hint">Récupérer davantage de messages en faisant défiler vers le bas</string>
     <string name="title_advanced_layout_hint">Le passage à une présentation plus compacte et la modification de la taille du texte du message peuvent être effectués dans le menu de la barre d\'action supérieure en vue message</string>
@@ -629,6 +624,7 @@
     <string name="title_duplicate_in">Message en double dans %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Tr: %1$s</string>
+    <string name="title_buttons">Boutons</string>
     <string name="title_seen">Marquer comme lu</string>
     <string name="title_unseen">Marquer comme non lu</string>
     <string name="title_hide">Masquer</string>
@@ -653,6 +649,7 @@
     <string name="title_raw_save">Enregistrer le message original</string>
     <string name="title_raw_send">Envoyer comme pièce-jointe</string>
     <string name="title_manage_keywords">Gérer les mots-clés</string>
+    <string name="title_manage_labels">Gérer les libellés Gmail</string>
     <string name="title_add_keyword">Ajouter un mot-clé</string>
     <string name="title_show_inline">Afficher les pièces-jointes incluses</string>
     <string name="title_download_all">Télécharger tout</string>
@@ -666,6 +663,8 @@
     <string name="title_more">Plus</string>
     <string name="title_spam">Indésirables</string>
     <string name="title_move">Déplacer</string>
+    <string name="title_unsubscribe">Se désabonner</string>
+    <string name="title_message_rule">Créer une règle</string>
     <string name="title_no_junk">Non indésirable</string>
     <string name="title_move_to">Déplacer vers&#8230;</string>
     <string name="title_move_to_folder">Déplacer vers&#8230;</string>
@@ -1115,7 +1114,6 @@
     <string name="title_dismiss">Rejeter</string>
     <string name="title_snooze_now">Reporter</string>
     <string name="title_loading">Chargement&#8230;</string>
-    <string name="title_set">Appliquer</string>
     <string name="title_fetching_again">Nouvelle récupération du message depuis le serveur</string>
     <string name="title_conversation_actions">Actions</string>
     <string name="title_conversation_action_reply">Répondre avec : \'%1$s\'</string>
@@ -1124,7 +1122,6 @@
     <string name="title_icalendar_decline">Refuser</string>
     <string name="title_icalendar_maybe">Peut-être</string>
     <string name="title_icalendar_calendar">Calendrier</string>
-    <string name="title_try">Essayez FairEmail, une application de messagerie open source et respectueuse de votre vie privée pour Android</string>
     <string name="title_pro_feature">Ceci est une fonctionnalité pro</string>
     <string name="title_pro_list">Liste des fonctionnalités pro</string>
     <string name="title_pro_purchase">Acheter</string>

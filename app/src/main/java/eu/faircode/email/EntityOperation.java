@@ -89,6 +89,7 @@ public class EntityOperation {
     static final String ANSWERED = "answered";
     static final String FLAG = "flag";
     static final String KEYWORD = "keyword";
+    static final String LABEL = "label"; // Gmail
     static final String HEADERS = "headers";
     static final String RAW = "raw";
     static final String BODY = "body";
@@ -480,5 +481,10 @@ public class EntityOperation {
                     Objects.equals(this.error, other.error));
         } else
             return false;
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(id);
     }
 }

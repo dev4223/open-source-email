@@ -9,7 +9,7 @@
     <string name="app_crash">FairEmail is not supported on this device because bugs in Android cause crashes</string>
     <string name="app_exit">Go \'back\' again to exit</string>
 
-    <string name="channel_service">Service</string>
+    <string name="channel_service">Receive</string>
     <string name="channel_send">Send</string>
     <string name="channel_notification">Notifications</string>
     <string name="channel_update">Updates</string>
@@ -98,6 +98,7 @@
     <string name="title_notification_idle">Idle</string>
     <string name="title_notification_failed">\'%1$s\' failed</string>
     <string name="title_notification_alert">\'%1$s\' server alert</string>
+    <string name="title_notification_sending_failed">Sending to %1$s failed</string>
 
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
@@ -308,7 +309,6 @@
     <string name="title_advanced_rlah">Roam like at home</string>
     <string name="title_advanced_timeout">Connection timeout (seconds)</string>
     <string name="title_advanced_ssl_harden">Harden SSL connections</string>
-    <string name="title_advanced_socks">Use SOCKS proxy</string>
     <string name="title_advanced_manage_connectivity">Manage connectivity</string>
 
     <string name="title_advanced_caption_general">General</string>
@@ -347,14 +347,12 @@
     <string name="title_advanced_subject_italic">Show subject in italics</string>
     <string name="title_advanced_subject_elipsed">When needed, shorten the subject</string>
     <string name="title_advanced_keywords">Show keywords in message header</string>
+    <string name="title_advanced_labels">Show Gmail labels in message header</string>
     <string name="title_advanced_flags">Show stars</string>
     <string name="title_advanced_flags_background">Show colored background instead of colored stars</string>
     <string name="title_advanced_preview">Show message preview</string>
     <string name="title_advanced_preview_italic">Show message preview in italics</string>
     <string name="title_advanced_preview_lines">Number of preview lines</string>
-    <string name="title_advanced_archive_trash">Show buttons to archive or trash a message</string>
-    <string name="title_advanced_move">Show button to move a message</string>
-    <string name="title_advanced_create_rule">Show button to create a rule for a message</string>
     <string name="title_advanced_addresses">Expand address details by default</string>
     <string name="title_advanced_attachments_alt">Show attachments after the message text</string>
     <string name="title_advanced_contrast">Use high contrast for message text</string>
@@ -500,7 +498,6 @@
     <string name="title_advanced_rlah_hint">Assuming no roaming within the EU</string>
     <string name="title_advanced_timeout_hint">The read/write timeout will be set to the double of the connection timeout. Higher values will result in more battery use.</string>
     <string name="title_advanced_ssl_harden_hint">Enabling this will disable weak SSL protocols and ciphers, which can lead to connection problems</string>
-    <string name="title_advanced_socks_hint">Using a remote proxy server is insecure because proxy connections are not encrypted</string>
     <string name="title_advanced_roaming_hint">Messages headers will always be fetched when roaming. You can use the device\'s roaming setting to disable internet while roaming.</string>
 
     <string name="title_advanced_browse_hint">Fetch more messages when scrolling down</string>
@@ -724,6 +721,7 @@
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
 
+    <string name="title_buttons">Buttons</string>
     <string name="title_seen">Mark read</string>
     <string name="title_unseen">Mark unread</string>
     <string name="title_hide">Hide</string>
@@ -748,6 +746,7 @@
     <string name="title_raw_save">Save raw message</string>
     <string name="title_raw_send">Send as attachment</string>
     <string name="title_manage_keywords">Manage keywords</string>
+    <string name="title_manage_labels">Manage Gmail labels</string>
     <string name="title_add_keyword">Add keyword</string>
     <string name="title_show_inline">Show inline attachments</string>
     <string name="title_download_all">Download all</string>
@@ -762,6 +761,9 @@
     <string name="title_more">More</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Move</string>
+    <string name="title_copy_btn">Copy</string>
+    <string name="title_unsubscribe">Unsubscribe</string>
+    <string name="title_message_rule">Create rule</string>
     <string name="title_no_junk">Not spam</string>
     <string name="title_move_to">Move to &#8230;</string>
     <string name="title_move_to_folder">Move to &#8230;</string>
@@ -1248,7 +1250,6 @@
     <string name="title_dismiss">Dismiss</string>
     <string name="title_snooze_now">Snooze</string>
     <string name="title_loading">Loading &#8230;</string>
-    <string name="title_set">Set</string>
     <string name="title_fetching_again">Fetching message again from the server</string>
 
     <string name="title_conversation_actions">Actions</string>

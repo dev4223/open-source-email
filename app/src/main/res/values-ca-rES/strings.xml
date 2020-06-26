@@ -6,7 +6,6 @@
     <string name="app_limitations">Per exemple, els missatges sempre es reformataran per eliminar elements no segurs i per millorar la llegibilitat i s\'hauran de confirmar l’obertura d’enllaços per afegir seguretat.</string>
     <string name="app_crash">FairMail no és compatible en aquest dispositiu perquè els errors a Android causen bloqueigs</string>
     <string name="app_exit">Premeu «Enrere» novament per sortir</string>
-    <string name="channel_service">Servei</string>
     <string name="channel_send">Enviar</string>
     <string name="channel_notification">Notificacions</string>
     <string name="channel_update">Actualitzacions</string>
@@ -96,9 +95,7 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="menu_privacy">Privadesa</string>
     <string name="menu_about">Quant a</string>
     <string name="menu_pro">Característiques Pro</string>
-    <string name="menu_invite">Convida</string>
     <string name="menu_rate">Puntua l\'aplicació</string>
-    <string name="menu_other">Altres aplicacions</string>
     <string name="title_welcome">Benvingut/da</string>
     <string name="title_eula">Contracte de Llicència d’usuari final</string>
     <string name="title_agree">D’acordo https://accounts.crowdin.com/password/reset https://accounts.crowdin.com/password/reset</string>
@@ -255,7 +252,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_rlah">Itinerant com a casa</string>
     <string name="title_advanced_timeout">Temps d\'espera de la connexió (segons)</string>
     <string name="title_advanced_ssl_harden">Connexions SSL \"endurides\"</string>
-    <string name="title_advanced_socks">Utilitza el servidor intermediari com a SOCKS</string>
     <string name="title_advanced_manage_connectivity">Gestiona la connectivitat</string>
     <string name="title_advanced_caption_general">General</string>
     <string name="title_advanced_caption_list">Llista</string>
@@ -297,8 +293,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_preview">Mostra la vista prèvia del missatge</string>
     <string name="title_advanced_preview_italic">Mostra la vista prèvia del missatge en cursiva</string>
     <string name="title_advanced_preview_lines">Nombre de línies de previsualització</string>
-    <string name="title_advanced_archive_trash">Mostra els botons per arxivar o esborrar un missatge</string>
-    <string name="title_advanced_move">Mostra botó per moure un missatge</string>
     <string name="title_advanced_addresses">Mostra els detalls de les adreces per defecte</string>
     <string name="title_advanced_attachments_alt">Mostra fitxers adjunts després del text del missatge</string>
     <string name="title_advanced_contrast">Utilitzeu un alt contrast per al text del missatge</string>
@@ -418,7 +412,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_rlah_hint">Si no se suposa una itinerància a la UE</string>
     <string name="title_advanced_timeout_hint">El temps d\'espera de lectura/escriptura s\'establirà en el doble del temps d\'espera de la connexió. Valors més alts produiran un major ús de bateries.</string>
     <string name="title_advanced_ssl_harden_hint">Si activeu això, desactivareu els protocols i xifratges SSL febles, la qual cosa pot comportar problemes de connexió</string>
-    <string name="title_advanced_socks_hint">L\'ús del Servidor intermediari remot es insegur perquè les connexions del Servidor intermediari no son xifrades</string>
     <string name="title_advanced_roaming_hint">Les capçaleres de missatges sempre es recuperaran en itinerància. Podeu utilitzar la configuració d\'itinerància del dispositiu per desactivar Internet durant la itinerància de dades.</string>
     <string name="title_advanced_browse_hint">Obteniu més missatges en desplaçar-vos cap avall</string>
     <string name="title_advanced_layout_hint">Podeu canviar a un disseny més compacte i canviar la mida del text del missatge al menú de la barra d’acció superior de la vista de missatges</string>
@@ -1076,14 +1069,12 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_dismiss">Descartar</string>
     <string name="title_snooze_now">Posposa</string>
     <string name="title_loading">S\'està carregant&#8230;</string>
-    <string name="title_set">Estableix</string>
     <string name="title_conversation_action_reply">Respon amb \'%1$s\'</string>
     <string name="title_conversation_action_copy">Copia: \'%1$s\'</string>
     <string name="title_icalendar_accept">Acceptar</string>
     <string name="title_icalendar_decline">Rebutja</string>
     <string name="title_icalendar_maybe">Potser</string>
     <string name="title_icalendar_calendar">Calendari</string>
-    <string name="title_try">Prova FairEmail, una aplicació de correu-e per a Android, de codi obert i que respecta la privacitat</string>
     <string name="title_pro_feature">Això es una característica Pro</string>
     <string name="title_pro_list">Llista de característiques Pro</string>
     <string name="title_pro_purchase">Comprar</string>

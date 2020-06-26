@@ -161,6 +161,7 @@ public class EntityMessage implements Serializable {
     public Boolean flagged = false;
     public String flags; // system flags
     public String[] keywords; // user flags
+    public String[] labels; // Gmail
     @NonNull
     public Integer notifying = 0;
     @NonNull
@@ -241,6 +242,30 @@ public class EntityMessage implements Serializable {
             return null;
         InternetAddress sender = (InternetAddress) from[0];
         return "notification." + sender.getAddress().toLowerCase(Locale.ROOT);
+    }
+
+    boolean setLabel(String label, boolean set) {
+        List<String> list = new ArrayList<>();
+        if (labels != null)
+            list.addAll(Arrays.asList(labels));
+
+        boolean changed = false;
+        if (set) {
+            if (!list.contains(label)) {
+                changed = true;
+                list.add(label);
+            }
+        } else {
+            if (list.contains(label)) {
+                changed = true;
+                list.remove(label);
+            }
+        }
+
+        if (changed)
+            labels = list.toArray(new String[0]);
+
+        return changed;
     }
 
     static File getFile(Context context, Long id) {

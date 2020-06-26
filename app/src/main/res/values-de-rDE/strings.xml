@@ -6,7 +6,7 @@
     <string name="app_limitations">Beispielsweise werden Nachrichten automatisch neu formatiert, um unsichere Elemente zu entfernen und die Lesbarkeit zu erhöhen. Um die Sicherheit zusätzlich zu erhöhen, muss das Öffnen von Links vorab bestätigt werden.</string>
     <string name="app_crash">FairEmail wird auf diesem Gerät nicht unterstützt, da Fehler in der benutzten Android-Version Abstürze verursachen</string>
     <string name="app_exit">Zum Beenden erneut „Zurück“ drücken</string>
-    <string name="channel_service">Dienst</string>
+    <string name="channel_service">Empfangen</string>
     <string name="channel_send">Senden</string>
     <string name="channel_notification">Benachrichtigungen</string>
     <string name="channel_update">Aktualisierungen</string>
@@ -78,6 +78,7 @@
     <string name="title_notification_idle">Leerlauf</string>
     <string name="title_notification_failed">\'%1$s\' fehlgeschlagen</string>
     <string name="title_notification_alert">Server-Warnung von \'%1$s\'</string>
+    <string name="title_notification_sending_failed">Senden an %1$s fehlgeschlagen</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
@@ -98,9 +99,7 @@
     <string name="menu_privacy">Datenschutz</string>
     <string name="menu_about">Über</string>
     <string name="menu_pro">Pro-Funktionen</string>
-    <string name="menu_invite">Einladen</string>
     <string name="menu_rate">App bewerten</string>
-    <string name="menu_other">Weitere Apps</string>
     <string name="title_welcome">Willkommen</string>
     <string name="title_eula">Endbenutzer-Lizenzvereinbarung</string>
     <string name="title_agree">Ich stimme zu</string>
@@ -261,7 +260,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_rlah">Roaming wie zu Hause</string>
     <string name="title_advanced_timeout">Zeitüberschreitung der Verbindung (Sekunden)</string>
     <string name="title_advanced_ssl_harden">SSL-Verbindungen stärken</string>
-    <string name="title_advanced_socks">SOCKS Proxy verwenden</string>
     <string name="title_advanced_manage_connectivity">Konnektivität verwalten</string>
     <string name="title_advanced_caption_general">Allgemein</string>
     <string name="title_advanced_caption_list">Liste</string>
@@ -298,14 +296,12 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_subject_italic">Betreff kursiv anzeigen</string>
     <string name="title_advanced_subject_elipsed">Wenn nötig, den Betreff kürzen</string>
     <string name="title_advanced_keywords">Schlüsselwörter im Nachrichtenkopf anzeigen</string>
+    <string name="title_advanced_labels">Gmail-Labels im Nachrichtenkopf anzeigen</string>
     <string name="title_advanced_flags">Sterne anzeigen</string>
     <string name="title_advanced_flags_background">Farbigen Hintergrund statt farbiger Sterne anzeigen</string>
     <string name="title_advanced_preview">Nachrichtenvorschau anzeigen</string>
     <string name="title_advanced_preview_italic">Nachrichtenvorschau kursiv anzeigen</string>
     <string name="title_advanced_preview_lines">Anzahl der Vorschauzeilen</string>
-    <string name="title_advanced_archive_trash">Schaltflächen zum Archivieren und Löschen einer Nachricht anzeigen</string>
-    <string name="title_advanced_move">Schaltfläche zum Verschieben einer Nachricht anzeigen</string>
-    <string name="title_advanced_create_rule">Schaltfläche zum Erstellen einer Regel für eine Nachricht anzeigen</string>
     <string name="title_advanced_addresses">Adressdetails standardmäßig anzeigen</string>
     <string name="title_advanced_attachments_alt">Anhänge nach (statt vor) dem Nachrichtentext anzeigen</string>
     <string name="title_advanced_contrast">Hohen Kontrast für den Nachrichtentext verwenden</string>
@@ -430,7 +426,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_rlah_hint">Unter der Annahme, dass kein Roaming innerhalb der EU stattfindet</string>
     <string name="title_advanced_timeout_hint">Die Zeitüberschreitung beim Lesen oder Schreiben wird auf das Doppelte der Verbindungszeitüberschreitung festgelegt. Höhere Werte führen zu einem höheren Akkuverbrauch.</string>
     <string name="title_advanced_ssl_harden_hint">Wenn dies eingeschaltet ist, werden schwache SSL-Protokolle und Chiffren deaktiviert, was zu Verbindungsproblemen führen kann</string>
-    <string name="title_advanced_socks_hint">Die Benutzung eines Remote-Proxy-Servers ist unsicher, da Proxy-Verbindungen nicht verschlüsselt sind</string>
     <string name="title_advanced_roaming_hint">Die Kopfzeilen der Nachrichten werden beim Roaming immer abgeholt. Sie können die Roaming-Einstellung des Geräts verwenden, um das Internet während des Roaming zu deaktivieren.</string>
     <string name="title_advanced_browse_hint">Durch Herunterziehen weitere Nachrichten abholen</string>
     <string name="title_advanced_layout_hint">Das Wechseln zu einer kompakteren Darstellung und Ändern der Nachrichtentextgröße kann im oberen Aktionsleistenmenü in der Nachrichtenansicht vorgenommen werden.</string>
@@ -630,6 +625,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_duplicate_in">Doppelte Nachricht in %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Fwd: %1$s</string>
+    <string name="title_buttons">Schaltflächen</string>
     <string name="title_seen">Als gelesen kennzeichnen</string>
     <string name="title_unseen">Als ungelesen kennzeichnen</string>
     <string name="title_hide">Ausblenden</string>
@@ -654,6 +650,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_raw_save">Rohdaten speichern</string>
     <string name="title_raw_send">Als Anhang senden</string>
     <string name="title_manage_keywords">Labels verwalten</string>
+    <string name="title_manage_labels">Gmail-Labels verwalten</string>
     <string name="title_add_keyword">Label hinzufügen</string>
     <string name="title_show_inline">Eingebettete Anhänge anzeigen</string>
     <string name="title_download_all">Alle herunterladen</string>
@@ -667,6 +664,8 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_more">Mehr</string>
     <string name="title_spam">Spam</string>
     <string name="title_move">Verschieben</string>
+    <string name="title_unsubscribe">Abonnement kündigen</string>
+    <string name="title_message_rule">Regel erstellen</string>
     <string name="title_no_junk">Kein Spam</string>
     <string name="title_move_to">Verschieben nach &#8230;</string>
     <string name="title_move_to_folder">Verschieben nach &#8230;</string>
@@ -1114,7 +1113,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_dismiss">Abbrechen</string>
     <string name="title_snooze_now">Schlummern</string>
     <string name="title_loading">wird geladen &#8230;</string>
-    <string name="title_set">Setzen</string>
     <string name="title_fetching_again">Nachricht wird erneut vom Server abgerufen</string>
     <string name="title_conversation_actions">Aktionen</string>
     <string name="title_conversation_action_reply">Antworten mit: \'%1$s\'</string>
@@ -1123,7 +1121,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_icalendar_decline">Ablehnen</string>
     <string name="title_icalendar_maybe">Vielleicht</string>
     <string name="title_icalendar_calendar">Kalender</string>
-    <string name="title_try">Teste FairEmail, eine Open-Source und datenschutzfreundliche E-Mail-App für Android</string>
     <string name="title_pro_feature">Das ist eine Pro-Funktion</string>
     <string name="title_pro_list">Liste der Pro-Funktionen</string>
     <string name="title_pro_purchase">Kaufen</string>

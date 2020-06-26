@@ -1,6 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/menu_button"
+        android:title="@string/title_buttons">
+        <menu>
+            <item
+                android:id="@+id/menu_button_junk"
+                android:checkable="true"
+                android:title="@string/title_spam" />
+            <item
+                android:id="@+id/menu_button_trash"
+                android:checkable="true"
+                android:title="@string/title_trash" />
+            <item
+                android:id="@+id/menu_button_archive"
+                android:checkable="true"
+                android:title="@string/title_archive" />
+            <item
+                android:id="@+id/menu_button_move"
+                android:checkable="true"
+                android:title="@string/title_move" />
+            <item
+                android:id="@+id/menu_button_copy"
+                android:checkable="true"
+                android:title="@string/title_copy_btn" />
+            <item
+                android:id="@+id/menu_button_unsubscribe"
+                android:checkable="true"
+                android:title="@string/title_unsubscribe" />
+            <item
+                android:id="@+id/menu_button_rule"
+                android:checkable="true"
+                android:title="@string/title_message_rule" />
+        </menu>
+    </item>
+
+    <item
         android:id="@+id/menu_unseen"
         android:title="@string/title_unseen" />
 
@@ -33,7 +68,11 @@
     </item>
 
     <item
-        android:id="@+id/menu_copy"
+        android:id="@+id/menu_move_to"
+        android:title="@string/title_move_to" />
+
+    <item
+        android:id="@+id/menu_copy_to"
         android:title="@string/title_copy_to" />
 
     <item
