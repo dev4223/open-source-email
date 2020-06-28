@@ -7,15 +7,21 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+
+import androidx.appcompat.widget.PopupMenu;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StyleHelper {
-    static boolean apply(int action, EditText etBody, Object... args) {
+    static boolean apply(int action, View anchor, EditText etBody, Object... args) {
         Log.i("Style action=" + action);
 
         try {
@@ -72,25 +78,59 @@ public class StyleHelper {
                 }
 
                 case R.id.menu_size: {
-                    RelativeSizeSpan[] spans = ss.getSpans(start, end, RelativeSizeSpan.class);
-                    float size = (spans.length > 0 ? spans[0].getSizeChange() : 1.0f);
+                    final int s = start;
+                    final int e = end;
+                    final SpannableString t = ss;
 
-                    // Match small/big
-                    if (size == 0.8f)
-                        size = 1.0f;
-                    else if (size == 1.0)
-                        size = 1.25f;
-                    else
-                        size = 0.8f;
+                    int order = 1;
+                    PopupMenu popupMenu = new PopupMenu(anchor.getContext(), anchor);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_style_size_small, order++, R.string.title_style_size_small);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_style_size_medium, order++, R.string.title_style_size_medium);
+                    popupMenu.getMenu().add(Menu.NONE, R.string.title_style_size_large, order++, R.string.title_style_size_large);
 
-                    for (RelativeSizeSpan span : spans)
-                        ss.removeSpan(span);
+                    if (BuildConfig.DEBUG) {
+                        popupMenu.getMenu().add(1, 1, order++, "Cursive");
+                        popupMenu.getMenu().add(1, 2, order++, "Serif");
+                        popupMenu.getMenu().add(1, 3, order++, "Sans-serif");
+                        popupMenu.getMenu().add(1, 4, order++, "Monospace");
+                    }
 
-                    if (size != 1.0f)
-                        ss.setSpan(new RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            if (item.getGroupId() == Menu.NONE) {
+                                RelativeSizeSpan[] spans = t.getSpans(s, e, RelativeSizeSpan.class);
+                                for (RelativeSizeSpan span : spans)
+                                    t.removeSpan(span);
 
-                    etBody.setText(ss);
-                    etBody.setSelection(start, end);
+                                float size;
+                                if (item.getItemId() == R.string.title_style_size_small)
+                                    size = 0.8f;
+                                else if (item.getItemId() == R.string.title_style_size_large)
+                                    size = 1.25f;
+                                else
+                                    size = 1.0f;
+
+                                t.setSpan(new RelativeSizeSpan(size), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                                etBody.setText(t);
+                                etBody.setSelection(s, e);
+                            } else {
+                                TypefaceSpan[] spans = t.getSpans(s, e, TypefaceSpan.class);
+                                for (TypefaceSpan span : spans)
+                                    t.removeSpan(span);
+
+                                t.setSpan(new TypefaceSpan(item.getTitle().toString().toLowerCase()), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                                etBody.setText(t);
+                                etBody.setSelection(s, e);
+                            }
+
+                            return false;
+                        }
+                    });
+
+                    popupMenu.show();
 
                     return true;
                 }

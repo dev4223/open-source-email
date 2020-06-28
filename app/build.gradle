@@ -13,8 +13,8 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 1223
-        versionName "1.1223"
+        versionCode 1226
+        versionName "1.1226"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
@@ -31,7 +31,7 @@ android {
 
         //ndkVersion "21.0.6113669"
         ndk {
-            // Bugsnag
+            // Bugsnag, sqlite
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
     }
@@ -245,7 +245,7 @@ dependencies {
     def preference_version = "1.1.1"
     def work_version = "2.4.0-rc01"
     def exif_version = "1.3.0-alpha01"
-    def biometric_version = "1.1.0-alpha01"
+    def biometric_version = "1.0.1" // https://issuetracker.google.com/issues/159983244
     def textclassifier_version = "1.0.0-alpha03"
     def billingclient_version = "3.0.0"
     def javamail_version = "1.6.5"
@@ -352,6 +352,7 @@ dependencies {
     //implementation "com.sun.mail:android-activation:$javamail_version"
 
     // https://jsoup.org/news/
+    // https://mvnrepository.com/artifact/org.jsoup/jsoup
     implementation "org.jsoup:jsoup:$jsoup_version"
 
     // http://cssparser.sourceforge.net/

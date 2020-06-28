@@ -1276,7 +1276,7 @@ public class FragmentCompose extends FragmentBase {
                 onMenuAnswer();
                 return true;
             case R.id.menu_clear:
-                StyleHelper.apply(R.id.menu_clear, etBody);
+                StyleHelper.apply(R.id.menu_clear, null, etBody);
                 return true;
             case R.id.menu_legend:
                 onMenuLegend();
@@ -1464,7 +1464,7 @@ public class FragmentCompose extends FragmentBase {
             fragment.show(getParentFragmentManager(), "account:color");
             return true;
         } else
-            return StyleHelper.apply(action, etBody);
+            return StyleHelper.apply(action, view.findViewById(action), etBody);
     }
 
     private void onActionRecordAudio() {
@@ -2594,16 +2594,47 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
-                    if (ex.getCause() instanceof CertificateException)
-                        snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (ex.getCause() instanceof CertificateException)
                                 startActivity(
                                         new Intent(getContext(), ActivitySetup.class)
                                                 .putExtra("tab", "encryption"));
+                            else {
+                                View vwAnchor = view.findViewById(R.id.vwAnchor);
+                                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), vwAnchor);
+                                popupMenu.getMenu().add(Menu.NONE, R.string.title_send_dialog, 1, R.string.title_send_dialog);
+                                popupMenu.getMenu().add(Menu.NONE, R.string.title_advanced_manage_certificates, 2, R.string.title_advanced_manage_certificates);
+
+                                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                    @Override
+                                    public boolean onMenuItemClick(MenuItem item) {
+                                        switch (item.getItemId()) {
+                                            case R.string.title_send_dialog:
+                                                FragmentDialogSend fragment = new FragmentDialogSend();
+                                                fragment.setArguments(args);
+                                                fragment.setTargetFragment(FragmentCompose.this, REQUEST_SEND);
+                                                fragment.show(getParentFragmentManager(), "compose:send");
+                                                return true;
+
+                                            case R.string.title_advanced_manage_certificates:
+                                                startActivity(
+                                                        new Intent(getContext(), ActivitySetup.class)
+                                                                .putExtra("tab", "encryption"));
+                                                return true;
+
+                                            default:
+                                                return false;
+                                        }
+                                    }
+                                });
+
+                                popupMenu.show();
                             }
-                        });
+                        }
+                    });
                     snackbar.show();
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
@@ -2737,7 +2768,7 @@ public class FragmentCompose extends FragmentBase {
         int start = args.getInt("start");
         int end = args.getInt("end");
         etBody.setSelection(start, end);
-        StyleHelper.apply(R.id.menu_color, etBody, color);
+        StyleHelper.apply(R.id.menu_color, null, etBody, color);
     }
 
     private void onLinkSelected(Bundle args) {
@@ -2745,7 +2776,7 @@ public class FragmentCompose extends FragmentBase {
         int start = args.getInt("start");
         int end = args.getInt("end");
         etBody.setSelection(start, end);
-        StyleHelper.apply(R.id.menu_link, etBody, link);
+        StyleHelper.apply(R.id.menu_link, null, etBody, link);
     }
 
     private void onActionDiscardConfirmed() {
@@ -4817,17 +4848,17 @@ public class FragmentCompose extends FragmentBase {
                         return true;
                     case KeyEvent.KEYCODE_B:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_bold, etBody);
+                            return StyleHelper.apply(R.id.menu_bold, null, etBody);
                         else
                             return false;
                     case KeyEvent.KEYCODE_I:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_italic, etBody);
+                            return StyleHelper.apply(R.id.menu_italic, null, etBody);
                         else
                             return false;
                     case KeyEvent.KEYCODE_U:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_underline, etBody);
+                            return StyleHelper.apply(R.id.menu_underline, null, etBody);
                         else
                             return false;
                 }
