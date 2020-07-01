@@ -252,6 +252,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean preview_italic;
     private int preview_lines;
     private boolean attachments_alt;
+    private boolean thumbnails;
     private boolean contrast;
     private boolean monospaced;
     private boolean inline;
@@ -2173,7 +2174,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }
 
                         // Draw images
-                        SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, new Html.ImageGetter() {
+                        SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, true, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
                                 Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, zoom, tvBody);
@@ -2499,9 +2500,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             });
 
             List<EntityAttachment> images = new ArrayList<>();
-            for (EntityAttachment attachment : attachments)
-                if (attachment.isAttachment() && attachment.isImage())
-                    images.add(attachment);
+            if (thumbnails)
+                for (EntityAttachment attachment : attachments)
+                    if (attachment.isAttachment() && attachment.isImage())
+                        images.add(attachment);
             adapterImage.set(images);
             grpImages.setVisibility(images.size() > 0 ? View.VISIBLE : View.GONE);
         }
@@ -5115,12 +5117,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         boolean contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         boolean avatars = prefs.getBoolean("avatars", true);
+        boolean gravatars = prefs.getBoolean("gravatars", false);
+        boolean favicons = prefs.getBoolean("favicons", false);
         boolean generated = prefs.getBoolean("generated_icons", true);
 
         this.date = prefs.getBoolean("date", true);
         this.threading = prefs.getBoolean("threading", true);
         this.threading_unread = threading && prefs.getBoolean("threading_unread", false);
-        this.avatars = (contacts && avatars) || generated;
+        this.avatars = (contacts && avatars) || (gravatars || favicons || generated);
         this.color_stripe = prefs.getBoolean("color_stripe", true);
         this.name_email = prefs.getBoolean("name_email", false);
         this.prefer_contact = prefs.getBoolean("prefer_contact", false);
@@ -5147,6 +5151,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.preview_italic = prefs.getBoolean("preview_italic", true);
         this.preview_lines = prefs.getInt("preview_lines", 2);
         this.attachments_alt = prefs.getBoolean("attachments_alt", false);
+        this.thumbnails = prefs.getBoolean("thumbnails", true);
         this.contrast = prefs.getBoolean("contrast", false);
         this.monospaced = prefs.getBoolean("monospaced", false);
         this.inline = prefs.getBoolean("inline_images", false);

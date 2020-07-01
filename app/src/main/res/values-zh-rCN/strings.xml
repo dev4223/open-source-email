@@ -267,6 +267,7 @@
     <string name="title_advanced_color_stripe">头像前显示色彩条纹</string>
     <string name="title_advanced_avatars">显示联系人头像</string>
     <string name="title_advanced_gravatars">显示 Gravatars 头像</string>
+    <string name="title_advanced_favicons">显示网站图标。</string>
     <string name="title_advanced_generated_icons">显示生成的图标</string>
     <string name="title_advanced_identicons">显示哈希头像</string>
     <string name="title_advanced_circular">使用圆形图标</string>
@@ -291,11 +292,13 @@
     <string name="title_advanced_preview_lines">预览行数</string>
     <string name="title_advanced_addresses">默认显示地址详情</string>
     <string name="title_advanced_attachments_alt">在消息文本后显示附件</string>
+    <string name="title_advanced_thumbnails">在消息文本后显示图像缩略图</string>
     <string name="title_advanced_contrast">对消息文本使用高对比度颜色</string>
-    <string name="title_advanced_monospaced">对邮件文本使用等宽字体</string>
-    <string name="title_advanced_text_color">显示文本颜色</string>
-    <string name="title_advanced_text_size">显示大小文本</string>
-    <string name="title_advanced_text_align">显示左/中/右对齐文本</string>
+    <string name="title_advanced_monospaced">默认对消息文本使用等宽字体</string>
+    <string name="title_advanced_text_color">使用文本颜色</string>
+    <string name="title_advanced_text_size">使用文本大小</string>
+    <string name="title_advanced_text_font">使用字体</string>
+    <string name="title_advanced_text_align">使用文本对齐</string>
     <string name="title_advanced_collapse_quotes">折叠引用文本</string>
     <string name="title_advanced_images_inline">自动显示内联图像</string>
     <string name="title_advanced_seekbar">在底部用一个圆点显示会话相对位置</string>
@@ -499,6 +502,7 @@
     <string name="title_primary">主要的</string>
     <string name="title_primary_account">主账户 (默认帐户)</string>
     <string name="title_primary_identity">主身份(默认身份)</string>
+    <string name="title_self_identity">回复时删除电子邮件地址</string>
     <string name="title_leave_on_server">把消息留在服务器上</string>
     <string name="title_leave_deleted">将删除的消息保留在服务器上</string>
     <string name="title_leave_on_device">把消息留在设备上</string>
@@ -744,11 +748,17 @@
     <string name="title_send_encryption">加密</string>
     <string name="title_send_priority">优先级</string>
     <string name="title_no_server">在 \'%1$s\' 找不到服务器</string>
+    <string name="title_style">样式</string>
     <string name="title_style_bold">粗体</string>
     <string name="title_style_italic">斜体</string>
     <string name="title_style_underline">下划线</string>
     <string name="title_style_size">大小</string>
-    <string name="title_style_color">颜色</string>
+    <string name="title_style_size_small">小</string>
+    <string name="title_style_size_medium">中等</string>
+    <string name="title_style_size_large">大</string>
+    <string name="title_style_font">字体</string>
+    <string name="title_style_font_default">默认</string>
+    <string name="title_style_color">颜色 &#8230;</string>
     <string name="title_style_clear">清除格式</string>
     <string name="title_style_link">插入链接</string>
     <string name="title_add_image">添加图片</string>
@@ -1014,8 +1024,7 @@
     <string name="title_legend_bold">加粗文本</string>
     <string name="title_legend_italic">倾斜文本</string>
     <string name="title_legend_underline">给文本加下划线</string>
-    <string name="title_legend_text_size">设置文本大小</string>
-    <string name="title_legend_text_color">设定文本颜色</string>
+    <string name="title_legend_text_style">设置文本样式</string>
     <string name="title_legend_metered">连接是计量的</string>
     <string name="title_legend_unmetered">连接是不计量的</string>
     <string name="title_legend_roaming">漫游</string>
@@ -1292,5 +1301,11 @@
         <item>10 MB</item>
         <item>20 MB</item>
         <item>50 MB</item>
+    </string-array>
+    <string-array name="fontNameNames">
+        <item>草书</item>
+        <item>衬线体</item>
+        <item>无衬线体</item>
+        <item>等宽字体</item>
     </string-array>
 </resources>

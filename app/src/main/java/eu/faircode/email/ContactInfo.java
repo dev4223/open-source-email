@@ -36,12 +36,24 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -51,6 +63,11 @@ import java.util.concurrent.ExecutorService;
 
 import javax.mail.Address;
 import javax.mail.internet.InternetAddress;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLProtocolException;
 
 public class ContactInfo {
     private String email;
@@ -63,10 +80,14 @@ public class ContactInfo {
     private static Map<String, Lookup> emailLookup = new ConcurrentHashMap<>();
     private static final Map<String, ContactInfo> emailContactInfo = new HashMap<>();
     private static final Map<String, Avatar> emailGravatar = new HashMap<>();
+
     private static final ExecutorService executor =
             Helper.getBackgroundExecutor(1, "contact");
 
     private static final int GRAVATAR_TIMEOUT = 5 * 1000; // milliseconds
+    private static final int FAVICON_CONNECT_TIMEOUT = 5 * 1000; // milliseconds
+    private static final int FAVICON_READ_TIMEOUT = 10 * 1000; // milliseconds
+    private static final int FAVICON_READ_BYTES = 2048;
     private static final long CACHE_CONTACT_DURATION = 2 * 60 * 1000L; // milliseconds
     private static final long CACHE_GRAVATAR_DURATION = 2 * 60 * 60 * 1000L; // milliseconds
 
@@ -105,10 +126,26 @@ public class ContactInfo {
         return (new Date().getTime() - time > CACHE_CONTACT_DURATION);
     }
 
-    static void clearCache() {
+    static void clearCache(Context context) {
         synchronized (emailContactInfo) {
             emailContactInfo.clear();
         }
+
+        final File dir = new File(context.getCacheDir(), "favicons");
+
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    File[] favicons = dir.listFiles();
+                    if (favicons != null)
+                        for (File favicon : favicons)
+                            favicon.delete();
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+            }
+        });
     }
 
     @NonNull
@@ -151,10 +188,12 @@ public class ContactInfo {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean avatars = prefs.getBoolean("avatars", true);
         boolean gravatars = prefs.getBoolean("gravatars", false);
+        boolean favicons = prefs.getBoolean("favicons", false);
         boolean generated = prefs.getBoolean("generated_icons", true);
         boolean identicons = prefs.getBoolean("identicons", false);
         boolean circular = prefs.getBoolean("circular", true);
 
+        // Contact photo
         if (!TextUtils.isEmpty(info.email) &&
                 Helper.hasPermission(context, Manifest.permission.READ_CONTACTS)) {
             ContentResolver resolver = context.getContentResolver();
@@ -195,8 +234,9 @@ public class ContactInfo {
             }
         }
 
-        if (info.bitmap == null) {
-            if (gravatars && !TextUtils.isEmpty(info.email)) {
+        // Gravatar
+        if (info.bitmap == null && gravatars) {
+            if (!TextUtils.isEmpty(info.email)) {
                 String gkey = info.email.toLowerCase(Locale.ROOT);
                 boolean lookup;
                 synchronized (emailGravatar) {
@@ -243,10 +283,86 @@ public class ContactInfo {
             }
         }
 
+        // Favicon
+        if (info.bitmap == null && favicons) {
+            int at = (info.email == null ? -1 : info.email.indexOf('@'));
+            String domain = (at < 0 ? null : info.email.substring(at + 1).toLowerCase(Locale.ROOT));
+
+            if (domain != null) {
+                if ("gmail.com".equals(domain) || "googlemail.com".equals(domain))
+                    domain = "google.com";
+
+                File dir = new File(context.getCacheDir(), "favicons");
+                if (!dir.exists())
+                    dir.mkdir();
+                File file = new File(dir, domain);
+
+                try {
+                    // check cache
+                    if (file.exists())
+                        if (file.length() == 0)
+                            Log.i("Favicon blacklisted domain=" + domain);
+                        else
+                            info.bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+                    else {
+                        URL base = new URL("https://" + domain);
+                        try {
+                            info.bitmap = getFavicon(new URL(base, "favicon.ico"));
+                        } catch (IOException ex) {
+                            if (ex instanceof SocketTimeoutException)
+                                throw ex;
+                            Log.i("Favicon ex=" + ex.getClass().getName() + " " + ex.getMessage());
+                        }
+
+                        if (info.bitmap == null)
+                            try {
+                                info.bitmap = parseFavicon(base);
+                            } catch (IOException ex) {
+                                if (ex instanceof SocketTimeoutException)
+                                    throw ex;
+                                Log.i("Favicon ex=" + ex.getClass().getName() + " " + ex.getMessage());
+                            }
+
+                        URL www = new URL("https://www." + domain);
+                        if (info.bitmap == null)
+                            try {
+                                info.bitmap = getFavicon(new URL(www, "favicon.ico"));
+                            } catch (IOException ex) {
+                                if (ex instanceof SocketTimeoutException)
+                                    throw ex;
+                                Log.i("Favicon ex=" + ex.getClass().getName() + " " + ex.getMessage());
+                            }
+                        if (info.bitmap == null)
+                            info.bitmap = parseFavicon(www);
+
+                        // Add to cache
+                        if (info.bitmap == null)
+                            throw new FileNotFoundException("decode");
+                        else
+                            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                                info.bitmap.compress(Bitmap.CompressFormat.PNG, 90, os);
+                            }
+                    }
+                } catch (Throwable ex) {
+                    if (isRecoverable(ex))
+                        Log.w(ex);
+                    else {
+                        Log.i("Favicon ex=" + ex.getClass().getName() + " " + ex.getMessage());
+                        try {
+                            file.createNewFile();
+                        } catch (IOException ex1) {
+                            Log.e(ex1);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generated
         boolean identicon = false;
-        if (info.bitmap == null) {
+        if (info.bitmap == null && generated) {
             int dp = Helper.dp2pixels(context, 96);
-            if (generated && !TextUtils.isEmpty(info.email)) {
+            if (!TextUtils.isEmpty(info.email)) {
                 if (identicons) {
                     identicon = true;
                     info.bitmap = ImageHelper.generateIdenticon(
@@ -275,6 +391,78 @@ public class ContactInfo {
 
         info.time = new Date().getTime();
         return info;
+    }
+
+    private static Bitmap parseFavicon(URL base) throws IOException {
+        Log.i("GET favicon " + base);
+        HttpsURLConnection connection = (HttpsURLConnection) base.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setReadTimeout(FAVICON_READ_TIMEOUT);
+        connection.setConnectTimeout(FAVICON_CONNECT_TIMEOUT);
+        connection.setInstanceFollowRedirects(true);
+        connection.connect();
+
+        String response;
+        try {
+            byte[] buffer = new byte[FAVICON_READ_BYTES];
+            int len = connection.getInputStream().read(buffer);
+            if (len < 0)
+                throw new IOException("length");
+            response = new String(buffer, 0, len, StandardCharsets.UTF_8.name());
+        } finally {
+            connection.disconnect();
+        }
+
+        Document doc = JsoupEx.parse(response);
+
+        Element link = doc.head().select("link[href~=.*\\.(ico|png)]").first();
+        String favicon = (link == null ? null : link.attr("href"));
+
+        if (TextUtils.isEmpty(favicon)) {
+            Element meta = doc.head().select("meta[itemprop=image]").first();
+            favicon = (meta == null ? null : meta.attr("content"));
+        }
+
+        if (!TextUtils.isEmpty(favicon)) {
+            URL url = new URL(base, favicon);
+            if ("https".equals(url.getProtocol()))
+                return getFavicon(url);
+        }
+
+        return null;
+    }
+
+    private static Bitmap getFavicon(URL url) throws IOException {
+        Log.i("GET favicon " + url);
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setReadTimeout(FAVICON_READ_TIMEOUT);
+        connection.setConnectTimeout(FAVICON_CONNECT_TIMEOUT);
+        connection.setInstanceFollowRedirects(true);
+        connection.connect();
+
+        try {
+            return BitmapFactory.decodeStream(connection.getInputStream());
+        } finally {
+            connection.disconnect();
+        }
+    }
+
+    private static boolean isRecoverable(Throwable ex) {
+        return !(ex instanceof ConnectException ||
+                (ex instanceof UnknownHostException &&
+                        ex.getMessage() != null &&
+                        ex.getMessage().contains("No address associated with hostname")) ||
+                ex instanceof FileNotFoundException ||
+                ex instanceof SSLPeerUnverifiedException ||
+                (ex instanceof SSLException &&
+                        "Unable to parse TLS packet header".equals(ex.getMessage())) ||
+                (ex instanceof SSLHandshakeException &&
+                        "connection closed".equals(ex.getMessage())) ||
+                (ex instanceof SSLHandshakeException &&
+                        (ex.getCause() instanceof CertificateException ||
+                                ex.getCause() instanceof SSLProtocolException)));
     }
 
     static void init(final Context context) {

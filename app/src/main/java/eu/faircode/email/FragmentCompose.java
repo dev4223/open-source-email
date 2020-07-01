@@ -37,7 +37,6 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -275,12 +274,11 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_TAKE_PHOTO = 7;
     private static final int REQUEST_RECORD_AUDIO = 8;
     private static final int REQUEST_OPENPGP = 9;
-    private static final int REQUEST_COLOR = 10;
-    private static final int REQUEST_CONTACT_GROUP = 11;
-    private static final int REQUEST_ANSWER = 12;
-    private static final int REQUEST_LINK = 13;
-    private static final int REQUEST_DISCARD = 14;
-    private static final int REQUEST_SEND = 15;
+    private static final int REQUEST_CONTACT_GROUP = 10;
+    private static final int REQUEST_ANSWER = 11;
+    private static final int REQUEST_LINK = 12;
+    private static final int REQUEST_DISCARD = 13;
+    private static final int REQUEST_SEND = 14;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -524,13 +522,17 @@ public class FragmentCompose extends FragmentBase {
                             int f = ssb.getSpanFlags(span);
                             Log.i("Style span " + s + "..." + e + " start=" + start);
 
-                            CharacterStyle s1 = CharacterStyle.wrap(span);
-                            ssb.setSpan(s1, s, start, f);
-                            Log.i("Style span " + s + "..." + start);
+                            if (s <= start) {
+                                CharacterStyle s1 = CharacterStyle.wrap(span);
+                                ssb.setSpan(s1, s, start, f);
+                                Log.i("Style span " + s + "..." + start);
+                            }
 
-                            CharacterStyle s2 = CharacterStyle.wrap(span);
-                            ssb.setSpan(s2, start + 1, e, f);
-                            Log.i("Style span " + (start + 1) + "..." + e);
+                            if (start + 1 <= e) {
+                                CharacterStyle s2 = CharacterStyle.wrap(span);
+                                ssb.setSpan(s2, start + 1, e, f);
+                                Log.i("Style span " + (start + 1) + "..." + e);
+                            }
 
                             ssb.removeSpan(span);
                         }
@@ -969,7 +971,7 @@ public class FragmentCompose extends FragmentBase {
                 Bundle args = new Bundle();
                 args.putLong("id", working);
                 args.putBoolean("plain", plain);
-                args.putString("body", HtmlHelper.toHtml(etBody.getText()));
+                args.putString("body", HtmlHelper.toHtml(etBody.getText(), getContext()));
 
                 new SimpleTask<String>() {
                     @Override
@@ -1029,7 +1031,7 @@ public class FragmentCompose extends FragmentBase {
 
             private void deleteRef() {
                 Bundle extras = new Bundle();
-                extras.putString("html", HtmlHelper.toHtml(etBody.getText()));
+                extras.putString("html", HtmlHelper.toHtml(etBody.getText(), getContext()));
                 extras.putBoolean("show", true);
                 onAction(R.id.action_save, extras, "refdelete");
             }
@@ -1446,25 +1448,7 @@ public class FragmentCompose extends FragmentBase {
 
     private boolean onActionStyle(int action) {
         Log.i("Style action=" + action);
-
-        if (action == R.id.menu_color) {
-            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
-            if (imm != null)
-                imm.hideSoftInputFromWindow(etBody.getWindowToken(), 0);
-
-            Bundle args = new Bundle();
-            args.putInt("color", Color.TRANSPARENT);
-            args.putString("title", getString(R.string.title_style_color));
-            args.putInt("start", etBody.getSelectionStart());
-            args.putInt("end", etBody.getSelectionEnd());
-
-            FragmentDialogColor fragment = new FragmentDialogColor();
-            fragment.setArguments(args);
-            fragment.setTargetFragment(FragmentCompose.this, REQUEST_COLOR);
-            fragment.show(getParentFragmentManager(), "account:color");
-            return true;
-        } else
-            return StyleHelper.apply(action, view.findViewById(action), etBody);
+        return StyleHelper.apply(action, view.findViewById(action), etBody);
     }
 
     private void onActionRecordAudio() {
@@ -1752,10 +1736,6 @@ public class FragmentCompose extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         onAnswerSelected(data.getBundleExtra("args"));
                     break;
-                case REQUEST_COLOR:
-                    if (resultCode == RESULT_OK && data != null)
-                        onColorSelected(data.getBundleExtra("args"));
-                    break;
                 case REQUEST_LINK:
                     if (resultCode == RESULT_OK && data != null)
                         onLinkSelected(data.getBundleExtra("args"));
@@ -1965,12 +1945,13 @@ public class FragmentCompose extends FragmentBase {
 
                 args.putInt("start", start);
 
-                return HtmlHelper.fromHtml(HtmlHelper.toHtml(s), new Html.ImageGetter() {
+                // TODO: double conversion
+                return HtmlHelper.fromHtml(HtmlHelper.toHtml(s, getContext()), false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
                         return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
                     }
-                }, null);
+                }, null, getContext());
             }
 
             @Override
@@ -2751,24 +2732,16 @@ public class FragmentCompose extends FragmentBase {
         } catch (AddressException ignored) {
         }
 
-        String text = EntityAnswer.replacePlaceholders(answer, to);
+        String html = EntityAnswer.replacePlaceholders(answer, to);
 
-        Spanned spanned = HtmlHelper.fromHtml(text, new Html.ImageGetter() {
+        Spanned spanned = HtmlHelper.fromHtml(html, false, new Html.ImageGetter() {
             @Override
             public Drawable getDrawable(String source) {
                 return ImageHelper.decodeImage(getContext(), working, source, true, zoom, etBody);
             }
-        }, null);
+        }, null, getContext());
 
         etBody.getText().insert(etBody.getSelectionStart(), spanned);
-    }
-
-    private void onColorSelected(Bundle args) {
-        int color = args.getInt("color");
-        int start = args.getInt("start");
-        int end = args.getInt("end");
-        etBody.setSelection(start, end);
-        StyleHelper.apply(R.id.menu_color, null, etBody, color);
     }
 
     private void onLinkSelected(Bundle args) {
@@ -2802,7 +2775,7 @@ public class FragmentCompose extends FragmentBase {
         if (!etSubject.getText().toString().equals(subject))
             return false;
 
-        if (!TextUtils.isEmpty(JsoupEx.parse(HtmlHelper.toHtml(etBody.getText())).text().trim()))
+        if (!TextUtils.isEmpty(JsoupEx.parse(HtmlHelper.toHtml(etBody.getText(), getContext())).text().trim()))
             return false;
 
         if (rvAttachment.getAdapter().getItemCount() > 0)
@@ -2831,7 +2804,7 @@ public class FragmentCompose extends FragmentBase {
         args.putString("cc", etCc.getText().toString().trim());
         args.putString("bcc", etBcc.getText().toString().trim());
         args.putString("subject", etSubject.getText().toString().trim());
-        args.putString("body", HtmlHelper.toHtml(etBody.getText()));
+        args.putString("body", HtmlHelper.toHtml(etBody.getText(), getContext()));
         args.putBoolean("signature", cbSignature.isChecked());
         args.putBoolean("empty", isEmpty());
         args.putBoolean("interactive", getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED));
@@ -4629,7 +4602,7 @@ public class FragmentCompose extends FragmentBase {
                 Elements ref = doc.select("div[fairemail=reference]");
                 ref.remove();
 
-                Spanned spannedBody = HtmlHelper.fromHtml(doc.html(), new Html.ImageGetter() {
+                Spanned spannedBody = HtmlHelper.fromDocument(context, doc, false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
                         return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
@@ -4657,7 +4630,7 @@ public class FragmentCompose extends FragmentBase {
                 if (!ref.isEmpty()) {
                     Document dref = JsoupEx.parse(ref.outerHtml());
                     Document quote = HtmlHelper.sanitizeView(context, dref, show_images);
-                    spannedRef = HtmlHelper.fromDocument(context, quote,
+                    spannedRef = HtmlHelper.fromDocument(context, quote, true,
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
@@ -4754,12 +4727,12 @@ public class FragmentCompose extends FragmentBase {
 
             Spanned signature = null;
             if (identity != null && !TextUtils.isEmpty(identity.signature))
-                signature = HtmlHelper.fromHtml(identity.signature, new Html.ImageGetter() {
+                signature = HtmlHelper.fromHtml(identity.signature, false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
                         return ImageHelper.decodeImage(getContext(), working, source, true, 0, tvSignature);
                     }
-                }, null);
+                }, null, getContext());
             tvSignature.setText(signature);
             grpSignature.setVisibility(signature == null ? View.GONE : View.VISIBLE);
 

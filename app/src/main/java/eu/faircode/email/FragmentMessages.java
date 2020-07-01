@@ -1135,7 +1135,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         if (viewType == AdapterMessage.ViewType.THREAD) {
             ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
+            model.observePrevNext(getContext(), getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 @Override
                 public void onPrevious(boolean exists, Long id) {
                     boolean reversed = prefs.getBoolean("reversed", false);
@@ -1727,8 +1727,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return;
 
             if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
-                swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
-                swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
+                if (swipes.swipe_right == null)
+                    swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
+                if (swipes.swipe_left == null)
+                    swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
             }
 
             Long action = (dX > 0 ? swipes.swipe_right : swipes.swipe_left);
@@ -1822,12 +1824,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             }
 
             if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
-                if (direction == ItemTouchHelper.LEFT) {
-                    adapter.notifyItemChanged(pos);
-                    onSwipeDelete(message);
-                } else
-                    onActionSeenSelection(!message.ui_seen, message.id);
-                return;
+                if (swipes.swipe_right == null)
+                    swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
+                if (swipes.swipe_left == null)
+                    swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
             }
 
             Long action = (direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
@@ -3958,7 +3958,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private void loadMessages(final boolean top) {
         if (viewType == AdapterMessage.ViewType.THREAD && onclose != null) {
             ViewModelMessages model = new ViewModelProvider(getActivity()).get(ViewModelMessages.class);
-            model.observePrevNext(getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
+            model.observePrevNext(getContext(), getViewLifecycleOwner(), id, new ViewModelMessages.IPrevNext() {
                 boolean once = false;
 
                 @Override
