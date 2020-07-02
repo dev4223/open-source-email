@@ -508,6 +508,7 @@ public class EmailService implements AutoCloseable {
                     }
                 } catch (MessagingException ex) {
                     Log.w(ex);
+                    // Check for 'User is authenticated but not connected'
                     if (require_id)
                         throw ex;
                 }
@@ -631,6 +632,19 @@ public class EmailService implements AutoCloseable {
 
     SMTPTransport getTransport() {
         return (SMTPTransport) iservice;
+    }
+
+    Long getMaxSize() {
+        // https://tools.ietf.org/html/rfc1870
+        String size = getTransport().getExtensionParameter("SIZE");
+        if (!TextUtils.isEmpty(size) && TextUtils.isDigitsOnly(size)) {
+            long s = Long.parseLong(size);
+            if (s != 0) // Not infinite
+                return s;
+        }
+
+        return null;
+
     }
 
     boolean hasCapability(String capability) throws MessagingException {

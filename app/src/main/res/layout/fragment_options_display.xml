@@ -146,6 +146,18 @@
             app:layout_constraintTop_toBottomOf="@id/swNavBarColorize" />
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swPortrait2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:checked="true"
+            android:text="@string/title_advanced_portrait2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNavBarColorizeHint"
+            app:switchPadding="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swLandscape"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -154,7 +166,7 @@
             android:text="@string/title_advanced_landscape"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvNavBarColorizeHint"
+            app:layout_constraintTop_toBottomOf="@id/swPortrait2"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat
@@ -344,7 +356,7 @@
             android:layout_marginEnd="48dp"
             android:text="@string/title_advanced_gravatars_hint"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
-            android:textColor="?android:attr/textColorLink"
+            android:textColor="?attr/colorWarning"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/swGravatars" />
@@ -810,6 +822,41 @@
             app:layout_constraintTop_toBottomOf="@id/tvCaptionBody"
             app:switchPadding="12dp" />
 
+        <eu.faircode.email.FixedTextView
+            android:id="@+id/tvMessageZoom"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="48dp"
+            android:text="@string/title_advanced_message_text_zoom"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/swAddresses" />
+
+        <eu.faircode.email.EditTextPlain
+            android:id="@+id/etMessageZoom"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:hint="100"
+            android:inputType="number"
+            android:maxLength="3"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvMessageZoom" />
+
+        <eu.faircode.email.FixedTextView
+            android:id="@+id/tvMessageZoomPercentage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="%"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            android:textColor="?android:attr/textColorPrimary"
+            app:layout_constraintBottom_toBottomOf="@id/etMessageZoom"
+            app:layout_constraintStart_toEndOf="@id/etMessageZoom"
+            app:layout_constraintTop_toTopOf="@id/etMessageZoom" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swContrast"
             android:layout_width="0dp"
@@ -818,7 +865,7 @@
             android:text="@string/title_advanced_contrast"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/swAddresses"
+            app:layout_constraintTop_toBottomOf="@id/etMessageZoom"
             app:switchPadding="12dp" />
 
         <androidx.appcompat.widget.SwitchCompat

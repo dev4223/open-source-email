@@ -32,6 +32,7 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -97,6 +98,7 @@ import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -307,6 +309,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private static final int MAX_MORE = 100; // messages
     private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
+    private static final float LUMINANCE_THRESHOLD = 0.7f;
 
     private static final int REQUEST_RAW = 1;
     private static final int REQUEST_OPENPGP = 4;
@@ -1304,7 +1307,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         //attachments.clear();
         //accountSwipes.clear();
 
-        values.remove("selected");
+        //values.remove("selected");
 
         super.onDestroyView();
     }
@@ -1728,9 +1731,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
                 if (swipes.swipe_right == null)
-                    swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
+                    swipes.swipe_right = EntityMessage.SWIPE_ACTION_SEEN;
                 if (swipes.swipe_left == null)
-                    swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
+                    swipes.swipe_left = EntityMessage.SWIPE_ACTION_DELETE;
             }
 
             Long action = (dX > 0 ? swipes.swipe_right : swipes.swipe_left);
@@ -1744,23 +1747,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             int size = Helper.dp2pixels(getContext(), 24);
 
             int icon;
-            if (FragmentAccount.SWIPE_ACTION_ASK.equals(action))
+            if (EntityMessage.SWIPE_ACTION_ASK.equals(action))
                 icon = R.drawable.baseline_list_24;
-            else if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
                 icon = (message.ui_seen ? R.drawable.baseline_visibility_off_24 : R.drawable.baseline_visibility_24);
-            else if (FragmentAccount.SWIPE_ACTION_FLAG.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
                 icon = (message.ui_flagged ? R.drawable.baseline_star_border_24 : R.drawable.baseline_star_24);
-            else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
                 icon = (message.ui_snoozed == null ? R.drawable.baseline_timelapse_24 : R.drawable.baseline_timer_off_24);
-            else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_HIDE.equals(action))
                 icon = (message.ui_snoozed == null ? R.drawable.baseline_visibility_off_24 :
                         (message.ui_snoozed == Long.MAX_VALUE
                                 ? R.drawable.baseline_visibility_24 : R.drawable.baseline_timer_off_24));
-            else if (FragmentAccount.SWIPE_ACTION_MOVE.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action))
                 icon = R.drawable.baseline_folder_24;
-            else if (FragmentAccount.SWIPE_ACTION_JUNK.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_JUNK.equals(action))
                 icon = R.drawable.baseline_report_problem_24;
-            else if (FragmentAccount.SWIPE_ACTION_DELETE.equals(action) ||
+            else if (EntityMessage.SWIPE_ACTION_DELETE.equals(action) ||
                     (action.equals(message.folder) && EntityFolder.TRASH.equals(message.folderType)) ||
                     (EntityFolder.TRASH.equals(actionType) && EntityFolder.JUNK.equals(message.folderType)))
                 icon = R.drawable.baseline_delete_forever_24;
@@ -1825,9 +1828,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             if (message.accountProtocol != EntityAccount.TYPE_IMAP) {
                 if (swipes.swipe_right == null)
-                    swipes.swipe_right = FragmentAccount.SWIPE_ACTION_SEEN;
+                    swipes.swipe_right = EntityMessage.SWIPE_ACTION_SEEN;
                 if (swipes.swipe_left == null)
-                    swipes.swipe_left = FragmentAccount.SWIPE_ACTION_DELETE;
+                    swipes.swipe_left = EntityMessage.SWIPE_ACTION_DELETE;
             }
 
             Long action = (direction == ItemTouchHelper.LEFT ? swipes.swipe_left : swipes.swipe_right);
@@ -1839,24 +1842,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             Log.i("Swiped dir=" + direction + " message=" + message.id);
 
-            if (FragmentAccount.SWIPE_ACTION_ASK.equals(action)) {
+            if (EntityMessage.SWIPE_ACTION_ASK.equals(action)) {
                 adapter.notifyItemChanged(pos);
                 onSwipeAsk(message, viewHolder);
-            } else if (FragmentAccount.SWIPE_ACTION_SEEN.equals(action))
+            } else if (EntityMessage.SWIPE_ACTION_SEEN.equals(action))
                 onActionSeenSelection(!message.ui_seen, message.id);
-            else if (FragmentAccount.SWIPE_ACTION_FLAG.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_FLAG.equals(action))
                 onActionFlagSelection(!message.ui_flagged, null, message.id);
-            else if (FragmentAccount.SWIPE_ACTION_SNOOZE.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_SNOOZE.equals(action))
                 onActionSnooze(message);
-            else if (FragmentAccount.SWIPE_ACTION_HIDE.equals(action))
+            else if (EntityMessage.SWIPE_ACTION_HIDE.equals(action))
                 onActionHide(message);
-            else if (FragmentAccount.SWIPE_ACTION_MOVE.equals(action)) {
+            else if (EntityMessage.SWIPE_ACTION_MOVE.equals(action)) {
                 adapter.notifyItemChanged(pos);
                 onSwipeMove(message);
-            } else if (FragmentAccount.SWIPE_ACTION_JUNK.equals(action)) {
+            } else if (EntityMessage.SWIPE_ACTION_JUNK.equals(action)) {
                 adapter.notifyItemChanged(pos);
                 onSwipeJunk(message);
-            } else if (FragmentAccount.SWIPE_ACTION_DELETE.equals(action) ||
+            } else if (EntityMessage.SWIPE_ACTION_DELETE.equals(action) ||
                     (action.equals(message.folder) && EntityFolder.TRASH.equals(message.folderType)) ||
                     (EntityFolder.TRASH.equals(actionType) && EntityFolder.JUNK.equals(message.folderType))) {
                 adapter.notifyItemChanged(pos);
@@ -1913,8 +1916,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 4, R.string.title_unhide);
 
             popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 5, R.string.title_flag_color);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, 7, R.string.title_report_spam);
+            if (message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, 7, R.string.title_report_spam);
+            }
             popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_permanently, 8, R.string.title_delete_permanently);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -4354,8 +4359,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 @Override
                 protected void onExecuted(Bundle args, Boolean[] data) {
-                    if (actionbar_color && args.containsKey("color"))
-                        bottom_navigation.setBackgroundColor(args.getInt("color"));
+                    if (actionbar_color && args.containsKey("color")) {
+                        int color = args.getInt("color");
+                        bottom_navigation.setBackgroundColor(color);
+
+                        float lum = (float) ColorUtils.calculateLuminance(color);
+                        if (lum > LUMINANCE_THRESHOLD)
+                            bottom_navigation.setItemIconTintList(ColorStateList.valueOf(Color.BLACK));
+                        else if ((1.0f - lum) > LUMINANCE_THRESHOLD)
+                            bottom_navigation.setItemIconTintList(ColorStateList.valueOf(Color.WHITE));
+                    }
 
                     bottom_navigation.setTag(data[0]);
                     bottom_navigation.getMenu().findItem(R.id.action_delete).setVisible(data[1]);
@@ -6681,7 +6694,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (!TextUtils.isEmpty(attachment.name))
                             footer.appendText(" " + attachment.name);
                         if (attachment.size != null)
-                            footer.appendText(" " + Helper.humanReadableByteCount(attachment.size, true));
+                            footer.appendText(" " + Helper.humanReadableByteCount(attachment.size));
                         footer.appendElement("br");
                     }
 

@@ -254,6 +254,7 @@
     <string name="title_advanced_caption_message">消息</string>
     <string name="title_advanced_caption_message_header">邮件标头</string>
     <string name="title_advanced_caption_message_body">消息正文</string>
+    <string name="title_advanced_portrait2">在竖屏模式中使用两行</string>
     <string name="title_advanced_landscape">在横屏模式下使用两列</string>
     <string name="title_advanced_landscape3">默认在横屏模式下显示导航菜单</string>
     <string name="title_advanced_startup">在启动屏幕上显示</string>
@@ -267,7 +268,7 @@
     <string name="title_advanced_color_stripe">头像前显示色彩条纹</string>
     <string name="title_advanced_avatars">显示联系人头像</string>
     <string name="title_advanced_gravatars">显示 Gravatars 头像</string>
-    <string name="title_advanced_favicons">显示网站图标。</string>
+    <string name="title_advanced_favicons">显示网页图标</string>
     <string name="title_advanced_generated_icons">显示生成的图标</string>
     <string name="title_advanced_identicons">显示哈希头像</string>
     <string name="title_advanced_circular">使用圆形图标</string>
@@ -284,7 +285,7 @@
     <string name="title_advanced_subject_italic">用斜体字显示邮件主题</string>
     <string name="title_advanced_subject_elipsed">必要时缩短邮件主题</string>
     <string name="title_advanced_keywords">在邮件头中显示关键字</string>
-    <string name="title_advanced_labels">在邮件头中显示Gmail标识</string>
+    <string name="title_advanced_labels">在邮件头中显示 Gmail 标签</string>
     <string name="title_advanced_flags">显示星标</string>
     <string name="title_advanced_flags_background">显示有色背景而非有色星标</string>
     <string name="title_advanced_preview">显示邮件预览</string>
@@ -293,8 +294,9 @@
     <string name="title_advanced_addresses">默认显示地址详情</string>
     <string name="title_advanced_attachments_alt">在消息文本后显示附件</string>
     <string name="title_advanced_thumbnails">在消息文本后显示图像缩略图</string>
+    <string name="title_advanced_message_text_zoom">默认消息文本缩放</string>
     <string name="title_advanced_contrast">对消息文本使用高对比度颜色</string>
-    <string name="title_advanced_monospaced">默认对消息文本使用等宽字体</string>
+    <string name="title_advanced_monospaced">消息文本默认使用等宽字体</string>
     <string name="title_advanced_text_color">使用文本颜色</string>
     <string name="title_advanced_text_size">使用文本大小</string>
     <string name="title_advanced_text_font">使用字体</string>
@@ -467,6 +469,7 @@
     <string name="title_advanced_sender_regex">用正则表达式来匹配收到的邮箱地址的用户名</string>
     <string name="title_identity_reply_to">回复给该地址</string>
     <string name="title_identity_unicode">允许在邮件地址中使用 Unicode</string>
+    <string name="title_identity_max_size">最大消息大小 (MB)</string>
     <string name="title_identity_receipt">默认请求送达／已读回执</string>
     <string name="title_identity_use_ip_hint">如果遇到“无效问候”，“需要有效的地址”或类似错误，请尝试更改此设置</string>
     <string name="title_optional">可选</string>
@@ -502,7 +505,7 @@
     <string name="title_primary">主要的</string>
     <string name="title_primary_account">主账户 (默认帐户)</string>
     <string name="title_primary_identity">主身份(默认身份)</string>
-    <string name="title_self_identity">回复时删除电子邮件地址</string>
+    <string name="title_self_identity">回复时去掉邮件地址</string>
     <string name="title_leave_on_server">把消息留在服务器上</string>
     <string name="title_leave_deleted">将删除的消息保留在服务器上</string>
     <string name="title_leave_on_device">把消息留在设备上</string>
@@ -798,6 +801,7 @@
     <string name="title_text_reminder">消息为空</string>
     <string name="title_attachment_keywords">至少包含一个附件</string>
     <string name="title_attachment_reminder">您是否打算添加一个附件？</string>
+    <string name="title_size_reminder">消息(%1$s) 超出服务器限制 (%2$s)</string>
     <string name="title_attachments_missing">没有下载全部附件</string>
     <string name="title_dialog_hint">此对话框可通过顶部操作栏右上角的三圆点菜单再次启用</string>
     <string name="title_draft_deleted">草稿已舍弃</string>
@@ -1303,9 +1307,9 @@
         <item>50 MB</item>
     </string-array>
     <string-array name="fontNameNames">
-        <item>草书</item>
-        <item>衬线体</item>
-        <item>无衬线体</item>
+        <item>草写体</item>
+        <item>Serif</item>
+        <item>Sans-serif</item>
         <item>等宽字体</item>
     </string-array>
 </resources>

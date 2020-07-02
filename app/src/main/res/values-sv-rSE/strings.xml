@@ -265,6 +265,7 @@
     <string name="title_advanced_caption_message">Meddelande</string>
     <string name="title_advanced_caption_message_header">Meddelandehuvud</string>
     <string name="title_advanced_caption_message_body">Meddelande-text</string>
+    <string name="title_advanced_portrait2">Använd två rader i porträttläge</string>
     <string name="title_advanced_landscape">Använd två kolumner i landskapsläge</string>
     <string name="title_advanced_landscape3">Visa navigeringsmenyn i liggande läge som standard</string>
     <string name="title_advanced_startup">Visa på startskärmen</string>
@@ -478,6 +479,7 @@
     <string name="title_advanced_sender_regex">Regex för att matcha användarnamn för inkommande e-postadresser</string>
     <string name="title_identity_reply_to">Svara till adress</string>
     <string name="title_identity_unicode">Tillåt Unicode i e-postadresser</string>
+    <string name="title_identity_max_size">Maximal meddelandestorlek (MB)</string>
     <string name="title_identity_receipt">Begär leverans/läs kvitto som standard</string>
     <string name="title_identity_use_ip_hint">Vid \"invalid greeting\", \"requires valid address\" eller ett liknande fel, försök ändra den här inställningen</string>
     <string name="title_optional">Valfritt</string>
@@ -809,6 +811,7 @@
     <string name="title_text_reminder">Meddelandet är tomt</string>
     <string name="title_attachment_keywords">bifogad,bilaga,bilaga,inkluderat</string>
     <string name="title_attachment_reminder">Hade du för avsikt att lägga till en bifogad fil?</string>
+    <string name="title_size_reminder">Meddelande (%1$s) större än gränsen på servern (%2$s)</string>
     <string name="title_attachments_missing">Inte alla bilagor har hämtats</string>
     <string name="title_dialog_hint">Denna dialogruta kan aktiveras igen via tre-pricks-menyn i åtgärdsfältet</string>
     <string name="title_draft_deleted">Utkastet slängdes</string>
