@@ -12,6 +12,7 @@
     <color name="colorAccentDark">#FFE50A3E</color>
 
     <color name="colorError">#CDDC39</color>
+    <color name="colorDebug">#bc3f3f</color>
 
     <color name="colorReadLight">#b3000000</color>
     <color name="colorUnreadLight">#ff000000</color>

@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
@@ -52,6 +53,11 @@ import androidx.preference.PreferenceManager;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPStore;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,7 +111,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final long QUIT_DELAY = 5 * 1000L; // milliseconds
     private static final long STILL_THERE_THRESHOLD = 3 * 60 * 1000L; // milliseconds
     static final int DEFAULT_POLL_INTERVAL = 0; // minutes
-    private static final int STILL_THERE_POLL_INTERVAL = 15; // minutes
+    private static final int OPTIMIZE_KEEP_ALIVE_INTERVAL = 12; // minutes
+    private static final int OPTIMIZE_POLL_INTERVAL = 15; // minutes
     private static final int CONNECT_BACKOFF_START = 8; // seconds
     private static final int CONNECT_BACKOFF_MAX = 32; // seconds (totally ~1 minutes)
     private static final int CONNECT_BACKOFF_AlARM_START = 15; // minutes
@@ -114,6 +121,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
     private static final int ACCOUNT_ERROR_AFTER_POLL = 3; // times
     private static final int BACKOFF_ERROR_AFTER = 16; // seconds
+    private static final long FAST_ERROR_TIME = 5 * 60 * 1000L; // milliseconds
+    private static final int FAST_ERROR_COUNT = 3;
 
     private static final String ACTION_NEW_MESSAGE_COUNT = BuildConfig.APPLICATION_ID + ".NEW_MESSAGE_COUNT";
 
@@ -221,8 +230,17 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         int index = accountStates.indexOf(current);
                         if (index < 0) {
                             if (current.canRun()) {
-                                EntityLog.log(ServiceSynchronize.this, "### new " + current);
-                                start(current, current.accountState.isEnabled(current.enabled));
+                                EntityLog.log(ServiceSynchronize.this, "### new " + current +
+                                        " start=" + current.canRun() +
+                                        " sync=" + current.accountState.isEnabled(current.enabled) +
+                                        " enabled=" + current.accountState.synchronize +
+                                        " ondemand=" + current.accountState.ondemand +
+                                        " folders=" + current.accountState.folders +
+                                        " ops=" + current.accountState.operations +
+                                        " tbd=" + current.accountState.tbd +
+                                        " state=" + current.accountState.state +
+                                        " type=" + current.networkState.getType());
+                                start(current, current.accountState.isEnabled(current.enabled), false);
                             }
                         } else {
                             TupleAccountNetworkState prev = accountStates.get(index);
@@ -232,6 +250,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                             boolean reload = false;
                             boolean sync = current.command.getBoolean("sync", false);
+                            boolean force = current.command.getBoolean("force", false);
                             switch (current.command.getString("name")) {
                                 case "reload":
                                     reload = true;
@@ -250,6 +269,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 if (prev.canRun() || current.canRun())
                                     EntityLog.log(ServiceSynchronize.this, "### changed " + current +
                                             " reload=" + reload +
+                                            " force=" + force +
                                             " stop=" + prev.canRun() +
                                             " start=" + current.canRun() +
                                             " sync=" + current.accountState.isEnabled(current.enabled) + "/" + sync +
@@ -264,7 +284,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 if (prev.canRun())
                                     stop(prev);
                                 if (current.canRun())
-                                    start(current, current.accountState.isEnabled(current.enabled) || sync);
+                                    start(current, current.accountState.isEnabled(current.enabled) || sync, force);
                             }
                         }
 
@@ -312,15 +332,16 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 }
             }
 
-            private void start(final TupleAccountNetworkState accountNetworkState, boolean sync) {
-                EntityLog.log(ServiceSynchronize.this, "Service start=" + accountNetworkState);
+            private void start(final TupleAccountNetworkState accountNetworkState, boolean sync, boolean force) {
+                EntityLog.log(ServiceSynchronize.this,
+                        "Service start=" + accountNetworkState + " sync=" + sync + " force=" + force);
 
                 final Core.State astate = new Core.State(accountNetworkState.networkState);
                 astate.runnable(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            monitorAccount(accountNetworkState.accountState, astate, sync);
+                            monitorAccount(accountNetworkState.accountState, astate, sync, force);
                         } catch (Throwable ex) {
                             Log.e(accountNetworkState.accountState.name, ex);
                         }
@@ -621,6 +642,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
         liveAccountNetworkState.postDestroy();
 
+        TTSHelper.shutdown();
+
         try {
             stopForeground(true);
         } catch (Throwable ex) {
@@ -721,11 +744,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private void onReload(Intent intent) {
-        if (intent.getBooleanExtra("force", false))
+        boolean force = intent.getBooleanExtra("force", false);
+        if (force)
             lastLost = 0;
+
         Bundle command = new Bundle();
         command.putString("name", "reload");
         command.putLong("account", intent.getLongExtra("account", -1));
+        command.putBoolean("force", force);
         liveAccountNetworkState.post(command);
     }
 
@@ -822,7 +848,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         return builder;
     }
 
-    private void monitorAccount(final EntityAccount account, final Core.State state, final boolean sync) throws NoSuchProviderException {
+    private void monitorAccount(
+            final EntityAccount account, final Core.State state,
+            final boolean sync, final boolean force) throws NoSuchProviderException {
         final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         final PowerManager.WakeLock wlAccount = pm.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, BuildConfig.APPLICATION_ID + ":account." + account.id);
@@ -859,6 +887,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     Log.w(account.name + " backoff " + ex.toString());
                 }
 
+            int errors = 0;
             state.setBackoff(CONNECT_BACKOFF_START);
             while (state.isRunning() &&
                     currentThread != null && currentThread.equals(thread)) {
@@ -928,7 +957,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     } catch (Throwable ex) {
                         // Immediately report auth errors
                         if (ex instanceof AuthenticationFailedException) {
-                            if (!ConnectionHelper.isIoError(ex)) {
+                            if (ConnectionHelper.isIoError(ex)) {
+                                if (!BuildConfig.PLAY_STORE_RELEASE)
+                                    Log.e(ex);
+                            } else {
                                 Log.e(ex);
                                 try {
                                     NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -940,35 +972,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 }
                                 throw ex;
                             }
-                        } else {
-                            if (!BuildConfig.PLAY_STORE_RELEASE)
-                                Log.e(ex);
-                        }
-
-                        // Report account connection error
-                        if (account.last_connected != null && !ConnectionHelper.airplaneMode(this)) {
-                            EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
-
-                            long now = new Date().getTime();
-                            int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
-                            long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
-                            long maxDelayed = (pollInterval > 0 && !account.poll_exempted
-                                    ? pollInterval * ACCOUNT_ERROR_AFTER_POLL : ACCOUNT_ERROR_AFTER) * 60 * 1000L;
-                            if (delayed > maxDelayed && state.getBackoff() > BACKOFF_ERROR_AFTER) {
-                                Log.i("Reporting sync error after=" + delayed);
-                                Throwable warning = new Throwable(
-                                        getString(R.string.title_no_sync,
-                                                Helper.getDateTimeInstance(this, DateFormat.SHORT, DateFormat.SHORT)
-                                                        .format(account.last_connected)), ex);
-                                try {
-                                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                    nm.notify("receive:" + account.id, 1,
-                                            Core.getNotificationError(this, "warning", account.name, warning)
-                                                    .build());
-                                } catch (Throwable ex1) {
-                                    Log.w(ex1);
-                                }
-                            }
                         }
 
                         throw ex;
@@ -976,13 +979,15 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                     final boolean capIdle = iservice.hasCapability("IDLE");
                     Log.i(account.name + " idle=" + capIdle);
-                    if (!capIdle)
+                    if (!capIdle || account.poll_interval < OPTIMIZE_KEEP_ALIVE_INTERVAL)
                         optimizeAccount(ServiceSynchronize.this, account, "IDLE");
 
                     db.account().setAccountState(account.id, "connected");
                     db.account().setAccountError(account.id, null);
                     db.account().setAccountWarning(account.id, null);
                     EntityLog.log(this, account.name + " connected");
+
+                    db.account().setAccountMaxSize(account.id, iservice.getMaxSize());
 
                     // Listen for folder events
                     iservice.getStore().addFolderListener(new FolderAdapter() {
@@ -1035,7 +1040,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                     // Update folder list
                     if (account.protocol == EntityAccount.TYPE_IMAP)
-                        Core.onSynchronizeFolders(this, account, iservice.getStore(), state);
+                        Core.onSynchronizeFolders(this, account, iservice.getStore(), state, force);
 
                     // Open synchronizing folders
                     List<EntityFolder> folders = db.folder().getFolders(account.id, false, true);
@@ -1430,7 +1435,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 account.keep_alive_ok = true;
                                 db.account().setAccountKeepAliveOk(account.id, true);
                                 if (!BuildConfig.PLAY_STORE_RELEASE)
-                                    Log.e(account.host + " set keep-alive=" + account.poll_interval);
+                                    Log.w(account.host + " set keep-alive=" + account.poll_interval);
                                 EntityLog.log(ServiceSynchronize.this, account.name + " keep alive ok");
                             } else
                                 EntityLog.log(ServiceSynchronize.this, account.name + " keep alive" +
@@ -1506,6 +1511,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             am.cancel(pi);
                         }
 
+                        errors = 0;
                         first = false;
                     }
 
@@ -1516,6 +1522,44 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             ServiceSynchronize.this,
                             account.name + " " + Log.formatThrowable(ex, false));
                     db.account().setAccountError(account.id, Log.formatThrowable(ex));
+
+                    long now = new Date().getTime();
+
+                    // Check for fast account errors
+                    if (account.last_connected != null &&
+                            now - account.last_connected < FAST_ERROR_TIME) {
+                        errors++;
+                        EntityLog.log(ServiceSynchronize.this,
+                                account.name + " fast errors=" + errors +
+                                        " last connected: " + new Date(account.last_connected));
+                        if (errors >= FAST_ERROR_COUNT)
+                            state.setBackoff(CONNECT_BACKOFF_AlARM_START * 60);
+                    }
+
+                    // Report account connection error
+                    if (account.last_connected != null && !ConnectionHelper.airplaneMode(this)) {
+                        EntityLog.log(this, account.name + " last connected: " + new Date(account.last_connected));
+
+                        int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
+                        long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
+                        long maxDelayed = (pollInterval > 0 && !account.poll_exempted
+                                ? pollInterval * ACCOUNT_ERROR_AFTER_POLL : ACCOUNT_ERROR_AFTER) * 60 * 1000L;
+                        if (delayed > maxDelayed && state.getBackoff() > BACKOFF_ERROR_AFTER) {
+                            Log.i("Reporting sync error after=" + delayed);
+                            Throwable warning = new Throwable(
+                                    getString(R.string.title_no_sync,
+                                            Helper.getDateTimeInstance(this, DateFormat.SHORT, DateFormat.SHORT)
+                                                    .format(account.last_connected)), ex);
+                            try {
+                                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                nm.notify("receive:" + account.id, 1,
+                                        Core.getNotificationError(this, "warning", account.name, warning)
+                                                .build());
+                            } catch (Throwable ex1) {
+                                Log.w(ex1);
+                            }
+                        }
+                    }
                 } finally {
                     // Update state
                     EntityLog.log(this, account.name + " closing");
@@ -1655,8 +1699,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         DB db = DB.getInstance(context);
 
         int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
+        EntityLog.log(context, "Auto optimize account=" + account.name + " poll interval=" + pollInterval);
         if (pollInterval == 0) {
-            prefs.edit().putInt("poll_interval", STILL_THERE_POLL_INTERVAL).apply();
+            prefs.edit().putInt("poll_interval", OPTIMIZE_POLL_INTERVAL).apply();
             try {
                 db.beginTransaction();
                 for (EntityAccount a : db.account().getAccounts())
@@ -1665,7 +1710,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             } finally {
                 db.endTransaction();
             }
-            ServiceSynchronize.eval(ServiceSynchronize.this, "Optimize=" + reason);
+            ServiceSynchronize.reschedule(ServiceSynchronize.this);
         } else if (pollInterval <= 60 && account.poll_exempted) {
             db.account().setAccountPollExempted(account.id, false);
             ServiceSynchronize.eval(ServiceSynchronize.this, "Optimize=" + reason);
@@ -1673,21 +1718,113 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
+        private Network reloaded = null;
+        private NetworkCapabilities lastActiveCaps = null;
+        private LinkProperties lastActiveProps = null;
+
         @Override
         public void onAvailable(@NonNull Network network) {
             try {
                 ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
                 NetworkInfo ni = cm.getNetworkInfo(network);
-                EntityLog.log(ServiceSynchronize.this, "Available network=" + network + " info=" + ni);
+                NetworkInfo ani = cm.getActiveNetworkInfo();
+                EntityLog.log(ServiceSynchronize.this, "Available network=" + network + " info=" + ni + " active=" + ani);
             } catch (Throwable ex) {
                 Log.w(ex);
             }
-            updateState(network, null);
+
+            updateNetworkState(network, null);
         }
 
         @Override
-        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities capabilities) {
-            updateState(network, capabilities);
+        public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities caps) {
+            updateNetworkState(network, caps);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                try {
+                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                    Network active = cm.getActiveNetwork();
+                    if (active != null && active.equals(network)) {
+                        boolean reload = (!active.equals(reloaded) && lastActiveCaps != null &&
+                                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) &&
+                                lastActiveCaps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                                !lastActiveCaps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED));
+
+                        if (reload || BuildConfig.DEBUG)
+                            EntityLog.log(ServiceSynchronize.this, "Connectivity changed " + network +
+                                    " caps=" + caps + " reload=" + reload);
+
+                        if (reload) {
+                            reloaded = active;
+                            reload(ServiceSynchronize.this, -1L, false, "unmetered");
+                        }
+
+                        lastActiveCaps = caps;
+                    }
+
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
+        }
+
+        @Override
+        public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties props) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                try {
+                    ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                    Network active = cm.getActiveNetwork();
+                    if (active != null && active.equals(network)) {
+                        boolean ahas4 = false;
+                        boolean ahas6 = false;
+                        boolean lhas4 = false;
+                        boolean lhas6 = false;
+                        if (lastActiveProps != null) {
+                            String aname = props.getInterfaceName();
+                            String lname = lastActiveProps.getInterfaceName();
+                            if (!TextUtils.isEmpty(aname) && !TextUtils.isEmpty(lname)) {
+                                NetworkInterface aintf = NetworkInterface.getByName(aname);
+                                NetworkInterface lintf = NetworkInterface.getByName(lname);
+                                if (aintf != null && lintf != null) {
+                                    for (InterfaceAddress iaddr : aintf.getInterfaceAddresses()) {
+                                        InetAddress addr = iaddr.getAddress();
+                                        if (!addr.isLoopbackAddress() && !addr.isLinkLocalAddress())
+                                            if (addr instanceof Inet4Address)
+                                                ahas4 = true;
+                                            else if (addr instanceof Inet6Address)
+                                                ahas6 = true;
+                                    }
+
+                                    for (InterfaceAddress iaddr : lintf.getInterfaceAddresses()) {
+                                        InetAddress addr = iaddr.getAddress();
+                                        if (!addr.isLoopbackAddress() && !addr.isLinkLocalAddress())
+                                            if (addr instanceof Inet4Address)
+                                                lhas4 = true;
+                                            else if (addr instanceof Inet6Address)
+                                                lhas6 = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        boolean reload = (!active.equals(reloaded) &&
+                                (ahas4 && !lhas4) || (ahas6 && !lhas6));
+
+                        if (reload || BuildConfig.DEBUG)
+                            EntityLog.log(ServiceSynchronize.this, "Connectivity changed " + network +
+                                    " props=" + props + " reload=" + reload);
+
+                        if (reload) {
+                            reloaded = active;
+                            reload(ServiceSynchronize.this, -1L, false, "connectivity");
+                        }
+
+                        lastActiveProps = props;
+                    }
+
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
         }
 
         @Override
@@ -1701,30 +1838,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             } catch (Throwable ex) {
                 Log.w(ex);
             }
-            updateState(network, null);
-        }
 
-        private void updateState(Network network, NetworkCapabilities capabilities) {
-            ConnectionHelper.NetworkState ns = ConnectionHelper.getNetworkState(ServiceSynchronize.this);
-            liveNetworkState.postValue(ns);
-
-            if (lastSuitable == null || lastSuitable != ns.isSuitable()) {
-                lastSuitable = ns.isSuitable();
-                EntityLog.log(ServiceSynchronize.this,
-                        "Updated network=" + network +
-                                " capabilities " + capabilities +
-                                " suitable=" + lastSuitable);
-
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
-                boolean background_service = prefs.getBoolean("background_service", false);
-                if (!background_service)
-                    try {
-                        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                        nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(lastAccounts, lastOperations).build());
-                    } catch (Throwable ex) {
-                        Log.w(ex);
-                    }
-            }
+            updateNetworkState(network, null);
         }
     };
 
@@ -1740,9 +1855,32 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     lastLost = 0;
             }
 
-            networkCallback.onCapabilitiesChanged(null, null);
+            updateNetworkState(null, null);
         }
     };
+
+    private void updateNetworkState(Network network, NetworkCapabilities capabilities) {
+        ConnectionHelper.NetworkState ns = ConnectionHelper.getNetworkState(ServiceSynchronize.this);
+        liveNetworkState.postValue(ns);
+
+        if (lastSuitable == null || lastSuitable != ns.isSuitable()) {
+            lastSuitable = ns.isSuitable();
+            EntityLog.log(ServiceSynchronize.this,
+                    "Updated network=" + network +
+                            " capabilities " + capabilities +
+                            " suitable=" + lastSuitable);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
+            boolean background_service = prefs.getBoolean("background_service", false);
+            if (!background_service)
+                try {
+                    NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    nm.notify(Helper.NOTIFICATION_SYNCHRONIZE, getNotificationService(lastAccounts, lastOperations).build());
+                } catch (Throwable ex) {
+                    Log.w(ex);
+                }
+        }
+    }
 
     private BroadcastReceiver idleModeChangedReceiver = new BroadcastReceiver() {
         @Override

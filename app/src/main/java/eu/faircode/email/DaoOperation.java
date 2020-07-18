@@ -33,11 +33,14 @@ public interface DaoOperation {
             " WHEN operation.name = '" + EntityOperation.BODY + "' THEN -4" +
             " WHEN operation.name = '" + EntityOperation.ATTACHMENT + "' THEN -3" +
             " WHEN operation.name = '" + EntityOperation.HEADERS + "' THEN -2" +
-            " WHEN operation.name = '" + EntityOperation.SYNC + "' THEN" +
-            "  CASE WHEN folder.account IS NULL THEN -1 ELSE 1 END" + // outbox
+            " WHEN operation.name = '" + EntityOperation.RAW + "' THEN -2" +
+            " WHEN operation.name = '" + EntityOperation.SYNC + "' AND folder.account IS NULL THEN -1" + // Outbox
+            " WHEN operation.name = '" + EntityOperation.SYNC + "' AND folder.account IS NOT NULL THEN 1" +
+            // Other operations: add, delete, seen, answered, flag, keyword, label, subscribe, send
             " WHEN operation.name = '" + EntityOperation.FETCH + "' THEN 2" +
             " WHEN operation.name = '" + EntityOperation.EXISTS + "' THEN 3" +
             " WHEN operation.name = '" + EntityOperation.MOVE + "' THEN 4" +
+            " WHEN operation.name = '" + EntityOperation.COPY + "' THEN 4" +
             " ELSE 0" +
             " END";
 
@@ -147,6 +150,8 @@ public interface DaoOperation {
     @Query("DELETE FROM operation WHERE id = :id")
     int deleteOperation(long id);
 
-    @Query("DELETE FROM operation WHERE folder = :folder")
-    int deleteOperations(long folder);
+    @Query("DELETE FROM operation" +
+            " WHERE folder = :folder" +
+            " AND state <> 'executing'")
+    int deletePendingOperations(long folder);
 }

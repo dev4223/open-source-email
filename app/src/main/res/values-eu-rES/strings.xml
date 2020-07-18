@@ -163,7 +163,6 @@
     <string name="title_setup_error">Akatsa</string>
     <string name="title_setup_export">Esportatu ezarpenak</string>
     <string name="title_setup_import">Inportatu ezarpenak</string>
-    <string name="title_setup_export_do">Gailuko Google kontura lotutako Gmail kontuak ezin dira esportatu</string>
     <string name="title_setup_import_do">Inportatutako kontuak daudenak gainidatzi gabe gehituko dira</string>
     <string name="title_setup_password">Pasahitza</string>
     <string name="title_setup_password_chars">Pasahitzak kontrol karaktereak edo espazio zuriak ditu</string>
@@ -285,8 +284,6 @@
     <string name="title_advanced_replace_name">Nahiago kontaktu-izena bidaltzaile-izena baino</string>
     <string name="title_advanced_distinguish_contacts">Azpimarratu igorlea kontaktua jasotzaile lokalki ezaguna bada</string>
     <string name="title_advanced_show_recipients">Erakutsi hartzaileak mezuaren goiburuan</string>
-    <string name="title_advanced_font_size_sender">Igorlearen letra tamaina</string>
-    <string name="title_advanced_font_size_subject">Gaiaren letra tamaina</string>
     <string name="title_advanced_subject_top">Erakutsi mintzagaia igorlearen gainean</string>
     <string name="title_advanced_subject_italic">Erakutsi mintzagaia letra etzanean</string>
     <string name="title_advanced_subject_elipsed">Behar denean laburtu mintzagaia</string>
@@ -464,7 +461,6 @@
     <string name="title_advanced_sender">Baimendu bidaltzailearen helbidea editatzea</string>
     <string name="title_advanced_sender_regex">Regex sarrerako helbideen erabiltzaile izenarekin bat etortzeko</string>
     <string name="title_identity_reply_to">Erantzun-helbidea</string>
-    <string name="title_identity_unicode">Onartu Unicode helbide elektronikoetan</string>
     <string name="title_identity_receipt">Eskatu defektuz bidalketa/irakurri izanaren egiaztagiria</string>
     <string name="title_identity_use_ip_hint">\'Baliogabeko agurra\', \'baliozko helbidea behar da\' edo antzeko mezurik jasotzen baduzu, saiatu ezarpen hau aldatzen</string>
     <string name="title_optional">Aukerakoa</string>
@@ -673,7 +669,6 @@
     <string name="title_no_camera">Ez dago kamera aplikazio egokirik eskuragarri</string>
     <string name="title_no_saf">Biltegiratzea atzitzeko tresneria ez dago eskuragarri</string>
     <string name="title_no_stream">Zaharkitutako aplikazio batek fitxategi bide bat bidali du fitxategi jario baten ordez</string>
-    <string name="title_no_contacts">Kontaktuan hautatzailea ez dago eskuragarri</string>
     <string name="title_no_internet">Internet konexiorik ez edo konexio desegokia</string>
     <string name="title_no_connection">Konektatzen kontu batera edo batzuetara &#8230;</string>
     <string name="title_no_folder">Karpeta ez da existitzen</string>
@@ -748,7 +743,6 @@ Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
     <string name="title_add_image_inline">Txertatu</string>
     <string name="title_add_image_attach">Erantsi</string>
     <string name="title_add_image_resize">Aldatu tamaina</string>
-    <string name="title_add_image_privacy">Kendu kokaleku geografikoa</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixel</string>
     <string name="title_add_image_select">Aukeratu fitxategia</string>
     <string name="title_add_attachment">Gehitu eranskina</string>
@@ -1135,7 +1129,6 @@ Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
     <string name="title_widget_folder_unified">Bateratutako sarrera-ontziko karpetak</string>
     <string name="title_widget_unseen">Irakurri gabeko mezuak soilik</string>
     <string name="title_widget_flagged">Izardun mezuak soilik</string>
-    <string name="title_widget_font_size">Letra-tamaina</string>
     <string name="title_widget_padding">Betegarriaren tamaina</string>
     <string name="title_widget_semi_transparent">Atzeko plano erdi gardena</string>
     <string name="title_accessibility_collapsed">Tolestuta</string>

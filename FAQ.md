@@ -1,7 +1,7 @@
 # FairEmail support
 
 If you have a question, please check the frequently asked questions below first.
-At the bottom you can find how to ask other questions, request features and report bugs.
+At the bottom, you can find out how to ask other questions, request features, and report bugs.
 
 ## Index
 
@@ -15,16 +15,16 @@ At the bottom you can find how to ask other questions, request features and repo
 
 ## Authorizing accounts
 
-In most cases the quick setup will be able to automatically identify the right configuration.
+In most cases, the quick setup will be able to automatically identify the correct configuration.
 
-If the quick setup fails, you'll need to manually setup an account (to receive email) and an identity (to send email).
+If the quick setup fails, you'll need to manually set up an account (to receive email) and an identity (to send email).
 For this you'll need the IMAP and SMTP server addresses and port numbers, whether SSL/TLS or STARTTLS should be used
 and your username (mostly, but not always, your email address) and your password.
 
 Searching for *IMAP* and the name of the provider is mostly sufficient to find the right documentation.
 
-In some cases you'll need to enable external access to your account and/or to use a special (app) password,
-for instance when two factor authentication is enabled.
+In some cases, you'll need to enable external access to your account and/or to use a special (app) password,
+for instance when two-factor authentication is enabled.
 
 For authorizing:
 
@@ -32,11 +32,11 @@ For authorizing:
 * Outlook / Live / Hotmail, see [question 14](#user-content-faq14)
 * Office365, see [question 14](#user-content-faq156)
 * Microsoft Exchange, see [question 8](#user-content-faq8)
-* Yahoo!, see [question 88](#user-content-faq88)
+* Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
 * Apple iCloud, see [question 148](#user-content-faq148)
 * Free.fr, see [question 157](#user-content-faq157)
 
-Please see [here](#user-content-faq22) for common error messages.
+Please see [here](#user-content-faq22) for common error messages and solutions.
 
 Related questions:
 
@@ -53,8 +53,8 @@ Related questions:
 * Set a signature: Setup, step 2, Manage, tap identity, Edit signature.
 * Add CC and BCC addresses: tap the people's icon at the end of the subject
 * Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
-* Add a folder to the unified inbox: long press the folder in the folder list and check *Show in unified inbox*
-* Add a folder to the navigation menu: long press the folder in the folder list and check *Show in navigation menu*
+* Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
+* Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
 * Load more messages: long press a folder in the folder list, select *Synchronize more messages*
 * Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
@@ -68,18 +68,18 @@ Related questions:
 
 * ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue. A workaround was added.~~
 * ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty. Google has fixed this.~~
-* ~~A [bug in AndroidX](https://issuetracker.google.com/issues/78495471) lets FairEmail occasionally crash on long pressing or swiping. Google has fixed this.~~
+* ~~A [bug in AndroidX](https://issuetracker.google.com/issues/78495471) causes FairEmail to occasionally crash on long pressing or swiping. Google has fixed this.~~
 * ~~A [bug in AndroidX ROOM](https://issuetracker.google.com/issues/138441698) causes sometimes a crash with "*... Exception while computing database live data ... Couldn't read row ...*". A workaround was added.~~
-* A [bug in Android](https://issuetracker.google.com/issues/119872129) lets FairEmail crash with "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
+* A [bug in Android](https://issuetracker.google.com/issues/119872129) causes FairEmail to crash with "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) sometimes causes a crash with "*... ActivityRecord not found for ...*" after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) might fix the problem.
 * A [bug in Android](https://issuetracker.google.com/issues/37018931) sometimes causes a crash with *... InputChannel is not initialized ...* on some devices.
 * ~~A [bug in LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) sometimes causes a crash with *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
-* A bug in Nova Launcher on Android 5.x lets FairEmail crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
+* A bug in Nova Launcher on Android 5.x causes FairEmail to crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * ~~The folder selector sometimes shows no folders for yet unknown reasons. This seems to be fixed.~~
 * ~~A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller. A workaround was added.~~
 * ~~Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
-* Scrolling to an internal linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
-* A preview of the message text doesn't (always) appear on a Samsung watch because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. However, message preview texts are known to appear correctly on a Pebble 2, a Fitbit Charge 3 and a Mi band 3. See also [this FAQ](#user-content-faq126).
+* Scrolling to an internally linked location in original messages does not work. This can't be fixed because the original message view is contained in a scrolling view.
+* A preview of a message text doesn't (always) appear on Samsung watches because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. Message preview texts are known to be displayed correctly on Pebble 2, Fitbit Charge 3, and Mi band 3 wearables. See also [this FAQ](#user-content-faq126).
 
 ## Planned features
 
@@ -96,7 +96,7 @@ Related questions:
 * ~~Search suggestions~~
 * ~~[Autocrypt Setup Message](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (section 4.4)~~ (IMO it is not a good idea to let an email client handle sensitive encryption keys for an exceptional use case while OpenKeychain can export keys too)
 * ~~Generic unified folders~~
-* ~~New message notification schedules per account~~ (implemented by added a time condition to rules, so messages can be snoozed in selected periods)
+* ~~New per account message notification schedules~~ (implemented by adding a time condition to rules so messages can be snoozed during selected periods)
 * ~~Copy accounts and identities~~
 * ~~Pinch zoom~~ (not reliably possible in a scrolling list; the full message view can be zoomed instead)
 * ~~More compact folder view~~
@@ -110,7 +110,7 @@ Related questions:
 * ~~Remind to attach files~~
 * ~~Select domains to show images for~~ (this will be too complicated to use)
 * ~~Unified starred messages view~~ (there is already a special search for this)
-* ~~Notification move action~~
+* ~~Move notification action~~
 * ~~S/MIME support~~
 * ~~Search for settings~~
 
@@ -151,7 +151,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
 * [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
-* [(27) How can I differentiate external and embedded images?](#user-content-faq27)
+* [(27) How can I distinguish between embedded and external images instead?](#user-content-faq27)
 * [(28) How can I manage status bar notifications?](#user-content-faq28)
 * [(29) How can I get new message notifications for other folders?](#user-content-faq29)
 * [(30) How can I use the provided quick settings?](#user-content-faq30)
@@ -159,7 +159,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(32) How can I check if reading email is really safe?](#user-content-faq32)
 * [(33) Why are edited sender addresses not working?](#user-content-faq33)
 * [(34) How are identities matched?](#user-content-faq34)
-* [(35) Why should I be careful with viewing images, attachments and the original message?](#user-content-faq35)
+* [(35) Why should I be careful with viewing images, attachments, and the original message?](#user-content-faq35)
 * [(36) How are settings files encrypted?](#user-content-faq36)
 * [(37) How are passwords stored?](#user-content-faq37)
 * [(39) How can I reduce the battery usage of FairEmail?](#user-content-faq39)
@@ -170,9 +170,9 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(44) Can you show contact photos / identicons in the sent folder?](#user-content-faq44)
 * [(45) How can I fix 'This key is not available. To use it, you must import it as one of your own!' ?](#user-content-faq45)
 * [(46) Why does the message list keep refreshing?](#user-content-faq46)
-* [(47) How can I solve 'No primary account or no drafts folder' ?](#user-content-faq47)
-* [~~(48) How can I solve 'No primary account or no archive folder' ?~~](#user-content-faq48)
-* [(49) How can I fix 'An outdated app sent a file path instead of a file stream' ?](#user-content-faq49)
+* [(47) How do I solve the error 'No primary account or no drafts folder' ?](#user-content-faq47)
+* [~~(48) How do I solve the error 'No primary account or no archive folder' ?~~](#user-content-faq48)
+* [(49) How do I fix 'An outdated app sent a file path instead of a file stream' ?](#user-content-faq49)
 * [(50) Can you add an option to synchronize all messages?](#user-content-faq50)
 * [(51) How are folders sorted?](#user-content-faq51)
 * [(52) Why does it take some time to reconnect to an account?](#user-content-faq52)
@@ -199,18 +199,18 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(73) Is moving messages across accounts safe/efficient?](#user-content-faq73)
 * [(74) Why do I see duplicate messages?](#user-content-faq74)
 * [(75) Can you make an iOS, Windows, Linux, etc version?](#user-content-faq75)
-* [(76) What does 'Clear local messages' ?](#user-content-faq76)
+* [(76) What does 'Clear local messages' do?](#user-content-faq76)
 * [(77) Why are messages sometimes shown with a small delay?](#user-content-faq77)
 * [(78) How do I use schedules?](#user-content-faq78)
 * [(79) How do I use synchronize on demand (manual)?](#user-content-faq79)
-* [~~(80) How can I fix 'Unable to load BODYSTRUCTURE'?~~](#user-content-faq80)
+* [~~(80) How do I fix the error 'Unable to load BODYSTRUCTURE'?~~](#user-content-faq80)
 * [~~(81) Can you make the background of the original message dark in the dark theme?~~](#user-content-faq81)
 * [(82) What is a tracking image?](#user-content-faq82)
 * [(84) What are local contacts for?](#user-content-faq84)
 * [(85) Why is an identity not available?](#user-content-faq85)
 * [~~(86) What are 'extra privacy features'?~~](#user-content-faq86)
 * [(87) What does 'invalid credentials' mean?](#user-content-faq87)
-* [(88) How can I use a Yahoo! account?](#user-content-faq88)
+* [(88) How can I use a Yahoo, AOL or Sky account?](#user-content-faq88)
 * [(89) How can I send plain text only messages?](#user-content-faq89)
 * [(90) Why are some texts linked while not being a link?](#user-content-faq90)
 * [~~(91) Can you add periodical synchronization to save battery power?~~](#user-content-faq91)
@@ -389,6 +389,7 @@ The low priority status bar notification shows the number of pending operations,
 * *subscribe*: subscribe to remote folder
 * *send*: send message
 * *exists*: check if message exists
+* *rule*: execute rule on body text
 
 Operations are processed only when there is a connection to the email server or when manually synchronizing.
 See also [this FAQ](#user-content-faq16).
@@ -575,7 +576,7 @@ Please see [this FAQ](#user-content-faq111) about OAuth support.
 <a name="faq9"></a>
 **(9) What are identities / how do I add an alias?**
 
-Identities represent email addresses you are sending *from*.
+Identities represent email addresses you are sending *from* via an email (SMTP) server.
 
 Some providers allow you to have multiple aliases.
 You can configure these by setting the email address field of an additional identity to the alias address
@@ -702,6 +703,9 @@ Note that certificates can contains multiple keys for multiple purposes,  for ex
 Android only imports the first key, so to import all the keys, the certificate must first be split.
 This is not very trivial and you are advised to ask the certificate supplier for support.
 
+The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time.
+You might need to enable the send options in the three dots menu again to be able to select the encryption method.
+
 To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.
 
 Public keys are stored by FairEmail and can be imported when verifying a signature for the first time or via the privacy settings (PEM or DER format).
@@ -712,6 +716,8 @@ Common errors:
 
 * *No certificate found matching targetContraints*: this likely means you are using an old version of FairEmail
 * *unable to find valid certification path to requested target*: basically this means one or more intermediate or root certificates were not found
+* *Private key does not match any encryption keys*: the selected key cannot be used to decrypt the message, probably because it is the incorrect key
+* *No private key*: no certificate was selected or no certificate was available in the Android keystore
 
 In case the certificate chain is incorrect, you can tap on the little info button to show the all certificates.
 After the certificate details the issuer or "selfSign" is shown.
@@ -754,7 +760,9 @@ S/MIME sign/encrypt is a pro feature, but all other PGP and S/MIME operations ar
 You can start searching for messages on sender (from), recipient (to, cc, bcc), subject, keywords or message text by using the magnify glass in the action bar of a folder.
 You can also search from any app by selecting *Search email* in the copy/paste popup menu.
 
-Searching in the unified inbox will search in all folders, searching in a folder will search in that folder only.
+Searching in the unified inbox will search in all folders of all accounts,
+searching in the folder list will search in the associated account only
+and searching in a folder will search in that folder only.
 
 Messages will be searched for on the device first.
 There will be an action button with a search again icon at the bottom to continue searching on the server.
@@ -907,6 +915,10 @@ Note that apps cannot change notification settings, including the notification l
 Apps designed and targeting older Android versions might still be able to control the contents of notifications,
 but such apps cannot be updated anymore and recent Android versions will show a warning that such apps are outdated.
 
+Sometimes it is necessary to disable the setting *Show message preview in notifications*
+or to enable the settings *Show notifications with a preview text only* to workaround a bug in Android.
+This might apply to notification sounds and vibrations too.
+
 Setting a light color before Android 8 is not supported and on Android 8 and later not possible.
 
 <br />
@@ -929,8 +941,8 @@ When using copy/paste to enter a username or password, invisible characters migh
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
 for example by allowing to logging from certain networks / IP addresses only.
 
-The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo! account password instead of an app password.
-Please see [this FAQ](#user-content-faq88) about how to setup a Yahoo! account.
+The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo account password instead of an app password.
+Please see [this FAQ](#user-content-faq88) about how to setup a Yahoo account.
 
 The message *... +OK ...* likely means that a POP3 port (usually port number 995) is being used for an IMAP account (usually port number 993).
 
@@ -1081,7 +1093,7 @@ Registration is free.
 <br />
 
 <a name="faq27"></a>
-**(27) How can I differentiate external and embedded images?**
+**(27) How can I distinguish between embedded and external images instead?**
 
 External image:
 
@@ -1219,7 +1231,7 @@ Setting identity colors is a pro feature.
 <br />
 
 <a name="faq35"></a>
-**(35) Why should I be careful with viewing images, attachments and the original message?**
+**(35) Why should I be careful with viewing images, attachments, and the original message?**
 
 Viewing remotely stored images (see also [this FAQ](#user-content-faq27)) might not only tell the sender that you have seen the message,
 but will also leak your IP address.
@@ -1333,6 +1345,13 @@ consider switching to a modern provider which supports push messages (IMAP IDLE)
 
 If your device has an [AMOLED](https://en.wikipedia.org/wiki/AMOLED) screen,
 you can save battery usage while viewing messages by switching to the black theme.
+
+By default auto optimize in the receive settings is enabled,
+which will switch an account to periodically checking for new messages when the email server:
+
+* Says '*Still here*' within 3 minutes
+* The email server does not support push messages
+* The keep-alive interval is lower than 12 minutes
 
 <br />
 
@@ -1449,7 +1468,7 @@ Note that you shouldn't set the number of days to synchronize messages for to mo
 <br />
 
 <a name="faq47"></a>
-**(47) How can I solve 'No primary account or no drafts folder' ?**
+**(47) How do I solve the error 'No primary account or no drafts folder' ?**
 
 You'll get the error message *No primary account or no drafts folder* when trying to compose a message
 while there is no account set to be the primary account or when there is no drafts folder selected for the primary account.
@@ -1465,7 +1484,7 @@ Please see [this FAQ](#user-content-faq141) for some more information.
 <br />
 
 <a name="faq48"></a>
-**~~(48) How can I solve 'No primary account or no archive folder' ?~~**
+**~~(48) How do I solve the error 'No primary account or no archive folder' ?~~**
 
 ~~You'll get the error message *No primary account or no archive folder* when searching for messages from another app.
 FairEmail needs to know where to search,
@@ -1474,7 +1493,7 @@ so you'll need to select one account to be the primary account and/or you'll nee
 <br />
 
 <a name="faq49"></a>
-**(49) How can I fix 'An outdated app sent a file path instead of a file stream' ?**
+**(49) How do I fix 'An outdated app sent a file path instead of a file stream' ?**
 
 You likely selected or sent an attachment or image with an outdated file manager
 or an outdated app which assumes all apps still have storage permissions.
@@ -1625,6 +1644,7 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
+* Did you know that if you select text and hit reply, only the selected text will be quoted?
 
 <br />
 
@@ -1825,6 +1845,7 @@ You can select one of these actions to apply to matching messages:
 * Move
 * Copy (Gmail: label)
 * Answer (with template)
+* Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
 
 Rules are applied directly after the message header has been fetched, but before the message text has been downloaded,
@@ -1887,7 +1908,7 @@ which is why I develop apps for Android only.
 <br />
 
 <a name="faq76"></a>
-**(76) What does 'Clear local messages' ?**
+**(76) What does 'Clear local messages' do?**
 
 The folder menu *Clear local messages* removes messages from the device which are present on the server too.
 It does not delete messages from the server.
@@ -2000,7 +2021,7 @@ You'll likely want to disabled [browse on server](#user-content-faq24) too.
 <br />
 
 <a name="faq80"></a>
-**~~(80) How can I fix 'Unable to load BODYSTRUCTURE' ?~~**
+**~~(80) How do I fix the error 'Unable to load BODYSTRUCTURE' ?~~**
 
 ~~The error message *Unable to load BODYSTRUCTURE* is caused by bugs in the email server,~~
 ~~see [here](https://javaee.github.io/javamail/FAQ#imapserverbug) for more details.~~
@@ -2086,17 +2107,21 @@ You will likely need to save the associated identity again as well.
 <br />
 
 <a name="faq88"></a>
-**(88) How can I use a Yahoo! account?**
+**(88) How can I use a Yahoo, AOL or Sky account?**
 
-To authorize a Yahoo! account you will need to create a third-party app password.
-Please see [here](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html) for the instructions.
+To authorize a Yahoo, AOL, or Sky account you will need to create an app password.
+For instructions, please see here:
+
+* [for Yahoo](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)
+* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password)
+* [for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)
 
 Please see [this FAQ](#user-content-faq111) about OAuth support.
 
-Note that Yahoo! does not standard support push messages.
-The Yahoo! email app uses a proprietary, undocumented protocol for push messages.
+Note that Yahoo, AOL, and Sky do not support standard push messages.
+The Yahoo email app uses a proprietary, undocumented protocol for push messages.
 
-Push messages require [IMAP IDLE](https://en.wikipedia.org/wiki/IMAP_IDLE) and the Yahoo! email server does not report IDLE as capability:
+Push messages require [IMAP IDLE](https://en.wikipedia.org/wiki/IMAP_IDLE) and the Yahoo email server does not report IDLE as capability:
 
 ```
 Y1 CAPABILITY
@@ -2432,10 +2457,10 @@ OAuth for Yandex is supported via the quick setup wizard.
 
 OAuth for Office365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
 
-OAuth access for Yahoo! was requested, but Yahoo! never responded to the request.
+OAuth access for Yahoo was requested, but Yahoo never responded to the request.
 OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL.
-Verizon owns both AOL and Yahoo!, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media).
-So, it is reasonable to assume that OAuth is not supported by Yahoo! anymore too.
+Verizon owns both AOL and Yahoo, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media).
+So, it is reasonable to assume that OAuth is not supported by Yahoo anymore too.
 
 <br />
 
@@ -2643,11 +2668,12 @@ Since there is no guarantee that a message text will always be fetched directly 
 it is not possible to guarantee that a new message notification with a preview text will always be sent to a wearable.
 
 If you think this is good enough, you can enable the notification option *Only send notifications with a message preview to wearables*.
-It is a good idea to review the connection setting *Automatically download messages and attachments on a metered connection up to ...* as well.
-For some odd reason notifications will work on [WearOS](https://wearos.google.com/) with this setting enabled only.
 
 If you want to have the full message text sent to your wearable, you can enable the notification option *Preview all text*.
 Note that some wearables are known to crash with this option enabled.
+
+If you use a Samsung wearable with the Galaxy Wearable (Samsung Gear) app, you might need to enable notifications for FairEmail
+when the setting *Notifications*, *Apps installed in the future* is turned off in this app.
 
 <br />
 
@@ -3016,8 +3042,14 @@ Unfortunately, there exists no intent to delete existing calendar events.
 **(151) Can you add backup/restore messages?**
 
 An email client is meant to read and write messages, not to backup and restore messages.
-The email server is responsible for backups.
+Note that breaking or losing your device, means losing your messages!
+
+Instead, the email provider/server is responsible for backups.
+
 If you want to make a backup yourself, you could use a tool like [imapsync](https://imapsync.lamiral.info/).
+
+If you want to import an mbox file to an existing email account,
+you can use Thunderbird on a desktop computer and the [ImportExportTools](https://addons.thunderbird.net/nl/thunderbird/addon/importexporttools/) add-on.
 
 <br />
 

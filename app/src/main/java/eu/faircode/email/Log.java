@@ -20,6 +20,7 @@ package eu.faircode.email;
 */
 
 import android.app.ActivityManager;
+import android.app.ApplicationExitInfo;
 import android.app.Dialog;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
@@ -81,6 +82,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertPathValidatorException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -103,6 +105,7 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.StoreClosedException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeUtility;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
@@ -649,6 +652,18 @@ public class Log {
             */
             return false;
 
+        if (ex instanceof IllegalArgumentException &&
+                "page introduces incorrect tiling".equals(ex.getMessage()))
+            /*
+                java.lang.IllegalArgumentException: page introduces incorrect tiling
+                  at androidx.paging.PagedStorage.insertPage(SourceFile:545)
+                  at androidx.paging.PagedStorage.tryInsertPageAndTrim(SourceFile:504)
+                  at androidx.paging.TiledPagedList$1.onPageResult(SourceFile:60)
+                  at androidx.paging.DataSource$LoadCallbackHelper$1.run(SourceFile:324)
+                  at android.os.Handler.handleCallback(Handler.java:789)
+            */
+            return false;
+
         if (ex instanceof IllegalMonitorStateException)
             /*
                 java.lang.IllegalMonitorStateException
@@ -1005,10 +1020,15 @@ public class Log {
     }
 
     static void unexpectedError(FragmentManager manager, Throwable ex) {
+        unexpectedError(manager, ex, true);
+    }
+
+    static void unexpectedError(FragmentManager manager, Throwable ex, boolean report) {
         Log.e(ex);
 
         Bundle args = new Bundle();
         args.putSerializable("ex", ex);
+        args.putBoolean("report", report);
 
         FragmentDialogUnexpected fragment = new FragmentDialogUnexpected();
         fragment.setArguments(args);
@@ -1020,41 +1040,45 @@ public class Log {
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final Throwable ex = (Throwable) getArguments().getSerializable("ex");
+            boolean report = getArguments().getBoolean("report", true);
 
-            return new AlertDialog.Builder(getContext())
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
                     .setTitle(R.string.title_unexpected_error)
                     .setMessage(Log.formatThrowable(ex, false))
-                    .setPositiveButton(android.R.string.cancel, null)
-                    .setNeutralButton(R.string.title_report, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // Dialog will be dismissed
-                            final Context context = getContext();
+                    .setPositiveButton(android.R.string.cancel, null);
 
-                            new SimpleTask<Long>() {
-                                @Override
-                                protected Long onExecute(Context context, Bundle args) throws Throwable {
-                                    return Log.getDebugInfo(context, R.string.title_crash_info_remark, ex, null).id;
-                                }
+            if (report)
+                builder.setNeutralButton(R.string.title_report, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Dialog will be dismissed
+                        final Context context = getContext();
 
-                                @Override
-                                protected void onExecuted(Bundle args, Long id) {
-                                    context.startActivity(new Intent(context, ActivityCompose.class)
-                                            .putExtra("action", "edit")
-                                            .putExtra("id", id));
-                                }
+                        new SimpleTask<Long>() {
+                            @Override
+                            protected Long onExecute(Context context, Bundle args) throws Throwable {
+                                return Log.getDebugInfo(context, R.string.title_unexpected_info_remark, ex, null).id;
+                            }
 
-                                @Override
-                                protected void onException(Bundle args, Throwable ex) {
-                                    if (ex instanceof IllegalArgumentException)
-                                        ToastEx.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
-                                    else
-                                        ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
-                                }
-                            }.execute(getContext(), getActivity(), new Bundle(), "error:unexpected");
-                        }
-                    })
-                    .create();
+                            @Override
+                            protected void onExecuted(Bundle args, Long id) {
+                                context.startActivity(new Intent(context, ActivityCompose.class)
+                                        .putExtra("action", "edit")
+                                        .putExtra("id", id));
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                if (ex instanceof IllegalArgumentException)
+                                    ToastEx.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+                                else
+                                    ToastEx.makeText(context, ex.toString(), Toast.LENGTH_LONG).show();
+                            }
+                        }.execute(getContext(), getActivity(), new Bundle(), "error:unexpected");
+                    }
+                });
+
+            return builder.create();
         }
     }
 
@@ -1130,6 +1154,9 @@ public class Log {
             sb.append(String.format("Data saving: %b\r\n", saving));
         }
 
+        String charset = MimeUtility.getDefaultJavaCharset();
+        sb.append(String.format("Default charset: %s/%s\r\n", charset, MimeUtility.mimeCharset(charset)));
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean reporting = prefs.getBoolean("crash_reports", false);
         if (reporting) {
@@ -1138,6 +1165,23 @@ public class Log {
         }
 
         sb.append("\r\n");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                // https://developer.android.com/reference/android/app/ApplicationExitInfo
+                List<ApplicationExitInfo> infos = am.getHistoricalProcessExitReasons(
+                        context.getPackageName(), 0, 20);
+                for (ApplicationExitInfo info : infos)
+                    sb.append(String.format("%s: %s %s/%s reason=%d status=%d importance=%d\r\n",
+                            new Date(info.getTimestamp()), info.getDescription(),
+                            Helper.humanReadableByteCount(info.getPss() * 1024L),
+                            Helper.humanReadableByteCount(info.getRss() * 1024L),
+                            info.getReason(), info.getStatus(), info.getReason()));
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+            sb.append("\r\n");
+        }
 
         sb.append(new Date(Helper.getInstallTime(context))).append("\r\n");
         sb.append(new Date()).append("\r\n");
@@ -1196,7 +1240,7 @@ public class Log {
             for (EntityAccount account : accounts)
                 try {
                     JSONObject jaccount = account.toJSON();
-                    jaccount.put("state", account.state);
+                    jaccount.put("state", account.state == null ? "null" : account.state);
                     jaccount.put("warning", account.warning);
                     jaccount.put("error", account.error);
 
@@ -1222,8 +1266,8 @@ public class Log {
                         jfolder.put("total", folder.total);
                         jfolder.put("initialize", folder.initialize);
                         jfolder.put("subscribed", folder.subscribed);
-                        jfolder.put("state", folder.state);
-                        jfolder.put("sync_state", folder.sync_state);
+                        jfolder.put("state", folder.state == null ? "null" : folder.state);
+                        jfolder.put("sync_state", folder.sync_state == null ? "null" : folder.sync_state);
                         jfolder.put("read_only", folder.read_only);
                         jfolder.put("selectable", folder.selectable);
                         jfolder.put("inferiors", folder.inferiors);
@@ -1410,7 +1454,7 @@ public class Log {
     }
 
     static InternetAddress myAddress() throws UnsupportedEncodingException {
-        return new InternetAddress("marcel+fairemail@faircode.eu", "FairCode");
+        return new InternetAddress("marcel+fairemail@faircode.eu", "FairCode", StandardCharsets.UTF_8.name());
     }
 
     static boolean isSupportedDevice() {

@@ -181,7 +181,6 @@
     <string name="title_setup_error">Napaka</string>
     <string name="title_setup_export">Izvozi nastavitve</string>
     <string name="title_setup_import">Uvozi nastavitve</string>
-    <string name="title_setup_export_do">Račune Gmail, ki so povezani z Googlovimi računi na napravi, ni mogoče izvoziti.</string>
     <string name="title_setup_import_do">Uvoženi računi bodo dodani, ne da bi prepisali obstoječe.</string>
     <string name="title_setup_password">Geslo</string>
     <string name="title_setup_password_chars">Geslo vsebuje krmilne znake ali presledke.</string>
@@ -293,8 +292,6 @@
     <string name="title_advanced_name_email">Prikaži imena in e-poštne naslove</string>
     <string name="title_advanced_replace_name">Prednost ima ime stika pred poslanim imenom</string>
     <string name="title_advanced_distinguish_contacts">Podčrtaj pošiljatelja, ko je ta poznan kot krajevni stik \'Za\'</string>
-    <string name="title_advanced_font_size_sender">Velikost pisave pošiljatelja</string>
-    <string name="title_advanced_font_size_subject">Velikost pisave zadeve</string>
     <string name="title_advanced_subject_top">Prikaži zadevo nad pošiljateljem</string>
     <string name="title_advanced_subject_italic">Prikaže zadevo v ležeči pisavi</string>
     <string name="title_advanced_subject_elipsed">Skrajšaj zadevo, ko je to potrebno</string>
@@ -461,7 +458,6 @@
     <string name="title_advanced_sender">Omogoči urejanje pošiljateljevega naslova</string>
     <string name="title_advanced_sender_regex">Reg. izraz za ujemanje z uporabniškim imenom dohodnega e-poštnega naslova.</string>
     <string name="title_identity_reply_to">Naslov za odgovor</string>
-    <string name="title_identity_unicode">Dovoli Unicode v e-poštnih naslovih</string>
     <string name="title_identity_receipt">Privzeto zahtevaj potrdilo o dostavi/branju</string>
     <string name="title_identity_use_ip_hint">V primeru \'Neveljaven pozdrav\', \'Zahteva veljaven naslov\' ali podobne napake poizkusite spremeniti to nastavitev.</string>
     <string name="title_optional">Izbirno</string>
@@ -664,7 +660,6 @@
     <string name="title_no_camera">Primerni program za fotoaparat ni na voljo.</string>
     <string name="title_no_saf">Ogrodje za dostop do pomnilniške naprave ni na voljo.</string>
     <string name="title_no_stream">Zastareli program je poslal pot datoteke namesto pretoka datoteke.</string>
-    <string name="title_no_contacts">Izbirnik stikov ni na voljo.</string>
     <string name="title_no_internet">Ni primerne internetne povezave.</string>
     <string name="title_no_connection">Povezovanje na enega ali več računov &#8230;</string>
     <string name="title_no_folder">Mapa ne obstaja</string>

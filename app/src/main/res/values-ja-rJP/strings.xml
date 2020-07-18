@@ -150,7 +150,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_setup_error">エラー</string>
     <string name="title_setup_export">設定をエクスポート</string>
     <string name="title_setup_import">設定をインポート</string>
-    <string name="title_setup_export_do">デバイス上でGoogleアカウントにリンクされているGmailアカウントはエクスポート出来ません</string>
     <string name="title_setup_import_do">インポートされたアカウントは既存のアカウントを上書きせずに追加されます</string>
     <string name="title_setup_password">パスワード</string>
     <string name="title_setup_password_chars">パスワードに制御文字又は空白が含まれています</string>
@@ -264,8 +263,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_advanced_replace_name">送信名より連絡先名を優先する</string>
     <string name="title_advanced_distinguish_contacts">送信者がローカル(宛先)連絡先として知られている場合、送信者に下線を引く</string>
     <string name="title_advanced_show_recipients">メッセージヘッダーにキーワードを表示</string>
-    <string name="title_advanced_font_size_sender">送信者のフォントサイズ</string>
-    <string name="title_advanced_font_size_subject">件名のフォントサイズ</string>
     <string name="title_advanced_subject_top">送信者の上に件名を表示</string>
     <string name="title_advanced_subject_italic">件名を斜体で表示</string>
     <string name="title_advanced_subject_elipsed">必要に応じて件名を短くします</string>
@@ -436,7 +433,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_advanced_sender">送信者アドレスの編集を許可</string>
     <string name="title_advanced_sender_regex">受信メールアドレスのユーザー名に一致する正規表現</string>
     <string name="title_identity_reply_to">返信先アドレス</string>
-    <string name="title_identity_unicode">メールアドレスでUnicodeを許可</string>
     <string name="title_identity_receipt">既定で送信/開封確認メッセージを要求</string>
     <string name="title_identity_use_ip_hint">\"無効な挨拶\" \"有効なアドレスが必要\"などのエラーが発生した場合は、この設定を変更してみてください</string>
     <string name="title_optional">オプション</string>
@@ -644,7 +640,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_no_camera">適切なカメラアプリが有りません</string>
     <string name="title_no_saf">ストレージアクセスフレームワークは利用出来ません</string>
     <string name="title_no_stream">古いアプリがファイルストリームでは無くファイルパスを送信しました</string>
-    <string name="title_no_contacts">連絡先ピッカーは利用出来ません</string>
     <string name="title_no_internet">適切なネット接続が有りません</string>
     <string name="title_no_connection">1つ以上のアカウント &#8230; への接続</string>
     <string name="title_no_folder">フォルダーが存在しません</string>
@@ -718,7 +713,6 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_add_image_inline">挿入</string>
     <string name="title_add_image_attach">添付</string>
     <string name="title_add_image_resize">リサイズ</string>
-    <string name="title_add_image_privacy">位置情報を削除</string>
     <string name="title_add_resize_pixels">&lt; %1$d ピクセル</string>
     <string name="title_add_image_select">ファイル選択</string>
     <string name="title_add_attachment">添付ファイルを追加</string>
@@ -1092,7 +1086,6 @@ PlayストアでFairEmailを評価できれば幸いです。
     <string name="title_widget_folder_unified">統合受信トレイフォルダー</string>
     <string name="title_widget_unseen">未読メッセージのみ</string>
     <string name="title_widget_flagged">スター付きメッセージのみ</string>
-    <string name="title_widget_font_size">フォントサイズ</string>
     <string name="title_widget_padding">余白のサイズ</string>
     <string name="title_widget_semi_transparent">半透明の背景</string>
     <string name="title_accessibility_collapsed">折りたたんだ</string>

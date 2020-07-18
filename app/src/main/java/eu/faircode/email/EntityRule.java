@@ -22,6 +22,8 @@ package eu.faircode.email;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -34,15 +36,21 @@ import androidx.room.PrimaryKey;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import javax.mail.Address;
@@ -98,11 +106,13 @@ public class EntityRule {
     static final int TYPE_KEYWORD = 11;
     static final int TYPE_HIDE = 12;
     static final int TYPE_IMPORTANCE = 13;
+    static final int TYPE_TTS = 14;
 
     static final String ACTION_AUTOMATION = BuildConfig.APPLICATION_ID + ".AUTOMATION";
     static final String EXTRA_RULE = "rule";
     static final String EXTRA_SENDER = "sender";
     static final String EXTRA_SUBJECT = "subject";
+    static final String EXTRA_RECEIVED = "received";
 
     private static final long SEND_DELAY = 5000L; // milliseconds
 
@@ -323,10 +333,12 @@ public class EntityRule {
                 return onActionCopy(context, message, jaction);
             case TYPE_ANSWER:
                 return onActionAnswer(context, message, jaction);
+            case TYPE_TTS:
+                return onActionTts(context, message, jaction);
             case TYPE_AUTOMATION:
                 return onActionAutomation(context, message, jaction);
             default:
-                throw new IllegalArgumentException("Unknown rule type=" + type);
+                throw new IllegalArgumentException("Unknown rule type=" + type + " name=" + name);
         }
     }
 
@@ -366,7 +378,7 @@ public class EntityRule {
         DB db = DB.getInstance(context);
         EntityFolder folder = db.folder().getFolder(target);
         if (folder == null)
-            throw new IllegalArgumentException("Rule move to folder not found");
+            throw new IllegalArgumentException("Rule move to folder not found name=" + name);
 
         List<EntityMessage> messages = db.message().getMessagesByThread(
                 message.account, message.thread, thread ? null : message.id, message.folder);
@@ -384,12 +396,12 @@ public class EntityRule {
     }
 
     private boolean onActionCopy(Context context, EntityMessage message, JSONObject jargs) throws JSONException {
-        long target = jargs.getLong("target");
+        long target = jargs.optLong("target", -1);
 
         DB db = DB.getInstance(context);
         EntityFolder folder = db.folder().getFolder(target);
         if (folder == null)
-            throw new IllegalArgumentException("Rule copy to folder not found");
+            throw new IllegalArgumentException("Rule copy to folder not found name=" + name);
 
         EntityOperation.queue(context, message, EntityOperation.COPY, target, false);
 
@@ -397,6 +409,12 @@ public class EntityRule {
     }
 
     private boolean onActionAnswer(Context context, EntityMessage message, JSONObject jargs) throws JSONException, IOException {
+        if (!message.content) {
+            EntityOperation.queue(context, message, EntityOperation.BODY);
+            EntityOperation.queue(context, message, EntityOperation.RULE, this.id);
+            return true;
+        }
+
         long iid = jargs.getLong("identity");
         long aid = jargs.getLong("answer");
         boolean cc = (jargs.has("cc") && jargs.getBoolean("cc"));
@@ -405,13 +423,13 @@ public class EntityRule {
 
         EntityIdentity identity = db.identity().getIdentity(iid);
         if (identity == null)
-            throw new IllegalArgumentException("Rule identity not found");
+            throw new IllegalArgumentException("Rule identity not found name=" + name);
 
         EntityAnswer answer = db.answer().getAnswer(aid);
         if (answer == null)
-            throw new IllegalArgumentException("Rule answer not found");
+            throw new IllegalArgumentException("Rule answer not found name=" + name);
 
-        Address[] from = new InternetAddress[]{new InternetAddress(identity.email, identity.name)};
+        Address[] from = new InternetAddress[]{new InternetAddress(identity.email, identity.name, StandardCharsets.UTF_8.name())};
 
         // Prevent loop
         List<EntityMessage> messages = db.message().getMessagesByThread(
@@ -448,6 +466,22 @@ public class EntityRule {
         reply.id = db.message().insertMessage(reply);
 
         String body = answer.getText(message.from);
+        Document msg = JsoupEx.parse(body);
+
+        Element div = msg.createElement("div");
+
+        Element p = msg.createElement("p");
+        DateFormat DF = Helper.getDateTimeInstance(context);
+        p.text(DF.format(new Date(message.received)) + " " + MessageHelper.formatAddresses(message.from) + ":");
+        div.appendChild(p);
+
+        Document answering = JsoupEx.parse(message.getFile(context));
+        div.appendChild(answering.body().tagName("blockquote"));
+
+        msg.body().appendChild(div);
+
+        body = msg.outerHtml();
+
         File file = reply.getFile(context);
         Helper.writeText(file, body);
         db.message().setMessageContent(reply.id,
@@ -469,13 +503,54 @@ public class EntityRule {
         String sender = (message.from == null || message.from.length == 0
                 ? null : ((InternetAddress) message.from[0]).getAddress());
 
+        // ISO 8601
+        DateFormat DTF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        DTF.setTimeZone(java.util.TimeZone.getTimeZone("Zulu"));
+
         Intent automation = new Intent(ACTION_AUTOMATION);
         automation.putExtra(EXTRA_RULE, name);
         automation.putExtra(EXTRA_SENDER, sender);
         automation.putExtra(EXTRA_SUBJECT, message.subject);
+        automation.putExtra(EXTRA_RECEIVED, DTF.format(message.received));
 
-        EntityLog.log(context, "Sending " + automation);
+        List<String> extras = Log.getExtras(automation.getExtras());
+        EntityLog.log(context, "Sending " + automation + " " + TextUtils.join(" ", extras));
         context.sendBroadcast(automation);
+
+        return true;
+    }
+
+    private boolean onActionTts(Context context, EntityMessage message, JSONObject jargs) throws IOException {
+        if (!message.content) {
+            EntityOperation.queue(context, message, EntityOperation.BODY);
+            EntityOperation.queue(context, message, EntityOperation.RULE, this.id);
+            return true;
+        }
+
+        Locale locale = (message.language == null ? Locale.getDefault() : new Locale(message.language));
+
+        Configuration configuration = new Configuration(context.getResources().getConfiguration());
+        configuration.setLocale(locale);
+        Resources res = context.createConfigurationContext(configuration).getResources();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(res.getString(R.string.title_rule_tts_prefix)).append(". ");
+
+        if (message.from != null && message.from.length > 0)
+            sb.append(res.getString(R.string.title_rule_tts_from))
+                    .append(' ').append(MessageHelper.formatAddressesShort(message.from)).append(". ");
+
+        if (!TextUtils.isEmpty(message.subject))
+            sb.append(res.getString(R.string.title_rule_tts_subject))
+                    .append(' ').append(message.subject).append(". ");
+
+        String body = Helper.readText(message.getFile(context));
+        String preview = HtmlHelper.getPreview(body);
+        if (!TextUtils.isEmpty(preview))
+            sb.append(res.getString(R.string.title_rule_tts_content))
+                    .append(' ').append(preview);
+
+        TTSHelper.speak(context, "rule:" + message.id, sb.toString(), locale);
 
         return true;
     }
@@ -571,8 +646,14 @@ public class EntityRule {
     }
 
     static EntityRule blockSender(Context context, EntityMessage message, EntityFolder junk, boolean block_domain, List<String> whitelist) throws JSONException {
+        if (message.from == null || message.from.length == 0)
+            return null;
+
         String sender = ((InternetAddress) message.from[0]).getAddress();
         String name = MessageHelper.formatAddresses(new Address[]{message.from[0]});
+
+        if (TextUtils.isEmpty(sender))
+            return null;
 
         if (block_domain) {
             int at = sender.indexOf('@');
@@ -599,8 +680,6 @@ public class EntityRule {
         JSONObject jaction = new JSONObject();
         jaction.put("type", TYPE_MOVE);
         jaction.put("target", junk.id);
-
-        DB db = DB.getInstance(context);
 
         EntityRule rule = new EntityRule();
         rule.folder = message.folder;

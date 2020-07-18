@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Build;
 import android.util.Printer;
 import android.webkit.CookieManager;
@@ -284,6 +285,15 @@ public class ApplicationEx extends Application {
             boolean monospaced = prefs.getBoolean("monospaced", false);
             if (monospaced && !BuildConfig.DEBUG)
                 editor.putBoolean("text_font", false);
+        } else if (version < 1238) {
+            if (!prefs.contains("subject_ellipsize"))
+                editor.putString("subject_ellipsize", "middle");
+            if (!prefs.contains("auto_optimize"))
+                editor.putBoolean("auto_optimize", false);
+        } else if (version < 1253) {
+            int threads = prefs.getInt("query_threads", 4);
+            if (threads == 4)
+                editor.remove("query_threads");
         }
 
         if (version < BuildConfig.VERSION_CODE)
@@ -321,6 +331,7 @@ public class ApplicationEx extends Application {
                     NotificationManager.IMPORTANCE_HIGH);
             notification.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
             notification.enableLights(true);
+            notification.setLightColor(Color.YELLOW);
             nm.createNotificationChannel(notification);
 
             // Update

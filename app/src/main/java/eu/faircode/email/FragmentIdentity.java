@@ -550,7 +550,8 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException || ex instanceof UnknownHostException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -900,15 +901,7 @@ public class FragmentIdentity extends FragmentBase {
                     identity.sign_key_alias = null;
                     identity.error = null;
                     identity.last_connected = last_connected;
-
-                    if (user_max_size == null)
-                        identity.max_size = server_max_size;
-                    else {
-                        if (server_max_size == null)
-                            identity.max_size = user_max_size;
-                        else
-                            identity.max_size = Math.min(user_max_size, server_max_size);
-                    }
+                    identity.max_size = (user_max_size == null ? server_max_size : user_max_size);
 
                     if (identity.primary)
                         db.identity().resetPrimary(account);
@@ -945,7 +938,8 @@ public class FragmentIdentity extends FragmentBase {
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     showError(ex);
             }
@@ -997,7 +991,7 @@ public class FragmentIdentity extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Log.unexpectedError(getParentFragmentManager(), ex);
+                Log.unexpectedError(getParentFragmentManager(), ex, false);
             }
         }.execute(this, args, "identity:oauth");
     }

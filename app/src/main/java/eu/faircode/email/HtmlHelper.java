@@ -83,6 +83,7 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.select.Elements;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
@@ -408,41 +409,7 @@ public class HtmlHelper {
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/style
         List<CSSStyleSheet> sheets = new ArrayList<>();
         if (parse_classes)
-            for (Element style : parsed.head().select("style")) {
-                if (BuildConfig.DEBUG)
-                    Log.i("Style=" + style.data());
-                try {
-                    InputSource source = new InputSource(new StringReader(style.data()));
-                    String media = style.attr("media");
-                    if (!TextUtils.isEmpty(media))
-                        source.setMedia(media);
-
-                    CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
-                    parser.setErrorHandler(new ErrorHandler() {
-                        @Override
-                        public void warning(CSSParseException ex) throws CSSException {
-                            Log.i("CSS warning=" + ex.getMessage());
-                        }
-
-                        @Override
-                        public void error(CSSParseException ex) throws CSSException {
-                            Log.i("CSS error=" + ex.getMessage());
-                        }
-
-                        @Override
-                        public void fatalError(CSSParseException ex) throws CSSException {
-                            Log.w(ex);
-                        }
-                    });
-
-                    long start = new Date().getTime();
-                    sheets.add(parser.parseStyleSheet(source, null, null));
-                    long elapsed = new Date().getTime() - start;
-                    Log.i("Style parse=" + elapsed + " ms");
-                } catch (Throwable ex) {
-                    Log.w(ex);
-                }
-            }
+            sheets = parseStyles(parsed.head().select("style"));
 
         Whitelist whitelist = Whitelist.relaxed()
                 .addTags("hr", "abbr", "big", "font", "dfn", "del", "s", "tt")
@@ -518,11 +485,10 @@ public class HtmlHelper {
 
         // Sanitize styles
         for (Element element : document.select("*")) {
-            String style = null;
-            String clazz = element.attr("class");
-
             // Class style
-            style = processStyles(element.tagName(), clazz, style, sheets);
+            String tag = element.tagName();
+            String clazz = element.attr("class");
+            String style = processStyles(tag, clazz, null, sheets);
 
             // Element style
             style = mergeStyles(style, element.attr("style"));
@@ -939,25 +905,35 @@ public class HtmlHelper {
                                     parent = parent.parent();
                                 }
 
-                                boolean email = matcher.group().contains("@") && !matcher.group().contains(":");
-                                Log.d("Web url=" + matcher.group() +
-                                        " " + matcher.start() + "..." + matcher.end() + "/" + text.length() +
+                                String group = matcher.group();
+                                int start = matcher.start();
+                                int end = matcher.end();
+
+                                // Workaround for links between parenthesis
+                                if (group.endsWith(")") &&
+                                        start > 0 && text.charAt(start - 1) == '(') {
+                                    group = group.substring(0, group.length() - 1);
+                                    end--;
+                                }
+
+                                boolean email = group.contains("@") && !group.contains(":");
+                                Log.d("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
                                         " linked=" + linked + " email=" + email + " count=" + links);
 
                                 if (linked)
-                                    span.appendText(text.substring(pos, matcher.end()));
+                                    span.appendText(text.substring(pos, end));
                                 else {
-                                    span.appendText(text.substring(pos, matcher.start()));
+                                    span.appendText(text.substring(pos, start));
 
                                     Element a = document.createElement("a");
-                                    a.attr("href", (email ? "mailto:" : "") + matcher.group());
-                                    a.text(matcher.group());
+                                    a.attr("href", (email ? "mailto:" : "") + group);
+                                    a.text(group);
                                     span.appendChild(a);
 
                                     links++;
                                 }
 
-                                pos = matcher.end();
+                                pos = end;
                             } while (links < MAX_AUTO_LINK && matcher.find());
 
                             span.appendText(text.substring(pos));
@@ -1020,7 +996,47 @@ public class HtmlHelper {
         return document;
     }
 
-    private static String processStyles(String tag, String clazz, String style, List<CSSStyleSheet> sheets) {
+    static List<CSSStyleSheet> parseStyles(Elements styles) {
+        List<CSSStyleSheet> sheets = new ArrayList<>();
+        for (Element style : styles) {
+            if (BuildConfig.DEBUG)
+                Log.i("Style=" + style.data());
+            try {
+                InputSource source = new InputSource(new StringReader(style.data()));
+                String media = style.attr("media");
+                if (!TextUtils.isEmpty(media))
+                    source.setMedia(media);
+
+                CSSOMParser parser = new CSSOMParser(new SACParserCSS3());
+                parser.setErrorHandler(new ErrorHandler() {
+                    @Override
+                    public void warning(CSSParseException ex) throws CSSException {
+                        Log.i("CSS warning=" + ex.getMessage());
+                    }
+
+                    @Override
+                    public void error(CSSParseException ex) throws CSSException {
+                        Log.i("CSS error=" + ex.getMessage());
+                    }
+
+                    @Override
+                    public void fatalError(CSSParseException ex) throws CSSException {
+                        Log.w(ex);
+                    }
+                });
+
+                long start = new Date().getTime();
+                sheets.add(parser.parseStyleSheet(source, null, null));
+                long elapsed = new Date().getTime() - start;
+                Log.i("Style parse=" + elapsed + " ms");
+            } catch (Throwable ex) {
+                Log.w(ex);
+            }
+        }
+        return sheets;
+    }
+
+    static String processStyles(String tag, String clazz, String style, List<CSSStyleSheet> sheets) {
         for (CSSStyleSheet sheet : sheets)
             if (isScreenMedia(sheet.getMedia())) {
                 style = processStyles(null, clazz, style, sheet.getCssRules(), Selector.SAC_ELEMENT_NODE_SELECTOR);
@@ -1086,7 +1102,7 @@ public class HtmlHelper {
         return false;
     }
 
-    private static String mergeStyles(String base, String style) {
+    static String mergeStyles(String base, String style) {
         return mergeStyles(base, style, null);
     }
 
@@ -1577,11 +1593,18 @@ public class HtmlHelper {
         if (full)
             return text;
 
-        String preview = text.substring(0, Math.min(text.length(), PREVIEW_SIZE));
-        if (preview.length() < text.length())
-            preview += "…";
+        return truncate(text, PREVIEW_SIZE);
+    }
 
-        return preview;
+    static String truncate(String text, int at) {
+        if (text.length() < at)
+            return text;
+
+        String preview = text.substring(0, at);
+        int space = preview.lastIndexOf(' ');
+        if (space > 0)
+            preview = preview.substring(0, space + 1);
+        return preview + "…";
     }
 
     static String getText(Context context, String html) {

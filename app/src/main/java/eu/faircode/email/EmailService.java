@@ -81,6 +81,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+// IMAP standards: https://imapwiki.org/Specs
+
 public class EmailService implements AutoCloseable {
     private Context context;
     private String protocol;
@@ -107,7 +109,7 @@ public class EmailService implements AutoCloseable {
 
     final static int DEFAULT_CONNECT_TIMEOUT = 20; // seconds
 
-    private final static int SEARCH_TIMEOUT = 2 * 60 * 1000; // milliseconds
+    private final static int SEARCH_TIMEOUT = 90 * 1000; // milliseconds
     private final static int FETCH_SIZE = 1024 * 1024; // bytes, default 16K
     private final static int POOL_TIMEOUT = 45 * 1000; // milliseconds, default 45 sec
 
@@ -145,10 +147,18 @@ public class EmailService implements AutoCloseable {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         this.harden = prefs.getBoolean("ssl_harden", false);
 
+        boolean auth_plain = prefs.getBoolean("auth_plain", true);
+        boolean auth_login = prefs.getBoolean("auth_login", true);
         boolean auth_sasl = prefs.getBoolean("auth_sasl", true);
+        Log.i("Authenticate plain=" + auth_plain + " login=" + auth_login + " sasl=" + auth_sasl);
 
         properties.put("mail.event.scope", "folder");
         properties.put("mail.event.executor", executor);
+
+        if (!auth_plain)
+            properties.put("mail." + protocol + ".auth.plain.disable", "true");
+        if (!auth_login)
+            properties.put("mail." + protocol + ".auth.login.disable", "true");
 
         properties.put("mail." + protocol + ".sasl.enable", "true");
         if (auth_sasl) {
@@ -634,9 +644,19 @@ public class EmailService implements AutoCloseable {
         return (SMTPTransport) iservice;
     }
 
-    Long getMaxSize() {
-        // https://tools.ietf.org/html/rfc1870
-        String size = getTransport().getExtensionParameter("SIZE");
+    Long getMaxSize() throws MessagingException {
+        // https://support.google.com/mail/answer/6584#limit
+
+        String size;
+        if (iservice instanceof SMTPTransport) {
+            // https://tools.ietf.org/html/rfc1870
+            size = getTransport().getExtensionParameter("SIZE");
+        } else if (iservice instanceof IMAPStore) {
+            // https://tools.ietf.org/html/rfc7889
+            size = ((IMAPStore) iservice).getCapability("APPENDLIMIT");
+        } else
+            return null;
+
         if (!TextUtils.isEmpty(size) && TextUtils.isDigitsOnly(size)) {
             long s = Long.parseLong(size);
             if (s != 0) // Not infinite
@@ -644,7 +664,6 @@ public class EmailService implements AutoCloseable {
         }
 
         return null;
-
     }
 
     boolean hasCapability(String capability) throws MessagingException {
@@ -929,6 +948,8 @@ public class EmailService implements AutoCloseable {
 
         String getFingerPrintSelect() {
             try {
+                if (certificate == null)
+                    return null;
                 String keyId = getKeyId(certificate);
                 String fingerPrint = getFingerPrint(certificate);
                 return fingerPrint + (keyId == null ? "" : "/" + keyId);

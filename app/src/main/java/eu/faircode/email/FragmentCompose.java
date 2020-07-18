@@ -52,6 +52,7 @@ import android.os.Handler;
 import android.os.OperationCanceledException;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.security.KeyChain;
 import android.security.KeyChainException;
 import android.text.Editable;
@@ -140,6 +141,7 @@ import org.jsoup.select.NodeFilter;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
+import org.w3c.dom.css.CSSStyleSheet;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -149,6 +151,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
@@ -173,6 +176,7 @@ import java.util.regex.Pattern;
 import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.BodyPart;
+import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -264,22 +268,22 @@ public class FragmentCompose extends FragmentBase {
     private static final int REDUCED_IMAGE_QUALITY = 90; // percent
 
     private static final int RECIPIENTS_WARNING = 10;
-    private static final int HEADERS_SIZE = 32 * 1024; // bytes
 
     private static final int REQUEST_CONTACT_TO = 1;
     private static final int REQUEST_CONTACT_CC = 2;
     private static final int REQUEST_CONTACT_BCC = 3;
-    private static final int REQUEST_IMAGE = 4;
-    private static final int REQUEST_IMAGE_FILE = 5;
-    private static final int REQUEST_ATTACHMENT = 6;
-    private static final int REQUEST_TAKE_PHOTO = 7;
-    private static final int REQUEST_RECORD_AUDIO = 8;
-    private static final int REQUEST_OPENPGP = 9;
-    private static final int REQUEST_CONTACT_GROUP = 10;
-    private static final int REQUEST_ANSWER = 11;
-    private static final int REQUEST_LINK = 12;
-    private static final int REQUEST_DISCARD = 13;
-    private static final int REQUEST_SEND = 14;
+    private static final int REQUEST_SHARED = 4;
+    private static final int REQUEST_IMAGE = 5;
+    private static final int REQUEST_IMAGE_FILE = 6;
+    private static final int REQUEST_ATTACHMENT = 7;
+    private static final int REQUEST_TAKE_PHOTO = 8;
+    private static final int REQUEST_RECORD_AUDIO = 9;
+    private static final int REQUEST_OPENPGP = 10;
+    private static final int REQUEST_CONTACT_GROUP = 11;
+    private static final int REQUEST_ANSWER = 12;
+    private static final int REQUEST_LINK = 13;
+    private static final int REQUEST_DISCARD = 14;
+    private static final int REQUEST_SEND = 15;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -438,12 +442,7 @@ public class FragmentCompose extends FragmentBase {
                 }
 
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
-                PackageManager pm = getContext().getPackageManager();
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R && // should be system whitelisted
-                        pick.resolveActivity(pm) == null)
-                    Snackbar.make(view, R.string.title_no_contacts, Snackbar.LENGTH_LONG).show();
-                else
-                    startActivityForResult(Helper.getChooser(getContext(), pick), request);
+                startActivityForResult(Helper.getChooser(getContext(), pick), request);
             }
         };
 
@@ -1103,7 +1102,6 @@ public class FragmentCompose extends FragmentBase {
                 args.putString("body", a.getString("body"));
                 args.putString("text", a.getString("text"));
                 args.putString("selected", a.getString("selected"));
-                args.putParcelableArrayList("attachments", a.getParcelableArrayList("attachments"));
                 draftLoader.execute(this, args, "compose:new");
             } else {
                 Bundle args = new Bundle();
@@ -1193,8 +1191,8 @@ public class FragmentCompose extends FragmentBase {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_compose, menu);
 
-        menu.findItem(R.id.menu_encrypt).setActionView(R.layout.action_button);
-        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
+        menu.findItem(R.id.menu_encrypt).setActionView(R.layout.action_button_text);
+        ImageButton ib = menu.findItem(R.id.menu_encrypt).getActionView().findViewById(R.id.button);
         ib.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1219,23 +1217,30 @@ public class FragmentCompose extends FragmentBase {
         menu.findItem(R.id.menu_clear).setEnabled(state == State.LOADED);
 
         int colorEncrypt = Helper.resolveColor(getContext(), R.attr.colorEncrypt);
-        ImageButton ib = (ImageButton) menu.findItem(R.id.menu_encrypt).getActionView();
+        View v = menu.findItem(R.id.menu_encrypt).getActionView();
+        ImageButton ib = v.findViewById(R.id.button);
+        TextView tv = v.findViewById(R.id.text);
         ib.setEnabled(state == State.LOADED);
         if (EntityMessage.PGP_SIGNONLY.equals(encrypt) || EntityMessage.SMIME_SIGNONLY.equals(encrypt)) {
             ib.setImageResource(R.drawable.baseline_gesture_24);
             ib.setImageTintList(null);
+            tv.setText(EntityMessage.PGP_SIGNONLY.equals(encrypt) ? "P" : "S");
         } else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) || EntityMessage.SMIME_SIGNENCRYPT.equals(encrypt)) {
             ib.setImageResource(R.drawable.baseline_lock_24);
             ib.setImageTintList(ColorStateList.valueOf(colorEncrypt));
+            tv.setText(EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) ? "P" : "S");
         } else {
             ib.setImageResource(R.drawable.baseline_lock_open_24);
             ib.setImageTintList(null);
+            tv.setText(null);
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean save_drafts = prefs.getBoolean("save_drafts", true);
         boolean send_dialog = prefs.getBoolean("send_dialog", true);
         boolean image_dialog = prefs.getBoolean("image_dialog", true);
 
+        menu.findItem(R.id.menu_save_drafts).setChecked(save_drafts);
         menu.findItem(R.id.menu_send_dialog).setChecked(send_dialog);
         menu.findItem(R.id.menu_image_dialog).setChecked(image_dialog);
         menu.findItem(R.id.menu_media).setChecked(media);
@@ -1259,6 +1264,9 @@ public class FragmentCompose extends FragmentBase {
                 return true;
             case R.id.menu_zoom:
                 onMenuZoom();
+                return true;
+            case R.id.menu_save_drafts:
+                onMenuSaveDrafts();
                 return true;
             case R.id.menu_send_dialog:
                 onMenuSendDialog();
@@ -1357,11 +1365,19 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void setZoom() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        int message_zoom = prefs.getInt("message_zoom", 100);
         float textSize = Helper.getTextSize(getContext(), zoom);
         if (textSize != 0) {
-            etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+            etBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * message_zoom / 100f);
             tvReference.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
         }
+    }
+
+    private void onMenuSaveDrafts() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean save_drafts = prefs.getBoolean("save_drafts", true);
+        prefs.edit().putBoolean("save_drafts", !save_drafts).apply();
     }
 
     private void onMenuSendDialog() {
@@ -1457,7 +1473,8 @@ public class FragmentCompose extends FragmentBase {
         PackageManager pm = getContext().getPackageManager();
         Intent intent = new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION);
         if (intent.resolveActivity(pm) == null) { // action whitelisted
-            Snackbar snackbar = Snackbar.make(view, getString(R.string.title_no_recorder), Snackbar.LENGTH_INDEFINITE);
+            Snackbar snackbar = Snackbar.make(view, getString(R.string.title_no_recorder), Snackbar.LENGTH_INDEFINITE)
+                    .setGestureInsetBottomIgnored(true);
             snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -1470,7 +1487,8 @@ public class FragmentCompose extends FragmentBase {
                 startActivityForResult(intent, REQUEST_RECORD_AUDIO);
             } catch (SecurityException ex) {
                 Log.w(ex);
-                Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_INDEFINITE).show();
+                Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_INDEFINITE)
+                        .setGestureInsetBottomIgnored(true).show();
             }
     }
 
@@ -1479,7 +1497,9 @@ public class FragmentCompose extends FragmentBase {
         boolean image_dialog = prefs.getBoolean("image_dialog", true);
         if (image_dialog) {
             Bundle args = new Bundle();
-            args.putBoolean("photo", photo);
+            args.putInt("title", photo
+                    ? R.string.title_attachment_photo
+                    : R.string.title_add_image_select);
             FragmentDialogAddImage fragment = new FragmentDialogAddImage();
             fragment.setArguments(args);
             fragment.setTargetFragment(this, REQUEST_IMAGE);
@@ -1501,7 +1521,8 @@ public class FragmentCompose extends FragmentBase {
     }
 
     private void noStorageAccessFramework() {
-        Snackbar snackbar = Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG);
+        Snackbar snackbar = Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG)
+                .setGestureInsetBottomIgnored(true);
         snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1614,8 +1635,11 @@ public class FragmentCompose extends FragmentBase {
 
                             @Override
                             public void onNothingSelected() {
-                                Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG);
-                                final Intent intent = KeyChain.createInstallIntent();
+                                Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG)
+                                        .setGestureInsetBottomIgnored(true);
+                                final Intent intent = (Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+                                        ? KeyChain.createInstallIntent()
+                                        : new Intent(Settings.ACTION_SECURITY_SETTINGS));
                                 PackageManager pm = getContext().getPackageManager();
                                 if (intent.resolveActivity(pm) != null) // package whitelisted
                                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
@@ -1675,14 +1699,16 @@ public class FragmentCompose extends FragmentBase {
                     onPgp(intent);
                 } catch (Throwable ex) {
                     if (ex instanceof IllegalArgumentException)
-                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                                .setGestureInsetBottomIgnored(true).show();
                     else {
                         Log.e(ex);
                         Log.unexpectedError(getParentFragmentManager(), ex);
                     }
                 }
             else {
-                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
+                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true);
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -1706,9 +1732,18 @@ public class FragmentCompose extends FragmentBase {
                     if (resultCode == RESULT_OK && data != null)
                         onPickContact(requestCode, data);
                     break;
-                case REQUEST_IMAGE:
+                case REQUEST_SHARED:
+                    Bundle args = getArguments();
+                    ArrayList<Uri> uris = args.getParcelableArrayList("attachments");
+                    args.remove("attachments");
                     if (resultCode == RESULT_OK)
-                        onAddImage(data.getBundleExtra("args").getBoolean("photo"));
+                        onAddImageFile(uris);
+                    break;
+                case REQUEST_IMAGE:
+                    if (resultCode == RESULT_OK) {
+                        int title = data.getBundleExtra("args").getInt("title");
+                        onAddImage(title == R.string.title_attachment_photo);
+                    }
                     break;
                 case REQUEST_IMAGE_FILE:
                     if (resultCode == RESULT_OK && data != null)
@@ -1812,7 +1847,7 @@ public class FragmentCompose extends FragmentBase {
                             if (address != null)
                                 list.addAll(Arrays.asList(address));
 
-                            list.add(new InternetAddress(email, name));
+                            list.add(new InternetAddress(email, name, StandardCharsets.UTF_8.name()));
 
                             if (requestCode == REQUEST_CONTACT_TO)
                                 draft.to = list.toArray(new Address[0]);
@@ -1855,7 +1890,8 @@ public class FragmentCompose extends FragmentBase {
             PackageManager pm = getContext().getPackageManager();
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (intent.resolveActivity(pm) == null) { // action whitelisted
-                Snackbar snackbar = Snackbar.make(view, getString(R.string.title_no_camera), Snackbar.LENGTH_LONG);
+                Snackbar snackbar = Snackbar.make(view, getString(R.string.title_no_camera), Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true);
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -1874,7 +1910,8 @@ public class FragmentCompose extends FragmentBase {
                     startActivityForResult(intent, REQUEST_TAKE_PHOTO);
                 } catch (SecurityException ex) {
                     Log.w(ex);
-                    Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 }
             }
         } else {
@@ -1975,7 +2012,8 @@ public class FragmentCompose extends FragmentBase {
                 if (ex instanceof SecurityException)
                     handleFileShare();
                 else if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.toString(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.toString(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -2021,10 +2059,10 @@ public class FragmentCompose extends FragmentBase {
                 if (draft == null)
                     throw new MessageRemovedException("PGP");
                 if (draft.identity == null)
-                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
+                    throw new IllegalArgumentException(context.getString(R.string.title_from_missing));
                 EntityIdentity identity = db.identity().getIdentity(draft.identity);
                 if (identity == null)
-                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
+                    throw new IllegalArgumentException(context.getString(R.string.title_from_missing));
 
                 // Create files
                 File input = new File(context.getCacheDir(), "pgp_input." + draft.id);
@@ -2301,7 +2339,8 @@ public class FragmentCompose extends FragmentBase {
                 else if (ex instanceof IllegalArgumentException
                         || ex instanceof GeneralSecurityException /* InvalidKeyException */) {
                     Log.i(ex);
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -2327,7 +2366,7 @@ public class FragmentCompose extends FragmentBase {
                     throw new MessageRemovedException("S/MIME");
                 EntityIdentity identity = db.identity().getIdentity(draft.identity);
                 if (identity == null)
-                    throw new IllegalArgumentException(getString(R.string.title_from_missing));
+                    throw new IllegalArgumentException(context.getString(R.string.title_from_missing));
 
                 // Get/clean attachments
                 List<EntityAttachment> attachments = db.attachment().getAttachments(id);
@@ -2576,7 +2615,8 @@ public class FragmentCompose extends FragmentBase {
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE)
+                            .setGestureInsetBottomIgnored(true);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -2657,7 +2697,7 @@ public class FragmentCompose extends FragmentBase {
                             if (contact != null && contact.moveToNext()) {
                                 String name = contact.getString(0);
                                 String email = contact.getString(1);
-                                selected.add(new InternetAddress(email, name));
+                                selected.add(new InternetAddress(email, name, StandardCharsets.UTF_8.name()));
                             }
                         }
                     }
@@ -2856,7 +2896,9 @@ public class FragmentCompose extends FragmentBase {
                 ftype = null;
             }
 
-        if (TextUtils.isEmpty(ftype) || "*/*".equals(ftype))
+        if (TextUtils.isEmpty(ftype) ||
+                "*/*".equals(ftype) ||
+                "application/octet-stream".equals(ftype))
             ftype = Helper.guessMimeType(fname);
 
         if (fsize != null && fsize <= 0)
@@ -2969,6 +3011,12 @@ public class FragmentCompose extends FragmentBase {
 
                     exif.setAttribute(ExifInterface.TAG_GPS_AREA_INFORMATION, null);
 
+                    exif.setAttribute(ExifInterface.TAG_XMP, null);
+                    exif.setAttribute(ExifInterface.TAG_ARTIST, null);
+                    exif.setAttribute(ExifInterface.TAG_CAMERA_OWNER_NAME, null);
+                    exif.setAttribute(ExifInterface.TAG_BODY_SERIAL_NUMBER, null);
+                    exif.setAttribute(ExifInterface.TAG_LENS_SERIAL_NUMBER, null);
+
                     exif.saveAttributes();
                 } catch (IOException ex) {
                     Log.w(ex);
@@ -3067,7 +3115,7 @@ public class FragmentCompose extends FragmentBase {
 
                 data.identities = db.identity().getComposableIdentities(null);
                 if (data.identities == null || data.identities.size() == 0)
-                    throw new IllegalStateException(getString(R.string.title_no_identities));
+                    throw new IllegalStateException(context.getString(R.string.title_no_identities));
 
                 data.draft = db.message().getMessage(id);
                 if (data.draft == null || data.draft.ui_hide) {
@@ -3270,7 +3318,15 @@ public class FragmentCompose extends FragmentBase {
                                 // Prevent replying to self
                                 if (ref.replySelf(data.identities, ref.account)) {
                                     data.draft.from = ref.from;
-                                    data.draft.to = ref.to;
+                                    List<Address> tos = new ArrayList<>();
+                                    if (ref.to != null)
+                                        for (Address to : ref.to)
+                                            for (EntityIdentity identity : data.identities)
+                                                if (!Objects.equals(identity.account, ref.account) ||
+                                                        !identity.self ||
+                                                        !identity.similarAddress(to))
+                                                    tos.add(to);
+                                    data.draft.to = (tos.size() == 0 ? null : tos.toArray(new Address[0]));
                                 } else {
                                     data.draft.from = ref.to;
                                     data.draft.to = (ref.reply == null || ref.reply.length == 0 ? ref.from : ref.reply);
@@ -3387,8 +3443,13 @@ public class FragmentCompose extends FragmentBase {
                             data.draft.plain_only = true;
 
                         // Encryption
-                        if (ref.ui_encrypt != null && !EntityMessage.ENCRYPT_NONE.equals(ref.ui_encrypt)) {
-                            if (ActivityBilling.isPro(context) && Helper.isOpenKeychainInstalled(context))
+                        if (EntityMessage.PGP_SIGNONLY.equals(ref.ui_encrypt) ||
+                                EntityMessage.PGP_SIGNENCRYPT.equals(ref.ui_encrypt)) {
+                            if (Helper.isOpenKeychainInstalled(context) && selected.sign_key != null)
+                                data.draft.ui_encrypt = ref.ui_encrypt;
+                        } else if (EntityMessage.SMIME_SIGNONLY.equals(ref.ui_encrypt) ||
+                                EntityMessage.SMIME_SIGNENCRYPT.equals(ref.ui_encrypt)) {
+                            if (ActivityBilling.isPro(context) && selected.sign_key_alias != null)
                                 data.draft.ui_encrypt = ref.ui_encrypt;
                         }
 
@@ -3529,8 +3590,19 @@ public class FragmentCompose extends FragmentBase {
                                 d.body().appendChild(div);
                             }
 
-                            // Quote referenced message body
                             Element e = d.body();
+
+                            // Apply styles
+                            List<CSSStyleSheet> sheets = HtmlHelper.parseStyles(d.head().select("style"));
+                            for (Element element : e.select("*")) {
+                                String tag = element.tagName();
+                                String clazz = element.attr("class");
+                                String style = HtmlHelper.processStyles(tag, clazz, null, sheets);
+                                style = HtmlHelper.mergeStyles(style, element.attr("style"));
+                                element.attr("style", style);
+                            }
+
+                            // Quote referenced message body
                             boolean quote_reply = prefs.getBoolean("quote_reply", true);
                             boolean quote = (quote_reply &&
                                     ("reply".equals(action) || "reply_all".equals(action) || "list".equals(action)));
@@ -3551,7 +3623,7 @@ public class FragmentCompose extends FragmentBase {
                     data.draft.account = drafts.account;
                     data.draft.folder = drafts.id;
                     data.draft.identity = selected.id;
-                    data.draft.from = new InternetAddress[]{new InternetAddress(selected.email, selected.name)};
+                    data.draft.from = new InternetAddress[]{new InternetAddress(selected.email, selected.name, StandardCharsets.UTF_8.name())};
 
                     data.draft.sender = MessageHelper.getSortKey(data.draft.from);
                     Uri lookupUri = ContactInfo.getLookupUri(data.draft.from);
@@ -3598,23 +3670,14 @@ public class FragmentCompose extends FragmentBase {
                             String email = organizer.getEmail();
                             String name = organizer.getCommonName();
                             if (!TextUtils.isEmpty(email)) {
-                                InternetAddress o = new InternetAddress(email, name);
+                                InternetAddress o = new InternetAddress(email, name, StandardCharsets.UTF_8.name());
                                 Log.i("Setting organizer=" + o);
                                 data.draft.to = new Address[]{o};
                             }
                         }
                     }
 
-                    if ("new".equals(action)) {
-                        ArrayList<Uri> uris = args.getParcelableArrayList("attachments");
-                        if (uris != null)
-                            for (Uri uri : uris)
-                                try {
-                                    addAttachment(context, data.draft.id, uri, false, 0, false);
-                                } catch (IOException ex) {
-                                    Log.e(ex);
-                                }
-                    } else if (ref != null &&
+                    if (ref != null &&
                             ("reply".equals(action) || "reply_all".equals(action) ||
                                     "forward".equals(action) || "editasnew".equals(action))) {
 
@@ -3769,7 +3832,8 @@ public class FragmentCompose extends FragmentBase {
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(data.draft.revision < data.draft.revisions);
 
             if (args.getBoolean("incomplete"))
-                Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_LONG).show();
+                Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true).show();
 
             DB db = DB.getInstance(getContext());
 
@@ -3858,6 +3922,23 @@ public class FragmentCompose extends FragmentBase {
                     }
                 }
             });
+
+            if (getArguments().containsKey("attachments")) {
+                boolean image_dialog = prefs.getBoolean("image_dialog", true);
+                if (image_dialog) {
+                    Bundle aargs = new Bundle();
+                    aargs.putInt("title", android.R.string.ok);
+                    FragmentDialogAddImage fragment = new FragmentDialogAddImage();
+                    fragment.setArguments(aargs);
+                    fragment.setTargetFragment(FragmentCompose.this, REQUEST_SHARED);
+                    fragment.show(getParentFragmentManager(), "compose:shared");
+                } else {
+                    Bundle aargs = getArguments();
+                    ArrayList<Uri> uris = aargs.getParcelableArrayList("attachments");
+                    aargs.remove("attachments");
+                    onAddImageFile(uris);
+                }
+            }
         }
 
         @Override
@@ -3870,9 +3951,11 @@ public class FragmentCompose extends FragmentBase {
             else if (ex instanceof SecurityException)
                 handleFileShare();
             else if (ex instanceof IllegalArgumentException)
-                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true).show();
             else if (ex instanceof IllegalStateException) {
-                Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE)
+                        .setGestureInsetBottomIgnored(true);
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -3887,7 +3970,8 @@ public class FragmentCompose extends FragmentBase {
     };
 
     private void handleFileShare() {
-        Snackbar sb = Snackbar.make(view, R.string.title_no_stream, Snackbar.LENGTH_INDEFINITE);
+        Snackbar sb = Snackbar.make(view, R.string.title_no_stream, Snackbar.LENGTH_INDEFINITE)
+                .setGestureInsetBottomIgnored(true);
         sb.setAction(R.string.title_info, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -4012,7 +4096,7 @@ public class FragmentCompose extends FragmentBase {
                     List<EntityAttachment> attachments = db.attachment().getAttachments(draft.id);
 
                     // Get data
-                    InternetAddress[] afrom = (identity == null ? null : new InternetAddress[]{new InternetAddress(identity.email, identity.name)});
+                    InternetAddress[] afrom = (identity == null ? null : new InternetAddress[]{new InternetAddress(identity.email, identity.name, StandardCharsets.UTF_8.name())});
                     InternetAddress[] ato = (TextUtils.isEmpty(to) ? null : InternetAddress.parseHeader(to, false));
                     InternetAddress[] acc = (TextUtils.isEmpty(cc) ? null : InternetAddress.parseHeader(cc, false));
                     InternetAddress[] abcc = (TextUtils.isEmpty(bcc) ? null : InternetAddress.parseHeader(bcc, false));
@@ -4095,6 +4179,11 @@ public class FragmentCompose extends FragmentBase {
                     else
                         b = HtmlHelper.sanitizeCompose(context, body, true);
 
+                    if (draft.revision == null) {
+                        draft.revision = 1;
+                        draft.revisions = 1;
+                    }
+
                     int revision = draft.revision; // Save for undo/redo
                     if (dirty ||
                             TextUtils.isEmpty(body) ||
@@ -4137,7 +4226,7 @@ public class FragmentCompose extends FragmentBase {
 
                     if (action == R.id.action_undo || action == R.id.action_redo) {
                         if (action == R.id.action_undo) {
-                            if (!dirty && revision > 1)
+                            if (revision > 1)
                                 draft.revision = revision - 1;
                             else
                                 draft.revision = revision;
@@ -4189,8 +4278,11 @@ public class FragmentCompose extends FragmentBase {
                             action == R.id.action_undo ||
                             action == R.id.action_redo ||
                             action == R.id.action_check) {
-                        if ((dirty || encrypted) && !needsEncryption)
-                            EntityOperation.queue(context, draft, EntityOperation.ADD);
+                        if ((dirty || encrypted) && !needsEncryption) {
+                            boolean save_drafts = prefs.getBoolean("save_drafts", true);
+                            if (save_drafts)
+                                EntityOperation.queue(context, draft, EntityOperation.ADD);
+                        }
 
                         if (action == R.id.action_check) {
                             // Check data
@@ -4203,6 +4295,14 @@ public class FragmentCompose extends FragmentBase {
                                 checkAddress(abcc, context);
                             } catch (AddressException ex) {
                                 args.putString("address_error", ex.getMessage());
+                            }
+
+                            try {
+                                checkMx(ato, context);
+                                checkMx(acc, context);
+                                checkMx(abcc, context);
+                            } catch (UnknownHostException ex) {
+                                args.putString("mx_error", ex.getMessage());
                             }
 
                             if (draft.to == null && draft.cc == null && draft.bcc == null &&
@@ -4283,10 +4383,18 @@ public class FragmentCompose extends FragmentBase {
 
                             // Check size
                             if (identity != null && identity.max_size != null) {
-                                long size = HEADERS_SIZE + body.length();
-                                for (EntityAttachment attachment : attachments)
-                                    if (attachment.available)
-                                        size += attachment.size;
+                                Properties props = MessageHelper.getSessionProperties();
+                                if (identity.unicode)
+                                    props.put("mail.mime.allowutf8", "true");
+                                Session isession = Session.getInstance(props, null);
+                                Message imessage = MessageHelper.from(context, draft, identity, isession, true);
+
+                                File file = draft.getRawFile(context);
+                                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
+                                    imessage.writeTo(os);
+                                }
+
+                                long size = file.length();
                                 if (size > identity.max_size) {
                                     args.putBoolean("remind_size", true);
                                     args.putLong("size", size);
@@ -4295,15 +4403,20 @@ public class FragmentCompose extends FragmentBase {
                             }
 
                         } else {
+                            int mid;
+                            if (action == R.id.action_undo)
+                                mid = R.string.title_undo;
+                            else if (action == R.id.action_redo)
+                                mid = R.string.title_redo;
+                            else
+                                mid = R.string.title_draft_saved;
+                            final String msg = context.getString(mid) +
+                                    (BuildConfig.DEBUG ? ":" + draft.revision : "");
+
                             Handler handler = new Handler(context.getMainLooper());
                             handler.post(new Runnable() {
                                 public void run() {
-                                    if (action == R.id.action_undo)
-                                        ToastEx.makeText(getContext(), R.string.title_undo, Toast.LENGTH_LONG).show();
-                                    else if (action == R.id.action_redo)
-                                        ToastEx.makeText(getContext(), R.string.title_redo, Toast.LENGTH_LONG).show();
-                                    else
-                                        ToastEx.makeText(context, R.string.title_draft_saved, Toast.LENGTH_LONG).show();
+                                    ToastEx.makeText(context, msg, Toast.LENGTH_LONG).show();
                                 }
                             });
                         }
@@ -4340,7 +4453,7 @@ public class FragmentCompose extends FragmentBase {
 
                         EntityFolder outbox = db.folder().getOutbox();
                         if (outbox == null) {
-                            Log.e("Outbox missing");
+                            Log.w("Outbox missing");
                             outbox = EntityFolder.getOutbox();
                             outbox.id = db.folder().insertFolder(outbox);
                         }
@@ -4457,6 +4570,7 @@ public class FragmentCompose extends FragmentBase {
                 boolean send_reminders = prefs.getBoolean("send_reminders", true);
 
                 String address_error = args.getString("address_error");
+                String mx_error = args.getString("mx_error");
                 boolean remind_to = args.getBoolean("remind_to", false);
                 boolean remind_extra = args.getBoolean("remind_extra", false);
                 boolean remind_pgp = args.getBoolean("remind_pgp", false);
@@ -4468,8 +4582,9 @@ public class FragmentCompose extends FragmentBase {
                 int recipients = (draft.to == null ? 0 : draft.to.length) +
                         (draft.cc == null ? 0 : draft.cc.length) +
                         (draft.bcc == null ? 0 : draft.bcc.length);
-                if (send_dialog || address_error != null || recipients > RECIPIENTS_WARNING || remind_size || (send_reminders &&
-                        (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_attachment))) {
+                if (send_dialog || address_error != null || mx_error != null || recipients > RECIPIENTS_WARNING || remind_size ||
+                        (send_reminders &&
+                                (remind_to || remind_extra || remind_pgp || remind_subject || remind_text || remind_attachment))) {
                     setBusy(false);
 
                     FragmentDialogSend fragment = new FragmentDialogSend();
@@ -4492,7 +4607,8 @@ public class FragmentCompose extends FragmentBase {
             else {
                 setBusy(false);
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -4524,25 +4640,28 @@ public class FragmentCompose extends FragmentBase {
         }
 
         private void checkAddress(InternetAddress[] addresses, Context context) throws AddressException {
+            if (addresses == null)
+                return;
+
+            for (InternetAddress address : addresses)
+                try {
+                    address.validate();
+                } catch (AddressException ex) {
+                    throw new AddressException(context.getString(R.string.title_address_parse_error,
+                            MessageHelper.formatAddressesCompose(addresses), ex.getMessage()));
+                }
+        }
+
+        private void checkMx(InternetAddress[] addresses, Context context) throws UnknownHostException {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean lookup_mx = prefs.getBoolean("lookup_mx", false);
+            if (!lookup_mx)
+                return;
 
             if (addresses == null)
                 return;
 
-            for (InternetAddress address : addresses) {
-                Address[] _addresses = new Address[]{address};
-                try {
-                    address.validate();
-                    if (lookup_mx)
-                        DnsHelper.checkMx(context, _addresses);
-                } catch (AddressException ex) {
-                    throw new AddressException(context.getString(R.string.title_address_parse_error,
-                            MessageHelper.formatAddressesCompose(_addresses), ex.getMessage()));
-                } catch (UnknownHostException ex) {
-                    throw new AddressException(ex.getMessage());
-                }
-            }
+            DnsHelper.checkMx(context, addresses);
         }
     };
 
@@ -4802,6 +4921,9 @@ public class FragmentCompose extends FragmentBase {
                             draft.ui_encrypt == null || EntityMessage.ENCRYPT_NONE.equals(draft.ui_encrypt))
                         return null;
 
+                    if (draft.identity != null && draft.identity.equals(iid))
+                        return draft.ui_encrypt;
+
                     EntityIdentity identity = db.identity().getIdentity(iid);
                     if (identity == null)
                         return null;
@@ -5010,7 +5132,7 @@ public class FragmentCompose extends FragmentBase {
         @NonNull
         @Override
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-            final boolean photo = getArguments().getBoolean("photo");
+            int title = getArguments().getInt("title");
 
             final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             boolean add_inline = prefs.getBoolean("add_inline", true);
@@ -5090,8 +5212,7 @@ public class FragmentCompose extends FragmentBase {
             return new AlertDialog.Builder(getContext())
                     .setView(dview)
                     .setNegativeButton(android.R.string.cancel, null)
-                    .setPositiveButton(
-                            photo ? R.string.title_attachment_photo : R.string.title_add_image_select,
+                    .setPositiveButton(title,
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
@@ -5143,6 +5264,7 @@ public class FragmentCompose extends FragmentBase {
             Bundle args = getArguments();
             long id = args.getLong("id");
             String address_error = args.getString("address_error");
+            String mx_error = args.getString("mx_error");
             final boolean remind_to = args.getBoolean("remind_to", false);
             final boolean remind_extra = args.getBoolean("remind_extra", false);
             final boolean remind_pgp = args.getBoolean("remind_pgp", false);
@@ -5186,8 +5308,8 @@ public class FragmentCompose extends FragmentBase {
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
             final TextView tvNotAgain = dview.findViewById(R.id.tvNotAgain);
 
-            tvAddressError.setText(address_error);
-            tvAddressError.setVisibility(address_error == null ? View.GONE : View.VISIBLE);
+            tvAddressError.setText(address_error == null ? mx_error : address_error);
+            tvAddressError.setVisibility(address_error == null && mx_error == null ? View.GONE : View.VISIBLE);
 
             tvRemindSize.setText(getString(R.string.title_size_reminder,
                     Helper.humanReadableByteCount(size),

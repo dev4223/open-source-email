@@ -66,6 +66,7 @@
         <item quantity="other">Behandla %1$d meddelanden som skräppost?</item>
     </plurals>
     <string name="title_ask_spam_who">Behandla meddelande från %1$s som skräppost?</string>
+    <string name="title_junk_hint">Din e-postleverantör ansvarar för att filtrera skräppost. En e-postapp har inte all data som behövs för att göra detta på ett tillförlitligt sätt.</string>
     <string name="title_block">Blockera %1$s</string>
     <string name="title_block_sender">Blockera avsändare</string>
     <string name="title_block_domain">Blockera avsändardomän</string>
@@ -77,6 +78,7 @@
     <string name="title_notification_idle">Inaktiv</string>
     <string name="title_notification_failed">\"%1$s\" misslyckades</string>
     <string name="title_notification_alert">\"%1$s\" servermeddelande</string>
+    <string name="title_notification_sending_left">Försök kvar: %1$d</string>
     <string name="title_notification_sending_failed">Det gick inte att skicka till %1$s</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
@@ -118,6 +120,7 @@
     </string>
     <string name="title_setup_quick">Snabbinstallation</string>
     <string name="title_setup_quick_remark">För att snabbt konfigurera ett konto och en identitet för de flesta leverantörer</string>
+    <string name="title_setup_quick_support">Vissa leverantörer gör det svårt att lägga till ett konto. Vänligen skyll inte på FairEmail för det, be om support istället.</string>
     <string name="title_setup_quick_hint">Snabbinställningen hämtar konfigurationsinformation från autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">IMAP-server för att ta emot meddelanden</string>
     <string name="title_setup_quick_smtp">SMTP-server för att skicka meddelanden</string>
@@ -150,6 +153,7 @@
     <string name="title_setup_identity">Ställ in identiteter</string>
     <string name="title_setup_identity_remark">Skicka e-post</string>
     <string name="title_setup_identity_hint">För att ändra namn, färg, signatur o.s.v.</string>
+    <string name="title_setup_identity_what">Vad är en identitet?</string>
     <string name="title_setup_permissions">Bevilja behörigheter</string>
     <string name="title_setup_permissions_remark">Få tillgång till kontaktinformation (valfritt)</string>
     <string name="title_setup_doze">Ställ in batterioptimering</string>
@@ -167,7 +171,6 @@
     <string name="title_setup_error">Fel</string>
     <string name="title_setup_export">Exportera inställningar</string>
     <string name="title_setup_import">Importera inställningar</string>
-    <string name="title_setup_export_do">Gmail-konton som är länkade till Google-konton på enheten kan inte exporteras</string>
     <string name="title_setup_import_do">Importerade konton kommer att läggas till utan att skriva över några befintliga</string>
     <string name="title_setup_password">Lösenord</string>
     <string name="title_setup_password_chars">Lösenordet innehåller CTRL- eller blanksteg</string>
@@ -305,6 +308,7 @@
     <string name="title_advanced_addresses">Visa adressuppgifter som standard</string>
     <string name="title_advanced_attachments_alt">Visa bilagor efter meddelandetexten</string>
     <string name="title_advanced_thumbnails">Visa miniatyrbilder efter meddelandetexten</string>
+    <string name="title_advanced_message_text_zoom">Förvald zoom på meddelandetext</string>
     <string name="title_advanced_contrast">Använd hög kontrast för meddelandetext</string>
     <string name="title_advanced_monospaced">Använd monospaced typsnitt för meddelandetext som standard</string>
     <string name="title_advanced_text_color">Använd textfärger</string>
@@ -332,6 +336,7 @@
     <string name="title_advanced_collapse_multiple">Kollapsa meddelanden i en konversation med flera meddelanden på \'back\'</string>
     <string name="title_advanced_autoclose">Stäng konversationer automatiskt</string>
     <string name="title_advanced_onclose">När du stänger en konversation</string>
+    <string name="title_advanced_undo">Ångra timeout</string>
     <string name="title_advanced_quick_filter">Visa icke-påträngande snabbfilter-ikoner</string>
     <string name="title_advanced_quick_scroll">Visa icke-påträngande snabba scrolla upp/ner ikoner</string>
     <string name="title_advanced_autoread">Märk automatiskt meddelanden som lästa vid flyttning av meddelanden</string>
@@ -352,6 +357,7 @@
     <string name="title_advanced_notify_summary">Visa enbart en sammanställning av aviseringar</string>
     <string name="title_advanced_notify_preview">Visa meddelandeförhandsvisning i aviseringar</string>
     <string name="title_advanced_notify_preview_all">Förhandsgranska all text</string>
+    <string name="title_advanced_notify_preview_only">Visa endast aviseringar med förhandsvisningar</string>
     <string name="title_advanced_notify_actions">Aviseringsåtgärd</string>
     <string name="title_advanced_notify_action_trash">Papperskorg</string>
     <string name="title_advanced_notify_action_junk">Skräppost</string>
@@ -389,6 +395,9 @@
     <string name="title_advanced_import_key">Importera privat nyckel</string>
     <string name="title_advanced_manage_keys">Hantera privata nycklar</string>
     <string name="title_advanced_ca">Installerade CA-certifikat</string>
+    <string name="title_advanced_manage_keys_hint">        Detta kommer att navigera till Androids säkerhetsinställningar.
+        Nycklar och certifikat kan i allmänhet hittas under Avancerat - Kryptering och inloggningsuppgifter.
+    </string>
     <string name="title_advanced_external_search">Tillåt andra appar att söka i meddelanden</string>
     <string name="title_advanced_shortcuts">Visa ofta använda kontakter i Android dela-menyn</string>
     <string name="title_advanced_conversation_actions">Föreslå åtgärder</string>
@@ -411,6 +420,7 @@
     <string name="title_advanced_more">Fler alternativ</string>
     <string name="title_advanced_manual_hint">Om mottagande av meddelanden är inaktiverat är det fortfarande möjligt att manuellt ta emot meddelanden genom att dra ner meddelandelistan</string>
     <string name="title_advanced_poll_hint">Genom att regelbundet kontrollera efter nya meddelanden kommer att jämföra lokala- och fjärrmeddelanden varje gång, detta är en drastisk åtgärd som kan leda till extra batterianvändning, särskilt om det finns många meddelanden. Genom att alltid ta emot kommer att förhindra detta genom att kontinuerligt följa förändringar.</string>
+    <string name="title_advanced_optimize_hint">Detta kan ändra synkroniseringsfrekvensen för att spara på batteriet, beroende på e-postservrarnas funktioner och beteende</string>
     <string name="title_advanced_schedule_hint">Tryck på en tid för att ställa in en tid</string>
     <string name="title_advanced_no_date_hint">Vissa leverantörer lagrar meddelanden med ett okänt, ogiltigt eller framtida datum som meddelanden utan datum</string>
     <string name="title_advanced_unseen_hint">Vissa leverantörer stödjer inte detta korrekt, vilket kan orsaka synkronisering av inga eller alla meddelanden</string>
@@ -457,6 +467,7 @@
     <string name="title_advanced_notify_manage_default_hint">För att ställa in standardljudet, etc</string>
     <string name="title_advanced_notify_manage_service_hint">För att inaktivera permanent avisering</string>
     <string name="title_advanced_notify_preview_all_hint">För handburna enheter som kan visa fulltext (upp till 5000 tecken)</string>
+    <string name="title_advanced_notify_preview_only_hint">Denna försening visar aviseringar tills meddelandet har laddats ner</string>
     <string name="title_advanced_wearable_hint">Aviseringar skickas endast till en bärbar enhet efter att meddelandet har laddats ner</string>
     <string name="title_advanced_move_hint">Målmappen kan konfigureras i kontoinställningarna</string>
     <string name="title_advanced_notify_no_grouping">Den här Android-versionen stödjer inte notifikationsgruppering</string>
@@ -478,7 +489,8 @@
     <string name="title_advanced_sender">Tillåt avsändaradress redigering</string>
     <string name="title_advanced_sender_regex">Regex för att matcha användarnamn för inkommande e-postadresser</string>
     <string name="title_identity_reply_to">Svara till adress</string>
-    <string name="title_identity_unicode">Tillåt Unicode i e-postadresser</string>
+    <string name="title_identity_unicode">Använd Unicode transport</string>
+    <string name="title_identity_unicode_remark">De flesta servrar stöder inte detta</string>
     <string name="title_identity_max_size">Maximal meddelandestorlek (MB)</string>
     <string name="title_identity_receipt">Begär leverans/läs kvitto som standard</string>
     <string name="title_identity_use_ip_hint">Vid \"invalid greeting\", \"requires valid address\" eller ett liknande fel, försök ändra den här inställningen</string>
@@ -535,6 +547,7 @@
     <string name="title_no_password">Lösenord saknas</string>
     <string name="title_no_inbox">Inkorgen hittades inte</string>
     <string name="title_no_primary_drafts">Inget primärt konto eller ingen utkastmapp</string>
+    <string name="title_no_junk_folder">Det finns ingen skräppostmapp vald för detta konto</string>
     <string name="title_no_identities">Att skicka e-post kräver minst en identitet och en utkastmapp</string>
     <string name="title_no_standard">Denna leverantör använder ett egenutvecklat e-postprotokoll och därför är det inte möjligt att använda tredje parts e-postklienter</string>
     <string name="title_no_idle">Leverantören stödjer inte push-meddelanden. Detta kommer att fördröja mottagning av nya meddelanden och öka batterianvändningen.</string>
@@ -696,7 +709,6 @@
     <string name="title_no_camera">Ingen lämplig kameraapp tillgänglig</string>
     <string name="title_no_saf">Ramverk för lagringstillträde är inte tillgängligt</string>
     <string name="title_no_stream">En föråldrad app skickade en sökväg istället för en filström</string>
-    <string name="title_no_contacts">Kontaktväljaren är inte tillgänglig</string>
     <string name="title_no_internet">Ingen eller ingen lämplig internetuppkoppling</string>
     <string name="title_no_connection">Ansluter till ett eller flera konton &#8230;</string>
     <string name="title_no_folder">Mappen finns inte</string>
@@ -778,7 +790,8 @@
     <string name="title_add_image_inline">Infoga</string>
     <string name="title_add_image_attach">Bifoga</string>
     <string name="title_add_image_resize">Ändra storlek</string>
-    <string name="title_add_image_privacy">Ta bort geografisk plats</string>
+    <string name="title_add_image_privacy">Ta bort sekretesskänslig data</string>
+    <string name="title_add_image_privacy_remark">Geografisk plats, serienummer, etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixlar</string>
     <string name="title_add_image_select">Välj fil</string>
     <string name="title_add_attachment">Lägg till bilaga</string>
@@ -786,6 +799,7 @@
     <string name="title_attachment_photo">Ta foto</string>
     <string name="title_attachment_audio">Spela in ljud</string>
     <string name="title_show_addresses">Visa kopia/dold kopia</string>
+    <string name="title_save_drafts">Spara utkast på servern</string>
     <string name="title_send_dialog">Visa alternativ för skicka</string>
     <string name="title_image_dialog">Visa bildalternativ</string>
     <string name="title_media_toolbar">Verktygsfält för media</string>
@@ -864,7 +878,7 @@
     <string name="title_search_with_unseen">Olästa</string>
     <string name="title_search_with_flagged">Stjärnmärkta</string>
     <string name="title_search_with_hidden">Dold (endast på enheten)</string>
-    <string name="title_search_with_encrypted">Krypterad (på enheten endast)</string>
+    <string name="title_search_with_encrypted">Krypterad (enbart på enheten)</string>
     <string name="title_search_with_attachments">Med bilagor (endast på enheten)</string>
     <string name="title_search_with_size">Meddelandets storlek större än</string>
     <string name="title_search_with_before">Före</string>
@@ -930,6 +944,7 @@
     <string name="title_rule_move">Flytta</string>
     <string name="title_rule_copy">Kopiera (etikett)</string>
     <string name="title_rule_answer">Svara</string>
+    <string name="title_rule_tts">Text till tal</string>
     <string name="title_rule_automation">Automatisering</string>
     <string name="title_rule_caption">Redigera regel</string>
     <string name="title_rule_title">Regeln gäller</string>
@@ -965,6 +980,13 @@
     <string name="title_rule_no_headers">Sidhuvudvillkor kan inte kontrolleras</string>
     <string name="title_rule_matched">Matchande meddelanden</string>
     <string name="title_rule_no_matches">Inga matchande meddelanden</string>
+    <string name="title_rule_tts_ok">Installation okej</string>
+    <string name="title_rule_tts_setup">Kontrollera konfigurationen</string>
+    <string name="title_rule_tts_data">Installera röstdata</string>
+    <string name="title_rule_tts_prefix">Nytt meddelande</string>
+    <string name="title_rule_tts_from">Från</string>
+    <string name="title_rule_tts_subject">Ämne</string>
+    <string name="title_rule_tts_content">Text</string>
     <string name="title_legend_section_synchronize">Synkronisera</string>
     <string name="title_legend_section_folders">Mappar</string>
     <string name="title_legend_section_messages">Meddelanden</string>
@@ -1160,6 +1182,7 @@
     <string name="title_debug_info">Felsökningsinformation</string>
     <string name="title_debug_info_remark">Beskriv problemet och ange tidpunkten för problemet:</string>
     <string name="title_crash_info_remark">Beskriv vad du gjorde när appen kraschade:</string>
+    <string name="title_unexpected_info_remark">Vänligen beskriv vad du gjorde när du fick felet:</string>
     <string name="title_widget_title_count">Antal nya meddelanden</string>
     <string name="title_widget_title_list">Meddelandelista</string>
     <string name="title_widget_account">Konto</string>
@@ -1168,9 +1191,10 @@
     <string name="title_widget_folder_unified">Samlade inkorgsmappar</string>
     <string name="title_widget_unseen">Endast olästa meddelanden</string>
     <string name="title_widget_flagged">Endast stjärnmärkta meddelanden</string>
-    <string name="title_widget_font_size">Teckenstorlek</string>
+    <string name="title_widget_font_size">Textstorlek</string>
     <string name="title_widget_padding">Utfyllnadsstorlek</string>
     <string name="title_widget_semi_transparent">Semi transparent bakgrund</string>
+    <string name="title_widget_background">Bakgrundsfärg</string>
     <string name="title_accessibility_collapsed">Ihopfälld</string>
     <string name="title_accessibility_expanded">Expanderad</string>
     <string name="title_accessibility_seen">Läst</string>
@@ -1317,6 +1341,13 @@
         <item>10 MB</item>
         <item>20 MB</item>
         <item>50 MB</item>
+    </string-array>
+    <string-array name="undoNames">
+        <item>Av</item>
+        <item>2,5 s</item>
+        <item>5 s</item>
+        <item>7,5 s</item>
+        <item>10 s</item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Kursivt</item>

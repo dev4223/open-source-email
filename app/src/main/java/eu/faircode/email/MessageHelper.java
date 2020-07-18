@@ -107,14 +107,14 @@ public class MessageHelper {
 
     private static File cacheDir = null;
 
-    static final int SMALL_MESSAGE_SIZE = 64 * 1024; // bytes
-    static final int DEFAULT_ATTACHMENT_DOWNLOAD_SIZE = 256 * 1024; // bytes
+    static final int DEFAULT_DOWNLOAD_SIZE = 256 * 1024; // bytes
     static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
 
     private static final int MAX_MESSAGE_SIZE = 10 * 1024 * 1024; // bytes
     private static final long ATTACHMENT_PROGRESS_UPDATE = 1500L; // milliseconds
     private static final int MAX_META_EXCERPT = 1024; // characters
     private static final int FORMAT_FLOWED_LINE_LENGTH = 72;
+    private static final long MIN_REQUIRED_SPACE = 250 * 1024L * 1024L;
 
     // https://tools.ietf.org/html/rfc4021
 
@@ -198,7 +198,7 @@ public class MessageHelper {
                 name = null;
                 Log.i("extra=" + email);
             }
-            imessage.setFrom(new InternetAddress(email, name));
+            imessage.setFrom(new InternetAddress(email, name, StandardCharsets.UTF_8.name()));
         }
 
         if (message.to != null && message.to.length > 0)
@@ -755,7 +755,10 @@ public class MessageHelper {
         }
     }
 
-    MessageHelper(MimeMessage message, Context context) {
+    MessageHelper(MimeMessage message, Context context) throws IOException {
+        long cake = Helper.getAvailableStorageSpace();
+        if (cake < MIN_REQUIRED_SPACE)
+            throw new IOException(context.getString(R.string.app_cake));
         if (cacheDir == null)
             cacheDir = context.getCacheDir();
         this.imessage = message;
@@ -1560,11 +1563,12 @@ public class MessageHelper {
     class MessageParts {
         private List<Part> plain = new ArrayList<>();
         private List<Part> html = new ArrayList<>();
+        private List<Part> extra = new ArrayList<>();
         private List<AttachmentPart> attachments = new ArrayList<>();
         private ArrayList<String> warnings = new ArrayList<>();
 
         Boolean isPlainOnly() {
-            if (plain.size() + html.size() == 0)
+            if (plain.size() + html.size() + extra.size() == 0)
                 return null;
             return (html.size() == 0);
         }
@@ -1573,6 +1577,7 @@ public class MessageHelper {
             List<Part> all = new ArrayList<>();
             all.addAll(plain);
             all.addAll(html);
+            all.addAll(extra);
 
             for (Part p : all)
                 if (p.getSize() > 0)
@@ -1587,6 +1592,7 @@ public class MessageHelper {
             List<Part> all = new ArrayList<>();
             all.addAll(plain);
             all.addAll(html);
+            all.addAll(extra);
             for (Part p : all) {
                 int s = p.getSize();
                 if (s >= 0)
@@ -1617,7 +1623,13 @@ public class MessageHelper {
 
             StringBuilder sb = new StringBuilder();
 
-            for (Part part : html.size() > 0 ? html : plain) {
+            List<Part> parts = new ArrayList<>();
+            if (html.size() > 0)
+                parts.addAll(html);
+            else
+                parts.addAll(plain);
+            parts.addAll(extra);
+            for (Part part : parts) {
                 if (part.getSize() > MAX_MESSAGE_SIZE) {
                     warnings.add(context.getString(R.string.title_insufficient_memory));
                     return null;
@@ -1697,6 +1709,29 @@ public class MessageHelper {
                                 }
                         }
                     }
+                } else if (part.isMimeType("message/delivery-status") ||
+                        part.isMimeType("message/disposition-notification")) {
+                    StringBuilder report = new StringBuilder();
+                    report.append("<hr><div style=\"font-family: monospace; font-size: small;\">");
+                    for (String line : result.split("\\r?\\n")) {
+                        if (line.length() > 0)
+                            if (Character.isWhitespace(line.charAt(0)))
+                                report.append(line).append("<br />");
+                            else {
+                                int colon = line.indexOf(':');
+                                if (colon < 0)
+                                    report.append(line);
+                                else
+                                    report
+                                            .append("<strong>")
+                                            .append(line.substring(0, colon))
+                                            .append("</strong>")
+                                            .append(line.substring(colon))
+                                            .append("<br />");
+                            }
+                    }
+                    report.append("</div>");
+                    result = report.toString();
                 }
 
                 sb.append(result);
@@ -2032,7 +2067,7 @@ public class MessageHelper {
                     contentType = new ContentType(part.getContentType());
                 } catch (ParseException ex) {
                     if (part instanceof MimeMessage)
-                        Log.e("MimeMessage content type=" + ex.getMessage());
+                        Log.w("MimeMessage content type=" + ex.getMessage());
                     else
                         Log.w(ex);
                     contentType = new ContentType(Helper.guessMimeType(filename));
@@ -2047,6 +2082,10 @@ public class MessageHelper {
                     else if (html)
                         parts.html.add(part);
                 } else {
+                    if ("message/delivery-status".equalsIgnoreCase(contentType.getBaseType()) ||
+                            "message/disposition-notification".equalsIgnoreCase(contentType.getBaseType()))
+                        parts.extra.add(part);
+
                     AttachmentPart apart = new AttachmentPart();
                     apart.disposition = disposition;
                     apart.filename = filename;
@@ -2109,9 +2148,32 @@ public class MessageHelper {
 
         try {
             if (imessage instanceof IMAPMessage) {
-                if (body)
-                    imessage.getContentType(); // force loadBODYSTRUCTURE
-                else
+                if (body) {
+                    String contentType = imessage.getContentType(); // force loadBODYSTRUCTURE
+
+                    // Workaround protocol parameter missing
+                    // Happens with Yandex and possibly other providers
+                    boolean load = false;
+                    try {
+                        ContentType ct = new ContentType(contentType);
+                        if (ct.match("multipart/signed") || ct.match("multipart/encrypted")) {
+                            String protocol = ct.getParameter("protocol");
+                            if (protocol == null)
+                                load = true;
+                        } else if (ct.match("application/pkcs7-mime") || ct.match("application/x-pkcs7-mime")) {
+                            String smimeType = ct.getParameter("smime-type");
+                            if (smimeType == null)
+                                load = true;
+                        }
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+
+                    if (load) {
+                        Log.w("Protocol missing content-type=" + contentType);
+                        throw new MessagingException("Failed to load IMAP envelope");
+                    }
+                } else
                     imessage.getMessageID(); // force loadEnvelope
             }
         } catch (MessagingException ex) {

@@ -887,18 +887,26 @@ public class IMAPStore extends Store
 		continue;
 	    }
 
-	    if (m.equals("PLAIN"))
-		p.authplain(authzid, user, password);
-	    else if (m.equals("LOGIN"))
-		p.authlogin(user, password);
-	    else if (m.equals("NTLM"))
-		p.authntlm(authzid, user, password);
-	    else if (m.equals("XOAUTH2"))
-		p.authoauth2(user, password);
-	    else {
-		logger.log(Level.FINE, "no authenticator for mechanism {0}", m);
-		continue;
-	    }
+	    try {
+			if (m.equals("PLAIN"))
+				p.authplain(authzid, user, password);
+			else if (m.equals("LOGIN"))
+				p.authlogin(user, password);
+			else if (m.equals("NTLM"))
+				p.authntlm(authzid, user, password);
+			else if (m.equals("XOAUTH2"))
+				p.authoauth2(user, password);
+			else {
+				logger.log(Level.FINE, "no authenticator for mechanism {0}", m);
+				continue;
+			}
+		} catch (ProtocolException ex) {
+			if (m.equals("PLAIN") || m.equals("LOGIN")) {
+				eu.faircode.email.Log.i("Falling back to classic LOGIN");
+				p.authclassic(user, password);
+			} else
+				throw ex;
+		}
 	    return;
 	}
 
@@ -1014,6 +1022,8 @@ public class IMAPStore extends Store
                             p.disconnect();
                         } catch (Exception ex2) { }
                     p = null;
+					eu.faircode.email.Log.e(new MessagingException("IMAP connection failure", ex1));
+					throw new MessagingException("connection failure", ex1);
                 }
                  
                 if (p == null)
@@ -1524,6 +1534,30 @@ public class IMAPStore extends Store
             return p.hasCapability(capability);
 	} catch (ProtocolException pex) {
 	    throw new MessagingException(pex.getMessage(), pex);
+        } finally {
+            releaseStoreProtocol(p);
+        }
+    }
+
+    public synchronized String getCapability(String capability)
+            throws MessagingException {
+        IMAPProtocol p = null;
+        try {
+            p = getStoreProtocol();
+            Map<String, String> caps = p.getCapabilities();
+            if (caps != null)
+                for (String cap : caps.values()) {
+                    int eq = (cap == null ? -1 : cap.indexOf('='));
+                    if (eq > 0) {
+                        String key = cap.substring(0, eq);
+                        String value = cap.substring(eq + 1);
+                        if (capability.equals(key))
+                            return value;
+                    }
+                }
+            return null;
+        } catch (ProtocolException pex) {
+            throw new MessagingException(pex.getMessage(), pex);
         } finally {
             releaseStoreProtocol(p);
         }

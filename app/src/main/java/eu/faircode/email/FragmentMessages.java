@@ -54,6 +54,7 @@ import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.security.KeyChain;
 import android.security.KeyChainException;
 import android.text.SpannableString;
@@ -209,6 +210,7 @@ import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static android.text.format.DateUtils.DAY_IN_MILLIS;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
 import static android.text.format.DateUtils.FORMAT_SHOW_WEEKDAY;
+import static android.view.KeyEvent.ACTION_DOWN;
 import static android.view.KeyEvent.ACTION_UP;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static org.openintents.openpgp.OpenPgpSignatureResult.RESULT_KEY_MISSING;
@@ -283,6 +285,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private boolean initialized = false;
     private boolean loading = false;
     private boolean swiping = false;
+    private boolean scrolling = false;
 
     private AdapterMessage adapter;
 
@@ -307,7 +310,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private NumberFormat NF = NumberFormat.getNumberInstance();
 
     private static final int MAX_MORE = 100; // messages
-    private static final int UNDO_TIMEOUT = 5000; // milliseconds
     private static final int SWIPE_DISABLE_SELECT_DURATION = 1500; // milliseconds
     private static final float LUMINANCE_THRESHOLD = 0.7f;
 
@@ -690,6 +692,24 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         };
         rvMessage.addItemDecoration(dateDecorator);
 
+        rvMessage.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy != 0) {
+                    boolean down = (dy > 0);
+                    if (scrolling != down) {
+                        scrolling = down;
+                        if (viewType == AdapterMessage.ViewType.UNIFIED || viewType == AdapterMessage.ViewType.FOLDER)
+                            if (dy > 0)
+                                fabCompose.hide();
+                            else
+                                fabCompose.show();
+                        updateExpanded();
+                    }
+                }
+            }
+        });
+
         boolean compact = prefs.getBoolean("compact", false);
         int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
         String sort = prefs.getString("sort", "time");
@@ -953,7 +973,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     @Override
                     protected void onExecuted(Bundle args, EntityFolder drafts) {
                         if (drafts == null)
-                            Snackbar.make(view, R.string.title_no_primary_drafts, Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(view, R.string.title_no_primary_drafts, Snackbar.LENGTH_LONG)
+                                    .setGestureInsetBottomIgnored(true).show();
                         else {
                             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
                             lbm.sendBroadcast(
@@ -1422,7 +1443,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalStateException) {
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -1433,7 +1455,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     });
                     snackbar.show();
                 } else if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -1514,6 +1537,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         adapter.notifyItemChanged(pos);
                     }
             }
+
+            if (value)
+                scrolling = false;
 
             updateExpanded();
             if (value)
@@ -2081,7 +2107,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
                     if (ex instanceof IllegalArgumentException)
-                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                                .setGestureInsetBottomIgnored(true).show();
                     else
                         Log.unexpectedError(getParentFragmentManager(), ex);
                 }
@@ -2246,7 +2273,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             protected void onExecuted(Bundle args, List<EntityAnswer> answers) {
                 if (answers == null || answers.size() == 0) {
-                    Snackbar snackbar = Snackbar.make(view, R.string.title_no_answers, Snackbar.LENGTH_LONG);
+                    Snackbar snackbar = Snackbar.make(view, R.string.title_no_answers, Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -3321,7 +3349,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 prefs.getBoolean("crash_reports_asked", false))
             return false;
 
-        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_help, Snackbar.LENGTH_INDEFINITE);
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_help, Snackbar.LENGTH_INDEFINITE)
+                .setGestureInsetBottomIgnored(true);
         snackbar.setAction(R.string.title_info, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -3366,7 +3395,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return false;
         }
 
-        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_review, Snackbar.LENGTH_INDEFINITE);
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_ask_review, Snackbar.LENGTH_INDEFINITE)
+                .setGestureInsetBottomIgnored(true);
         snackbar.setAction(R.string.title_info, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -3393,7 +3423,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         if (prefs.getBoolean("third_party_notified", false))
             return false;
 
-        final Snackbar snackbar = Snackbar.make(view, R.string.title_third_party, Snackbar.LENGTH_INDEFINITE);
+        final Snackbar snackbar = Snackbar.make(view, R.string.title_third_party, Snackbar.LENGTH_INDEFINITE)
+                .setGestureInsetBottomIgnored(true);
         snackbar.setAction(R.string.title_info, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -3679,7 +3710,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onMenuFolders(long account) {
-        if (isDetached())
+        if (!isAdded())
             return;
 
         if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
@@ -4047,7 +4078,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED))
                 if (ex instanceof IllegalStateException) {
                     // No internet connection
-                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG);
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true);
                     snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
@@ -4181,7 +4213,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             autoExpanded = false;
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            long download = prefs.getInt("download", MessageHelper.DEFAULT_ATTACHMENT_DOWNLOAD_SIZE);
+            long download = prefs.getInt("download", MessageHelper.DEFAULT_DOWNLOAD_SIZE);
             if (download == 0)
                 download = Long.MAX_VALUE;
 
@@ -4238,7 +4270,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             boolean expand_all = prefs.getBoolean("expand_all", false);
             if (expand_all)
                 for (TupleMessageEx message : messages)
-                    if (message != null && message.ui_seen && !message.duplicate)
+                    if (message != null &&
+                            message.ui_seen &&
+                            !message.duplicate &&
+                            !EntityFolder.DRAFTS.equals(message.folderType) &&
+                            !EntityFolder.TRASH.equals(message.folderType))
                         iProperties.setExpanded(message, true);
         } else {
             if (autoCloseCount > 0 && (autoclose || onclose != null)) {
@@ -4389,17 +4425,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void updateExpanded() {
         int expanded = (values.containsKey("expanded") ? values.get("expanded").size() : 0);
-
-        if (expanded == 1) {
-            long id = values.get("expanded").get(0);
-            int pos = adapter.getPositionForKey(id);
-            TupleMessageEx message = adapter.getItemAtPosition(pos);
-            if (message != null && !EntityFolder.OUTBOX.equals(message.folderType))
-                fabReply.show();
-            else
-                fabReply.hide();
-        } else
+        if (scrolling)
             fabReply.hide();
+        else {
+            if (expanded == 1) {
+                long id = values.get("expanded").get(0);
+                int pos = adapter.getPositionForKey(id);
+                TupleMessageEx message = adapter.getItemAtPosition(pos);
+                if (message != null && !EntityFolder.OUTBOX.equals(message.folderType))
+                    fabReply.show();
+                else
+                    fabReply.hide();
+            } else
+                fabReply.hide();
+        }
 
         ibDown.setVisibility(quick_scroll && expanded > 0 ? View.VISIBLE : View.GONE);
         ibUp.setVisibility(quick_scroll && expanded > 0 ? View.VISIBLE : View.GONE);
@@ -4633,7 +4672,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -4641,6 +4681,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void moveUndo(ArrayList<MessageTarget> result) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        final int undo_timeout = prefs.getInt("undo_timeout", 5000);
+
         Bundle args = new Bundle();
         args.putParcelableArrayList("result", result);
 
@@ -4652,7 +4695,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 DB db = DB.getInstance(context);
 
                 long now = new Date().getTime();
-                long busy = now + UNDO_TIMEOUT * 2;
+                long busy = now + undo_timeout * 2;
                 try {
                     db.beginTransaction();
 
@@ -4682,6 +4725,42 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 }
 
+                final Context context = getContext().getApplicationContext();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        DB db = DB.getInstance(context);
+                        try {
+                            db.beginTransaction();
+
+                            for (MessageTarget target : result) {
+                                EntityMessage message = db.message().getMessage(target.id);
+                                if (message == null || !message.ui_hide)
+                                    continue;
+
+                                Log.i("Move id=" + target.id + " target=" + target.folder.name);
+                                db.message().setMessageUiBusy(target.id, null);
+                                db.message().setMessageLastAttempt(target.id, new Date().getTime());
+                                EntityOperation.queue(context, message, EntityOperation.MOVE, target.folder.id);
+                            }
+
+                            db.setTransactionSuccessful();
+                        } catch (Throwable ex) {
+                            Log.e(ex);
+                        } finally {
+                            db.endTransaction();
+                        }
+
+                        ServiceSynchronize.eval(context, "move");
+                    }
+                }, "messages:movetimeout");
+                thread.setPriority(THREAD_PRIORITY_BACKGROUND);
+
+                if (undo_timeout == 0) {
+                    thread.start();
+                    return;
+                }
+
                 FragmentActivity factivity = getActivity();
                 if (!(factivity instanceof ActivityView)) {
                     Log.e("Undo: activity missing");
@@ -4700,7 +4779,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 final Snackbar snackbar = Snackbar.make(
                         content,
                         getString(R.string.title_move_undo, getDisplay(result), result.size()),
-                        Snackbar.LENGTH_INDEFINITE);
+                        Snackbar.LENGTH_INDEFINITE)
+                        .setGestureInsetBottomIgnored(true);
                 snackbar.setAction(R.string.title_undo, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -4762,8 +4842,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 });
                 snackbar.show();
 
-                final Context context = getContext().getApplicationContext();
-
                 // Wait
                 new Handler().postDelayed(new Runnable() {
                     @Override
@@ -4777,38 +4855,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         if (snackbar.isShown())
                             snackbar.dismiss();
 
-                        Thread thread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                DB db = DB.getInstance(context);
-                                try {
-                                    db.beginTransaction();
-
-                                    for (MessageTarget target : result) {
-                                        EntityMessage message = db.message().getMessage(target.id);
-                                        if (message == null || !message.ui_hide)
-                                            continue;
-
-                                        Log.i("Move id=" + target.id + " target=" + target.folder.name);
-                                        db.message().setMessageUiBusy(target.id, null);
-                                        db.message().setMessageLastAttempt(target.id, new Date().getTime());
-                                        EntityOperation.queue(context, message, EntityOperation.MOVE, target.folder.id);
-                                    }
-
-                                    db.setTransactionSuccessful();
-                                } catch (Throwable ex) {
-                                    Log.e(ex);
-                                } finally {
-                                    db.endTransaction();
-                                }
-
-                                ServiceSynchronize.eval(context, "move");
-                            }
-                        }, "messages:movetimeout");
-                        thread.setPriority(THREAD_PRIORITY_BACKGROUND);
                         thread.start();
                     }
-                }, UNDO_TIMEOUT);
+                }, undo_timeout);
             }
 
             @Override
@@ -4849,6 +4898,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 return false;
 
             boolean up = (event.getAction() == ACTION_UP);
+            boolean down = (event.getAction() == ACTION_DOWN);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean volumenav = prefs.getBoolean("volumenav", false);
@@ -4880,6 +4930,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     break;
                 case KeyEvent.KEYCODE_R:
                     return (up && onReply(context));
+                case KeyEvent.KEYCODE_PAGE_UP:
+                case KeyEvent.KEYCODE_DPAD_UP:
+                    if (viewType == AdapterMessage.ViewType.THREAD)
+                        return (down && onScroll(context, true));
+                    break;
+                case KeyEvent.KEYCODE_PAGE_DOWN:
+                case KeyEvent.KEYCODE_DPAD_DOWN:
+                    if (viewType == AdapterMessage.ViewType.THREAD)
+                        return (down && onScroll(context, false));
+                    break;
             }
 
             if (!up)
@@ -4988,6 +5048,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             fabMore.performClick();
             return true;
         }
+
+        private boolean onScroll(Context context, boolean up) {
+            rvMessage.scrollBy(0, (up ? -1 : 1) *
+                    context.getResources().getDisplayMetrics().heightPixels / 2);
+            return true;
+        }
     };
 
     @Override
@@ -5047,7 +5113,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Helper.openAdvanced(create);
         PackageManager pm = getContext().getPackageManager();
         if (create.resolveActivity(pm) == null) // system whitelisted
-            Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG).show();
+            Snackbar.make(view, R.string.title_no_saf, Snackbar.LENGTH_LONG)
+                    .setGestureInsetBottomIgnored(true).show();
         else
             startActivityForResult(Helper.getChooser(getContext(), create), REQUEST_RAW);
     }
@@ -5104,8 +5171,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                         @Override
                         public void onNothingSelected() {
-                            Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG);
-                            final Intent intent = KeyChain.createInstallIntent();
+                            Snackbar snackbar = Snackbar.make(view, R.string.title_no_key, Snackbar.LENGTH_LONG)
+                                    .setGestureInsetBottomIgnored(true);
+                            final Intent intent = (Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+                                    ? KeyChain.createInstallIntent()
+                                    : new Intent(Settings.ACTION_SECURITY_SETTINGS));
                             PackageManager pm = getContext().getPackageManager();
                             if (intent.resolveActivity(pm) != null) // system whitelisted
                                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
@@ -5131,7 +5201,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 data.putExtra(BuildConfig.APPLICATION_ID, id);
                 onPgp(data, auto);
             } else {
-                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG);
+                Snackbar snackbar = Snackbar.make(view, R.string.title_no_openpgp, Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true);
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -5316,13 +5387,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, Void data) {
-                Snackbar.make(view, R.string.title_raw_saved, Snackbar.LENGTH_LONG).show();
+                Snackbar.make(view, R.string.title_raw_saved, Snackbar.LENGTH_LONG)
+                        .setGestureInsetBottomIgnored(true).show();
             }
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException || ex instanceof FileNotFoundException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else if (!(ex instanceof MessageRemovedException))
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -5562,12 +5635,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 List<String> users = sigResult.getConfirmedUserIds();
                                 String text;
                                 if (users.size() > 0)
-                                    text = getString(sresult == RESULT_VALID_KEY_UNCONFIRMED
+                                    text = context.getString(sresult == RESULT_VALID_KEY_UNCONFIRMED
                                                     ? R.string.title_signature_unconfirmed_from
                                                     : R.string.title_signature_valid_from,
                                             TextUtils.join(", ", users));
                                 else
-                                    text = getString(sresult == RESULT_VALID_KEY_UNCONFIRMED
+                                    text = context.getString(sresult == RESULT_VALID_KEY_UNCONFIRMED
                                             ? R.string.title_signature_unconfirmed
                                             : R.string.title_signature_valid);
                                 args.putString("sigresult", text);
@@ -5576,7 +5649,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             } else if (sresult == RESULT_KEY_MISSING)
                                 args.putString("sigresult", context.getString(R.string.title_signature_key_missing));
                             else {
-                                String text = getString(R.string.title_signature_invalid_reason, Integer.toString(sresult));
+                                String text = context.getString(R.string.title_signature_invalid_reason, Integer.toString(sresult));
                                 args.putString("sigresult", text);
                             }
 
@@ -5608,7 +5681,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onExecuted(Bundle args, PendingIntent pi) {
                 if (args.containsKey("sigresult")) {
                     String text = args.getString("sigresult");
-                    Snackbar.make(view, text, Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, text, Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 }
 
                 if (pi != null)
@@ -5628,7 +5702,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException) {
                     Log.i(ex);
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -5972,7 +6047,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             message = getString(R.string.title_signature_invalid);
                         else
                             message = getString(R.string.title_signature_invalid_reason, reason);
-                        Snackbar.make(view, message, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                                .setGestureInsetBottomIgnored(true).show();
                     } else
                         try {
                             String sender = args.getString("sender");
@@ -5995,7 +6071,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 }
 
                             if (known && !record.isExpired(time) && match && valid)
-                                Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG).show();
+                                Snackbar.make(view, R.string.title_signature_valid, Snackbar.LENGTH_LONG)
+                                        .setGestureInsetBottomIgnored(true).show();
                             else {
                                 LayoutInflater inflator = LayoutInflater.from(getContext());
                                 View dview = inflator.inflate(R.layout.dialog_certificate, null);
@@ -6100,7 +6177,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 builder.show();
                             }
                         } catch (Throwable ex) {
-                            Snackbar.make(view, Log.formatThrowable(ex), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(view, Log.formatThrowable(ex), Snackbar.LENGTH_LONG)
+                                    .setGestureInsetBottomIgnored(true).show();
                         }
                 }
             }
@@ -6109,7 +6187,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 if (ex instanceof IllegalArgumentException ||
                         ex instanceof CMSException || ex instanceof KeyChainException)
-                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_LONG)
+                            .setGestureInsetBottomIgnored(true).show();
                 else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
@@ -6327,16 +6406,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     EntityFolder junk = db.folder().getFolderByType(message.account, EntityFolder.JUNK);
                     if (junk == null)
-                        return null;
+                        throw new IllegalArgumentException(context.getString(R.string.title_no_junk_folder));
 
                     EntityOperation.queue(context, message, EntityOperation.MOVE, junk.id);
 
-                    if ((block_sender || block_domain) &&
-                            (message.from != null && message.from.length > 0)) {
+                    if (block_sender || block_domain) {
                         EntityRule rule = EntityRule.blockSender(context, message, junk, block_domain, whitelist);
-                        rule.id = db.rule().insertRule(rule);
+                        if (rule != null)
+                            rule.id = db.rule().insertRule(rule);
                     }
-
 
                     db.setTransactionSuccessful();
                 } finally {
@@ -6350,7 +6428,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Log.unexpectedError(getParentFragmentManager(), ex);
+                if (ex instanceof IllegalArgumentException) {
+                    Snackbar snackbar = Snackbar.make(view, ex.getMessage(), Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            startActivity(new Intent(getContext(), ActivitySetup.class));
+                        }
+                    });
+                    snackbar.show();
+                } else
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "message:junk");
     }
@@ -6625,7 +6713,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (message.from != null && message.from.length > 0) {
                     Element span = document.createElement("span");
                     Element strong = document.createElement("strong");
-                    strong.text(getString(R.string.title_from));
+                    strong.text(context.getString(R.string.title_from));
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.from));
                     span.appendElement("br");
@@ -6635,7 +6723,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (message.to != null && message.to.length > 0) {
                     Element span = document.createElement("span");
                     Element strong = document.createElement("strong");
-                    strong.text(getString(R.string.title_to));
+                    strong.text(context.getString(R.string.title_to));
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.to));
                     span.appendElement("br");
@@ -6645,7 +6733,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (message.cc != null && message.cc.length > 0) {
                     Element span = document.createElement("span");
                     Element strong = document.createElement("strong");
-                    strong.text(getString(R.string.title_cc));
+                    strong.text(context.getString(R.string.title_cc));
                     span.appendChild(strong);
                     span.appendText(" " + MessageHelper.formatAddresses(message.cc));
                     span.appendElement("br");
@@ -6657,7 +6745,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     Element span = document.createElement("span");
                     Element strong = document.createElement("strong");
-                    strong.text(getString(R.string.title_received));
+                    strong.text(context.getString(R.string.title_received));
                     span.appendChild(strong);
                     span.appendText(" " + DTF.format(message.received));
                     span.appendElement("br");
@@ -6689,7 +6777,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     if (attachment.isAttachment()) {
                         hasAttachments = true;
                         Element strong = document.createElement("strong");
-                        strong.text(getString(R.string.title_attachment));
+                        strong.text(context.getString(R.string.title_attachment));
                         footer.appendChild(strong);
                         if (!TextUtils.isEmpty(attachment.name))
                             footer.appendText(" " + attachment.name);

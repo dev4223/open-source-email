@@ -263,8 +263,6 @@
     <string name="title_advanced_name_email">Prikažite imena i adrese e-pošte</string>
     <string name="title_advanced_replace_name">Preferiraj ime kontakta nad poslanim imenom</string>
     <string name="title_advanced_distinguish_contacts">Podvucite pošiljatelja kada je pošiljalac poznat kao lokalni \"za\" kontakt</string>
-    <string name="title_advanced_font_size_sender">Veličina fonta pošiljatelja</string>
-    <string name="title_advanced_font_size_subject">Veličina fonta predmeta</string>
     <string name="title_advanced_subject_top">Pokaži predmet iznad pošiljatelja</string>
     <string name="title_advanced_subject_italic">Prikaži predmet kurzivno</string>
     <string name="title_advanced_subject_elipsed">Ako potrebno skratiti naslov</string>
@@ -596,7 +594,6 @@
     <string name="title_no_camera">Nije dostupna odgovarajuća aplikacija za kameru</string>
     <string name="title_no_saf">Storage access framework nije dostupan</string>
     <string name="title_no_stream">Zastarjela aplikacija poslala je put datoteke umjesto sadržaja datoteke</string>
-    <string name="title_no_contacts">Birač kontakata nije dostupan</string>
     <string name="title_no_internet">Nema ili nema prikladne internetske veze</string>
     <string name="title_no_connection">Povezivanje s jednim ili više računa &#8230;</string>
     <string name="title_no_folder">Mapa ne postoji</string>
