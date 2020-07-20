@@ -6,6 +6,7 @@
     <string name="app_limitations">Przykładowo, wiadomości będą zawsze przeformatowane, aby usunąć niebezpieczne elementy i zwiększyć czytelność, a otwieranie linków musi być potwierdzane dla zachowania bezpieczeństwa.</string>
     <string name="app_crash">FairEmail nie jest obsługiwany na tym urządzeniu, ponieważ błędy w Androidzie powodują awarie</string>
     <string name="app_exit">Ponownie \'wstecz\', aby wyjść</string>
+    <string name="app_cake">Za mało miejsca w pamięci</string>
     <string name="channel_service">Odbierz</string>
     <string name="channel_send">Wyślij</string>
     <string name="channel_notification">Powiadomienia</string>
@@ -358,7 +359,7 @@
     <string name="title_advanced_collapse_multiple">Zwiń wiadomości w rozmowie z wieloma wiadomościami przy \'wstecz\'</string>
     <string name="title_advanced_autoclose">Automatycznie zamykaj konwersacje</string>
     <string name="title_advanced_onclose">Przy zamykaniu wiadomości</string>
-    <string name="title_advanced_undo">Cofnij limit czasu</string>
+    <string name="title_advanced_undo">Ustaw limit czasu dla \"Cofnij\"</string>
     <string name="title_advanced_quick_filter">Pokaż nienatarczywe ikony szybkiego filtrowania</string>
     <string name="title_advanced_quick_scroll">Pokaż nienatarczywe ikony szybkiego przewijania w górę/w dół</string>
     <string name="title_advanced_autoread">Automatycznie oznacz wiadomość jako przeczytaną przy przenoszeniu</string>
@@ -406,6 +407,8 @@
     <string name="title_advanced_secure">Ukryj z ekranu ostatnich aplikacji i zapobiegaj wykonywaniu zrzutów ekranu</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Limit czasu uwierzytelniania biometrycznego</string>
+    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Użyj list do rozpoznawania linków śledzących</string>
+    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Użyj list do rozpoznawania obrazów śledzących</string>
     <string name="title_advanced_sign_default">Domyślnie podpisuj</string>
     <string name="title_advanced_encrypt_default">Domyślnie szyfruj</string>
     <string name="title_advanced_auto_decrypt">Automatycznie odszyfruj wiadomości</string>
@@ -812,6 +815,8 @@
     <string name="title_add_image_inline">Wstaw</string>
     <string name="title_add_image_attach">Załącz</string>
     <string name="title_add_image_resize">Zmień rozmiar</string>
+    <string name="title_add_image_privacy">Usuń wrażliwe prywatne dane</string>
+    <string name="title_add_image_privacy_remark">Lokalizacja geograficzna, numery seryjne, itp.</string>
     <string name="title_add_resize_pixels">&lt; %1$d pikseli</string>
     <string name="title_add_image_select">Wybierz plik</string>
     <string name="title_add_attachment">Dodaj załącznik</string>
@@ -819,6 +824,7 @@
     <string name="title_attachment_photo">Zrób zdjęcie</string>
     <string name="title_attachment_audio">Nagraj dźwięk</string>
     <string name="title_show_addresses">Pokaż DW/UDW</string>
+    <string name="title_save_drafts">Zapisz szkice na serwerze</string>
     <string name="title_send_dialog">Pokaż opcje wysyłania</string>
     <string name="title_image_dialog">Pokaż opcje obrazu</string>
     <string name="title_media_toolbar">Pasek mediów</string>
@@ -1124,6 +1130,7 @@
     <string name="title_hint_eml">To jest podsumowanie zawartości nieprzetworzonego pliku wiadomości. Zapisz nieprzetworzoną wiadomość używając ikony zapisu na pasku akcji, aby wyświetlić całą zawartość.</string>
     <string name="title_open_link">Otwórz link</string>
     <string name="title_different_link">Tytuł i adres linku są różne</string>
+    <string name="title_tracking_link">Ta strona może Cię śledzić</string>
     <string name="title_link_http">Ruch nie będzie szyfrowany</string>
     <string name="title_link_https">Ruch będzie szyfrowany</string>
     <string name="title_sanitize_link">Usuń parametry śledzenia</string>
@@ -1142,6 +1149,7 @@
     <string name="title_add">Dodaj</string>
     <string name="title_browse">Otwórz za pomocą</string>
     <string name="title_info">Info</string>
+    <string name="title_download">Pobierz</string>
     <string name="title_report">Zgłoś błąd</string>
     <string name="title_fix">Popraw</string>
     <string name="title_enable">Włącz</string>
@@ -1364,9 +1372,9 @@
     </string-array>
     <string-array name="undoNames">
         <item>Wył.</item>
-        <item>2.5 s</item>
+        <item>2,5 s</item>
         <item>5 s</item>
-        <item>7.5 s</item>
+        <item>7,5 s</item>
         <item>10 s</item>
     </string-array>
     <string-array name="fontNameNames">

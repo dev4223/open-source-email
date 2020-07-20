@@ -6,6 +6,7 @@
     <string name="app_limitations">例如，为了去除不安全元素并提高阅读性，邮件将总被重建格式；出于安全考虑，打开邮件内链接时需经用户确认</string>
     <string name="app_crash">FairEmail不支持该设备，因为 android 中的bug会导致崩溃</string>
     <string name="app_exit">再按一次返回键退出</string>
+    <string name="app_cake">剩余存储空间不足</string>
     <string name="channel_service">接收</string>
     <string name="channel_send">发送</string>
     <string name="channel_notification">通知</string>
@@ -373,6 +374,8 @@
     <string name="title_advanced_secure">从\"最近应用\"列表中隐藏并阻止截屏</string>
     <string name="title_advanced_pin">PIN 码</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时时间</string>
+    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">使用列表警告跟踪链接</string>
+    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">使用列表来识别跟踪图像</string>
     <string name="title_advanced_sign_default">使用默认签名</string>
     <string name="title_advanced_encrypt_default">使用默认加密</string>
     <string name="title_advanced_auto_decrypt">自动解密消息</string>
@@ -1094,6 +1097,7 @@
     <string name="title_hint_eml">这是一个原始消息文件内容的摘要。用操作栏中的保存图标保存原始消息以查看所有内容。</string>
     <string name="title_open_link">打开链接</string>
     <string name="title_different_link">标题和链接地址不同</string>
+    <string name="title_tracking_link">此网站可能会跟踪你</string>
     <string name="title_link_http">流量不会被加密</string>
     <string name="title_link_https">流量将被加密</string>
     <string name="title_sanitize_link">删除跟踪参数</string>
@@ -1112,6 +1116,7 @@
     <string name="title_add">添加</string>
     <string name="title_browse">打开方式</string>
     <string name="title_info">信息</string>
+    <string name="title_download">下载</string>
     <string name="title_report">报告</string>
     <string name="title_fix">修复</string>
     <string name="title_enable">启用</string>

@@ -385,6 +385,7 @@
     <string name="title_advanced_swipenav">Swipe left/right to go to next/previous conversation</string>
     <string name="title_advanced_volumenav">Volume up/down to go to next/previous conversation</string>
     <string name="title_advanced_reversed">Reverse navigation direction</string>
+    <string name="title_advanced_swipe_close">Swipe down to close conversation</string>
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
     <string name="title_advanced_expand_all">Automatically expand all read messages</string>
     <string name="title_advanced_expand_one">Expand only one message at a time</string>
@@ -447,6 +448,9 @@
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
     <string name="title_advanced_safe_browsing" translatable="false">Google Safe browsing</string>
+    <string name="title_advanced_disconnect_blacklist" translatable="false">Disconnect\'s tracker protection lists</string>
+    <string name="title_advanced_disconnect_links">Use lists to warn about tracking links</string>
+    <string name="title_advanced_disconnect_images">Use lists to recognize tracking images</string>
 
     <string name="title_advanced_sign_default">Sign by default</string>
     <string name="title_advanced_encrypt_default">Encrypt by default</string>
@@ -1249,6 +1253,7 @@
 
     <string name="title_open_link">Open link</string>
     <string name="title_different_link">The title and the link address are different</string>
+    <string name="title_tracking_link">This website might track you</string>
     <string name="title_link_http">Traffic will not be encrypted</string>
     <string name="title_link_https">Traffic will be encrypted</string>
     <string name="title_sanitize_link">Remove tracking parameters</string>
@@ -1267,6 +1272,7 @@
     <string name="title_add">Add</string>
     <string name="title_browse">Open with</string>
     <string name="title_info">Info</string>
+    <string name="title_download">Download</string>
     <string name="title_report">Report</string>
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>

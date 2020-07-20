@@ -6,6 +6,7 @@
     <string name="app_limitations">Meddelanden kommer till exempel alltid att omformateras för att avlägsna osäkra element och för att förbättra läsbarheten och öppna länkar måste bekräftas för säkerheten.</string>
     <string name="app_crash">FairEmail stöds inte på den här enheten eftersom buggar i Android orsakar kraschar</string>
     <string name="app_exit">Tryck \"tillbaka\" igen för att avsluta</string>
+    <string name="app_cake">Otillräckligt lagringsutrymme kvar</string>
     <string name="channel_service">Ta emot</string>
     <string name="channel_send">Skicka</string>
     <string name="channel_notification">Aviseringar</string>
@@ -384,6 +385,8 @@
     <string name="title_advanced_secure">Dölj dig från senaste appar-skärmen och förhindra tagning av skärmdumpar</string>
     <string name="title_advanced_pin">PIN-kod</string>
     <string name="title_advanced_biometrics_timeout">Tidsgräns för biometrisk autentisering</string>
+    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Använd listor för att varna för spårningslänkar</string>
+    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Använd listor för att känna igen spårningsbilder</string>
     <string name="title_advanced_sign_default">Signera som standard</string>
     <string name="title_advanced_encrypt_default">Kryptera som standard</string>
     <string name="title_advanced_auto_decrypt">Dekryptera meddelanden automatiskt</string>
@@ -1105,6 +1108,7 @@
     <string name="title_hint_eml">Detta är en sammanfattning av innehållet i en raw-meddelandefil. Spara raw-meddelandet med ikonen spara i åtgärdsfältet för att visa allt innehåll.</string>
     <string name="title_open_link">Öppna länken</string>
     <string name="title_different_link">Titeln och länkadressen är olika</string>
+    <string name="title_tracking_link">Denna webbplats kan spåra dig</string>
     <string name="title_link_http">Trafiken kommer inte att krypteras</string>
     <string name="title_link_https">Trafiken kommer att krypteras</string>
     <string name="title_sanitize_link">Ta bort spårningsparametrar</string>
@@ -1123,6 +1127,7 @@
     <string name="title_add">Lägg till</string>
     <string name="title_browse">Öppna med</string>
     <string name="title_info">Info</string>
+    <string name="title_download">Ladda ned</string>
     <string name="title_report">Rapportera</string>
     <string name="title_fix">Åtgärda</string>
     <string name="title_enable">Aktivera</string>

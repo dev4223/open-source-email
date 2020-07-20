@@ -151,7 +151,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
 * [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
-* [(27) How can I distinguish between embedded and external images instead?](#user-content-faq27)
+* [(27) How can I distinguish between embedded and external images?](#user-content-faq27)
 * [(28) How can I manage status bar notifications?](#user-content-faq28)
 * [(29) How can I get new message notifications for other folders?](#user-content-faq29)
 * [(30) How can I use the provided quick settings?](#user-content-faq30)
@@ -273,7 +273,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(148) How can I use an Apple iCloud account?](#user-content-faq148)
 * [(149) How does the unread message count widget work?](#user-content-faq149)
 * [(150) Can you add cancelling calendar invites?](#user-content-faq150)
-* [(151) Can you add backup/restore messages?](#user-content-faq151)
+* [(151) Can you add backup/restore of messages?](#user-content-faq151)
 * [(152) How can I insert a contact group?](#user-content-faq152)
 * [(153) Why does permanently deleting Gmail message not work?](#user-content-faq153)
 * [~~(154) Can you add favicons as contact photos?~~](#user-content-faq154)
@@ -281,6 +281,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(156) How can I set up an Office365 account?](#user-content-faq156)
 * [(157) How can I set up an Free.fr account?](#user-content-faq157)
 * [(158) Which camera / audio recorder do you recommend?](#user-content-faq158)
+* [(159) What are Disconnect's tracker protection lists?](#user-content-faq159)
 
 [I have another question.](#user-content-support)
 
@@ -355,7 +356,7 @@ The status bar notification can be disabled via the notification settings of Fai
 You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power.
 See [here](#user-content-faq39) for more details about battery usage.
 
-Android 8 Oreo might also shows a status bar notification with the text *Apps are running in the background*.
+Android 8 Oreo might also show a status bar notification with the text *Apps are running in the background*.
 Please see [here](https://www.reddit.com/r/Android/comments/7vw7l4/psa_turn_off_background_apps_notification/) about how you can disable this notification.
 
 Some people suggested to use [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging/) (FCM) instead of an Android service with a status bar notification,
@@ -1093,7 +1094,7 @@ Registration is free.
 <br />
 
 <a name="faq27"></a>
-**(27) How can I distinguish between embedded and external images instead?**
+**(27) How can I distinguish between embedded and external images?**
 
 External image:
 
@@ -1849,7 +1850,7 @@ You can select one of these actions to apply to matching messages:
 * Automation (Tasker, etc)
 
 Rules are applied directly after the message header has been fetched, but before the message text has been downloaded,
-so it is not possible to apply conditions and actions to the message text.
+so it is not possible to apply conditions to the message text.
 Note that large message texts are downloaded on demand on a metered connection to save on data usage.
 
 If you want to forward a message, consider to use the move action instead.
@@ -3039,7 +3040,7 @@ Unfortunately, there exists no intent to delete existing calendar events.
 <br />
 
 <a name="faq151"></a>
-**(151) Can you add backup/restore messages?**
+**(151) Can you add backup/restore of messages?**
 
 An email client is meant to read and write messages, not to backup and restore messages.
 Note that breaking or losing your device, means losing your messages!
@@ -3133,6 +3134,32 @@ Oddly, most audio recorders seem not to support this standard Android action.
 
 <br />
 
+<a name="faq159"></a>
+**(159) What are Disconnect's tracker protection lists?**
+
+Please see [here](https://disconnect.me/trackerprotection) for more information about Disconnect's tracker protection lists.
+
+After downloading the lists in the privacy settings, the lists can optionally be used:
+
+* to warn about tracking links on opening links
+* to recognize tracking images in messages
+
+Tracking images will be disabled only if the corresponding main 'disable' option is enabled.
+
+Tracking images will not be recognized when the domain is classified as '*Content*',
+see [here](https://disconnect.me/trackerprotection#trackers-we-dont-block) for more information.
+
+This command can be sent to FairEmail from an automation app to update the protection lists:
+
+```
+(adb shell) am startservice -a eu.faircode.email.DISCONNECT.ME
+```
+
+Updating once a week will probably be sufficient,
+please see [here](https://github.com/disconnectme/disconnect-tracking-protection/commits/master) for recent lists changes.
+
+<br />
+
 ## Support
 
 Only the latest Play store version and latest GitHub release are supported.
@@ -3146,6 +3173,7 @@ Requested features should:
 * comply with common standards (IMAP, SMTP, etc)
 
 Features not fulfilling these requirements will likely be rejected.
+This is also to keep maintenance and support in the long run feasible.
 
 If you have a question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
 

@@ -6,6 +6,7 @@
     <string name="app_limitations">Eksempelvis vil beskeder altid blive omformateret for at fjerne usikre elementer samt for at øge læsbarheden, og åbning af links skal af sikkerhedsårsager bekræftes.</string>
     <string name="app_crash">FairEmail er ikke understøttet på denne enhed, da fejl i Android forårsager nedbrud</string>
     <string name="app_exit">Tryk \'Tilbage\' igen for at afslutte</string>
+    <string name="app_cake">Utilstrækkelig tilgængelig lagerplads</string>
     <string name="channel_service">Modtagelse</string>
     <string name="channel_send">Send</string>
     <string name="channel_notification">Notifikationer</string>
@@ -30,7 +31,7 @@
     <string name="shortcut_compose">Skriv</string>
     <string name="shortcut_setup">Indstillinger</string>
     <plurals name="title_notification_synchronizing">
-        <item quantity="one">Monitorere %1$d konto</item>
+        <item quantity="one">Monitorerer %1$d konto</item>
         <item quantity="other">Monitorere %1$d konti</item>
     </plurals>
     <plurals name="title_notification_operations">
@@ -321,7 +322,7 @@
     <string name="title_advanced_seekbar">Vis relativ samtaleposition med en prik</string>
     <string name="title_advanced_actionbar">Vis samtale-handlingsbjælke</string>
     <string name="title_advanced_actionbar_color">Benyt kontofarve som baggrundsfarve til samtalens handlingsbjælke</string>
-    <string name="title_advanced_navbar_colorize">Farvelæg Abdroid-navigeringsbjælken</string>
+    <string name="title_advanced_navbar_colorize">Farvelæg Android-navigeringsbjælken</string>
     <string name="title_advanced_parse_classes">CSS-fortolkning</string>
     <string name="title_advanced_authentication">Vis en advarsel, når indgående server ikke kunne bekræfte beskeden</string>
     <string name="title_advanced_double_back">Dobbelttryk \"Tilbage\"/stryg for at lukke</string>
@@ -370,7 +371,7 @@
     <string name="title_advanced_notify_action_seen">Læs</string>
     <string name="title_advanced_notify_action_snooze">Udsæt</string>
     <string name="title_advanced_notify_remove">Fjern nye beskednotifikationer ved tryk på notifikationen</string>
-    <string name="title_advanced_notify_clear">Fjern nye beskednotifikationer ved visnng af beskedliste</string>
+    <string name="title_advanced_notify_clear">Fjern nye beskednotifikationer ved visning af beskedliste</string>
     <string name="title_advanced_wearable_preview">Send kun notifikationer med en beskedforhåndsvisning til wearables</string>
     <string name="title_advanced_biometrics_notify">Vis notifikationsindhold ved brug af biometrisk godkendelse</string>
     <string name="title_advanced_light">Benyt notifikations-LED</string>
@@ -800,6 +801,7 @@
     <string name="title_attachment_photo">Tag foto</string>
     <string name="title_attachment_audio">Optag lyd</string>
     <string name="title_show_addresses">Vis Cc/Bcc</string>
+    <string name="title_save_drafts">Gem udkast på serveren</string>
     <string name="title_send_dialog">Vis Send-muligheder</string>
     <string name="title_image_dialog">Vis Billed-muligheder</string>
     <string name="title_media_toolbar">Medieværktøjsbjælke</string>
@@ -1105,6 +1107,7 @@
     <string name="title_hint_eml">Dette er en oversigt over indholdet af en råformatsbeskedfil. Gem den rå besked med Gem-ikonet i handlingsbjælken for at se alt indhold.</string>
     <string name="title_open_link">Åbn link</string>
     <string name="title_different_link">Titlen og linkadressen er forskellige</string>
+    <string name="title_tracking_link">Dette websted sporer dig muligvis</string>
     <string name="title_link_http">Trafik bliver ikke krypteret</string>
     <string name="title_link_https">Trafik bliver krypteret</string>
     <string name="title_sanitize_link">Fjern sporingsparametre</string>
@@ -1123,6 +1126,7 @@
     <string name="title_add">Tilføj</string>
     <string name="title_browse">Åbn med</string>
     <string name="title_info">Info</string>
+    <string name="title_download">Download</string>
     <string name="title_report">Rapportér</string>
     <string name="title_fix">Ret</string>
     <string name="title_enable">Aktivér</string>

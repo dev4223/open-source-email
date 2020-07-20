@@ -5922,6 +5922,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final TextView tvTitle = dview.findViewById(R.id.tvTitle);
             final ImageButton ibDifferent = dview.findViewById(R.id.ibDifferent);
             final EditText etLink = dview.findViewById(R.id.etLink);
+            final TextView tvDisconnect = dview.findViewById(R.id.tvDisconnect);
+            final TextView tvDisconnectCategories = dview.findViewById(R.id.tvDisconnectCategories);
             final ImageButton ibShare = dview.findViewById(R.id.ibShare);
             final ImageButton ibCopy = dview.findViewById(R.id.ibCopy);
             final CheckBox cbSecure = dview.findViewById(R.id.cbSecure);
@@ -5934,6 +5936,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
             final Group grpDifferent = dview.findViewById(R.id.grpDifferent);
             final Group grpOwner = dview.findViewById(R.id.grpOwner);
+
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
 
             ibDifferent.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -6036,7 +6040,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
                     prefs.edit().putBoolean(uri.getHost() + ".confirm_link", !isChecked).apply();
                 }
             });
@@ -6104,6 +6107,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     uriTitle == null || uriTitle.getHost() == null ||
                     uriTitle.getHost().equalsIgnoreCase(uri.getHost())
                     ? View.GONE : View.VISIBLE);
+
+            boolean disconnect_links = prefs.getBoolean("disconnect_links", true);
+            List<String> categories = null;
+            if (disconnect_links)
+                categories = DisconnectBlacklist.getCategories(uri.getHost());
+            if (categories != null)
+                tvDisconnectCategories.setText(TextUtils.join(", ", categories));
+            tvDisconnect.setVisibility(categories == null ? View.GONE : View.VISIBLE);
+            tvDisconnectCategories.setVisibility(categories == null ? View.GONE : View.VISIBLE);
 
             final Context context = getContext();
 

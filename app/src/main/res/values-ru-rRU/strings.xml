@@ -6,6 +6,7 @@
     <string name="app_limitations">Например, сообщения всегда будут переформатированы, чтобы удалить небезопасные элементы и улучшить читабельность, а также открытие ссылок требует подтверждения в целях безопасности.</string>
     <string name="app_crash">FairEmail не поддерживается на этом устройстве, так как ошибки в Android вызывают сбои</string>
     <string name="app_exit">Для выхода снова перейдите \"назад\"</string>
+    <string name="app_cake">Недостаточно места</string>
     <string name="channel_service">Получение</string>
     <string name="channel_send">Отправка</string>
     <string name="channel_notification">Уведомления</string>
@@ -359,7 +360,7 @@
     <string name="title_advanced_collapse_multiple">Сворачивать сообщения в диалоге с несколькими сообщениями кнопкой \"назад\"</string>
     <string name="title_advanced_autoclose">Автоматически закрывать диалоги</string>
     <string name="title_advanced_onclose">При закрытии диалога</string>
-    <string name="title_advanced_undo">Отменить таймаут</string>
+    <string name="title_advanced_undo">Время отмены</string>
     <string name="title_advanced_quick_filter">Показывать ненавязчивые значки быстрого фильтра</string>
     <string name="title_advanced_quick_scroll">Показывать ненавязчивые значки быстрой прокрутки вверх/вниз</string>
     <string name="title_advanced_autoread">Автоматически помечать сообщения прочитанными при перемещении</string>
@@ -407,6 +408,8 @@
     <string name="title_advanced_secure">Скрыть с экрана недавних приложений и запретить создание снимков экрана</string>
     <string name="title_advanced_pin">PIN-код</string>
     <string name="title_advanced_biometrics_timeout">Время до включения биометрической аутентификации</string>
+    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Использовать списки для предупреждения об отслеживающих ссылках</string>
+    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Использовать списки для распознавания отслеживающих изображений</string>
     <string name="title_advanced_sign_default">Подписать по умолчанию</string>
     <string name="title_advanced_encrypt_default">Шифровать по умолчанию</string>
     <string name="title_advanced_auto_decrypt">Автоматически расшифровывать сообщения</string>
@@ -1128,6 +1131,7 @@
     <string name="title_hint_eml">Это обзор содержимого файла оригинального сообщения. Сохраните его с помощью значка \"Сохранить\" на панели действий, чтобы просмотреть содержимое полностью.</string>
     <string name="title_open_link">Открыть ссылку</string>
     <string name="title_different_link">Заголовок и адрес ссылки отличаются</string>
+    <string name="title_tracking_link">Этот сайт может отслеживать вас</string>
     <string name="title_link_http">Не шифровать трафик</string>
     <string name="title_link_https">Трафик будет зашифрован</string>
     <string name="title_sanitize_link">Удалить параметры отслеживания</string>
@@ -1146,6 +1150,7 @@
     <string name="title_add">Добавить</string>
     <string name="title_browse">В браузере</string>
     <string name="title_info">Информация</string>
+    <string name="title_download">Загрузить</string>
     <string name="title_report">Отчёт</string>
     <string name="title_fix">Исправить</string>
     <string name="title_enable">Включить</string>
@@ -1369,10 +1374,10 @@
     </string-array>
     <string-array name="undoNames">
         <item>Выкл.</item>
-        <item>2.5 с</item>
-        <item>5 с</item>
-        <item>7.5 с</item>
-        <item>10 с</item>
+        <item>2,5 с</item>
+        <item>5 сек. </item>
+        <item>7,5 с</item>
+        <item>10 сек. </item>
     </string-array>
     <string-array name="fontNameNames">
         <item>Курсив</item>

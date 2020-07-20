@@ -6,6 +6,7 @@
     <string name="app_limitations">Berichten worden bijvoorbeeld altijd opnieuw geformatteerd om onveilige elementen te verwijderen en de leesbaarheid te verbeteren en het openen van koppelingen moet voor de veiligheid worden bevestigd.</string>
     <string name="app_crash">FairEmail wordt niet ondersteund op dit apparaat omdat bugs in Android crashes veroorzaken</string>
     <string name="app_exit">Ga nogmaals \'terug\' om af te sluiten</string>
+    <string name="app_cake">Onvoldoende opslagruimte over</string>
     <string name="channel_service">Ontvangen</string>
     <string name="channel_send">Verzenden</string>
     <string name="channel_notification">Meldingen</string>
@@ -378,12 +379,14 @@
     <string name="title_advanced_browse_links">Het openen van links overdragen aan Android</string>
     <string name="title_advanced_confirm_images">Bevestig het tonen van afbeeldingen</string>
     <string name="title_advanced_confirm_html">Toon standaard opnieuw geformatteerde berichten</string>
-    <string name="title_advanced_tracking">Automatisch herkennen en uitschakelen van tracking-afbeeldingen</string>
+    <string name="title_advanced_tracking">Automatisch herkennen en uitschakelen van tracking afbeeldingen</string>
     <string name="title_advanced_hide_timezone">Berichten verzenden zonder tijdzone data</string>
     <string name="title_advanced_display_hidden">Verborgen berichtteksten weergeven</string>
     <string name="title_advanced_secure">Verbergen van recente apps scherm en voorkomen dat screenshots worden gemaakt</string>
     <string name="title_advanced_pin">Pincode</string>
     <string name="title_advanced_biometrics_timeout">Biometrische verificatie verloopt na</string>
+    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Gebruik lijsten om te waarschuwen voor tracking links</string>
+    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Gebruik lijsten om tracking afbeeldingen te herkennen</string>
     <string name="title_advanced_sign_default">Standaard ondertekenen</string>
     <string name="title_advanced_encrypt_default">Standaard versleutelen</string>
     <string name="title_advanced_auto_decrypt">Berichten automatisch ontsleutelen</string>
@@ -734,7 +737,7 @@
     <string name="title_ask_show_html_remark">Het weergeven van het oorspronkelijke bericht met een donkere achtergrond is niet mogelijk omdat het onzichtbare donkere teksten en afbeeldingen kan veroorzaken</string>
     <string name="title_ask_show_html_images">Altijd afbeeldingen tonen bij het weergeven van originele berichten</string>
     <string name="title_ask_show_image">Afbeeldingen tonen kan privacy gevoelige informatie lekken</string>
-    <string name="title_ask_show_image_hint">Afbeeldingen die als tracking-afbeeldingen zijn herkend, worden niet getoond</string>
+    <string name="title_ask_show_image_hint">Afbeeldingen die als tracking afbeeldingen zijn herkend, worden niet getoond</string>
     <string name="title_ask_delete_local">Lokale berichten verwijderen? Berichten blijven op de externe server.</string>
     <string name="title_ask_help">Help FairEmail te verbeteren</string>
     <string name="title_ask_reporting">Foutrapporten verzenden?</string>
@@ -1048,7 +1051,7 @@
     <string name="title_legend_download">Inhoud downloaden</string>
     <string name="title_legend_external_image">Plaatshouder externe afbeelding</string>
     <string name="title_legend_embedded_image">Plaatshouder ingesloten afbeelding</string>
-    <string name="title_legend_tracking_pixel">Tracking-afbeelding</string>
+    <string name="title_legend_tracking_pixel">Tracking afbeelding</string>
     <string name="title_legend_broken_image">Defecte afbeelding</string>
     <string name="title_legend_pick">Kies contact</string>
     <string name="title_legend_cc">Toon CC/BCC</string>
@@ -1105,6 +1108,7 @@
     <string name="title_hint_eml">Dit is een samenvatting van de inhoud van een ruw berichtbestand. Sla het ruwe bericht op met het \'bewaar\' icoon in de actiebalk om alle inhoud te bekijken.</string>
     <string name="title_open_link">Koppeling openen</string>
     <string name="title_different_link">De titel en het link-adres zijn verschillend</string>
+    <string name="title_tracking_link">Deze website kan je volgen</string>
     <string name="title_link_http">Verkeer wordt niet versleuteld</string>
     <string name="title_link_https">Verkeer wordt versleuteld</string>
     <string name="title_sanitize_link">Verwijder tracking parameters</string>
@@ -1123,6 +1127,7 @@
     <string name="title_add">Toevoegen</string>
     <string name="title_browse">Open met</string>
     <string name="title_info">Info</string>
+    <string name="title_download">Downloaden</string>
     <string name="title_report">Rapporteer</string>
     <string name="title_fix">Oplossen</string>
     <string name="title_enable">Inschakelen</string>
