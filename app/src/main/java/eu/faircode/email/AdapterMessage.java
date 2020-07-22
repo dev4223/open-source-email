@@ -3894,6 +3894,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle aargs = new Bundle();
             aargs.putLong("id", message.id);
             aargs.putLong("account", message.account);
+            aargs.putInt("protocol", message.accountProtocol);
             aargs.putLong("folder", message.folder);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
 
@@ -4692,7 +4693,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 context.getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_LONG)
                                 .setGestureInsetBottomIgnored(true).show();
                     else
-                        context.startActivity(Helper.getChooser(context, intent));
+                        context.startActivity(intent);
                 }
 
                 @Override
@@ -6215,6 +6216,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle args = getArguments();
             final long account = args.getLong("account");
             final long folder = args.getLong("folder");
+            final int protocol = args.getInt("protocol");
             final String from = args.getString("from");
 
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_junk, null);
@@ -6250,7 +6252,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     lbm.sendBroadcast(
                             new Intent(ActivityView.ACTION_EDIT_RULES)
                                     .putExtra("account", account)
-                                    .putExtra("folder", folder));
+                                    .putExtra("folder", folder)
+                                    .putExtra("protocol", protocol));
                     dismiss();
                 }
             });

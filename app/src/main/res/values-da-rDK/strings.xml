@@ -332,6 +332,7 @@
     <string name="title_advanced_swipenav">Stryg til venstre/højre for at gå til næste/forrige samtale</string>
     <string name="title_advanced_volumenav">Lydstyrke op/ned for at gå til næste/foregående samtale</string>
     <string name="title_advanced_reversed">Omvendt navigeringsretning</string>
+    <string name="title_advanced_swipe_close">Stryg nedad for at lukke samtale</string>
     <string name="title_advanced_autoexpand">Auto-udvid beskeder</string>
     <string name="title_advanced_expand_all">Auto-udvid alle læste beskeder</string>
     <string name="title_advanced_expand_one">Udvid kun én besked ad gangen</string>
@@ -350,7 +351,6 @@
     <string name="title_advanced_default_snooze">Standard udsættelsestid</string>
     <string name="title_advanced_notifications">Håndtér notifikationer</string>
     <string name="title_advanced_notifications_default">Standardkanal</string>
-    <string name="title_advanced_notifications_service">Tjenestekanal</string>
     <string name="title_advanced_notifications_background">Benyt baggrundstjeneste til beskedsynkronisering</string>
     <string name="title_advanced_notifications_background_hint">En baggrundstjeneste kan til enhver tid stoppes af Android, men behøver ingen statusbjælkenotifikation</string>
     <string name="title_advanced_badge">Vis launcher-ikon med antal nye beskeder</string>
@@ -386,6 +386,8 @@
     <string name="title_advanced_secure">Skjul fra seneste apps-skærm og forhindr skærmfotofunktion</string>
     <string name="title_advanced_pin">PIN-kode</string>
     <string name="title_advanced_biometrics_timeout">Biometrisk godkendelse fik timeout</string>
+    <string name="title_advanced_disconnect_links">Benyt lister til at advare om sporingslinks</string>
+    <string name="title_advanced_disconnect_images">Benyt lister til at genkende sporingsbilleder</string>
     <string name="title_advanced_sign_default">Signér som standard</string>
     <string name="title_advanced_encrypt_default">Kryptér som standard</string>
     <string name="title_advanced_auto_decrypt">Auto-dekryptér beskeder</string>
@@ -535,7 +537,6 @@
     <string name="title_leave_on_device">Lad beskeder forblive på enhed</string>
     <string name="title_max_messages">Maks. antal beskeder at downloade (tomt for samtlige)</string>
     <string name="title_keep_alive_interval">Hold i live/hentningsinterval (minutter)</string>
-    <string name="title_use_date">Benyt datooverskriftadsendelsestid i stedet for servermodtagelsestid</string>
     <string name="title_related_identity">Tilføj relateret identitet</string>
     <string name="title_check">Tjek</string>
     <string name="title_trust">Gør servercertifikat betroet med fingeraftryk %1$s</string>

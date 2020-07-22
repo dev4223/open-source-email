@@ -353,6 +353,7 @@
     <string name="title_advanced_swipenav">Przesuń w lewo/prawo, aby przejść do następnej/poprzedniej konwersacji</string>
     <string name="title_advanced_volumenav">Zwiększanie/zmniejszanie głośności, aby przejść do następnej/poprzedniej rozmowy</string>
     <string name="title_advanced_reversed">Odwróć kierunek nawigacji</string>
+    <string name="title_advanced_swipe_close">Przesuń palcem w dół, aby zamknąć rozmowę</string>
     <string name="title_advanced_autoexpand">Automatycznie rozwijaj wiadomości</string>
     <string name="title_advanced_expand_all">Automatycznie rozwiń wszystkie przeczytane wiadomości</string>
     <string name="title_advanced_expand_one">Rozwiń tylko jedną wiadomość na raz</string>
@@ -371,7 +372,7 @@
     <string name="title_advanced_default_snooze">Domyślny czas odłożenia</string>
     <string name="title_advanced_notifications">Zarządzaj powiadomieniami</string>
     <string name="title_advanced_notifications_default">Domyślny kanał</string>
-    <string name="title_advanced_notifications_service">Kanał usługi</string>
+    <string name="title_advanced_notifications_service">Kanał odbioru</string>
     <string name="title_advanced_notifications_background">Użyj usługi w tle do synchronizacji wiadomości</string>
     <string name="title_advanced_notifications_background_hint">Usługa w tle może być w dowolnym momencie zatrzymana przez Androida, ale nie wymaga powiadomienia na pasku stanu</string>
     <string name="title_advanced_badge">Pokaż liczbę nowych wiadomości na ikonie launchera</string>
@@ -407,8 +408,8 @@
     <string name="title_advanced_secure">Ukryj z ekranu ostatnich aplikacji i zapobiegaj wykonywaniu zrzutów ekranu</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Limit czasu uwierzytelniania biometrycznego</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Użyj list do rozpoznawania linków śledzących</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Użyj list do rozpoznawania obrazów śledzących</string>
+    <string name="title_advanced_disconnect_links">Użyj list do rozpoznawania linków śledzących</string>
+    <string name="title_advanced_disconnect_images">Użyj list do rozpoznawania obrazów śledzących</string>
     <string name="title_advanced_sign_default">Domyślnie podpisuj</string>
     <string name="title_advanced_encrypt_default">Domyślnie szyfruj</string>
     <string name="title_advanced_auto_decrypt">Automatycznie odszyfruj wiadomości</string>
@@ -558,7 +559,6 @@
     <string name="title_leave_on_device">Pozostaw wiadomości na urządzeniu</string>
     <string name="title_max_messages">Maksymalna liczba wiadomości do pobrania (puste dla wszystkich)</string>
     <string name="title_keep_alive_interval">Interwał utrzymywania aktywności/odpytywania (minuty)</string>
-    <string name="title_use_date">Użyj czasu wysłania nagłówka daty zamiast czasu odebranego przez serwer</string>
     <string name="title_related_identity">Dodaj powiązaną tożsamość</string>
     <string name="title_check">Sprawdź</string>
     <string name="title_trust">Zaufaj certyfikatowi serwera za pomocą odcisku palca %1$s</string>

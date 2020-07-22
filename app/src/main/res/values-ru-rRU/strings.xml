@@ -236,7 +236,7 @@
     <string name="title_advanced_section_send">Отправка</string>
     <string name="title_advanced_section_connection">Соединение</string>
     <string name="title_advanced_section_display">Отображение</string>
-    <string name="title_advanced_section_behavior">Режимы</string>
+    <string name="title_advanced_section_behavior">Поведение</string>
     <string name="title_advanced_section_privacy">Конфиденциальность</string>
     <string name="title_advanced_section_encryption">Шифрование</string>
     <string name="title_advanced_section_notifications">Уведомления</string>
@@ -354,6 +354,7 @@
     <string name="title_advanced_swipenav">Смахивание влево/вправо для перехода к следующему/предыдущему диалогу</string>
     <string name="title_advanced_volumenav">Кнопки увеличения/уменьшения громкости для перехода к следующему/предыдущему диалогу</string>
     <string name="title_advanced_reversed">Обратное направление навигации</string>
+    <string name="title_advanced_swipe_close">Смахивание вниз, чтобы закрыть диалог</string>
     <string name="title_advanced_autoexpand">Автоматически разворачивать сообщения</string>
     <string name="title_advanced_expand_all">Автоматически разворачивать все прочитанные сообщения</string>
     <string name="title_advanced_expand_one">Разворачивать только одно сообщение за раз</string>
@@ -372,7 +373,7 @@
     <string name="title_advanced_default_snooze">Время повтора по умолчанию</string>
     <string name="title_advanced_notifications">Настроить уведомления</string>
     <string name="title_advanced_notifications_default">Канал по умолчанию</string>
-    <string name="title_advanced_notifications_service">Служебный канал</string>
+    <string name="title_advanced_notifications_service">Канал получения</string>
     <string name="title_advanced_notifications_background">Использовать фоновую службу для синхронизации сообщений</string>
     <string name="title_advanced_notifications_background_hint">Фоновая служба может быть остановлена Android в любое время, но не требует уведомления в статусной строке</string>
     <string name="title_advanced_badge">Показывать значок запуска с количеством новых сообщений</string>
@@ -408,8 +409,8 @@
     <string name="title_advanced_secure">Скрыть с экрана недавних приложений и запретить создание снимков экрана</string>
     <string name="title_advanced_pin">PIN-код</string>
     <string name="title_advanced_biometrics_timeout">Время до включения биометрической аутентификации</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Использовать списки для предупреждения об отслеживающих ссылках</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Использовать списки для распознавания отслеживающих изображений</string>
+    <string name="title_advanced_disconnect_links">Использовать списки для предупреждения об отслеживающих ссылках</string>
+    <string name="title_advanced_disconnect_images">Использовать списки для распознавания отслеживающих изображений</string>
     <string name="title_advanced_sign_default">Подписать по умолчанию</string>
     <string name="title_advanced_encrypt_default">Шифровать по умолчанию</string>
     <string name="title_advanced_auto_decrypt">Автоматически расшифровывать сообщения</string>
@@ -559,7 +560,6 @@
     <string name="title_leave_on_device">Оставлять сообщения на устройстве</string>
     <string name="title_max_messages">Максимальное количество загружаемых сообщений (пусто для всех)</string>
     <string name="title_keep_alive_interval">Интервал поддержания активности/опроса (мин.)</string>
-    <string name="title_use_date">Использовать время отправки вместо времени получения сервером</string>
     <string name="title_related_identity">Добавить связанный идентификатор</string>
     <string name="title_check">Проверить</string>
     <string name="title_trust">Доверять сертификату сервера с отпечатком %1$s</string>

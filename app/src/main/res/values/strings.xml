@@ -179,6 +179,7 @@
     <string name="title_setup_no_auth_hint">Please double check your email address and password and make sure external access (IMAP/SMTP) is enabled for your account</string>
     <string name="title_setup_app_password_hint">This provider requires an app password instead of the account password, please check the instructions of your provider</string>
     <string name="title_setup_no_system_folders">Inbox or draft folder not found</string>
+    <string name="title_setup_advanced_protection">When enrolled in the advanced protection program it is not possible to use a third party email app. This is a restriction imposed by Google.</string>
     <string name="title_setup_quick_success">An account and an identity have successfully been added</string>
     <string name="title_setup_quick_failed">You can try to configure an account and an identity below too</string>
     <string name="title_setup_manage">Manage</string>
@@ -405,7 +406,7 @@
 
     <string name="title_advanced_notifications">Manage notifications</string>
     <string name="title_advanced_notifications_default">Default channel</string>
-    <string name="title_advanced_notifications_service">Service channel</string>
+    <string name="title_advanced_notifications_service">Receive channel</string>
     <string name="title_advanced_notifications_background">Use background service to synchronize messages</string>
     <string name="title_advanced_notifications_background_hint">A background service can be stopped by Android at any time, but doesn\'t require a status bar notification</string>
 
@@ -493,8 +494,9 @@
     <string name="title_advanced_app">App settings</string>
     <string name="title_advanced_more">More options</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
-    <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s</string>
-    <string name="title_advanced_storage_space" translatable="false">Storage space: %1$s/%2$s</string>
+    <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s/%2$s</string>
+    <string name="title_advanced_memory_usage" translatable="false">Memory usage: %1$s/%2$s Native: %3$s</string>
+    <string name="title_advanced_storage_usage" translatable="false">Storage space: %1$s/%2$s</string>
     <string name="title_advanced_charsets" translatable="false">Charsets</string>
     <string name="title_advanced_ciphers" translatable="false">Ciphers</string>
 
@@ -631,7 +633,8 @@
     <string name="title_keep_alive_interval">Keep-alive/poll interval (minutes)</string>
     <string name="title_partial_fetch" translatable="false">Partial fetch</string>
     <string name="title_ignore_size" translatable="false">Ignore bodystructure size</string>
-    <string name="title_use_date">Use date header sent time instead of server received time</string>
+    <string name="title_use_date">Use \'Date\' header instead of server received time</string>
+    <string name="title_use_received">Use \'Received\' header instead of server received time</string>
     <string name="title_related_identity">Add related identity</string>
     <string name="title_check">Check</string>
     <string name="title_trust">Trust server certificate with fingerprint %1$s</string>

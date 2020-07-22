@@ -341,7 +341,7 @@ Android 8 Oreo może również pokazywać powiadomienie na pasku stanu z tekstem
 
 Niektóre osoby sugerowały użycie [ Firebase Cloud Messaging ](https://firebase.google.com/docs/cloud-messaging/) (FCM) zamiast usługi Android z powiadomieniem na pasku stanu, ale wymagałoby to od dostawców poczty e-mail wysyłania wiadomości FCM lub centralnego serwera, na którym gromadzone są wszystkie wiadomości wysyłające wiadomości FCM. Pierwsze z nich się nie wydarzy, a drugie miałoby znaczący wpływ na prywatność.
 
-Jeśli przyszedłeś tutaj, klikając powiadomienie, powinieneś wiedzieć, że następne kliknięcie spowoduje otwarcie wspólnej skrzynki odbiorczej.
+Jeśli trafiłeś tutaj, klikając powiadomienie, powinieneś wiedzieć, że następne kliknięcie otworzy wspólną skrzynkę odbiorczą.
 
 <br />
 
@@ -861,7 +861,7 @@ Błąd *... Uwierzytelnianie nie powiodło się ... Nieprawidłowe dane logowani
 
 Błąd *... Uwierzytelnianie nie powiodło się ... Nieprawidłowe dane logowania...* mogą być spowodowane cofnięciem wymaganych uprawnień do konta/kontaktów. Po prostu uruchom kreatora (ale nie wybieraj konta), aby ponownie przyznać wymagane uprawnienia.
 
-Błąd *... ServiceDisabled ... * może być spowodowany zarejestrowaniem się w [Advanced Protection Program](https://landing.google.com/advancedprotection/).
+Błąd *... ServiceDisabled ...* może być spowodowany zarejestrowaniem się w [Advanced Protection Program](https://landing.google.com/advancedprotection/) i używaniem nazwy użytkownika/hasła do autoryzacji. Zamiast tego spróbuj użyć kreatora szybkiej konfiguracji Gmail.
 
 W razie wątpliwości możesz poprosić o [wsparcie](#user-content-support).
 
@@ -1545,7 +1545,7 @@ Możesz wybrać jedną z tych akcji do zastosowania do pasujących wiadomości:
 * Tekst na mowę (nadawca i temat)
 * Automatyzacja (Tasker, itp.)
 
-Reguły są stosowane bezpośrednio po pobraniu nagłówka wiadomości, ale przed pobraniem tekstu wiadomości, więc nie jest możliwe zastosowanie warunków i działań do tekstu wiadomości. Zauważ, że duże wiadomości są pobierane na żądanie przy połączeniu taryfowym, aby oszczędzić użycie danych.
+Reguły są stosowane bezpośrednio po pobraniu nagłówka wiadomości, ale przed pobraniem tekstu wiadomości, dlatego nie można zastosować warunków do tekstu wiadomości. Zauważ, że duże wiadomości są pobierane na żądanie przy połączeniu taryfowym, aby oszczędzić użycie danych.
 
 Jeśli chcesz przesłać dalej wiadomość, rozważ użycie akcji przenoszenia. Będzie to bardziej wiarygodne niż przesyłanie dalej wiadomości, ponieważ przesłane dalej wiadomości mogą być uznane za spam.
 
@@ -2640,6 +2640,8 @@ Ta komenda może zostać wysłana do FairEmail z aplikacji automatyzującej aby 
 ```
 (adb shell) am startservice -a eu.faircode.email.DISCONNECT.ME
 ```
+
+Aktualizacja raz w tygodniu prawdopodobnie wystarczy, zobacz [tutaj](https://github.com/disconnectme/disconnect-tracking-protection/commits/master), aby przeczytać zmiany w ostatnich listach.
 
 <br />
 

@@ -333,6 +333,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_swipenav">Nach links/rechts wischen, um nächste/vorige Unterhaltung anzuzeigen</string>
     <string name="title_advanced_volumenav">Lautstärke hoch/runter, um zur nächsten/vorherigen Unterhaltung zu wechseln</string>
     <string name="title_advanced_reversed">Navigationsrichtung umkehren</string>
+    <string name="title_advanced_swipe_close">Zum Schließen der Unterhaltung nach unten wischen</string>
     <string name="title_advanced_autoexpand">Nachrichten automatisch erweitern</string>
     <string name="title_advanced_expand_all">Alle gelesenen Nachrichten automatisch erweitern</string>
     <string name="title_advanced_expand_one">Jeweils nur eine Nachricht erweitern</string>
@@ -351,7 +352,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_default_snooze">Standard-Schlummer-Zeit</string>
     <string name="title_advanced_notifications">Benachrichtigungen verwalten</string>
     <string name="title_advanced_notifications_default">Standardkanal</string>
-    <string name="title_advanced_notifications_service">Service-Kanal</string>
     <string name="title_advanced_notifications_background">Hintergrunddienst verwenden, um Nachrichten zu synchronisieren</string>
     <string name="title_advanced_notifications_background_hint">Ein Hintergrunddienst kann jederzeit von Android angehalten werden, erfordert aber keine Benachrichtigung in der Statusleiste</string>
     <string name="title_advanced_badge">Startsymbol mit der Anzahl der neuen Nachrichten anzeigen</string>
@@ -387,8 +387,8 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_advanced_secure">Im Anwendungsverlauf verbergen und das Aufnehmen von Bildschirmfotos verhindern</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Gültigkeitsdauer der biometrischen Authentifizierung</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Zusätzlich die Listen von Disconnect\'s tracker protection lists verwenden, um vor Nachverfolgungslinks zu warnen</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Zusätzlich die Listen von Disconnect\'s tracker protection lists zur Erkennung von Nachverfolgungsbildern verwenden</string>
+    <string name="title_advanced_disconnect_links">Listen verwenden, um vor Nachverfolgungslinks zu warnen</string>
+    <string name="title_advanced_disconnect_images">Listen zur Erkennung von Nachverfolgungsbildern verwenden</string>
     <string name="title_advanced_sign_default">Standardmäßig signieren</string>
     <string name="title_advanced_encrypt_default">Standardmäßig verschlüsseln</string>
     <string name="title_advanced_auto_decrypt">Nachrichten automatisch entschlüsseln</string>
@@ -538,7 +538,6 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_leave_on_device">Nachrichten auf Gerät belassen</string>
     <string name="title_max_messages">Maximale Anzahl der Nachrichten zum Herunterladen (leer für alle)</string>
     <string name="title_keep_alive_interval">Verbindung halten / Abfrageintervall (Minuten)</string>
-    <string name="title_use_date">Sendezeit der Datumskopfzeilen anstelle der Empfangszeit des Servers verwenden</string>
     <string name="title_related_identity">Hierzu passende Identität hinzufügen</string>
     <string name="title_check">Prüfen</string>
     <string name="title_trust">Serverzertifikat mit Fingerabdruck %1$s vertrauen</string>

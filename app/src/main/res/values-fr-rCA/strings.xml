@@ -332,6 +332,7 @@
     <string name="title_advanced_swipenav">Balayer vers la gauche/droite pour passer à la conversation suivante/précédente</string>
     <string name="title_advanced_volumenav">Augmenter/diminuer le volume pour passer à la conversation suivante/précédente</string>
     <string name="title_advanced_reversed">Inverser la direction de navigation</string>
+    <string name="title_advanced_swipe_close">Balayer vers le bas pour fermer la conversation</string>
     <string name="title_advanced_autoexpand">Développer automatiquement les messages</string>
     <string name="title_advanced_expand_all">Développer automatiquement tous les messages lus</string>
     <string name="title_advanced_expand_one">Ne développer qu’un seul message à la fois</string>
@@ -350,7 +351,7 @@
     <string name="title_advanced_default_snooze">Délai de report par défaut</string>
     <string name="title_advanced_notifications">Gérer les notifications</string>
     <string name="title_advanced_notifications_default">Canal par défaut</string>
-    <string name="title_advanced_notifications_service">Canal service</string>
+    <string name="title_advanced_notifications_service">Canal « Réception »</string>
     <string name="title_advanced_notifications_background">Utiliser le service d\'arrière-plan pour synchroniser les messages</string>
     <string name="title_advanced_notifications_background_hint">Un service en arrière-plan peut être arrêté par Android à tout moment, mais ne nécessite pas de notification dans la barre d\'état</string>
     <string name="title_advanced_badge">Afficher le nombre de nouveaux messages sur l\'icône de lancement</string>
@@ -386,8 +387,8 @@
     <string name="title_advanced_secure">Masquer FairEmail de la liste des applications récentes et empêcher la prise de captures d’écran</string>
     <string name="title_advanced_pin">NIP</string>
     <string name="title_advanced_biometrics_timeout">Délai d’expiration de l’authentification biométrique</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Utiliser des listes pour vous avertir des liens de pistage</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Utiliser des listes pour identifier les images de pistage</string>
+    <string name="title_advanced_disconnect_links">Utiliser des listes pour vous avertir des liens de pistage</string>
+    <string name="title_advanced_disconnect_images">Utiliser des listes pour identifier les images de pistage</string>
     <string name="title_advanced_sign_default">Signer par défaut</string>
     <string name="title_advanced_encrypt_default">Chiffrer par défaut</string>
     <string name="title_advanced_auto_decrypt">Déchiffrer automatiquement les messages</string>
@@ -537,7 +538,6 @@
     <string name="title_leave_on_device">Laisser les messages sur l’appareil</string>
     <string name="title_max_messages">Nombre maximum de messages à télécharger (laisser vide pour tous)</string>
     <string name="title_keep_alive_interval">Intervalle de maintien de connexion (minutes)</string>
-    <string name="title_use_date">Utiliser l’heure d’envoi indiquée dans l’en-tête au lieu de l’heure de réception par le serveur</string>
     <string name="title_related_identity">Ajouter une identité liée</string>
     <string name="title_check">Vérifier</string>
     <string name="title_trust">Faire confiance au certificat du serveur avec l’empreinte digitale %1$s</string>

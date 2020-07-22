@@ -320,6 +320,7 @@
     <string name="title_advanced_swipenav">左右滑动切换邮件</string>
     <string name="title_advanced_volumenav">音量上/下键切换邮件</string>
     <string name="title_advanced_reversed">反转导航方向</string>
+    <string name="title_advanced_swipe_close">向下滑动关闭对话</string>
     <string name="title_advanced_autoexpand">自动展开消息</string>
     <string name="title_advanced_expand_all">自动展开所有已读消息</string>
     <string name="title_advanced_expand_one">每次仅展开一个消息</string>
@@ -338,7 +339,7 @@
     <string name="title_advanced_default_snooze">默认打盹时间</string>
     <string name="title_advanced_notifications">管理通知</string>
     <string name="title_advanced_notifications_default">默认频道</string>
-    <string name="title_advanced_notifications_service">服务频道</string>
+    <string name="title_advanced_notifications_service">接收频道</string>
     <string name="title_advanced_notifications_background">使用后台服务来同步消息</string>
     <string name="title_advanced_notifications_background_hint">后台服务不会显示状态栏通知，但随时可能会被 Android 终止</string>
     <string name="title_advanced_badge">在启动器图标上显示新消息数目</string>
@@ -374,8 +375,8 @@
     <string name="title_advanced_secure">从\"最近应用\"列表中隐藏并阻止截屏</string>
     <string name="title_advanced_pin">PIN 码</string>
     <string name="title_advanced_biometrics_timeout">生物认证超时时间</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">使用列表警告跟踪链接</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">使用列表来识别跟踪图像</string>
+    <string name="title_advanced_disconnect_links">使用列表警告跟踪链接</string>
+    <string name="title_advanced_disconnect_images">使用列表来识别跟踪图像</string>
     <string name="title_advanced_sign_default">使用默认签名</string>
     <string name="title_advanced_encrypt_default">使用默认加密</string>
     <string name="title_advanced_auto_decrypt">自动解密消息</string>
@@ -525,7 +526,6 @@
     <string name="title_leave_on_device">把消息留在设备上</string>
     <string name="title_max_messages">下载邮件的最大数（留空则下载全部）</string>
     <string name="title_keep_alive_interval">保持激活/轮询时间间隔(分钟)</string>
-    <string name="title_use_date">使用日期头发送时间而非服务器接收时间</string>
     <string name="title_related_identity">添加相关身份</string>
     <string name="title_check">检查</string>
     <string name="title_trust">信任具有指纹 %1$s的服务器证书</string>

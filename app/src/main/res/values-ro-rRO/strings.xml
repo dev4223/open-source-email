@@ -360,7 +360,6 @@
     <string name="title_advanced_default_snooze">Timpul implicit de amânare</string>
     <string name="title_advanced_notifications">Gestionarea notificărilor</string>
     <string name="title_advanced_notifications_default">Canal implicit</string>
-    <string name="title_advanced_notifications_service">Canal serviciu</string>
     <string name="title_advanced_notifications_background">Folosește serviciul de fundal pentru a sincroniza mesajele</string>
     <string name="title_advanced_notifications_background_hint">Un serviciu de fundal poate fi oprit de Android în orice moment, dar nu necesită o notificare în bara de stare</string>
     <string name="title_advanced_badge">Afișează iconița lansatorului cu numărul de mesaje noi</string>
@@ -396,8 +395,8 @@
     <string name="title_advanced_secure">Ascunde din lista de aplicații recente și previne capturarea ecranului</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Expirare autentificarea biometrică</string>
-    <string name="title_advanced_disconnect_links" comment="title_advanced_disconnect_links&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Folosește liste pentru a avertiza despre adrese de urmărire</string>
-    <string name="title_advanced_disconnect_images" comment="title_advanced_disconnect_images&#10;This is about Disconnect's tracker protection lists: https://disconnect.me/trackerprotection">Folosește listele pentru a recunoaște imaginile de urmărire</string>
+    <string name="title_advanced_disconnect_links">Folosește liste pentru a avertiza despre adrese de urmărire</string>
+    <string name="title_advanced_disconnect_images">Folosește listele pentru a recunoaște imaginile de urmărire</string>
     <string name="title_advanced_sign_default">Semnare în mod implicit</string>
     <string name="title_advanced_encrypt_default">Criptare în mod implicit</string>
     <string name="title_advanced_auto_decrypt">Decriptează automat mesajele</string>
@@ -547,7 +546,6 @@
     <string name="title_leave_on_device">Păstrează mesajele pe dispozitiv</string>
     <string name="title_max_messages">Numărul maxim de mesaje de descărcat (liber pentru toate)</string>
     <string name="title_keep_alive_interval">Interval menținere conexiune/verificare periodică (minute)</string>
-    <string name="title_use_date">Folosește data de trimitere din antet în loc de data de recepție pe server</string>
     <string name="title_related_identity">Adaugă identitate conexă</string>
     <string name="title_check">Verificare</string>
     <string name="title_trust">Autorizare certificat server cu amprenta %1$s</string>

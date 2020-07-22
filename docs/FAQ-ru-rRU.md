@@ -44,11 +44,11 @@
 ## Узнайте, как...
 
 * Изменение имени учётной записи: Настройки, Шаг 1, Редактировать, нажмите учётную запись
-* Для изменения цели смахивания влево/вправо: Настройка, Режимы, Настройка жестов
-* Change password: Setup, step 1, Manage, tap account, change password
-* Set a signature: Setup, step 2, Manage, tap identity, Edit signature.
-* Add CC and BCC addresses: tap the people's icon at the end of the subject
-* Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
+* Для изменения цели смахивания влево/вправо: Настройка, Поведение, Настройка жестов
+* Изменить пароль: Настройки, Шаг 1, Редактировать, нажать на аккаунт, изменить пароль
+* Установка подписи: Настройки, Шаг 2, Редактировать, нажмите на идентификатор, Изменить подпись.
+* Добавить адреса CC и BCC: нажмите на значок человека в конце темы
+* Перейти к следующему/предыдущему сообщению при архивации/удалении: в настройках поведения отключите *Автоматически закрывать диалоги* и выберите *Перейти к следующему/предыдущему диалогу* для *При закрытии диалога*
 * Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
 * Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
 * Load more messages: long press a folder in the folder list, select *Synchronize more messages*
@@ -341,7 +341,7 @@ Android 8 Oreo might also show a status bar notification with the text *Apps are
 
 Some people suggested to use [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging/) (FCM) instead of an Android service with a status bar notification, but this would require email providers to send FCM messages or a central server where all messages are collected sending FCM messages. The first is not going to happen and the last would have significant privacy implications.
 
-If you came here by clicking on the notification, you should know that the next click will open the unified inbox instead.
+Если вы попали сюда, нажав на уведомление, вам стоит знать, что следующий щелчок откроет единый почтовый ящик.
 
 <br />
 
@@ -859,11 +859,11 @@ The errors *... Authentication failed ... No token on refresh ...* means that th
 
 The error *... Authentication failed ... Invalid credentials ... network error ...* means that the Android account manager was not able to refresh the authorization of a Gmail account due to problems with the internet connection
 
-The error *... Authentication failed ... Invalid credentials ...* could be caused by having revoked the required account/contacts permissions. Just start the wizard (but do not select an account) to grant the required permissions again.
+Ошибка *... Authentication failed ... Invalid credentials ...* может быть вызвана отзывом необходимых прав доступа к учетной записи/контактам. Просто запустите мастера (но не выберите учетную запись), чтобы снова предоставить необходимые разрешения.
 
-The eror *... ServiceDisabled ...* might be caused by enrolling in the [Advanced Protection Program](https://landing.google.com/advancedprotection/).
+Ошибка *... ServiceDisabled ...* может быть вызвана регистрацией в [Advanced Protection Program](https://landing.google.com/advancedprotection/) и использованием имени пользователя/пароля для аутентификации. Попробуйте вместо этого использовать мастер быстрой настройки Gmail.
 
-When in doubt, you can ask for [support](#user-content-support).
+Если вы сомневаетесь, вы можете запросить [поддержку ](#user-content-support).
 
 <br />
 
@@ -1545,7 +1545,7 @@ You can select one of these actions to apply to matching messages:
 * Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
 
-Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions and actions to the message text. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
+Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions to the message text. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
 
 If you want to forward a message, consider to use the move action instead. This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
 
@@ -2280,7 +2280,7 @@ If you read from left to right, swiping to the left will show the next message. 
 
 This behavior seems quite natural to me, also because it is similar to turning pages.
 
-Anyway, there is a behavior setting to reverse the swipe direction.
+Во всяком случае, есть настройка поведения для обратного направления свайпа.
 
 <br />
 
@@ -2641,23 +2641,25 @@ Tracking images will not be recognized when the domain is classified as '*Conten
 (adb shell) am startservice -a eu.faircode.email.DISCONNECT.ME
 ```
 
+Updating once a week will probably be sufficient, please see [here](https://github.com/disconnectme/disconnect-tracking-protection/commits/master) for recent lists changes.
+
 <br />
 
 ## Поддержка
 
-Поддерживается только последняя версия Play и последняя версия GitHub. Это также означает, что понижение версии не поддерживается.
+Only the latest Play store version and latest GitHub release are supported. This also means that downgrading is not supported.
 
-Запрошенные функции должны:
+Requested features should:
 
 * be useful to most people
 * not complicate the usage of FairEmail
 * fit within the philosophy of FairEmail (privacy oriented, security minded)
 * comply with common standards (IMAP, SMTP, etc)
 
-Характеристики, не удовлетворяющие этим требованиям, скорее всего, будут отклонены. Это также необходимо для поддержики в долгосрочной перспективе.
+Features not fulfilling these requirements will likely be rejected. This is also to keep maintenance and support in the long run feasible.
 
-Если у вас есть вопрос, хотите запросить функцию или сообщить об ошибке, пожалуйста, используйте [эту форму](https://contact.faircode.eu/?product=fairemailsupport).
+If you have a question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
 
-Issues на GitHub отключены из-за частых злоупотреблений.
+GitHub issues are disabled due to frequent misusage.
 
-Copyright &copy; 2018-2020 Марсель Bokhorst.
+Copyright &copy; 2018-2020 Marcel Bokhorst.
