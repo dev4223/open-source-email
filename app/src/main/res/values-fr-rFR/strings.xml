@@ -127,6 +127,7 @@
     <string name="title_setup_quick_smtp">Serveur SMTP pour l’envoi des messages</string>
     <string name="title_setup_wizard">Assistant</string>
     <string name="title_setup_wizard_multiple">L’assistant de configuration rapide peut être utilisé plusieurs fois pour configurer plusieurs comptes</string>
+    <string name="title_setup_wizard_new">J\'ai besoin d\'une nouvelle adresse électronique</string>
     <string name="title_setup_wizard_remark">Faire « Retour » pour aller à la boîte de réception</string>
     <string name="title_setup_other">Autre fournisseur</string>
     <string name="title_setup_gmail_support">L’autorisation des comptes Google fonctionnera seulement sur les versions officielles parce qu’Android vérifie la signature de l’application</string>
@@ -159,7 +160,7 @@
     <string name="title_setup_permissions">Accorder les autorisations</string>
     <string name="title_setup_permissions_remark">Pour accéder aux informations des contacts (facultatif)</string>
     <string name="title_setup_doze">Configurer les optimisations de la batterie</string>
-    <string name="title_setup_doze_remark">Pour recevoir des e-mails en continu (facultatif)</string>
+    <string name="title_setup_doze_remark">Recevoir des e-mails de manière fiable</string>
     <string name="title_setup_doze_instructions">Sur le prochain écran, sélectionnez « Toutes les applications » en haut, recherchez cette application puis sélectionnez et validez « Ne pas optimiser »</string>
     <string name="title_setup_doze_battery">Utilisation élevée de la batterie ?</string>
     <string name="title_setup_doze_stopped">Synchronisation arrêtée ?</string>
@@ -242,6 +243,7 @@
     <string name="title_advanced_suggest_sent">Suggérer les adresses trouvées dans les messages envoyés</string>
     <string name="title_advanced_suggest_received">Suggérer les adresses trouvées dans les messages reçus</string>
     <string name="title_advanced_suggest_frequently">Trier les adresses suggérées par fréquence d’utilisation</string>
+    <string name="title_advanced_compose_font">Police de caractères par défaut</string>
     <string name="title_advanced_auto_list">Créer automatiquement des listes</string>
     <string name="title_advanced_prefix_once">Ne préfixer l\'objet qu\'une seule fois lors de la réponse ou du transfert</string>
     <string name="title_advanced_extended_reply">Utiliser l\'en-tête étendu de réponse/transfert</string>
@@ -357,6 +359,7 @@
     <string name="title_advanced_notifications_background_hint">Un service en arrière-plan peut être arrêté par Android à tout moment, mais ne nécessite pas de notification dans la barre d\'état</string>
     <string name="title_advanced_badge">Afficher le nombre de nouveaux messages sur l’icône de lancement</string>
     <string name="title_advanced_unseen_ignored">Faire correspondre le nombre de nouveaux messages et le nombre de notifications</string>
+    <string name="title_advanced_notify_background">Afficher les notifications en arrière-plan uniquement</string>
     <string name="title_advanced_notify_known">Afficher les notifications uniquement pour les contacts</string>
     <string name="title_advanced_notify_summary">Afficher seulement une notification récapitulative</string>
     <string name="title_advanced_notify_preview">Afficher un aperçu du message dans les notifications</string>
@@ -540,8 +543,8 @@
     <string name="title_max_messages">Nombre maximum de messages à télécharger (laisser vide pour tous)</string>
     <string name="title_keep_alive_interval">Intervalle de maintien de connexion (minutes)</string>
     <string name="title_server_time">Utiliser l\'heure de réception (serveur)</string>
-    <string name="title_received_header" comment="title_received_header&#10;'Received' should not be translated">Utiliser l\'en-tête « Reçu »</string>
-    <string name="title_date_header" comment="title_date_header&#10;'Date' should not be translated">Utiliser l\'en-tête « Date » (heure d\'envoi)</string>
+    <string name="title_received_header">Utiliser l\'en-tête « Reçu »</string>
+    <string name="title_date_header">Utiliser l\'en-tête « Date » (heure d\'envoi)</string>
     <string name="title_date_remark">Les modifications seront appliquées uniquement aux nouveaux messages</string>
     <string name="title_related_identity">Ajouter une identité liée</string>
     <string name="title_check">Vérifier</string>
@@ -599,6 +602,7 @@
     <string name="title_empty_spam_ask">Supprimer définitivement tous les messages indésirables ?</string>
     <string name="title_empty_trash_all_ask">Supprimer définitivement tous les messages de la corbeille pour tous les comptes ?</string>
     <string name="title_empty_spam_all_ask">Supprimer définitivement tous les messages indésirables pour tous les comptes ?</string>
+    <string name="title_empty_all">Ceci supprimera tous les messages à la fois de l\'appareil et du serveur</string>
     <string name="title_delete_operation">Supprimer les opérations avec un message d’erreur ?</string>
     <string name="title_delete_contacts">Supprimer tous les contacts locaux ?</string>
     <string name="title_no_operations">Aucune opération en attente</string>
@@ -822,6 +826,7 @@
     <string name="title_no_key">Aucune clé privée</string>
     <string name="title_invalid_key">Clé privée non valide</string>
     <string name="title_unknown_key">La clé privée ne correspond à aucune clé de chiffrement</string>
+    <string name="title_key_missing">Aucune clé pour %1$s</string>
     <string name="title_send_reminder_remark">Les rappels peuvent être activés à nouveau dans les paramètres d\'envoi</string>
     <string name="title_send_plain_text">Texte brut seulement</string>
     <string name="title_send_receipt">Demander une confirmation</string>

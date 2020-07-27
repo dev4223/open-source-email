@@ -102,6 +102,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private int lastAccounts = 0;
     private int lastOperations = 0;
 
+    private boolean foreground = false;
     private Map<Long, Core.State> coreStates = new Hashtable<>();
     private MutableLiveData<ConnectionHelper.NetworkState> liveNetworkState = new MutableLiveData<>();
     private MutableLiveData<List<TupleAccountState>> liveAccountState = new MutableLiveData<>();
@@ -131,7 +132,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     ));
 
     private static final List<String> PREF_RELOAD = Collections.unmodifiableList(Arrays.asList(
-            "metered", "roaming", "rlah", // force reconnect
             "ssl_harden", // force reconnect
             "badge", "unseen_ignored", // force update badge/widget
             "debug" // force reconnect
@@ -509,7 +509,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     @Override
                     public void run() {
                         try {
-                            Core.notifyMessages(ServiceSynchronize.this, messages, groupNotifying);
+                            Core.notifyMessages(ServiceSynchronize.this, messages, groupNotifying, foreground);
                         } catch (SecurityException ex) {
                             Log.w(ex);
                             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ServiceSynchronize.this);
@@ -612,7 +612,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (PREF_EVAL.contains(key)) {
+        if (PREF_EVAL.contains(key) || ConnectionHelper.PREF_NETWORK.contains(key)) {
+            if (ConnectionHelper.PREF_NETWORK.contains(key))
+                updateNetworkState(null, null);
+
             Bundle command = new Bundle();
             command.putString("pref", key);
             command.putString("name", "eval");
@@ -717,6 +720,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         onWakeup(intent);
                         break;
 
+                    case "state":
+                        onState(intent);
+                        break;
+
                     case "alarm":
                         onAlarm(intent);
                         break;
@@ -770,6 +777,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 Log.w(ex);
             }
         }
+    }
+
+    private void onState(Intent intent) {
+        foreground = intent.getBooleanExtra("foreground", false);
     }
 
     private void onAlarm(Intent intent) {
@@ -1751,13 +1762,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 lastActiveCaps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
                                 !lastActiveCaps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED));
 
-                        if (reload || BuildConfig.DEBUG)
-                            EntityLog.log(ServiceSynchronize.this, "Connectivity changed " + network +
-                                    " caps=" + caps + " reload=" + reload);
-
                         if (reload) {
                             reloaded = active;
-                            reload(ServiceSynchronize.this, -1L, false, "unmetered");
+                            reload(ServiceSynchronize.this, -1L, false,
+                                    "Connectivity changed " + network + " caps=" + caps);
                         }
 
                         lastActiveCaps = caps;
@@ -1810,13 +1818,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         boolean reload = (!active.equals(reloaded) &&
                                 (ahas4 && !lhas4) || (ahas6 && !lhas6));
 
-                        if (reload || BuildConfig.DEBUG)
-                            EntityLog.log(ServiceSynchronize.this, "Connectivity changed " + network +
-                                    " props=" + props + " reload=" + reload);
-
                         if (reload) {
                             reloaded = active;
-                            reload(ServiceSynchronize.this, -1L, false, "connectivity");
+                            reload(ServiceSynchronize.this, -1L, false,
+                                    "Connectivity changed " + network + " props=" + props);
                         }
 
                         lastActiveProps = props;
@@ -2149,6 +2154,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         start(context,
                 new Intent(context, ServiceSynchronize.class)
                         .setAction("alarm"));
+    }
+
+    static void state(Context context, boolean foreground) {
+        start(context,
+                new Intent(context, ServiceSynchronize.class)
+                        .setAction("state")
+                        .putExtra("foreground", foreground));
     }
 
     static void watchdog(Context context) {

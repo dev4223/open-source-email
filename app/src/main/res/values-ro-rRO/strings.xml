@@ -169,7 +169,6 @@
     <string name="title_setup_permissions">Acordă permisiuni</string>
     <string name="title_setup_permissions_remark">Pentru a obține informațiile contactelor (opțional)</string>
     <string name="title_setup_doze">Configurare optimizare baterie</string>
-    <string name="title_setup_doze_remark">Pentru a primi în mod continuu e-mail (opțional)</string>
     <string name="title_setup_doze_instructions">În fereastra următoare, selectați \"Toate aplicațiile\" din partea de sus, selectați acestă aplicație și selectați și confirmați \"Nu optimiza\"</string>
     <string name="title_setup_doze_battery">Utilizare intensă a bateriei?</string>
     <string name="title_setup_doze_stopped">Sincronizarea e oprită?</string>
@@ -252,6 +251,7 @@
     <string name="title_advanced_suggest_sent">Sugerează adrese găsite în mesajele trimise</string>
     <string name="title_advanced_suggest_received">Sugerează adrese găsite în mesajele primite</string>
     <string name="title_advanced_suggest_frequently">Sortați adresele sugerate în funcție de frecvența de utilizare</string>
+    <string name="title_advanced_compose_font">Font prestabilit</string>
     <string name="title_advanced_auto_list">Creează automat liste</string>
     <string name="title_advanced_prefix_once">Adaugă prefix la subiect o singură dată pentru răspuns sau redirecționare</string>
     <string name="title_advanced_extended_reply">Folosește antetul extins pentru răspuns/redirecționare</string>
@@ -362,10 +362,12 @@
     <string name="title_advanced_default_snooze">Timpul implicit de amânare</string>
     <string name="title_advanced_notifications">Gestionarea notificărilor</string>
     <string name="title_advanced_notifications_default">Canal implicit</string>
+    <string name="title_advanced_notifications_service">Canal primire</string>
     <string name="title_advanced_notifications_background">Folosește serviciul de fundal pentru a sincroniza mesajele</string>
     <string name="title_advanced_notifications_background_hint">Un serviciu de fundal poate fi oprit de Android în orice moment, dar nu necesită o notificare în bara de stare</string>
     <string name="title_advanced_badge">Afișează iconița lansatorului cu numărul de mesaje noi</string>
     <string name="title_advanced_unseen_ignored">Fie ca numărul de mesaje noi să corespundă cu numărul de notificări</string>
+    <string name="title_advanced_notify_background">Arată notificări doar când e în fundal</string>
     <string name="title_advanced_notify_known">Arată notificări numai pentru contacte</string>
     <string name="title_advanced_notify_summary">Arată doar sumarul în notificare</string>
     <string name="title_advanced_notify_preview">Arată previzualizare mesaj în notificare</string>
@@ -549,8 +551,8 @@
     <string name="title_max_messages">Numărul maxim de mesaje de descărcat (liber pentru toate)</string>
     <string name="title_keep_alive_interval">Interval menținere conexiune/verificare periodică (minute)</string>
     <string name="title_server_time">Utilizează ora primită (server)</string>
-    <string name="title_received_header" comment="title_received_header&#10;'Received' should not be translated">Folosește antetul \"Primit\"</string>
-    <string name="title_date_header" comment="title_date_header&#10;'Date' should not be translated">Folosește antetul \'Dată\' (ora trimisă)</string>
+    <string name="title_received_header">Folosește antetul \"Primit\"</string>
+    <string name="title_date_header">Folosește antetul \'Dată\' (ora trimisă)</string>
     <string name="title_date_remark">Modificările vor fi aplicate doar mesajelor noi</string>
     <string name="title_related_identity">Adaugă identitate conexă</string>
     <string name="title_check">Verificare</string>
@@ -608,6 +610,7 @@
     <string name="title_empty_spam_ask">Se șterg permanent toate mesajele spam?</string>
     <string name="title_empty_trash_all_ask">Şterge permanent toate mesajele din coșul de gunoi pentru toate conturile?</string>
     <string name="title_empty_spam_all_ask">Şterge permanent toate mesajele spam pentru toate conturile?</string>
+    <string name="title_empty_all">Aceasta va șterge toate mesajele atât de pe dispozitiv cât și de pe server</string>
     <string name="title_delete_operation">Se șterg operațiunile cu mesaj de eroare?</string>
     <string name="title_delete_contacts">Ștergeți toate contactele locale?</string>
     <string name="title_no_operations">Nici o operațiune în așteptare</string>
@@ -831,6 +834,7 @@
     <string name="title_no_key">Nici o cheie privată</string>
     <string name="title_invalid_key">Cheie privată invalidă</string>
     <string name="title_unknown_key">Cheia privată nu se potrivește cu nici o cheie de criptare</string>
+    <string name="title_key_missing">Nici o cheie pentru %1$s</string>
     <string name="title_send_reminder_remark">Memento-urile pot fi activate din nou în setările de trimitere</string>
     <string name="title_send_plain_text">Doar text simplu</string>
     <string name="title_send_receipt">Solicitare confirmare</string>

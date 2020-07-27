@@ -170,7 +170,7 @@ Designen bygger på många diskussioner och om du vill kan du diskutera det [i d
 * [(51) Hur är mappar sorterade?](#user-content-faq51)
 * [(52) Varför tar det tid att återansluta till ett konto?](#user-content-faq52)
 * [(53) Kan du fästa meddelandets åtgärdsfält högst upp/nedre?](#user-content-faq53)
-* [~~(54) How do I use a namespace prefix?~~](#user-content-faq54)
+* [~~(54) Hur använder jag ett namnrymdsprefix?~~](#user-content-faq54)
 * [(55) Hur kan jag markera alla meddelanden som lästa/flytta eller ta bort alla meddelanden?](#user-content-faq55)
 * [(56) Kan du lägga till stöd för JMAP?](#user-content-faq56)
 * [~~(57) Kan jag använda HTML i signaturer?~~](#user-content-faq57)
@@ -223,73 +223,73 @@ Designen bygger på många diskussioner och om du vill kan du diskutera det [i d
 * [(105) Hur fungerar roaming som hemma?](#user-content-faq105)
 * [(106) Vilken hemapp kan visa ett märke med antalet olästa meddelanden?](#user-content-faq106)
 * [(107) Hur använder jag färgade stjärnor?](#user-content-faq107)
-* [(108) Can you add permanently delete messages from any folder?](#user-content-faq108)
-* [~~(109) Why is 'select account' available in official versions only?~~](#user-content-faq109)
-* [(110) Why are (some) messages empty and/or attachments corrupted?](#user-content-faq110)
-* [(111) Is OAuth supported?](#user-content-faq111)
-* [(112) Which email provider do you recommend?](#user-content-faq112)
-* [(113) How does biometric authentication work?](#user-content-faq113)
-* [(114) Can you add an import for the settings of other email apps?](#user-content-faq114)
+* [(108) Kan du lägga till permanent ta bort meddelanden från valfri mapp?](#user-content-faq108)
+* [~~(109) Varför finns "välj konto" endast i officiella versioner?~~](#user-content-faq109)
+* [(110) Varför är (vissa) meddelanden tomma och/eller bilagor korrumperade?](#user-content-faq110)
+* [(111) Stöds OAuth?](#user-content-faq111)
+* [(112) Vilken e-postleverantör rekommenderar du?](#user-content-faq112)
+* [(113) Hur fungerar biometrisk autentisering?](#user-content-faq113)
+* [(114) Kan du lägga till en import för inställningarna för andra e-postappar?](#user-content-faq114)
 * [(115) Can you add email address chips?](#user-content-faq115)
-* [~~(116) How can I show images in messages from trusted senders by default?~~](#user-content-faq116)
-* [(117) Can you help me restore my purchase?](#user-content-faq117)
-* [(118) What does 'Remove tracking parameters' exactly?](#user-content-faq118)
-* [~~(119) Can you add colors to the unified inbox widget?~~](#user-content-faq119)
-* [(120) Why are new message notifications not removed on opening the app?](#user-content-faq120)
-* [(121) How are messages grouped into a conversation?](#user-content-faq121)
-* [~~(122) Why is the recipient name/email address show with a warning color?~~](#user-content-faq122)
-* [(123) What will happen when FairEmail cannot connect to an email server?](#user-content-faq123)
-* [(124) Why do I get 'Message too large or too complex to display'?](#user-content-faq124)
-* [(125) What are the current experimental features?](#user-content-faq125)
-* [(126) Can message previews be sent to my wearable?](#user-content-faq126)
-* [(127) How can I fix 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
-* [(128) How can I reset asked questions, for example to show images?](#user-content-faq128)
-* [(129) Are ProtonMail, Tutanota supported?](#user-content-faq129)
-* [(130) What does message error ... mean?](#user-content-faq130)
-* [(131) Can you change the direction for swiping to previous/next message?](#user-content-faq131)
-* [(132) Why are new message notifications silent?](#user-content-faq132)
-* [(133) Why is ActiveSync not supported?](#user-content-faq133)
-* [(134) Can you add deleting local messages?](#user-content-faq134)
-* [(135) Why are trashed messages and drafts shown in conversations?](#user-content-faq135)
-* [(136) How can I delete an account/identity/folder?](#user-content-faq136)
-* [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
-* [(138) Can you add calendar/contact management/synchronizing?](#user-content-faq138)
-* [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
-* [(140) Why does the message text contain strange characters?](#user-content-faq140)
-* [(141) How can I fix 'A drafts folder is required to send messages'?](#user-content-faq141)
-* [(142) How can I store sent messages in the inbox?](#user-content-faq142)
-* [~~(143) Can you add a trash folder for POP3 accounts?~~](#user-content-faq143)
-* [(144) How can I record voice notes?](#user-content-faq144)
-* [(145) How can I set a notification sound for an account, folder or sender?](#user-content-faq145)
-* [(146) How can I fix incorrect message times?](#user-content-faq146)
-* [(147) What should I know about third party versions?](#user-content-faq147)
-* [(148) How can I use an Apple iCloud account?](#user-content-faq148)
-* [(149) How does the unread message count widget work?](#user-content-faq149)
-* [(150) Can you add cancelling calendar invites?](#user-content-faq150)
+* [~~(116) Hur kan jag visa bilder i meddelanden från betrodda avsändare som standard?~~](#user-content-faq116)
+* [(117) Kan du hjälpa mig att återställa mitt köp?](#user-content-faq117)
+* [(118) Vad gör "Ta bort spårningsparametrar" exakt?](#user-content-faq118)
+* [~~(119) Kan du lägga till färger till den enhetliga inkorgwidgeten?~~](#user-content-faq119)
+* [(120) Varför tas inte avisering av nya meddelanden bort när appen öppnas?](#user-content-faq120)
+* [(121) Hur grupperas meddelanden i en konversation?](#user-content-faq121)
+* [~~(122) Varför visas mottagarens namn/e-postadress med en varningsfärg?~~](#user-content-faq122)
+* [(123) Vad händer när FairEmail inte kan ansluta till en e-postserver?](#user-content-faq123)
+* [(124) Varför får jag 'Meddelande för stort eller för komplext för att visa'?](#user-content-faq124)
+* [(125) Vilka är de nuvarande experimentella funktionerna?](#user-content-faq125)
+* [(126) Kan förhandsvisningar skickas till min bärbara enhet/klocka?](#user-content-faq126)
+* [(127) Hur kan jag fixa 'Syntactically invalid HELO argument(s)'?](#user-content-faq127)
+* [(128) Hur kan jag återställa frågorna, till exempel för att visa bilder?](#user-content-faq128)
+* [(129) Stöds ProtonMail, Tutanota?](#user-content-faq129)
+* [(130) Vad innebär felet ... ?](#user-content-faq130)
+* [(131) Kan du ändra riktning för att svepa till föregående/nästa meddelande?](#user-content-faq131)
+* [(132) Varför är nya meddelanden tysta?](#user-content-faq132)
+* [(133) Varför stöds inte ActiveSync?](#user-content-faq133)
+* [(134) Kan du lägga till ta bort lokala meddelanden?](#user-content-faq134)
+* [(135) Varför visas kastade meddelanden och utkast i konversationer?](#user-content-faq135)
+* [(136) Hur tar jag bort en konto/identitet/mapp?](#user-content-faq136)
+* [(137) Hur kan jag återställa 'Fråga inte igen'?](#user-content-faq137)
+* [(138) Kan du lägga till kalender/kontakthantering/synkronisering?](#user-content-faq138)
+* [(139) Hur löser jag 'User is authenticated but not connected'?](#user-content-faq139)
+* [(140) Varför innehåller texten konstiga tecken?](#user-content-faq140)
+* [(141) Hur kan jag åtgärda 'En utkastmapp krävs för att skicka meddelanden'?](#user-content-faq141)
+* [(142) Hur kan jag lagra skickade meddelanden i inkorgen?](#user-content-faq142)
+* [~~(143) Kan du lägga till en papperskorgsmapp för POP3-konton?~~](#user-content-faq143)
+* [(144) Hur kan jag spela in röstnoter?](#user-content-faq144)
+* [(145) Hur kan jag ställa in ett aviseringsljud för ett konto, mapp eller avsändare?](#user-content-faq145)
+* [(146) Hur kan jag åtgärda felaktiga meddelandetider?](#user-content-faq146)
+* [(147) Vad bör jag veta om tredjepartsversioner?](#user-content-faq147)
+* [(148) Hur kan jag använda ett Apple iCloud-konto?](#user-content-faq148)
+* [(149) Hur fungerar den olästa meddelanden widgeten?](#user-content-faq149)
+* [(150) Kan du lägga till annullerande kalenderinbjudningar?](#user-content-faq150)
 * [(151) Kan du lägga till säkerhetskopiering/återställning av meddelanden?](#user-content-faq151)
-* [(152) How can I insert a contact group?](#user-content-faq152)
-* [(153) Why does permanently deleting Gmail message not work?](#user-content-faq153)
-* [~~(154) Can you add favicons as contact photos?~~](#user-content-faq154)
-* [(155) What is a winmail.dat file?](#user-content-faq155)
-* [(156) How can I set up an Office365 account?](#user-content-faq156)
-* [(157) How can I set up an Free.fr account?](#user-content-faq157)
-* [(158) Which camera / audio recorder do you recommend?](#user-content-faq158)
+* [(152) Hur kan jag sätta in en kontaktgrupp?](#user-content-faq152)
+* [(153) Varför fungerar inte det att permanent radera Gmail-meddelandet?](#user-content-faq153)
+* [~~(154) Kan du lägga till favicons som kontaktbilder?~~](#user-content-faq154)
+* [(155) Vad är en winmail.dat fil?](#user-content-faq155)
+* [(156) Hur kan jag ställa in ett Office365-konto?](#user-content-faq156)
+* [(157) Hur kan jag sätta upp ett Free.fr-konto?](#user-content-faq157)
+* [(158) Vilken kamera / ljudinspelare rekommenderar du?](#user-content-faq158)
 * [(159) Vad är Disconnect's spårningsskyddslistor?](#user-content-faq159)
 
-[I have another question.](#user-content-support)
+[Jag har en annan fråga.](#user-content-support)
 
 <a name="faq1"></a>
-**(1) Which permissions are needed and why?**
+**(1) Vilka behörigheter behövs och varför?**
 
-The following Android permissions are needed:
+Följande Android-behörigheter behövs:
 
-* *have full network access* (INTERNET): to send and receive email
-* *view network connections* (ACCESS_NETWORK_STATE): to monitor internet connectivity changes
-* *run at startup* (RECEIVE_BOOT_COMPLETED): to start monitoring on device start
-* *foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
-* *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while synchronizing messages
-* *in-app billing* (BILLING): to allow in-app purchases
-* Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
+* *har full nätverksåtkomst* (INTERNET): för att skicka och ta emot e-post
+* *visa nätverksanslutningar* (ACCESS_NETWORK_STATE): för att övervaka ändringar av internetanslutningar
+* *kör vid start* (RECEIVE_BOOT_COMPLETED): för att starta övervakningen på enheten
+* *förgrundstjänst* (FOREGROUND_SERVICE): att köra en förgrundstjänst på Android 9 Pie och senare, se även nästa fråga
+* *förhindra enheten från att sova* (WAKE_LOCK): för att hålla enheten vaken vid synkronisering av meddelanden
+* *i-app fakturering* (BILLING): för att tillåta i-app köp
+* Valfritt: *läs dina kontakter* (READ_CONTACTS): för att automatiskt fylla på adresser och för att visa foton
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 * Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
 * Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
@@ -366,9 +366,10 @@ The low priority status bar notification shows the number of pending operations,
 * *attachment*: download attachment
 * *sync*: synchronize local and remote messages
 * *subscribe*: subscribe to remote folder
-* *send*: send message
-* *exists*: check if message exists
-* *regel*: kör regel på text
+* *rensa*: ta bort alla meddelanden från fjärrmappen
+* *skicka*: skicka meddelande
+* *existerar*: kontrollera om meddelandet finns
+* *regel*: exekvera regel på text
 
 Operations are processed only when there is a connection to the email server or when manually synchronizing. Se även [denna FAQ](#user-content-faq16).
 
@@ -451,7 +452,7 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 
 You can use the quick setup wizard to easily setup a Gmail account and identity.
 
-If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password or enable two factor authentication and use an app specific password. Please see [this FAQ](#user-content-faq111) about why it is not possible to non on-device accounts.
+If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password or enable two factor authentication and use an app specific password. Se [denna FAQ](#user-content-faq111) om varför endast konton på enheten kan användas.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
@@ -494,7 +495,7 @@ See [here](https://support.google.com/mail/answer/7126229) for Google's instruct
 
 Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder. This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 
-Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. In these cases FairEmail will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message have been sent. Note that this will result in extra internet traffic.
+Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. I dessa fall kommer FairEmail, automatiskt lägga till meddelanden till den skickat vid synkronisering av mappen, vilket kommer att hända efter att ett meddelande har skickats. Note that this will result in extra internet traffic.
 
 ~~If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.~~ ~~In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.~~ ~~Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.~~ ~~Also beware that enabling this setting will result in extra data usage, especially when when sending messages with large attachments.~~
 
@@ -530,7 +531,7 @@ Alternatively, you can enable *Allow editing sender address* in the advanced set
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
-See [this FAQ](#user-content-faq33) for editing the username of email addresses.
+Se [denna FAQ](#user-content-faq33) om hur du redigerar användarnamnet för e-postadresser.
 
 <br />
 
@@ -609,6 +610,10 @@ Signed-only or encrypted-only messages are not a good idea, please see here abou
 
 Signed-only messages are supported, encrypted-only messages are not supported.
 
+Common errors:
+
+* *Missing key for encryption*: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.
+
 *S/MIME*
 
 Encrypting a message requires the public key(s) of the recipient(s). Signing a message requires your private key.
@@ -617,7 +622,7 @@ Private keys are stored by Android and can be imported via the Android advanced 
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
 
-Standardkrypteringsmetoden är PGP, men den senast använda krypteringsmetoden kommer att bli ihågkommen för den valda identiteten för nästa gång. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
+The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
 
 To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.
 
@@ -855,13 +860,13 @@ The authorization of Gmail accounts setup with the quick wizard needs to be peri
 
 The error *... Autentisering misslyckades ... Account not found ...* means that a previously authorized Gmail account was removed from the device.
 
-The errors *... Autentisering misslyckades ... No token on refresh ...* means that the Android account manager failed to refresh the authorization of a Gmail account.
+The errors *... Authentication failed ... No token on refresh ...* means that the Android account manager failed to refresh the authorization of a Gmail account.
 
 The error *... Authentication failed ... Invalid credentials ... network error ...* means that the Android account manager was not able to refresh the authorization of a Gmail account due to problems with the internet connection
 
 The error *... Authentication failed ... Invalid credentials ...* could be caused by having revoked the required account/contacts permissions. Just start the wizard (but do not select an account) to grant the required permissions again.
 
-The eror *... ServiceDisabled ... /0> kan orsakas av inskrivning i [Advanced Protection Program](https://landing.google.com/advancedprotection/): "*För att läsa din e-post, du kan (måste) använda Gmail - Du kommer inte att kunna använda ditt Google-konto med några (alla) appar & tjänster som kräver åtkomst till känsliga data som din e-post*", se [här](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=9264881).</p>
+The eror *... ServiceDisabled ...* might be caused by enrolling in the [Advanced Protection Program](https://landing.google.com/advancedprotection/): "*To read your email, you can (must) use Gmail - You won’t be able to use your Google Account with some (all) apps & services that require access to sensitive data like your emails*", see [here](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=9264881).
 
 When in doubt, you can ask for [support](#user-content-support).
 
@@ -929,7 +934,7 @@ Yes, you can translate the texts of FairEmail in your own language [on Crowdin](
 <br />
 
 <a name="faq27"></a>
-**(27) Hur kan jag skilja mellan inbäddade och externa bilder?**
+**(27) How can I distinguish between embedded and external images?**
 
 External image:
 
@@ -1088,6 +1093,8 @@ Long version:
 **(37) How are passwords stored?**
 
 All supported Android versions [encrypt all user data](https://source.android.com/security/encryption), so all data, including usernames, passwords, messages, etc, is stored encrypted.
+
+If the device is secured with a PIN, pattern or password, you can make the account and identity passwords visible. If this is a problem because you are sharing the device with other people, consider to use [user profiles](https://www.howtogeek.com/333484/how-to-set-up-multiple-user-profiles-on-android/).
 
 <br />
 
@@ -1513,11 +1520,11 @@ You can disable a rule and you can stop processing other rules after a rule has 
 
 The following rule conditions are available:
 
-* Avsändaren innehåller
-* Mottagare innehåller
-* Ämnet innehåller
-* Har bilagor
-* Sidhuvud innehåller
+* Sender contains
+* Recipient contains
+* Subject contains
+* Has attachments
+* Header contains
 * Day/time between
 
 All the conditions of a rule need to be true for the rule action to be executed. All conditions are optional, but there needs to be at least one condition, to prevent matching all messages. If you want to match all senders or all recipients, you can just use the @ character as condition because all email address will contain this character.
@@ -1533,19 +1540,19 @@ You can select one of these actions to apply to matching messages:
 * No action (useful for *not*)
 * Mark as read
 * Mark as unread
-* Dölj
-* Dämpa avisering
-* Slumra
-* Lägg till stjärna
+* Hide
+* Suppress notification
+* Snooze
+* Add star
 * Set importance (local priority)
-* Lägg till nyckelord
-* Flytta
+* Add keyword
+* Move
 * Copy (Gmail: label)
 * Answer (with template)
 * Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
 
-Reglerna tillämpas direkt efter att meddelandehuvudet har hämtats, men innan meddelandetexten har hämtats, så det är inte möjligt att tillämpa villkoren på meddelandetexten. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
+Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions to the message text. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
 
 If you want to forward a message, consider to use the move action instead. This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
 
@@ -1777,8 +1784,8 @@ If the account authorization has expired, you will have to select the account ag
 To authorize a Yahoo, AOL, or Sky account you will need to create an app password. For instructions, please see here:
 
 * [for Yahoo](https://help.yahoo.com/kb/generate-third-party-passwords-sln15241.html)
-* [för AOL](https://help.aol.com/articles/Create-and-manage-app-password)
-* [för Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Andra e-postappar*)
+* [for AOL](https://help.aol.com/articles/Create-and-manage-app-password)
+* [for Sky](https://www.sky.com/help/articles/getting-started-with-sky-yahoo-mail) (under *Other email apps*)
 
 Please see [this FAQ](#user-content-faq111) about OAuth support.
 
@@ -2066,7 +2073,9 @@ OAuth access for Yahoo was requested, but Yahoo never responded to the request. 
 <a name="faq112"></a>
 **(112) Which email provider do you recommend?**
 
-Which email provider is best for you depends on your wishes/requirements. Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/) for a list of privacy oriented email providers with advantages and disadvantages.
+FairEmail är bara en e-postklient, så du måste ta med din egen e-postadress.
+
+Det finns gott om e-postleverantörer att välja mellan. Vilken e-postleverantör som är bäst för dig beror på dina önskemål/krav. Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/) for a list of privacy oriented email providers with advantages and disadvantages.
 
 Be aware that not all providers support standard email protocols, see [this FAQ](#user-content-faq129) for more information.
 
@@ -2380,6 +2389,14 @@ The error *User is authenticated but not connected* might occur if:
 * An alias email address is being used as username instead of the primary email address
 * An incorrect login scheme is being used for a shared mailbox: the right scheme is *username@domain\SharedMailboxAlias*
 
+The shared mailbox alias will mostly be the email address of the shared account, like this:
+
+```
+you@example.com\shared@example.com
+```
+
+Note that it should be a backslash and not a forward slash.
+
 <br />
 
 <a name="faq140"></a>
@@ -2471,11 +2488,11 @@ Setting a notification sound for an account, folder or sender requires Android 8
 <a name="faq146"></a>
 **(146) How can I fix incorrect message times?**
 
-Since the sent date/time is optional and can be manipulated by the sender, FairEmail uses the server received date/time.
+Since the sent date/time is optional and can be manipulated by the sender, FairEmail uses the server received date/time by default.
 
-Sometimes the received date/time is incorrect, mostly because messages were incorrectly imported from another server and sometimes due to a bug in the email server.
+Sometimes the server received date/time is incorrect, mostly because messages were incorrectly imported from another server and sometimes due to a bug in the email server.
 
-In this rare case you can enable the account option *Use date header sent time instead of server received time* (Setup, step 1, Manage, tap account, tap Advanced) as a workaround.
+In these rare cases, it is possible to let FairEmail use either the date/time from the *Date* header (sent time) or from the *Received* header as a workaround. This can be changed in the advanced account settings: Setup, step 1, Manage, tap account, tap Advanced.
 
 This will not change the time of already synchronized messages. To solve this, long press the folder(s) in the folder list and select *Delete local messages* and *Synchronize now*.
 
@@ -2498,7 +2515,7 @@ Note that the GitHub version will automatically check for updates. When desired,
 
 Please [see here](https://github.com/M66B/FairEmail/blob/master/README.md#user-content-downloads) for all download options.
 
-If you have a problem with the F-Droid build, please check if there is a newer version first.
+If you have a problem with the F-Droid build, please check if there is a newer GitHub version first.
 
 <br />
 
@@ -2536,7 +2553,7 @@ Inserting new calendar events can be done without permissions with special [inte
 <br />
 
 <a name="faq151"></a>
-**(151) Kan du lägga till säkerhetskopiering/återställning av meddelanden?**
+**(151) Can you add backup/restore of messages?**
 
 An email client is meant to read and write messages, not to backup and restore messages. Note that breaking or losing your device, means losing your messages!
 
@@ -2622,44 +2639,44 @@ To record voice notes, etc, the audio recorder needs to support [MediaStore.Audi
 <br />
 
 <a name="faq159"></a>
-**(159) Vad är Disconnect's spårningsskyddslistor?**
+**(159) What are Disconnect's tracker protection lists?**
 
-Se [här](https://disconnect.me/trackerprotection) för mer information om Disconnect's spårarskyddslistor.
+Please see [here](https://disconnect.me/trackerprotection) for more information about Disconnect's tracker protection lists.
 
-Efter att ha laddat ner listorna i sekretessinställningarna kan listorna användas valfritt:
+After downloading the lists in the privacy settings, the lists can optionally be used:
 
-* att varna för spårningslänkar vid öppnande av länkar
-* att känna igen spårningsbilder i meddelanden
+* to warn about tracking links on opening links
+* to recognize tracking images in messages
 
-Spårningsbilder kommer endast att inaktiveras om motsvarande huvudalternativ "inaktiveras" är aktiverat.
+Tracking images will be disabled only if the corresponding main 'disable' option is enabled.
 
-Spårningsbilder kommer inte att kännas igen när domänen är klassificerad som '*Content*', se [här](https://disconnect.me/trackerprotection#trackers-we-dont-block) för mer information.
+Tracking images will not be recognized when the domain is classified as '*Content*', see [here](https://disconnect.me/trackerprotection#trackers-we-dont-block) for more information.
 
-Detta kommando kan skickas till FairEmail från en automationsapp för att uppdatera skyddslistorna:
+This command can be sent to FairEmail from an automation app to update the protection lists:
 
 ```
 (adb shell) am startservice -a eu.faircode.email.DISCONNECT.ME
 ```
 
-Uppdatering en gång i veckan kommer förmodligen att räcka, se [här](https://github.com/disconnectme/disconnect-tracking-protection/commits/master) för ändringar i de senaste listorna.
+Updating once a week will probably be sufficient, please see [here](https://github.com/disconnectme/disconnect-tracking-protection/commits/master) for recent lists changes.
 
 <br />
 
 ## Support
 
-Endast den senaste versionen av Play Store och den senaste versionen av GitHub stöds. Detta innebär också att nedgradering inte stöds.
+Only the latest Play store version and latest GitHub release are supported. This also means that downgrading is not supported.
 
-Önskade funktioner bör:
+Requested features should:
 
-* vara användbar för de flesta användare
-* inte komplicera användningen av FairEmail
-* passar in i filosofin i FairEmail (integritetsorienterad, säkerhetsorienterad)
-* följa gemensamma standarder (IMAP, SMTP, etc)
+* be useful to most people
+* not complicate the usage of FairEmail
+* fit within the philosophy of FairEmail (privacy oriented, security minded)
+* comply with common standards (IMAP, SMTP, etc)
 
-Funktioner som inte uppfyller dessa krav kommer sannolikt att avvisas. Detta är också för att hålla underhåll och stöd i det långa loppet genomförbart.
+Features not fulfilling these requirements will likely be rejected. This is also to keep maintenance and support in the long run feasible.
 
-Om du har en fråga, efterfrågar en funktion eller rapportera en bugg, använd [detta formulär](https://contact.faircode.eu/?product=fairemailsupport).
+If you have a question, want to request a feature or report a bug, please use [this form](https://contact.faircode.eu/?product=fairemailsupport).
 
-GitHub-issues är inaktiverade på grund av frekvent missbruk.
+GitHub issues are disabled due to frequent misusage.
 
 Copyright &copy; 2018-2020 Marcel Bokhorst.

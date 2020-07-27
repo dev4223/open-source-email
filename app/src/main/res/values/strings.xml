@@ -159,6 +159,7 @@
     <string name="title_setup_quick_smtp">SMTP server to send messages</string>0
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_multiple">The installation wizard can be used multiple times to set up multiple accounts</string>
+    <string name="title_setup_wizard_new">I need a new email address</string>
     <string name="title_setup_wizard_remark">Go \'back\' to go to the inbox</string>
     <string name="title_setup_gmail" translatable="false">Gmail</string>
     <string name="title_setup_outlook" translatable="false">Outlook</string>
@@ -195,7 +196,7 @@
     <string name="title_setup_permissions">Grant permissions</string>
     <string name="title_setup_permissions_remark">To access contact information (optional)</string>
     <string name="title_setup_doze">Setup battery optimizations</string>
-    <string name="title_setup_doze_remark">To continuously receive email (optional)</string>
+    <string name="title_setup_doze_remark">To reliably receive email</string>
     <string name="title_setup_doze_instructions">In the next dialog, select \"All apps\" at the top, select this app and select and confirm \"Don\'t optimize\"</string>
     <string name="title_setup_doze_battery">High battery usage?</string>
     <string name="title_setup_doze_stopped">Sync stopped?</string>
@@ -291,6 +292,7 @@
     <string name="title_advanced_suggest_sent">Suggest addresses found in sent messages</string>
     <string name="title_advanced_suggest_received">Suggest addresses found in received messages</string>
     <string name="title_advanced_suggest_frequently">Sort suggested addresses on frequency of use</string>
+    <string name="title_advanced_compose_font">Default font</string>
     <string name="title_advanced_auto_list">Automatically create lists</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
@@ -412,6 +414,7 @@
 
     <string name="title_advanced_badge">Show launcher icon with number of new messages</string>
     <string name="title_advanced_unseen_ignored">Let the number of new messages match the number of notifications</string>
+    <string name="title_advanced_notify_background">Show notifications when in the background only</string>
     <string name="title_advanced_notify_known">Show notifications for contacts only</string>
     <string name="title_advanced_notify_summary">Show summary notification only</string>
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
@@ -696,6 +699,7 @@
     <string name="title_empty_spam_ask">Delete all spam messages permanently?</string>
     <string name="title_empty_trash_all_ask">Delete all trashed messages of all accounts permanently?</string>
     <string name="title_empty_spam_all_ask">Delete all spam messages of all accounts permanently?</string>
+    <string name="title_empty_all">This will delete all messages both from the device and the server</string>
     <string name="title_delete_operation">Delete operations with an error message?</string>
     <string name="title_delete_contacts">Delete all local contacts?</string>
     <string name="title_no_operations">No pending operations</string>
@@ -937,6 +941,7 @@
     <string name="title_no_key">No private key</string>
     <string name="title_invalid_key">Invalid private key</string>
     <string name="title_unknown_key">Private key does not match any encryption keys</string>
+    <string name="title_key_missing">No key for %1$s</string>
     <string name="title_send_reminder_remark">Reminders can be enabled again in the send settings</string>
     <string name="title_send_plain_text">Plain text only</string>
     <string name="title_send_receipt">Request receipt</string>

@@ -134,6 +134,8 @@ public class MessageHelper {
         System.setProperty("mail.mime.multipart.ignoreexistingboundaryparameter", "true"); // default false
         System.setProperty("mail.mime.multipart.ignoremissingendboundary", "true"); // default true
         System.setProperty("mail.mime.multipart.allowempty", "true"); // default false
+
+        //System.setProperty("mail.imap.parse.debug", "true");
     }
 
     static Properties getSessionProperties() {
@@ -547,6 +549,8 @@ public class MessageHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean autolist = prefs.getBoolean("autolist", true);
         boolean format_flowed = prefs.getBoolean("format_flowed", false);
+        boolean monospaced = prefs.getBoolean("monospaced", false);
+        String compose_font = prefs.getString("compose_font", monospaced ? "monospace" : "sans-serif");
 
         // Build html body
         Document document = JsoupEx.parse(message.getFile(context));
@@ -557,6 +561,12 @@ public class MessageHelper {
                 HtmlHelper.convertLists(document);
 
             if (send) {
+                for (Element child : document.body().children())
+                    if (TextUtils.isEmpty(child.attr("fairemail"))) {
+                        String style = HtmlHelper.mergeStyles(
+                                "font-family:" + compose_font, child.attr("style"));
+                        child.attr("style", style);
+                    }
                 document.select("div[fairemail=signature]").removeAttr("fairemail");
                 document.select("div[fairemail=reference]").removeAttr("fairemail");
             }

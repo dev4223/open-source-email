@@ -149,6 +149,7 @@
     <string name="title_setup_quick_smtp">SMTP-сервер для отправки сообщений</string>
     <string name="title_setup_wizard">Мастер</string>
     <string name="title_setup_wizard_multiple">Мастер установки может быть использован неоднократно для настройки разных учётных записей</string>
+    <string name="title_setup_wizard_new">Мне нужен новый адрес электронной почты</string>
     <string name="title_setup_wizard_remark">Переход \"назад\" приводит в папку \"Входящие\"</string>
     <string name="title_setup_other">Другой провайдер</string>
     <string name="title_setup_gmail_support">Авторизация учётных записей Google будет работать только в официальных версиях, так как Android проверяет подпись приложения</string>
@@ -181,7 +182,7 @@
     <string name="title_setup_permissions">Предоставить доступ</string>
     <string name="title_setup_permissions_remark">Доступ к контактной информации (необязательно)</string>
     <string name="title_setup_doze">Настроить энергосбережение</string>
-    <string name="title_setup_doze_remark">Непрерывно получать электронную почту (необязательно)</string>
+    <string name="title_setup_doze_remark">Для надёжного получения электронной почты</string>
     <string name="title_setup_doze_instructions">В следующем диалоговом окне выберите \"Все приложения\" вверху, выберите это приложение, выберите и подтвердите \"Не оптимизировать\"</string>
     <string name="title_setup_doze_battery">Высокий расход заряда батареи?</string>
     <string name="title_setup_doze_stopped">Синхронизация останавливается?</string>
@@ -264,6 +265,7 @@
     <string name="title_advanced_suggest_sent">Предлагать адреса, найденные в отправленных сообщениях</string>
     <string name="title_advanced_suggest_received">Предлагать адреса, найденные в полученных сообщениях</string>
     <string name="title_advanced_suggest_frequently">Сортировать предложенные адреса по частоте использования</string>
+    <string name="title_advanced_compose_font">Шрифт по умолчанию</string>
     <string name="title_advanced_auto_list">Автоматическое создание списков</string>
     <string name="title_advanced_prefix_once">Добавлять только один префикс перед темой при ответе или пересылке</string>
     <string name="title_advanced_extended_reply">Использовать расширенный заголовок для ответа/пересылки</string>
@@ -362,7 +364,7 @@
     <string name="title_advanced_collapse_multiple">Сворачивать сообщения в диалоге с несколькими сообщениями кнопкой \"назад\"</string>
     <string name="title_advanced_autoclose">Автоматически закрывать диалоги</string>
     <string name="title_advanced_onclose">При закрытии диалога</string>
-    <string name="title_advanced_undo">Время отмены</string>
+    <string name="title_advanced_undo">Таймаут отмены</string>
     <string name="title_advanced_quick_filter">Показывать ненавязчивые значки быстрого фильтра</string>
     <string name="title_advanced_quick_scroll">Показывать ненавязчивые значки быстрой прокрутки вверх/вниз</string>
     <string name="title_advanced_autoread">Автоматически помечать сообщения прочитанными при перемещении</string>
@@ -370,7 +372,7 @@
     <string name="title_advanced_autounstar">Автоматически удалять отметку избранного при перемещении сообщений</string>
     <string name="title_advanced_auto_important">Автоматически помечать избранные сообщения важными</string>
     <string name="title_advanced_reset_importance">Сбрасывать важность при перемещении сообщений</string>
-    <string name="title_advanced_discard_delete">При отмене удалять черновик безвозвратно</string>
+    <string name="title_advanced_discard_delete">При отклонении черновика удалять его безвозвратно</string>
     <string name="title_advanced_default_snooze">Время повтора по умолчанию</string>
     <string name="title_advanced_notifications">Настроить уведомления</string>
     <string name="title_advanced_notifications_default">Канал по умолчанию</string>
@@ -379,6 +381,7 @@
     <string name="title_advanced_notifications_background_hint">Фоновая служба может быть остановлена Android в любое время, но не требует уведомления в статусной строке</string>
     <string name="title_advanced_badge">Показывать значок запуска с количеством новых сообщений</string>
     <string name="title_advanced_unseen_ignored">Количество уведомлений соответствует количеству новых сообщений</string>
+    <string name="title_advanced_notify_background">Показывать уведомления только в фоновом режиме</string>
     <string name="title_advanced_notify_known">Показывать уведомления только для контактов</string>
     <string name="title_advanced_notify_summary">Показывать только сводное уведомление</string>
     <string name="title_advanced_notify_preview">Предпросмотр сообщений в уведомлениях</string>
@@ -562,8 +565,8 @@
     <string name="title_max_messages">Максимальное количество загружаемых сообщений (пусто для всех)</string>
     <string name="title_keep_alive_interval">Интервал поддержания активности/опроса (мин.)</string>
     <string name="title_server_time">Использовать время получения (сервер)</string>
-    <string name="title_received_header" comment="title_received_header&#10;'Received' should not be translated">Использовать заголовок \'Received\'</string>
-    <string name="title_date_header" comment="title_date_header&#10;'Date' should not be translated">Использовать заголовок \'Date\' (время отправки)</string>
+    <string name="title_received_header">Использовать заголовок \'Received\'</string>
+    <string name="title_date_header">Использовать заголовок \'Date\' (время отправки)</string>
     <string name="title_date_remark">Изменения будут применены только к новым сообщениям</string>
     <string name="title_related_identity">Добавить связанный идентификатор</string>
     <string name="title_check">Проверить</string>
@@ -621,6 +624,7 @@
     <string name="title_empty_spam_ask">Удалить все сообщения в папке \"Спам\" навсегда?</string>
     <string name="title_empty_trash_all_ask">Навсегда удалить все сообщения из корзин всех учётных записей?</string>
     <string name="title_empty_spam_all_ask">Навсегда удалить весь спам из всех учётных записей?</string>
+    <string name="title_empty_all">Это действие удалит все сообщения и с устройства, и с сервера</string>
     <string name="title_delete_operation">Удалить операции с сообщением об ошибке?</string>
     <string name="title_delete_contacts">Удалить все локальные контакты?</string>
     <string name="title_no_operations">Нет операций в очереди</string>
@@ -795,7 +799,7 @@
     <string name="title_subject">Тема:</string>
     <string name="title_attachment">Вложение:</string>
     <string name="title_body_hint">Ваше сообщение</string>
-    <string name="title_discard">Отменить</string>
+    <string name="title_discard">Отклонить</string>
     <string name="title_save">Сохранить</string>
     <string name="title_send">Отправить</string>
     <string name="title_send_now">Отправить сейчас</string>
@@ -844,6 +848,7 @@
     <string name="title_no_key">Нет приватного ключа</string>
     <string name="title_invalid_key">Приватный ключ недействителен</string>
     <string name="title_unknown_key">Приватный ключ не соответствует ни одному ключу шифрования</string>
+    <string name="title_key_missing">Нет ключа для %1$s</string>
     <string name="title_send_reminder_remark">Напоминания можно повторно включить в настройках отправки</string>
     <string name="title_send_plain_text">Только простой текст</string>
     <string name="title_send_receipt">Запросить уведомление</string>

@@ -56,6 +56,7 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FLAGS;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.MessageSet;
 import com.sun.mail.imap.protocol.UID;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
@@ -136,6 +137,7 @@ class Core {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
+    private static final long FUTURE_RECEIVED = 30 * 24 * 3600 * 1000L; // milliseconds
     private static final int LOCAL_RETRY_MAX = 3;
     private static final long LOCAL_RETRY_DELAY = 10 * 1000L; // milliseconds
     private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 10;
@@ -185,7 +187,8 @@ class Core {
                         if (message == null &&
                                 !EntityOperation.FETCH.equals(op.name) &&
                                 !EntityOperation.SYNC.equals(op.name) &&
-                                !EntityOperation.SUBSCRIBE.equals(op.name))
+                                !EntityOperation.SUBSCRIBE.equals(op.name) &&
+                                !EntityOperation.PURGE.equals(op.name))
                             throw new MessageRemovedException();
 
                         // Process similar operations
@@ -302,6 +305,10 @@ class Core {
                                     onSynchronizeMessages(context, jargs, account, folder, (POP3Folder) ifolder, (POP3Store) istore, state);
                                     break;
 
+                                case EntityOperation.PURGE:
+                                    onPurgeFolder(context, folder);
+                                    break;
+
                                 default:
                                     Log.w(folder.name + " ignored=" + op.name);
                             }
@@ -378,6 +385,10 @@ class Core {
 
                                 case EntityOperation.SUBSCRIBE:
                                     onSubscribeFolder(context, jargs, folder, (IMAPFolder) ifolder);
+                                    break;
+
+                                case EntityOperation.PURGE:
+                                    onPurgeFolder(context, jargs, folder, (IMAPFolder) ifolder);
                                     break;
 
                                 case EntityOperation.RULE:
@@ -966,6 +977,9 @@ class Core {
 
                 file.delete();
 
+                for (Flags.Flag flag : imessage.getFlags().getSystemFlags())
+                    icopy.setFlag(flag, true);
+
                 icopies.add(icopy);
             }
 
@@ -1136,7 +1150,8 @@ class Core {
                         downloadMessage(context, account, folder, istore, ifolder, imessage, message.id, state, stats);
                 }
 
-                EntityLog.log(context, folder.name + " fetch stats " + stats);
+                if (!stats.isEmpty())
+                    EntityLog.log(context, folder.name + " fetch stats " + stats);
             } finally {
                 ((IMAPMessage) imessage).invalidateHeaders();
             }
@@ -1726,6 +1741,51 @@ class Core {
         db.folder().setFolderSubscribed(folder.id, subscribe);
 
         Log.i(folder.name + " subscribed=" + subscribe);
+    }
+
+    private static void onPurgeFolder(Context context, JSONArray jargs, EntityFolder folder, IMAPFolder ifolder) throws MessagingException {
+        // Delete all messages from folder
+        DB db = DB.getInstance(context);
+
+        try {
+            final MessageSet[] sets = new MessageSet[]{new MessageSet(1, ifolder.getMessageCount())};
+
+            Log.i(folder.name + " purge " + MessageSet.toString(sets));
+            ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+                @Override
+                public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
+                    protocol.storeFlags(sets, new Flags(Flags.Flag.DELETED), true);
+                    return null;
+                }
+            });
+            Log.i(folder.name + " purge deleted");
+
+            ifolder.expunge();
+            Log.i(folder.name + " purge expunged");
+        } catch (Throwable ex) {
+            Log.e(ex);
+            throw ex;
+        } finally {
+            int count = ifolder.getMessageCount();
+            db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
+
+            // Delete local, hidden messages
+            onPurgeFolder(context, folder);
+        }
+    }
+
+    private static void onPurgeFolder(Context context, EntityFolder folder) {
+        DB db = DB.getInstance(context);
+        try {
+            db.beginTransaction();
+
+            int purged = db.message().deleteHiddenMessages(folder.id);
+            Log.i(folder.name + " purge count=" + purged);
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
     }
 
     private static void onRule(Context context, JSONArray jargs, EntityMessage message) throws JSONException, IOException {
@@ -2377,6 +2437,7 @@ class Core {
             db.folder().setFolderError(folder.id, null);
 
             stats.total = (SystemClock.elapsedRealtime() - search);
+
             EntityLog.log(context, folder.name + " sync stats " + stats);
         } finally {
             Log.i(folder.name + " end sync state=" + state);
@@ -2474,19 +2535,20 @@ class Core {
             Long sent = helper.getSent();
 
             Long received;
+            long future = new Date().getTime() + FUTURE_RECEIVED;
             if (account.use_date) {
                 received = sent;
-                if (received == null)
+                if (received == null || received == 0 || received > future)
                     received = helper.getReceived();
-                if (received == null)
+                if (received == null || received == 0 || received > future)
                     received = helper.getReceivedHeader();
             } else if (account.use_received) {
                 received = helper.getReceivedHeader();
-                if (received == null)
+                if (received == null || received == 0 || received > future)
                     received = helper.getReceived();
             } else {
                 received = helper.getReceived();
-                if (received == null)
+                if (received == null || received == 0 || received > future)
                     received = helper.getReceivedHeader();
             }
             if (received == null)
@@ -3159,7 +3221,7 @@ class Core {
         }
     }
 
-    static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<Long, List<Long>> groupNotifying) {
+    static void notifyMessages(Context context, List<TupleMessageEx> messages, Map<Long, List<Long>> groupNotifying, boolean foreground) {
         if (messages == null)
             messages = new ArrayList<>();
 
@@ -3167,7 +3229,10 @@ class Core {
         if (nm == null)
             return;
 
+        DB db = DB.getInstance(context);
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean notify_background_only = prefs.getBoolean("notify_background_only", false);
         boolean notify_summary = prefs.getBoolean("notify_summary", false);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
         boolean notify_preview_only = prefs.getBoolean("notify_preview_only", false);
@@ -3194,13 +3259,22 @@ class Core {
                 String channelId = message.getNotificationChannelId();
                 if (channelId != null) {
                     NotificationChannel channel = nm.getNotificationChannel(channelId);
-                    if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE)
+                    if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                        Log.i("Notify disabled=" + message.id + " channel=" + channelId);
                         continue;
+                    }
                 }
             }
 
             if (notify_preview && notify_preview_only && !message.content)
                 continue;
+
+            if (foreground && notify_background_only && message.notifying >= 0) {
+                Log.i("Notify foreground=" + message.id + " notifying=" + message.notifying);
+                if (message.notifying == 0)
+                    db.message().setMessageNotifying(message.id, 1);
+                continue;
+            }
 
             long group = (pro && message.accountNotify ? message.account : 0);
             if (!message.folderUnified)
@@ -3268,8 +3342,6 @@ class Core {
 
             Log.i("Notify group=" + group + " count=" + notifications.size() +
                     " added=" + add.size() + " removed=" + remove.size());
-
-            DB db = DB.getInstance(context);
 
             if (notifications.size() == 0) {
                 String tag = "unseen." + group + "." + 0;
@@ -4096,14 +4168,27 @@ class Core {
     private static class SyncStats {
         long search_ms;
         int flags;
-        int uids;
         long flags_ms;
+        int uids;
         long uids_ms;
         int headers;
         long headers_ms;
         long content;
         long attachments;
         long total;
+
+        boolean isEmpty() {
+            return (search_ms == 0 &&
+                    flags == 0 &&
+                    flags_ms == 0 &&
+                    uids == 0 &&
+                    uids_ms == 0 &&
+                    headers == 0 &&
+                    headers_ms == 0 &&
+                    content == 0 &&
+                    attachments == 0 &&
+                    total == 0);
+        }
 
         @Override
         public String toString() {
@@ -4113,7 +4198,7 @@ class Core {
                     " headers=" + headers + "/" + headers_ms + " ms" +
                     " content=" + Helper.humanReadableByteCount(content) +
                     " attachments=" + Helper.humanReadableByteCount(attachments) +
-                    " total=" + total;
+                    " total=" + total + " ms";
         }
     }
 }

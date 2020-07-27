@@ -126,6 +126,7 @@
     <string name="title_setup_quick_smtp">SMTP-server om berichten te verzenden</string>
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_multiple">De installatie-wizard kan meerdere keren worden gebruikt om meerdere accounts in te stellen</string>
+    <string name="title_setup_wizard_new">Ik heb een nieuw e-mailadres nodig</string>
     <string name="title_setup_wizard_remark">Ga \'terug\' om naar het postvak in te gaan</string>
     <string name="title_setup_other">Andere provider</string>
     <string name="title_setup_gmail_support">Het autoriseren van Google accounts werkt alleen in officiële versies omdat Android de app handtekening controleert</string>
@@ -158,7 +159,7 @@
     <string name="title_setup_permissions">Toestemmingen verlenen</string>
     <string name="title_setup_permissions_remark">Voor toegang tot contactinformatie (optioneel)</string>
     <string name="title_setup_doze">Accuoptimalisaties instellen</string>
-    <string name="title_setup_doze_remark">Om voortdurend e-mail te ontvangen (optioneel)</string>
+    <string name="title_setup_doze_remark">Om betrouwbaar e-mail te ontvangen</string>
     <string name="title_setup_doze_instructions">In het volgende dialoogvenster, selecteer \"Alle apps\" bovenin, selecteer deze app en bevestig met \"Niet optimaliseren\"</string>
     <string name="title_setup_doze_battery">Hoog accugebruik?</string>
     <string name="title_setup_doze_stopped">Sync gestopt?</string>
@@ -241,6 +242,7 @@
     <string name="title_advanced_suggest_sent">Suggereer adressen gevonden in verzonden berichten</string>
     <string name="title_advanced_suggest_received">Suggereer adressen gevonden in ontvangen berichten</string>
     <string name="title_advanced_suggest_frequently">Sorteer voorgestelde adressen op gebruiksfrequentie</string>
+    <string name="title_advanced_compose_font">Standaard lettertype</string>
     <string name="title_advanced_auto_list">Automatisch lijsten aanmaken</string>
     <string name="title_advanced_prefix_once">Prefix onderwerp slechts één keer bij beantwoorden of doorsturen</string>
     <string name="title_advanced_extended_reply">Gebruik uitgebreide kop bij antwoorden/doorsturen</string>
@@ -356,6 +358,7 @@
     <string name="title_advanced_notifications_background_hint">Een achtergrondservice kan op elk gewenst moment worden gestopt door Android, maar vereist geen melding in de statusbalk</string>
     <string name="title_advanced_badge">Toon opstartpictogram met aantal nieuwe berichten</string>
     <string name="title_advanced_unseen_ignored">Laat het aantal nieuwe berichten overeenkomen met het aantal meldingen</string>
+    <string name="title_advanced_notify_background">Toon meldingen alleen wanneer op de achtergrond</string>
     <string name="title_advanced_notify_known">Toon alleen meldingen voor contacten</string>
     <string name="title_advanced_notify_summary">Toon alleen melding met een samenvatting</string>
     <string name="title_advanced_notify_preview">Toon berichtvoorbeeld in meldingen</string>
@@ -539,8 +542,8 @@
     <string name="title_max_messages">Maximum aantal berichten om te downloaden (leeg voor allen)</string>
     <string name="title_keep_alive_interval">Keep-alive/periodieke controle interval (minuten)</string>
     <string name="title_server_time">Gebruik ontvangsttijd (server)</string>
-    <string name="title_received_header" comment="title_received_header&#10;'Received' should not be translated">Gebruik de kop \'Received\'</string>
-    <string name="title_date_header" comment="title_date_header&#10;'Date' should not be translated">Gebruik de kop \'Date\' (verzonden tijd)</string>
+    <string name="title_received_header">Gebruik de kop \'Received\'</string>
+    <string name="title_date_header">Gebruik de kop \'Date\' (verzonden tijd)</string>
     <string name="title_date_remark">Wijzigingen worden alleen toegepast op nieuwe berichten</string>
     <string name="title_related_identity">Voeg gerelateerde identiteit toe</string>
     <string name="title_check">Controleer</string>
@@ -598,6 +601,7 @@
     <string name="title_empty_spam_ask">Alle spam berichten definitief verwijderen?</string>
     <string name="title_empty_trash_all_ask">Alle weggegooide berichten van alle accounts definitief verwijderen?</string>
     <string name="title_empty_spam_all_ask">Alle spam berichten van alle accounts permanent verwijderen?</string>
+    <string name="title_empty_all">Dit zal alle berichten van zowel het apparaat als de server verwijderen</string>
     <string name="title_delete_operation">Bewerkingen met een foutmelding verwijderen?</string>
     <string name="title_delete_contacts">Verwijder alle lokale contacten?</string>
     <string name="title_no_operations">Geen openstaande bewerkingen</string>
@@ -821,6 +825,7 @@
     <string name="title_no_key">Geen privé sleutel</string>
     <string name="title_invalid_key">Ongeldige privé sleutel</string>
     <string name="title_unknown_key">Privésleutel komt niet overeen met coderingssleutels</string>
+    <string name="title_key_missing">Geen sleutel voor %1$s</string>
     <string name="title_send_reminder_remark">Herinneringen kunnen weer worden ingeschakeld in de verzendinstellingen</string>
     <string name="title_send_plain_text">Alleen platte tekst</string>
     <string name="title_send_receipt">Vraag bevestiging</string>

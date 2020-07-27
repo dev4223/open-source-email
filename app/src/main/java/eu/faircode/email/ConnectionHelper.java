@@ -43,6 +43,10 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class ConnectionHelper {
+    static final List<String> PREF_NETWORK = Collections.unmodifiableList(Arrays.asList(
+            "metered", "roaming", "rlah" // update network state
+    ));
+
     // Roam like at home
     // https://en.wikipedia.org/wiki/European_Union_roaming_regulations
     private static final List<String> RLAH_COUNTRY_CODES = Collections.unmodifiableList(Arrays.asList(
@@ -236,6 +240,11 @@ public class ConnectionHelper {
         }
 
         // VPN: evaluate underlying networks
+        Integer transport = null;
+        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            transport = NetworkCapabilities.TRANSPORT_CELLULAR;
+        else if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+            transport = NetworkCapabilities.TRANSPORT_WIFI;
 
         boolean underlying = false;
         Network[] networks = cm.getAllNetworks();
@@ -261,6 +270,14 @@ public class ConnectionHelper {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
                     !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_FOREGROUND)) {
                 Log.i("isMetered: underlying background");
+                continue;
+            }
+
+            if (!caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN) &&
+                    (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) &&
+                    (transport != null && !caps.hasTransport(transport))) {
+                Log.i("isMetered: underlying other transport");
                 continue;
             }
 
