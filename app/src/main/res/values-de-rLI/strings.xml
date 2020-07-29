@@ -16,8 +16,8 @@
     <string name="channel_alert">Serverbenachrichtigungen</string>
     <string name="channel_group_contacts">Kontakte</string>
     <plurals name="page_conversation">
-        <item quantity="one">Thread</item>
-        <item quantity="other">Threads</item>
+        <item quantity="one">Unterhaltung</item>
+        <item quantity="other">Unterhaltungen</item>
     </plurals>
     <plurals name="page_message">
         <item quantity="one">Nachricht</item>
@@ -648,8 +648,7 @@ Protokolle, die dem Standard nicht entsprechen, wie „Microsoft Exchange Web Se
     <string name="title_folder_system">System</string>
     <string name="title_folder_user">Benutzer</string>
     <string name="title_folder_user_only">Nur Benutzerordner</string>
-    <string name="title_folder_primary">Ordner primäres Konto</string>
-    <string name="title_folder_thread">%1$s | Thread</string>
+    <string name="title_folder_primary">Hauptkontoordner</string>
     <string name="title_folders_unified">Sammeleingangsordner</string>
     <string name="title_no_folders">Keine Ordner</string>
     <string name="title_no_messages">Keine E-Mails</string>
@@ -1284,8 +1283,8 @@ Zur Erinnerung daran zeigt FairEmail einen kleinen Hinweis an, dieser verschwind
     </string-array>
     <string-array name="onCloseNames">
         <item>Nichts tun</item>
-        <item>Gehe zu vorherigem Thread</item>
-        <item>Gehe zu nächstem Thread</item>
+        <item>Zur vorherigen Unterhaltung wechseln</item>
+        <item>Zur nächsten Unterhaltung wechseln</item>
     </string-array>
     <string-array name="resizeNames">
         <item>Klein</item>

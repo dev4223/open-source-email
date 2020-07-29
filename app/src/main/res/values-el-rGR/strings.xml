@@ -1048,17 +1048,182 @@
     <string name="title_legend_download_state">Κατάσταση του κατεβάσματος</string>
     <string name="title_legend_save">Αποθήκευση</string>
     <string name="title_legend_delete">Διαγραφή</string>
+    <string name="title_legend_count">Πλήθος</string>
+    <string name="title_legend_folder_type">Τύπος φακέλου</string>
+    <string name="title_legend_enter">Άνοιγμα</string>
+    <string name="title_legend_a">Αρχειοθέτηση</string>
+    <string name="title_legend_c">Σύνταξη</string>
+    <string name="title_legend_d">Απορρίμματα (διαγραφή)</string>
+    <string name="title_legend_m">Μενού (πολλαπλή επιλογή)</string>
+    <string name="title_legend_n">Επόμενο</string>
+    <string name="title_legend_p">Προηγούμενο</string>
+    <string name="title_legend_r">Απάντηση</string>
+    <string name="title_legend_s">Επιλογή/αποεπιλογή</string>
+    <string name="title_legend_t">Εστίαση στο κείμενο</string>
+    <string name="title_hint_folder_actions">Παρατεταμένο πάτημα σε έναν φάκελο για επιλογές, όπως προσθήκη ενός φακέλου στο μενού πλοήγησης για γρήγορη πρόσβαση</string>
+    <string name="title_hint_folder_sync">Για να μειωθεί η χρήση μπαταρίας και δικτύου δεν συγχρονίζονται όλοι οι φάκελοι και όλα τα μηνύματα από προεπιλογή</string>
+    <string name="title_hint_support">Αν έχετε μία ερώτηση ή ένα πρόβλημα, παρακαλώ χρησιμοποιήστε το μενού \"Υποστήριξη\" για να λάβετε βοήθεια</string>
+    <string name="title_hint_message_actions">Σάρωση αριστερά για απορρίμματα• σάρωση δεξιά για αρχειοθέτηση (αν είναι διαθέσιμη)• μπορείτε να ρυθμίσετε τις ενέργειες σάρωσης στις ρυθμίσεις του λογαριασμού</string>
+    <string name="title_hint_message_selection">Πατήστε παρατεταμένα σε ένα μήνυμα για να αρχίσετε να επιλέγετε πολλαπλά μηνύματα. Συνεχίστε το πάτημα και σύρετε προς τα πάνω ή κάτω για να επιλέξετε περισσότερα μηνύματα</string>
+    <string name="title_hint_important">Σημαντικό</string>
+    <string name="title_hint_sync">Το κατέβασμα των μηνυμάτων μπορεί να διαρκέσει κάποιο διάστημα, ανάλογα με την ταχύτητα του παρόχου, της σύνδεσης, της συσκευής και τον αριθμό των μηνυμάτων. Ενόσω κατεβαίνουν τα μηνύματα, η εφαρμογή ίσως να ανταποκρίνεται πιο αργά.</string>
+    <string name="title_hint_battery">Καθότι το FairEmail πάντα λαμβάνει μηνύματα από προεπιλογή, το Android θα αναφέρει το FairEmail ως μονίμως ενεργό. Αυτό μπορεί να δώσει την εντύπωση ότι το FairEmail διαρκώς καταναλώνει μπαταρία, παρόλο που, στην πραγματικότητα, δεν συμβαίνει κάτι τέτοιο.</string>
+    <string name="title_hint_reformat">Από προεπιλογή, το FairEmail αναμορφοποιεί τα μηνύματα για λόγους ιδιωτικότητας και ασφάλειας. Για να δείτε το αρχικό μήνυμα, πατήστε στο εικονίδιο \"πλήρης οθόνη\" πάνω από το κείμενο του μηνύματος.</string>
+    <string name="title_hint_contact_actions">Πατήστε παρατεταμένα για επιλογές</string>
+    <string name="title_hint_eml">Αυτό είναι μια σύνοψη του περιεχομένου ενός αρχείου αρχικού μηνύματος. Αποθηκεύστε το αρχικό μήνυμα μέσω του εικονιδίου αποθήκευσης στη γραμμή ενεργειών, για να δείτε όλο το περιεχόμενο.</string>
+    <string name="title_open_link">Άνοιγμα συνδέσμου</string>
+    <string name="title_different_link">Ο τίτλος και η διεύθυνση του συνδέσμου διαφέρουν μεταξύ τους</string>
+    <string name="title_tracking_link">Ο ιστότοπος αυτός μπορεί να σας παρακολουθεί</string>
+    <string name="title_link_http">Η κίνηση δεδομένων δεν θα κρυπτογραφηθεί</string>
+    <string name="title_link_https">Η κίνηση δεδομένων θα κρυπτογραφηθεί</string>
+    <string name="title_sanitize_link">Αφαίρεση παραμέτρων ιχνηλάτησης</string>
+    <string name="title_insecure_link">Αυτός ο σύνδεσμος δεν είναι ασφαλής</string>
+    <string name="title_check_owner">Επαλήθευση κατόχου</string>
+    <string name="title_remark_owner">Θα ανακτηθούν πληροφορίες από <a href="https://ipinfo.io/">ipinfo.io</a></string>
+    <string name="title_ip_owner">Διεύθυνση IP κατόχου</string>
+    <string name="title_select_app">Επιλογή εφαρμογής</string>
+    <string name="title_updated">Υπάρχει διαθέσιμη μια ενημέρωση για την έκδοση %1$s</string>
+    <string name="title_issue">Έχετε μία ερώτηση ή κάποιο πρόβλημα;</string>
+    <string name="title_yes">Ναι</string>
+    <string name="title_no">Όχι</string>
+    <string name="title_later">Αργότερα</string>
+    <string name="title_undo">Αναίρεση</string>
+    <string name="title_redo">Επαναφορά</string>
+    <string name="title_add">Προσθήκη</string>
+    <string name="title_browse">Άνοιγμα με</string>
+    <string name="title_info">Πληροφορίες</string>
+    <string name="title_download">Κατέβασμα</string>
+    <string name="title_report">Αποστολή αναφοράς</string>
+    <string name="title_fix">Επιδιόρθωση</string>
+    <string name="title_enable">Ενεργοποίηση</string>
+    <string name="title_enabled">Ενεργοποιημένο</string>
+    <string name="title_executing">Εκτελείται</string>
+    <string name="title_completed">Ολοκληρώθηκε</string>
+    <string name="title_clipboard_copy">Αντιγραφή στο πρόχειρο</string>
+    <string name="title_clipboard_copied">Αντιγράφηκε στο πρόχειρο</string>
+    <string name="title_ask_what">Ερώτηση για το τι πρέπει να γίνεται</string>
+    <string name="title_no_ask_again">Να μην ερωτηθώ ξανά</string>
+    <string name="title_no_ask_for_again">Να μην ερωτηθώ ξανά για %1$s</string>
+    <string name="title_no_body">Δεν βρέθηκε κανένα κείμενο μηνύματος</string>
+    <string name="title_no_charset">Μη υποστηριζόμενη κωδικοποίηση: %1$s</string>
+    <string name="title_via">Μέσω: %1$s</string>
+    <string name="title_1hour">1 ώρα</string>
+    <string name="title_1day">1 ημέρα</string>
+    <string name="title_1week">1 εβδομάδα</string>
+    <string name="title_now">Τώρα</string>
+    <string name="title_after">Μετά από %1$s</string>
+    <string name="title_reset">Επαναφορά</string>
+    <string name="title_hours">Ώρες</string>
+    <string name="title_minutes">Λεπτά</string>
+    <string name="title_dismiss">Απόρριψη</string>
+    <string name="title_snooze_now">Αναβολή</string>
+    <string name="title_loading">Φόρτωση &#8230;</string>
     <string name="title_fetching_again">Λήψη του μηνύματος ξανά από το διακομιστή</string>
+    <string name="title_conversation_actions">Ενέργειες</string>
+    <string name="title_conversation_action_reply">Απάντηση με: %1$s</string>
+    <string name="title_conversation_action_copy">Αντιγραφή: %1$s</string>
+    <string name="title_icalendar_accept">Αποδοχή</string>
+    <string name="title_icalendar_decline">Απόρριψη</string>
+    <string name="title_icalendar_maybe">Ίσως</string>
+    <string name="title_icalendar_calendar">Ημερολόγιο</string>
+    <string name="title_pro_feature">Αυτό είναι μία δυνατότητα της έκδοσης pro</string>
+    <string name="title_pro_list">Κατάλογος δυνατοτήτων έκδοσης pro</string>
+    <string name="title_pro_purchase">Αγορά</string>
+    <string name="title_pro_once">Μόνο μία φορά</string>
+    <string name="title_pro_info">Χρειάστηκαν, κυριολεκτικά, χιλιάδες ώρες για να αναπτυχθεί το FairEmail και, παρόλα αυτά, τα περισσότερα χαρακτηριστικά του προσφέρονται δωρεάν.
+        Το FairEmail σέβεται απολύτως το απόρρητό σας και δεν προβάλλει διαφημίσεις ούτε χρησιμοποιεί ιχνηλάτες και αναλύσεις δεδομένων των χρηστών, για να κερδίσει χρήματα.
+        Για να παραμείνει ενεργό το FairEmail και να αναπτυχθεί περαιτέρω, ορισμένες διευκολύνσεις και προχωρημένες δυνατότητες δεν προσφέρονται δωρεάν.
+        Το FairEmail προβάλλει μια μικρή υπενθύμιση, η οποία θα αφαιρεθεί αν αγοράσετε την έκδοση pro.
+    </string>
+    <string name="title_pro_hide">Απόκρυψη μικρής υπενθύμισης για %1$d εβδομάδες</string>
+    <string name="title_pro_hint">Αγοράζοντας την έκδοση pro θα μπορείτε να χρησιμοποιείτε όλες τις τρέχουσες και μελλοντικές δυνατότητες pro, και θα βοηθήσετε να ενημερώνεται και να αναπτύσσεται περαιτέρω αυτή η εφαρμογή.</string>
+    <string name="title_pro_price">Παρακαλώ δείτε <a href="https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq19"> το FAQ </a> σχετικά με το κόστος των δυνατοτήτων pro</string>
+    <string name="title_pro_pending">Εκκρεμεί αγορά</string>
+    <string name="title_pro_activated">Όλες οι δυνατότητες pro έχουν ενεργοποιηθεί</string>
+    <string name="title_pro_valid">Ενεργοποιημένες όλες οι δυνατότητες pro</string>
+    <string name="title_pro_invalid">Μη έγκυρη απάντηση</string>
+    <string name="title_pro_support">Το FairEmail χρειάζεται τη βοήθειά σας. Πατήστε για να αγοράσετε τις δυνατότητες pro, ώστε να διατηρήσετε ζωντανό το πρότζεκτ.</string>
     <string name="title_boundary_error">Σφάλμα κατά τη λήψη μηνυμάτων από το διακομιστή</string>
+    <string name="title_boundary_retry">Δοκιμάστε ξανά</string>
+    <string name="title_unexpected_error">Μη αναμενόμενο σφάλμα</string>
+    <string name="title_log">Αρχείο καταγραφής</string>
+    <string name="title_auto_scroll">Αυτόματη κύλιση</string>
+    <string name="title_log_clear">Καθαρισμός</string>
+    <string name="title_debug_info">Πληροφορίες απασφαλμάτωσης</string>
+    <string name="title_debug_info_remark">Παρακαλούμε περιγράψτε το πρόβλημα καθώς και τον χρόνο εμφάνισής του:</string>
+    <string name="title_crash_info_remark">Παρακαλώ, περιγράψτε τι κάνατε τη στιγμή που η εφαρμογή σταμάτησε να λειτουργεί:</string>
+    <string name="title_unexpected_info_remark">Παρακαλώ, περιγράψτε τι κάνατε όταν λάβατε το μήνυμα σφάλματος:</string>
+    <string name="title_widget_title_count">Αριθμός νέων μηνυμάτων</string>
+    <string name="title_widget_title_list">Λίστα μηνυμάτων</string>
+    <string name="title_widget_account">Λογαριασμός</string>
+    <string name="title_widget_account_all">Όλοι</string>
+    <string name="title_widget_folder">Φάκελος</string>
+    <string name="title_widget_folder_unified">Φάκελοι ενοποιημένων εισερχομένων</string>
+    <string name="title_widget_unseen">Μη αναγνωσμένα μηνύματα μόνο</string>
+    <string name="title_widget_flagged">Μηνύματα με αστέρι μόνο</string>
+    <string name="title_widget_font_size">Μέγεθος κειμένου</string>
+    <string name="title_widget_padding">Μέγεθος διαστήματος μεταξύ μηνυμάτων</string>
+    <string name="title_widget_semi_transparent">Ημιδιαφανές φόντο</string>
+    <string name="title_widget_background">Χρώμα φόντου</string>
+    <string name="title_accessibility_collapsed">Συνεπτυγμένο</string>
+    <string name="title_accessibility_expanded">Ανεπτυγμένο</string>
+    <string name="title_accessibility_seen">Αναγνωσμένο</string>
+    <string name="title_accessibility_unseen">Μη αναγνωσμένο</string>
+    <plurals name="title_accessibility_messages">
+        <item quantity="one">%1$d μήνυμα</item>
+        <item quantity="other">%1$d μηνύματα</item>
+    </plurals>
     <!-- Thunderbird -->
+    <string name="title_keyword_label1">Σημαντικό</string>
+    <string name="title_keyword_label2">Δουλειά</string>
+    <string name="title_keyword_label3">Προσωπικά</string>
+    <string name="title_keyword_label4">Εργασίες</string>
+    <string name="title_keyword_label5">Αργότερα</string>
+    <string name="title_accessibility_flagged">Με αστέρι</string>
+    <string name="title_accessibility_unflagged">Χωρίς αστέρι</string>
+    <string name="title_accessibility_collapse">Σύμπτυξη</string>
+    <string name="title_accessibility_expand">Ανάπτυξη</string>
+    <string name="title_accessibility_view_contact">Προβολή επαφής</string>
+    <string name="title_accessibility_show_authentication_result">Προβολή αποτελέσματος ταυτοποίησης</string>
+    <string name="title_accessibility_show_snooze_time">Προβολή χρόνου αναβολής</string>
+    <string name="title_accessibility_view_help">Προβολή βοήθειας</string>
+    <string name="title_accessibility_selected">Επιλεγμένο</string>
+    <string name="title_accessibility_answered">Απαντημένο</string>
+    <string name="title_accessibility_scroll_down">Κύλιση προς τα κάτω</string>
+    <string name="title_accessibility_scroll_up">Κύλιση προς τα πάνω</string>
+    <string name="title_accessibility_filter_out_seen">(Απ-/)ενεργοποίηση φίλτρου αναγνωσμένων μηνυμάτων</string>
+    <string name="title_accessibility_filter_out_unflagged">(Απ-/)ενεργοποίηση φίλτρου μηνυμάτων με αστέρι</string>
+    <string name="title_accessibility_filter_out_snoozed">(Απ-/)ενεργοποίηση φίλτρου μηνυμάτων σε αναβολή</string>
+    <string name="title_accessibility_edit">Επεξεργασία</string>
+    <string name="title_accessibility_show_addresses">Προβολή διευθύνσεων</string>
+    <string name="title_accessibility_hide_addresses">Απόκρυψη διευθύνσεων</string>
+    <string name="title_accessibility_attachment">Συνημμένο</string>
+    <string name="title_accessibility_from">Αποστολέας</string>
+    <string name="title_accessibility_to">Παραλήπτης</string>
+    <string-array name="pollIntervalNames">
+        <item>Πάντα</item>
+        <item>Κάθε 15 λεπτά</item>
+        <item>Κάθε 30 λεπτά</item>
+        <item>Κάθε ώρα</item>
+        <item>Κάθε 2 ώρες</item>
+        <item>Κάθε 4 ώρες</item>
+        <item>Κάθε 8 ώρες</item>
+        <item>Καθημερινά</item>
+    </string-array>
     <string-array name="sendDelayedNames">
-        <item>No</item>
+        <item>Όχι</item>
         <item>15 δευτερόλεπτα</item>
-        <item>30 seconds</item>
-        <item>1 minute</item>
-        <item>2 minutes</item>
+        <item>30 δευτερόλεπτα</item>
+        <item>1 λεπτό</item>
+        <item>2 λεπτά</item>
         <item>5 λεπτά</item>
-        <item>10 minutes</item>
+        <item>10 λεπτά</item>
+    </string-array>
+    <string-array name="startupNames">
+        <item>Ενοποιημένα εισερχόμενα</item>
+        <item>Ενοποιημένοι φάκελοι</item>
+        <item>Φάκελοι κύριου λογαριασμού</item>
+        <item>Λογαριασμοί</item>
     </string-array>
     <string-array name="downloadNames">
         <item>16 KB</item>
@@ -1070,6 +1235,17 @@
         <item>1 MB</item>
         <item>2 MB</item>
         <item>∞</item>
+    </string-array>
+    <string-array name="onCloseNames">
+        <item>Καμία ενέργεια</item>
+        <item>Μετάβαση στην προηγούμενη συνομιλία</item>
+        <item>Μετάβαση στην επόμενη συνομιλία</item>
+    </string-array>
+    <string-array name="resizeNames">
+        <item>Μικρό</item>
+        <item>Μεσαίο</item>
+        <item>Μεγάλο</item>
+        <item>Πολύ μεγάλο</item>
     </string-array>
     <!-- https://en.wikipedia.org/wiki/Display_resolution -->
     <!-- https://en.wikipedia.org/wiki/Comparison_of_high-definition_smartphone_displays -->

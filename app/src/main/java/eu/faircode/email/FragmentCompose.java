@@ -44,6 +44,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Build;
@@ -127,6 +128,7 @@ import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
 import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DigestCalculatorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
@@ -152,6 +154,7 @@ import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -2661,8 +2664,12 @@ public class FragmentCompose extends FragmentBase {
                         }
                     });
                     snackbar.show();
-                } else
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                } else {
+                    boolean expected =
+                            (ex instanceof OperatorCreationException &&
+                                    ex.getCause() instanceof InvalidKeyException);
+                    Log.unexpectedError(getParentFragmentManager(), ex, !expected);
+                }
             }
         }.execute(this, args, "compose:s/mime");
     }
@@ -4656,7 +4663,10 @@ public class FragmentCompose extends FragmentBase {
             if (addresses == null)
                 return;
 
-            DnsHelper.checkMx(context, addresses);
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo ani = (cm == null ? null : cm.getActiveNetworkInfo());
+            if (ani != null && ani.isConnected())
+                DnsHelper.checkMx(context, addresses);
         }
     };
 

@@ -366,10 +366,10 @@ Lavprioritets statusbjælkenotifikationen viser antallet af afventende operation
 * *vedhæftning*: Download vedhæftning
 * *synk*: Synk lokal- og fjernbeskeder
 * *abonnér*: Abonnér på fjernmappe
-* *purge*: delete all messages from remote folder
-* *send*: send message
-* *exists*: check if message exists
-* *rule*: execute rule on body text
+* *udrens*: Slet alle beskeder fra fjernmappen
+* *send*: Send besked
+* *findes*: Tjek om besked findes
+* *regel*: Eksekvér regel på brødtekst
 
 Operationer behandles kun, såfremt en forbindelse til e-mailserveren findes, eller under manuel synkronisering. Se også [denne FAQ](#user-content-faq16).
 
@@ -531,7 +531,7 @@ Alternativt kan *Tillad redigering af afsenderadresse* aktiveres i de avancerede
 
 FairEmail opdaterer automatisk adgangskoder til relaterede identiteter, når adgangskoden til den tilknyttede konto/relateret identitet opdateres.
 
-See [this FAQ](#user-content-faq33) on editing the username of email addresses.
+Se [denne FAQ](#user-content-faq33) om redigering af brugernavnet til e-mailadresser.
 
 <br />
 
@@ -578,51 +578,51 @@ For at signere/kryptere en besked, vælg den passende metode i Send-dialogen. Ha
 
 For at bekræfte en signatur eller dekryptere en modtaget besked, så åbn beskeden og tryk blot på gestussen eller på hængelåsikonet umiddelbart under beskedhandlingsbjælken.
 
-Første gang du sender en signeret/krypteret besked, bliver du muligvis bedt om en signaturnøgle. Mhp. efterfølgende brug gemmer FairEmail automatisk den valgte signeringsnøgle i den anvendte identitet. Har du behov for at nulstille signeringsnøglen, så gem blot identiteten eller brug et langt tryk på identiteten på identitetslisten og vælg *Nulstil signeringsnøgle*. Den valgte signeringsnøgle er synlig på identitetslisten. If need to select a key on a case by case basis, you can create multiple identities for the same account with the same email address.
+Første gang du sender en signeret/krypteret besked, bliver du muligvis bedt om en signaturnøgle. Mhp. efterfølgende brug gemmer FairEmail automatisk den valgte signeringsnøgle i den anvendte identitet. Har du behov for at nulstille signeringsnøglen, så gem blot identiteten eller brug et langt tryk på identiteten på identitetslisten og vælg *Nulstil signeringsnøgle*. Den valgte signeringsnøgle er synlig på identitetslisten. Skal en nøgle vælges en nøgle fra gang til gang, kan du oprette flere identiteter for den samme konto med den samme e-mailadresse.
 
-In the privacy settings you can select the default encryption method (PGP or S/MIME), enable *Sign by default*, *Encrypt by default* and *Automatically decrypt messages*, but be aware that automatic decryption is not possible if user interaction is required, like selecting a key or reading a security token.
+I fortrolighedsindstillingerne kan du vælge standardkrypteringsmetoden (PGP eller S/MIME), aktivere *Signér som standard*, *Kryptér som standard* samt *Dekryptér automatisk beskeder*, men vær opmærksom på, at automatisk dekryptering ikke er mulig, hvis brugerinteraktion kræves, såsom valg af en nøgle eller læsning af et sikkerhedstoken.
 
-The to be encrypted message text/attachments and the decrypted message text/attachments are stored locally only and will never be added to the remote server. If you want to undo decryption, you can use the *resync* menu item in the three-dots menu of the message action bar.
+Beskedtekster/vedhæftninger, som skal krypteres, samt dekrypterede beskedtekster/vedhæftninger gemmes kun lokalt og vil aldrig blive tilføjet til den eksterne server. Vil du fortryde dekryptering, kan du benytte menupunktet *gensynk* fra trepunktsmenuen på beskedhandlingsbjælken.
 
 *PGP*
 
-You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/) first. FairEmail was tested with OpenKeychain version 5.4. Later versions will most likely be compatible, but earlier versions might not be.
+Du skal først installere og opsætte [OpenKeychain](https://f-droid.org/en/packages/org.sufficientlysecure.keychain/). FairEmail er aftestet med OpenKeychain version 5.4. Senere versioner er højest sansynlig kompatible, men tidligere versioner er muligvis ikke.
 
-**Important**: the OpenKeychain app is known to (silently) crash when the calling app (FairEmail) is not authorized yet and is getting an existing public key. You can workaround this by trying to send a signed/encrypted message to a sender with an unknown public key.
+**Vigtigt**: OpenKeychain-appen er kendt for at gå ned (upåagtet), når den kaldende app (FairEmail) endnu ikke er godkendt og får en eksisterende offentlig nøgle. Du kan løse dette ved at prøve at sende en signeret/krypteret besked til en afsender med en ukendt offentlig nøgle.
 
-**Important**: if the OpenKeychain app cannot find a key (anymore), you might need to reset a previously selected key. This can be done by long pressing an identity in the list of identities (Setup, step 2, Manage).
+**Vigtigt**: Kan OpenKeychain-appen ikke finde en nøgle (længere), skal du muligvis nulstille en tidligere valgt nøgle. Dette kan gøres via et langt tryk på en identitet i identitetsoversigten (Opsætning, trin 2, Håndtér).
 
-**Important**: to let apps like FairEmail reliably connect to the OpenKeychain service to encrypt/decrypt messages, it might be necessary to disable battery optimizations for the OpenKeychain app.
+**Vigtigt **: For at lade apps såsom FairEmail pålideligt oprette forbindelse til OpenKeychain-tjenesten for at kryptere/dekryptere beskeder, kan deaktivering af batterioptimeringer af OpenKeychain-appen være nødvendig.
 
-**Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
+**Vigtigt**: På visse Android-versioner/-enheder er det nødvendigt at aktivere *Vis popups i baggrundstilstand * i de udvidede tilladelser til Android-app indstillingerne i OpenKeychain-appen. Uden denne tilladelse, gemmes udkastet, men OpenKeychain-popup'en til bekræftelse/valg vises muligvis ikke.
 
-FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients and send received Autocrypt headers to the OpenKeychain app for storage.
+FairEmail sender [Autokrypt](https://autocrypt.org/)-headere til brug for andre e-mailklienter og sender modtagne Autocrypt-headere til OpenKeychain-appen for opbevaring.
 
-All key handling is delegated to the OpenKey chain app for security reasons. This also means that FairEmail does not store PGP keys.
+Al nøglehåndtering uddelegeres af sikkerhedsårsager til OpenKey-kæde appen. Dette betyder også, at FairEmail ikke gemmer PGP-nøgler.
 
-Inline encrypted PGP in received messages is supported, but inline PGP signatures and inline PGP in outgoing messages is not supported, see [here](https://josefsson.org/inline-openpgp-considered-harmful.html) about why not.
+Inline-krypteret PGP i modtagne beskeder understøttes, men inline PGP-signaturer og inline PGP i udgående beskeder understøttes ikke, se [hér](https://josefsson.org/inline-openpgp-considered-harmful.html) for årsagen.
 
-Signed-only or encrypted-only messages are not a good idea, please see here about why not:
+Kun signerede eller kun krypterede beskeder er ikke en god idé. Se her for årsagen:
 
-* [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
-* [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
-* [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
+* [Overvejelser vedr. OpenPGP, del I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
+* [Overvejelser vedr. OpenPGP, del II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
+* [Overvejelser vedr. OpenPGP, del III, Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
-Signed-only messages are supported, encrypted-only messages are not supported.
+Kun signarede beskeder understøttes, kun krypterede beskeder understøttes ikke.
 
-Common errors:
+Almindelige fejl:
 
-* *Missing key for encryption*: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.
+* *Manglende krypteringsnøgle*: Der er sandsynligvis valgt en nøgle i FairEmail, der ikke længere forefindes i OpenKeychain-appen. Nulstilling af nøglen (se ovenfor) løser sandsynligvis dette problem.
 
 *S/MIME*
 
-Encrypting a message requires the public key(s) of the recipient(s). Signing a message requires your private key.
+Den/de offentlige modtagernøgle(r) kræves ved kryptering af en besked. Din private nøgle kræves ved signering af en besked.
 
-Private keys are stored by Android and can be imported via the Android advanced security settings. There is a shortcut (button) for this in the privacy settings. Android will ask you to set a PIN, pattern, or password if you didn't before. If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
+Private nøgler gemmes af Android og kan importeres via Androids avancerede sikkerhedsindstillinger. Der er en genvej (knap) til dette under fortrolighedsindstillingerne. Android beder opsætte en PIN-kode, mønster eller adgangskode, hvis dette ikke allerede er gjort. Har du en Nokia-enhed med Android 9, så [læs først dette](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
-Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
+Bemærk, at certifikater kan indeholde flere nøgler til flere formål, f.eks. til godkendelse, kryptering og signering. Android importerer kun den første nøgle, så for at importere alle nøgler, skal certifikatet først opdeles. Dette er ikke en almindelig forekommende handling, så du rådes til at bede certifikatleverandøren om support.
 
-The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
+Standardkrypteringsmetoden er PGP, men den sidst anvendte krypteringsmetode huskes for den valgte identitet til næste gang. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
 
 To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.
 
