@@ -2272,6 +2272,15 @@ public class HtmlHelper {
         return fromDocument(context, document, false, compress, imageGetter, tagHandler);
     }
 
+    static Spanned trim(Spanned spanned) {
+        int i = spanned.length();
+        while (i > 1 && spanned.charAt(i - 2) == '\n' && spanned.charAt(i - 1) == '\n')
+            i--;
+        if (i != spanned.length())
+            spanned = (Spanned) spanned.subSequence(0, i);
+        return spanned;
+    }
+
     static String toHtml(Spanned spanned, Context context) {
         HtmlEx converter = new HtmlEx(context);
         String html = converter.toHtml(spanned, TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
