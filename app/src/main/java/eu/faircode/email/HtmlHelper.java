@@ -1430,14 +1430,32 @@ public class HtmlHelper {
         sb.append("data:image/png;base64,");
         sb.append(Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP));
 
+        // Build list of allowed hosts
+        List<String> hosts = new ArrayList<>();
+        for (Element img : document.select("img")) {
+            String src = img.attr("src");
+            if (!TextUtils.isEmpty(src) && !isTrackingPixel(img)) {
+                Uri uri = Uri.parse(img.attr("src"));
+                String host = uri.getHost();
+                if (host != null && !hosts.contains(host))
+                    hosts.add(host);
+            }
+        }
+
         // Images
         for (Element img : document.select("img")) {
             img.removeAttr("x-tracking");
             String src = img.attr("src");
             if (TextUtils.isEmpty(src))
                 continue;
+
+            Uri uri = Uri.parse(src);
+            String host = uri.getHost();
+            if (host == null || hosts.contains(host))
+                continue;
+
             if (isTrackingPixel(img) ||
-                    (disconnect_images && DisconnectBlacklist.isTracking(Uri.parse(src).getHost()))) {
+                    (disconnect_images && DisconnectBlacklist.isTracking(host))) {
                 img.attr("src", sb.toString());
                 img.attr("alt", context.getString(R.string.title_legend_tracking_pixel));
                 img.attr("height", "24");
@@ -2252,6 +2270,15 @@ public class HtmlHelper {
     static Spanned fromHtml(@NonNull String html, boolean compress, @Nullable Html.ImageGetter imageGetter, @Nullable Html.TagHandler tagHandler, Context context) {
         Document document = JsoupEx.parse(html);
         return fromDocument(context, document, false, compress, imageGetter, tagHandler);
+    }
+
+    static Spanned trim(Spanned spanned) {
+        int i = spanned.length();
+        while (i > 1 && spanned.charAt(i - 2) == '\n' && spanned.charAt(i - 1) == '\n')
+            i--;
+        if (i != spanned.length())
+            spanned = (Spanned) spanned.subSequence(0, i);
+        return spanned;
     }
 
     static String toHtml(Spanned spanned, Context context) {

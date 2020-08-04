@@ -69,6 +69,7 @@
     <string name="title_notification_alert">\'%1$s\' 服务器警告</string>
     <string name="title_notification_sending_left">剩余尝试次数: %1$d</string>
     <string name="title_notification_sending_failed">发送至 %1$s 失败</string>
+    <string name="title_notification_redacted">已编辑：启用了生物识别或PIN身份验证</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
@@ -745,6 +746,7 @@
         如果您能在谷歌商店为FairEmail评分，我将感激不尽。
         这将有助于保持批评和赞同评论之间的平衡。
     </string>
+    <string name="title_ask_once">此消息将只显示一次，除非您选择“稍后”</string>
     <string name="title_third_party">您使用的是第三方版本</string>
     <string name="title_expand_warning">展开此消息将下载 %1$s</string>
     <string name="title_download_message">&#8230; 下载中</string>

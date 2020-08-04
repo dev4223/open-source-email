@@ -81,6 +81,7 @@
     <string name="title_notification_alert">Alerta del servidor \'%1$s\'</string>
     <string name="title_notification_sending_left">Intentos restantes: %1$d</string>
     <string name="title_notification_sending_failed">El envío a %1$s falló</string>
+    <string name="title_notification_redacted">Redactado: autenticación biométrica o PIN habilitada</string>
     <string name="title_of">%1$s/%2$s</string>
     <string name="title_name_count">%1$s (%2$s)</string>
     <string name="title_name_plus">%1$s +%2$d</string>
@@ -758,6 +759,7 @@
         Agradecería que pudiera calificar a FairEmail en Play Store.
         Esto ayudará a mantener un equilibrio entre reseñas desfavorables y favorables.
     </string>
+    <string name="title_ask_once">Este mensaje sólo aparecerá una vez, a menos que seleccione \'Más tarde\'</string>
     <string name="title_third_party">Está usando una versión de un tercero</string>
     <string name="title_expand_warning">Expandir este mensaje descargará %1$s</string>
     <string name="title_download_message">Descargando &#8230;</string>
