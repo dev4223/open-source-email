@@ -53,10 +53,6 @@
         <item quantity="one">S\'han seleccionat %1$d conversa</item>
         <item quantity="other">S\'han seleccionat %1$d converses</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Moure el missatge %1$d a %2$s?</item>
-        <item quantity="other">Moure els missatges %1$d a %2$s?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Esborrar el missatge %1$d per sempre?</item>
         <item quantity="other">Esborrar els missatges %1$d per sempre?</item>
@@ -725,10 +721,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_ask_reporting">Enviar registre d\'errors?</string>
     <string name="title_reporting_why">La notificació d’errors ajudarà a millorar FairEmail</string>
     <string name="title_ask_review">Consulteu FairEmail</string>
-    <string name="title_ask_review_rationale">        Fa temps que utilitzes FairEmail.
-        T\'agrairia que poguessis valorar FairEmail a Play Store.
-        Això ajudarà a mantenir un equilibri entre les revisions favorables i desfavorables.
-    </string>
     <string name="title_third_party">Utilitzeu la versió d’un tercer</string>
     <string name="title_expand_warning">En expandir aquest missatge es descarregarà %1$s</string>
     <string name="title_download_message">Descarregant &#8230;</string>

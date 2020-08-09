@@ -363,7 +363,7 @@ public class Helper {
 
     static String[] getOAuthPermissions() {
         List<String> permissions = new ArrayList<>();
-        permissions.add(Manifest.permission.READ_CONTACTS); // profile
+        //permissions.add(Manifest.permission.READ_CONTACTS); // profile
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
             permissions.add(Manifest.permission.GET_ACCOUNTS);
         return permissions.toArray(new String[0]);
@@ -998,6 +998,20 @@ public class Helper {
                 return false;
         }
         return true;
+    }
+
+    static Integer parseInt(String text) {
+        if (TextUtils.isEmpty(text))
+            return null;
+
+        if (!TextUtils.isDigitsOnly(text))
+            return null;
+
+        try {
+            return Integer.parseInt(text);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 
     // Files

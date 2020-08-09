@@ -54,10 +54,6 @@
         <item quantity="one">Valittuna %1$d keskustelu</item>
         <item quantity="other">Valittuna %1$d keskustelua</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Siirrä %1$d viesti kansioon %2$s?</item>
-        <item quantity="other">Siirrä %1$d viestiä kansioon %2$s?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Poista %1$d viesti pysyvästi?</item>
         <item quantity="other">Poista %1$d viestiä pysyvästi?</item>
@@ -750,10 +746,6 @@
     <string name="title_ask_reporting">Lähetetäänkö virheraportteja?</string>
     <string name="title_reporting_why">Virheraportointi auttaa FairEmailin kehittämisessä</string>
     <string name="title_ask_review">Ole hyvä ja arvostele FairEmail</string>
-    <string name="title_ask_review_rationale">Olet käyttänyt FairEmailia jonkin aikaa.
-        Olisi hienoa, jos voisit arvioida FairEmailin Play Kaupassa.
-        Tämä auttaa pitämään tasapainon hyvien ja huonojen arvioiden välillä.
-    </string>
     <string name="title_ask_once">Tämä viesti näytetään vain kerran, jos et valitse \'Myöhemmin\'</string>
     <string name="title_third_party">Käytät kolmannen osapuolen versiota</string>
     <string name="title_expand_warning">Tämän viestin laajentaminen lataa %1$s</string>

@@ -71,8 +71,8 @@
     </plurals>
 
     <plurals name="title_moving_messages">
-        <item quantity="one">Move %1$d message to %2$s?</item>
-        <item quantity="other">Move %1$d messages to %2$s?</item>
+        <item quantity="one">Move %1$d message?</item>
+        <item quantity="other">Move %1$d messages?</item>
     </plurals>
 
     <plurals name="title_deleting_messages">
@@ -210,6 +210,7 @@
     <string name="title_setup_done">Done</string>
     <string name="title_setup_still">Still to do</string>
     <string name="title_setup_error">Error</string>
+    <string name="title_setup_configuring">Configuring account &#8230;</string>
 
     <string name="title_setup_export">Export settings</string>
     <string name="title_setup_import">Import settings</string>
@@ -391,6 +392,7 @@
     <string name="title_advanced_volumenav">Volume up/down to go to next/previous conversation</string>
     <string name="title_advanced_reversed">Reverse navigation direction</string>
     <string name="title_advanced_swipe_close">Swipe down to close conversation</string>
+    <string name="title_advanced_swipe_move">Swipe up to move conversation</string>
     <string name="title_advanced_autoexpand">Automatically expand messages</string>
     <string name="title_advanced_expand_all">Automatically expand all read messages</string>
     <string name="title_advanced_expand_one">Expand only one message at a time</string>
@@ -674,6 +676,7 @@
     <string name="title_oauth_support">OAuth is not supported</string>
     <string name="title_review">Review</string>
     <string name="title_hint_alias">Long press an identity to display options, like copy to create alias identities</string>
+    <string name="title_service_auth">The email server said: \'%1$s\'</string>
     <string name="title_service_vpn">This might be caused by the VPN that is being used</string>
     <string name="title_service_port">Please double check the port number</string>
     <string name="title_service_protocol">Please double check the protocol (SSL/TLS or STARTTLS)</string>
@@ -842,6 +845,7 @@
     <string name="title_unused_inline">Unused inline images will be removed on send</string>
     <string name="title_accross_remark">Messages moved across accounts will be downloaded again resulting in extra data usage</string>
     <string name="title_raw_saved">Raw message saved</string>
+    <string name="title_attachment_eml">Attached message</string>
     <string name="title_attachment_saved">Attachment saved</string>
     <string name="title_attachments_saved">Attachments saved</string>
     <string name="title_attachments_incomplete">Some attachments or images were not downloaded and could not be added</string>
@@ -864,7 +868,6 @@
     <string name="title_ask_review_rationale">
         You have been using FairEmail for a while.
         It would be appreciated if you could rate FairEmail in the Play Store.
-        This will help to maintain a balance between unfavorable and favorable reviews.
     </string>
     <string name="title_ask_once">This message will only appear once, unless you select \'Later\'</string>
 
@@ -1178,6 +1181,7 @@
     <string name="title_legend_stop">Stop processing rules</string>
 
     <string name="title_legend_thread">Conversation</string>
+    <string name="title_legend_bookmark">Last opened conversation</string>
     <string name="title_legend_zoom">Change text size</string>
     <string name="title_legend_draft">Has draft</string>
     <string name="title_legend_priority">Has high priority</string>

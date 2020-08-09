@@ -131,15 +131,14 @@ import static androidx.core.app.NotificationCompat.DEFAULT_SOUND;
 import static javax.mail.Folder.READ_WRITE;
 
 class Core {
-    private static final int MAX_NOTIFICATION_COUNT = 25; // per group
-    private static final long AFTER_SEND_DELAY = 20 * 1000L; // milliseconds
+    private static final int MAX_NOTIFICATION_COUNT = 10; // per group
     private static final int SYNC_CHUNCK_SIZE = 200;
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
     private static final long FUTURE_RECEIVED = 30 * 24 * 3600 * 1000L; // milliseconds
-    private static final int LOCAL_RETRY_MAX = 3;
-    private static final long LOCAL_RETRY_DELAY = 10 * 1000L; // milliseconds
+    private static final int LOCAL_RETRY_MAX = 2;
+    private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
     private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 10;
 
     static void processOperations(
@@ -953,6 +952,8 @@ class Core {
                 db.message().deleteMessage(message.id);
             }
 
+        boolean canMove = istore.hasCapability("MOVE");
+
         // Some providers do not support the COPY operation for drafts
         boolean draft = (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type));
         if (draft) {
@@ -986,28 +987,35 @@ class Core {
             itarget.appendMessages(icopies.toArray(new Message[0]));
         } else {
             for (Message imessage : map.keySet()) {
-                Log.i("Move seen=" + seen + " unflag=" + unflag + " flags=" + imessage.getFlags());
+                Log.i("Move seen=" + seen + " unflag=" + unflag + " flags=" + imessage.getFlags() + " can=" + canMove);
 
                 // Mark read
-                if (seen && flags.contains(Flags.Flag.SEEN))
+                if (seen && !imessage.isSet(Flags.Flag.SEEN) && flags.contains(Flags.Flag.SEEN))
                     imessage.setFlag(Flags.Flag.SEEN, true);
 
                 // Remove star
-                if (unflag && flags.contains(Flags.Flag.FLAGGED))
+                if (unflag && imessage.isSet(Flags.Flag.FLAGGED) && flags.contains(Flags.Flag.FLAGGED))
                     imessage.setFlag(Flags.Flag.FLAGGED, false);
             }
 
-            ifolder.copyMessages(map.keySet().toArray(new Message[0]), itarget);
+            // https://tools.ietf.org/html/rfc6851
+            if (!copy && canMove)
+                ifolder.moveMessages(map.keySet().toArray(new Message[0]), itarget);
+            else
+                ifolder.copyMessages(map.keySet().toArray(new Message[0]), itarget);
         }
 
         // Delete source
-        if (!copy) {
+        if (!copy && (draft || !canMove)) {
             try {
                 for (Message imessage : map.keySet())
                     imessage.setFlag(Flags.Flag.DELETED, true);
             } catch (MessageRemovedException ignored) {
             }
             ifolder.expunge();
+        } else {
+            int count = MessageHelper.getMessageCount(ifolder);
+            db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
         }
 
         // Fetch appended/copied when needed
@@ -1026,11 +1034,11 @@ class Core {
                                     Message icopy = itarget.getMessageByUID(uid);
 
                                     // Mark read
-                                    if (seen && flags.contains(Flags.Flag.SEEN))
+                                    if (seen && !icopy.isSet(Flags.Flag.SEEN) && flags.contains(Flags.Flag.SEEN))
                                         icopy.setFlag(Flags.Flag.SEEN, true);
 
                                     // Remove star
-                                    if (unflag && flags.contains(Flags.Flag.FLAGGED))
+                                    if (unflag && icopy.isSet(Flags.Flag.FLAGGED) && flags.contains(Flags.Flag.FLAGGED))
                                         icopy.setFlag(Flags.Flag.FLAGGED, false);
 
                                     // Set drafts flag
@@ -1099,16 +1107,19 @@ class Core {
 
     private static void onFetch(Context context, JSONArray jargs, EntityFolder folder, IMAPStore istore, IMAPFolder ifolder, State state) throws JSONException, MessagingException, IOException {
         long uid = jargs.getLong(0);
+        boolean removed = jargs.optBoolean(1);
+
         if (uid < 0)
             throw new MessageRemovedException(folder.name + " fetch uid=" + uid);
 
         DB db = DB.getInstance(context);
         EntityAccount account = db.account().getAccount(folder.account);
-        boolean download = db.folder().getFolderDownload(folder.id);
-        List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
 
         try {
-            SyncStats stats = new SyncStats();
+            if (removed) {
+                db.message().deleteMessage(folder.id, uid);
+                throw new MessageRemovedException("removed uid=" + uid);
+            }
 
             MimeMessage imessage = (MimeMessage) ifolder.getMessageByUID(uid);
             if (imessage == null)
@@ -1117,6 +1128,10 @@ class Core {
                 throw new MessageRemovedException(folder.name + " fetch expunged uid=" + uid);
             if (imessage.isSet(Flags.Flag.DELETED))
                 throw new MessageRemovedException(folder.name + " fetch deleted uid=" + uid);
+
+            SyncStats stats = new SyncStats();
+            boolean download = db.folder().getFolderDownload(folder.id);
+            List<EntityRule> rules = db.rule().getEnabledRules(folder.id);
 
             try {
                 FetchProfile fp = new FetchProfile();
@@ -1173,7 +1188,7 @@ class Core {
 
             db.message().deleteMessage(folder.id, uid);
         } finally {
-            int count = ifolder.getMessageCount();
+            int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
         }
     }
@@ -1218,7 +1233,7 @@ class Core {
 
             db.message().deleteMessage(message.id);
         } finally {
-            int count = ifolder.getMessageCount();
+            int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
         }
     }
@@ -1426,19 +1441,6 @@ class Core {
 
         if (message.msgid == null)
             throw new IllegalArgumentException("exists without msgid");
-
-        if (EntityFolder.SENT.equals(folder.type)) {
-            long ago = new Date().getTime() - op.created;
-            long delay = AFTER_SEND_DELAY - ago;
-            if (delay > 0) {
-                Log.i(folder.name + " send delay=" + delay);
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException ex) {
-                    Log.w(ex);
-                }
-            }
-        }
 
         Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
         if (imessages == null || imessages.length == 0)
@@ -1766,7 +1768,7 @@ class Core {
             Log.e(ex);
             throw ex;
         } finally {
-            int count = ifolder.getMessageCount();
+            int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
 
             // Delete local, hidden messages
@@ -2370,7 +2372,7 @@ class Core {
                     db.message().deleteOrphans(folder.id);
             }
 
-            int count = ifolder.getMessageCount();
+            int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
             account.last_connected = new Date().getTime();
             db.account().setAccountConnected(account.id, account.last_connected);

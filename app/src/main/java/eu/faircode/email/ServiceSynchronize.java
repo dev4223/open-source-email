@@ -1092,7 +1092,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             db.folder().setFolderState(folder.id, "connected");
                             db.folder().setFolderError(folder.id, null);
 
-                            int count = ifolder.getMessageCount();
+                            int count = MessageHelper.getMessageCount(ifolder);
                             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
 
                             Log.i(account.name + " folder " + folder.name + " flags=" + ifolder.getPermanentFlags());
@@ -1139,7 +1139,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                                             for (Message imessage : e.getMessages()) {
                                                 long uid = ifolder.getUID(imessage);
-                                                EntityOperation.queue(ServiceSynchronize.this, folder, EntityOperation.FETCH, uid);
+                                                EntityOperation.queue(ServiceSynchronize.this, folder, EntityOperation.FETCH, uid, true);
                                             }
 
                                             db.setTransactionSuccessful();
@@ -1328,7 +1328,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                     db.folder().setFolderState(folder.id, "connected");
                                                                     db.folder().setFolderError(folder.id, null);
 
-                                                                    int count = ifolder.getMessageCount();
+                                                                    int count = MessageHelper.getMessageCount(ifolder);
                                                                     db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
 
                                                                     Log.i(account.name + " folder " + folder.name + " flags=" + ifolder.getPermanentFlags());

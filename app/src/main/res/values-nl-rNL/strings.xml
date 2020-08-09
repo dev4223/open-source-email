@@ -55,8 +55,8 @@
         <item quantity="other">%1$d gesprekken geselecteerd</item>
     </plurals>
     <plurals name="title_moving_messages">
-        <item quantity="one">Eén bericht verplaatsen naar %2$s ?</item>
-        <item quantity="other">%1$d berichten verplaatsen naar %2$s?</item>
+        <item quantity="one">Één bericht verplaatsen?</item>
+        <item quantity="other">%1$d berichten verplaatsen?</item>
     </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Verwijder één bericht definitief?</item>
@@ -172,6 +172,7 @@
     <string name="title_setup_done">Gedaan</string>
     <string name="title_setup_still">Nog te doen</string>
     <string name="title_setup_error">Fout</string>
+    <string name="title_setup_configuring">Account configureren &#8230;</string>
     <string name="title_setup_export">Exporteer instellingen</string>
     <string name="title_setup_import">Importeer instellingen</string>
     <string name="title_setup_import_do">Geïmporteerde accounts worden toegevoegd zonder de bestaande te overschrijven</string>
@@ -336,6 +337,7 @@
     <string name="title_advanced_volumenav">Volume omhoog/omlaag om naar het volgende/vorige gesprek te gaan</string>
     <string name="title_advanced_reversed">Keer navigatierichting om</string>
     <string name="title_advanced_swipe_close">Veeg naar beneden om gesprek te sluiten</string>
+    <string name="title_advanced_swipe_move">Veeg omhoog om gesprek te verplaatsen</string>
     <string name="title_advanced_autoexpand">Berichten automatisch uitvouwen</string>
     <string name="title_advanced_expand_all">Automatisch alle gelezen berichten uitvouwen</string>
     <string name="title_advanced_expand_one">Vouw slechts één bericht per keer uit</string>
@@ -578,6 +580,7 @@
     <string name="title_oauth_support">OAuth wordt niet ondersteund</string>
     <string name="title_review">Review</string>
     <string name="title_hint_alias">Druk lang voor opties, zoals kopiëren om alias identiteiten te maken</string>
+    <string name="title_service_auth">De e-mailserver zei: %1$s\'</string>
     <string name="title_service_vpn">Dit kan worden veroorzaakt door de VPN die in gebruik is</string>
     <string name="title_service_port">Controleer het poortnummer a.u.b.</string>
     <string name="title_service_protocol">Controleer a.u.b. het protocol (SSL/TLS of STARTTLS)</string>
@@ -735,6 +738,7 @@
     <string name="title_unused_inline">Ongebruikte inline afbeeldingen worden verwijderd bij verzenden</string>
     <string name="title_accross_remark">Berichten die worden verplaatst tussen accounts worden opnieuw gedownload en veroorzaken extra datagebruik</string>
     <string name="title_raw_saved">Ruw bericht opgeslagen</string>
+    <string name="title_attachment_eml">Bijgevoegd bericht</string>
     <string name="title_attachment_saved">Bijlage opgeslagen</string>
     <string name="title_attachments_saved">Bijlagen opgeslagen</string>
     <string name="title_attachments_incomplete">Sommige bijlagen of afbeeldingen zijn niet gedownload en konden niet worden toegevoegd</string>
@@ -753,9 +757,8 @@
     <string name="title_ask_reporting">Foutrapporten verzenden?</string>
     <string name="title_reporting_why">Foutrapportage helpt om FairEmail te verbeteren</string>
     <string name="title_ask_review">Beoordeel a.u.b. FairEmail</string>
-    <string name="title_ask_review_rationale">        U heeft FairEmail al een tijdje gebruikt.
-        Het wordt gewaardeerd als u FairEmail in de Play Store zou beoordelen.
-        Dit helpt ook om het evenwicht tussen ongunstige en gunstige beoordelingen te bewaren.
+    <string name="title_ask_review_rationale">        U gebruikt FairEmail al een tijdje.
+        Het zou gewaardeerd worden als u FairEmail in de Play Store zou kunnen beoordelen.
     </string>
     <string name="title_ask_once">Dit bericht zal slechts één keer verschijnen, tenzij je \'Later\' selecteert</string>
     <string name="title_third_party">U gebruikt een versie van een derde partij</string>
@@ -1038,6 +1041,7 @@
     <string name="title_legend_download_fetch">Aantal berichtteksten gedownload / koppen opgehaald</string>
     <string name="title_legend_stop">Stop met het verwerken van regels</string>
     <string name="title_legend_thread">Gesprek</string>
+    <string name="title_legend_bookmark">Laatste geopende gesprek</string>
     <string name="title_legend_zoom">Tekstgrootte wijzigen</string>
     <string name="title_legend_draft">Heeft concept</string>
     <string name="title_legend_priority">Heeft hoge prioriteit</string>

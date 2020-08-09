@@ -52,10 +52,6 @@
         <item quantity="one">Valgt %1$d samtale</item>
         <item quantity="other">Valgte %1$d samtaler</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Flytte %1$d melding til %2$s?</item>
-        <item quantity="other">Flytte %1$d meldinger til %2$s?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Slette %1$d melding permanent?</item>
         <item quantity="other">Slette %1$d meldinger permanent?</item>
@@ -638,9 +634,6 @@
     <string name="title_ask_reporting">Send feilrapporter?</string>
     <string name="title_reporting_why">Feilrapportering vil bidra til å forbedre FairEmail</string>
     <string name="title_ask_review">Vennligst anmeld FairEmail</string>
-    <string name="title_ask_review_rationale">Du har brukt FairEmail en stund.
-Det vil bli satt pris på om du kunne rangere FairEmail i Play Store.
-Dette vil bidra til å opprettholde en balanse mellom ugunstige og gunstige anmeldelser.    </string>
     <string name="title_third_party">Du bruker en versjon av en tredjepart</string>
     <string name="title_expand_warning">Å utvide denne meldingen vil laste ned %1$s</string>
     <string name="title_download_message">Laster ned &#8230;</string>

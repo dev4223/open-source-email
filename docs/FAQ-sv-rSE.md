@@ -26,7 +26,7 @@ För auktorisering:
 
 * Gmail / G suite, se [fråga 6](#user-content-faq6)
 * Outlook / Live / Hotmail, se [fråga 14](#user-content-faq14)
-* Office365, se [fråga 14](#user-content-faq156)
+* Office 365, se [fråga 14](#user-content-faq156)
 * Microsoft Exchange, se [fråga 8](#user-content-faq8)
 * Yahoo, AOL och Sky, se [fråga 88](#user-content-faq88)
 * Apple iCloud, se [fråga 148](#user-content-faq148)
@@ -271,7 +271,7 @@ Designen bygger på många diskussioner och om du vill kan du diskutera det [i d
 * [(153) Varför fungerar inte det att permanent radera Gmail-meddelandet?](#user-content-faq153)
 * [~~(154) Kan du lägga till favicons som kontaktbilder?~~](#user-content-faq154)
 * [(155) Vad är en winmail.dat fil?](#user-content-faq155)
-* [(156) Hur kan jag ställa in ett Office365-konto?](#user-content-faq156)
+* [(156) How can I set up an Office 365 account?](#user-content-faq156)
 * [(157) Hur kan jag sätta upp ett Free.fr-konto?](#user-content-faq157)
 * [(158) Vilken kamera / ljudinspelare rekommenderar du?](#user-content-faq158)
 * [(159) Vad är Disconnect's spårningsskyddslistor?](#user-content-faq159)
@@ -702,7 +702,7 @@ To use an Outlook, Live or Hotmail account with two factor authentication enable
 
 See [here](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040) for Microsoft's instructions.
 
-For setting up an Office365 account, please see [this FAQ](#user-content-faq156).
+For setting up an Office 365 account, please see [this FAQ](#user-content-faq156).
 
 <br />
 
@@ -821,11 +821,11 @@ The error *... Host is unresolved ...* or "*... Unable to resolve host ...* mean
 
 The error *... Software caused connection abort ...* means that the email server or something between FairEmail and the email server actively terminated an existing connection. This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
-The error *... BYE Logging out ...*, *... Connection reset by peer ...* or *... Broken pipe ...* means that the email server actively terminated an existing connection.
+Felen *... BYE Logging out ...*, *... Connection reset by peer ...* mean that the email server actively terminated an existing connection.
 
 The error *... Connection closed by peer ...* might be caused by a not updated Exchange server, see [here](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for more information.
 
-The errors *... Read error ...*, *... Write error ...*, *... Read timed out ...* mean that the email server is not responding anymore or that the internet connection is bad.
+The errors *... Read error ...*, *... Write error ...*, *... Read timed out ...*, *... Broken pipe ...* mean that the email server is not responding anymore or that the internet connection is bad.
 
 The error *... Unexpected end of zlib input stream ...* means that not all data was received, possibly due to a bad or interrupted connection.
 
@@ -854,11 +854,20 @@ Many public Wi-Fi networks block outgoing email to prevent spam. Sometimes you c
 
 If you are using a [VPN](https://en.wikipedia.org/wiki/Virtual_private_network), the VPN provider might block the connection because it is too aggressively trying to prevent spam. Note that [Google Fi](https://fi.google.com/) is using a VPN too.
 
+**Send errors**
+
+SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes). Too large messages and triggering the spam filter of an email server are the most common reasons.
+
+* The attachment size limit for Gmail [is 25 MB](https://support.google.com/mail/answer/6584)
+* The attachment size limit for Outlook and Office 365 [is 20 MB](https://support.microsoft.com/en-us/help/2813269/attachment-size-exceeds-the-allowable-limit-error-when-you-add-a-large)
+* The attachment size limit for Yahoo [is 25 MB](https://help.yahoo.com/kb/SLN5673.html)
+* *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
+
 **Gmail errors**
 
 The authorization of Gmail accounts setup with the quick wizard needs to be periodically refreshed via the [Android account manager](https://developer.android.com/reference/android/accounts/AccountManager). This requires contact/account permissions and internet connectivity.
 
-The error *... Autentisering misslyckades ... Account not found ...* means that a previously authorized Gmail account was removed from the device.
+The error *... Authentication failed ... Account not found ...* means that a previously authorized Gmail account was removed from the device.
 
 The errors *... Authentication failed ... No token on refresh ...* means that the Android account manager failed to refresh the authorization of a Gmail account.
 
@@ -2064,7 +2073,7 @@ OAuth for Gmail is supported via the quick setup wizard. The Android account man
 
 OAuth for Yandex is supported via the quick setup wizard.
 
-OAuth for Office365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
+OAuth for Office 365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
 
 OAuth access for Yahoo was requested, but Yahoo never responded to the request. OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL. Verizon owns both AOL and Yahoo, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media). So, it is reasonable to assume that OAuth is not supported by Yahoo anymore too.
 
@@ -2073,9 +2082,9 @@ OAuth access for Yahoo was requested, but Yahoo never responded to the request. 
 <a name="faq112"></a>
 **(112) Which email provider do you recommend?**
 
-FairEmail är bara en e-postklient, så du måste ta med din egen e-postadress.
+FairEmail is an email client only, so you need to bring your own email address.
 
-Det finns gott om e-postleverantörer att välja mellan. Vilken e-postleverantör som är bäst för dig beror på dina önskemål/krav. Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/) for a list of privacy oriented email providers with advantages and disadvantages.
+There are plenty of email providers to choose from. Which email provider is best for you depends on your wishes/requirements. Please see the websites of [Restore privacy](https://restoreprivacy.com/secure-email/) or [Privacy Tools](https://www.privacytools.io/providers/email/) for a list of privacy oriented email providers with advantages and disadvantages.
 
 Be aware that not all providers support standard email protocols, see [this FAQ](#user-content-faq129) for more information.
 
@@ -2127,11 +2136,12 @@ Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f4
 <a name="faq117"></a>
 **(117) Can you help me restore my purchase?**
 
-Google manages all purchases, so as developer I have little control over purchases. So, basically the only thing I can do, is give some advice:
+Google manages all purchases, so as a developer I have little control over purchases. So, basically the only thing I can do, is give some advice:
 
 * Make sure you have an active, working internet connection
 * Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
-* Open the Play store application and wait at least a minute to give it time to synchronize with the Google servers
+* Make sure you installed FairEmail via the right Google account if you configured multiple Google accounts on your device
+* Open the Play store app and wait at least a minute to give it time to synchronize with the Google servers
 * Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases
 
 You can also try to clear the cache of the Play store app via the Android apps settings. Restarting the device might be necessary to let the Play store recognize the purchase correctly.
@@ -2141,7 +2151,7 @@ Note that:
 * Purchases are stored in the Google cloud and cannot get lost
 * There is no time limit on purchases, so they cannot expire
 * Google does not expose details (name, e-mail, etc) about buyers to developers
-* An application like FairEmail cannot select which Google account to use
+* An app like FairEmail cannot select which Google account to use
 * It may take a while until the Play store app has synchronized a purchase to another device
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
@@ -2366,7 +2376,7 @@ You can reset all questions set to be not asked again in the miscellaneous setti
 <a name="faq138"></a>
 **(138) Can you add calendar/contact management/synchronizing?**
 
-Calendar and contact management can better be done by a separate, specialized app.
+Kalender och kontakthantering kan bättre göras genom en separat, specialiserad app. Observera att FairEmail är en specialiserad e-postapp, inte en kontorssvit.
 
 You are advised to use the excellent, open source [DAVx⁵](https://f-droid.org/packages/at.bitfire.davdroid/) app to synchronize/manage your calendars/contacts.
 
@@ -2607,9 +2617,9 @@ You can view it with for example the Android app [Letter Opener](https://play.go
 <br />
 
 <a name="faq156"></a>
-**(156) How can I set up an Office365 account?**
+**(156) How can I set up an Office 365 account?**
 
-An Office365 account can be set up via the quick setup wizard and selecting *Office365 (OAuth)*.
+An Office 365 account can be set up via the quick setup wizard and selecting *Office 365 (OAuth)*.
 
 If the wizard ends with *AUTHENTICATE failed*, IMAP and/or SMTP might be disabled for the account. In this case you should ask the administrator to enable IMAP and SMTP. The procedure is documented [here](https://docs.microsoft.com/en-in/exchange/troubleshoot/configure-mailboxes/pop3-imap-owa-activesync-office-365).
 

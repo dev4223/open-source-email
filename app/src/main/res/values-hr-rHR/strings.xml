@@ -60,11 +60,6 @@
         <item quantity="few">Odabrana %1$d razgovora</item>
         <item quantity="other">Odabrano %1$d razgovora</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Premjesti %1$d poruku u %2$s?</item>
-        <item quantity="few">Premjesti %1$d poruke u %2$s?</item>
-        <item quantity="other">Premjesti %1$d poruka u %2$s?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Želite li trajno izbrisati %1$d poruku?</item>
         <item quantity="few">Želite li trajno izbrisati %1$d poruke?</item>
@@ -622,9 +617,6 @@
     <string name="title_ask_reporting">Pošalji izvješća o pogreškama?</string>
     <string name="title_reporting_why">Izvješćivanje o pogreškama pomoći će u poboljšanju FairEmail aplikacije</string>
     <string name="title_ask_review">Molim ostavite recenziju o FairEmailu</string>
-    <string name="title_ask_review_rationale">Već neko vrijeme upotrebljavate FairEmail.
-         Bilo bi nam drago ako biste mogli ocijeniti FairEmail u PlayStore-u.
-         Ovo će nam pomoći da se održi ravnoteža između nepovoljnih i povoljnih recenzija.    </string>
     <string name="title_third_party">Koristite verziju neke treće strane</string>
     <string name="title_expand_warning">Proširivanjem ove poruke preuzet će se %1$s</string>
     <string name="title_download_message">Preuzima se &#8230;</string>

@@ -54,10 +54,6 @@
         <item quantity="one">%1$d konversation valgt</item>
         <item quantity="other">%1$d konversationer valgt</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Flyt %1$d besked til %2$s?</item>
-        <item quantity="other">Flyt %1$d beskeder til %2$s?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Slet %1$d besked permanent?</item>
         <item quantity="other">Slet %1$d beskeder permanent?</item>
@@ -173,6 +169,7 @@
     <string name="title_setup_done">Udført</string>
     <string name="title_setup_still">Resterer stadig</string>
     <string name="title_setup_error">Fejl</string>
+    <string name="title_setup_configuring">Opsætter konto &#8230;</string>
     <string name="title_setup_export">Eksportindstillinger</string>
     <string name="title_setup_import">Importindstillinger</string>
     <string name="title_setup_import_do">Importerede konti tilføjes uden at overskrive eksisterende ditto</string>
@@ -337,6 +334,7 @@
     <string name="title_advanced_volumenav">Lydstyrke op/ned for at gå til næste/foregående samtale</string>
     <string name="title_advanced_reversed">Omvendt navigeringsretning</string>
     <string name="title_advanced_swipe_close">Stryg nedad for at lukke samtale</string>
+    <string name="title_advanced_swipe_move">Stryg opad for at flytte samtale</string>
     <string name="title_advanced_autoexpand">Auto-udvid beskeder</string>
     <string name="title_advanced_expand_all">Auto-udvid alle læste beskeder</string>
     <string name="title_advanced_expand_one">Udvid kun én besked ad gangen</string>
@@ -736,6 +734,7 @@
     <string name="title_unused_inline">Ubrugte inline-billeder fjernes ved afsendelsen</string>
     <string name="title_accross_remark">Beskeder flyttet mellem konti gen-downloades, hvilket betyder ekstra dataforbrug</string>
     <string name="title_raw_saved">Besked i råformat gemt</string>
+    <string name="title_attachment_eml">Vedhæftet besked</string>
     <string name="title_attachment_saved">Vedhæftning gemt</string>
     <string name="title_attachments_saved">Vedhæftninger gemt</string>
     <string name="title_attachments_incomplete">Visse vedhæftninger eller billeder blev ikke downloadet og kunne ikke tilføjes</string>
@@ -754,9 +753,8 @@
     <string name="title_ask_reporting">Send fejlrapporter?</string>
     <string name="title_reporting_why">Rapportering af fejl vil hjælpe med at forbedre FairEmail</string>
     <string name="title_ask_review">Bedøm venligst FairEmail</string>
-    <string name="title_ask_review_rationale">        Du har brugt FairEmail i et stykke tid nu.
-        Det vil blive værdsat, hvis du kunne bedømme FairEmail i Play Butik.
-        Dette vil hjælpe med at bevare balancen mellem ugunstige og gunstige anmeldelser.
+    <string name="title_ask_review_rationale">        Du har nu benyttet FairEmail i et stykke tid.
+         Det vil blive værdsat, hvis du kunne bedømme FairEmail i Play Butik.
     </string>
     <string name="title_ask_once">Denne besked vises kun én gang, med mindre duvælger \'Senere\'</string>
     <string name="title_third_party">Du benytter en tredjepartsversion</string>
@@ -1039,6 +1037,7 @@
     <string name="title_legend_download_fetch">Antal downloadede beskeder/hentede overskrifter</string>
     <string name="title_legend_stop">Stop afvikling af regler</string>
     <string name="title_legend_thread">Samtale</string>
+    <string name="title_legend_bookmark">Senest åbnede samtale</string>
     <string name="title_legend_zoom">Ændr tekststørrelse</string>
     <string name="title_legend_draft">Har kladde</string>
     <string name="title_legend_priority">Har høj prioritet</string>

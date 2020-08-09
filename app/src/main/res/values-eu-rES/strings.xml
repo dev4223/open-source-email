@@ -52,10 +52,6 @@
         <item quantity="one">Elkarrizketa %1$d hautatuta</item>
         <item quantity="other">%1$d elkarrizketa hautatuta</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Eraman mezu %1$d %2$s helburura?</item>
-        <item quantity="other">Eraman %1$d mezu %2$s(e)ra?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Ezabatu mezu %1$d behin betiko?</item>
         <item quantity="other">Ezabatu %1$d mezu behin betiko?</item>
@@ -697,10 +693,6 @@
     <string name="title_ask_reporting">Bidali errore txostenak?</string>
     <string name="title_reporting_why">Errore txostenek FairEmail hobetzen laguntzen dute</string>
     <string name="title_ask_review">Baloratu FairEmail mesedez</string>
-    <string name="title_ask_review_rationale">FairEmail denbora batez erabili duzu.
-Eskertzekoa litzateke Play Storen FairEmail baloratuko bazenu.
-Honekin aldeko eta kontrako botoen arteko oreka mantenduko da.
-    </string>
     <string name="title_third_party">Hirugarren baten bertsioa erabiltzen ari zara</string>
     <string name="title_expand_warning">Mezu hau hedatzean %1$s deskargatuko da</string>
     <string name="title_download_message">Deskargatzen &#8230;</string>

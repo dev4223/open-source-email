@@ -26,7 +26,7 @@ Til godkendelse:
 
 * Gmail/G Suite, se [spørgsmål 6](#user-content-faq6)
 * Outlook/Live/Hotmail, se [spørgsmål 14](#user-content-faq14)
-* Office365, se [spørgsmål 14](#user-content-faq156)
+* Office 365, see [question 14](#user-content-faq156)
 * Microsoft Exchange, se [spørgsmål 8](#user-content-faq8)
 * Yahoo, AOL og Sky, se [spørgsmål 88](#user-content-faq88)
 * Apple iCloud, se [spørgsmål 148](#user-content-faq148)
@@ -271,7 +271,7 @@ Designet er baseret på mange debatter, og er du interesseret, kan du også deba
 * [(153) Hvorfor fungerer permanent sletning af Gmail-beskeder ikke?](#user-content-faq153)
 * [~~(154) Kan fav-ikonr som kontaktfotos tilføjes?~~](#user-content-faq154)
 * [(155) Hvad er en winmail.dat-fil?](#user-content-faq155)
-* [(156) Hvordan opsættes en Office365-konto?](#user-content-faq156)
+* [(156) How can I set up an Office 365 account?](#user-content-faq156)
 * [(157) Hvordan opsættes en Free.fr-konto?](#user-content-faq157)
 * [(158) Hvilken kamera-/lydoptager anbefales?](#user-content-faq158)
 * [(159) Hvad er Disconnect's sporingsbeskyttelseslister?](#user-content-faq159)
@@ -702,7 +702,7 @@ Anvendelse af en Outlook-, Live- eller Hotmail-konto med tofaktorgodkendelse akt
 
 Tjek Microsoft-instruktionerne [hér](https://support.office.com/en-us/article/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040).
 
-Tjek [denne FAQ](#user-content-faq156) for opsætnig af en Office365-konto.
+For setting up an Office 365 account, please see [this FAQ](#user-content-faq156).
 
 <br />
 
@@ -821,11 +821,11 @@ Fejlen *... Vært er uopløst ...* eller "*... Kan ikke opløse vært ...* betyd
 
 Fejlen *... Software forårsaget forbindelsesafbrydelse ...* betyder, at e-mailserveren, eller noget mellem FairEmail og e-mailserveren, aktivt afsluttede en eksisterende forbindelse. Dette kan f.eks. ske, når tilslutningen pludselig blev mistet. Et typisk eksempel er aktivering af Flytilstand.
 
-Fejlen *... BYE, logger ud ...*, *... Connection reset by peer ...* eller *... Broken pipe ...* betyder, at e-mailserveren aktivt afsluttede en eksisterende forbindelse.
+Fejlene *... BYE, logger ud ...*, *... Forbindelse nulstillet af peer ... * betyder, at e-mailserveren aktivt afsluttede en eksisterende forbindelse.
 
 Fejlen *... Forbindelse lukket af peer ...* kan forårsages af en ikke-opdateret Exchange-server, se [hér](https://blogs.technet.microsoft.com/pki/2010/09/30/sha2-and-windows/) for yderligere oplysninger.
 
-Fejlene *... Læsefejl ...*, *... Skrivefejl ...*, *... Læsning fik timeout ...* betyder, at e-mailserveren ikke længere svarer, eller at Internetforbindelsen er ringe.
+Fejlene *... Læsefejl ...*, *... Skrivefejl ...*, *... Læsning fik timeout ...*, *... Ødelagt pipe ...* betyder, at e-mailserveren ikke længere svarer, eller at Internetforbindelsen er ringe.
 
 Fejlen *... Uventet afslutning af zlib-inputstrøm ...* betyder, at ikke alle data blev modtaget, muligvis grundet en dårlig/afbrudt forbindelse.
 
@@ -854,195 +854,204 @@ Mange offentlige Wi-Fi netværk blokerer udgående e-mail for at forhindre spam.
 
 Benytter du et [VPN](https://en.wikipedia.org/wiki/Virtual_private_network), kan VPN-udbyderen muligvis blokere forbindelsen, hvis den for aggressivt forsøger at forhindre spam. Bemærk, at [Google Fi](https://fi.google.com/) også benytter et VPN.
 
-**Gmail-fejl**
+**Send errors**
 
-Godkendelsen af Gmail-kontiopsætninger vha. hurtigguiden skal periodisk opfriskes via [Android-kontohåndteringen](https://developer.android.com/reference/android/accounts/AccountManager). Dette kræver kontakt-/konto-tilladelser samt Internetforbindelse.
+SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes). Too large messages and triggering the spam filter of an email server are the most common reasons.
 
-Fejlen *... Godkendelse mislykkedes ... Konto ikke fundet ...* betyder, at en tidligere godkendt Gmail-konto er blevet fjernet fra enheden.
+* The attachment size limit for Gmail [is 25 MB](https://support.google.com/mail/answer/6584)
+* The attachment size limit for Outlook and Office 365 [is 20 MB](https://support.microsoft.com/en-us/help/2813269/attachment-size-exceeds-the-allowable-limit-error-when-you-add-a-large)
+* The attachment size limit for Yahoo [is 25 MB](https://help.yahoo.com/kb/SLN5673.html)
+* *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
 
-Fejlene *... Godkendelse mislykkedes ... Ingen token ved opfriskning ...* betyder, at Android-kontohåndteringen ikke kunne opfriske godkendelsen af en Gmail-konto.
+**Gmail errors**
 
-Fejlen *... Godkendelse mislykkedes ... Ugyldige akkreditiverer ... netværksfejl ...* betyder, at Android-kontohåndteringen ikke var i stand til at opfriske godkendelsen af en Gmail-konto grundet Internetforbindelsesproblemer
+The authorization of Gmail accounts setup with the quick wizard needs to be periodically refreshed via the [Android account manager](https://developer.android.com/reference/android/accounts/AccountManager). This requires contact/account permissions and internet connectivity.
 
-Fejlen *... Godkendelse mislykkedes ... Ugyldige akkreditiver ...* kan være forårsaget af ophævelse af de krævede konto-/kontakter-tilladelser. Start blot guiden (men vælg ikke en konto) for at tildele de krævede tilladelser igen.
+Fejlen *... Godkendelse mislykkedes ... Account not found ...* means that a previously authorized Gmail account was removed from the device.
 
-Fejlen *... ServiceDisabled ...* kan skyldes din indrullering i [Avanceret Beskyttelsesprogram](https://landing.google.com/advancedprotection/): "*For at læse din e-mail, skal du benytte Gmail. Du kan ikke benytte din Google-konto med apps og tjenester, som kræver adgang til følsomme data såsom dine e-mails*", se mere info [hér](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=9264881).
+The errors *... Godkendelse mislykkedes ... No token on refresh ...* means that the Android account manager failed to refresh the authorization of a Gmail account.
 
-Hvis du er i tvivl, kan du anmode om [support](#user-content-support).
+The error *... Authentication failed ... Invalid credentials ... network error ...* means that the Android account manager was not able to refresh the authorization of a Gmail account due to problems with the internet connection
+
+The error *... Authentication failed ... Invalid credentials ...* could be caused by having revoked the required account/contacts permissions. Just start the wizard (but do not select an account) to grant the required permissions again.
+
+The eror *... ServiceDisabled ...* might be caused by enrolling in the [Advanced Protection Program](https://landing.google.com/advancedprotection/): "*To read your email, you can (must) use Gmail - You won’t be able to use your Google Account with some (all) apps & services that require access to sensitive data like your emails*", see [here](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=9264881).
+
+When in doubt, you can ask for [support](#user-content-support).
 
 <br />
 
 <a name="faq23"></a>
-**(23) Hvorfor ses advarslen ... ?**
+**(23) Why do I get alert ... ?**
 
-*Generelt*
+*General*
 
-Avarsler er advarselsmeddelelser sendt af e-mailservere.
+Alerts are warning messages sent by email servers.
 
-*For mange samtidige forbindelser* eller *Maksimalt antal forbindelser overskred*
+*Too many simultaneous connections* or *Maximum number of connections exceeded*
 
-Denne advarsel udsendes, når der er for mange mappeforbindelser til den samme e-mail-konto på samme tid.
+This alert will be sent when there are too many folder connections for the same email account at the same time.
 
-Mulige årsager:
+Possible causes are:
 
-* Flere e-mailklienter er forbundet til den samme konto
-* Samme e-mailklient er forbundet flere gange til den samme konto
-* Tidligere forbindelser blev brat afsluttet, f.eks. ved en pludselig mistet Internetforbindelse
+* There are multiple email clients connected to the same account
+* The same email client is connected multiple times to the same account
+* Previous connections were terminated abruptly for example by abruptly losing internet connectivity
 
-Prøv først at vente lidt for at se, om problemet løser sig selv, ellers:
+First try to wait some time to see if the problem resolves itself, else:
 
-* Skift enten til periodisk tjek for beskeder i modtagelsesindstillingerne, hvilket resulterer i, at mapper åbnes én ad gangen
-* eller indstil nogle mapper til polling i stedet for at synkronisation (langt tryk på mappen i mappelisten, redigere egenskaber)
+* either switch to periodically checking for messages in the receive settings, which will result in opening folders one at a time
+* or set some folders to poll instead of synchronize (long press folder in the folder list, edit properties)
 
-Det maksimale antal samtidige mappeforbindelser til Gmail udgør 15, så du kan synkronisere maks. 15 mapper samtidigt på tværs af *alle* dine enheder. Af samme grund er Gmail *brugermapper* som standard opsat til polling fremfor altid at synkronisere. Om nødvendigt eller ønsket, kan dette ændres vha. langt tryk på en mappe i mappelisten og vælge *Redigér egenskaber*. Tjek oplysningerne [hér](https://support.google.com/mail/answer/7126229).
+The maximum number of simultaneous folder connections for Gmail is 15, so you can synchronize at most 15 folders simultaneously on *all* your devices at the same time. For this reason Gmail *user* folders are set to poll by default instead of synchronize always. When needed or desired, you can change this by long pressing a folder in the folder list and selecting *Edit properties*. See [here](https://support.google.com/mail/answer/7126229) for details.
 
-Ved brug af en Dovecot-server, skal indstillingen [mail_max_userip_connections](https://doc.dovecot.org/settings/dovecot_core_settings/#mail-max-userip-connections) muligvis ændres.
+When using a Dovecot server, you might want to change the setting [mail_max_userip_connections](https://doc.dovecot.org/settings/dovecot_core_settings/#mail-max-userip-connections).
 
 <br />
 
 <a name="faq24"></a>
-**(24) Hvad betyder gennemse beskeder på serveren?**
+**(24) What is browse messages on the server?**
 
-Gennemse beskeder på serveren henter beskeder fra e-mailserveren i realtid, når du kommer til slutningen af listen over synkroniserede beskeder, også når mappen er indstillet til ikke at synkronisere. Du kan deaktivere denne funktion under Avancerede kontoindstillinger.
+Browse messages on the server will fetch messages from the email server in real time when you reach the end of the list of synchronized messages, even when the folder is set to not synchronize. You can disable this feature in the advanced account settings.
 
 <br />
 
 <a name="faq25"></a>
-**(25) Hvorfor kan der ikke vælges/åbnes/gemmes et billede, vedhæftning eller fil?**
+**(25) Why can't I select/open/save an image, attachment or a file?**
 
-Når et menupunkt til at vælge/åbne/gemme en fil er deaktiveret (nedtonet), eller når du ser meddelelsen *Lageradgangs-framework ikke tilgængelig*, så er [lageradgangs-framework'en](https://developer.android.com/guide/topics/providers/document-provider), en standard Android-komponent, sandsynligvis ikke til stede. Dette kan skyldes, at din brugerdefinerede ROM ikke inkluderer den, eller fordi den er blevet fjernet (debloated).
+When a menu item to select/open/save a file is disabled (dimmed) or when you get the message *Storage access framework not available*, the [storage access framework](https://developer.android.com/guide/topics/providers/document-provider), a standard Android component, is probably not present. This might be because your custom ROM does not include it or because it was actively removed (debloated).
 
-FairEmail anmoder ikke om lagerpladstilladelser, så denne framework kræves for at kunne vælge filer og mapper. Ingen app, undtagen måske filhåndteringer målrettet Android 4.4 KitKat eller senere, bør anmode om lagerpladstilladelser, da dette giver adgang til *alle* filer.
+FairEmail does not request storage permissions, so this framework is required to select files and folders. No app, except maybe file managers, targeting Android 4.4 KitKat or later should ask for storage permissions because it would allow access to *all* files.
 
-Framework for lagerpladsadgang leveres af pakken *com.android.documentsui*, der er synlig som *Fil-*app i visse Android-versioner (specifikt OxygenOS).
+The storage access framework is provided by the package *com.android.documentsui*, which is visible as *Files* app on some Android versions (notable OxygenOS).
 
-Du kan aktivere framework'en for lagerpladsadgang (igen) med denne adb-kommando:
+You can enable the storage access framework (again) with this adb command:
 
 ```
 pm install -k --user 0 com.android.documentsui
 ```
 
-Alternativt kan du muligvis aktivere *Fil-*appen igen vha. Android app-indstillingerne.
+Alternatively, you might be able to enable the *Files* app again using the Android app settings.
 
 <br />
 
 <a name="faq26"></a>
-**(26) Kan jeg hjælpe med at oversætte FairEmail til mit sprog?**
+**(26) Can I help to translate FairEmail in my own language?**
 
-Ja, du kan oversætte FairEmail-teksterne til dit sprog [via Crowdin](https://crowdin.com/project/open-source-email). Tilmelding er gratis.
+Yes, you can translate the texts of FairEmail in your own language [on Crowdin](https://crowdin.com/project/open-source-email). Registration is free.
 
 <br />
 
 <a name="faq27"></a>
-**(27) Hvordan skelnes mellem indlejrede eller eksterne billeder?**
+**(27) How can I distinguish between embedded and external images?**
 
-Eksternt billede:
+External image:
 
-![Eksternt billede](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_image_black_48dp.png)
+![External image](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_image_black_48dp.png)
 
-Indlejret billede:
+Embedded image:
 
-![Indlejret billede](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_photo_library_black_48dp.png)
+![Embedded image](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_photo_library_black_48dp.png)
 
-Ødelagt billede:
+Broken image:
 
-![Ødelagt billede](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_broken_image_black_48dp.png)
+![Broken image](https://raw.githubusercontent.com/google/material-design-icons/master/image/1x_web/ic_broken_image_black_48dp.png)
 
-Bemærk, at download af eksterne billeder fra en fjernserver kan bruges til at registrere, at du har set en besked, hvilket du sandsynligvis ikke ønsker, såfremt beskeden er spam eller ondsindet.
+Note that downloading external images from a remote server can be used to record you did see a message, which you likely don't want if the message is spam or malicious.
 
 <br />
 
 <a name="faq28"></a>
-**(28) Hvordan håndteres statusbjælkenotifikationer?**
+**(28) How can I manage status bar notifications?**
 
-I opsætningen findes knappen *Håndtér notifikationer *for at navigere direkte til for Android-notifikationsindstillingerne til FairEmail.
+In the setup you'll find a button *Manage notifications* to directly navigate to the Android notifications settings for FairEmail.
 
-I Android 8.0 Oreo og senere kan du håndtere egenskaberne for de individuelle notifikationskanaler, f.eks. indstilling af en bestemt notifikationslyd eller for at vise notifikationer på låseskærmen.
+On Android 8.0 Oreo and later you can manage the properties of the individual notification channels, for example to set a specific notification sound or to show notifications on the lock screen.
 
-FairEmail har flg. beskedkanaler:
+FairEmail has the following notification channels:
 
-* Tjeneste: Benytttes til notifikation om synkroniseringstjenesten, se også [denne FAQ](#user-content-faq2)
-* Send: Benyttes til sendetjenestenotiifikation
-* Notifikationer: Benyttes til notifikation om ny besked
-* Advarsel: Benyttes til advarselsnotifikationer
-* Fejl: Benyttes til notifikationer om fejl
+* Service: used for the notification of the synchronize service, see also [this FAQ](#user-content-faq2)
+* Send: used for the notification of the send service
+* Notifications: used for new message notifications
+* Warning: used for warning notifications
+* Error: used for error notifications
 
-Se [hér](https://developer.android.com/guide/topics/ui/notifiers/notifications#ManageChannels) for detaljer om notifikationskanaler. Kort sagt: Tryk på notifikationskanalens navn for at få adgang til kanalindstillingerne.
+See [here](https://developer.android.com/guide/topics/ui/notifiers/notifications#ManageChannels) for details on notification channels. In short: tap on the notification channel name to access the channel settings.
 
-På Android før Android 8 Oreo kan du opsætte notifikationslyden i indstillingerne.
+On Android before Android 8 Oreo you can set the notification sound in the settings.
 
-Se [denne FAQ](#user-content-faq21), hvis din enhed har et notifikationslys.
+See [this FAQ](#user-content-faq21) if your device has a notification light.
 
 <br />
 
 <a name="faq29"></a>
-**(29) Hvordan fås notifikationer om nye beskeder for andre mapper?**
+**(29) How can I get new message notifications for other folders?**
 
-Benyt blot et langt tryk på en mappe, vælg *Redigér egenskaber*, og aktivér enten *Vis i den fælles indbakke* eller *Notificér om nye beskeder* (kun tilgængelig på Android 7 Nougat og senere) og tryk på *Gem*.
+Just long press a folder, select *Edit properties*, and enable either *Show in unified inbox* or *Notify new messages* (available on Android 7 Nougat and later only) and tap *Save*.
 
 <br />
 
 <a name="faq30"></a>
-**(30) Hvordan kan de medfølgende hurtige indstillinger benyttes?**
+**(30) How can I use the provided quick settings?**
 
-Der er hurtige indstillinger (indstillingsfliser) tilgængelig for:
+There are quick settings (settings tiles) available to:
 
-* globalt aktivere/deaktivere synkronisering
-* vis antallet af nye beskeder og markér dem som set (ikke læst)
+* globally enable/disable synchronization
+* show the number of new messages and marking them as seen (not read)
 
-Hurtige indstillinger kræver Android 7.0 Nougat eller senere. Brug af indstillingsfliserne forklares [hér](https://support.google.com/android/answer/9083864).
+Quick settings require Android 7.0 Nougat or later. The usage of settings tiles is explained [here](https://support.google.com/android/answer/9083864).
 
 <br />
 
 <a name="faq31"></a>
-**(31) Hvordan kan de medfølgende genveje benyttes?**
+**(31) How can I use the provided shortcuts?**
 
-Der er tilgængelige genveje til:
+There are shortcuts available to:
 
-* at skrive en ny besked til en favoritkontakt
-* opsætning af konti, identiteter mv.
+* compose a new message to a favorite contact
+* setup accounts, identities, etc
 
-Genveje kræver Android 7.1 Nougat eller senere. Brug af genveje forklares [hér](https://support.google.com/android/answer/2781850).
+Shortcuts require Android 7.1 Nougat or later. The usage of shortcuts is explained [here](https://support.google.com/android/answer/2781850).
 
 <br />
 
 <a name="faq32"></a>
-**(32) Hvordan tjekkes, om læsning af e-mails virkelig er sikkert?**
+**(32) How can I check if reading email is really safe?**
 
-Man kan benytte [E-mail Fortrolighedstester](https://www.emailprivacytester.com/) til dette.
+You can use the [Email Privacy Tester](https://www.emailprivacytester.com/) for this.
 
 <br />
 
 <a name="faq33"></a>
-**(33) Hvorfor fungerer redigerede afsenderadresser ikke?**
+**(33) Why are edited sender addresses not working?**
 
-For at forhindre spam accepterer de fleste udbydere kun bekræftede adresser ifm. afsendelser.
+Most providers accept validated addresses only when sending messages to prevent spam.
 
-F.eks. ændrer Google beskedhoveder som dette for *ikke-bekræftede* adresser:
+For example Google modifies the message headers like this for *unverified* addresses:
 
 ```
 Fra: Nogen <somebody@example.org>
 X-Google-Originale-Fra: Nogen <somebody+extra@example.org>
 ```
 
-Dette betyder, at den redigerede afsenderadresse automatisk erstattes af en bekræftet adresse inden bekedafsendelsen.
+This means that the edited sender address was automatically replaced by a verified address before sending the message.
 
-Bemærk, at dette er uafhængigt af at modtage beskeder.
+Note that this is independent of receiving messages.
 
 <br />
 
 <a name="faq34"></a>
-**(34) Hvordan matches identiteter?**
+**(34) How are identities matched?**
 
-Identities are as expected matched by account. For indgående beskeder adresserne *til*, *cc*, *bcc*, *fra* og *(X-)leverede/konvolut/originale-til* blive tjekket (i denne rækkefølge) og for udgående beskeder (kladder, udbakke og sendt) tjekkes kun *fra*-adresserne.
+Identities are as expected matched by account. For incoming messages the *to*, *cc*, *bcc*, *from* and *(X-)delivered/envelope/original-to* addresses will be checked (in this order) and for outgoing messages (drafts, outbox and sent) only the *from* addresses will be checked.
 
-Den matchede adresse vises som *via* i adresseafsnittet.
+The matched address will be shown as *via* in the addresses section.
 
-Bemærk, at identiteter skal aktiveres for at kunne matches, osamt at identiteter på andre konti ikke overvejes.
+Note that identities needs to be enabled to be able to be matched and that identities of other accounts will not be considered.
 
-Match udføres kun én gang efter modtagelse af en besked, så ændring af opsætningen ændrer ikke eksisterende beskeder. Du kan dog rydde lokale beskeder vha. langt tryk på en mappe i mappelisten og synkronisere beskederne igen.
+Matching will be done only once on receiving a message, so changing the configuration will not change existing messages. You could clear local messages by long pressing a folder in the folder list and synchronize the messages again though.
 
-Det er muligt at opsætte en [regex](https://en.wikipedia.org/wiki/Regular_expression) i identitetsindstillingerne for at få en e-mailadresses matchende brugernavn (tekstdelen før @-tegnet).
+It is possible to configure a [regex](https://en.wikipedia.org/wiki/Regular_expression) in the identity settings to match the username of an email address (the part before the @ sign).
 
 Note that the domain name (the parts after the @ sign) always needs to be equal to the domain name of the identity.
 
@@ -1103,7 +1112,7 @@ If the device is secured with a PIN, pattern or password, you can make the accou
 
 Recent Android versions by default report *app usage* as a percentage in the Android battery settings screen. **Confusingly, *app usage* is not the same as *battery usage* and is not even directly related to battery usage!** The app usage (while in use) will be very high because FairEmail is using a foreground service which is considered as constant app usage by Android. However, this doesn't mean that FairEmail is constantly using battery power. The real battery usage can be seen by navigating to this screen:
 
-*Android-indstillinger*, *Batteri*, trepriksmenu *Batteriforbrug*, trepriksmenu *Vis fuld enhedsbrug*
+*Android settings*, *Battery*, three-dots menu *Battery usage*, three-dots menu *Show full device usage*
 
 As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby*. If this isn't the case, please let me know.
 
@@ -1152,7 +1161,7 @@ By default auto optimize in the receive settings is enabled, which will switch a
 
 You can reduce the network usage basically in the same way as reducing battery usage, see the previous question for suggestions.
 
-Som standard henter FairEmail ikke beskedtekster og vedhæftninger større end 256 KiB, når Internetforbindelsen er takseret (mobildata eller betalt Wi-Fi). You can change this in the connection settings.
+By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection. You can change this in the connection settings.
 
 <br />
 
@@ -1169,7 +1178,7 @@ If your provider doesn't support encrypted connections, you should ask to make t
 
 See also [this FAQ](#user-content-faq4).
 
-The error '*Handshake failed ... SSLV3_ALERT_ILLEGAL_PARAMETER ...*' is either caused by a bug in the SSL protocol implementation or by a too short DH key on the email server and can unfortunately not be fixed by FairEmail.
+Fejlen '*Handshake mislykkedes ... SSLV3_ALERT_ILLEGAL_PARAMETER ...*' is either caused by a bug in the SSL protocol implementation or by a too short DH key on the email server and can unfortunately not be fixed by FairEmail.
 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4, which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
 
@@ -1192,7 +1201,7 @@ The following information is needed:
 <provider
     name="Gmail"
     link="https://support.google.com/mail/answer/7126229" // link to the instructions of the provider
-    type="com.google"> // this is not needed
+    type="com.google"> // dette kræves ikke
     <imap
         host="imap.gmail.com"
         port="993"
@@ -1463,7 +1472,7 @@ The price of FairEmail is too low, lower than that of most similar apps, and the
 <a name="faq67"></a>
 **(67) How can I snooze conversations?**
 
-Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*. Alternativt kan *Slumre...* benyttes i den udvidede beskedvisning i trepriksmenuens 'mere'-menu eller tidsforskydningshandlingen i den nederste handlingsbjælke. Select the time the conversation(s) should snooze and confirm by tapping OK. The conversations will be hidden for the selected time and shown again afterwards. You will receive a new message notification as reminder.
+Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*. Alternatively, in the expanded message view use *Snooze ...* in the message three-dots 'more' menu or the timelapse action in the bottom action bar. Select the time the conversation(s) should snooze and confirm by tapping OK. The conversations will be hidden for the selected time and shown again afterwards. You will receive a new message notification as reminder.
 
 It is also possible to snooze messages with [a rule](#user-content-faq71).
 
@@ -1499,7 +1508,7 @@ When navigation to a conversation one message will be expanded if:
 * There is just one message in the conversation
 * There is exactly one unread message in the conversation
 
-Der er én undtagelse: Beskeden er ikke downloadet endnu, og beskeden er for stor til at downloade automatisk på en takseret (mobildata) forbindelse. You can set or disable the maximum message size on the 'connection' settings tab.
+There is one exception: the message was not downloaded yet and the message is too large to download automatically on a metered (mobile) connection. You can set or disable the maximum message size on the 'connection' settings tab.
 
 Duplicate (archived) messages, trashed messages and draft messages are not counted.
 
@@ -1552,13 +1561,13 @@ You can select one of these actions to apply to matching messages:
 * Text-to-speech (sender and subject)
 * Automation (Tasker, etc)
 
-Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions to the message text. Bemærk, at store beskedtekster downloades på forlangende via takserede forbindelser mhp. at reducere dataforbruget.
+Rules are applied directly after the message header has been fetched, but before the message text has been downloaded, so it is not possible to apply conditions to the message text. Note that large message texts are downloaded on demand on a metered connection to save on data usage.
 
 If you want to forward a message, consider to use the move action instead. This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space it is not possible to preview which messages would match a header rule condition.
 
-I trepriks-beskedmenuens *mere*-menu findes et element til oprettelse af en regel for en modtaget besked med de mest almindelige betingelser udfyldt.
+In the three-dots *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
 
 The POP3 protocol does not support setting keywords and moving or copying messages.
 
@@ -1849,7 +1858,7 @@ FairEmail uses services and alarms, provides widgets and listens for the boot co
 
 Messages, attachments, etc stored on external storage media, like an sdcard, can be accessed by other apps and is therefore not safe. See [here](https://developer.android.com/training/data-storage) for the details.
 
-Om ønsket, kan du gemme (rå) beskeder via trepriksmenuen ovenover beskedteksten samt gemme vedhæftninger ved at trykke på disketteikonet.
+When needed you can save (raw) messages via the three-dots menu just above the message text and save attachments by tapping on the floppy icon.
 
 If you need to save on storage space, you can limit the number of days messages are being synchronized and kept for. You can change these settings by long pressing a folder in the folder list and selecting *Edit properties*.
 
@@ -1931,7 +1940,7 @@ category:promotions
 
 Unfortunately, this is not possible for snoozed messages folder.
 
-Du kan benytte *Tvangssynk* i trepriksmenuen i den fælles indbakke for at lade FairEmail synkronisere mappelisten igen, og du kan vha. et langt tryk på mapperne aktivere synkronisering.
+You can use *Force sync* in the three-dots menu of the unified inbox to let FairEmail synchronize the folder list again and you can long press the folders to enable synchronization.
 
 <br />
 
@@ -2051,7 +2060,7 @@ Empty messages and/or corrupt attachments are probably being caused by a bug in 
 
 Setup > Step 1 > Manage > Tap account > Tap advanced > Partial fetch > uncheck
 
-Efter deaktivering af indstillingen kan du benytte trepriks-beskedmenuens 'mere'-menu til at 'gensynke' tomme beskeder. Alternatively, you can *Delete local messages* by long pressing the folder(s) in the folder list and synchronize all messages again.
+After disabling this setting, you can use the message 'more' (three dots) menu to 'resync' empty messages. Alternatively, you can *Delete local messages* by long pressing the folder(s) in the folder list and synchronize all messages again.
 
 Disabling *Partial fetch* will result in more memory usage.
 
@@ -2064,7 +2073,7 @@ OAuth for Gmail is supported via the quick setup wizard. The Android account man
 
 OAuth for Yandex is supported via the quick setup wizard.
 
-OAuth for Office365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
+OAuth for Office 365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
 
 OAuth access for Yahoo was requested, but Yahoo never responded to the request. OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL. Verizon owns both AOL and Yahoo, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media). So, it is reasonable to assume that OAuth is not supported by Yahoo anymore too.
 
@@ -2127,11 +2136,12 @@ Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f4
 <a name="faq117"></a>
 **(117) Can you help me restore my purchase?**
 
-Google manages all purchases, so as developer I have little control over purchases. So, basically the only thing I can do, is give some advice:
+Google manages all purchases, so as a developer I have little control over purchases. So, basically the only thing I can do, is give some advice:
 
 * Make sure you have an active, working internet connection
 * Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
-* Open the Play store application and wait at least a minute to give it time to synchronize with the Google servers
+* Make sure you installed FairEmail via the right Google account if you configured multiple Google accounts on your device
+* Open the Play store app and wait at least a minute to give it time to synchronize with the Google servers
 * Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases
 
 You can also try to clear the cache of the Play store app via the Android apps settings. Restarting the device might be necessary to let the Play store recognize the purchase correctly.
@@ -2141,7 +2151,7 @@ Note that:
 * Purchases are stored in the Google cloud and cannot get lost
 * There is no time limit on purchases, so they cannot expire
 * Google does not expose details (name, e-mail, etc) about buyers to developers
-* An application like FairEmail cannot select which Google account to use
+* An app like FairEmail cannot select which Google account to use
 * It may take a while until the Play store app has synchronized a purchase to another device
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
@@ -2200,7 +2210,7 @@ Between connectivity changes there is a wait of 90 seconds to give the email ser
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) does not allow to wake the device earlier than after 15 minutes.
 
-*Tvangssynk* i trepriksmenuen i den fælles indbakke kan bruges til at lade FairEmail forsøge at oprette forbindelse igen uden at vente.
+*Force sync* in the three-dots menu of the unified inbox can be used to let FairEmail attempt to reconnect without waiting.
 
 Sending messages will be retried on connectivity changes only (reconnecting to the same network or connecting to another network) to prevent the email server from blocking the connection permanently. You can pull down the outbox to retry manually.
 
@@ -2252,7 +2262,7 @@ The error *... Syntactically invalid HELO argument(s) ...* means that the SMTP s
 <a name="faq128"></a>
 **(128) How can I reset asked questions, for example to show images?**
 
-Du kan nulstille stillede spørgsmål via trepriksoverløbsmenuen under diverse indstillinger.
+You can reset asked questions via the three dots overflow menu in the miscellaneous settings.
 
 <br />
 
@@ -2326,7 +2336,7 @@ In the account settings (Setup, step 1, Manage, tap account) you can enable *Lea
 
 Since the IMAP protocol is meant to synchronize two ways, deleting a message from the device would result in fetching the message again when synchronizing again.
 
-FairEmail understøtter imidlertid skjulning af beskeer, enten via trepriksmenuen i handlingsbjælken ovenover beskedteksten eller ved at vælge flere beskeder på beskedlisten.
+However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list.
 
 It is also possible to set the swipe left or right action to hide a message.
 
@@ -2337,7 +2347,7 @@ It is also possible to set the swipe left or right action to hide a message.
 
 Individual messages will rarely be trashed and mostly this happens by accident. Showing trashed messages in conversations makes it easier to find them back.
 
-Du kan slette en besked permanent vha. trepriksbeskedmenuen *slet*, hvilket fjerner beskeden fra samtalen. Note that this irreversible.
+You can permanently delete a message using the message three-dots *delete* menu, which will remove the message from the conversation. Note that this irreversible.
 
 Similarly, drafts are shown in conversations to find them back in the context where they belong. It is easy to read through the received messages before continuing to write the draft later.
 
@@ -2352,7 +2362,7 @@ Deleting an account/identity/folder is a little bit hidden to prevent accidents.
 * Identity: Setup > Step 2 > Manage > Tap identity
 * Folder: Long press the folder in the folder list > Edit properties
 
-I trepriksoverløbsmenuen, øverst til højre, er der et element til sletning af kontoen/identiteten/mappen.
+In the three-dots overflow menu at the top right there is an item to delete the account/identity/folder.
 
 <br />
 
@@ -2366,7 +2376,7 @@ You can reset all questions set to be not asked again in the miscellaneous setti
 <a name="faq138"></a>
 **(138) Can you add calendar/contact management/synchronizing?**
 
-Calendar and contact management can better be done by a separate, specialized app.
+Calendar and contact management can better be done by a separate, specialized app. Note that FairEmail is a specialized email app, not an office suite.
 
 You are advised to use the excellent, open source [DAVx⁵](https://f-droid.org/packages/at.bitfire.davdroid/) app to synchronize/manage your calendars/contacts.
 
@@ -2568,7 +2578,7 @@ If you want to import an mbox file to an existing email account, you can use Thu
 <a name="faq152"></a>
 **(152) How can I insert a contact group?**
 
-Du kan indsætte e-mailadresserne for alle kontakter i en kontaktgruppe via trepriksmenuen i beskedskrivningsværktøjet.
+You can insert the email addresses of all contacts in a contact group via the three dots menu of the message composer.
 
 You can define contact groups with the Android contacts app, please see [here](https://support.google.com/contacts/answer/30970) for instructions.
 
@@ -2607,9 +2617,9 @@ You can view it with for example the Android app [Letter Opener](https://play.go
 <br />
 
 <a name="faq156"></a>
-**(156) How can I set up an Office365 account?**
+**(156) How can I set up an Office 365 account?**
 
-An Office365 account can be set up via the quick setup wizard and selecting *Office365 (OAuth)*.
+An Office 365 account can be set up via the quick setup wizard and selecting *Office 365 (OAuth)*.
 
 If the wizard ends with *AUTHENTICATE failed*, IMAP and/or SMTP might be disabled for the account. In this case you should ask the administrator to enable IMAP and SMTP. The procedure is documented [here](https://docs.microsoft.com/en-in/exchange/troubleshoot/configure-mailboxes/pop3-imap-owa-activesync-office-365).
 

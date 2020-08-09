@@ -62,11 +62,6 @@
         <item quantity="few">%1$d conversații selectate</item>
         <item quantity="other">%1$d de conversații selectate</item>
     </plurals>
-    <plurals name="title_moving_messages">
-        <item quantity="one">Se mută %1$d mesaj la %2$s ?</item>
-        <item quantity="few">Se mută %1$d mesaje la %2$s ?</item>
-        <item quantity="other">Se mută %1$d de mesaje la %2$s ?</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Ștergeți definitiv %1$d mesaj?</item>
         <item quantity="few">Ștergeți definitiv %1$d mesaje?</item>
@@ -764,10 +759,6 @@
     <string name="title_ask_reporting">Trimite rapoarte de eroare?</string>
     <string name="title_reporting_why">Raportarea erorilor va ajuta la îmbunătățirea FairEmail</string>
     <string name="title_ask_review">Vă rugăm să evaluați FairEmail</string>
-    <string name="title_ask_review_rationale">        Utilizați FairEmail de ceva vreme.
-        Vom aprecia dacă ați putea evalua FairEmail în Play Store.
-        Aceasta ajută la menținerea unui echilibru între recenziile nefavorabile și cele favorabile.
-    </string>
     <string name="title_ask_once">Acest mesaj va apărea o singură dată, decât dacă nu selectați \'Mai târziu\'</string>
     <string name="title_third_party">Folosiți o versiune a unei terțe părți</string>
     <string name="title_expand_warning">Extinderea acestui mesaj va descărca %1$s</string>

@@ -47,7 +47,7 @@
         <item quantity="other">选定了 %1$d 个会话</item>
     </plurals>
     <plurals name="title_moving_messages">
-        <item quantity="other">移动 %1$d 邮件到  %2$s 吗？</item>
+        <item quantity="other">移动 %1$d 条消息吗？</item>
     </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="other">永久删除这%1$d则邮件？</item>
@@ -161,6 +161,7 @@
     <string name="title_setup_done">已完成</string>
     <string name="title_setup_still">仍待处理</string>
     <string name="title_setup_error">出错</string>
+    <string name="title_setup_configuring">正在配置账户 &#8230;</string>
     <string name="title_setup_export">导出设置</string>
     <string name="title_setup_import">导入设置</string>
     <string name="title_setup_import_do">导入的账户不会覆盖任何现有的帐户</string>
@@ -325,6 +326,7 @@
     <string name="title_advanced_volumenav">音量上/下键切换邮件</string>
     <string name="title_advanced_reversed">反转导航方向</string>
     <string name="title_advanced_swipe_close">向下滑动关闭对话</string>
+    <string name="title_advanced_swipe_move">向上滑动以移动对话</string>
     <string name="title_advanced_autoexpand">自动展开消息</string>
     <string name="title_advanced_expand_all">自动展开所有已读消息</string>
     <string name="title_advanced_expand_one">每次仅展开一个消息</string>
@@ -567,6 +569,7 @@
     <string name="title_oauth_support">不支持OAuth</string>
     <string name="title_review">评论</string>
     <string name="title_hint_alias">长按出现选项，如复制以创建别名身份</string>
+    <string name="title_service_auth">电子邮件服务器说：\'%1$s\'</string>
     <string name="title_service_vpn">这可能是正在使用的 VPN 造成的</string>
     <string name="title_service_port">请再次检查端口号</string>
     <string name="title_service_protocol">请仔细检查协议 (SSL/TLS 或 STARTTLS)</string>
@@ -724,6 +727,7 @@
     <string name="title_unused_inline">未使用的内联图像将在发送时被删除</string>
     <string name="title_accross_remark">App会再次下载在不同账户间移动的消息，这将导致额外的数据使用</string>
     <string name="title_raw_saved">原始消息已保存</string>
+    <string name="title_attachment_eml">附加的消息</string>
     <string name="title_attachment_saved">附件已保存</string>
     <string name="title_attachments_saved">附件已保存</string>
     <string name="title_attachments_incomplete">一些附件或图像没有下载，且无法添加</string>
@@ -742,11 +746,10 @@
     <string name="title_ask_reporting">发送错误报告?</string>
     <string name="title_reporting_why">错误报告将有助于改进FairEmail</string>
     <string name="title_ask_review">请给FairEmail评分</string>
-    <string name="title_ask_review_rationale">        您已经使用FairEmail一段时间了。
-        如果您能在谷歌商店为FairEmail评分，我将感激不尽。
-        这将有助于保持批评和赞同评论之间的平衡。
+    <string name="title_ask_review_rationale">        您使用 FairEmail 已经有一段时间了
+        如果您能在 Play Store 中为 FairEmail 评分, 我将不胜感激
     </string>
-    <string name="title_ask_once">此消息将只显示一次，除非您选择“稍后”</string>
+    <string name="title_ask_once">此消息将只会显示一次，除非您选择\"稍后再说\"</string>
     <string name="title_third_party">您使用的是第三方版本</string>
     <string name="title_expand_warning">展开此消息将下载 %1$s</string>
     <string name="title_download_message">&#8230; 下载中</string>
@@ -1027,6 +1030,7 @@
     <string name="title_legend_download_fetch">下载的邮件正文数/获取的标头数</string>
     <string name="title_legend_stop">停止处理规则</string>
     <string name="title_legend_thread">对话</string>
+    <string name="title_legend_bookmark">上次打开的对话</string>
     <string name="title_legend_zoom">改变文字大小</string>
     <string name="title_legend_draft">有草稿</string>
     <string name="title_legend_priority">具备高优先级</string>

@@ -130,6 +130,7 @@ public class HtmlHelper {
     private static final int MAX_AUTO_LINK = 250;
     private static final int MAX_FORMAT_TEXT_SIZE = 200 * 1024; // characters
     private static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
+    private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
     private static final String LINE = "----------------------------------------";
@@ -304,13 +305,13 @@ public class HtmlHelper {
     static Document fixEdit(Document document) {
         // Prevent extra newline at end
         Element body = document.body();
-        if (body != null && body.childrenSize() == 1) {
-            Element holder = body.child(0);
+        if (body != null && body.childrenSize() > 0) {
+            Element holder = body.child(body.childrenSize() - 1);
             if ("p".equals(holder.tagName())) {
                 holder.tagName("span");
-                int c = holder.childrenSize();
-                Element last = (c > 0 ? holder.child(c - 1) : null);
-                if (last == null || !"br".equals(last.tagName()))
+                int c = holder.childNodeSize();
+                Node last = (c > 0 ? holder.childNode(c - 1) : null);
+                if (last == null || !"br".equals(last.nodeName()))
                     holder.appendChild(new Element("br"));
             }
         }
@@ -833,7 +834,7 @@ public class HtmlHelper {
 
         // Remove tracking pixels
         if (disable_tracking)
-            removeTrackingPixels(context, document);
+            removeTrackingPixels(context, document, false);
 
         // Images
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
@@ -1427,7 +1428,7 @@ public class HtmlHelper {
         return sb.toString();
     }
 
-    static void removeTrackingPixels(Context context, Document document) {
+    static void removeTrackingPixels(Context context, Document document, boolean full) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean disconnect_images = prefs.getBoolean("disconnect_images", false);
 
@@ -1461,14 +1462,28 @@ public class HtmlHelper {
         // Images
         for (Element img : document.select("img")) {
             img.removeAttr("x-tracking");
+
             String src = img.attr("src");
-            if (TextUtils.isEmpty(src))
+            if (TextUtils.isEmpty(src)) {
+                if (!full)
+                    img.remove();
                 continue;
+            }
 
             Uri uri = Uri.parse(src);
             String host = uri.getHost();
-            if (host == null || hosts.contains(host))
+            if (host == null || hosts.contains(host)) {
+                if (!full) {
+                    // Remove spacer, etc
+                    Integer width = Helper.parseInt(img.attr("width").trim());
+                    Integer height = Helper.parseInt(img.attr("height").trim());
+                    if ((width != null && width <= SMALL_IMAGE_SIZE) ||
+                            (height != null && height <= SMALL_IMAGE_SIZE))
+                        img.remove();
+                }
+
                 continue;
+            }
 
             if (isTrackingPixel(img) ||
                     (disconnect_images && DisconnectBlacklist.isTracking(host))) {
@@ -1531,13 +1546,15 @@ public class HtmlHelper {
 
     static void setViewport(Document document) {
         // https://developer.mozilla.org/en-US/docs/Mozilla/Mobile/Viewport_meta_tag
-        document.head().select("meta").select("[name=viewport]").remove();
+        Elements meta = document.head().select("meta").select("[name=viewport]");
+        if (meta.size() > 0) {
+            meta.remove();
+            document.head().prependChild(document.createElement("meta")
+                    .attr("name", "viewport")
+                    .attr("content", "width=device-width, initial-scale=1.0"));
+        }
 
-        document.head().prependChild(document.createElement("meta")
-                .attr("name", "viewport")
-                .attr("content", "width=device-width, initial-scale=1.0"));
-
-        Log.i(document.head().html());
+        Log.d(document.head().html());
     }
 
     static String getLanguage(Context context, String body) {

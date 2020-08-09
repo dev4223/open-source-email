@@ -55,8 +55,8 @@
         <item quantity="other">Επιλεγμένες %1$d συζητήσεις</item>
     </plurals>
     <plurals name="title_moving_messages">
-        <item quantity="one">Μετακινήση %1$d μηνύματος προς %2$s;</item>
-        <item quantity="other">Μετακινήση %1$d μηνυμάτων προς %2$s;</item>
+        <item quantity="one">Μετακίνηση %1$d μηνύματος;</item>
+        <item quantity="other">Μετακίνηση %1$d μηνυμάτων;</item>
     </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Οριστική διαγραφή %1$d μηνύματος;</item>
@@ -172,6 +172,7 @@
     <string name="title_setup_done">Έγινε</string>
     <string name="title_setup_still">Απομένουν να γίνουν</string>
     <string name="title_setup_error">Σφάλμα</string>
+    <string name="title_setup_configuring">Ρύθμιση λογαριασμού &#8230;</string>
     <string name="title_setup_export">Εξαγωγή ρυθμίσεων</string>
     <string name="title_setup_import">Εισαγωγή ρυθμίσεων</string>
     <string name="title_setup_import_do">Οι εισαγόμενοι λογαριασμοί θα προστεθούν χωρίς να αντικατασταθεί κάποιος από τους ήδη υπάρχοντες</string>
@@ -335,6 +336,7 @@
     <string name="title_advanced_volumenav">Πατήστε τα πλήκτρα έντασης πάνω/κάτω για να μεταβείτε στην επόμενη/προηγούμενη συζήτηση</string>
     <string name="title_advanced_reversed">Αντιστροφή της κατεύθυνσης πλοήγησης</string>
     <string name="title_advanced_swipe_close">Σύρετε προς τα κάτω για να κλείσετε μια συζήτηση</string>
+    <string name="title_advanced_swipe_move">Σύρετε προς τα πάνω για να μετακινήσετε μια συζήτηση</string>
     <string name="title_advanced_autoexpand">Αυτόματη ανάπτυξη των μηνυμάτων</string>
     <string name="title_advanced_expand_all">Αυτόματη ανάπτυξη όλων των αναγνωσμένων μηνυμάτων</string>
     <string name="title_advanced_expand_one">Ανάπτυξη μόνο ενός μηνύματος κάθε φορά</string>
@@ -575,6 +577,7 @@
     <string name="title_oauth_support">Δεν υποστηρίζεται OAuth</string>
     <string name="title_review">Επανέλεγχος</string>
     <string name="title_hint_alias">Παρατεταμένο πάτημα πάνω σε μια ταυτότητα για να εμφανιστούν οι επιλογές, όπως αντιγραφή για τη δημιουργία ψευδώνυμων ταυτοτήτων</string>
+    <string name="title_service_auth">Ο εξυπηρετητής ηλ. ταχυδρομείου είπε: %1$s</string>
     <string name="title_service_vpn">Αυτό μπορεί να προκαλείται από το χρησιμοποιούμενο VPN</string>
     <string name="title_service_port">Παρακαλώ, ελέγξτε εκ νέου τον αριθμό θύρας</string>
     <string name="title_service_protocol">Παρακαλώ, ελέγξτε εκ νέου το πρωτόκολλο (SSL/TLS ή STARTTLS)</string>
@@ -731,6 +734,7 @@
     <string name="title_unused_inline">Οι μη χρησιμοποιημένες ένθετες εικόνες θα αφαιρεθούν κατά την αποστολή</string>
     <string name="title_accross_remark">Μηνύματα που έχουν μετακινηθεί μεταξύ των λογαριασμών θα κατέβουν εκ νέου, με αποτέλεσμα επιπλέον χρήση δεδομένων</string>
     <string name="title_raw_saved">Το αρχικό μήνυμα αποθηκεύτηκε</string>
+    <string name="title_attachment_eml">Συνημμένο μήνυμα</string>
     <string name="title_attachment_saved">Το συνημμένο αποθηκεύτηκε</string>
     <string name="title_attachments_saved">Τα συνημμένα αποθηκεύτηκαν</string>
     <string name="title_attachments_incomplete">Ορισμένα συνημμένα ή εικόνες δεν κατέβηκαν και δεν μπόρεσαν να προστεθούν</string>
@@ -749,9 +753,8 @@
     <string name="title_ask_reporting">Να αποστέλλονται αναφορές σφαλμάτων;</string>
     <string name="title_reporting_why">Οι αναφορές σφαλμάτων θα βοηθήσουν να βελτιωθεί το FairEmail</string>
     <string name="title_ask_review">Παρακαλούμε, αξιολογήστε το FairEmail</string>
-    <string name="title_ask_review_rationale">        Χρησιμοποιείτε το FairEmail για αρκετό καιρό.
-        Θα το εκτιμούσαμε πολύ, εάν θα αξιολογούσατε το FairEmail στο Play Store.
-        Έτσι, θα βοηθήσετε να διατηρηθεί μια ισορροπία ανάμεσα στις δυσμενείς και τις ευνοϊκές κριτικές.
+    <string name="title_ask_review_rationale">        Χρησιμοποιείτε το FairEmail για αρκετό χρονικό διάστημα.
+        Θα το εκτιμούσαμε αν θα αξιολογούσατε το FairEmail στο Play Store.
     </string>
     <string name="title_ask_once">Το μήνυμα αυτό θα εμφανιστεί μόνο μια φορά, εκτός αν επιλέξετε \"Αργότερα\"</string>
     <string name="title_third_party">Χρησιμοποιείτε μια έκδοση ενός τρίτου παρόχου</string>
@@ -1033,6 +1036,7 @@
     <string name="title_legend_download_fetch">Αριθμός μηνυμάτων που κατέβηκαν / κεφαλίδων που λήφθηκαν</string>
     <string name="title_legend_stop">Διακοπή επεξεργασίας κανόνων</string>
     <string name="title_legend_thread">Συζήτηση</string>
+    <string name="title_legend_bookmark">Η πιο πρόσφατα ανοιγμένη συζήτηση</string>
     <string name="title_legend_zoom">Αλλαγή μεγέθους κειμένου</string>
     <string name="title_legend_draft">Έχει πρόχειρο</string>
     <string name="title_legend_priority">Έχει υψηλή προτεραιότητα</string>
