@@ -839,8 +839,8 @@ public class Log {
 
         StackTraceElement[] stack = ex.getStackTrace();
         if (stack.length > 0 &&
-                stack[0].getClassName().equals("android.text.TextLine") &&
-                stack[0].getMethodName().equals("measure"))
+                "android.text.TextLine".equals(stack[0].getClassName()) &&
+                "measure".equals(stack[0].getMethodName()))
             /*
                 java.lang.IndexOutOfBoundsException: offset(21) should be less than line limit(20)
                   at android.text.TextLine.measure(Unknown Source:233)
@@ -858,9 +858,9 @@ public class Log {
             return false;
 
         if (stack.length > 0 &&
-                stack[0].getClassName().equals("android.os.Parcel") &&
-                (stack[0].getMethodName().equals("createException") ||
-                        stack[0].getMethodName().equals("readException")))
+                "android.os.Parcel".equals(stack[0].getClassName()) &&
+                ("createException".equals(stack[0].getMethodName()) ||
+                        "readException".equals(stack[0].getMethodName())))
             /*
                 java.lang.IllegalArgumentException
                   at android.os.Parcel.createException(Parcel.java:1954)
@@ -878,6 +878,41 @@ public class Log {
                   at android.app.job.IJobCallback$Stub$Proxy.jobFinished(IJobCallback.java:167)
                   at android.app.job.JobService$JobHandler.handleMessage(JobService.java:147)
                   at android.os.Handler.dispatchMessage(Handler.java:102)
+             */
+            return false;
+
+        if (stack.length > 0 &&
+                "android.hardware.biometrics.BiometricPrompt".equals(stack[0].getClassName()))
+            /*
+                java.lang.NullPointerException: Attempt to invoke virtual method 'java.lang.String android.hardware.fingerprint.FingerprintManager.getErrorString(int, int)' on a null object reference
+                  at android.hardware.biometrics.BiometricPrompt.lambda$sendError$0(BiometricPrompt.java:490)
+                  at android.hardware.biometrics.-$$Lambda$BiometricPrompt$HqBGXtBUWNc-v8NoHYsj2gLfaRw.run(Unknown Source:6)
+                  at android.os.Handler.handleCallback(Handler.java:873)
+             */
+            return false;
+
+        if (stack.length > 0 &&
+                "android.text.SpannableStringInternal".equals(stack[0].getClassName()))
+            /*
+                java.lang.IndexOutOfBoundsException: setSpan (-1 ... -1) starts before 0
+                  at android.text.SpannableStringInternal.checkRange(SpannableStringInternal.java:478)
+                  at android.text.SpannableStringInternal.setSpan(SpannableStringInternal.java:189)
+                  at android.text.SpannableStringInternal.setSpan(SpannableStringInternal.java:178)
+                  at android.text.SpannableString.setSpan(SpannableString.java:60)
+                  at android.text.Selection.setSelection(Selection.java:93)
+                  at android.text.Selection.setSelection(Selection.java:77)
+                  at android.widget.Editor$SelectionHandleView.updateSelection(Editor.java:5281)
+                  at android.widget.Editor$HandleView.positionAtCursorOffset(Editor.java:4676)
+                  at android.widget.Editor$SelectionHandleView.positionAtCursorOffset(Editor.java:5466)
+                  at android.widget.Editor$SelectionHandleView.positionAndAdjustForCrossingHandles(Editor.java:5528)
+                  at android.widget.Editor$SelectionHandleView.updatePosition(Editor.java:5458)
+                  at android.widget.Editor$HandleView.onTouchEvent(Editor.java:4989)
+                  at android.widget.Editor$SelectionHandleView.onTouchEvent(Editor.java:5472)
+                  at android.view.View.dispatchTouchEvent(View.java:12545)
+                  at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:3083)
+                  at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2741)
+                  at android.widget.PopupWindow$PopupDecorView.dispatchTouchEvent(PopupWindow.java:2407)
+                  at android.view.View.dispatchPointerEvent(View.java:12789)
              */
             return false;
 

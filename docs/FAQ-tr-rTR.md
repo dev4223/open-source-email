@@ -1,66 +1,66 @@
-# FairEmail support
+# E-Posta Desteği
 
-If you have a question, please check the frequently asked questions below first. At the bottom, you can find out how to ask other questions, request features, and report bugs.
+Sorununuz olması halinde, öncelikle aşağıdaki sıkça sorulan soruları kontrol ediniz. Son kısımda diğer soruları nasıl soracağınız, özellikleri nasıl talep edeceğiniz ve hataları nasıl şikayet edeceğiniz anlatılmıştır.
 
-## Index
+## İçindekiler
 
-* [Authorizing accounts](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-authorizing-accounts)
-* [How to ...?](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
-* [Known problems](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-known-problems)
-* [Planned features](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
-* [Frequently requested features](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
-* [Frequently Asked Questions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
+* [Hesap Yetkilendirme](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-authorizing-accounts)
+* [Nasıl yapılır?](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
+* [Bilinen Hatalar](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-known-problems)
+* [Planlanan Özellikler](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
+* [Sıkça İstenen Özellikler](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
+* [Sıkça Sorulan Sorular](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
 * [Destek](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-support)
 
-## Authorizing accounts
+## Hesap Yetkilendirme
 
-In most cases, the quick setup will be able to automatically identify the correct configuration.
+Çoğu zaman hızlı kurulum doğru konfigürasyonu otomatik olarak tanımlayacaktır.
 
-If the quick setup fails, you'll need to manually set up an account (to receive email) and an identity (to send email). For this you'll need the IMAP and SMTP server addresses and port numbers, whether SSL/TLS or STARTTLS should be used and your username (mostly, but not always, your email address) and your password.
+Hızlı kurulumun çalışmadığı durumlarda, (e-posta almak için) bir hesap ve (e-posta gönderebilmek için) bir kimlik oluşturmalısınız. Bunun için SSL/TLS veya STARTTLS kullanılan IMAP ve SMTP sunucu adresi ve bağlantı noktası numaraları, (genellikle e-posta adresin olan) kullanıcı adın ve şifren gerekmektedir.
 
-Searching for *IMAP* and the name of the provider is mostly sufficient to find the right documentation.
+*IMAP* ve sağlayıcının adını aramak çoğunlukla doğru belgelemeyi bulmak için yeterlidir.
 
-In some cases, you'll need to enable external access to your account and/or to use a special (app) password, for instance when two-factor authentication is enabled.
+Bazı durumlarda, örneğin iki faktörlü kimlik doğrulamada, hesabınıza üçüncü parti erişimine izin vermek ve/veya özel (uygulama) şifre kullanmak durumunda kalabilirsiniz.
 
-For authorizing:
+Yetkilendirme için:
 
-* Gmail / G suite, see [question 6](#user-content-faq6)
-* Outlook / Live / Hotmail, see [question 14](#user-content-faq14)
-* Office 365, see [question 14](#user-content-faq156)
-* Microsoft Exchange, see [question 8](#user-content-faq8)
-* Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
-* Apple iCloud, see [question 148](#user-content-faq148)
-* Free.fr, see [question 157](#user-content-faq157)
+* Gmail / G Suite, [6. soru](#user-content-faq6)ya bakınız
+* Outlook / Live / Hotmail, [14. soru](#user-content-faq14)ya bakınız
+* Office 365, [14. soru](#user-content-faq156)ya bakınız
+* Microsoft Exchange, [8. soru](#user-content-faq8)ya bakınız
+* Yahoo, AOL and Sky, [88. soru](#user-content-faq88)ya bakınız
+* Apple iCloud, [148. soru](#user-content-faq148)ya bakınız
+* Free.fr, [157. soru](#user-content-faq157)ya bakınız
 
-Please see [here](#user-content-faq22) for common error messages and solutions.
+Sıkça rastlanan hata iletileri ve çözümleri için [burayı](#user-content-faq22) kontrol ediniz.
 
-Related questions:
+İlgili sorular:
 
-* [Is OAuth supported?](#user-content-faq111)
-* [Why is ActiveSync not supported?](#user-content-faq133)
+* [OAuth destekleniyor mu?](#user-content-faq111)
+* [ActiveSync neden desteklenmiyor?](#user-content-faq133)
 
 <a name="howto">
 
-## How to ...?
+## Nasıl yapılır?
 
-* Change the account name: Setup, step 1, Manage, tap account
-* Change the swipe left/right target: Setup, Behavior, Set swipe actions
-* Change password: Setup, step 1, Manage, tap account, change password
-* Set a signature: Setup, step 2, Manage, tap identity, Edit signature.
-* Add CC and BCC addresses: tap the people's icon at the end of the subject
-* Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
-* Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
-* Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
-* Load more messages: long press a folder in the folder list, select *Synchronize more messages*
-* Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
-* Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
-* Delete a folder: long press the folder in the folder list, Edit properties, three-dots menu, Delete
-* Undo send: Outbox, tap message, tap undo icon button
-* Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
-* Change system folders: Setup, step 1, Manage, tap account, at the bottom
-* Export/import settings: Setup, navigation/hamburger menu
+* Hesap ismini değiştirme: Kurulum, adım 1, Yönet, hesaba tıklayın
+* Sağ/sol hedefi değiştirme: Kurulum, Davranış, hareketleri değiştirmeyi ayarlayın
+* Şifreyi değiştirme: Kurulum, adım 1, Yönet, hesaba tıklayın, şifreyi değiştirin
+* İmza ayarlama: Kurulum, adım 2, Yönet, kimliğe tıklayın, imzayı düzenleyin.
+* CC ve BCC adresi ekleme: konu kısmının sonundaki insan ikonuna tıklayın
+* Arşiv/silinenlerdeki bir önceki/sonraki mesaja gitme: davranış ayarlarında *konuşmaları otomatik silmeyi* devre dışı bırakıp *bir görüşmeyi kapatırken* *bir sonraki/önceki konuşmaya giti* seçin
+* Toplu gelen kutusuna dosya ekleme: dosya listesindeki dosyaya uzun süre basılı tutun ve *Toplu gelen postayı gösteri* seçin
+* Dolaşım menüsüne dosya ekleme: dosya listesindeki dosyaya uzun süre basılı tutun ve *Navigasyon menüsünü gösteri* seçin
+* Daha fazla mesaj gösterme: dosya listesindeki dosyaya uzun süre basılı tutun ve *Daha fazla mesaj eşzamanlayı* seçin
+* Çöp kutusunu atlayarak bir mesajı silme: mesaj kutusunun üstündeki üç noktaya tıklayıp *Sil*in veya hesap ayarlarında çöp kutusu seçeneğini kaldırın
+* Hesabı/Kimliği silme: Kurulum adım 1/2, Yönet, hesap/kimliğe tıklayın, üç noktaya tıklayın, Silin
+* Dosya silme: dosya listesindeki dosyaya uzun süre basılı tutun, özellikleri düzenle, üç noktaya tıklayın, silin
+* Gönderilen mesajı iptal etme: mesaja tıklayın, geri al ikonuna tıklayın
+* Gönderilen mesajları gelen kutusunda saklama: lütfen [SSS'ı inceleyin](#user-content-faq142)
+* Sistem dosyalarını değiştirme: Kurulum, adım 1, Yönet, hesaba tıklayın, en altta
+* Ayarları içe/dışa aktarma: Ayarlar, menü
 
-## Known problems
+## Bilinen Hatalar
 
 * ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue. A workaround was added.~~
 * ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty. Google has fixed this.~~
@@ -680,7 +680,12 @@ Searching local messages is case insensitive and on partial text. The message te
 
 Some servers cannot handle searching in the message text when there are a large number of messages. For this case there is an option to disable searching in the message text.
 
-Searching through a large number of messages is not very fast because of two limitations:
+It is possible to use Gmail search operators by prefixing a search command with *raw:*. If you configured just one Gmail account, you can start a raw search directly on the server by searching from the unified inbox. If you configured multiple Gmail accounts, you'll first need to navigate to the folder list or the archive (all messages) folder of the Gmail account you want to search in. Please [see here](https://support.google.com/mail/answer/7190) for the possible search operators. For example:
+
+`
+raw:larger:10M`
+
+Searching through a large number of messages on the device is not very fast because of two limitations:
 
 * [sqlite](https://www.sqlite.org/), the database engine of Android has a record size limit, preventing message texts from being stored in the database
 * Android apps get only limited memory to work with, even if the device has plenty memory available
@@ -807,7 +812,7 @@ There are general errors and errors specific to Gmail accounts (see below).
 
 **General errors**
 
-The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect. Some providers expect as username just *username* and others your full email address *username@example.com*. When using copy/paste to enter a username or password, invisible characters might be copied, which could cause this problem as well. Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way, for example by allowing to logging from certain networks / IP addresses only.
+The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect. Some providers expect as username just *username* and others your full email address *username@example.com*. When copying/pasting to enter a username or password, invisible characters might be copied, which could cause this problem as well. Some providers require using an app password instead of the account password, so please check the documentation of the provider. Sometimes it is necessary to enable external access (IMAP/SMTP) on the website of the provider first. Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way, for example by allowing to login from certain networks / IP addresses only.
 
 The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo account password instead of an app password. Please see [this FAQ](#user-content-faq88) about how to setup a Yahoo account.
 
@@ -1536,11 +1541,21 @@ The following rule conditions are available:
 * Header contains
 * Day/time between
 
-All the conditions of a rule need to be true for the rule action to be executed. All conditions are optional, but there needs to be at least one condition, to prevent matching all messages. If you want to match all senders or all recipients, you can just use the @ character as condition because all email address will contain this character.
+All the conditions of a rule need to be true for the rule action to be executed. All conditions are optional, but there needs to be at least one condition, to prevent matching all messages. If you want to match all senders or all recipients, you can just use the @ character as condition because all email addresses will contain this character.
+
+Note that email addresses are formatted like this:
+
+`
+"Somebody" <somebody@example.org>`
 
 You can use multiple rules, possibly with a *stop processing*, for an *or* or a *not* condition.
 
 Matching is not case sensitive, unless you use [regular expressions](https://en.wikipedia.org/wiki/Regular_expression). Please see [here](https://developer.android.com/reference/java/util/regex/Pattern) for the documentation of Java regular expressions. You can test a regex [here](https://regexr.com/).
+
+Note that a regular expression supports an *or* operator, so if you want to match multiple senders, you can do this:
+
+`
+.*alice@example\.org.*|.*bob@example\.org.*|.*carol@example\.org.*`
 
 Note that [dot all mode](https://developer.android.com/reference/java/util/regex/Pattern#DOTALL) is enabled to be able to match [unfolded headers](https://tools.ietf.org/html/rfc2822#section-3.2.3).
 
@@ -1841,7 +1856,11 @@ Links for less usual protocols like telnet and ftp will not automatically be lin
 
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client. Servers generally have more memory and computing power, so they are much better suited to this task than battery-powered devices. Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client. Moreover, email servers have access to information, like the IP address, etc of the connecting server, which an email client has no access to.
 
-Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too.
+Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too. Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
+
+Note that you should not delete spam messages, also not from the spam folder, because the email server uses the messages in the spam folder to "learn" what spam messages are.
+
+If you receive a lot of spam messages in your inbox, the best you can do is to contact the email provider to ask if spam filtering can be improved.
 
 Also, FairEmail can show a small red warning flag when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server. You can enable/disable [authentication verification](https://en.wikipedia.org/wiki/Email_authentication) in the display settings.
 
@@ -2377,6 +2396,8 @@ You can reset all questions set to be not asked again in the miscellaneous setti
 **(138) Can you add calendar/contact management/synchronizing?**
 
 Calendar and contact management can better be done by a separate, specialized app. Note that FairEmail is a specialized email app, not an office suite.
+
+Also, I prefer to do a few things very well, instead of many things only half. Moreover, from a security perspective, it is not a good idea to grant many permissions to a single app.
 
 You are advised to use the excellent, open source [DAVx⁵](https://f-droid.org/packages/at.bitfire.davdroid/) app to synchronize/manage your calendars/contacts.
 

@@ -784,7 +784,17 @@ Searching on the server might be case sensitive or case insensitive and might be
 Some servers cannot handle searching in the message text when there are a large number of messages.
 For this case there is an option to disable searching in the message text.
 
-Searching through a large number of messages is not very fast because of two limitations:
+It is possible to use Gmail search operators by prefixing a search command with *raw:*.
+If you configured just one Gmail account, you can start a raw search directly on the server by searching from the unified inbox.
+If you configured multiple Gmail accounts,
+you'll first need to navigate to the folder list or the archive (all messages) folder of the Gmail account you want to search in.
+Please [see here](https://support.google.com/mail/answer/7190) for the possible search operators. For example:
+
+``
+raw:larger:10M
+``
+
+Searching through a large number of messages on the device is not very fast because of two limitations:
 
 * [sqlite](https://www.sqlite.org/), the database engine of Android has a record size limit, preventing message texts from being stored in the database
 * Android apps get only limited memory to work with, even if the device has plenty memory available
@@ -943,9 +953,11 @@ There are general errors and errors specific to Gmail accounts (see below).
 
 The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect.
 Some providers expect as username just *username* and others your full email address *username@example.com*.
-When using copy/paste to enter a username or password, invisible characters might be copied, which could cause this problem as well.
+When copying/pasting to enter a username or password, invisible characters might be copied, which could cause this problem as well.
+Some providers require using an app password instead of the account password, so please check the documentation of the provider.
+Sometimes it is necessary to enable external access (IMAP/SMTP) on the website of the provider first.
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
-for example by allowing to logging from certain networks / IP addresses only.
+for example by allowing to login from certain networks / IP addresses only.
 
 The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo account password instead of an app password.
 Please see [this FAQ](#user-content-faq88) about how to setup a Yahoo account.
@@ -2209,6 +2221,12 @@ Moreover, email servers have access to information, like the IP address, etc of 
 Of course you can report messages as spam with FairEmail,
 which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work.
 This can be done automatically with [filter rules](#user-content-faq71) too.
+Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
+
+Note that you should not delete spam messages, also not from the spam folder,
+because the email server uses the messages in the spam folder to "learn" what spam messages are.
+
+If you receive a lot of spam messages in your inbox, the best you can do is to contact the email provider to ask if spam filtering can be improved.
 
 Also, FairEmail can show a small red warning flag
 when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server.

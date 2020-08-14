@@ -1602,9 +1602,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         @Override
         public void setExpanded(TupleMessageEx message, boolean value) {
             // Prevent flicker
-            if (value &&
-                    (message.accountProtocol != EntityAccount.TYPE_IMAP ||
-                            (message.accountAutoSeen && !message.ui_seen && !message.folderReadOnly))) {
+            if (value && message.accountAutoSeen && !message.folderReadOnly) {
                 message.unseen = 0;
                 message.ui_seen = true;
                 message.visible_unseen = 0;
@@ -2211,7 +2209,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading && thread ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null)
+                            if (sourceFolder == null || sourceFolder.read_only)
                                 continue;
 
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder));
@@ -3106,7 +3104,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null)
+                            if (sourceFolder == null || sourceFolder.read_only)
                                 continue;
 
                             result.add(new MessageTarget(context, threaded, account, sourceFolder, account, targetFolder));
@@ -3186,7 +3184,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 message.account, message.thread, threading ? null : id, message.folder);
                         for (EntityMessage threaded : messages) {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null)
+                            if (sourceFolder == null || sourceFolder.read_only)
                                 continue;
 
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder, copy));
@@ -4743,7 +4741,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         db.message().setMessageUnsnoozed(message.id, false);
 
                     if (account.protocol != EntityAccount.TYPE_IMAP) {
-                        if (!message.ui_seen)
+                        if (!message.ui_seen && account.auto_seen)
                             EntityOperation.queue(context, message, EntityOperation.SEEN, true);
                     } else {
                         if (!message.content)
@@ -6872,7 +6870,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             EntityOperation.queue(context, message, EntityOperation.COPY, tid);
                         else {
                             EntityFolder sourceFolder = db.folder().getFolder(threaded.folder);
-                            if (sourceFolder == null)
+                            if (sourceFolder == null || sourceFolder.read_only)
                                 continue;
                             result.add(new MessageTarget(context, threaded, sourceAccount, sourceFolder, targetAccount, targetFolder));
                         }
@@ -7099,12 +7097,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         List<Long> ids = db.message().getMessageByFolder(folder.id);
                         for (Long id : ids) {
                             EntityMessage message = db.message().getMessage(id);
-                            if (message != null &&
-                                    (account.protocol == EntityAccount.TYPE_POP || message.uid != null))
+                            if (message == null)
+                                continue;
+
+                            if (message.uid != null || account.protocol == EntityAccount.TYPE_POP)
                                 db.message().setMessageUiHide(message.id, true);
                         }
 
                         EntityOperation.queue(context, folder, EntityOperation.PURGE);
+                        EntityOperation.sync(context, folder.id, false);
                     }
 
                     db.setTransactionSuccessful();

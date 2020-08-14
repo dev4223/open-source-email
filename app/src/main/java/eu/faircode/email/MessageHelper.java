@@ -548,7 +548,6 @@ public class MessageHelper {
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean autolist = prefs.getBoolean("autolist", true);
         boolean format_flowed = prefs.getBoolean("format_flowed", false);
         boolean monospaced = prefs.getBoolean("monospaced", false);
         String compose_font = prefs.getString("compose_font", monospaced ? "monospace" : "sans-serif");
@@ -558,12 +557,10 @@ public class MessageHelper {
 
         // When sending message
         if (identity != null) {
-            if (autolist)
-                HtmlHelper.convertLists(document);
-
             if (send) {
                 for (Element child : document.body().children())
-                    if (TextUtils.isEmpty(child.attr("fairemail"))) {
+                    if (!TextUtils.isEmpty(child.text()) &&
+                            TextUtils.isEmpty(child.attr("fairemail"))) {
                         String style = HtmlHelper.mergeStyles(
                                 "font-family:" + compose_font, child.attr("style"));
                         child.attr("style", style);
@@ -2287,16 +2284,18 @@ public class MessageHelper {
         }
     }
 
-    static int getMessageCount(Folder folder) throws MessagingException {
-        // Keep alive
-        folder.getMessageCount();
+    static int getMessageCount(Folder folder) {
+        try {
+            int count = 0;
+            for (Message message : folder.getMessages())
+                if (!message.isExpunged())
+                    count++;
 
-        int count = 0;
-        for (Message message : folder.getMessages())
-            if (!message.isExpunged())
-                count++;
-
-        return count;
+            return count;
+        } catch (Throwable ex) {
+            Log.e(ex);
+            return -1;
+        }
     }
 
     static String sanitizeKeyword(String keyword) {

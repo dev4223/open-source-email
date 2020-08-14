@@ -660,6 +660,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        String theme = prefs.getString("theme", "light");
+        swTextColor.setEnabled(!"black_and_white".equals(theme));
+
         swTextSize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -1061,6 +1064,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                 case "black":
                     rgTheme.check(R.id.rbThemeBlack);
                     break;
+                case "black_and_white":
+                    rgTheme.check(R.id.rbThemeBlackAndWhite);
+                    break;
             }
 
             return new AlertDialog.Builder(getContext())
@@ -1114,6 +1120,9 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
                                     break;
                                 case R.id.rbThemeBlack:
                                     prefs.edit().putString("theme", "black").apply();
+                                    break;
+                                case R.id.rbThemeBlackAndWhite:
+                                    prefs.edit().putString("theme", "black_and_white").apply();
                                     break;
                             }
                         }

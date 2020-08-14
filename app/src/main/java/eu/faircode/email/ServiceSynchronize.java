@@ -108,7 +108,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private MutableLiveData<List<TupleAccountState>> liveAccountState = new MutableLiveData<>();
     private MediatorState liveAccountNetworkState = new MediatorState();
 
-    private static final long YIELD_DURATION = 200L; // milliseconds
     private static final long QUIT_DELAY = 5 * 1000L; // milliseconds
     private static final long STILL_THERE_THRESHOLD = 3 * 60 * 1000L; // milliseconds
     static final int DEFAULT_POLL_INTERVAL = 0; // minutes
@@ -766,16 +765,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         String action = intent.getAction();
         long account = Long.parseLong(action.split(":")[1]);
         Core.State state = coreStates.get(account);
+
         if (state == null)
             EntityLog.log(this, "### wakeup missing account=" + account);
         else {
             EntityLog.log(this, "### waking up account=" + account);
-            state.release();
-            try {
-                Thread.sleep(YIELD_DURATION);
-            } catch (InterruptedException ex) {
-                Log.w(ex);
-            }
+            if (!state.release())
+                EntityLog.log(this, "### waking up failed account=" + account);
         }
     }
 
@@ -1393,6 +1389,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 throw new StoreClosedException(iservice.getStore(), "Unrecoverable");
 
                             // Sends store NOOP
+                            EntityLog.log(ServiceSynchronize.this, account.name + " checking store");
                             if (!iservice.getStore().isConnected())
                                 throw new StoreClosedException(iservice.getStore(), "NOOP");
 
@@ -1403,7 +1400,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 throw new StoreClosedException(iservice.getStore(), "App died");
                             }
 
-                            if (sync)
+                            if (sync) {
+                                EntityLog.log(ServiceSynchronize.this, account.name + " checking folders");
                                 for (EntityFolder folder : mapFolders.keySet())
                                     if (folder.synchronize)
                                         if (!folder.poll && capIdle) {
@@ -1417,6 +1415,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                             db.folder().setFolderPollCount(folder.id, folder.poll_count);
                                             Log.i(folder.name + " poll count=" + folder.poll_count);
                                         }
+                            }
                         } catch (Throwable ex) {
                             if (tune) {
                                 account.keep_alive_failed++;
