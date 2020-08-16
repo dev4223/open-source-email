@@ -29,6 +29,7 @@ import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
 import com.sun.mail.gimap.GmailMessage;
+import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.util.ASCIIUtility;
 import com.sun.mail.util.BASE64DecoderStream;
@@ -556,19 +557,18 @@ public class MessageHelper {
         Document document = JsoupEx.parse(message.getFile(context));
 
         // When sending message
-        if (identity != null) {
-            if (send) {
-                for (Element child : document.body().children())
-                    if (!TextUtils.isEmpty(child.text()) &&
-                            TextUtils.isEmpty(child.attr("fairemail"))) {
-                        String style = HtmlHelper.mergeStyles(
-                                "font-family:" + compose_font, child.attr("style"));
-                        child.attr("style", style);
-                    }
-                document.select("div[fairemail=signature]").removeAttr("fairemail");
-                document.select("div[fairemail=reference]").removeAttr("fairemail");
-            }
+        if (identity != null && send) {
+            for (Element child : document.body().children())
+                if (!TextUtils.isEmpty(child.text()) &&
+                        TextUtils.isEmpty(child.attr("fairemail"))) {
+                    String style = HtmlHelper.mergeStyles(
+                            "font-family:" + compose_font, child.attr("style"));
+                    child.attr("style", style);
+                }
+            document.select("div[fairemail=signature]").removeAttr("fairemail");
+            document.select("div[fairemail=reference]").removeAttr("fairemail");
 
+            boolean save = false;
             DB db = DB.getInstance(context);
             try {
                 db.beginTransaction();
@@ -614,6 +614,7 @@ public class MessageHelper {
 
                     attachments.add(attachment);
                     img.attr("src", "cid:" + cid);
+                    save = true;
                 }
 
                 db.setTransactionSuccessful();
@@ -622,6 +623,9 @@ public class MessageHelper {
             } finally {
                 db.endTransaction();
             }
+
+            if (save)
+                Helper.writeText(message.getFile(context), document.html());
         }
 
         // multipart/mixed
@@ -2286,6 +2290,13 @@ public class MessageHelper {
 
     static int getMessageCount(Folder folder) {
         try {
+            // Prevent pool lock
+            if (folder instanceof IMAPFolder) {
+                int count = ((IMAPFolder) folder).getCachedCount();
+                Log.i(folder.getFullName() + " total count=" + count);
+                return count;
+            }
+
             int count = 0;
             for (Message message : folder.getMessages())
                 if (!message.isExpunged())

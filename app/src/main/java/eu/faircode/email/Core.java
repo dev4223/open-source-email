@@ -752,6 +752,8 @@ class Core {
             if (imessages != null && imessages.length > 0)
                 try {
                     Message imessage = ifolder.getMessageByUID(message.uid);
+                    if (imessage == null)
+                        throw new MessageRemovedException();
                     imessage.setFlag(Flags.Flag.DELETED, true);
                     ifolder.expunge();
                 } catch (MessagingException ex) {
@@ -1032,6 +1034,8 @@ class Core {
                             if (uid != null) {
                                 if (draft) {
                                     Message icopy = itarget.getMessageByUID(uid);
+                                    if (icopy == null)
+                                        continue;
 
                                     // Mark read
                                     if (seen && !icopy.isSet(Flags.Flag.SEEN) && flags.contains(Flags.Flag.SEEN))
@@ -3315,10 +3319,10 @@ class Core {
             if (notify_preview && notify_preview_only && !message.content)
                 continue;
 
-            if (foreground && notify_background_only && message.notifying >= 0) {
-                Log.i("Notify foreground=" + message.id + " notifying=" + message.notifying);
-                if (message.notifying == 0)
-                    db.message().setMessageNotifying(message.id, 1);
+            if (foreground && notify_background_only && message.notifying == 0) {
+                Log.i("Notify foreground=" + message.id);
+                if (!message.ui_ignored)
+                    db.message().setMessageUiIgnored(message.id, true);
                 continue;
             }
 
@@ -3343,8 +3347,10 @@ class Core {
                 // This assumes the messages are properly ordered
                 if (groupMessages.get(group).size() < MAX_NOTIFICATION_COUNT)
                     groupMessages.get(group).add(message);
-                else
-                    db.message().setMessageUiIgnored(message.id, true);
+                else {
+                    if (!message.ui_ignored)
+                        db.message().setMessageUiIgnored(message.id, true);
+                }
             }
         }
 
@@ -3691,7 +3697,7 @@ class Core {
             Address[] afrom = messageFrom.get(message.id);
             String from = MessageHelper.formatAddresses(afrom, name_email, false);
             mbuilder.setContentTitle(from);
-            if (message.folderUnified)
+            if (message.folderUnified && !EntityFolder.INBOX.equals(message.folderType))
                 mbuilder.setSubText(message.accountName + " · " + message.getFolderName(context));
             else
                 mbuilder.setSubText(message.accountName);
