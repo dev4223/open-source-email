@@ -2053,11 +2053,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             }
 
                             @Override
-                            public void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
-                                if (clampedY) {
-                                    int dy = context.getResources().getDisplayMetrics().heightPixels / 50;
-                                    properties.scrollBy(0, scrollY == 0 ? -dy : dy);
-                                }
+                            public void onOverScrolled(int scrollX, int scrollY, int dx, int dy, boolean clampedX, boolean clampedY) {
+                                if (clampedY && ((WebViewEx) wvBody).isZoomed())
+                                    properties.scrollBy(0, dy);
                             }
 
                             @Override
@@ -4197,7 +4195,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     else
                         ToastEx.makeText(context, R.string.title_pro_invalid, Toast.LENGTH_LONG).show();
                 } catch (NoSuchAlgorithmException ex) {
-                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
+                    Log.e(ex);
+                    ToastEx.makeText(context, Log.formatThrowable(ex), Toast.LENGTH_LONG).show();
                 }
             } else {
                 if ("full".equals(uri.getScheme())) {
@@ -4291,7 +4290,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     @Override
                     protected void onExecuted(Bundle args, File file) {
-                        Helper.share(context, file, "image/png", file.getName());
+                        if (file != null)
+                            Helper.share(context, file, "image/png", file.getName());
                     }
 
                     @Override
