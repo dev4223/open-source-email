@@ -29,8 +29,10 @@ import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
 import com.sun.mail.gimap.GmailMessage;
+import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.imap.IMAPMessage;
+import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.util.ASCIIUtility;
 import com.sun.mail.util.BASE64DecoderStream;
 import com.sun.mail.util.FolderClosedIOException;
@@ -559,17 +561,23 @@ public class MessageHelper {
 
         // When sending message
         if (identity != null && send) {
+            boolean save = false;
+
             for (Element child : document.body().children())
                 if (!TextUtils.isEmpty(child.text()) &&
                         TextUtils.isEmpty(child.attr("fairemail"))) {
+                    String old = child.attr("style");
                     String style = HtmlHelper.mergeStyles(
-                            "font-family:" + compose_font, child.attr("style"));
-                    child.attr("style", style);
+                            "font-family:" + compose_font, old);
+                    if (!old.equals(style)) {
+                        save = true;
+                        child.attr("style", style);
+                    }
                 }
+
             document.select("div[fairemail=signature]").removeAttr("fairemail");
             document.select("div[fairemail=reference]").removeAttr("fairemail");
 
-            boolean save = false;
             DB db = DB.getInstance(context);
             try {
                 db.beginTransaction();
@@ -1127,16 +1135,12 @@ public class MessageHelper {
             return header;
 
         if (Helper.isUTF8(header)) {
-            if (!Helper.isISO8859(header)) {
-                Log.w("Converting " + name + " to UTF-8");
-                return new String(header.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-            }
+            Log.w("Converting " + name + " to UTF-8");
+            return new String(header.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         } else {
-            Log.w("Converting " + name + " to ISO8859-1");
+            Log.i("Converting " + name + " to ISO8859-1");
             return new String(header.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.ISO_8859_1);
         }
-
-        return header;
     }
 
     private Address[] getAddressHeader(String name) throws MessagingException {
@@ -1721,6 +1725,12 @@ public class MessageHelper {
                     warnings.add(context.getString(R.string.title_no_charset, charset));
 
                 if (part.isMimeType("text/plain")) {
+                    if ((TextUtils.isEmpty(charset) || charset.equalsIgnoreCase(StandardCharsets.US_ASCII.name())) &&
+                            Helper.isUTF8(result)) {
+                        Log.i("Charset plain=UTF8");
+                        result = new String(result.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+                    }
+
                     if ("flowed".equalsIgnoreCase(ct.getParameter("format")))
                         result = HtmlHelper.flow(result);
                     result = "<div x-plain=\"true\">" + HtmlHelper.formatPre(result) + "</div>";
@@ -2311,6 +2321,16 @@ public class MessageHelper {
             Log.e(ex);
             return -1;
         }
+    }
+
+    static boolean hasCapability(IMAPFolder ifolder, final String capability) throws MessagingException {
+        // Folder can have different capabilities than the store
+        return (boolean) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
+            @Override
+            public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
+                return protocol.hasCapability(capability);
+            }
+        });
     }
 
     static String sanitizeKeyword(String keyword) {

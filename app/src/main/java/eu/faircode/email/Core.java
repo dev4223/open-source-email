@@ -136,7 +136,7 @@ class Core {
     private static final int SYNC_BATCH_SIZE = 20;
     private static final int DOWNLOAD_BATCH_SIZE = 20;
     private static final long YIELD_DURATION = 200L; // milliseconds
-    private static final long JOIN_WAIT = 90 * 1000L; // milliseconds
+    private static final long JOIN_WAIT = 180 * 1000L; // milliseconds
     private static final long FUTURE_RECEIVED = 30 * 24 * 3600 * 1000L; // milliseconds
     private static final int LOCAL_RETRY_MAX = 2;
     private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
@@ -873,7 +873,7 @@ class Core {
 
         // Add message
         Long newuid = null;
-        if (istore.hasCapability("UIDPLUS")) {
+        if (MessageHelper.hasCapability(ifolder, "UIDPLUS")) {
             // https://tools.ietf.org/html/rfc4315
             AppendUID[] uids = ifolder.appendUIDMessages(new Message[]{imessage});
             if (uids != null && uids.length > 0 && uids[0] != null && uids[0].uid > 0) {
@@ -956,12 +956,7 @@ class Core {
             }
 
         // Some servers return different capabilities for different sessions
-        boolean canMove = (Boolean) ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
-            @Override
-            public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
-                return protocol.hasCapability("MOVE");
-            }
-        });
+        boolean canMove = MessageHelper.hasCapability(ifolder, "MOVE");
 
         // Some providers do not support the COPY operation for drafts
         boolean draft = (EntityFolder.DRAFTS.equals(folder.type) || EntityFolder.DRAFTS.equals(target.type));
@@ -4149,13 +4144,20 @@ class Core {
         void join(Thread thread) {
             boolean joined = false;
             boolean interrupted = false;
+            String name = thread.getName();
             while (!joined)
                 try {
-                    Log.i("Joining " + thread.getName() +
-                            " state=" + thread.getState() + " alive=" + thread.isAlive());
+                    Log.i("Joining " + name +
+                            " alive=" + thread.isAlive() +
+                            " state=" + thread.getState());
+
                     thread.join(JOIN_WAIT);
+
+                    // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.State.html
+                    Thread.State state = thread.getState();
                     if (thread.isAlive()) {
-                        Log.e("Join failed state=" + thread.getState() + " interrupted=" + interrupted);
+                        if (interrupted)
+                            Log.e("Join " + name + " failed state=" + state + " interrupted=" + interrupted);
                         if (interrupted)
                             joined = true; // give up
                         else {
@@ -4163,7 +4165,7 @@ class Core {
                             interrupted = true;
                         }
                     } else {
-                        Log.i("Joined " + thread.getName() + " state=" + thread.getState());
+                        Log.i("Joined " + name + " " + " state=" + state);
                         joined = true;
                     }
                 } catch (InterruptedException ex) {

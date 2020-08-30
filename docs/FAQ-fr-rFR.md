@@ -850,10 +850,11 @@ Possible causes are:
 
 * A firewall or router is blocking connections to the server
 * The host name or port number is invalid
-* The are problems with the internet connection
+* Il y a des problèmes avec la connexion Internet
+* Il y a des problèmes avec la résolution des noms de domaine (Yandex : essayez de désactiver le DNS privé dans les paramètres Android)
 * Le serveur de messagerie refuse d'accepter des connexions (externes)
-* The email server is refusing to accept a message, for example because it is too large or contains unacceptable links
-* There are too many connections to the server, see also the next question
+* Le serveur de messagerie refuse d'accepter un message, par exemple parce qu'il est trop grand ou qu'il contient des liens inacceptables
+* Il y a trop de connexions au serveur, voir aussi la question suivante
 
 Many public Wi-Fi networks block outgoing email to prevent spam. Sometimes you can workaround this by using another SMTP port. See the documentation of the provider for the usable port numbers.
 
@@ -2172,6 +2173,7 @@ Note that:
 * Google does not expose details (name, e-mail, etc) about buyers to developers
 * An app like FairEmail cannot select which Google account to use
 * It may take a while until the Play store app has synchronized a purchase to another device
+* Les achats du Play Store ne peuvent pas être utilisés sans le Play Store, ce qui n'est pas autorisé par les règles du Play Store
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
 
