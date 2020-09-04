@@ -90,6 +90,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.textclassifier.ConversationAction;
 import android.view.textclassifier.ConversationActions;
@@ -266,6 +267,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private static boolean debug;
 
     private boolean gotoTop = false;
+    private Integer gotoPos = null;
     private boolean firstClick = false;
     private int searchResult = 0;
     private AsyncPagedListDiffer<TupleMessageEx> differ;
@@ -3563,6 +3565,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onInsertContact(String name, String email) {
+            if (TextUtils.isEmpty(name)) {
+                int at = email.indexOf('@');
+                if (at > 0)
+                    name = email.substring(0, at);
+            }
+
             // https://developer.android.com/training/contacts-provider/modify-data
             Intent insert = new Intent();
             insert.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
@@ -3577,8 +3585,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // https://developer.android.com/training/contacts-provider/modify-data
             Intent edit = new Intent();
             edit.putExtra(ContactsContract.Intents.Insert.EMAIL, email);
-            if (!TextUtils.isEmpty(name))
-                edit.putExtra(ContactsContract.Intents.Insert.NAME, name);
             edit.setAction(Intent.ACTION_EDIT);
             edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
             context.startActivity(edit);
@@ -4275,7 +4281,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (bm == null)
                             return null;
 
-                        File file = ImageHelper.getCacheFile(context, id, source);
+                        File file = ImageHelper.getCacheFile(context, id, source, ".png");
                         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
                             bm.compress(Bitmap.CompressFormat.PNG, 90, os);
                         }
@@ -5586,6 +5592,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     }
                 }
 
+                if (gotoPos != null && currentList != null && currentList.size() > 0) {
+                    properties.scrollTo(gotoPos, 0);
+                    gotoPos = null;
+                }
+
                 if (selectionTracker != null && selectionTracker.hasSelection()) {
                     Selection<Long> selection = selectionTracker.getSelection();
 
@@ -5673,6 +5684,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         } else
             properties.scrollTo(0, 0);
         this.gotoTop = true;
+    }
+
+    void gotoPos(int pos) {
+        if (pos != RecyclerView.NO_POSITION)
+            gotoPos = pos;
     }
 
     void submitList(PagedList<TupleMessageEx> list) {
@@ -6023,6 +6039,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             secure ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
 
                     cbSecure.setVisibility(hyperlink ? View.VISIBLE : View.GONE);
+                }
+            });
+
+            etLink.setHorizontallyScrolling(false);
+            etLink.setMaxLines(10);
+            etLink.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE).performClick();
+                        return true;
+                    } else
+                        return false;
                 }
             });
 
