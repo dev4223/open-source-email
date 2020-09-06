@@ -2166,7 +2166,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             Bundle aargs = new Bundle();
             aargs.putLong("id", message.id);
             aargs.putLong("account", message.account);
+            aargs.putInt("protocol", message.accountProtocol);
             aargs.putLong("folder", message.folder);
+            aargs.putString("type", message.folderType);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
 
             AdapterMessage.FragmentDialogJunk ask = new AdapterMessage.FragmentDialogJunk();
@@ -2426,12 +2428,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     snackbar.show();
                 } else {
                     PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabReply);
+                    Menu main = popupMenu.getMenu();
+
+                    Map<String, SubMenu> map = new HashMap<>();
 
                     int order = 0;
                     for (EntityAnswer answer : answers) {
                         order++;
-                        popupMenu.getMenu().add(Menu.NONE, order, order++, answer.toString())
-                                .setIntent(new Intent().putExtra("id", answer.id));
+                        if (answer.group == null)
+                            main.add(Menu.NONE, order, order++, answer.toString())
+                                    .setIntent(new Intent().putExtra("id", answer.id));
+                        else {
+                            if (!map.containsKey(answer.group))
+                                map.put(answer.group, main.addSubMenu(Menu.NONE, order, order++, answer.group));
+                            SubMenu smenu = map.get(answer.group);
+                            smenu.add(Menu.NONE, smenu.size(), smenu.size() + 1, answer.toString())
+                                    .setIntent(new Intent().putExtra("id", answer.id));
+                        }
                     }
 
                     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -4082,6 +4095,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         int zoom = prefs.getInt("view_zoom", compact ? 0 : 1);
         zoom = ++zoom % 3;
         prefs.edit().putInt("view_zoom", zoom).apply();
+        clearMeasurements();
         adapter.setZoom(zoom);
     }
 
@@ -4095,7 +4109,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         adapter.setCompact(compact);
         adapter.setZoom(zoom);
+        clearMeasurements();
         getActivity().invalidateOptionsMenu();
+    }
+
+    private void clearMeasurements() {
+        sizes.clear();
+        heights.clear();
+        positions.clear();
     }
 
     private void onMenuSelectLanguage() {

@@ -2109,7 +2109,7 @@ public class FragmentCompose extends FragmentBase {
                 return HtmlHelper.fromHtml(HtmlHelper.toHtml(s, context), false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
+                        return ImageHelper.decodeImage(context, id, source, true, zoom, 1.0f, etBody);
                     }
                 }, null, getContext());
             }
@@ -2903,7 +2903,7 @@ public class FragmentCompose extends FragmentBase {
         Spanned spanned = HtmlHelper.fromHtml(html, false, new Html.ImageGetter() {
             @Override
             public Drawable getDrawable(String source) {
-                return ImageHelper.decodeImage(getContext(), working, source, true, zoom, etBody);
+                return ImageHelper.decodeImage(getContext(), working, source, true, zoom, 1.0f, etBody);
             }
         }, null, getContext());
 
@@ -3796,7 +3796,7 @@ public class FragmentCompose extends FragmentBase {
 
                         File file = data.draft.getFile(context);
 
-                        Document doc = (data.draft.uid == null ? Document.createShell("") : JsoupEx.parse(file));
+                        Document doc = (data.draft.content ? JsoupEx.parse(file) : Document.createShell(""));
                         doc.select("div[fairemail=signature]").remove();
                         Elements ref = doc.select("div[fairemail=reference]");
                         ref.remove();
@@ -4817,7 +4817,7 @@ public class FragmentCompose extends FragmentBase {
                 Spanned spannedBody = HtmlHelper.fromDocument(context, doc, false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        return ImageHelper.decodeImage(context, id, source, true, zoom, etBody);
+                        return ImageHelper.decodeImage(context, id, source, true, zoom, 1.0f, etBody);
                     }
                 }, null);
 
@@ -4846,7 +4846,7 @@ public class FragmentCompose extends FragmentBase {
                             new Html.ImageGetter() {
                                 @Override
                                 public Drawable getDrawable(String source) {
-                                    return ImageHelper.decodeImage(context, id, source, show_images, zoom, tvReference);
+                                    return ImageHelper.decodeImage(context, id, source, show_images, zoom, 1.0f, tvReference);
                                 }
                             },
                             null);
@@ -4946,7 +4946,7 @@ public class FragmentCompose extends FragmentBase {
                 signature = HtmlHelper.fromHtml(identity.signature, false, new Html.ImageGetter() {
                     @Override
                     public Drawable getDrawable(String source) {
-                        return ImageHelper.decodeImage(getContext(), working, source, true, 0, tvSignature);
+                        return ImageHelper.decodeImage(getContext(), working, source, true, 0, 1.0f, tvSignature);
                     }
                 }, null, getContext());
             tvSignature.setText(signature);

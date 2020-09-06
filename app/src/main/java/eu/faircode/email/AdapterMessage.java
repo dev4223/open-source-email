@@ -767,30 +767,41 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 btnCalendarMaybe.setOnLongClickListener(this);
 
                 gestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                    private float scale = 1.0f;
                     private Toast toast = null;
 
                     @Override
                     public boolean onScale(ScaleGestureDetector detector) {
                         TupleMessageEx message = getMessage();
                         if (message != null) {
+                            // Scale factor
                             float factor = detector.getScaleFactor();
                             float size = tvBody.getTextSize() * factor;
+                            float scale = (textSize == 0 ? 1.0f : size / (textSize * message_zoom / 100f));
+
+                            // Text size
                             properties.setSize(message.id, size);
                             tvBody.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
 
-                            scale = scale * factor;
-                            String perc = Math.round(scale * message_zoom) + " %";
+                            // Image size
+                            Spanned spanned = (Spanned) tvBody.getText();
+                            for (ImageSpan img : spanned.getSpans(0, spanned.length(), ImageSpan.class)) {
+                                Drawable d = img.getDrawable();
+                                ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(img.getSource());
+                                ImageHelper.fitDrawable(d, a, scale, tvBody);
+                            }
+
+                            // Feedback
+                            String perc = Math.round(scale * 100) + " %";
                             if (toast != null)
                                 toast.cancel();
                             toast = ToastEx.makeText(context, perc, Toast.LENGTH_SHORT);
                             toast.show();
                         }
+
                         return true;
                     }
                 });
             }
-
 
             if (accessibility) {
                 view.setAccessibilityDelegate(accessibilityDelegateHeader);
@@ -1032,7 +1043,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 vwColor.setTag(colorBackground);
                 vwColor.setBackgroundColor(colorBackground);
             }
-            vwColor.setAlpha(message.ui_seen ? Helper.LOW_LIGHT : 1.0f);
             vwColor.setVisibility(color_stripe ? View.VISIBLE : View.GONE);
 
             // Expander
@@ -2094,6 +2104,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             args.putBoolean("show_quotes", show_quotes);
             args.putInt("zoom", zoom);
 
+            float scale = (size == 0 || textSize == 0 ? 1.0f : size / (textSize * message_zoom / 100f));
+            args.putFloat("scale", scale);
+
             new SimpleTask<Object>() {
                 @Override
                 protected void onPreExecute(Bundle args) {
@@ -2112,6 +2125,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     final boolean show_images = args.getBoolean("show_images");
                     final boolean show_quotes = args.getBoolean("show_quotes");
                     final int zoom = args.getInt("zoom");
+                    final float scale = args.getFloat("scale");
 
                     if (message == null || !message.content)
                         return null;
@@ -2269,7 +2283,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, true, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
-                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, zoom, tvBody);
+                                Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, zoom, scale, tvBody);
 
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                                     if (drawable instanceof AnimatedImageDrawable)
@@ -3911,6 +3925,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             aargs.putLong("account", message.account);
             aargs.putInt("protocol", message.accountProtocol);
             aargs.putLong("folder", message.folder);
+            aargs.putString("type", message.folderType);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
 
             FragmentDialogJunk ask = new FragmentDialogJunk();
@@ -6295,8 +6310,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             Bundle args = getArguments();
             final long account = args.getLong("account");
-            final long folder = args.getLong("folder");
             final int protocol = args.getInt("protocol");
+            final long folder = args.getLong("folder");
+            final String type = args.getString("type");
             final String from = args.getString("from");
 
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_junk, null);
@@ -6332,8 +6348,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     lbm.sendBroadcast(
                             new Intent(ActivityView.ACTION_EDIT_RULES)
                                     .putExtra("account", account)
+                                    .putExtra("protocol", protocol)
                                     .putExtra("folder", folder)
-                                    .putExtra("protocol", protocol));
+                                    .putExtra("type", type));
                     dismiss();
                 }
             });
