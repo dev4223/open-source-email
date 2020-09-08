@@ -15,6 +15,9 @@
     <string name="channel_error">Chyby</string>
     <string name="channel_alert">Upozornění serveru</string>
     <string name="channel_group_contacts">Kontakty</string>
+    <string name="channel_service_description">Synchronizace a monitorování účtů</string>
+    <string name="channel_send_description">Odesílání zpráv</string>
+    <string name="channel_notification_description">Oznámení nových zpráv</string>
     <plurals name="page_conversation">
         <item quantity="one">Konverzace</item>
         <item quantity="few">Konverzace</item>
@@ -1239,8 +1242,6 @@
     <string name="title_auto_scroll">Automatické posouvání</string>
     <string name="title_log_clear">Vyčistit</string>
     <string name="title_rules_search_hint">Hledat název nebo podmínku</string>
-    <string name="title_rules_clear">Vymazat pravidla nevyžádané pošty</string>
-    <string name="title_rules_clear_confirm">Smazat všechna pravidla pro přesun zpráv do složky nevyžádané pošty?</string>
     <string name="title_debug_info">Ladící informace</string>
     <string name="title_debug_info_remark">Prosím, popište problém a uveďte čas, kdy k němu došlo:</string>
     <string name="title_crash_info_remark">Popište prosím, co jste dělali, když došlo k pádu aplikace:</string>
