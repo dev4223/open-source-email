@@ -1571,7 +1571,7 @@ public class FragmentCompose extends FragmentBase {
         new SimpleTask<List<EntityAnswer>>() {
             @Override
             protected List<EntityAnswer> onExecute(Context context, Bundle args) {
-                return DB.getInstance(context).answer().getAnswersByFavorite(false);
+                return DB.getInstance(context).answer().getAnswers(false);
             }
 
             @Override
@@ -2155,11 +2155,11 @@ public class FragmentCompose extends FragmentBase {
                     if (d == null)
                         throw new IllegalArgumentException(context.getString(R.string.title_no_image));
 
-                    s.insert(start, " \uFFFC"); // Object replacement character
+                    s.insert(start, "\n\uFFFC\n"); // Object replacement character
                     ImageSpan is = new ImageSpan(context, cid);
                     s.setSpan(is, start + 1, start + 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                    start += 2;
+                    start += 3;
                 }
 
                 if (!image)
@@ -3416,13 +3416,13 @@ public class FragmentCompose extends FragmentBase {
                             document.body().appendChild(e);
                         }
 
-                        if (answer > 0) {
-                            EntityAnswer a = db.answer().getAnswer(answer);
-                            if (a != null) {
-                                data.draft.subject = a.name;
-                                Document d = JsoupEx.parse(a.getText(null));
-                                document.body().append(d.body().html());
-                            }
+                        EntityAnswer a = (answer < 0
+                                ? db.answer().getStandardAnswer()
+                                : db.answer().getAnswer(answer));
+                        if (a != null) {
+                            data.draft.subject = a.name;
+                            Document d = JsoupEx.parse(a.getText(null));
+                            document.body().append(d.body().html());
                         }
 
                         addSignature(context, document, data.draft, selected);
@@ -3581,12 +3581,12 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                         // Reply template
-                        if (answer > 0) {
-                            EntityAnswer a = db.answer().getAnswer(answer);
-                            if (a != null) {
-                                Document d = JsoupEx.parse(a.getText(data.draft.to));
-                                document.body().append(d.body().html());
-                            }
+                        EntityAnswer a = (answer < 0
+                                ? db.answer().getStandardAnswer()
+                                : db.answer().getAnswer(answer));
+                        if (a != null) {
+                            Document d = JsoupEx.parse(a.getText(data.draft.to));
+                            document.body().append(d.body().html());
                         }
 
                         // Signature
@@ -4382,6 +4382,7 @@ public class FragmentCompose extends FragmentBase {
                     boolean autosave = extras.getBoolean("autosave");
                     if (needsEncryption && !autosave) {
                         args.putBoolean("needsEncryption", true);
+                        db.setTransactionSuccessful();
                         return draft;
                     }
 
@@ -4543,7 +4544,7 @@ public class FragmentCompose extends FragmentBase {
                             }
 
                             for (EntityAttachment attachment : new ArrayList<>(attachments))
-                                if (!attachment.isAttachment() && attachment.isImage() &&
+                                if (attachment.isInline() && attachment.isImage() &&
                                         attachment.cid != null && !cids.contains(attachment.cid)) {
                                     Log.i("Removing unused inline attachment cid=" + attachment.cid);
                                     db.attachment().deleteAttachment(attachment.id);

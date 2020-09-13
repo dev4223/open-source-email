@@ -464,8 +464,7 @@ class Core {
                                 ex.getCause() instanceof MessageRemovedIOException ||
                                 ex.getCause() instanceof BadCommandException ||
                                 ex.getCause() instanceof CommandFailedException ||
-                                (ex instanceof FolderClosedException &&
-                                        ex.getCause() instanceof IOException &&
+                                (ConnectionHelper.isIoError(ex) &&
                                         EntityFolder.DRAFTS.equals(folder.type) &&
                                         EntityOperation.ADD.equals(op.name))) {
                             // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
@@ -473,6 +472,7 @@ class Core {
                             // com.sun.mail.iap.CommandFailedException: B16 NO [ALERT] Cannot MOVE messages out of the Drafts folder
                             // Drafts: javax.mail.FolderClosedException: * BYE Jakarta Mail Exception:
                             //   javax.net.ssl.SSLException: Write error: ssl=0x8286cac0: I/O error during system call, Broken pipe
+                            // Drafts: * BYE Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
                             Log.w("Unrecoverable");
 
                             try {
@@ -898,10 +898,10 @@ class Core {
                 try {
                     Log.i(folder.name + " deleting uid=" + message.uid);
                     iexisting.setFlag(Flags.Flag.DELETED, true);
+                    ifolder.expunge();
                 } catch (MessageRemovedException ignored) {
                     Log.w(folder.name + " existing gone uid=" + message.uid);
                 }
-                ifolder.expunge();
             }
         }
 
@@ -1018,9 +1018,10 @@ class Core {
             try {
                 for (Message imessage : map.keySet())
                     imessage.setFlag(Flags.Flag.DELETED, true);
-            } catch (MessageRemovedException ignored) {
+                ifolder.expunge();
+            } catch (MessageRemovedException ex) {
+                Log.w(ex);
             }
-            ifolder.expunge();
         } else {
             int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
@@ -2845,11 +2846,11 @@ class Core {
             if (download && message.size != null && !message.ui_hide) {
                 long maxSize;
                 if (state == null || state.networkState.isUnmetered())
-                    maxSize = MessageHelper.DEFAULT_DOWNLOAD_SIZE;
+                    maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
                 else {
                     maxSize = prefs.getInt("download", MessageHelper.DEFAULT_DOWNLOAD_SIZE);
-                    if (maxSize == 0)
-                        maxSize = MessageHelper.DEFAULT_DOWNLOAD_SIZE;
+                    if (maxSize == 0 || maxSize > MessageHelper.SMALL_MESSAGE_SIZE)
+                        maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
                 }
 
                 if (message.size < maxSize) {

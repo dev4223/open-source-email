@@ -596,7 +596,7 @@ You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packa
 
 **Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
-FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients and send received Autocrypt headers to the OpenKeychain app for storage.
+FairEmail enverra l'en-tête [Autocrypt](https://autocrypt.org/) pour être utilisé par d'autres clients de messagerie, mais seulement pour les messages signés et chiffrés parce que trop de serveurs de messagerie ont des problèmes avec l'en-tête Autocrypt souvent long. Notez que le moyen le plus sûr de démarrer un échange de messages chiffrés est d'envoyer d'abord des messages signés. Les en-têtes Autocrypt reçus seront envoyés à l'application OpenKeychain pour être stockés lors de la vérification d'une signature ou du déchiffrement d'un message.
 
 All key handling is delegated to the OpenKey chain app for security reasons. This also means that FairEmail does not store PGP keys.
 
@@ -695,7 +695,21 @@ This means that searching for a message text requires that files containing the 
 
 In the *miscellaneous settings* you can enable *Build search index* to significantly increase the speed of searching on the device, but be aware that this will increase battery and storage space usage. The search index is based on words, so searching for partial text is not possible. Searching using the search index is by default AND, so searching for *apple orange* will search for apple AND orange. Words separated by commas result in searching for OR, so for example *apple, orange* will search for apple OR orange. Both can be combined, so searching for *apple, orange banana* will search for apple OR (orange AND banana). Using the search index is a pro feature.
 
-Searching messages on the device is a free feature, searching messages on the server is a pro feature.
+From version 1.1315 it is possible to use search expressions like this:
+
+```
+apple +banana -cherry ?nuts
+```
+
+This will result in searching like this:
+
+```
+("apple" AND "banana" AND NOT "cherry") OR "nuts"
+```
+
+Search expressions can be used for searching on the device via the search index and for searching on the email server, but not for searching on the device without search index for performance reasons.
+
+Searching on the device is a free feature, using the search index and searching on the server is a pro feature.
 
 <br />
 

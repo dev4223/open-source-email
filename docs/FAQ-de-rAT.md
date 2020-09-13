@@ -81,7 +81,7 @@ Verwandte Fragen:
 
 * ~~Synchronisieren bei Bedarf (manuell)~~
 * ~~Halbautomatische Verschlüsselung~~
-* ~~Nachricht kopieren~
+* ~~Nachricht kopieren~~
 * ~~Farbige Sterne~~
 * ~~Benachrichtigungseinstellungen pro Ordner~~
 * ~~~Das Wählen von lokalen Bildern für Signaturen~~ (dies wird nicht hinzugefügt, weil es eine Bildverwaltung erfordert und weil Bilder in den meisten E-Mail-Clients ohnehin nicht standardmäßig angezeigt werden)
@@ -161,7 +161,7 @@ Das Design basiert auf vielen Diskussionen und wenn du möchtest, kannst du auch
 * [(42) Können Sie einen neuen Anbieter zur Liste der Anbieter hinzufügen?](#user-content-faq42)
 * [(43) Können Sie das Original anzeigen?](#user-content-faq43)
 * [(44) Können Sie Kontaktfotos / Ident-Icons im Gesendeten Ordner anzeigen?](#user-content-faq44)
-* [(45) Wie kann ich "Dieser Schlüssel ist nicht verfügbar, um ihn verwenden zu können, müssen Sie ihn als einen Ihrer eigenen importieren" beheben ? ~ ?](#user-content-faq45)
+* [(45) Wie kann ich "Dieser Schlüssel ist nicht verfügbar, um ihn verwenden zu können, müssen Sie ihn als einen Ihrer eigenen importieren" beheben? ~ ?](#user-content-faq45)
 * [(46) Warum wird die Nachrichtenliste immer wieder aktualisiert?](#user-content-faq46)
 * [(47) Wie löse ich den Fehler 'Kein primäres Konto oder kein Ordner für Entwürfe' ?](#user-content-faq47)
 * [(48) Wie löse ich den Fehler 'Kein primäres Konto oder kein Archivordner' ?](#user-content-faq48)
@@ -237,7 +237,7 @@ Das Design basiert auf vielen Diskussionen und wenn du möchtest, kannst du auch
 * [(119) Können Sie dem Sammeleingang-Widget für Post Farben hinzufügen?](#user-content-faq119)
 * [(120) Warum werden neue Nachrichten beim Öffnen der App nicht entfernt?](#user-content-faq120)
 * [(121) Wie werden Nachrichten zu einer Konversation gruppiert?](#user-content-faq121)
-* [~~~(122) Warum wird der Empfängername/E-Mail-Adresse mit einer Warnfarbe angezeigt?~~](#user-content-faq122)
+* [~~(122) Warum wird der Empfängername/E-Mail-Adresse mit einer Warnfarbe angezeigt?~~](#user-content-faq122)
 * [(123) Was geschieht, wenn FairEmail keine Verbindung zu einem E-Mail-Server herstellen kann?](#user-content-faq123)
 * [(124) Warum erhalte ich den Hinweis 'Nachricht zu groß oder zu komplex, um sie anzuzeigen'?](#user-content-faq124)
 * [(125) Was sind die aktuellen experimentellen Eigenschaften?](#user-content-faq125)
@@ -258,7 +258,7 @@ Das Design basiert auf vielen Diskussionen und wenn du möchtest, kannst du auch
 * [(140) Warum enthält der Nachrichtentext seltsame Zeichen?](#user-content-faq140)
 * [(141) Wie kann ich 'Ein Entwürfe-Ordner ist erforderlich, um Nachrichten zu senden' beheben?](#user-content-faq141)
 * [(142) Wie kann ich gesendete Nachrichten im Posteingang speichern?](#user-content-faq142)
-* [~~~(143) Gibt es einen Papierkorb für POP3-Konten? ~~](#user-content-faq143)
+* [~~(143) Gibt es einen Papierkorb für POP3-Konten? ~~](#user-content-faq143)
 * [(144) Wie kann ich Sprachnotizen aufnehmen?](#user-content-faq144)
 * [(145) Wie kann ich einen Benachrichtigungston für ein Konto, einen Ordner oder einen Absender festlegen?](#user-content-faq145)
 * [(146) Wie kann ich falsche Zeiten von Nachrichten beheben?](#user-content-faq146)
@@ -596,7 +596,7 @@ You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packa
 
 **Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
-FairEmail will send the [Autocrypt](https://autocrypt.org/) headers for use by other email clients and send received Autocrypt headers to the OpenKeychain app for storage.
+FairEmail sendet den [Autocrypt](https://autocrypt.org/)-Header zur Verwendung durch andere E-Mail-Clients, aber nur für signierte und verschlüsselte Nachrichten, da zu viele E-Mail-Server Probleme mit dem oft langen Autocrypt-Header haben. Beachten Sie, dass die sicherste Art, einen verschlüsselten E-Mail-Austausch zu beginnen, darin besteht, dass zuerst signierte Nachrichten gesendet werden. Empfangene Autocrypt-Header werden an die OpenKeychain-App gesendet, um sie beim Verifizieren einer Signatur oder Entschlüsseln einer Nachricht zu speichern.
 
 All key handling is delegated to the OpenKey chain app for security reasons. This also means that FairEmail does not store PGP keys.
 
@@ -606,7 +606,7 @@ Signed-only or encrypted-only messages are not a good idea, please see here abou
 
 * [OpenPGP Considerations Part I](https://k9mail.github.io/2016/11/24/OpenPGP-Considerations-Part-I.html)
 * [OpenPGP Considerations Part II](https://k9mail.github.io/2017/01/30/OpenPGP-Considerations-Part-II.html)
-* [OpenPGP Considerations Part III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
+* [OpenPGP-Überlegungen Teil III Autocrypt](https://k9mail.github.io/2018/02/26/OpenPGP-Considerations-Part-III-Autocrypt.html)
 
 Signed-only messages are supported, encrypted-only messages are not supported.
 
@@ -695,12 +695,26 @@ This means that searching for a message text requires that files containing the 
 
 In the *miscellaneous settings* you can enable *Build search index* to significantly increase the speed of searching on the device, but be aware that this will increase battery and storage space usage. The search index is based on words, so searching for partial text is not possible. Searching using the search index is by default AND, so searching for *apple orange* will search for apple AND orange. Words separated by commas result in searching for OR, so for example *apple, orange* will search for apple OR orange. Both can be combined, so searching for *apple, orange banana* will search for apple OR (orange AND banana). Das Verwenden des Suchindex ist eine Pro-Funktion.
 
-Die Suche nach Nachrichten auf dem Gerät ist eine kostenlose Funktion, die Suche nach Nachrichten auf dem Server ist jedoch eine Pro-Funktion.
+Ab Version 1.1315 ist es möglich, Suchausdrücke wie folgt zu verwenden:
+
+```
+Apfel +Banane -Kirsche ?Nüsse
+```
+
+Dies führt zu dem folgenden Suchergebnis:
+
+```
+("Apfel" UND "Banane" UND NICHT "Kirsche") ODER "Nüsse"
+```
+
+Search expressions can be used for searching on the device via the search index and for searching on the email server, but not for searching on the device without search index for performance reasons.
+
+Searching on the device is a free feature, using the search index and searching on the server is a pro feature.
 
 <br />
 
 <a name="faq14"></a>
-**(14) Wie kann ich ein Outlook-/Live-/Hotmail-Konto einrichten?**
+**(14) How can I set up an Outlook / Live / Hotmail account?**
 
 An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting *Outlook*.
 
@@ -713,7 +727,7 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 <br />
 
 <a name="faq15"></a>
-**(15) Warum wird der Nachrichtentext immer noch geladen?**
+**(15) Why does the message text keep loading?**
 
 The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and need to be fetched on opening the message. The message text will keep loading if there is no connection to the account, see also the next question.
 
@@ -726,7 +740,7 @@ Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are 
 <br />
 
 <a name="faq16"></a>
-**(16) Warum werden Nachrichten nicht synchronisiert?**
+**(16) Why are messages not being synchronized?**
 
 Possible causes of messages not being synchronized (sent or received) are:
 
@@ -749,7 +763,7 @@ Disabling battery optimizations (setup step 4) reduces the chance Android will s
 <br />
 
 <a name="faq17"></a>
-**~~(17) Warum funktioniert die manuelle Synchronisation nicht?~~**
+**~~(17) Why does manual synchronize not work?~~**
 
 ~~If the *Synchronize now* menu is dimmed, there is no connection to the account.~~
 
@@ -758,39 +772,39 @@ Disabling battery optimizations (setup step 4) reduces the chance Android will s
 <br />
 
 <a name="faq18"></a>
-**(18) Warum wird die Nachrichtenvorschau nicht immer angezeigt?**
+**(18) Why is the message preview not always shown?**
 
-Die Vorschau des Nachrichtentextes kann nicht angezeigt werden, wenn der Nachrichtentext noch nicht heruntergeladen wurde. Siehe auch [diese F&A](#user-content-faq15).
+The preview of the message text cannot be shown if the message body has not been downloaded yet. See also [this FAQ](#user-content-faq15).
 
 <br />
 
 <a name="faq19"></a>
-**(19) Warum sind die Pro-Funktionen so teuer?**
+**(19) Why are the pro features so expensive?**
 
-Die richtige Frage ist: »*Warum gibt es so viele Steuern und Gebühren?*«:
+The right question is "*why are there so many taxes and fees?*":
 
 * MwSt.: 25 % (je nach Land)
 * Google-Gebühr: 30 %
 * Einkommenssteuer: 50 %
 * <sub>PayPal-Gebühr: 5-10 % abhängig vom Land/Betrag</sub>
 
-Was also für den Entwickler übrig bleibt, ist nur ein Bruchteil dessen, was Sie bezahlen.
+So, what is left for the developer is just a fraction of what you pay.
 
-Beachten Sie, dass nur einige Vorteile und erweiterte Funktionen erworben werden müssen, was bedeutet, dass FairEmail grundsätzlich frei zu verwenden ist.
+Note that only some convenience and advanced features need to be purchased which means that FairEmail is basically free to use.
 
-Beachten Sie auch, dass die meisten kostenlosen Apps am Ende nicht langfristig einsetzbar sind, während FairEmail ordnungsgemäß gewartet und unterstützt wird, und dass kostenlose Anwendungen einen Haken haben können, wie z.B. das Senden vertraulicher Informationen ins Internet.
+Also note that most free apps will appear not to be sustainable in the end, whereas FairEmail is properly maintained and supported, and that free apps may have a catch, like sending privacy sensitive information to the internet.
 
-Ich arbeite seit mehr als zwei Jahren fast jeden Tag an FairEmail, daher halte ich den Preis für mehr als angemessen. Aus diesem Grund gibt es auch keine Rabatte.
+I have been working on FairEmail almost every day for more than two years, so I think the price is more than reasonable. For this reason there won't be discounts either.
 
 <br />
 
 <a name="faq20"></a>
-**(20) Kann ich eine Rückerstattung erhalten?**
+**(20) Can I get a refund?**
 
-Wenn eine gekaufte Pro-Funktion nicht wie vorgesehen funktioniert und dies wird nicht durch ein Problem in den kostenlosen Funktionen verursacht und ich das Problem nicht rechtzeitig beheben kann, können Sie eine Rückerstattung beantragen. In all other cases there is no refund possible. Unter keinen Umständen ist eine Rückerstattung für Probleme im Zusammenhang mit den kostenlosen Funktionen möglich, da diese nicht kostenpflichtig sind und diese uneingeschränkt genutzt werden können. I take my responsibility as seller to deliver what has been promised and I expect that you take responsibility for informing yourself of what you are buying.
+If a purchased pro feature doesn't work as intended and this isn't caused by a problem in the free features and I cannot fix the problem in a timely manner, you can get a refund. In all other cases there is no refund possible. In no circumstances there is a refund possible for any problem related to the free features, since there wasn't paid anything for them and because they can be evaluated without any limitation. I take my responsibility as seller to deliver what has been promised and I expect that you take responsibility for informing yourself of what you are buying.
 
 <a name="faq21"></a>
-**(21) Wie aktiviere ich das Benachrichtigungslicht?**
+**(21) How do I enable the notification light?**
 
 Before Android 8 Oreo: there is an advanced option in the setup for this.
 
@@ -813,7 +827,7 @@ There are general errors and errors specific to Gmail accounts (see below).
 
 **General errors**
 
-The error *... Authentication failed ...* or *... „Authentifizierung fehlgeschlagen …”* bedeutet wahrscheinlich, dass Ihr Benutzername oder Passwort ungültig war. Einige Anbieter erwarten als Benutzername nur den *Benutzernamen* und andere jedoch Ihre vollständige E-Mail-Adresse *benutzername@beispiel.de*. Beim Kopieren/Einfügen eines Benutzernamens oder Passworts können unsichtbare Zeichen kopiert werden, was auch zu diesem Problem führen kann. Einige Passwortmanager sind dafür bekannt, dies ebenfalls fehlerhaft zu tun. Beim Benutzernamen wird möglicherweise die Groß- und Kleinschreibung berücksichtigt, versuchen Sie außerdem nur Kleinbuchstaben. Das Passwort unterscheidet fast immer zwischen Groß- und Kleinschreibung. Einige Anbieter benötigen statt des regulären Passworts ein App-spezfisches Passwort. Bitte überprüfen Sie die Dokumentation des Anbieters. In einigen Fällen ist es erforderlich, zuerst den externen Zugang (IMAP/SMTP) auf der Website des Anbieters zu erlauben. Andere mögliche Ursachen können eine Kontensperrung sein oder eine Anmeldebeschränkung in sonstiger/administrativer Hinsicht. Eine Anmeldung kann z. B. auf bestimmte Netzwerke oder IP-Adressen beschränkt sein.
+The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect. Some providers expect as username just *username* and others your full email address *username@example.com*. When copying/pasting to enter a username or password, invisible characters might be copied, which could cause this problem as well. Some password managers are known to do this incorrectly too. The username might be case sensitive, so try lowercase characters only. The password is almost always case sensitive. Some providers require using an app password instead of the account password, so please check the documentation of the provider. Sometimes it is necessary to enable external access (IMAP/SMTP) on the website of the provider first. Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way, for example by allowing to login from certain networks / IP addresses only.
 
 The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo account password instead of an app password. Please see [this FAQ](#user-content-faq88) about how to setup a Yahoo account.
 
@@ -889,9 +903,9 @@ When in doubt, you can ask for [support](#user-content-support).
 <br />
 
 <a name="faq23"></a>
-**(23) Warum bekomme ich einen Alarm?**
+**(23) Why do I get alert ... ?**
 
-*Allgemein*
+*General*
 
 Alerts are warning messages sent by email servers.
 
