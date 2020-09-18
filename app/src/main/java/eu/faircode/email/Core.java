@@ -701,13 +701,11 @@ class Core {
         if (TextUtils.isEmpty(keyword))
             throw new IllegalArgumentException("keyword/empty");
 
-        if (!ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
-            db.message().setMessageKeywords(message.id, DB.Converters.fromStringArray(null));
-            return;
-        }
-
         if (message.uid == null)
             throw new IllegalArgumentException("keyword/uid");
+
+        if (!ifolder.getPermanentFlags().contains(Flags.Flag.USER))
+            return;
 
         Message imessage = ifolder.getMessageByUID(message.uid);
         if (imessage == null)
@@ -1518,7 +1516,7 @@ class Core {
                             itarget.setSubscribed(subscribed);
                             itarget.close();
                         } catch (MessagingException ex) {
-                            Log.e(ex);
+                            Log.w(ex);
                         }
 
                     db.folder().renameFolder(folder.account, folder.name, folder.rename);
@@ -2716,7 +2714,7 @@ class Core {
             EntityIdentity identity = matchIdentity(context, folder, message);
             message.identity = (identity == null ? null : identity.id);
 
-            message.sender = MessageHelper.getSortKey(message.from);
+            message.sender = MessageHelper.getSortKey(EntityFolder.isOutgoing(folder.type) ? message.to : message.from);
             Uri lookupUri = ContactInfo.getLookupUri(message.from);
             message.avatar = (lookupUri == null ? null : lookupUri.toString());
             if (message.avatar == null && notify_known && pro)
@@ -2916,7 +2914,8 @@ class Core {
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flags=" + flags);
             }
 
-            if (!Helper.equal(message.keywords, keywords)) {
+            if (!Helper.equal(message.keywords, keywords) &&
+                    ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
                 update = true;
                 message.keywords = keywords;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid +
