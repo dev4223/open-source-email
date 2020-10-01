@@ -139,6 +139,7 @@
     <string name="title_setup_gmail_rationale">Si prega di concedere i permessi per selezionare un account e leggere il tuo nome</string>
     <string name="title_setup_gmail_permissions">Google chiederà le autorizzazioni per leggere, comporre, inviare e eliminare definitivamente tutte le tue email. FairEmail non eliminerà mai i tuoi messaggi senza il tuo esplicito consenso.</string>
     <string name="title_setup_gmail_drafts">Se la cartella bozze non è accessibile da IMAP, questo può essere corretto nelle impostazioni dell\'etichetta Gmail</string>
+    <string name="title_setup_office_remark">Microsoft non fornisce questo tipo di autorizzazione per gli account Outlook, Live, Hotmail, ecc.</string>
     <string name="title_setup_office_auth">L\'errore «AUTENTICA fallita» può essere causato dalla disattivazione di IMAP/SMTP da parte dell\'amministratore di sistema</string>
     <string name="title_setup_oauth_rationale">Autorizza l\'accesso al tuo account %1$s</string>
     <string name="title_setup_oauth_authorize">Autorizza</string>
@@ -206,9 +207,10 @@
     <string name="title_setup_theme_black">Nero</string>
     <string name="title_setup_theme_black_and_white">Bianco e nero</string>
     <string name="title_setup_theme_reverse">Inverti colori</string>
+    <string name="title_setup_theme_light">Chiaro</string>
     <string name="title_setup_theme_dark">Scuro</string>
-    <string name="title_setup_theme_black_background">Sfondo nero</string>
     <string name="title_setup_theme_system">Segui il sistema</string>
+    <string name="title_setup_theme_black_background">Sfondo nero</string>
     <string name="title_setup_theme_system_hint">I temi di sistema passeranno automaticamente a chiaro/scuro a seconda sia giorno o notte, se supportato da Android</string>
     <string name="title_setup_advanced">Avanzate</string>
     <string name="title_setup_options">Opzioni</string>
@@ -284,6 +286,7 @@
     <string name="title_advanced_landscape3">Mostra il menu di navigazione in modalità orizzontale per impostazione predefinita</string>
     <string name="title_advanced_startup">Mostra nella schermata iniziale</string>
     <string name="title_advanced_cards">Utilizza lo stile della carta al posto dello stile tabulare</string>
+    <string name="title_advanced_cards_beige">Usa uno sfondo beige quando si usa lo stile carta</string>
     <string name="title_advanced_date_header">Raggruppa per data</string>
     <string name="title_advanced_threading">Thread di conversazione</string>
     <string name="title_advanced_threading_unread">Mostra il numero di messaggi non letti nelle conversazioni</string>
@@ -460,6 +463,7 @@
     <string name="title_advanced_browse_hint">Scarica più messaggi quando scorri verso il basso</string>
     <string name="title_advanced_layout_hint">Puoi passare ad un layout più compatto e modificare la dimensione del testo del messaggio nel menu della barra di azione in alto nella vista dei messaggi</string>
     <string name="title_advanced_startup_hint">Premi a lungo su qualsiasi cartella nell\'elenco di cartelle per aggiungerla o rimuoverla dall\'elenco di cartelle unificate</string>
+    <string name="title_advanced_beige_hint">Solo temi chiari</string>
     <string name="title_advanced_date_hint">I messaggi sono raggruppati per data solo se sono ordinati cronologicamente</string>
     <string name="title_advanced_navbar_colorize_hint">Se funziona dipende dalla versione e variante di Android</string>
     <string name="title_advanced_threading_hint">Messaggi di gruppo relazionati a vicenda</string>
@@ -869,6 +873,7 @@
     <string name="title_queued">Invio messaggio in corso</string>
     <string name="title_queued_at">Il messaggio verrà inviato intorno a %1$s</string>
     <string name="title_sign">Firma</string>
+    <string name="title_verify">Verifica</string>
     <string name="title_encrypt">Crittografare</string>
     <string name="title_decrypt">Decifra</string>
     <string name="title_resync">Risincronizza</string>
@@ -1032,8 +1037,8 @@
     <string name="title_legend_section_compose">Scrivi</string>
     <string name="title_legend_section_keyboard">Tastiera</string>
     <string name="title_legend_oauth">Autorizzazione OAuth</string>
-    <string name="title_legend_primary_connected">Account connesso</string>
-    <string name="title_legend_primary_disconnected">Account disconnesso</string>
+    <string name="title_legend_folder_connected">Cartella connessa</string>
+    <string name="title_legend_folder_disconnected">Cartella disconnessa</string>
     <string name="title_legend_download_on">Scarica il contenuto del messaggio automaticamente</string>
     <string name="title_legend_download_off">Scarica il contenuto del messaggio su richiesta </string>
     <string name="title_legend_synchronize_on">Sincronizzazione ON</string>
@@ -1141,6 +1146,8 @@
     <string name="title_hint_sync">Scaricare i messaggi può richiedere molto tempo, a seconda della velocità del provider, della connessione internet e del dispositivo e dal numero di messaggi. Durante il download l\'app potrebbe funzionare più lentamente.</string>
     <string name="title_hint_battery">Poiché FairEmail per impostazione predefinita riceve sempre messaggi, Android segnalerà FairEmail come sempre attivo. Potrebbe quindi sembrare che FairEmail utilizzi sempre la carica della batteria, ma in realtà non è così.</string>
     <string name="title_hint_reformat">Per impostazione predefinita, FairEmail formatta i messaggi per motivi di privacy e sicurezza. Per visualizzare il messaggio originale, tocca l\'icona \'schermo intero\' sopra il testo del messaggio.</string>
+    <string name="title_hint_design">Il design è intenzionalmente non distraente ma mantenuto altamente funzionale. Ci sono molte opzioni per personalizzare l\'aspetto, ma si prega di capire che è impossibile rendere tutti completamente felici allo stesso tempo.</string>
+    <string name="title_hint_junk">Il filtraggio dello spam dovrebbe essere fatto dal server di posta elettronica e non può essere fatto in modo affidabile su un dispositivo alimentato a batteria con capacità limitate.</string>
     <string name="title_hint_contact_actions">Tieni premuto per le opzioni</string>
     <string name="title_hint_eml">Questo è un riepilogo del contenuto di un file di messaggio grezzo. Salva il messaggio grezzo con l\'icona di salvataggio nella barra azioni per vedere tutto il contenuto.</string>
     <string name="title_open_link">Apri collegamento</string>

@@ -183,8 +183,8 @@
     <string name="title_setup_theme_black">Beltza</string>
     <string name="title_setup_theme_reverse">Alderantzizkatu koloreak</string>
     <string name="title_setup_theme_dark">Iluna</string>
-    <string name="title_setup_theme_black_background">Atzeko plano beltza</string>
     <string name="title_setup_theme_system">Jarraitu sistema</string>
+    <string name="title_setup_theme_black_background">Atzeko plano beltza</string>
     <string name="title_setup_theme_system_hint">Jarraitu sistemako azala automatikoki txandakatuko ditu argia eta iluna eguna eta gauaren arabera, Androidek onartzen duenean</string>
     <string name="title_setup_advanced">Aurreratua</string>
     <string name="title_setup_options">Aukerak</string>
@@ -916,8 +916,6 @@
     <string name="title_legend_section_compose">Idatzi</string>
     <string name="title_legend_section_keyboard">Teklatua</string>
     <string name="title_legend_oauth">OAuth baimena</string>
-    <string name="title_legend_primary_connected">Kontua konektatuta</string>
-    <string name="title_legend_primary_disconnected">Kontua deskonektatuta</string>
     <string name="title_legend_download_on">Deskargatu mezuaren edukia automatikoki</string>
     <string name="title_legend_download_off">Deskargatu mezuaren eskaria eskatzen denean</string>
     <string name="title_legend_synchronize_on">Sinkronizazioa aktibo</string>

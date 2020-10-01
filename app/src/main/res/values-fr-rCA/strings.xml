@@ -139,6 +139,7 @@
     <string name="title_setup_gmail_rationale">Veuillez accorder les autorisations pour sélectionner un compte et lire votre nom</string>
     <string name="title_setup_gmail_permissions">Google vous demandera l’autorisation de lire, rédiger, envoyer et supprimer définitivement tous vos courriels. FairEmail ne supprimera jamais vos messages sans votre approbation.</string>
     <string name="title_setup_gmail_drafts">Si le dossier brouillons n’est pas accessible par IMAP, ceci peut être corrigé dans les paramètres de libellé Gmail</string>
+    <string name="title_setup_office_remark">Microsoft ne fournit pas ce type d\'autorisation pour les comptes Outlook, Live, Hotmail, etc.</string>
     <string name="title_setup_office_auth">L’erreur \'AUTHENTICATE failed\' peut être due à la désactivation d’IMAP/SMTP par l’administrateur</string>
     <string name="title_setup_oauth_rationale">Autoriser l’accès à votre compte %1$s</string>
     <string name="title_setup_oauth_authorize">Autoriser</string>
@@ -206,9 +207,10 @@
     <string name="title_setup_theme_black">Noir</string>
     <string name="title_setup_theme_black_and_white">Noir et blanc</string>
     <string name="title_setup_theme_reverse">Inverser les couleurs</string>
+    <string name="title_setup_theme_light">Clair</string>
     <string name="title_setup_theme_dark">Sombre</string>
-    <string name="title_setup_theme_black_background">Fond noir</string>
     <string name="title_setup_theme_system">Suivre le thème du système</string>
+    <string name="title_setup_theme_black_background">Fond noir</string>
     <string name="title_setup_theme_system_hint">Suivre le thème du système basculera automatiquement en mode clair/sombre le jour/la nuit si pris en charge par Android</string>
     <string name="title_setup_advanced">Avancé</string>
     <string name="title_setup_options">Options</string>
@@ -284,6 +286,7 @@
     <string name="title_advanced_landscape3">Afficher le menu de navigation en mode paysage par défaut</string>
     <string name="title_advanced_startup">Afficher sur l’écran de démarrage</string>
     <string name="title_advanced_cards">Utiliser le style carte au lieu du style tableau</string>
+    <string name="title_advanced_cards_beige">Utiliser un arrière-plan beige pour le style carte</string>
     <string name="title_advanced_date_header">Grouper par date</string>
     <string name="title_advanced_threading">Afficher en mode conversation</string>
     <string name="title_advanced_threading_unread">Afficher le nombre de messages non lus dans les conversations</string>
@@ -460,6 +463,7 @@
     <string name="title_advanced_browse_hint">Récupérer davantage de messages en faisant défiler vers le bas</string>
     <string name="title_advanced_layout_hint">Le passage à une présentation plus compacte et la modification de la taille du texte du message peuvent être effectués dans le menu de la barre d\'action supérieure en vue message</string>
     <string name="title_advanced_startup_hint">Appuyer longuement sur n’importe quel dossier de la liste pour l’ajouter ou le retirer de la liste des dossiers unifiés</string>
+    <string name="title_advanced_beige_hint">Thèmes clairs uniquement</string>
     <string name="title_advanced_date_hint">Les messages ne sont regroupés par date que s’ils sont triés par ordre chronologique</string>
     <string name="title_advanced_navbar_colorize_hint">Le fonctionnement dépend de la version et de la variante d’Android</string>
     <string name="title_advanced_threading_hint">Grouper les messages liés les uns aux autres</string>
@@ -564,6 +568,7 @@
     <string name="title_no_name">Nom manquant</string>
     <string name="title_no_email">Adresse courriel manquante</string>
     <string name="title_email_invalid">Adresse courriel non valide : \'%1$s\'</string>
+    <string name="title_address_duplicate">Duplication de l\'adresse \'%1$s\'</string>
     <string name="title_address_parse_error">Adresse \'%1$s\' non valide : %2$s</string>
     <string name="title_no_account">Compte manquant</string>
     <string name="title_no_host">Nom d’hôte manquant</string>
@@ -818,6 +823,8 @@
     <string name="title_style_list_numbered">Numérotée</string>
     <string name="title_style_font">Police de caractères</string>
     <string name="title_style_font_default">Par défaut</string>
+    <string name="title_style_blockquote">Bloc de citation</string>
+    <string name="title_style_strikethrough">Barré</string>
     <string name="title_style_clear">Effacer la mise en forme</string>
     <string name="title_style_link">Insérer un lien</string>
     <string name="title_add_image">Ajouter une image</string>
@@ -869,6 +876,7 @@
     <string name="title_queued">Envoi du message</string>
     <string name="title_queued_at">Le message sera envoyé vers %1$s</string>
     <string name="title_sign">Signer</string>
+    <string name="title_verify">Vérifier</string>
     <string name="title_encrypt">Chiffrer</string>
     <string name="title_decrypt">Déchiffrer</string>
     <string name="title_resync">Resynchroniser</string>
@@ -1032,8 +1040,8 @@
     <string name="title_legend_section_compose">Rédiger</string>
     <string name="title_legend_section_keyboard">Clavier</string>
     <string name="title_legend_oauth">Autorisation OAuth</string>
-    <string name="title_legend_primary_connected">Compte connecté</string>
-    <string name="title_legend_primary_disconnected">Compte déconnecté</string>
+    <string name="title_legend_folder_connected">Dossier connecté</string>
+    <string name="title_legend_folder_disconnected">Dossier déconnecté</string>
     <string name="title_legend_download_on">Télécharger le contenu des messages automatiquement</string>
     <string name="title_legend_download_off">Télécharger le contenu des messages sur demande</string>
     <string name="title_legend_synchronize_on">Synchronisation activée</string>
@@ -1141,6 +1149,8 @@
     <string name="title_hint_sync">Le téléchargement des messages peut prendre un certain temps selon la vitesse du fournisseur, de la connexion Internet, de l’appareil ainsi que du nombre de messages. Pendant le téléchargement des messages, l’application peut répondre plus lentement.</string>
     <string name="title_hint_battery">Étant donné que FairEmail reçoit toujours des messages par défaut, Android signalera FairEmail comme étant toujours actif. Ceci peut donner l’impression que FairEmail utilise de la pile en permanence alors que ce n’est pas le cas.</string>
     <string name="title_hint_reformat">Par défaut, FairEmail reformate les messages pour des raisons de confidentialité et de sécurité. Appuyez sur l’icône « plein écran » au-dessus du texte du message pour afficher le message original.</string>
+    <string name="title_hint_design">La conception est intentionnellement peu agrémentée mais elle reste très fonctionnelle. Il y a beaucoup d\'options pour personnaliser l\'apparence mais s\'il vous plaît, comprenez qu\'il est impossible de satisfaire pleinement tout le monde en même temps.</string>
+    <string name="title_hint_junk">Le filtrage du pourriel devrait être fait par le serveur de messagerie et ne peut pas être fait de manière fiable sur un appareil ayant des capacités limitées et alimenté par une batterie.</string>
     <string name="title_hint_contact_actions">Appui long pour les options</string>
     <string name="title_hint_eml">Ceci est l’aperçu d’un fichier contenant un message original. Enregistrez le message original au moyen de l’icône de sauvegarde dans la barre d’action pour afficher tout son contenu.</string>
     <string name="title_open_link">Ouvrir le lien</string>

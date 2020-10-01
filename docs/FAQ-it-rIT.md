@@ -76,6 +76,8 @@ Domande correlate:
 * ~~La crittografia con YubiKey risulta in un ciclo infinito. Ciò sembra essere causato da un [errore in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Lo scorrimento verso una posizione collegata internamente nei messaggi originali non funziona. Ciò non può essere risolto perché la vista originale dei messaggi è contenuta in una vista a scorrimento.
 * Un'anteprima di un testo di un messaggio non (sempre) appare negli orologi Samsung perché [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) sembra venga ignorato. Le anteprime dei messaggi sono note per essere visualizzate correttamente su Pebble 2, Fitbit Charge 3 e Mi band 3. Vedi anche [queste domande frequenti](#user-content-faq126).
+* Un [errore in Android](https://issuetracker.google.com/issues/37068143) a volte provoca un crash con *... Spostamento non valido: ... L'intervallo valido è ... quando il testo è selezionato e tocca all'esterno del testo selezionato. Questo bug è stato risolto in Android 6.0.1.</li>
+* Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.</ul>
 
 ## Funzionalità pianificate
 
@@ -95,8 +97,8 @@ Domande correlate:
 * ~~Programmazione notifiche nuovo messaggio per account~~ (implementato aggiungendo regole di orario in modo che i messaggi possano essere silenziati durante periodi scelti)
 * ~~Copiare account e identità~~
 * ~~Zoom con selezione~~ (non è possibile in modo affidabile in una lista scorrevole; si può invece ingrandire l'intero messaggio)
-* ~~More compact folder view~~
-* ~~Compose lists and tables~~ (this requires a rich text editor, see [this FAQ](#user-content-faq99))
+* ~~Visualizzazione delle cartelle più compatta~~
+* ~~Creare liste e tabelle~~ (richiede un rich text editor, vedi [questa FAQ](#user-content-faq99))
 * ~~Pinch zoom text size~~
 * ~~Display GIFs~~
 * ~~Themes~~ (a grey light and dark theme were added because this is what most people seems to want)
@@ -151,24 +153,24 @@ Il design è basato su molte discussioni e se vuoi puoi discuterne anche tu [in 
 * [(31) Come posso usare i collegamenti rapidi previsti?](#user-content-faq31)
 * [(32) Come posso controllare se leggere un'email è davvero sicuro?](#user-content-faq32)
 * [(33) Perché gli indirizzi modificati dei mittenti non funzionano?](#user-content-faq33)
-* [(34) How are identities matched?](#user-content-faq34)
-* [(35) Why should I be careful with viewing images, attachments, and the original message?](#user-content-faq35)
-* [(36) How are settings files encrypted?](#user-content-faq36)
-* [(37) How are passwords stored?](#user-content-faq37)
-* [(39) How can I reduce the battery usage of FairEmail?](#user-content-faq39)
-* [(40) How can I reduce the network usage of FairEmail?](#user-content-faq40)
-* [(41) How can I fix the error 'Handshake failed' ?](#user-content-faq41)
-* [(42) Can you add a new provider to the list of providers?](#user-content-faq42)
-* [(43) Can you show the original ... ?](#user-content-faq43)
-* [(44) Can you show contact photos / identicons in the sent folder?](#user-content-faq44)
-* [(45) How can I fix 'This key is not available. To use it, you must import it as one of your own!' ?](#user-content-faq45)
-* [(46) Why does the message list keep refreshing?](#user-content-faq46)
-* [(47) How do I solve the error 'No primary account or no drafts folder' ?](#user-content-faq47)
-* [~~(48) How do I solve the error 'No primary account or no archive folder' ?~~](#user-content-faq48)
-* [(49) How do I fix 'An outdated app sent a file path instead of a file stream' ?](#user-content-faq49)
-* [(50) Can you add an option to synchronize all messages?](#user-content-faq50)
-* [(51) How are folders sorted?](#user-content-faq51)
-* [(52) Why does it take some time to reconnect to an account?](#user-content-faq52)
+* [(34) Come vengono abbinate le identità?](#user-content-faq34)
+* [(35) Perché dovrei fare attenzione quando visualizzo immagini, allegati e il messaggio originale?](#user-content-faq35)
+* [(36) Come sono crittografati i file delle impostazioni?](#user-content-faq36)
+* [(37) Come vengono memorizzate le password?](#user-content-faq37)
+* [(39) Come posso ridurre l'uso della batteria di FairEmail?](#user-content-faq39)
+* [(40) Come posso ridurre l'utilizzo rete di FairEmail?](#user-content-faq40)
+* [(41) Come posso correggere l'errore 'Handshake non riuscito'?](#user-content-faq41)
+* [(42) È possibile aggiungere un nuovo provider all'elenco dei provider?](#user-content-faq42)
+* [(43) Riesci a mostrare l'originale ... ?](#user-content-faq43)
+* [(44) È possibile mostrare le foto dei contatti/ identicon nella cartella 'messaggi inviati'?](#user-content-faq44)
+* [(45) Come posso risolvere 'Questa chiave non è disponibile. Per usarla, devi importarla come una delle tue!' ?](#user-content-faq45)
+* [(46) Perché la lista dei messaggi continua ad aggiornarsi?](#user-content-faq46)
+* [(47) Come risolvo l'errore 'Nessun account primario o nessuna cartella bozze'?](#user-content-faq47)
+* [~~(48) Come posso risolvere l'errore 'Nessun account primario o nessuna cartella di archivio' ?~~](#user-content-faq48)
+* [(49) Come faccio a risolvere 'Un'app obsoleta ha inviato un percorso di file invece di un flusso di file'?](#user-content-faq49)
+* [(50) È possibile aggiungere un'opzione per sincronizzare tutti i messaggi?](#user-content-faq50)
+* [(51) Come vengono ordinate le cartelle?](#user-content-faq51)
+* [(52) Perché ci vuole tempo per riconnettersi a un account?](#user-content-faq52)
 * [(53) Can you stick the message action bar to the top/bottom?](#user-content-faq53)
 * [~~(54) How do I use a namespace prefix?~~](#user-content-faq54)
 * [(55) How can I mark all messages as read / move or delete all messages?](#user-content-faq55)
@@ -452,7 +454,9 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 
 You can use the quick setup wizard to easily setup a Gmail account and identity.
 
-If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password or enable two factor authentication and use an app specific password. Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
+If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to setup an account and identity via setup step 1 and 2 instead of via the quick setup wizard.
+
+Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
@@ -482,7 +486,7 @@ When "less secure apps" is not enabled, you'll get the error *Authentication fai
 
 <br />
 
-*Generale*
+*General*
 
 You might get the alert "*Please log in via your web browser*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.
 
@@ -531,7 +535,7 @@ Alternatively, you can enable *Allow editing sender address* in the advanced set
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
-Vedi [queste Domande frequenti](#user-content-faq33) sulla modifica del nome utente degli indirizzi e-mail.
+See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 
 <br />
 
@@ -560,7 +564,7 @@ Vedi [queste Domande frequenti](#user-content-faq33) sulla modifica del nome ute
 <a name="faq12"></a>
 **(12) How does encryption/decryption work?**
 
-*Generali*
+*General*
 
 Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
 
@@ -594,6 +598,8 @@ You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packa
 
 **Important**: to let apps like FairEmail reliably connect to the OpenKeychain service to encrypt/decrypt messages, it might be necessary to disable battery optimizations for the OpenKeychain app.
 
+**Important**: the OpenKeychain app reportedly needs contacts permission to work correctly.
+
 **Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
 FairEmail will send the [Autocrypt](https://autocrypt.org/) header for use by other email clients, but only for signed and encrypted messages because too many email servers have problems with the often long Autocrypt header. Note that the most secure way to start an encrypted email exchange is by sending signed messages first. Received Autocrypt headers will be sent to the OpenKeychain app for storage on verifying a signature or decrypting a message.
@@ -622,6 +628,8 @@ Encrypting a message requires the public key(s) of the recipient(s). Signing a m
 Private keys are stored by Android and can be imported via the Android advanced security settings. There is a shortcut (button) for this in the privacy settings. Android will ask you to set a PIN, pattern, or password if you didn't before. If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
+
+Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
 
@@ -883,6 +891,8 @@ SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia
 * The attachment size limit for Outlook and Office 365 [is 20 MB](https://support.microsoft.com/en-us/help/2813269/attachment-size-exceeds-the-allowable-limit-error-when-you-add-a-large)
 * The attachment size limit for Yahoo [is 25 MB](https://help.yahoo.com/kb/SLN5673.html)
 * *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
+* *501 Errore di sintassi – linea troppo lunga* è spesso causata dall'utilizzo di una lunga intestazione Autocrypt
+* *503 5.5.0 Recipient already specified* mostly means that an address is being used both as TO and CC address
 
 **Gmail errors**
 
@@ -1068,7 +1078,7 @@ Note that this is independent of receiving messages.
 
 Identities are as expected matched by account. For incoming messages the *to*, *cc*, *bcc*, *from* and *(X-)delivered/envelope/original-to* addresses will be checked (in this order) and for outgoing messages (drafts, outbox and sent) only the *from* addresses will be checked.
 
-The matched address will be shown as *via* in the addresses section.
+The matched address will be shown as *via* in the addresses section of received messages (between the message header and message text).
 
 Note that identities needs to be enabled to be able to be matched and that identities of other accounts will not be considered.
 
@@ -1205,7 +1215,7 @@ The error '*Handshake failed ... SSLV3_ALERT_ILLEGAL_PARAMETER ...*' is either c
 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4, which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
 
-The error '*Handshake failed ... UNSUPPORTED_PROTOCOL ...*' might be caused by enabling hardening connections in the connection settings or by Android not supporting older protocols anymore, like SSLv3.
+The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION ...*' might be caused by enabling hardening connections in the connection settings or by Android not supporting older protocols anymore, like SSLv3.
 
 Android 8 Oreo and later [do not support](https://developer.android.com/about/versions/oreo/android-8.0-changes#security-all) SSLv3 anymore. There is no way to workaround lacking RC4 and SSLv3 support because it has completely been removed from Android (which should say something).
 
@@ -1420,6 +1430,7 @@ For security reasons the files with the original message texts are not accessibl
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
+* Did you know that you can insert the email addresses of an Android contact group via the three dots overflow menu?
 * Did you know that if you select text and hit reply, only the selected text will be quoted?
 
 <br />
@@ -2374,9 +2385,9 @@ In the account settings (Setup, step 1, Manage, tap account) you can enable *Lea
 
 Since the IMAP protocol is meant to synchronize two ways, deleting a message from the device would result in fetching the message again when synchronizing again.
 
-However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list.
+However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list. Basically this is the same as "leave on server" of the POP3 protocol with the advantage that you can show the messages again when needed.
 
-It is also possible to set the swipe left or right action to hide a message.
+Note that it is possible to set the swipe left or right action to hide a message.
 
 <br />
 

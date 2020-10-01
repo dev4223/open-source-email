@@ -68,6 +68,7 @@ import android.text.style.ParagraphStyle;
 import android.text.style.QuoteSpan;
 import android.text.style.URLSpan;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -126,6 +127,7 @@ import org.bouncycastle.cms.RecipientInfoGenerator;
 import org.bouncycastle.cms.SignerInfoGenerator;
 import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
 import org.bouncycastle.cms.jcajce.JceCMSContentEncryptorBuilder;
+import org.bouncycastle.cms.jcajce.JceKeyAgreeRecipientInfoGenerator;
 import org.bouncycastle.cms.jcajce.JceKeyTransRecipientInfoGenerator;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.DigestCalculatorProvider;
@@ -578,13 +580,15 @@ public class FragmentCompose extends FragmentBase {
                             if (s > 0 &&
                                     added + 1 > s && e > added + 1 &&
                                     text.charAt(s - 1) == '\n' && text.charAt(e - 1) == '\n') {
-                                BulletSpan b1 = clone(span, span.getClass(), etBody.getContext());
-                                text.setSpan(b1, s, added + 1, f);
-                                Log.i("Span " + s + "..." + (added + 1));
+                                if (e - s > 2) {
+                                    BulletSpan b1 = clone(span, span.getClass(), etBody.getContext());
+                                    text.setSpan(b1, s, added + 1, f);
+                                    Log.i("Span " + s + "..." + (added + 1));
 
-                                BulletSpan b2 = clone(b1, span.getClass(), etBody.getContext());
-                                text.setSpan(b2, added + 1, e, f);
-                                Log.i("Span " + (added + 1) + "..." + e);
+                                    BulletSpan b2 = clone(b1, span.getClass(), etBody.getContext());
+                                    text.setSpan(b2, added + 1, e, f);
+                                    Log.i("Span " + (added + 1) + "..." + e);
+                                }
 
                                 renum = true;
                                 text.removeSpan(span);
@@ -802,6 +806,11 @@ public class FragmentCompose extends FragmentBase {
         // Initialize
         setHasOptionsMenu(true);
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        //boolean beige = prefs.getBoolean("beige", true);
+        //if (beige && !Helper.isDarkTheme(getContext()))
+        //    view.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.lightColorBackground_cards_beige));
+
         etExtra.setHint("");
         tvDomain.setText(null);
         tvPlainTextOnly.setVisibility(View.GONE);
@@ -828,7 +837,6 @@ public class FragmentCompose extends FragmentBase {
 
         final DB db = DB.getInstance(getContext());
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         final boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
         final boolean suggest_received = prefs.getBoolean("suggest_received", false);
         final boolean suggest_frequently = prefs.getBoolean("suggest_frequently", false);
@@ -879,7 +887,7 @@ public class FragmentCompose extends FragmentBase {
                         else {
                             String uri = cursor.getString(columnIndex);
                             if (uri == null)
-                                photo.setImageResource(R.drawable.baseline_person_24);
+                                photo.setImageResource(R.drawable.twotone_person_24);
                             else
                                 photo.setImageURI(Uri.parse(uri));
                         }
@@ -1330,6 +1338,19 @@ public class FragmentCompose extends FragmentBase {
                 onMenuEncrypt();
             }
         });
+        ib.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                int[] pos = new int[2];
+                ib.getLocationOnScreen(pos);
+                int dp24 = Helper.dp2pixels(v.getContext(), 24);
+
+                Toast toast = ToastEx.makeTextBw(getContext(), getString(R.string.title_encrypt), Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.TOP | Gravity.START, pos[0], pos[1] + dp24);
+                toast.show();
+                return true;
+            }
+        });
 
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -1353,15 +1374,15 @@ public class FragmentCompose extends FragmentBase {
         TextView tv = v.findViewById(R.id.text);
         ib.setEnabled(state == State.LOADED);
         if (EntityMessage.PGP_SIGNONLY.equals(encrypt) || EntityMessage.SMIME_SIGNONLY.equals(encrypt)) {
-            ib.setImageResource(R.drawable.baseline_gesture_24);
+            ib.setImageResource(R.drawable.twotone_gesture_24);
             ib.setImageTintList(null);
             tv.setText(EntityMessage.PGP_SIGNONLY.equals(encrypt) ? "P" : "S");
         } else if (EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) || EntityMessage.SMIME_SIGNENCRYPT.equals(encrypt)) {
-            ib.setImageResource(R.drawable.baseline_lock_24);
+            ib.setImageResource(R.drawable.twotone_lock_24);
             ib.setImageTintList(ColorStateList.valueOf(colorEncrypt));
             tv.setText(EntityMessage.PGP_SIGNENCRYPT.equals(encrypt) ? "P" : "S");
         } else {
-            ib.setImageResource(R.drawable.baseline_lock_open_24);
+            ib.setImageResource(R.drawable.twotone_lock_open_24);
             ib.setImageTintList(null);
             tv.setText(null);
         }
@@ -2184,6 +2205,10 @@ public class FragmentCompose extends FragmentBase {
                 int start = args.getInt("start");
 
                 SpannableStringBuilder s = new SpannableStringBuilder(body);
+                if (start < 0)
+                    start = 0;
+                if (start > s.length())
+                    start = s.length();
 
                 for (Uri uri : uris) {
                     EntityAttachment attachment = addAttachment(context, id, uri, image, resize, privacy);
@@ -2696,7 +2721,14 @@ public class FragmentCompose extends FragmentBase {
                 CMSSignedDataGenerator cmsGenerator = new CMSSignedDataGenerator();
                 cmsGenerator.addCertificates(store);
 
-                ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA")
+                String algorithm = privkey.getAlgorithm();
+                Log.i("Private key algorithm=" + algorithm);
+                if (TextUtils.isEmpty(algorithm))
+                    algorithm = "RSA";
+                else if ("EC".equals(algorithm))
+                    algorithm = "ECDSA";
+
+                ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256with" + algorithm)
                         .build(privkey);
                 DigestCalculatorProvider digestCalculator = new JcaDigestCalculatorProviderBuilder()
                         .build();
@@ -2804,9 +2836,22 @@ public class FragmentCompose extends FragmentBase {
 
                 // Encrypt
                 CMSEnvelopedDataGenerator cmsEnvelopedDataGenerator = new CMSEnvelopedDataGenerator();
-                for (X509Certificate cert : certs) {
-                    RecipientInfoGenerator gen = new JceKeyTransRecipientInfoGenerator(cert);
+                if ("EC".equals(privkey.getAlgorithm())) {
+                    JceKeyAgreeRecipientInfoGenerator gen = new JceKeyAgreeRecipientInfoGenerator(
+                            CMSAlgorithm.ECDH_SHA256KDF,
+                            privkey,
+                            chain[0].getPublicKey(),
+                            CMSAlgorithm.AES128_WRAP);
+                    for (X509Certificate cert : certs)
+                        gen.addRecipient(cert);
                     cmsEnvelopedDataGenerator.addRecipientInfoGenerator(gen);
+                    // https://security.stackexchange.com/a/53960
+                    // throw new IllegalArgumentException("ECDSA cannot be used for encryption");
+                } else {
+                    for (X509Certificate cert : certs) {
+                        RecipientInfoGenerator gen = new JceKeyTransRecipientInfoGenerator(cert);
+                        cmsEnvelopedDataGenerator.addRecipientInfoGenerator(gen);
+                    }
                 }
 
                 File einput = new File(context.getCacheDir(), "smime_encrypt." + draft.id);
@@ -3686,6 +3731,11 @@ public class FragmentCompose extends FragmentBase {
                                                         remove = true;
                                                     else {
                                                         Node next = node.nextSibling();
+                                                        if (next == null) {
+                                                            Node parent = node.parent();
+                                                            if (parent != null)
+                                                                next = parent.nextSibling();
+                                                        }
                                                         if (next != null && "br".equals(next.nodeName()))
                                                             remove = true;
                                                     }
@@ -3992,7 +4042,7 @@ public class FragmentCompose extends FragmentBase {
             bottom_navigation.getMenu().findItem(R.id.action_redo).setVisible(data.draft.revision < data.draft.revisions);
 
             if (args.getBoolean("incomplete"))
-                Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_INDEFINITE)
+                Snackbar.make(view, R.string.title_attachments_incomplete, Snackbar.LENGTH_LONG)
                         .setGestureInsetBottomIgnored(true).show();
 
             DB db = DB.getInstance(getContext());
@@ -4397,7 +4447,11 @@ public class FragmentCompose extends FragmentBase {
 
                         // Restore revision
                         Log.i("Restoring revision=" + draft.revision);
-                        body = Helper.readText(draft.getFile(context, draft.revision));
+                        File file = draft.getFile(context, draft.revision);
+                        if (file.exists())
+                            body = Helper.readText(file);
+                        else
+                            Log.e("Missing revision=" + file);
 
                         dirty = true;
                     }
@@ -4452,6 +4506,23 @@ public class FragmentCompose extends FragmentBase {
                                 checkAddress(ato, context);
                                 checkAddress(acc, context);
                                 checkAddress(abcc, context);
+
+                                List<String> all = new ArrayList<>();
+                                List<String> dup = new ArrayList<>();
+                                for (InternetAddress a : Helper.concat(Helper.concat(ato, acc), abcc)) {
+                                    String email = a.getAddress();
+                                    if (TextUtils.isEmpty(email))
+                                        continue;
+                                    if (all.contains(a.getAddress()))
+                                        dup.add(email);
+                                    else
+                                        all.add(email);
+                                }
+
+                                if (dup.size() > 0)
+                                    throw new AddressException(context.getString(
+                                            R.string.title_address_duplicate,
+                                            TextUtils.join(", ", dup)));
                             } catch (AddressException ex) {
                                 args.putString("address_error", ex.getMessage());
                             }
@@ -4926,7 +4997,7 @@ public class FragmentCompose extends FragmentBase {
                     bodyBuilder.setSpan(q,
                             bodyBuilder.getSpanStart(quoteSpan),
                             bodyBuilder.getSpanEnd(quoteSpan),
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            bodyBuilder.getSpanFlags(quoteSpan));
                     bodyBuilder.removeSpan(quoteSpan);
                 }
 

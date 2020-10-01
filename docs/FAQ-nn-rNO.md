@@ -76,6 +76,8 @@ Relaterte spørsmål:
 * ~~Kryptering med YubiKey resulterer i en uendelig loop. Dette ser ut til å være forårsaket av en [feil i OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Å rulle til et internt koblet sted i originale meldinger fungerer ikke. Dette kan ikke løses fordi den opprinnelige meldingsvisningen finnes i en rullende visning.
 * En forhåndsvisning av en meldingstekst vises ikke (alltid) på Samsung-klokker fordi [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) ser ut til å bli ignorert. Det er kjent at forhåndsvisningstekster for meldinger vises riktig på Pebble 2, Fitbit Charge 3 og Mi band 3 wearables. Se også [denne vanlige FAQ](#user-content-faq126).
+* A [bug in Android 6.0](https://issuetracker.google.com/issues/37068143) causes a crash with *... Invalid offset: ... Valid range is ...* when text is selected and tapping outside of the selected text. This bug has been fixed in Android 6.0.1.
+* Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.
 
 ## Planlagte funksjoner
 
@@ -103,49 +105,49 @@ Relaterte spørsmål:
 * ~~Hvilken dagstid som helst~~ (hvilken som helst dag passer egentlig ikke inn i fra/til dato/klokkeslett)
 * ~~Send som vedlegg~~
 * ~~Widget for valgt konto~~
-* ~~Remind to attach files~~
-* ~~Select domains to show images for~~ (this will be too complicated to use)
-* ~~Unified starred messages view~~ (there is already a special search for this)
-* ~~Move notification action~~
-* ~~S/MIME support~~
-* ~~Search for settings~~
+* ~~Påminn om å legge ved filer~~
+* ~~Velg domener for å vise bilder for~~ (dette vil være for komplisert å bruke)
+* ~~Enhetlige stjernemerkede meldings visning~~ (det er allerede et spesielt søk for dette)
+* ~~Flytt varselhandling~~
+* ~~S/MIME støtte~~
+* ~Søk etter innstillinger~~
 
-Anything on this list is in random order and *might* be added in the near future.
+Alt på denne listen er i tilfeldig rekkefølge, og *kan* legges til i nær fremtid.
 
-## Frequently requested features
+## Ofte etterspurte funksjoner
 
-The design is based on many discussions and if you like you can discuss about it [in this forum](https://forum.xda-developers.com/android/apps-games/source-email-t3824168) too. The goal of the design is to be minimalistic (no unnecessary menus, buttons, etc) and non distracting (no fancy colors, animations, etc). All displayed things should be useful in one or another way and should be carefully positioned for easy usage. Fonts, sizes, colors, etc should be material design whenever possible.
+Designet er basert på mange diskusjoner, og hvis du vil, kan du diskutere om det [i dette forumet](https://forum.xda-developers.com/android/apps-games/source-email-t3824168). Målet med designet er å være minimalistisk (ingen unødvendige menyer, knapper osv.) Og ikke distraherende (ingen fancy farger, animasjoner osv.). Alle viste ting skal være nyttige på en eller annen måte og bør være nøye plassert for enkel bruk. Skrifttyper, størrelser, farger osv. Bør være material design når det er mulig.
 
-## Frequently Asked Questions
+## Ofte stilte spørsmål
 
-* [(1) Which permissions are needed and why?](#user-content-faq1)
-* [(2) Why is there a permanent notification shown?](#user-content-faq2)
-* [(3) What are operations and why are they pending?](#user-content-faq3)
-* [(4) How can I use an invalid security certificate / empty password / plain text connection?](#user-content-faq4)
-* [(5) How can I customize the message view?](#user-content-faq5)
-* [(6) How can I login to Gmail / G suite?](#user-content-faq6)
-* [(7) Why are sent messages not appearing (directly) in the sent folder?](#user-content-faq7)
-* [(8) Can I use a Microsoft Exchange account?](#user-content-faq8)
-* [(9) What are identities / how do I add an alias?](#user-content-faq9)
-* [~~(11) Why is POP not supported?~~](#user-content-faq11)
-* [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
-* [(12) How does encryption/decryption work?](#user-content-faq12)
-* [(13) How does search on device/server work?](#user-content-faq13)
-* [(14) How can I set up an Outlook / Live / Hotmail account?](#user-content-faq14)
-* [(15) Why does the message text keep loading?](#user-content-faq15)
-* [(16) Why are messages not being synchronized?](#user-content-faq16)
-* [~~(17) Why does manual synchronize not work?~~](#user-content-faq17)
-* [(18) Why is the message preview not always shown?](#user-content-faq18)
-* [(19) Why are the pro features so expensive?](#user-content-faq19)
-* [(20) Can I get a refund?](#user-content-faq20)
-* [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What does account/folder error ... mean?](#user-content-faq22)
-* [(23) Why do I get alert .. ?](#user-content-faq23)
-* [(24) What is browse messages on the server?](#user-content-faq24)
-* [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
-* [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
-* [(27) How can I distinguish between embedded and external images?](#user-content-faq27)
-* [(28) How can I manage status bar notifications?](#user-content-faq28)
+* [(1) Hvilke tillatelser er nødvendig og hvorfor?](#user-content-faq1)
+* [(2) Hvorfor vises det en permanent varsling?](#user-content-faq2)
+* [(3) Hva er operasjoner og hvorfor venter de?](#user-content-faq3)
+* [(4) Hvordan kan jeg bruke et ugyldig sikkerhetssertifikat / tomt passord / vanlig tekstforbindelse?](#user-content-faq4)
+* [(5) Hvordan kan jeg tilpasse meldingsvisningen?](#user-content-faq5)
+* [(6) Hvordan kan jeg logge på Gmail / G suite?](#user-content-faq6)
+* [(7) Hvorfor vises ikke sendte meldinger (direkte) i den sendte mappen?](#user-content-faq7)
+* [(8) Kan jeg bruke en Microsoft Exchange-konto?](#user-content-faq8)
+* [(9) Hva er identiteter / hvordan legger jeg til et alias?](#user-content-faq9)
+* [~~(11) Hvorfor støttes ikke POP?~~](#user-content-faq11)
+* [~~(10) Hva betyr 'UIDPLUS støttes ikke'?~~](#user-content-faq10)
+* [(12) Hvordan fungerer kryptering/dekryptering?](#user-content-faq12)
+* [(13) Hvordan fungerer søk på enhet/server?](#user-content-faq13)
+* [(14) Hvordan kan jeg sette opp en Outlook / Live / Hotmail-konto?](#user-content-faq14)
+* [(15) Hvorfor fortsetter meldingsteksten å lastes inn?](#user-content-faq15)
+* [(16) Hvorfor synkroniseres ikke meldinger?](#user-content-faq16)
+* [~~(17) Hvorfor fungerer ikke manuell synkronisering?~~](#user-content-faq17)
+* [(18) Hvorfor vises ikke altid forhåndsvisning av meldingen?](#user-content-faq18)
+* [(19) Hvorfor er pro-funksjonene så dyre?](#user-content-faq19)
+* [(20) Kan jeg få refusjon?](#user-content-faq20)
+* [(21) Hvordan aktiverer jeg varsellyset?](#user-content-faq21)
+* [(22) Hva betyr konto/mappefeil?](#user-content-faq22)
+* [(23) Hvorfor får jeg varsel.. ?](#user-content-faq23)
+* [(24) Hva er bla i meldinger på server?](#user-content-faq24)
+* [(25) Hvorfor kan jeg ikke velge/åpne/lagre et bilde, et vedlegg eller en fil?](#user-content-faq25)
+* [(26) Kan jeg hjelpe til med å oversette FairEmail på mitt eget språk?](#user-content-faq26)
+* [(27) Hvordan kan jeg skille mellom innebygde og eksterne bilder?](#user-content-faq27)
+* [(28) Hvordan kan jeg administrere statuslinjevarsler?](#user-content-faq28)
 * [(29) How can I get new message notifications for other folders?](#user-content-faq29)
 * [(30) How can I use the provided quick settings?](#user-content-faq30)
 * [(31) How can I use the provided shortcuts?](#user-content-faq31)
@@ -452,7 +454,9 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 
 You can use the quick setup wizard to easily setup a Gmail account and identity.
 
-If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password or enable two factor authentication and use an app specific password. Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
+If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to setup an account and identity via setup step 1 and 2 instead of via the quick setup wizard.
+
+Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
@@ -482,7 +486,7 @@ When "less secure apps" is not enabled, you'll get the error *Authentication fai
 
 <br />
 
-*Generelt*
+*General*
 
 You might get the alert "*Please log in via your web browser*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.
 
@@ -560,7 +564,7 @@ See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 <a name="faq12"></a>
 **(12) How does encryption/decryption work?**
 
-*Generelt*
+*General*
 
 Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
 
@@ -594,6 +598,8 @@ You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packa
 
 **Important**: to let apps like FairEmail reliably connect to the OpenKeychain service to encrypt/decrypt messages, it might be necessary to disable battery optimizations for the OpenKeychain app.
 
+**Important**: the OpenKeychain app reportedly needs contacts permission to work correctly.
+
 **Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
 FairEmail will send the [Autocrypt](https://autocrypt.org/) header for use by other email clients, but only for signed and encrypted messages because too many email servers have problems with the often long Autocrypt header. Note that the most secure way to start an encrypted email exchange is by sending signed messages first. Received Autocrypt headers will be sent to the OpenKeychain app for storage on verifying a signature or decrypting a message.
@@ -622,6 +628,8 @@ Encrypting a message requires the public key(s) of the recipient(s). Signing a m
 Private keys are stored by Android and can be imported via the Android advanced security settings. There is a shortcut (button) for this in the privacy settings. Android will ask you to set a PIN, pattern, or password if you didn't before. If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
+
+Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
 
@@ -883,6 +891,8 @@ SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia
 * The attachment size limit for Outlook and Office 365 [is 20 MB](https://support.microsoft.com/en-us/help/2813269/attachment-size-exceeds-the-allowable-limit-error-when-you-add-a-large)
 * The attachment size limit for Yahoo [is 25 MB](https://help.yahoo.com/kb/SLN5673.html)
 * *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
+* *501 Syntax error - line too long* is often caused by using a long Autocrypt header
+* *503 5.5.0 Recipient already specified* mostly means that an address is being used both as TO and CC address
 
 **Gmail errors**
 
@@ -1068,7 +1078,7 @@ Note that this is independent of receiving messages.
 
 Identities are as expected matched by account. For incoming messages the *to*, *cc*, *bcc*, *from* and *(X-)delivered/envelope/original-to* addresses will be checked (in this order) and for outgoing messages (drafts, outbox and sent) only the *from* addresses will be checked.
 
-The matched address will be shown as *via* in the addresses section.
+The matched address will be shown as *via* in the addresses section of received messages (between the message header and message text).
 
 Note that identities needs to be enabled to be able to be matched and that identities of other accounts will not be considered.
 
@@ -1205,7 +1215,7 @@ The error '*Handshake failed ... SSLV3_ALERT_ILLEGAL_PARAMETER ...*' is either c
 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4, which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
 
-The error '*Handshake failed ... UNSUPPORTED_PROTOCOL ...*' might be caused by enabling hardening connections in the connection settings or by Android not supporting older protocols anymore, like SSLv3.
+The error '*Handshake failed ... UNSUPPORTED_PROTOCOL or TLSV1_ALERT_PROTOCOL_VERSION ...*' might be caused by enabling hardening connections in the connection settings or by Android not supporting older protocols anymore, like SSLv3.
 
 Android 8 Oreo and later [do not support](https://developer.android.com/about/versions/oreo/android-8.0-changes#security-all) SSLv3 anymore. There is no way to workaround lacking RC4 and SSLv3 support because it has completely been removed from Android (which should say something).
 
@@ -1420,6 +1430,7 @@ For security reasons the files with the original message texts are not accessibl
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
+* Did you know that you can insert the email addresses of an Android contact group via the three dots overflow menu?
 * Did you know that if you select text and hit reply, only the selected text will be quoted?
 
 <br />
@@ -2374,9 +2385,9 @@ In the account settings (Setup, step 1, Manage, tap account) you can enable *Lea
 
 Since the IMAP protocol is meant to synchronize two ways, deleting a message from the device would result in fetching the message again when synchronizing again.
 
-However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list.
+However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list. Basically this is the same as "leave on server" of the POP3 protocol with the advantage that you can show the messages again when needed.
 
-It is also possible to set the swipe left or right action to hide a message.
+Note that it is possible to set the swipe left or right action to hide a message.
 
 <br />
 

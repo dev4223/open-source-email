@@ -152,6 +152,9 @@ public class ApplicationEx extends Application {
         Map<String, String> crumb = new HashMap<>();
         crumb.put("free", Integer.toString(Log.getFreeMemMb()));
         Log.breadcrumb("low", crumb);
+
+        ContactInfo.clearCache(this, false);
+
         super.onLowMemory();
     }
 
@@ -311,6 +314,10 @@ public class ApplicationEx extends Application {
                 editor.putInt("query_threads", 2);
         } else if (version < 1274)
             ContactInfo.clearCache(context); // Favicon background
+        else if (version < 1336) {
+            if (!prefs.contains("beige"))
+                editor.putBoolean("beige", false);
+        }
 
         if (version < BuildConfig.VERSION_CODE)
             editor.putInt("previous_version", version);

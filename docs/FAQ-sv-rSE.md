@@ -1,6 +1,6 @@
-# FairEmail support
+# FairEmail Support
 
-Om du har en fråga, vänligen kontrollera de vanliga frågorna nedan först. Längst ner kan du ta reda på hur du ställer andra frågor, begär funktioner och rapporterar buggar.
+Om du har en fråga, vänligen kontrollera de vanligaste ställda frågorna först. Längst ner kan du ta reda på hur du ställer andra frågor, begär funktioner och rapporterar buggar.
 
 ## Index
 
@@ -76,6 +76,8 @@ Relaterade frågor:
 * ~~Kryptering med YubiKey resulterar i en oändlig loop. Detta verkar bero på ett [fel i OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Att bläddra till en internt länkad plats i originalmeddelanden fungerar inte. Detta kan inte rättas till eftersom den ursprungliga meddelandevyn finns i en rullande vy.
 * En förhandsvisning av ett meddelande visas inte (alltid) på Samsung klockor eftersom [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) verkar ignoreras. Meddelanden är kända för att visas korrekt på Pebble 2, Fitbit Charge 3 och Mi band 3 wearables. Se även [denna FAQ](#user-content-faq126).
+* En [bugg i Android 6.0](https://issuetracker.google.com/issues/37068143) orsakar en krasch med *... Ogiltig offset: ... Giltigt intervall är ...* när text är markerad och knackar utanför den valda texten. Detta fel har rättats i Android 6.0.1.
+* Interna (ankare) länkar kommer inte att fungera eftersom ursprungliga meddelanden visas i en inbäddad WebView i en rullande vy (meddelandelistan). Detta är en Android-begränsning som inte kan lösas eller arbetas runt.
 
 ## Planerade funktioner
 
@@ -230,7 +232,7 @@ Designen bygger på många diskussioner och om du vill kan du diskutera det [i d
 * [(112) Vilken e-postleverantör rekommenderar du?](#user-content-faq112)
 * [(113) Hur fungerar biometrisk autentisering?](#user-content-faq113)
 * [(114) Kan du lägga till en import för inställningarna för andra e-postappar?](#user-content-faq114)
-* [(115) Can you add email address chips?](#user-content-faq115)
+* [(115) Kan du lägga till e-postadresschips?](#user-content-faq115)
 * [~~(116) Hur kan jag visa bilder i meddelanden från betrodda avsändare som standard?~~](#user-content-faq116)
 * [(117) Kan du hjälpa mig att återställa mitt köp?](#user-content-faq117)
 * [(118) Vad gör "Ta bort spårningsparametrar" exakt?](#user-content-faq118)
@@ -271,7 +273,7 @@ Designen bygger på många diskussioner och om du vill kan du diskutera det [i d
 * [(153) Varför fungerar inte det att permanent radera Gmail-meddelandet?](#user-content-faq153)
 * [~~(154) Kan du lägga till favicons som kontaktbilder?~~](#user-content-faq154)
 * [(155) Vad är en winmail.dat fil?](#user-content-faq155)
-* [(156) How can I set up an Office 365 account?](#user-content-faq156)
+* [(156) Hur kan jag ställa in ett Office 365-konto?](#user-content-faq156)
 * [(157) Hur kan jag sätta upp ett Free.fr-konto?](#user-content-faq157)
 * [(158) Vilken kamera / ljudinspelare rekommenderar du?](#user-content-faq158)
 * [(159) Vad är Disconnect's spårningsskyddslistor?](#user-content-faq159)
@@ -290,11 +292,11 @@ Följande Android-behörigheter behövs:
 * *förhindra enheten från att sova* (WAKE_LOCK): för att hålla enheten vaken vid synkronisering av meddelanden
 * *i-app fakturering* (BILLING): för att tillåta i-app köp
 * Valfritt: *läs dina kontakter* (READ_CONTACTS): för att automatiskt fylla på adresser och för att visa foton
-* Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
-* Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
-* Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
-* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)
-* Android 5.1 Lollipop and before: *Read profile* (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)
+* Valfritt: *läs innehållet på ditt SD-kort* (READ_EXTERNAL_STORAGE): för att acceptera filer från andra, ej uppdaterade appar, se även [denna FAQ](#user-content-faq49)
+* Valfritt: *använd maskinvara för fingeravtryck* (USE_FINGERPRINT) och använd *biometrisk hårdvara* (USE_BIOMETRIC): för att använda biometrisk autentisering
+* Valfritt: *hitta konton på enheten* (GET_ACCOUNTS): för att välja ett konto när du använder Gmail snabbinställning
+* Android 5. Lollipop och tidigare: *använda konton på enheten* (USE_CREDENTIALS): för att välja ett konto när du använder Gmail snabbinställning (inte begärt på senare Android-versioner)
+* Android 5. Lollipop och tidigare: *Läs profil* (READ_PROFILE): för att läsa ditt namn när du använder Gmail snabbinställning (inte begärt på senare Android-versioner)
 
 [Valfria behörigheter](https://developer.android.com/training/permissions/requesting) stöds endast på Android 6 Marshmallow och senare. På tidigare Android-versioner kommer du att bli ombedd att bevilja de valfria behörigheterna vid installation av FairEmail.
 
@@ -317,23 +319,23 @@ Följande behörigheter behövs för att visa antalet olästa meddelanden som et
 * *me.everything.badger.permission.BADGE_COUNT_READ*
 * *me.everything.badger.permission.BADGE_COUNT_WRITE*
 
-FairEmail will keep a list of addresses you receive messages from and send messages to and will use this list for contact suggestions when no contacts permissions is granted to FairEmail. This means you can use FairEmail without the Android contacts provider (address book). Note that you can still pick contacts without granting contacts permissions to FairEmail, only suggesting contacts won't work without contacts permissions.
+FairEmail kommer att skapa en lista över adresser som du tar emot meddelanden från och skickar meddelanden till och kommer att använda denna lista för kontaktförslag när inga kontaktbehörigheter beviljas till FairEmail. Detta innebär att du kan använda FairEmail utan tillgång till Android-kontakter (adressbok). Observera att du fortfarande kan välja kontakter utan att ge FairEmail tillåtelse att läsa kontakter, endast föreslå kontakter fungerar inte utan behörigheter för kontakter.
 
 <br />
 
 <a name="faq2"></a>
 **(2) Varför visas en permanent avisering?**
 
-A low priority permanent status bar notification with the number of accounts being monitored and the number of operations pending (see the next question) is shown to prevent Android from killing the service that takes care of continuous receiving email. This was [already necessary](https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)), but with the introduction of [doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) in Android 6 Marshmallow this is more than ever necessary. Doze mode will stop all apps when the screen is off for some time, unless the app did start a foreground service, which requires showing a status bar notification.
+En avisering med låg prioritet permanent statusfält med antalet konton som övervakas och antalet pågående åtgärder (se nästa fråga) visas för att förhindra Android från att döda tjänsten som tar hand om kontinuerligt mottagande e-post. Detta var [redan nödvändigt](https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)), men med införandet av [doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) i Android 6 Marshmallow är detta mer än någonsin nödvändigt. Doze mode kommer att stoppa alla appar när skärmen är avstängd under en tid, om inte appen startade en förgrundstjänst, vilket kräver att en statusfältsnotis visas.
 
-Most, if not all, other email apps don't show a notification with the "side effect" that new messages are often not or late being reported and that messages are not or late being sent.
+De flesta, om inte alla, andra e-postappar visar inte en avisering med "sidoeffekter" att nya meddelanden ofta inte eller är sena att rapporteras och att meddelanden inte eller är sena att skickas.
 
-Android shows icons of high priority status bar notifications first and will hide the icon of FairEmail's notification if there is no space to show icons anymore. In practice this means that the status bar notification doesn't take space in the status bar, unless there is space available.
+Android visar ikoner med hög prioritet statusfältet meddelanden först och kommer att dölja ikonen för FairEmail's aviseringar om det inte finns något utrymme att visa ikoner längre. I praktiken innebär detta att aviseringen i statusfältet inte tar plats i statusfältet, om det inte finns utrymme tillgängligt.
 
-The status bar notification can be disabled via the notification settings of FairEmail:
+Aviseringen i statusfältet kan inaktiveras via inställningarna för FairEmail:
 
-* Android 8 Oreo and later: tap the *Receive channel* button and disable the channel via the Android settings (this won't disable new message notifications)
-* Android 7 Nougat and before: enabled *Use background service to synchronize messages*, but be sure to read the remark below the setting
+* Android 8 Oreo och senare: tryck på *Receive channel* -knappen och inaktivera kanalen via Android-inställningarna (detta kommer inte att inaktivera nya meddelanden)
+* Android 7 Nougat och tidigare: aktiverat *Använd bakgrundstjänst för att synkronisera meddelanden*, men se till att läsa anmärkningen under inställningen
 
 You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power. See [here](#user-content-faq39) for more details about battery usage.
 
@@ -452,7 +454,9 @@ Unfortunately, it is impossible to make everybody happy and adding lots of setti
 
 You can use the quick setup wizard to easily setup a Gmail account and identity.
 
-If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password or enable two factor authentication and use an app specific password. Se [denna FAQ](#user-content-faq111) om varför endast konton på enheten kan användas.
+If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to setup an account and identity via setup step 1 and 2 instead of via the quick setup wizard.
+
+Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
 Note that an app specific password is required when two factor authentication is enabled.
 
@@ -482,7 +486,7 @@ When "less secure apps" is not enabled, you'll get the error *Authentication fai
 
 <br />
 
-*Allmänt*
+*General*
 
 You might get the alert "*Please log in via your web browser*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.
 
@@ -495,7 +499,7 @@ See [here](https://support.google.com/mail/answer/7126229) for Google's instruct
 
 Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder. This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 
-Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. I dessa fall kommer FairEmail, automatiskt lägga till meddelanden till den skickat vid synkronisering av mappen, vilket kommer att hända efter att ett meddelande har skickats. Note that this will result in extra internet traffic.
+Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. In these cases FairEmail, will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message have been sent. Note that this will result in extra internet traffic.
 
 ~~If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.~~ ~~In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.~~ ~~Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.~~ ~~Also beware that enabling this setting will result in extra data usage, especially when when sending messages with large attachments.~~
 
@@ -531,7 +535,7 @@ Alternatively, you can enable *Allow editing sender address* in the advanced set
 
 FairEmail will automatically update the passwords of related identities when you update the password of the associated account or a related identity.
 
-Se [denna FAQ](#user-content-faq33) om hur du redigerar användarnamnet för e-postadresser.
+See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 
 <br />
 
@@ -560,7 +564,7 @@ Se [denna FAQ](#user-content-faq33) om hur du redigerar användarnamnet för e-p
 <a name="faq12"></a>
 **(12) How does encryption/decryption work?**
 
-*Allmänt*
+*General*
 
 Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
 
@@ -594,9 +598,11 @@ You'll need to install and configure [OpenKeychain](https://f-droid.org/en/packa
 
 **Important**: to let apps like FairEmail reliably connect to the OpenKeychain service to encrypt/decrypt messages, it might be necessary to disable battery optimizations for the OpenKeychain app.
 
+**Important**: the OpenKeychain app reportedly needs contacts permission to work correctly.
+
 **Important**: on some Android versions / devices it is necessary to enable *Show popups while running in background* in the additional permissions of the Android app settings of the OpenKeychain app. Without this permission the draft will be saved, but the OpenKeychain popup to confirm/select might not appear.
 
-FairEmail kommer att skicka [Autocrypt](https://autocrypt.org/) header för användning av andra e-postklienter, men bara för signerade och krypterade meddelanden eftersom för många e-postservrar har problem med det långa Autocrypt header. Observera att det säkraste sättet att starta ett krypterat e-postutbyte är genom att skicka signerade meddelanden först. Received Autocrypt headers will be sent to the OpenKeychain app for storage on verifying a signature or decrypting a message.
+FairEmail will send the [Autocrypt](https://autocrypt.org/) header for use by other email clients, but only for signed and encrypted messages because too many email servers have problems with the often long Autocrypt header. Note that the most secure way to start an encrypted email exchange is by sending signed messages first. Received Autocrypt headers will be sent to the OpenKeychain app for storage on verifying a signature or decrypting a message.
 
 All key handling is delegated to the OpenKey chain app for security reasons. This also means that FairEmail does not store PGP keys.
 
@@ -622,6 +628,8 @@ Encrypting a message requires the public key(s) of the recipient(s). Signing a m
 Private keys are stored by Android and can be imported via the Android advanced security settings. There is a shortcut (button) for this in the privacy settings. Android will ask you to set a PIN, pattern, or password if you didn't before. If you have a Nokia device with Android 9, please [read this first](https://nokiamob.net/2019/08/10/a-bug-prevents-nokia-1-owners-from-unlocking-their-screen-even-with-right-pin-pattern/).
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
+
+Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
 
@@ -883,6 +891,8 @@ SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia
 * The attachment size limit for Outlook and Office 365 [is 20 MB](https://support.microsoft.com/en-us/help/2813269/attachment-size-exceeds-the-allowable-limit-error-when-you-add-a-large)
 * The attachment size limit for Yahoo [is 25 MB](https://help.yahoo.com/kb/SLN5673.html)
 * *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
+* *501 Syntax error - line too long* is often caused by using a long Autocrypt header
+* *503 5.5.0 Mottagare som redan angivits* innebär oftast att en adress används både som TO och CC-adress
 
 **Gmail errors**
 
@@ -1068,7 +1078,7 @@ Note that this is independent of receiving messages.
 
 Identities are as expected matched by account. For incoming messages the *to*, *cc*, *bcc*, *from* and *(X-)delivered/envelope/original-to* addresses will be checked (in this order) and for outgoing messages (drafts, outbox and sent) only the *from* addresses will be checked.
 
-The matched address will be shown as *via* in the addresses section.
+The matched address will be shown as *via* in the addresses section of received messages (between the message header and message text).
 
 Note that identities needs to be enabled to be able to be matched and that identities of other accounts will not be considered.
 
@@ -1205,7 +1215,7 @@ The error '*Handshake failed ... SSLV3_ALERT_ILLEGAL_PARAMETER ...*' is either c
 
 The error '*Handshake failed ... HANDSHAKE_FAILURE_ON_CLIENT_HELLO ...*' might be caused by the provider still using RC4, which isn't supported since [Android 7](https://developer.android.com/about/versions/nougat/android-7.0-changes.html#tls-ssl) anymore.
 
-The error '*Handshake failed ... UNSUPPORTED_PROTOCOL ...*' might be caused by enabling hardening connections in the connection settings or by Android not supporting older protocols anymore, like SSLv3.
+The error '*Handshake failed ... UNSUPPORTED_PROTOCOL eller TLSV1_ALERT_PROTOCOL_VERSION ...*' kan orsakas av aktivering av härdning av anslutningar i anslutningsinställningarna eller av Android som inte stödjer äldre protokoll längre, som SSLv3.
 
 Android 8 Oreo and later [do not support](https://developer.android.com/about/versions/oreo/android-8.0-changes#security-all) SSLv3 anymore. There is no way to workaround lacking RC4 and SSLv3 support because it has completely been removed from Android (which should say something).
 
@@ -1420,6 +1430,7 @@ For security reasons the files with the original message texts are not accessibl
 * Did you know that you can long press the star icon in a conversation thread to set a colored star?
 * Did you know that you can open the navigation drawer by swiping from the left, even when viewing a conversation?
 * Did you know that you can long press the people's icon to show/hide the CC/BCC fields and remember the visibility state for the next time?
+* Did you know that you can insert the email addresses of an Android contact group via the three dots overflow menu?
 * Did you know that if you select text and hit reply, only the selected text will be quoted?
 
 <br />
@@ -2374,9 +2385,9 @@ In the account settings (Setup, step 1, Manage, tap account) you can enable *Lea
 
 Since the IMAP protocol is meant to synchronize two ways, deleting a message from the device would result in fetching the message again when synchronizing again.
 
-However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list.
+However, FairEmail supports hiding messages, either via the three-dots menu in the action bar just above the message text or by multiple selecting messages in the message list. Basically this is the same as "leave on server" of the POP3 protocol with the advantage that you can show the messages again when needed.
 
-It is also possible to set the swipe left or right action to hide a message.
+Note that it is possible to set the swipe left or right action to hide a message.
 
 <br />
 

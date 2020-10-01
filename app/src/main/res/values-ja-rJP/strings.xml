@@ -171,8 +171,8 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_setup_theme_black">ブラック</string>
     <string name="title_setup_theme_reverse">色を反転</string>
     <string name="title_setup_theme_dark">ダーク</string>
-    <string name="title_setup_theme_black_background">ブラック背景</string>
     <string name="title_setup_theme_system">システム設定に従う</string>
+    <string name="title_setup_theme_black_background">ブラック背景</string>
     <string name="title_setup_theme_system_hint">Androidでサポートされている場合、システムテーマは昼/夜に自動的に切り替わります</string>
     <string name="title_setup_advanced">詳細</string>
     <string name="title_setup_options">オプション</string>
@@ -882,8 +882,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_legend_section_compose">作成する</string>
     <string name="title_legend_section_keyboard">キーワード</string>
     <string name="title_legend_oauth">OAuth認証</string>
-    <string name="title_legend_primary_connected">接続されたアカウント</string>
-    <string name="title_legend_primary_disconnected">アカウントが切断されました</string>
     <string name="title_legend_download_on">メッセージコンテンツを自動的にダウンロードする</string>
     <string name="title_legend_download_off">オンデマンドでメッセージコンテンツをダウンロードする</string>
     <string name="title_legend_synchronize_on">同期する</string>

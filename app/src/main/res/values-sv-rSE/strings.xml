@@ -139,6 +139,7 @@
     <string name="title_setup_gmail_rationale">Vänligen bevilja behörigheter för att välja ett konto och läsa ditt namn</string>
     <string name="title_setup_gmail_permissions">Google kommer att be om behörighet att läsa, komponera, skicka och permanent ta bort all din e-post. FairEmail kommer aldrig att ta bort dina meddelanden utan ditt uttryckliga medgivande.</string>
     <string name="title_setup_gmail_drafts">Om mappen för utkast inte är åtkomlig för IMAP kan detta lösas under inställningarna för Gmail-etiketten</string>
+    <string name="title_setup_office_remark">Microsoft tillhandahåller inte denna typ av auktorisering för Outlook, Live, Hotmail, etc konton</string>
     <string name="title_setup_office_auth">Felet \"AUTHENTICATE failed\" kan orsakas av att IMAP/SMTP inaktiveras av systemadministratören</string>
     <string name="title_setup_oauth_rationale">Auktorisera åtkomst till ditt %1$s konto</string>
     <string name="title_setup_oauth_authorize">Auktorisera</string>
@@ -206,9 +207,10 @@
     <string name="title_setup_theme_black">Svart</string>
     <string name="title_setup_theme_black_and_white">Svart och vitt</string>
     <string name="title_setup_theme_reverse">Omvända färger</string>
+    <string name="title_setup_theme_light">Ljus</string>
     <string name="title_setup_theme_dark">Mörk</string>
-    <string name="title_setup_theme_black_background">Svart bakgrund</string>
     <string name="title_setup_theme_system">Använd systemtema</string>
+    <string name="title_setup_theme_black_background">Svart bakgrund</string>
     <string name="title_setup_theme_system_hint">Systemtema kommer automatiskt att växla till ljus/mörk på dagen/natt, om det stöds av Android</string>
     <string name="title_setup_advanced">Avancerat</string>
     <string name="title_setup_options">Alternativ</string>
@@ -283,6 +285,7 @@
     <string name="title_advanced_landscape3">Visa navigeringsmenyn i liggande läge som standard</string>
     <string name="title_advanced_startup">Visa på startskärmen</string>
     <string name="title_advanced_cards">Använd kortstil istället för tabellstil</string>
+    <string name="title_advanced_cards_beige">Använd beige bakgrund när du använder kort stil</string>
     <string name="title_advanced_date_header">Gruppera efter datum</string>
     <string name="title_advanced_threading">Konversationstrådar</string>
     <string name="title_advanced_threading_unread">Visa antal olästa meddelanden i konversationer</string>
@@ -459,6 +462,7 @@
     <string name="title_advanced_browse_hint">Hämta fler meddelanden när du rullar ner</string>
     <string name="title_advanced_layout_hint">Växla till en mer kompakt layout och ändra meddelandetextstorleken kan göras i menyn högst upp i meddelandevyn</string>
     <string name="title_advanced_startup_hint">Långtryck på valfri mapp i mapplistan för att lägga till eller ta bort den från listan över enhetliga mappar</string>
+    <string name="title_advanced_beige_hint">Endast ljusa teman</string>
     <string name="title_advanced_date_hint">Meddelanden grupperas endast efter datum om de sorteras efter tid</string>
     <string name="title_advanced_navbar_colorize_hint">Om detta fungerar beror på Android-versionen och varianten</string>
     <string name="title_advanced_threading_hint">Gruppera meddelanden relaterade till varandra</string>
@@ -563,6 +567,7 @@
     <string name="title_no_name">Namn saknas</string>
     <string name="title_no_email">E-postadressen saknas</string>
     <string name="title_email_invalid">E-post-adress ogiltig: \'%1$s\'</string>
+    <string name="title_address_duplicate">Adress \'%1$s\' dubblett</string>
     <string name="title_address_parse_error">Adress \"%1$s\" ogiltig: %2$s</string>
     <string name="title_no_account">Konto saknas</string>
     <string name="title_no_host">Värdnamn saknas</string>
@@ -817,6 +822,8 @@
     <string name="title_style_list_numbered">Numrerad</string>
     <string name="title_style_font">Typsnitt</string>
     <string name="title_style_font_default">Standard</string>
+    <string name="title_style_blockquote">Block</string>
+    <string name="title_style_strikethrough">Genomstruken</string>
     <string name="title_style_clear">Rensa formatering</string>
     <string name="title_style_link">Infoga länk</string>
     <string name="title_add_image">Lägg till bild</string>
@@ -868,6 +875,7 @@
     <string name="title_queued">Skickar meddelande</string>
     <string name="title_queued_at">Meddelandet kommer att skickas runt %1$s</string>
     <string name="title_sign">Signera</string>
+    <string name="title_verify">Verifiera</string>
     <string name="title_encrypt">Kryptera</string>
     <string name="title_decrypt">Dekryptera</string>
     <string name="title_resync">Synkronisera om</string>
@@ -1031,8 +1039,8 @@
     <string name="title_legend_section_compose">Skriv</string>
     <string name="title_legend_section_keyboard">Tangentbord</string>
     <string name="title_legend_oauth">OAuth auktorisering</string>
-    <string name="title_legend_primary_connected">Kontot anslutet</string>
-    <string name="title_legend_primary_disconnected">Kontot frånkopplat</string>
+    <string name="title_legend_folder_connected">Mapp ansluten</string>
+    <string name="title_legend_folder_disconnected">Mappen frånkopplad</string>
     <string name="title_legend_download_on">Hämta meddelandeinnehåll automatiskt</string>
     <string name="title_legend_download_off">Hämta meddelandeinnehåll på begäran </string>
     <string name="title_legend_synchronize_on">Synkronisera nu</string>
@@ -1140,6 +1148,8 @@
     <string name="title_hint_sync">Hämtning av meddelanden kan ta lite tid, beroende på leverantörens hastighet, internetanslutning och enhet och på antalet meddelanden. När du hämtar meddelanden kan appen svara långsammare.</string>
     <string name="title_hint_battery">Eftersom FairEmail som standard alltid tar emot meddelanden, kommer Android att rapportera FairEmail som alltid aktiv. Därför kan det se ut som om FairEmail alltid förbrukar batterikraft även om detta i själva verket inte är fallet.</string>
     <string name="title_hint_reformat">Som standard formaterar FairEmail meddelanden av sekretess- och säkerhetsskäl. För att visa det ursprungliga meddelandet trycker du på ikonen \"helskärm\" ovanför meddelandetexten.</string>
+    <string name="title_hint_design">Designen är avsiktligt inte distraherande, men hålls mycket funktionell. Det finns många alternativ för att anpassa utseendet, men vänligen förstå att det är omöjligt att göra alla helt glada på samma gång.</string>
+    <string name="title_hint_junk">Spamfiltrering bör göras via e-postservern och kan inte göras tillförlitligt på en batteridriven enhet med begränsad kapacitet.</string>
     <string name="title_hint_contact_actions">Långt tryck för alternativ</string>
     <string name="title_hint_eml">Detta är en sammanfattning av innehållet i en raw-meddelandefil. Spara raw-meddelandet med ikonen spara i åtgärdsfältet för att visa allt innehåll.</string>
     <string name="title_open_link">Öppna länken</string>

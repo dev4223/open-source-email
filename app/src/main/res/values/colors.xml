@@ -53,10 +53,12 @@
 
     <color name="lightColorCardBackground">#fff</color>
     <color name="lightColorBackground_cards">#eee</color>
+    <!-- Cosmic Latte -->
+    <color name="lightColorBackground_cards_beige">#fff8e7</color>
 
     <color name="lightActionForeground">#fff</color>
     <color name="lightActionForegroundDisabled">#ddd</color>
-    <color name="lightActionBackground">#ccc</color>
+    <color name="lightActionBackground">#bbb</color>
 
     <color name="darkColorItemSelected">#444</color>
     <color name="darkColorSeparator">#444</color>

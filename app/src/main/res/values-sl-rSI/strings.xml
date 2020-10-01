@@ -199,8 +199,8 @@
     <string name="title_setup_theme_black">Črna</string>
     <string name="title_setup_theme_reverse">Obrni barve</string>
     <string name="title_setup_theme_dark">Temno</string>
-    <string name="title_setup_theme_black_background">Črno ozadje</string>
     <string name="title_setup_theme_system">Sledi sistemu</string>
+    <string name="title_setup_theme_black_background">Črno ozadje</string>
     <string name="title_setup_theme_system_hint">\'Sledi sistemu\' bo samodejno preklopilo med svetlo/temno temo podnevi/ponoči, če to podpira Android.</string>
     <string name="title_setup_advanced">Napredno</string>
     <string name="title_setup_options">Možnosti</string>
@@ -896,8 +896,6 @@
     <string name="title_legend_section_compose">Sestavi</string>
     <string name="title_legend_section_keyboard">Tipkovnica</string>
     <string name="title_legend_oauth">Overitev OAuth</string>
-    <string name="title_legend_primary_connected">Račun je povezan</string>
-    <string name="title_legend_primary_disconnected">Račun ni povezan</string>
     <string name="title_legend_download_on">Samodejno prejmi vsebino sporočila</string>
     <string name="title_legend_download_off">Vsebino sporočila prejmi na zahtevo</string>
     <string name="title_legend_synchronize_on">Sinhronizacija je vklopljena</string>

@@ -144,7 +144,7 @@ class Core {
     private static final long FUTURE_RECEIVED = 30 * 24 * 3600 * 1000L; // milliseconds
     private static final int LOCAL_RETRY_MAX = 2;
     private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
-    private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 10;
+    private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 5;
 
     static void processOperations(
             Context context,
@@ -500,7 +500,9 @@ class Core {
                             ops.remove(op);
                         } else {
                             retry++;
-                            if (retry < LOCAL_RETRY_MAX)
+                            if (retry < LOCAL_RETRY_MAX &&
+                                    state.isRunning() &&
+                                    state.batchCanRun(folder.id, priority, sequence))
                                 try {
                                     Thread.sleep(LOCAL_RETRY_DELAY);
                                 } catch (InterruptedException ex1) {
@@ -528,6 +530,10 @@ class Core {
 
             if (ops.size() == 0)
                 state.batchCompleted(folder.id, priority, sequence);
+            else {
+                if (state.batchCanRun(folder.id, priority, sequence))
+                    state.error(new OperationCanceledException("Processing"));
+            }
         } finally {
             Log.i(folder.name + " end process state=" + state + " pending=" + ops.size());
         }
@@ -1470,8 +1476,12 @@ class Core {
         if (imessages == null || imessages.length == 0)
             EntityOperation.queue(context, message, EntityOperation.ADD);
         else {
-            long uid = ifolder.getUID(imessages[0]);
-            EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
+            if (imessages.length > 1)
+                Log.w(folder.name + " exists messages=" + imessages.length);
+            for (int i = 0; i < imessages.length; i++) {
+                long uid = ifolder.getUID(imessages[i]);
+                EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
+            }
         }
     }
 
@@ -1851,14 +1861,14 @@ class Core {
                 imessages = Arrays.copyOfRange(imessages,
                         imessages.length - account.max_messages, imessages.length);
 
+            db.folder().setFolderSyncState(folder.id, "downloading");
+
             boolean hasUidl = caps.containsKey("UIDL");
             if (hasUidl) {
                 FetchProfile ifetch = new FetchProfile();
                 ifetch.add(UIDFolder.FetchProfileItem.UID);
                 ifolder.fetch(imessages, ifetch);
             }
-
-            db.folder().setFolderSyncState(folder.id, "downloading");
 
             List<TupleUidl> ids = db.message().getUidls(folder.id);
             Log.i(folder.name + " POP existing=" + ids.size() + " uidl=" + hasUidl);
@@ -3592,7 +3602,6 @@ class Core {
                             .setContentTitle(title)
                             .setContentIntent(piContent)
                             .setNumber(messages.size())
-                            .setShowWhen(false)
                             .setDeleteIntent(piClear)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(notify_summary
@@ -3758,7 +3767,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piTrash = PendingIntent.getService(context, ServiceUI.PI_TRASH, trash, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionTrash = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_delete_24,
+                        R.drawable.twotone_delete_24,
                         context.getString(R.string.title_advanced_notify_action_trash),
                         piTrash)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_DELETE)
@@ -3776,7 +3785,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piJunk = PendingIntent.getService(context, ServiceUI.PI_JUNK, junk, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionJunk = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_report_problem_24,
+                        R.drawable.twotone_report_problem_24,
                         context.getString(R.string.title_advanced_notify_action_junk),
                         piJunk)
                         .setAllowGeneratedReplies(false);
@@ -3793,7 +3802,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piArchive = PendingIntent.getService(context, ServiceUI.PI_ARCHIVE, archive, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionArchive = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_archive_24,
+                        R.drawable.twotone_archive_24,
                         context.getString(R.string.title_advanced_notify_action_archive),
                         piArchive)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_ARCHIVE)
@@ -3814,7 +3823,7 @@ class Core {
                                 .putExtra("group", group);
                         PendingIntent piMove = PendingIntent.getService(context, ServiceUI.PI_MOVE, move, PendingIntent.FLAG_UPDATE_CURRENT);
                         NotificationCompat.Action.Builder actionMove = new NotificationCompat.Action.Builder(
-                                R.drawable.baseline_folder_24,
+                                R.drawable.twotone_folder_24,
                                 folder.getDisplayName(context),
                                 piMove)
                                 .setAllowGeneratedReplies(false);
@@ -3834,7 +3843,7 @@ class Core {
                 reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 PendingIntent piReply = PendingIntent.getActivity(context, ActivityCompose.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_reply_24,
+                        R.drawable.twotone_reply_24,
                         context.getString(R.string.title_advanced_notify_action_reply),
                         piReply)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
@@ -3852,7 +3861,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piReply = PendingIntent.getService(context, ServiceUI.PI_REPLY_DIRECT, reply, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_reply_24,
+                        R.drawable.twotone_reply_24,
                         context.getString(R.string.title_advanced_notify_action_reply_direct),
                         piReply)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
@@ -3886,7 +3895,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piSeen = PendingIntent.getService(context, ServiceUI.PI_SEEN, seen, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionSeen = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_visibility_24,
+                        R.drawable.twotone_visibility_24,
                         context.getString(R.string.title_advanced_notify_action_seen),
                         piSeen)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ)
@@ -3902,7 +3911,7 @@ class Core {
                         .putExtra("group", group);
                 PendingIntent piSnooze = PendingIntent.getService(context, ServiceUI.PI_SNOOZE, snooze, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionSnooze = new NotificationCompat.Action.Builder(
-                        R.drawable.baseline_timelapse_24,
+                        R.drawable.twotone_timelapse_24,
                         context.getString(R.string.title_advanced_notify_action_snooze),
                         piSnooze)
                         .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MUTE)
@@ -4053,6 +4062,7 @@ class Core {
 
     static class State {
         private int backoff;
+        private boolean backingoff = false;
         private ConnectionHelper.NetworkState networkState;
         private Thread thread = new Thread();
         private Semaphore semaphore = new Semaphore(0);
@@ -4060,6 +4070,7 @@ class Core {
         private boolean recoverable = true;
         private Long lastActivity = null;
 
+        private boolean process = false;
         private Map<FolderPriority, Long> sequence = new HashMap<>();
         private Map<FolderPriority, Long> batch = new HashMap<>();
 
@@ -4097,8 +4108,13 @@ class Core {
             return true;
         }
 
-        boolean acquire(long milliseconds) throws InterruptedException {
-            return semaphore.tryAcquire(milliseconds, TimeUnit.MILLISECONDS);
+        boolean acquire(long milliseconds, boolean backingoff) throws InterruptedException {
+            try {
+                this.backingoff = backingoff;
+                return semaphore.tryAcquire(milliseconds, TimeUnit.MILLISECONDS);
+            } finally {
+                this.backingoff = false;
+            }
         }
 
         void error(Throwable ex) {
@@ -4128,17 +4144,21 @@ class Core {
             if (ex instanceof OperationCanceledException)
                 recoverable = false;
 
-            thread.interrupt();
-            yield();
+            if (!backingoff) {
+                thread.interrupt();
+                yield();
+            }
         }
 
         void reset() {
             recoverable = true;
             lastActivity = null;
             resetBatches();
+            process = true;
         }
 
         void resetBatches() {
+            process = false;
             synchronized (this) {
                 for (FolderPriority key : sequence.keySet()) {
                     batch.put(key, sequence.get(key));
@@ -4234,6 +4254,11 @@ class Core {
         }
 
         boolean batchCanRun(long folder, int priority, long current) {
+            if (!process) {
+                Log.i("=== Can " + folder + ":" + priority + " process=" + process);
+                return false;
+            }
+
             synchronized (this) {
                 FolderPriority key = new FolderPriority(folder, priority);
                 boolean can = batch.get(key).equals(current);

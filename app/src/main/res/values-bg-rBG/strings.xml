@@ -187,8 +187,8 @@
     <string name="title_setup_theme_black">Черно</string>
     <string name="title_setup_theme_reverse">Обратни цветове</string>
     <string name="title_setup_theme_dark">Тъмна</string>
-    <string name="title_setup_theme_black_background">Черен фон</string>
     <string name="title_setup_theme_system">Използвай системните</string>
+    <string name="title_setup_theme_black_background">Черен фон</string>
     <string name="title_setup_theme_system_hint">Системната тема ще превключи автоматично от светло/тъмно през деня/ноща, ако се поддържа от Андроид</string>
     <string name="title_setup_advanced">Разширени</string>
     <string name="title_setup_options">Опции</string>
@@ -948,8 +948,6 @@
     <string name="title_legend_section_compose">Съчиняване</string>
     <string name="title_legend_section_keyboard">Клавиатура</string>
     <string name="title_legend_oauth">OAuth оторизация</string>
-    <string name="title_legend_primary_connected">Профила е свързан</string>
-    <string name="title_legend_primary_disconnected">Профила не е свързан</string>
     <string name="title_legend_download_on">Изтеглеяне съдържанието на съобщенията автоматично</string>
     <string name="title_legend_download_off">Изтеглеяне съдържанието на съобщенията при поискване</string>
     <string name="title_legend_synchronize_on">Синхронизация включена</string>
