@@ -368,7 +368,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_browse_links">Delega obrir enllaços a Android</string>
     <string name="title_advanced_confirm_images">Confirmeu la visualització d’imatges</string>
     <string name="title_advanced_confirm_html">Mostra els missatges reformatats de manera predeterminada</string>
-    <string name="title_advanced_tracking">Reconèixer i desactivar automàticament les imatges de seguiment</string>
     <string name="title_advanced_hide_timezone">Envia missatges sense dades de fus horari</string>
     <string name="title_advanced_display_hidden">Mostra textos de missatges ocults</string>
     <string name="title_advanced_secure">Amaga de la pantalla d\'aplicacions recents i evita que es pugui fer captures de pantalla</string>
@@ -461,7 +460,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_fts_hint">Habilitant això millora el rendiment de cerca, però també augmenta l’ús de la bateria i l’espai d’emmagatzematge</string>
     <string name="title_advanced_english_hint">Això reiniciarà l\'aplicació</string>
     <string name="title_advanced_experiments_hint">Llista de funcions experimentals actuals</string>
-    <string name="title_advanced_debug_hint">Habiliteu el registre addicional i mostra informació de depuració en diversos llocs</string>
     <string name="title_advanced_cleanup_attachments_hint">Si es neteja manualment, s\'eliminen els fitxers adjunts dels missatges que ja no es sincronitzen</string>
     <string name="title_advanced_cleanup_hint">S\'eliminaran tots els fitxers temporals</string>
     <string name="title_advanced_never_favorite">Mai preferit</string>

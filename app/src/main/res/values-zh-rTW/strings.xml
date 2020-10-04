@@ -379,7 +379,6 @@
     <string name="title_advanced_browse_links">將打開的連結轉向 Android</string>
     <string name="title_advanced_confirm_images">顯示圖片前確認</string>
     <string name="title_advanced_confirm_html">預設顯示重新格式化的郵件</string>
-    <string name="title_advanced_tracking">自動辨識和禁止可追蹤的影像</string>
     <string name="title_advanced_hide_timezone">傳送沒有時區資料的郵件</string>
     <string name="title_advanced_display_hidden">顯示隱藏的訊息內文</string>
     <string name="title_advanced_secure">從最近的應用程式中移除並防止截圖</string>
@@ -478,7 +477,6 @@
     <string name="title_advanced_fts_hint">啟用此功能可增加搜尋效率，但也會增加電池和儲存空間的使用量</string>
     <string name="title_advanced_english_hint">這將會重起應用程式</string>
     <string name="title_advanced_experiments_hint">當前實驗功能列表</string>
-    <string name="title_advanced_debug_hint">啟用額外的日誌記錄並在不同位置顯示調試信息</string>
     <string name="title_advanced_cleanup_attachments_hint">手動清除時，這將從不再同步的郵件中刪除附件</string>
     <string name="title_advanced_cleanup_hint">這將刪除所有臨時文件</string>
     <string name="title_advanced_never_favorite">從不喜歡</string>
@@ -805,7 +803,6 @@
     <string name="title_add_image_attach">附加</string>
     <string name="title_add_image_resize">調整大小</string>
     <string name="title_add_image_privacy">刪除隱私敏感數據</string>
-    <string name="title_add_image_privacy_remark">地理位置，序列號等</string>
     <string name="title_add_resize_pixels">&lt; %1$d 像素</string>
     <string name="title_add_image_select">選擇文件</string>
     <string name="title_add_attachment">添加附件</string>

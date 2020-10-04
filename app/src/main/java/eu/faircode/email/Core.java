@@ -1228,23 +1228,28 @@ class Core {
                     }
             }
 
-            if (!TextUtils.isEmpty(message.msgid) && !deleted) {
-                Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
-                if (imessages == null)
-                    Log.w(folder.name + " search for msgid=" + message.msgid + " returned null");
-                else
-                    for (Message iexisting : imessages) {
-                        long muid = ifolder.getUID(iexisting);
-                        Log.i(folder.name + " deleting uid=" + muid);
-                        try {
-                            iexisting.setFlag(Flags.Flag.DELETED, true);
-                        } catch (MessageRemovedException ignored) {
-                            Log.w(folder.name + " existing gone uid=" + muid);
+            if (!TextUtils.isEmpty(message.msgid) && !deleted)
+                try {
+                    Message[] imessages = ifolder.search(new MessageIDTerm(message.msgid));
+                    if (imessages == null)
+                        Log.w(folder.name + " search for msgid=" + message.msgid + " returned null");
+                    else
+                        for (Message iexisting : imessages) {
+                            long muid = ifolder.getUID(iexisting);
+                            Log.i(folder.name + " deleting uid=" + muid);
+                            try {
+                                iexisting.setFlag(Flags.Flag.DELETED, true);
+                                deleted = true;
+                            } catch (MessageRemovedException ignored) {
+                                Log.w(folder.name + " existing gone uid=" + muid);
+                            }
                         }
-                    }
-            }
+                } catch (MessagingException ex) {
+                    Log.w(ex);
+                }
 
-            ifolder.expunge();
+            if (deleted)
+                ifolder.expunge();
 
             db.message().deleteMessage(message.id);
         } finally {
@@ -1477,7 +1482,7 @@ class Core {
             EntityOperation.queue(context, message, EntityOperation.ADD);
         else {
             if (imessages.length > 1)
-                Log.w(folder.name + " exists messages=" + imessages.length);
+                Log.e(folder.name + " exists messages=" + imessages.length);
             for (int i = 0; i < imessages.length; i++) {
                 long uid = ifolder.getUID(imessages[i]);
                 EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
@@ -1991,6 +1996,7 @@ class Core {
                         message.deliveredto = helper.getDeliveredTo();
                         message.thread = helper.getThreadId(context, account.id, 0);
                         message.priority = helper.getPriority();
+                        message.auto_submitted = helper.getAutoSubmitted();
                         message.receipt_request = helper.getReceiptRequested();
                         message.receipt_to = helper.getReceiptTo();
                         message.dkim = MessageHelper.getAuthentication("dkim", authentication);
@@ -2669,6 +2675,7 @@ class Core {
             message.deliveredto = helper.getDeliveredTo();
             message.thread = helper.getThreadId(context, account.id, uid);
             message.priority = helper.getPriority();
+            message.auto_submitted = helper.getAutoSubmitted();
             message.receipt_request = helper.getReceiptRequested();
             message.receipt_to = helper.getReceiptTo();
             message.dkim = MessageHelper.getAuthentication("dkim", authentication);
@@ -3159,9 +3166,14 @@ class Core {
         }
 
         for (Address address : addresses) {
-            final String email = ((InternetAddress) address).getAddress();
-            final String name = ((InternetAddress) address).getPersonal();
-            final Uri avatar = ContactInfo.getLookupUri(new Address[]{address});
+            String email = ((InternetAddress) address).getAddress();
+            String name = ((InternetAddress) address).getPersonal();
+            Uri avatar = ContactInfo.getLookupUri(new Address[]{address});
+
+            if (TextUtils.isEmpty(email))
+                continue;
+            if (TextUtils.isEmpty(name))
+                name = null;
 
             try {
                 db.beginTransaction();
@@ -3180,7 +3192,7 @@ class Core {
                     contact.id = db.contact().insertContact(contact);
                     Log.i("Inserted contact=" + contact + " type=" + type);
                 } else {
-                    if (!TextUtils.isEmpty(name))
+                    if (contact.name == null && name != null)
                         contact.name = name;
                     contact.avatar = (avatar == null ? null : avatar.toString());
                     contact.times_contacted++;

@@ -860,7 +860,8 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 
 The message header and message body are fetched separately from the server.
 The message text of larger messages is not being pre-fetched on metered connections and need to be fetched on opening the message.
-The message text will keep loading if there is no connection to the account, see also the next question.
+The message text will keep loading if there is no connection to the account, see also the next question,
+or if there other operations, like synchronizing messages, are being executed.
 
 You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons)
 and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
@@ -1941,6 +1942,11 @@ This will be more reliable than forwarding as well because forwarded messages mi
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
 it is not possible to preview which messages would match a header rule condition.
+
+Some common header conditions (regex):
+
+* *.&ast;Auto-Submitted:.&ast;* [RFC3834](https://tools.ietf.org/html/rfc3834)
+* *.&ast;Content-Type: multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
 
 In the three-dots *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
 

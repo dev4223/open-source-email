@@ -329,7 +329,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_advanced_browse_links">Androidへのリンクを開いて下さい</string>
     <string name="title_advanced_confirm_images">画像表示を確認</string>
     <string name="title_advanced_confirm_html">デフォルトで再フォーマットされたメッセージを表示</string>
-    <string name="title_advanced_tracking">追跡イメージを自動認識して無効</string>
     <string name="title_advanced_hide_timezone">タイムゾーンデータ無しでメッセージを送信</string>
     <string name="title_advanced_display_hidden">非表示のメッセージテキストを表示</string>
     <string name="title_advanced_secure">最近使ったアプリから非表示にしスクリーンショット撮影から守る</string>
@@ -414,7 +413,6 @@ Microsoft Exchange WebサービスやMicrosoft ActiveSyncなどの非標準プ�
     <string name="title_advanced_fts_hint">有効にすると検索パフォーマンスが向上しますが、バッテリーとストレージ使用量も増加します</string>
     <string name="title_advanced_english_hint">アプリが再起動されます</string>
     <string name="title_advanced_experiments_hint">現在の実験的な機能のリスト</string>
-    <string name="title_advanced_debug_hint">追加のログを有効にし様々な場所でデバッグ情報を表示</string>
     <string name="title_advanced_cleanup_attachments_hint">手動でクリーニングすると同期されていないメッセージから添付ファイルが削除されます</string>
     <string name="title_advanced_cleanup_hint">全ての一時ファイルが削除されます</string>
     <string name="title_advanced_never_favorite">お気に入りにしないようにします</string>

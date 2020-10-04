@@ -375,7 +375,6 @@
     <string name="title_advanced_browse_links">Android\'i bağlantıları açması için görevlendir</string>
     <string name="title_advanced_confirm_images">Görüntüleri göstermeyi onayla</string>
     <string name="title_advanced_confirm_html">Yeniden formatlanmış mesajları varsayılan olarak göster</string>
-    <string name="title_advanced_tracking">İzleme görsellerini otomatik olarak tanı ve devre dışı bırak</string>
     <string name="title_advanced_hide_timezone">İletileri saat dilimi verisi olmadan gönder</string>
     <string name="title_advanced_display_hidden">Gizli mesaj metinlerini göster</string>
     <string name="title_advanced_secure">Son kullanılan uygulamalar ekranından gizle ve ekran görüntüsü alınmasını engelle</string>
@@ -462,7 +461,6 @@
     <string name="title_advanced_fts_hint">Bunu etkinleştirmek arama performansını iyileştirir, ancak pil ve depolama alanı kullanımını da artırır</string>
     <string name="title_advanced_english_hint">Bu app yeniden başlatılır</string>
     <string name="title_advanced_experiments_hint">Güncel deneysel özelliklerin listesi</string>
-    <string name="title_advanced_debug_hint">Fazladan günlük kaydını etkinleştir ve çeşitli yerlerdeki hata ayıklama bilgisini göster</string>
     <string name="title_advanced_cleanup_hint">Bu bütün geçici dosyaları silecek</string>
     <string name="title_advanced_never_favorite">Asla sık kullanılan değil</string>
     <string name="title_select">Seçin &#8230;</string>
@@ -755,7 +753,6 @@
     <string name="title_add_image_attach">Ekle</string>
     <string name="title_add_image_resize">Yeniden boyutlandır</string>
     <string name="title_add_image_privacy">Mahremiyetiniz için önemli verileri sil</string>
-    <string name="title_add_image_privacy_remark">Coğrafi konum, seri numarası vb.</string>
     <string name="title_add_resize_pixels">&lt; %1$d piksel</string>
     <string name="title_add_image_select">Dosya seçin</string>
     <string name="title_add_attachment">Ek ekle</string>

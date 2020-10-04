@@ -334,7 +334,6 @@
     <string name="title_advanced_confirm_links">Potvrdi početne veze</string>
     <string name="title_advanced_confirm_images">Potvrdi prikazivanje slika</string>
     <string name="title_advanced_confirm_html">Po zadanom pokaži preoblikovane poruke</string>
-    <string name="title_advanced_tracking">Automatsko prepoznavanje i onemogućavanje slika za praćenje</string>
     <string name="title_advanced_display_hidden">Prikaži skrivene tekstove poruka</string>
     <string name="title_advanced_secure">Sakrij sa zaslona nedavnih aplikacija i spriječi snimanje zaslona</string>
     <string name="title_advanced_pin">PIN</string>
@@ -407,7 +406,6 @@
     <string name="title_advanced_fts_hint">Omogućivanje ovoga poboljšava performanse pretraživanja, ali također povećava i upotrebu baterije i prostora za pohranu</string>
     <string name="title_advanced_english_hint">To će ponovno pokrenuti aplikaciju</string>
     <string name="title_advanced_experiments_hint">Popis trenutnih eksperimentalnih značajki</string>
-    <string name="title_advanced_debug_hint">Omogućite dodatno bilježenje i prikaz informacija za uklanjanje pogrešaka na različitim mjestima</string>
     <string name="title_advanced_cleanup_hint">Ovo će izbrisati sve privremene datoteke</string>
     <string name="title_advanced_never_favorite">Nikada favorit</string>
     <string name="title_select">Odaberi &#8230;</string>

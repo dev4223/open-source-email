@@ -395,7 +395,6 @@
     <string name="title_advanced_browse_links">Delegar abertura de links ao Android</string>
     <string name="title_advanced_confirm_images">Confirmar a exibição de imagens</string>
     <string name="title_advanced_confirm_html">Mostrar mensagens reformatadas por padrão</string>
-    <string name="title_advanced_tracking">Reconhecer e desativar automaticamente as imagens de rastreamento</string>
     <string name="title_advanced_hide_timezone">Enviar mensagens sem dados de fuso horário</string>
     <string name="title_advanced_display_hidden">Exibir textos de mensagens ocultas</string>
     <string name="title_advanced_secure">Ocultar da tela de apps recentes e impedir a captura de tela</string>
@@ -496,7 +495,6 @@
     <string name="title_advanced_fts_hint">Ativando isto melhora o desempenho da pesquisa, mas também aumenta o uso de bateria e espaço de armazenamento</string>
     <string name="title_advanced_english_hint">Isto irá reiniciar o app</string>
     <string name="title_advanced_experiments_hint">Lista de recursos experimentais atuais</string>
-    <string name="title_advanced_debug_hint">Habilitar o log extra e mostrar informações de depuração em vários lugares</string>
     <string name="title_advanced_cleanup_attachments_hint">Ao limpar manualmente, isto removerá anexos de mensagens que não estão mais sincronizadas</string>
     <string name="title_advanced_cleanup_hint">Isto irá excluir todos os arquivos temporários</string>
     <string name="title_advanced_never_favorite">Nunca favoritar</string>
@@ -826,7 +824,6 @@
     <string name="title_add_image_attach">Anexar</string>
     <string name="title_add_image_resize">Redimensionar</string>
     <string name="title_add_image_privacy">Remover dados confidenciais</string>
-    <string name="title_add_image_privacy_remark">Localização, número de série, etc</string>
     <string name="title_add_resize_pixels">&lt; %1$d pixels</string>
     <string name="title_add_image_select">Selecionar arquivo</string>
     <string name="title_add_attachment">Adicionar anexo</string>

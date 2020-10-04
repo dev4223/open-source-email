@@ -337,7 +337,7 @@ Aviseringen i statusfältet kan inaktiveras via inställningarna för FairEmail:
 * Android 8 Oreo och senare: tryck på *Receive channel* -knappen och inaktivera kanalen via Android-inställningarna (detta kommer inte att inaktivera nya meddelanden)
 * Android 7 Nougat och tidigare: aktiverat *Använd bakgrundstjänst för att synkronisera meddelanden*, men se till att läsa anmärkningen under inställningen
 
-You can switch to periodically synchronization of messages in the receive settings to remove the notification, but be aware that this might use more battery power. See [here](#user-content-faq39) for more details about battery usage.
+Du kan växla till periodisk synkronisering av meddelanden i mottagarinställningarna för att ta bort meddelandet, men var medveten om att detta kan använda mer batteridrift. See [here](#user-content-faq39) for more details about battery usage.
 
 Android 8 Oreo kan också visa ett meddelande i statusfältet med texten *Apps körs i bakgrunden*. Please see [here](https://www.reddit.com/r/Android/comments/7vw7l4/psa_turn_off_background_apps_notification/) about how you can disable this notification.
 
@@ -1611,6 +1611,11 @@ If you want to forward a message, consider to use the move action instead. This 
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space it is not possible to preview which messages would match a header rule condition.
 
+Some common header conditions (regex):
+
+* *.&ast;Auto-Submitted:.&ast;* [RFC3834](https://tools.ietf.org/html/rfc3834)
+* *.&ast;Content-Type: multipart/report.&ast;* [RFC3462](https://tools.ietf.org/html/rfc3462)
+
 In the three-dots *more* message menu there is an item to create a rule for a received message with the most common conditions filled in.
 
 The POP3 protocol does not support setting keywords and moving or copying messages.
@@ -2201,7 +2206,7 @@ Note that:
 * Google does not expose details (name, e-mail, etc) about buyers to developers
 * An app like FairEmail cannot select which Google account to use
 * It may take a while until the Play store app has synchronized a purchase to another device
-* Play Store-köp kan inte användas utan Play Store, vilket inte heller är tillåtet enligt Play Store-reglerna
+* Play Store purchases cannot be used without the Play Store, which is also not allowed by Play Store rules
 
 If you cannot solve the problem with the purchase, you will have to contact Google about it.
 

@@ -156,8 +156,10 @@
     <color name="greyPrimary">#424242</color>
     <color name="greyPrimaryDark">#1b1b1b</color>
     <color name="greyAccent">#90a4ae</color>
+
     <!-- greyAccentDark orig: #62757f -->
     <color name="greyAccentDark">#3B4345</color>
+    <color name="greyAccentLight">#c1d5e0</color>
 
     <!-- default: #323232 -->
     <color name="design_snackbar_background_color" tools:override="true">#222</color>
