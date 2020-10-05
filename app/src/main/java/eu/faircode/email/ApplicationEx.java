@@ -33,6 +33,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
+import android.os.LocaleList;
 import android.os.Looper;
 import android.util.Printer;
 import android.webkit.CookieManager;
@@ -54,14 +55,29 @@ public class ApplicationEx extends Application {
 
     static Context getLocalizedContext(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean english = prefs.getBoolean("english", false);
 
-        if (english) {
-            Configuration config = new Configuration(context.getResources().getConfiguration());
-            config.setLocale(Locale.US);
-            return context.createConfigurationContext(config);
-        } else
-            return context;
+        boolean english = prefs.getBoolean("english", false);
+        String language = prefs.getString("language", english ? "en_US" : "primary");
+
+        switch (language) {
+            case "secondary":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    LocaleList ll = context.getResources().getConfiguration().getLocales();
+                    if (ll.size() > 1) {
+                        Configuration config = new Configuration(context.getResources().getConfiguration());
+                        config.setLocale(ll.get(1));
+                        return context.createConfigurationContext(config);
+                    }
+                }
+                break;
+            case "en_US":
+            case "en_GB":
+                Configuration config = new Configuration(context.getResources().getConfiguration());
+                config.setLocale("en_GB".equals(language) ? Locale.UK : Locale.US);
+                return context.createConfigurationContext(config);
+        }
+
+        return context;
     }
 
     @Override
