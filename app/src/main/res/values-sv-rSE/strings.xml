@@ -253,6 +253,7 @@
     <string name="title_advanced_suggest_frequently">Sortera föreslagna adresser vid användningsfrekvens</string>
     <string name="title_advanced_compose_font">Standardtypsnitt</string>
     <string name="title_advanced_prefix_once">Prefix i ämnet endast när du svarar eller vidarebefordrar</string>
+    <string name="title_advanced_separate_reply">Infoga en horisontell linje innan ett svar/framåt sidhuvud</string>
     <string name="title_advanced_extended_reply">Använd förlängd svars-/framåtriktad sidhuvud</string>
     <string name="title_advanced_quote_reply">Citera svarstext</string>
     <string name="title_advanced_resize_reply">Ändra storlek på bilder i svarande text</string>
@@ -311,6 +312,7 @@
     <string name="title_advanced_subject_top">Visa ämne ovanför avsändaren</string>
     <string name="title_advanced_subject_italic">Visa ämnet kursivt</string>
     <string name="title_advanced_subject_elipsed">När det behövs, förkorta ämnet</string>
+    <string name="title_advanced_highlight_color">Markera färg</string>
     <string name="title_advanced_keywords">Visa nyckelord i sidhuvudet för meddelandet</string>
     <string name="title_advanced_labels">Visa Gmail-etiketter i meddelandehuvud</string>
     <string name="title_advanced_flags">Visa stjärnor</string>
@@ -425,7 +427,8 @@
     <string name="title_advanced_language_detection">Detektera textens språk</string>
     <string name="title_advanced_fts">Bygg sökindex</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d meddelanden indexerade (%3$s)</string>
-    <string name="title_advanced_english">Använd amerikanska (US) inställningar</string>
+    <string name="title_advanced_language">Språk</string>
+    <string name="title_advanced_language_system">System</string>
     <string name="title_advanced_watchdog">Kontrollera regelbundet om FairEmail fortfarande är aktiv</string>
     <string name="title_advanced_optimize">Optimera automatiskt</string>
     <string name="title_advanced_updates">Sök efter uppdateringar</string>
@@ -829,7 +832,7 @@
     <string name="title_style_list_numbered">Numrerad</string>
     <string name="title_style_font">Typsnitt</string>
     <string name="title_style_font_default">Standard</string>
-    <string name="title_style_blockquote" comment="title_style_blockquote&#10;See here for what a block quote is:&#10;https://en.wikipedia.org/wiki/Block_quotation">Block</string>
+    <string name="title_style_blockquote">Block</string>
     <string name="title_style_strikethrough">Genomstruken</string>
     <string name="title_style_clear">Rensa formatering</string>
     <string name="title_style_link">Infoga länk</string>

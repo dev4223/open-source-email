@@ -305,6 +305,7 @@
     <string name="title_advanced_suggest_frequently">Sort suggested addresses on frequency of use</string>
     <string name="title_advanced_compose_font">Default font</string>
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
+    <string name="title_advanced_separate_reply">Insert a horizontal line before a reply/forward header</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
     <string name="title_advanced_quote_reply">Quote replied text</string>
     <string name="title_advanced_resize_reply">Resize images in replied text</string>
@@ -366,6 +367,7 @@
     <string name="title_advanced_subject_top">Show subject above sender</string>
     <string name="title_advanced_subject_italic">Show subject in italics</string>
     <string name="title_advanced_subject_elipsed">When needed, shorten the subject</string>
+    <string name="title_advanced_highlight_color">Highlight color</string>
     <string name="title_advanced_keywords">Show keywords in message header</string>
     <string name="title_advanced_labels">Show Gmail labels in message header</string>
     <string name="title_advanced_flags">Show stars</string>
@@ -495,6 +497,7 @@
     <string name="title_advanced_fts">Build search index</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexed (%3$s)</string>
     <string name="title_advanced_language">Language</string>
+    <string name="title_advanced_language_system">System</string>
     <string name="title_advanced_watchdog">Periodically check if FairEmail is still active</string>
     <string name="title_advanced_auth_plain" translatable="false">PLAIN</string>
     <string name="title_advanced_auth_login" translatable="false">LOGIN</string>
@@ -992,6 +995,7 @@
     <string name="title_text_reminder">Message is empty</string>
     <string name="title_attachment_keywords">attached,attachment,attachments,included</string>
     <string name="title_attachment_reminder">Did you intend to add an attachment?</string>
+    <string name="title_plain_reminder">All formatting will go lost</string>
     <string name="title_size_reminder">Message (%1$s) larger than server limit (%2$s)</string>
     <string name="title_attachments_missing">Not all attachments have been downloaded</string>
     <string name="title_dialog_hint">This dialog can be enabled again via the three-dots menu in the top action bar</string>

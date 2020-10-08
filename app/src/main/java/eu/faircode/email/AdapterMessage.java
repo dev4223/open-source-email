@@ -2219,7 +2219,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                                 div.appendChild(h);
 
-                                Element p = embedded.getReplyHeader(context, document, true);
+                                Element p = embedded.getReplyHeader(context, document, false, true);
                                 div.appendChild(p);
 
                                 div.appendChild(d.body().tagName("p"));
@@ -5247,8 +5247,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         boolean highlight_unread = prefs.getBoolean("highlight_unread", true);
         boolean highlight_subject = prefs.getBoolean("highlight_subject", false);
+        int colorHighlight = prefs.getInt("highlight_color", Helper.resolveColor(context, R.attr.colorUnreadHighlight));
 
-        this.colorUnread = Helper.resolveColor(context, highlight_unread ? R.attr.colorUnreadHighlight : R.attr.colorUnread);
+        this.colorUnread = (highlight_unread ? colorHighlight : Helper.resolveColor(context, R.attr.colorUnread));
         this.colorRead = Helper.resolveColor(context, R.attr.colorRead);
         this.colorSubject = Helper.resolveColor(context, highlight_subject ? R.attr.colorUnreadHighlight : R.attr.colorRead);
         this.colorEncrypt = Helper.resolveColor(context, R.attr.colorEncrypt);

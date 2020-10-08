@@ -264,6 +264,7 @@
     <string name="title_advanced_suggest_frequently">Sortați adresele sugerate în funcție de frecvența de utilizare</string>
     <string name="title_advanced_compose_font">Font prestabilit</string>
     <string name="title_advanced_prefix_once">Adaugă prefix la subiect o singură dată pentru răspuns sau redirecționare</string>
+    <string name="title_advanced_separate_reply">Introduceți o linie orizontală înaintea unui antet răspuns/forward</string>
     <string name="title_advanced_extended_reply">Folosește antetul extins pentru răspuns/redirecționare</string>
     <string name="title_advanced_quote_reply">Citează textul la care răspunzi</string>
     <string name="title_advanced_resize_reply">Redimensionează imaginile în textul cu răspuns</string>
@@ -322,6 +323,7 @@
     <string name="title_advanced_subject_top">Arată subiectul desupra expeditorului</string>
     <string name="title_advanced_subject_italic">Arată subiectul cursiv</string>
     <string name="title_advanced_subject_elipsed">La nevoie, scurtează subiectul</string>
+    <string name="title_advanced_highlight_color">Culoare de evidențiere</string>
     <string name="title_advanced_keywords">Arată cuvinte cheie în antetul mesajului</string>
     <string name="title_advanced_labels">Arată etichetele Gmail în antetul mesajului</string>
     <string name="title_advanced_flags">Arată cu stea</string>
@@ -436,7 +438,8 @@
     <string name="title_advanced_language_detection">Detectează limba textului mesajului</string>
     <string name="title_advanced_fts">Creează index de căutare</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mesaje indexate (%3$s)</string>
-    <string name="title_advanced_english">Utilizați setările pentru țara SUA</string>
+    <string name="title_advanced_language">Limba</string>
+    <string name="title_advanced_language_system">Sistem</string>
     <string name="title_advanced_watchdog">Verifică periodic dacă FairEmail este încă activ</string>
     <string name="title_advanced_optimize">Optimizare automată</string>
     <string name="title_advanced_updates">Verificare actualizări aplicație</string>
@@ -511,7 +514,7 @@
     <string name="title_advanced_english_hint">Aplicația se va restarta</string>
     <string name="title_advanced_experiments_hint">Lista de funcții experimentale curente</string>
     <string name="title_advanced_protocol_hint">Acest lucru va crește semnificativ utilizarea bateriei și a spațiului de stocare!</string>
-    <string name="title_advanced_debug_hint">Activează jurnalul suplimentar și arată informații de depanare urât în diferite locuri</string>
+    <string name="title_advanced_debug_hint">Activează jurnalul suplimentar și arată informații de depanare urâte în diferite locuri</string>
     <string name="title_advanced_cleanup_attachments_hint">Când se curăță manual, se vor elimina atașamentele din mesajele care nu mai sunt sincronizate</string>
     <string name="title_advanced_cleanup_hint">Se vor șterge toate fișierele temporare</string>
     <string name="title_advanced_never_favorite">Niciodată favorit</string>
@@ -840,7 +843,7 @@
     <string name="title_style_list_numbered">Numere</string>
     <string name="title_style_font">Font</string>
     <string name="title_style_font_default">Implicit</string>
-    <string name="title_style_blockquote" comment="title_style_blockquote&#10;See here for what a block quote is:&#10;https://en.wikipedia.org/wiki/Block_quotation">Bloc citat</string>
+    <string name="title_style_blockquote">Bloc citat</string>
     <string name="title_style_strikethrough">Tăiat</string>
     <string name="title_style_clear">Elimină toate formatările</string>
     <string name="title_style_link">Inserare legătură</string>

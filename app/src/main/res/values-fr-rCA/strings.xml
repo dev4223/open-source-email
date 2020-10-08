@@ -254,6 +254,7 @@
     <string name="title_advanced_suggest_frequently">Trier les adresses suggérées par fréquence d’utilisation</string>
     <string name="title_advanced_compose_font">Police par défaut</string>
     <string name="title_advanced_prefix_once">Ne préfixer l’objet qu’une seule fois lors de la réponse ou du transfert</string>
+    <string name="title_advanced_separate_reply">Insérer une ligne horizontale avant l\'en-tête de réponse/transfert</string>
     <string name="title_advanced_extended_reply">Utiliser l’en-tête de réponse/transfert étendu</string>
     <string name="title_advanced_quote_reply">Citer le texte répondu</string>
     <string name="title_advanced_resize_reply">Redimensionner les images dans le texte de la réponse</string>
@@ -291,8 +292,8 @@
     <string name="title_advanced_threading">Afficher en mode conversation</string>
     <string name="title_advanced_threading_unread">Afficher le nombre de messages non lus dans les conversations</string>
     <string name="title_advanced_indentation">Retrait gauche/droite des messages reçus/envoyés dans les conversations</string>
-    <string name="title_advanced_highlight_unread">Mettre les messages non lus en surbrillance</string>
-    <string name="title_advanced_highlight_subject">Mettre l’objet en surbrillance</string>
+    <string name="title_advanced_highlight_unread">Afficher les messages non lus en surbrillance</string>
+    <string name="title_advanced_highlight_subject">Afficher l’objet en surbrillance</string>
     <string name="title_advanced_color_stripe">Afficher la bande de couleur</string>
     <string name="title_advanced_avatars">Afficher la photo des contacts</string>
     <string name="title_advanced_gravatars">Afficher les Gravatars</string>
@@ -312,6 +313,7 @@
     <string name="title_advanced_subject_top">Afficher l’objet au dessus de l’expéditeur</string>
     <string name="title_advanced_subject_italic">Afficher l’objet en italique</string>
     <string name="title_advanced_subject_elipsed">Raccourcir l’objet si nécessaire</string>
+    <string name="title_advanced_highlight_color">Couleur de surbrillance</string>
     <string name="title_advanced_keywords">Afficher les mots-clés dans l’en-tête du message</string>
     <string name="title_advanced_labels">Afficher les libellés Gmail dans l\'en-tête du message</string>
     <string name="title_advanced_flags">Afficher les étoiles de suivi</string>
@@ -426,7 +428,8 @@
     <string name="title_advanced_language_detection">Reconnaître la langue du contenu du message</string>
     <string name="title_advanced_fts">Construire l’index de recherche</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d messages indexés (%3$s)</string>
-    <string name="title_advanced_english">Utiliser les paramètres des États-Unis</string>
+    <string name="title_advanced_language">Langue</string>
+    <string name="title_advanced_language_system">Système</string>
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
     <string name="title_advanced_optimize">Optimiser automatiquement</string>
     <string name="title_advanced_updates">Vérifier les mises à jour</string>
@@ -468,7 +471,7 @@
     <string name="title_advanced_date_hint">Les messages ne sont regroupés par date que s’ils sont triés par ordre chronologique</string>
     <string name="title_advanced_navbar_colorize_hint">Le fonctionnement dépend de la version et de la variante d’Android</string>
     <string name="title_advanced_threading_hint">Grouper les messages liés les uns aux autres</string>
-    <string name="title_advanced_highlight_hint">La couleur d’accentuation du thème sera utilisée pour la mise en surbrillance</string>
+    <string name="title_advanced_highlight_hint">La couleur d’accentuation du thème sera utilisée pour la surbrillance</string>
     <string name="title_advanced_gravatars_hint">Cela pourrait présenter un risque pour la confidentialité</string>
     <string name="title_advanced_name_email_hint">Si désactivé, seuls les noms seront affichés si disponibles</string>
     <string name="title_advanced_preview_hint">Disponible uniquement lorsque le texte du message a été téléchargé</string>
@@ -830,7 +833,7 @@
     <string name="title_style_list_numbered">Numérotée</string>
     <string name="title_style_font">Police de caractères</string>
     <string name="title_style_font_default">Par défaut</string>
-    <string name="title_style_blockquote" comment="title_style_blockquote&#10;See here for what a block quote is:&#10;https://en.wikipedia.org/wiki/Block_quotation">Bloc de citation</string>
+    <string name="title_style_blockquote">Bloc de citation</string>
     <string name="title_style_strikethrough">Barré</string>
     <string name="title_style_clear">Effacer la mise en forme</string>
     <string name="title_style_link">Insérer un lien</string>

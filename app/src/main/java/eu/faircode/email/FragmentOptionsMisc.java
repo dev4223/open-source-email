@@ -40,6 +40,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
@@ -61,7 +62,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import java.util.Locale;
 import java.util.SortedMap;
 
 import javax.net.ssl.SSLSocket;
@@ -108,7 +109,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Group grpDebug;
 
     private final static String[] RESET_OPTIONS = new String[]{
-            "shortcuts", "fts", "english", "watchdog", "updates",
+            "shortcuts", "fts", "language", "watchdog", "updates",
             "experiments", "query_threads", "crash_reports", "cleanup_attachments",
             "protocol", "debug", "auth_plain", "auth_login", "auth_sasl"
     };
@@ -185,7 +186,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("shortcuts", checked).commit(); // apply won't work here
-                restart();
             }
         });
 
@@ -231,22 +231,17 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         spLanguage.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                String[] values = getResources().getStringArray(R.array.languageValues);
-                setLanguage(values[position]);
+                if (position == 0)
+                    onNothingSelected(adapterView);
+                else {
+                    String tag = getResources().getAssets().getLocales()[position - 1];
+                    prefs.edit().putString("language", tag).commit(); // apply won't work here
+                }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                setLanguage("primary");
-            }
-
-            private void setLanguage(String value) {
-                boolean english = prefs.getBoolean("english", false);
-                String current = prefs.getString("language", english ? "en_US" : "primary");
-                if (!Objects.equals(current, value)) {
-                    prefs.edit().putString("language", value).commit();
-                    restart();
-                }
+                prefs.edit().remove("language").commit(); // apply won't work here
             }
         });
 
@@ -291,7 +286,6 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     prefs.edit().putInt("query_threads", 2).commit(); // apply won't work here
                 else
                     prefs.edit().remove("query_threads").commit(); // apply won't work here
-                restart();
             }
         });
 
@@ -611,15 +605,25 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         swShortcuts.setChecked(prefs.getBoolean("shortcuts", true));
         swFts.setChecked(prefs.getBoolean("fts", false));
 
-        String[] languageValues = getResources().getStringArray(R.array.languageValues);
+        String language = prefs.getString("language", null);
+        String[] languages = getResources().getAssets().getLocales();
 
-        boolean english = prefs.getBoolean("english", false);
-        String language = prefs.getString("language", english ? "en_US" : "primary");
-        for (int pos = 0; pos < languageValues.length; pos++)
-            if (languageValues[pos].equals(language)) {
-                spLanguage.setSelection(pos);
-                break;
-            }
+        int selected = -1;
+        List<String> display = new ArrayList<>();
+        display.add(getString(R.string.title_advanced_language_system));
+        for (int pos = 0; pos < languages.length; pos++) {
+            String lang = languages[pos];
+            Locale loc = Locale.forLanguageTag(lang);
+            display.add(loc.getDisplayName() + " [" + lang + "]");
+            if (lang.equals(language))
+                selected = pos + 1;
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, android.R.id.text1, display);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spLanguage.setAdapter(adapter);
+        if (selected >= 0)
+            spLanguage.setSelection(selected);
 
         swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));

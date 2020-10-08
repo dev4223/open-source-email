@@ -174,6 +174,9 @@ class Core {
                             " group=" + group +
                             " retry=" + retry);
 
+                    if (!Objects.equals(folder.id, op.folder))
+                        throw new IllegalArgumentException("Invalid folder=" + folder.id + "/" + op.folder);
+
                     if (ifolder != null && !ifolder.isOpen())
                         break;
 
@@ -1477,11 +1480,12 @@ class Core {
         if (imessages == null || imessages.length == 0)
             EntityOperation.queue(context, message, EntityOperation.ADD);
         else {
-            if (imessages.length > 1)
-                Log.e(folder.name + " exists messages=" + imessages.length);
-            for (int i = 0; i < imessages.length; i++) {
-                long uid = ifolder.getUID(imessages[i]);
+            if (imessages.length == 1) {
+                long uid = ifolder.getUID(imessages[0]);
                 EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
+            } else {
+                Log.e(folder.name + " EXISTS messages=" + imessages.length);
+                EntityOperation.sync(context, folder.id, false);
             }
         }
     }
