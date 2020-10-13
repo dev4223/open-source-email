@@ -387,7 +387,8 @@ public class HtmlHelper {
         for (Element e : parsed.select("*")) {
             String tag = e.tagName();
             if (tag.contains(":")) {
-                if (ns == null || tag.startsWith(ns)) {
+                if (display_hidden ||
+                        ns == null || tag.startsWith(ns)) {
                     e.tagName(tag.split(":")[1]);
                     Log.i("Updated tag=" + tag + " to=" + e.tagName());
                 } else {
@@ -1653,7 +1654,10 @@ public class HtmlHelper {
         if (full)
             return text;
 
-        return truncate(text, PREVIEW_SIZE);
+        String preview = text
+                .replace("\u200C", "") // Zero-width non-joiner
+                .replaceAll("\\s+", " ");
+        return truncate(preview, PREVIEW_SIZE);
     }
 
     static String truncate(String text, int at) {

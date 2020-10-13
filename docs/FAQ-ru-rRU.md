@@ -488,14 +488,14 @@ When "less secure apps" is not enabled, you'll get the error *Authentication fai
 
 *General*
 
-You might get the alert "*Please log in via your web browser*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.
+Вы можете получить оповещение "*Пожалуйста, войдите через веб-браузер*". Это происходит, когда Google считает небезопасной сеть, которая подключает вас к Интернету (это может быть VPN). Это можно предотвратить, используя мастер быстрой установки Gmail или пароль для конкретного приложения.
 
-See [here](https://support.google.com/mail/answer/7126229) for Google's instructions and [here](https://support.google.com/mail/accounts/answer/78754) for troubleshooting.
+Смотрите [здесь](https://support.google.com/mail/answer/7126229) для инструкций Google и [здесь](https://support.google.com/mail/accounts/answer/78754) для устранения неполадок.
 
 <br />
 
 <a name="faq7"></a>
-**(7) Why are sent messages not appearing (directly) in the sent folder?**
+(7) Почему сообщения не появляются (непосредственно) в папке отправленных?
 
 Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder. This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 
@@ -737,9 +737,11 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 <a name="faq15"></a>
 **(15) Why does the message text keep loading?**
 
-The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and need to be fetched on opening the message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
+The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and will be fetched on demand on expanding a message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
 
 You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons) and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
+
+If FairEmail is holding off because of prior connectivity issues, please see [this FAQ](#user-content-faq123), you can force synchronization via the three dots menu.
 
 In the receive settings you can set the maximum size for automatically downloading of messages on metered connections.
 

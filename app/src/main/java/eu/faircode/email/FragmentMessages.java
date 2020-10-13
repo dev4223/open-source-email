@@ -94,7 +94,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
@@ -2093,100 +2092,109 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         private void onSwipeAsk(final @NonNull TupleMessageEx message, @NonNull RecyclerView.ViewHolder viewHolder) {
-            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
-
-            if (message.ui_seen)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, 1, R.string.title_unseen);
-            else
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
-
-            if (message.ui_flagged)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, 2, R.string.title_unflag);
-            else
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, 2, R.string.title_flag);
-
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
-
-            if (message.ui_snoozed == null)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 4, R.string.title_hide);
-            else if (message.ui_snoozed == Long.MAX_VALUE)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 4, R.string.title_unhide);
-
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 5, R.string.title_flag_color);
-            if (message.accountProtocol == EntityAccount.TYPE_IMAP) {
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, 7, R.string.title_report_spam);
-            }
-            popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_permanently, 8, R.string.title_delete_permanently);
-
-            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            rvMessage.post(new Runnable() {
                 @Override
-                public boolean onMenuItemClick(MenuItem target) {
-                    switch (target.getItemId()) {
-                        case R.string.title_seen:
-                            onActionSeenSelection(true, message.id);
-                            return true;
-                        case R.string.title_unseen:
-                            onActionSeenSelection(false, message.id);
-                            return true;
-                        case R.string.title_flag:
-                            onActionFlagSelection(true, null, message.id);
-                            return true;
-                        case R.string.title_unflag:
-                            onActionFlagSelection(false, null, message.id);
-                            return true;
-                        case R.string.title_snooze:
-                            onMenuSnooze();
-                            return true;
-                        case R.string.title_hide:
-                        case R.string.title_unhide:
-                            onActionHide(message);
-                            return true;
-                        case R.string.title_flag_color:
-                            onMenuColor();
-                            return true;
-                        case R.string.title_move:
-                            onSwipeMove(message);
-                            return true;
-                        case R.string.title_report_spam:
-                            onSwipeJunk(message);
-                            return true;
-                        case R.string.title_delete_permanently:
-                            onSwipeDelete(message);
-                            return true;
-                        default:
-                            return false;
+                public void run() {
+                    try {
+                        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
+
+                        if (message.ui_seen)
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, 1, R.string.title_unseen);
+                        else
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
+
+                        if (message.ui_flagged)
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, 2, R.string.title_unflag);
+                        else
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, 2, R.string.title_flag);
+
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
+
+                        if (message.ui_snoozed == null)
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 4, R.string.title_hide);
+                        else if (message.ui_snoozed == Long.MAX_VALUE)
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 4, R.string.title_unhide);
+
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 5, R.string.title_flag_color);
+                        if (message.accountProtocol == EntityAccount.TYPE_IMAP) {
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, 7, R.string.title_report_spam);
+                        }
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_permanently, 8, R.string.title_delete_permanently);
+
+                        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem target) {
+                                switch (target.getItemId()) {
+                                    case R.string.title_seen:
+                                        onActionSeenSelection(true, message.id);
+                                        return true;
+                                    case R.string.title_unseen:
+                                        onActionSeenSelection(false, message.id);
+                                        return true;
+                                    case R.string.title_flag:
+                                        onActionFlagSelection(true, null, message.id);
+                                        return true;
+                                    case R.string.title_unflag:
+                                        onActionFlagSelection(false, null, message.id);
+                                        return true;
+                                    case R.string.title_snooze:
+                                        onMenuSnooze();
+                                        return true;
+                                    case R.string.title_hide:
+                                    case R.string.title_unhide:
+                                        onActionHide(message);
+                                        return true;
+                                    case R.string.title_flag_color:
+                                        onMenuColor();
+                                        return true;
+                                    case R.string.title_move:
+                                        onSwipeMove(message);
+                                        return true;
+                                    case R.string.title_report_spam:
+                                        onSwipeJunk(message);
+                                        return true;
+                                    case R.string.title_delete_permanently:
+                                        onSwipeDelete(message);
+                                        return true;
+                                    default:
+                                        return false;
+                                }
+                            }
+
+                            private void onMenuSnooze() {
+                                Bundle args = new Bundle();
+                                args.putString("title", getString(R.string.title_snooze));
+                                args.putLong("account", message.account);
+                                args.putString("thread", message.thread);
+                                args.putLong("id", message.id);
+                                args.putBoolean("finish", false);
+
+                                FragmentDialogDuration fragment = new FragmentDialogDuration();
+                                fragment.setArguments(args);
+                                fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
+                                fragment.show(getParentFragmentManager(), "message:snooze");
+                            }
+
+                            private void onMenuColor() {
+                                Bundle args = new Bundle();
+                                args.putLong("id", message.id);
+                                args.putInt("color", message.color == null ? Color.TRANSPARENT : message.color);
+                                args.putString("title", getString(R.string.title_flag_color));
+
+                                FragmentDialogColor fragment = new FragmentDialogColor();
+                                fragment.setArguments(args);
+                                fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_COLOR);
+                                fragment.show(getParentFragmentManager(), "message:color");
+                            }
+                        });
+
+                        popupMenu.show();
+                    } catch (Throwable ex) {
+                        Log.e(ex);
                     }
                 }
-
-                private void onMenuSnooze() {
-                    Bundle args = new Bundle();
-                    args.putString("title", getString(R.string.title_snooze));
-                    args.putLong("account", message.account);
-                    args.putString("thread", message.thread);
-                    args.putLong("id", message.id);
-                    args.putBoolean("finish", false);
-
-                    FragmentDialogDuration fragment = new FragmentDialogDuration();
-                    fragment.setArguments(args);
-                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_SNOOZE);
-                    fragment.show(getParentFragmentManager(), "message:snooze");
-                }
-
-                private void onMenuColor() {
-                    Bundle args = new Bundle();
-                    args.putLong("id", message.id);
-                    args.putInt("color", message.color == null ? Color.TRANSPARENT : message.color);
-                    args.putString("title", getString(R.string.title_flag_color));
-
-                    FragmentDialogColor fragment = new FragmentDialogColor();
-                    fragment.setArguments(args);
-                    fragment.setTargetFragment(FragmentMessages.this, REQUEST_MESSAGE_COLOR);
-                    fragment.show(getParentFragmentManager(), "message:color");
-                }
             });
-
-            popupMenu.show();
         }
 
         private void onSwipeMove(final @NonNull TupleMessageEx message) {
@@ -7134,11 +7142,22 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             @Override
             protected void onExecuted(Bundle args, final String[] data) {
-                if (data == null)
+                if (data == null) {
+                    Log.w("Print no data");
                     return;
+                }
+
+                ActivityBase activity = (ActivityBase) getActivity();
+                if (activity == null) {
+                    Log.w("Print no activity");
+                    return;
+                }
+
+                final Context context = activity.getOriginalContext();
 
                 // https://developer.android.com/training/printing/html-docs.html
-                printWebView = new WebView(getContext());
+                printWebView = new WebView(context);
+
                 WebSettings settings = printWebView.getSettings();
                 settings.setLoadsImagesAutomatically(true);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
@@ -7151,19 +7170,20 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     public void onPageFinished(WebView view, String url) {
+                        Log.i("Print page finished");
+
                         try {
-                            if (printWebView == null)
+                            if (printWebView == null) {
+                                Log.w("Print no view");
                                 return;
+                            }
 
-                            ActivityBase activity = (ActivityBase) getActivity();
-                            if (activity == null)
-                                return;
-
-                            PrintManager printManager = (PrintManager) activity.getOriginalContext().getSystemService(Context.PRINT_SERVICE);
+                            PrintManager printManager = (PrintManager) context.getSystemService(Context.PRINT_SERVICE);
                             String jobName = getString(R.string.app_name);
                             if (!TextUtils.isEmpty(data[0]))
                                 jobName += " - " + data[0];
 
+                            Log.i("Print queue job=" + jobName);
                             PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
                             printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
                         } catch (Throwable ex) {
@@ -7174,6 +7194,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     }
                 });
 
+                Log.i("Print load data");
                 printWebView.loadDataWithBaseURL("about:blank", data[1], "text/html", StandardCharsets.UTF_8.name(), null);
             }
 

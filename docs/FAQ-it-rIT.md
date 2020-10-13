@@ -406,14 +406,14 @@ Il tuo nome utente è probabilmente facilmente individuato, quindi ciò non è s
 
 Il tuo nome utente e la password e tutti i messaggi saranno inviati e ricevuti non crittografati, il che è **molto insicuro** perché un [attacco man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) è molto semplice su una connessione non crittografata.
 
-Se vuoi ancora usare un certificato di sicurezza non valido, una password vuota o una connessione del testo semplice dovrai abilitare le connessioni non sicure nelle impostazioni del profilo e/o dell'identità. STARTTLS dovrebbe essere selezionato per le connessioni in testo semplice. If you enable insecure connections, you should connect via private, trusted networks only and never via public networks, like offered in hotels, airports, etc.
+Se vuoi ancora usare un certificato di sicurezza non valido, una password vuota o una connessione del testo semplice dovrai abilitare le connessioni non sicure nelle impostazioni del profilo e/o dell'identità. STARTTLS dovrebbe essere selezionato per le connessioni in testo semplice. Se abiliti connessioni non sicure, dovresti connetterti solo tramite reti private e attendibili e mai tramite reti pubbliche, come quelle offerte in hotel, aeroporti, ecc.
 
 <br />
 
 <a name="faq5"></a>
-**(5) How can I customize the message view?**
+**(5) Come posso personalizzare la visualizzazione dei messaggi?**
 
-In the three dot overflow menu you can enable or disable or select:
+Nel menu di overflow a tre punti è possibile abilitare o disabilitare o selezionare:
 
 * *text size*: for three different font sizes
 * *compact view*: for more condensed message items and a smaller message text font
@@ -737,13 +737,15 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 <a name="faq15"></a>
 **(15) Why does the message text keep loading?**
 
-The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and need to be fetched on opening the message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
+The message header and message body are fetched separately from the server. Il testo del messaggio di messaggi più grandi non viene pre-recuperato su connessioni misurate e sarà recuperato su domanda all'espansione di un messaggio. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
 
 You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons) and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
 
-In the receive settings you can set the maximum size for automatically downloading of messages on metered connections.
+Se FairEmail si sta bloccando a causa di problemi di connettività pregressa, sei pregato di vedere [questa FAQ](#user-content-faq123), puoi forzare la sincronizzazione tramite il menu a tre puntini.
 
-Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are too.
+Nelle impostazioni di ricezione puoi impostare la dimensione massima per scaricare automaticamente i messaggi su connessioni misurate.
+
+Le connessioni mobili sono quasi sempre misurate e anche alcuni hotspot Wi-Fi (pagati).
 
 <br />
 
