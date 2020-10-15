@@ -83,6 +83,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -145,6 +146,7 @@ class Core {
     private static final int LOCAL_RETRY_MAX = 2;
     private static final long LOCAL_RETRY_DELAY = 5 * 1000L; // milliseconds
     private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 5;
+    private static final int MAX_PREVIEW = 5000; // characters
 
     static void processOperations(
             Context context,
@@ -946,6 +948,9 @@ class Core {
         EntityFolder target = db.folder().getFolder(id);
         if (target == null)
             throw new FolderNotFoundException();
+        if (folder.id.equals(target.id))
+            return;
+
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
         // Get source messages
@@ -1103,6 +1108,8 @@ class Core {
         EntityFolder target = db.folder().getFolder(id);
         if (target == null)
             throw new FolderNotFoundException();
+        if (folder.id.equals(target.id))
+            return;
 
         // Move from trash/drafts only
         if (!EntityFolder.TRASH.equals(folder.type) &&
@@ -3952,6 +3959,8 @@ class Core {
                     try {
                         File file = message.getFile(context);
                         preview = HtmlHelper.getFullText(file);
+                        if (preview != null && preview.length() > MAX_PREVIEW)
+                            preview = preview.substring(0, MAX_PREVIEW);
                     } catch (Throwable ex) {
                         Log.e(ex);
                     }
@@ -3966,8 +3975,14 @@ class Core {
                     if (!TextUtils.isEmpty(preview))
                         sb.append(preview);
                 }
-                if (sb.length() > 0)
-                    mbuilder.setContentText(sb.toString());
+                if (sb.length() > 0) {
+                    String ascii = Normalizer
+                            .normalize(sb.toString(), Normalizer.Form.NFKD)
+                            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                            .replace("ß", "ss")
+                            .replace("ĳ", "ij");
+                    mbuilder.setContentText(ascii);
+                }
 
                 // Device
                 StringBuilder sbm = new StringBuilder();

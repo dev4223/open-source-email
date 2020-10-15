@@ -33,6 +33,7 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.database.sqlite.SQLiteConstraintException;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -50,6 +51,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
+import android.print.PrintJob;
 import android.print.PrintManager;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -265,6 +267,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     private boolean found;
     private BoundaryCallbackMessages.SearchCriteria criteria = null;
     private boolean pane;
+
+    private WebView printWebView = null;
 
     private long message = -1;
     private OpenPgpServiceConnection pgpService;
@@ -2092,35 +2096,37 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         private void onSwipeAsk(final @NonNull TupleMessageEx message, @NonNull RecyclerView.ViewHolder viewHolder) {
+            // Make sure animations are done
             rvMessage.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        int order = 1;
                         PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), viewHolder.itemView);
 
                         if (message.ui_seen)
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, 1, R.string.title_unseen);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unseen, order++, R.string.title_unseen);
                         else
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, 1, R.string.title_seen);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_seen, order++, R.string.title_seen);
 
                         if (message.ui_flagged)
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, 2, R.string.title_unflag);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unflag, order++, R.string.title_unflag);
                         else
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, 2, R.string.title_flag);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_flag, order++, R.string.title_flag);
 
-                        popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, 3, R.string.title_snooze);
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_snooze, order++, R.string.title_snooze);
 
                         if (message.ui_snoozed == null)
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, 4, R.string.title_hide);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_hide, order++, R.string.title_hide);
                         else if (message.ui_snoozed == Long.MAX_VALUE)
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, 4, R.string.title_unhide);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_unhide, order++, R.string.title_unhide);
 
-                        popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, 5, R.string.title_flag_color);
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_flag_color, order++, R.string.title_flag_color);
                         if (message.accountProtocol == EntityAccount.TYPE_IMAP) {
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, 6, R.string.title_move);
-                            popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, 7, R.string.title_report_spam);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_move, order++, R.string.title_move);
+                            popupMenu.getMenu().add(Menu.NONE, R.string.title_report_spam, order++, R.string.title_report_spam);
                         }
-                        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_permanently, 8, R.string.title_delete_permanently);
+                        popupMenu.getMenu().add(Menu.NONE, R.string.title_delete_permanently, order++, R.string.title_delete_permanently);
 
                         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                             @Override
@@ -2692,6 +2698,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     for (EntityAccount account : db.account().getSynchronizingAccounts())
                         if (account.protocol == EntityAccount.TYPE_IMAP)
                             result.accounts.add(account);
+
+                if (result.folders.size() > 1)
+                    result.folders = new ArrayList<>();
 
                 return result;
             }
@@ -5948,6 +5957,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                         db.message().setMessageFts(message.id, false);
 
                                         db.setTransactionSuccessful();
+                                    } catch (SQLiteConstraintException ex) {
+                                        // Message removed
+                                        Log.w(ex);
                                     } finally {
                                         db.endTransaction();
                                     }
@@ -6573,6 +6585,9 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         db.identity().setIdentitySignKeyAlias(message.identity, alias);
 
                     db.setTransactionSuccessful();
+                } catch (SQLiteConstraintException ex) {
+                    // Message removed
+                    Log.w(ex);
                 } finally {
                     db.endTransaction();
                 }
@@ -7027,8 +7042,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     private void onPrint(Bundle args) {
         new SimpleTask<String[]>() {
-            private WebView printWebView = null;
-
             @Override
             protected String[] onExecute(Context context, Bundle args) throws IOException {
                 long id = args.getLong("id");
@@ -7185,9 +7198,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                             Log.i("Print queue job=" + jobName);
                             PrintDocumentAdapter adapter = printWebView.createPrintDocumentAdapter(jobName);
-                            printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
+                            PrintJob job = printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
+                            EntityLog.log(context, "Print queued job=" + job.getInfo());
                         } catch (Throwable ex) {
-                            Log.e(ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex);
                         } finally {
                             printWebView = null;
                         }

@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.bugsnag.android.gradle'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
@@ -12,12 +13,12 @@ android {
         applicationId "eu.faircode.email"
         minSdkVersion 21
         targetSdkVersion 30
-        versionCode 1358
-        versionName "1.1358"
+        versionCode 1361
+        versionName "1.1361"
         archivesBaseName = "FairEmail-v$versionName"
 
         // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
-        buildConfigField "String", "RELEASE_NAME", "\"Wyleyia\""
+        buildConfigField "String", "RELEASE_NAME", "\"Xiyunykus\""
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -33,6 +34,26 @@ android {
             // Bugsnag, sqlite
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
+    }
+
+    // https://stackoverflow.com/questions/28948538/
+    // $JAVA_HOME/bin/java -jar ~/Android/Sdk/tools/proguard/lib/retrace.jar ~/email/app/schemas/mapping/FairEmail-v1.nnn-github-release-mapping.txt
+    applicationVariants.all { variant ->
+        if (variant.getBuildType().isMinifyEnabled())
+            variant.assembleProvider.get().doLast {
+                for (file in variant.getMappingFileProvider().get().files)
+                    if (file != null && file.exists()) {
+                        def dir = "${rootDir}/app/schemas/mapping"
+                        def name = "$archivesBaseName-$variant.baseName-$file.name"
+                        def target = new File(dir, name)
+                        if (!target.exists())
+                            copy {
+                                from file
+                                into dir
+                                rename { String fileName -> name }
+                            }
+                    }
+            }
     }
 
     android {
@@ -77,6 +98,12 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
     packagingOptions {
         exclude 'LICENSES'
         exclude 'META-INF/LICENSE.txt'
@@ -101,10 +128,10 @@ android {
     }
 
     buildTypes {
+        // https://developer.android.com/studio/build/shrink-code
         release {
             debuggable = false
             minifyEnabled = true
-            useProguard = true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -112,7 +139,6 @@ android {
             applicationIdSuffix '.debug'
             debuggable = true
             minifyEnabled = false
-            useProguard = false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -157,6 +183,19 @@ android {
         if (variant.buildType.name == "debug" &&
                 (flavors.contains("fdroid") || flavors.contains("play"))) {
             setIgnore(true)
+        }
+    }
+
+    bugsnag {
+        // https://docs.bugsnag.com/build-integrations/gradle/
+        uploadJvmMappings = false // disables upload of ProGuard/DexGuard/R8 mapping files
+        uploadNdkMappings = false // disables upload of NDK mapping files
+        reportBuilds = false // disables upload of build metadata
+        overwrite = true
+        builderName = "M66B"
+        sourceControl {
+            provider = "github-enterprise"
+            repository = "https://github.com/M66B/FairEmail"
         }
     }
 }
@@ -210,11 +249,11 @@ dependencies {
     def lifecycle_version = "2.3.0-beta01"
     def lifecycle_extensions_version = "2.2.0"
     def sqlite_version = "2.1.0"
-    def room_version = "2.2.5" // 2.3.0-alpha02
+    def room_version = "2.2.5" // 2.3.0-alpha03
     def paging_version = "2.1.2" // 3.0.0-alpha03
     def preference_version = "1.1.1"
-    def work_version = "2.5.0-alpha02"
-    def exif_version = "1.3.0"
+    def work_version = "2.5.0-alpha03"
+    def exif_version = "1.3.1"
     def biometric_version = "1.1.0-beta01"
     def textclassifier_version = "1.0.0-alpha03"
     def billingclient_version = "3.0.1"
@@ -235,7 +274,6 @@ dependencies {
     def overscroll_version = "1.1.0"
     def appauth_version = "0.7.1"
     def jcharset_version = "2.1"
-    def jchardet_version = "2.3.2"
 
     // https://developer.android.com/jetpack/androidx/releases/
 
@@ -396,9 +434,4 @@ dependencies {
     // http://www.freeutils.net/source/jcharset/
     // https://mvnrepository.com/artifact/net.freeutils/jcharset
     implementation "net.freeutils:jcharset:$jcharset_version"
-
-    // https://github.com/albfernandez/juniversalchardet
-    // https://www-archive.mozilla.org/projects/intl/chardet.html
-    // https://mvnrepository.com/artifact/com.github.albfernandez/juniversalchardet
-    implementation "com.github.albfernandez:juniversalchardet:$jchardet_version"
 }

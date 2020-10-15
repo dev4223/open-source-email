@@ -2189,10 +2189,14 @@ public class MessageHelper {
                 boolean html = "text/html".equalsIgnoreCase(contentType.getBaseType());
                 if ((plain || html) &&
                         !Part.ATTACHMENT.equalsIgnoreCase(disposition) && TextUtils.isEmpty(filename)) {
-                    if (plain)
-                        parts.plain.add(part);
-                    else if (html)
-                        parts.html.add(part);
+                    if (Part.INLINE.equalsIgnoreCase(disposition))
+                        parts.extra.add(part);
+                    else {
+                        if (plain)
+                            parts.plain.add(part);
+                        else if (html)
+                            parts.html.add(part);
+                    }
                 } else {
                     if ("message/delivery-status".equalsIgnoreCase(contentType.getBaseType()) ||
                             "message/disposition-notification".equalsIgnoreCase(contentType.getBaseType()))

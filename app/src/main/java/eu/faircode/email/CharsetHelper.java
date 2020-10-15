@@ -19,14 +19,18 @@ package eu.faircode.email;
     Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
-import org.mozilla.universalchardet.UniversalDetector;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 
 class CharsetHelper {
-    private static final int SAMPLE_SIZE = 1024;
+    private static final int MAX_SAMPLE_SIZE = 8192;
+
+    static {
+        System.loadLibrary("compact_enc_det");
+    }
+
+    private static native String jni_detect(byte[] chars);
 
     static boolean isUTF8(String text) {
         // Get extended ASCII characters
@@ -124,17 +128,20 @@ class CharsetHelper {
         try {
             byte[] octets = text.getBytes(StandardCharsets.ISO_8859_1);
 
-            int offset = 0;
-            UniversalDetector detector = new UniversalDetector();
-            while (offset < octets.length && !detector.isDone()) {
-                detector.handleData(octets, offset, Math.min(SAMPLE_SIZE, octets.length - offset));
-                offset += SAMPLE_SIZE;
+            byte[] sample;
+            if (octets.length < MAX_SAMPLE_SIZE)
+                sample = octets;
+            else {
+                sample = new byte[MAX_SAMPLE_SIZE];
+                System.arraycopy(octets, 0, sample, 0, MAX_SAMPLE_SIZE);
             }
-            detector.dataEnd();
 
-            String detected = detector.getDetectedCharset();
-            if (detected == null)
-                return null;
+            Log.i("compact_enc_det sample=" + sample.length);
+            String detected = jni_detect(sample);
+            if ("US-ASCII".equals(detected))
+                Log.w("compact_enc_det result=" + detected);
+            else
+                Log.e("compact_enc_det result=" + detected);
 
             return Charset.forName(detected);
         } catch (Throwable ex) {
