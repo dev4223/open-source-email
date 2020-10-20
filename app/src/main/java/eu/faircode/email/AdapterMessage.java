@@ -971,16 +971,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFolder.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvLabels.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
-
-                if (avatars) {
-                    int px = Math.round(fz_sender + fz_subject + (compact ? 0 : textSize * 0.9f));
-                    ViewGroup.LayoutParams lparams = ibAvatar.getLayoutParams();
-                    if (lparams.width != px || lparams.height != px) {
-                        lparams.width = px;
-                        lparams.height = px;
-                        ibAvatar.requestLayout();
-                    }
-                }
             }
 
             // Selected / disabled
@@ -1021,38 +1011,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvError.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
             }
 
-            // Unseen
-            Typeface typeface = (message.unseen > 0 ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            tvFrom.setTypeface(typeface);
-            tvSize.setTypeface(typeface);
-            tvTime.setTypeface(typeface);
-            if (subject_italic)
-                if (message.unseen > 0)
-                    tvSubject.setTypeface(null, Typeface.BOLD_ITALIC);
-                else
-                    tvSubject.setTypeface(null, Typeface.ITALIC);
-            else
-                tvSubject.setTypeface(typeface);
-            //tvCount.setTypeface(typeface);
-            tvCount.setTypeface(Typeface.DEFAULT_BOLD);
-
-            int colorUnseen = (message.unseen > 0 ? colorUnread : colorRead);
-
-            // dev4223: subject in unseen-color
-            tvSubject.setTextColor(colorUnseen);
-            // dev4223: from in new color
-            int colorUnseenFrom = (message.unseen > 0 ? colorUnread : colorSubject);
-            
-            if (tvFrom.getTag() == null || !Objects.equals(tvFrom.getTag(), colorUnseen)) {
-                tvFrom.setTag(colorUnseen);
-	            if (viewType == ViewType.THREAD)
-	                tvFrom.setTextColor(colorUnseen);
-	            else
-	                tvFrom.setTextColor(colorUnseenFrom);
-	            tvSize.setTextColor(colorUnseen);
-	            tvTime.setTextColor(colorUnseen);
-            }
-            tvCount.setTextColor(colorAccent);
+            bindSeen(message);
 
             // Account color
             int colorBackground =
@@ -1485,6 +1444,54 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             pbCalendarWait.setVisibility(View.GONE);
         }
 
+        private void bindSeen(TupleMessageEx message) {
+        	if (textSize != 0) {
+                float fz_sender = (font_size_sender == null ? textSize : font_size_sender) * (message.unseen > 0 ? 1.1f : 1f);
+                float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.9f;
+                tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
+                tvSubject.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_subject);
+
+                if (avatars) {
+                    int px = Math.round(fz_sender + fz_subject + (compact ? 0 : textSize * 0.9f));
+                    ViewGroup.LayoutParams lparams = ibAvatar.getLayoutParams();
+                    if (lparams.width != px || lparams.height != px) {
+                        lparams.width = px;
+                        lparams.height = px;
+                        ibAvatar.requestLayout();
+                    }
+                }
+            }
+
+            Typeface typeface = (message.unseen > 0 ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            tvFrom.setTypeface(typeface);
+            tvSize.setTypeface(typeface);
+            tvTime.setTypeface(typeface);
+            if (subject_italic)
+                if (message.unseen > 0)
+                    tvSubject.setTypeface(null, Typeface.BOLD_ITALIC);
+                else
+                    tvSubject.setTypeface(null, Typeface.ITALIC);
+            else
+                tvSubject.setTypeface(typeface);
+            //tvCount.setTypeface(typeface);
+            tvCount.setTypeface(Typeface.DEFAULT_BOLD);
+
+            // dev4223: subject in unseen-color
+            tvSubject.setTextColor(colorUnseen);
+            // dev4223: from in new color
+            int colorUnseenFrom = (message.unseen > 0 ? colorUnread : colorSubject);
+            if (tvFrom.getTag() == null || !Objects.equals(tvFrom.getTag(), colorUnseen)) {
+                tvFrom.setTag(colorUnseen);
+	            if (viewType == ViewType.THREAD)
+	                tvFrom.setTextColor(colorUnseen);
+	            else
+	                tvFrom.setTextColor(colorUnseenFrom);
+	            tvSize.setTextColor(colorUnseen);
+	            tvTime.setTextColor(colorUnseen);
+            }
+            tvCount.setTextColor(colorAccent);
+        }
+
         private void bindFlagged(TupleMessageEx message, boolean expanded) {
             boolean pro = ActivityBilling.isPro(context);
             boolean flagged = (message.count - message.unflagged) > 0;
@@ -1777,7 +1784,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 protected void onException(Bundle args, Throwable ex) {
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
-            }.setLog(false).execute(context, owner, sargs, "message:more");
+            }.setLog(false).execute(context, owner, sargs, "message:tools");
         }
 
         private void bindAddresses(TupleMessageEx message) {
@@ -3195,7 +3202,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     } else {
                         message.ui_seen = !message.ui_seen;
                         message.unseen = (message.ui_seen ? 0 : message.count);
-                        bindTo(message, false);
+                        bindSeen(message);
 
                         Bundle args = new Bundle();
                         args.putLong("id", message.id);
@@ -3676,16 +3683,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             else {
                 boolean expanded = !properties.getValue("expanded", message.id);
 
-                // Prevent flicker
-                if (expanded && message.accountAutoSeen && !message.folderReadOnly) {
-                    message.unseen = 0;
-                    message.ui_seen = true;
-                    message.visible_unseen = 0;
-                    message.ui_unsnoozed = false;
-                }
-                properties.setValue("expanded", message.id, expanded);
-                bindTo(message, expanded);
-
                 properties.setExpanded(message, expanded);
 
                 // Needed to scroll to item after collapsing other items
@@ -3741,7 +3738,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onSaveAttachments(TupleMessageEx message) {
             LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
             lbm.sendBroadcast(
-                    new Intent(FragmentMessages.ACTION_STORE_ATTACHMENTS)
+                    new Intent(FragmentBase.ACTION_STORE_ATTACHMENTS)
                             .putExtra("id", message.id));
         }
 
@@ -4435,10 +4432,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (amessage == null || !amessage.id.equals(id))
                         return;
 
-                    properties.setExpanded(message, false);
                     message.ui_seen = args.getBoolean("seen");
                     message.unseen = (message.ui_seen ? 0 : message.count);
-                    bindTo(message, false);
+                    properties.setExpanded(message, false);
                 }
 
                 @Override

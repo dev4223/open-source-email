@@ -949,7 +949,7 @@ class Core {
         if (target == null)
             throw new FolderNotFoundException();
         if (folder.id.equals(target.id))
-            return;
+            throw new IllegalArgumentException("self");
 
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
@@ -1109,7 +1109,7 @@ class Core {
         if (target == null)
             throw new FolderNotFoundException();
         if (folder.id.equals(target.id))
-            return;
+            throw new IllegalArgumentException("self");
 
         // Move from trash/drafts only
         if (!EntityFolder.TRASH.equals(folder.type) &&
@@ -1448,6 +1448,8 @@ class Core {
             attachment = db.attachment().getAttachment(message.id, (int) id); // legacy
         if (attachment == null)
             throw new IllegalArgumentException("Local attachment not found");
+        if (attachment.subsequence != null)
+            throw new IllegalArgumentException("Download of sub attachment");
         if (attachment.available)
             return;
 
@@ -1764,7 +1766,9 @@ class Core {
         Log.i("Delete local count=" + local.size());
         for (String name : local.keySet()) {
             EntityFolder folder = local.get(name);
-            if (EntityFolder.USER.equals(folder.type)) {
+            List<EntityFolder> childs = parentFolders.get(name);
+            if (EntityFolder.USER.equals(folder.type) ||
+                    childs == null || childs.size() == 0) {
                 Log.i(name + " delete");
                 db.folder().deleteFolder(account.id, name);
             } else
@@ -1989,6 +1993,8 @@ class Core {
                         if (received == null)
                             received = 0L;
 
+                        boolean seen = (received <= account.created);
+
                         String[] authentication = helper.getAuthentication();
                         MessageHelper.MessageParts parts = helper.getMessageParts();
 
@@ -2027,12 +2033,12 @@ class Core {
                         message.ui_encrypt = message.encrypt;
                         message.received = received;
                         message.sent = sent;
-                        message.seen = false;
+                        message.seen = seen;
                         message.answered = false;
                         message.flagged = false;
                         message.flags = null;
                         message.keywords = new String[0];
-                        message.ui_seen = false;
+                        message.ui_seen = seen;
                         message.ui_answered = false;
                         message.ui_flagged = false;
                         message.ui_hide = false;
@@ -2093,7 +2099,8 @@ class Core {
                                 parts.getWarnings(message.warning));
 
                         for (EntityAttachment attachment : parts.getAttachments())
-                            parts.downloadAttachment(context, attachment);
+                            if (attachment.subsequence == null)
+                                parts.downloadAttachment(context, attachment);
 
                         if (message.received > account.created)
                             updateContactInfo(context, folder, message);

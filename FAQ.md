@@ -1069,6 +1069,7 @@ Too large messages and triggering the spam filter of an email server are the mos
 * *554 5.7.1 Service unavailable; Client host xxx.xxx.xxx.xxx blocked*, please [see here](https://docs.gandi.net/en/gandimail/faq/error_types/554_5_7_1_service_unavailable.html)
 * *501 Syntax error - line too long* is often caused by using a long Autocrypt header
 * *503 5.5.0 Recipient already specified* mostly means that an address is being used both as TO and CC address
+* *554 5.7.1 ... not permitted to relay* means that the email server does not recognize the username/email address. Please double check the host name and username/email address in the identity settings.
 
 **Gmail errors**
 
@@ -3135,7 +3136,9 @@ Therefore you are advised to switch to the GitHub release.
 
 The F-Droid version is built from the same source code, but signed differently.
 This means that all features are available in the F-Droid version too,
-except for using the Gmail quick setup wizard because Google approved (and allows) one signature only.
+except for using the Gmail quick setup wizard because Google approved (and allows) one app signature only.
+For all other email providers, OAuth access is only available in Play Store versions and Github releases,
+as the email providers have only allowed permission for official builds to use OAuth.
 
 Note that you'll need to uninstall the F-Droid build first before you can install a GitHub release
 because Android refuses to install the same app with a different signature for security reasons.
@@ -3252,6 +3255,9 @@ An Office 365 account can be set up via the quick setup wizard and selecting *Of
 If the wizard ends with *AUTHENTICATE failed*, IMAP and/or SMTP might be disabled for the account.
 In this case you should ask the administrator to enable IMAP and SMTP.
 The procedure is documented [here](https://docs.microsoft.com/en-in/exchange/troubleshoot/configure-mailboxes/pop3-imap-owa-activesync-office-365).
+
+If you've enabled *security defaults* in your organization, you might need to enable the SMTP AUTH protocol.
+Please [see here](https://docs.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission) about how to.
 
 <br />
 
