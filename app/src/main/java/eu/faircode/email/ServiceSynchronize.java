@@ -1094,7 +1094,28 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 continue;
                             } catch (Throwable ex) {
                                 db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
-                                throw ex;
+                                if (EntityFolder.INBOX.equals(folder.type))
+                                    throw ex;
+                                else
+                                    continue;
+                                /*
+                                    javax.mail.MessagingException: D2 NO Mailbox does not exist, or must be subscribed to.;
+                                      nested exception is:
+                                        com.sun.mail.iap.CommandFailedException: D2 NO Mailbox does not exist, or must be subscribed to.
+                                    javax.mail.MessagingException: D2 NO Mailbox does not exist, or must be subscribed to.;
+                                      nested exception is:
+                                        com.sun.mail.iap.CommandFailedException: D2 NO Mailbox does not exist, or must be subscribed to.
+                                        at com.sun.mail.imap.IMAPFolder.open(SourceFile:61)
+                                        at com.sun.mail.imap.IMAPFolder.open(SourceFile:1)
+                                        at eu.faircode.email.ServiceSynchronize.monitorAccount(SourceFile:63)
+                                        at eu.faircode.email.ServiceSynchronize.access$900(SourceFile:1)
+                                        at eu.faircode.email.ServiceSynchronize$4$1.run(SourceFile:1)
+                                        at java.lang.Thread.run(Thread.java:919)
+                                    Caused by: com.sun.mail.iap.CommandFailedException: D2 NO Mailbox does not exist, or must be subscribed to.
+                                        at com.sun.mail.iap.Protocol.handleResult(SourceFile:8)
+                                        at com.sun.mail.imap.protocol.IMAPProtocol.select(SourceFile:19)
+                                        at com.sun.mail.imap.IMAPFolder.open(SourceFile:16)
+                                 */
                             }
 
                             db.folder().setFolderState(folder.id, "connected");
@@ -1461,7 +1482,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 account.keep_alive_succeeded = 0;
                                 if (account.keep_alive_failed >= 3) {
                                     account.keep_alive_failed = 0;
-                                    account.poll_interval--;
+                                    account.poll_interval = account.poll_interval - 2;
                                     db.account().setAccountKeepAliveInterval(account.id, account.poll_interval);
                                 }
                                 db.account().setAccountKeepAliveValues(account.id,
@@ -1588,11 +1609,15 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             Throwable e = ex;
                             while (e != null) {
                                 if (ConnectionHelper.isMaxConnections(e.getMessage())) {
-                                    for (String ft : new String[]{EntityFolder.TRASH, EntityFolder.JUNK}) {
-                                        EntityFolder f = db.folder().getFolderByType(account.id, ft);
-                                        if (f != null)
-                                            db.folder().setFolderPoll(f.id, true);
-                                    }
+                                    for (int i = 0; i < EntityFolder.SYSTEM_FOLDER_SYNC.size(); i++)
+                                        if (EntityFolder.SYSTEM_FOLDER_POLL.get(i)) {
+                                            String ft = EntityFolder.SYSTEM_FOLDER_SYNC.get(i);
+                                            EntityFolder f = db.folder().getFolderByType(account.id, ft);
+                                            if (f != null && f.synchronize) {
+                                                EntityLog.log(ServiceSynchronize.this, account.name + "/" + f.name + "=poll");
+                                                db.folder().setFolderPoll(f.id, true);
+                                            }
+                                        }
                                 }
                                 e = e.getCause();
                             }
@@ -1788,10 +1813,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
-        private Network reloaded = null;
-        private NetworkCapabilities lastActiveCaps = null;
-        private LinkProperties lastActiveProps = null;
-
         @Override
         public void onAvailable(@NonNull Network network) {
             try {

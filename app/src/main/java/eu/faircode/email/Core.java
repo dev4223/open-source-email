@@ -94,6 +94,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -1789,8 +1790,6 @@ class Core {
 
     private static void onPurgeFolder(Context context, JSONArray jargs, EntityFolder folder, IMAPFolder ifolder) throws MessagingException {
         // Delete all messages from folder
-        DB db = DB.getInstance(context);
-
         try {
             final MessageSet[] sets = new MessageSet[]{new MessageSet(1, ifolder.getMessageCount())};
 
@@ -1810,15 +1809,12 @@ class Core {
             Log.e(ex);
             throw ex;
         } finally {
-            int count = MessageHelper.getMessageCount(ifolder);
-            db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
-
-            // Delete local, hidden messages
-            onPurgeFolder(context, folder);
+            EntityOperation.sync(context, folder.id, false);
         }
     }
 
     private static void onPurgeFolder(Context context, EntityFolder folder) {
+        // POP3
         DB db = DB.getInstance(context);
         try {
             db.beginTransaction();
@@ -3524,8 +3520,12 @@ class Core {
 
                     String tag = "unseen." + group + "." + Math.abs(id);
                     Notification notification = builder.build();
-                    Log.i("Notifying tag=" + tag + " id=" + id + " group=" + notification.getGroup() +
-                            (Build.VERSION.SDK_INT < Build.VERSION_CODES.O ? "" : " channel=" + notification.getChannelId()));
+                    EntityLog.log(context, "Notifying tag=" + tag +
+                            " id=" + id + " group=" + notification.getGroup() +
+                            (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                                    ? " sdk=" + Build.VERSION.SDK_INT
+                                    : " channel=" + notification.getChannelId()) +
+                            " sort=" + notification.getSortKey());
                     try {
                         nm.notify(tag, 1, notification);
                     } catch (Throwable ex) {
@@ -3558,6 +3558,7 @@ class Core {
         boolean pro = ActivityBilling.isPro(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean notify_newest_first = prefs.getBoolean("notify_newest_first", false);
         boolean name_email = prefs.getBoolean("name_email", false);
         boolean prefer_contact = prefs.getBoolean("prefer_contact", false);
         boolean flags = prefs.getBoolean("flags", true);
@@ -3763,12 +3764,17 @@ class Core {
                     channelName = channel.getId();
             }
 
+            String sortKey = String.format(Locale.ROOT, "%13d",
+                    notify_newest_first ? (10000000000000L - message.received) : message.received);
+
             NotificationCompat.Builder mbuilder =
                     new NotificationCompat.Builder(context, channelName)
                             .addExtras(args)
                             .setSmallIcon(R.drawable.baseline_mail_white_24)
                             .setContentIntent(piContent)
                             .setWhen(message.received)
+                            .setShowWhen(true)
+                            .setSortKey(sortKey)
                             .setDeleteIntent(piIgnore)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setCategory(NotificationCompat.CATEGORY_EMAIL)
