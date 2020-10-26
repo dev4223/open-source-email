@@ -19,8 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2020 by Marcel Bokhorst (M66B)
 */
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -47,7 +45,6 @@ import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -68,6 +65,8 @@ import javax.mail.internet.InternetAddress;
 import static android.app.Activity.RESULT_OK;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_NONE;
 import static com.google.android.material.textfield.TextInputLayout.END_ICON_PASSWORD_TOGGLE;
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_OAUTH;
+import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 
 public class FragmentIdentity extends FragmentBase {
     private ViewGroup view;
@@ -97,7 +96,6 @@ public class FragmentIdentity extends FragmentBase {
     private TextView tvCharacters;
     private Button btnCertificate;
     private TextView tvCertificate;
-    private Button btnOAuth;
     private EditText etRealm;
     private CheckBox cbUseIp;
     private EditText etEhlo;
@@ -131,7 +129,7 @@ public class FragmentIdentity extends FragmentBase {
     private long id = -1;
     private long copy = -1;
     private long account = -1;
-    private int auth = EmailService.AUTH_TYPE_PASSWORD;
+    private int auth = AUTH_TYPE_PASSWORD;
     private String provider = null;
     private String certificate = null;
     private String signature = null;
@@ -190,7 +188,6 @@ public class FragmentIdentity extends FragmentBase {
         tvCharacters = view.findViewById(R.id.tvCharacters);
         btnCertificate = view.findViewById(R.id.btnCertificate);
         tvCertificate = view.findViewById(R.id.tvCertificate);
-        btnOAuth = view.findViewById(R.id.btnOAuth);
         etRealm = view.findViewById(R.id.etRealm);
         cbUseIp = view.findViewById(R.id.cbUseIp);
         etEhlo = view.findViewById(R.id.etEhlo);
@@ -409,13 +406,6 @@ public class FragmentIdentity extends FragmentBase {
             }
         });
 
-        btnOAuth.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onAuth();
-            }
-        });
-
         cbSynchronize.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -498,9 +488,9 @@ public class FragmentIdentity extends FragmentBase {
         etRealm.setText(account.realm);
         cbTrust.setChecked(false);
 
-        etUser.setEnabled(auth == EmailService.AUTH_TYPE_PASSWORD);
-        tilPassword.setEnabled(auth == EmailService.AUTH_TYPE_PASSWORD);
-        btnCertificate.setEnabled(auth == EmailService.AUTH_TYPE_PASSWORD);
+        etUser.setEnabled(auth == AUTH_TYPE_PASSWORD);
+        tilPassword.setEnabled(auth == AUTH_TYPE_PASSWORD);
+        btnCertificate.setEnabled(auth == AUTH_TYPE_PASSWORD);
     }
 
     private void setProvider(EmailProvider provider) {
@@ -961,56 +951,6 @@ public class FragmentIdentity extends FragmentBase {
         }.execute(this, args, "identity:save");
     }
 
-    private void onAuth() {
-        Bundle args = new Bundle();
-        args.putLong("id", id);
-
-        new SimpleTask<String>() {
-            @Override
-            protected void onPreExecute(Bundle args) {
-                btnOAuth.setEnabled(false);
-            }
-
-            @Override
-            protected void onPostExecute(Bundle args) {
-                btnOAuth.setEnabled(true);
-            }
-
-            @Override
-            protected String onExecute(Context context, Bundle args) throws Throwable {
-                long id = args.getLong("id");
-
-                DB db = DB.getInstance(context);
-
-                EntityIdentity identity = db.identity().getIdentity(id);
-                if (identity == null)
-                    return null;
-
-                AccountManager am = AccountManager.get(context);
-                Account[] accounts = am.getAccountsByType("com.google");
-                for (Account google : accounts)
-                    if (identity.user.equals(google.name))
-                        return am.blockingGetAuthToken(
-                                google,
-                                EmailService.getAuthTokenType("com.google"),
-                                true);
-
-                return null;
-            }
-
-            @Override
-            protected void onExecuted(Bundle args, String token) {
-                ToastEx.makeText(getContext(), R.string.title_completed, Toast.LENGTH_LONG).show();
-                tilPassword.getEditText().setText(token);
-            }
-
-            @Override
-            protected void onException(Bundle args, Throwable ex) {
-                Log.unexpectedError(getParentFragmentManager(), ex, false);
-            }
-        }.execute(this, args, "identity:oauth");
-    }
-
     private void showError(Throwable ex) {
         tvError.setText(Log.formatThrowable(ex, false));
         grpError.setVisibility(View.VISIBLE);
@@ -1137,7 +1077,7 @@ public class FragmentIdentity extends FragmentBase {
                     etBcc.setText(identity == null ? null : identity.bcc);
                     cbUnicode.setChecked(identity != null && identity.unicode);
 
-                    auth = (identity == null ? EmailService.AUTH_TYPE_PASSWORD : identity.auth_type);
+                    auth = (identity == null ? AUTH_TYPE_PASSWORD : identity.auth_type);
                     provider = (identity == null ? null : identity.provider);
 
                     if (identity == null || copy > 0)
@@ -1171,14 +1111,11 @@ public class FragmentIdentity extends FragmentBase {
 
                 Helper.setViewsEnabled(view, true);
 
-                if (auth != EmailService.AUTH_TYPE_PASSWORD) {
+                if (auth != AUTH_TYPE_PASSWORD) {
                     etUser.setEnabled(false);
                     tilPassword.setEnabled(false);
                     btnCertificate.setEnabled(false);
                 }
-
-                if (identity == null || identity.auth_type != EmailService.AUTH_TYPE_GMAIL)
-                    Helper.hide(btnOAuth);
 
                 cbPrimary.setEnabled(cbSynchronize.isChecked());
 
@@ -1197,7 +1134,7 @@ public class FragmentIdentity extends FragmentBase {
                     if (identity != null)
                         for (int pos = 1; pos < providers.size(); pos++) {
                             EmailProvider provider = providers.get(pos);
-                            if ((provider.oauth != null) == (identity.auth_type == EmailService.AUTH_TYPE_OAUTH) &&
+                            if ((provider.oauth != null) == (identity.auth_type == AUTH_TYPE_OAUTH) &&
                                     provider.smtp.host.equals(identity.host) &&
                                     provider.smtp.port == identity.port &&
                                     provider.smtp.starttls == (identity.encryption == EmailService.ENCRYPTION_STARTTLS)) {
@@ -1226,7 +1163,7 @@ public class FragmentIdentity extends FragmentBase {
 
                         EntityAccount unselected = new EntityAccount();
                         unselected.id = -1L;
-                        unselected.auth_type = EmailService.AUTH_TYPE_PASSWORD;
+                        unselected.auth_type = AUTH_TYPE_PASSWORD;
                         unselected.name = getString(R.string.title_select);
                         unselected.primary = false;
                         accounts.add(0, unselected);
@@ -1295,6 +1232,7 @@ public class FragmentIdentity extends FragmentBase {
     private void onMenuDelete() {
         Bundle aargs = new Bundle();
         aargs.putString("question", getString(R.string.title_identity_delete));
+        aargs.putBoolean("warning", true);
 
         FragmentDialogAsk fragment = new FragmentDialogAsk();
         fragment.setArguments(aargs);

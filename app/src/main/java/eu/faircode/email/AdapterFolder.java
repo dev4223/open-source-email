@@ -223,9 +223,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     if (folder.executing > 0) {
                         ivState.setImageResource(R.drawable.twotone_dns_24);
                         ivState.setContentDescription(context.getString(R.string.title_legend_executing));
-                    } else if ("waiting".equals(folder.state)) {
-                        ivState.setImageResource(R.drawable.twotone_hourglass_top_24);
-                        ivState.setContentDescription(context.getString(R.string.title_legend_waiting));
                     } else if ("connected".equals(folder.state)) {
                         ivState.setImageResource(R.drawable.twotone_cloud_done_24);
                         ivState.setContentDescription(context.getString(R.string.title_legend_connected));
@@ -315,7 +312,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                 else
                     tvType.setText(EntityFolder.localizeType(context, folder.type));
 
-                tvTotal.setText(folder.total == null ? "" : NF.format(folder.total));
+                tvTotal.setText(folder.total == null ? null : NF.format(folder.total));
 
                 if (folder.account == null) {
                     tvAfter.setText(null);
@@ -337,8 +334,17 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         a.append(NF.format(folder.keep_days));
 
                     tvAfter.setText(a.toString());
-                    ivSync.setImageResource(folder.synchronize ? R.drawable.twotone_sync_24 : R.drawable.twotone_sync_disabled_24);
-                    ivSync.setContentDescription(context.getString(folder.synchronize ? R.string.title_legend_synchronize_on : R.string.title_legend_synchronize_off));
+                    if (folder.synchronize) {
+                        ivSync.setImageResource(folder.poll
+                                ? R.drawable.twotone_hourglass_top_24
+                                : R.drawable.twotone_sync_24);
+                        ivSync.setContentDescription(context.getString(folder.poll
+                                ? R.string.title_legend_synchronize_poll
+                                : R.string.title_legend_synchronize_on));
+                    } else {
+                        ivSync.setImageResource(R.drawable.twotone_sync_disabled_24);
+                        ivSync.setContentDescription(context.getString(R.string.title_legend_synchronize_off));
+                    }
                 }
                 ivSync.setImageTintList(ColorStateList.valueOf(
                         folder.synchronize && folder.initialize != 0 && !EntityFolder.OUTBOX.equals(folder.type)
@@ -466,7 +472,15 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, view);
 
             if (folder.selectable) {
-                SpannableString ss = new SpannableString(folder.getDisplayName(context));
+                String title;
+                if (folder.last_sync == null)
+                    title = folder.getDisplayName(context);
+                else
+                    title = context.getString(R.string.title_name_count,
+                            folder.getDisplayName(context),
+                            Helper.getRelativeTimeSpanString(context, folder.last_sync));
+
+                SpannableString ss = new SpannableString(title);
                 ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), 0);
                 ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
                 popupMenu.getMenu().add(Menu.NONE, 0, 0, ss).setEnabled(false);
@@ -732,6 +746,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         aargs.putString("question", context.getString(R.string.title_empty_spam_ask));
                     else
                         throw new IllegalArgumentException("Invalid folder type=" + type);
+                    aargs.putBoolean("warning", true);
                     aargs.putString("remark", context.getString(R.string.title_empty_all));
                     aargs.putLong("folder", folder.id);
                     aargs.putString("type", type);
@@ -800,6 +815,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                     Bundle aargs = new Bundle();
                     aargs.putLong("id", folder.id);
                     aargs.putString("question", context.getString(R.string.title_folder_delete));
+                    aargs.putBoolean("warning", true);
 
                     FragmentDialogAsk ask = new FragmentDialogAsk();
                     ask.setArguments(aargs);

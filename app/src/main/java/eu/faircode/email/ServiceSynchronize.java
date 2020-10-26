@@ -127,9 +127,19 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     ));
 
     private static final List<String> PREF_RELOAD = Collections.unmodifiableList(Arrays.asList(
+            "sync_nodate",
+            "sync_unseen",
+            "sync_flagged",
+            "delete_unseen",
+            "sync_kept",
+            "sync_folders",
+            "sync_shared_folders",
             "ssl_harden", // force reconnect
             "badge", "unseen_ignored", // force update badge/widget
-            "protocol", "debug" // force reconnect
+            "protocol", "debug", // force reconnect
+            "auth_plain",
+            "auth_login",
+            "auth_sasl"
     ));
 
     static final int PI_ALARM = 1;
@@ -796,6 +806,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     }
 
     private void onWatchdog(Intent intent) {
+        EntityLog.log(this, "Watchdog");
         schedule(this, false);
         networkCallback.onCapabilitiesChanged(null, null);
     }
@@ -936,10 +947,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             // Store NOOP
                             //iservice.getStore().isConnected();
 
-                            if ("Still here".equals(message) && !account.ondemand) {
+                            if ("Still here".equals(message) && !isTransient(account)) {
                                 long now = new Date().getTime();
                                 if (now - start < STILL_THERE_THRESHOLD)
-                                    optimizeAccount(ServiceSynchronize.this, account, message);
+                                    optimizeAccount(account, message);
                             }
                         } else
                             try {
@@ -998,7 +1009,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     final boolean capIdle = iservice.hasCapability("IDLE");
                     Log.i(account.name + " idle=" + capIdle);
                     if (!capIdle || account.poll_interval < OPTIMIZE_KEEP_ALIVE_INTERVAL)
-                        optimizeAccount(ServiceSynchronize.this, account, "IDLE");
+                        optimizeAccount(account, "IDLE");
 
                     db.account().setAccountState(account.id, "connected");
                     db.account().setAccountError(account.id, null);
@@ -1242,8 +1253,14 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
                             if (sync && folder.selectable)
                                 EntityOperation.sync(this, folder.id, false);
-                        } else
+                        } else {
                             mapFolders.put(folder, null);
+                            db.folder().setFolderState(folder.id, null);
+                            if (!capIdle && !folder.poll) {
+                                folder.poll = true;
+                                db.folder().setFolderPoll(folder.id, folder.poll);
+                            }
+                        }
                     }
 
                     Log.i(account.name + " observing operations");
@@ -1411,10 +1428,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                                                         Log.w(folder.name, ex);
                                                                     }
                                                                 }
-                                                                if (folder.synchronize && (folder.poll || !capIdle))
-                                                                    db.folder().setFolderState(folder.id, "waiting");
-                                                                else
-                                                                    db.folder().setFolderState(folder.id, null);
+                                                                db.folder().setFolderState(folder.id, null);
                                                             }
                                                         }
                                                     } finally {
@@ -1672,7 +1686,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     ((ThreadPoolExecutor) executor).getQueue().clear();
 
                     // Close folders
-                    for (EntityFolder folder : mapFolders.keySet())
+                    for (EntityFolder folder : mapFolders.keySet()) {
                         if (folder.synchronize && !folder.poll && mapFolders.get(folder) != null) {
                             db.folder().setFolderState(folder.id, "closing");
                             try {
@@ -1680,10 +1694,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                     mapFolders.get(folder).close();
                             } catch (Throwable ex) {
                                 Log.w(ex);
-                            } finally {
-                                db.folder().setFolderState(folder.id, null);
                             }
                         }
+
+                        db.folder().setFolderState(folder.id, null);
+                    }
 
                     // Close store
                     try {
@@ -1726,9 +1741,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             }
                         } else {
                             // Cancel transient sync operations
-                            boolean enabled = prefs.getBoolean("enabled", true);
-                            int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
-                            if (!enabled || account.ondemand || (pollInterval > 0 && !account.poll_exempted)) {
+                            if (isTransient(account)) {
                                 List<EntityOperation> syncs = db.operation().getOperations(account.id, EntityOperation.SYNC);
                                 if (syncs != null) {
                                     for (EntityOperation op : syncs) {
@@ -1785,18 +1798,24 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         }
     }
 
-    private void optimizeAccount(Context context, EntityAccount account, String reason) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+    private boolean isTransient(EntityAccount account) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean enabled = prefs.getBoolean("enabled", true);
+        int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
+        return (!enabled || account.ondemand || (pollInterval > 0 && !account.poll_exempted));
+    }
+
+    private void optimizeAccount(EntityAccount account, String reason) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean auto_optimize = prefs.getBoolean("auto_optimize", false);
         if (!auto_optimize)
             return;
 
-        DB db = DB.getInstance(context);
+        DB db = DB.getInstance(this);
 
         int pollInterval = prefs.getInt("poll_interval", DEFAULT_POLL_INTERVAL);
-        EntityLog.log(context, "Auto optimize account=" + account.name + " poll interval=" + pollInterval);
+        EntityLog.log(this, "Auto optimize account=" + account.name + " poll interval=" + pollInterval);
         if (pollInterval == 0) {
-            prefs.edit().putInt("poll_interval", OPTIMIZE_POLL_INTERVAL).apply();
             try {
                 db.beginTransaction();
                 for (EntityAccount a : db.account().getAccounts())
@@ -1805,7 +1824,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             } finally {
                 db.endTransaction();
             }
-            ServiceSynchronize.reschedule(ServiceSynchronize.this);
+            prefs.edit().putInt("poll_interval", OPTIMIZE_POLL_INTERVAL).apply();
         } else if (pollInterval <= 60 && account.poll_exempted) {
             db.account().setAccountPollExempted(account.id, false);
             ServiceSynchronize.eval(ServiceSynchronize.this, "Optimize=" + reason);
@@ -2077,6 +2096,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         for (EntityFolder folder : db.folder().getFolders()) {
                             db.folder().setFolderState(folder.id, null);
                             db.folder().setFolderSyncState(folder.id, null);
+                            db.folder().setFolderPollCount(folder.id, 0);
                         }
 
                         // Reset operations

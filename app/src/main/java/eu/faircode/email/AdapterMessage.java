@@ -760,6 +760,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibMove.setOnClickListener(this);
                 ibArchive.setOnClickListener(this);
                 ibTrash.setOnClickListener(this);
+                ibTrash.setOnLongClickListener(this);
                 ibJunk.setOnClickListener(this);
                 ibInbox.setOnClickListener(this);
                 ibMore.setOnClickListener(this);
@@ -767,6 +768,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibDownloading.setOnClickListener(this);
                 ibTrashBottom.setOnClickListener(this);
+                ibTrashBottom.setOnLongClickListener(this);
                 ibArchiveBottom.setOnClickListener(this);
                 ibSeenBottom.setOnClickListener(this);
 
@@ -866,6 +868,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibMove.setOnClickListener(null);
                 ibArchive.setOnClickListener(null);
                 ibTrash.setOnClickListener(null);
+                ibTrash.setOnLongClickListener(null);
                 ibJunk.setOnClickListener(null);
                 ibInbox.setOnClickListener(null);
                 ibMore.setOnClickListener(null);
@@ -873,6 +876,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                 ibDownloading.setOnClickListener(null);
                 ibTrashBottom.setOnClickListener(null);
+                ibTrashBottom.setOnLongClickListener(null);
                 ibArchiveBottom.setOnClickListener(null);
                 ibSeenBottom.setOnClickListener(null);
 
@@ -1057,8 +1061,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivSigned.clearColorFilter();
             ivEncrypted.setVisibility(message.encrypted > 0 ? View.VISIBLE : View.GONE);
             if (show_recipients && recipients != null && recipients.length > 0)
-                tvFrom.setText(context.getString(
-                        outgoing && viewType != ViewType.THREAD ? R.string.title_to_from : R.string.title_from_to,
+                tvFrom.setText(context.getString(outgoing && viewType != ViewType.THREAD && compact
+                                ? R.string.title_to_from
+                                : R.string.title_from_to,
                         MessageHelper.formatAddresses(senders, name_email, false),
                         MessageHelper.formatAddresses(recipients, name_email, false)));
             else
@@ -3264,6 +3269,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 case R.id.ibFlagged:
                     onMenuColoredStar(message);
                     return true;
+                case R.id.ibTrash:
+                case R.id.ibTrashBottom:
+                    if (EntityFolder.OUTBOX.equals(message.folderType))
+                        return false;
+                    onActionTrash(message, true);
+                    return true;
                 case R.id.btnCalendarAccept:
                 case R.id.btnCalendarDecline:
                 case R.id.btnCalendarMaybe:
@@ -3972,6 +3983,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle aargs = new Bundle();
             aargs.putString("question", context.getString(R.string.title_ask_delete));
             aargs.putLong("id", message.id);
+            aargs.putBoolean("warning", true);
 
             FragmentDialogAsk ask = new FragmentDialogAsk();
             ask.setArguments(aargs);
@@ -4541,6 +4553,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             Bundle aargs = new Bundle();
             aargs.putString("question", context.getString(R.string.title_ask_delete));
             aargs.putLong("id", message.id);
+            aargs.putBoolean("warning", true);
 
             FragmentDialogAsk ask = new FragmentDialogAsk();
             ask.setArguments(aargs);
