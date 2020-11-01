@@ -271,6 +271,7 @@
     <string name="title_advanced_roaming">Descargar mensajes y adjuntos en itinerancia</string>
     <string name="title_advanced_rlah">Itinerancia como en casa</string>
     <string name="title_advanced_timeout">Tiempo de espera de conexión (segundos)</string>
+    <string name="title_advanced_prefer_ip4">Preferir IPv4 sobre IPv6</string>
     <string name="title_advanced_ssl_harden">Endurecer conexiones SSL</string>
     <string name="title_advanced_manage_connectivity">Administrar conectividad</string>
     <string name="title_advanced_caption_general">General</string>
@@ -1058,6 +1059,7 @@
     <string name="title_legend_download_off">Descargar el contenido de mensajes bajo demanda </string>
     <string name="title_legend_synchronize_on">Sincronización activada</string>
     <string name="title_legend_synchronize_off">Sincronización desactivada</string>
+    <string name="title_legend_synchronize_poll">Sincronizar periódicamente</string>
     <string name="title_legend_disconnected">Desconectado</string>
     <string name="title_legend_connecting">Conectando</string>
     <string name="title_legend_connected">Conectado</string>

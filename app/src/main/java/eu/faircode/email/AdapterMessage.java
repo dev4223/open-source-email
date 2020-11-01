@@ -1647,7 +1647,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (attachment.available)
                                 if (attachment.isInline() && attachment.isImage())
                                     inlineImages++;
-                                else if ("message/rfc822".equals(attachment.type))
+                                else if ("message/rfc822".equals(attachment.getMimeType()))
                                     embeddedMessages++;
 
                     int lastInlineImages = 0;
@@ -1658,7 +1658,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             if (attachment.available)
                                 if (attachment.isInline() && attachment.isImage())
                                     lastInlineImages++;
-                                else if ("message/rfc822".equals(attachment.type))
+                                else if ("message/rfc822".equals(attachment.getMimeType()))
                                     lastEmbeddedMessages++;
 
                     boolean show_images = properties.getValue("images", message.id);
@@ -2212,7 +2212,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     // Add embedded messages
                     for (EntityAttachment attachment : attachments)
-                        if (attachment.available && "message/rfc822".equals(attachment.type))
+                        if (attachment.available && "message/rfc822".equals(attachment.getMimeType()))
                             try (FileInputStream fis = new FileInputStream(attachment.getFile(context))) {
                                 Properties props = MessageHelper.getSessionProperties();
                                 Session isession = Session.getInstance(props, null);
@@ -4925,22 +4925,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message.raw == null || !message.raw) {
                 properties.setValue("raw_send", message.id, true);
                 rawDownload(message);
-            } else {
-                File file = message.getRawFile(context);
-                Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
-
-                Intent send = new Intent(Intent.ACTION_SEND);
-                send.putExtra(Intent.EXTRA_STREAM, uri);
-                send.setType("message/rfc822");
-                send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
+            } else
                 try {
+                    File file = message.getRawFile(context);
+                    Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
+
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.putExtra(Intent.EXTRA_STREAM, uri);
+                    send.setType("message/rfc822");
+                    send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
                     context.startActivity(send);
-                } catch (ActivityNotFoundException ex) {
-                    Log.w(ex);
-                    ToastEx.makeText(context, context.getString(R.string.title_no_viewer, send), Toast.LENGTH_LONG).show();
+                } catch (Throwable ex) {
+                    // java.lang.IllegalArgumentException: Failed to resolve canonical path for ...
+                    Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
-            }
         }
 
         private void rawDownload(TupleMessageEx message) {
