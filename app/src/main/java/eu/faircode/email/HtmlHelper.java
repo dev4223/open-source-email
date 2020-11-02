@@ -653,6 +653,10 @@ public class HtmlHelper {
                                     Log.i("Removing display none " + element.tagName());
                                     element.remove();
                                 }
+
+                                if ("block".equals(value) || "inline-block".equals(value))
+                                    element.attr("x-block", "true");
+
                                 if ("inline".equals(value) || "inline-block".equals(value)) {
                                     if (element.nextSibling() != null)
                                         element.attr("x-inline", "true");
@@ -733,6 +737,9 @@ public class HtmlHelper {
                         Log.i("Style=" + sb);
                 }
             }
+
+            if (element.isBlock())
+                element.attr("x-block", "true");
         }
 
         // Remove trailing br from div
@@ -1390,7 +1397,11 @@ public class HtmlHelper {
     static String flow(String text) {
         boolean continuation = false;
         StringBuilder flowed = new StringBuilder();
-        for (String line : text.split("\\r?\\n")) {
+        String[] lines = text.split("\\r?\\n");
+        for (int l = 0; l < lines.length; l++) {
+            String line = lines[l];
+            lines[l] = null;
+
             if (continuation)
                 while (line.startsWith(">")) {
                     line = line.substring(1);
@@ -1415,7 +1426,10 @@ public class HtmlHelper {
         int level = 0;
         StringBuilder sb = new StringBuilder();
         String[] lines = text.split("\\r?\\n");
-        for (String line : lines) {
+        for (int l = 0; l < lines.length; l++) {
+            String line = lines[l];
+            lines[l] = null;
+
             // Opening quotes
             // https://tools.ietf.org/html/rfc3676#section-4.5
             if (quote) {
@@ -1441,17 +1455,17 @@ public class HtmlHelper {
             }
 
             // Tabs characters
-            StringBuilder l = new StringBuilder();
+            StringBuilder sbl = new StringBuilder();
             for (int j = 0; j < line.length(); j++) {
                 char kar = line.charAt(j);
                 if (kar == '\t') {
-                    l.append(' ');
-                    while (l.length() % TAB_SIZE != 0)
-                        l.append(' ');
+                    sbl.append(' ');
+                    while (sbl.length() % TAB_SIZE != 0)
+                        sbl.append(' ');
                 } else
-                    l.append(kar);
+                    sbl.append(kar);
             }
-            line = l.toString();
+            line = sbl.toString();
 
             // Html characters
             // This will handle spaces / word wrapping as well
@@ -1910,7 +1924,7 @@ public class HtmlHelper {
             private int plain = 0;
             private List<TextNode> block = new ArrayList<>();
 
-            private String WHITESPACE = " \t\f\u00A0";
+            private String WHITESPACE = " \t\f";
             private String WHITESPACE_NL = WHITESPACE + "\r\n";
             private Pattern TRIM_WHITESPACE_NL =
                     Pattern.compile("[" + WHITESPACE + "]*\\r?\\n[" + WHITESPACE + "]*");
@@ -1924,9 +1938,11 @@ public class HtmlHelper {
                         block.add((TextNode) node);
                 } else if (node instanceof Element) {
                     element = (Element) node;
-                    if ("true".equals(element.attr("x-plain")))
+                    if ("pre".equals(element.tagName()) ||
+                            "true".equals(element.attr("x-plain")))
                         plain++;
-                    if (element.isBlock()) {
+                    if (element.isBlock() ||
+                            "true".equals(element.attr("x-block"))) {
                         normalizeText(block);
                         block.clear();
                     }
@@ -1937,9 +1953,12 @@ public class HtmlHelper {
             public void tail(Node node, int depth) {
                 if (node instanceof Element) {
                     element = (Element) node;
-                    if ("true".equals(element.attr("x-plain")))
+                    if ("pre".equals(element.tagName()) ||
+                            "true".equals(element.attr("x-plain")))
                         plain--;
-                    if (element.isBlock() || "br".equals(element.tagName())) {
+                    if (element.isBlock() ||
+                            "true".equals(element.attr("x-block")) ||
+                            "br".equals(element.tagName())) {
                         normalizeText(block);
                         block.clear();
                     }
