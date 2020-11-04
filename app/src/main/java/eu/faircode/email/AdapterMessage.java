@@ -3695,12 +3695,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 .putExtra("id", message.id));
             else {
                 boolean expanded = !properties.getValue("expanded", message.id);
-
-                properties.setExpanded(message, expanded);
-
-                // Needed to scroll to item after collapsing other items
-                if (expanded)
-                    properties.scrollTo(getAdapterPosition(), 0);
+                properties.setExpanded(message, expanded, expanded);
             }
         }
 
@@ -4448,7 +4443,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     message.ui_seen = args.getBoolean("seen");
                     message.unseen = (message.ui_seen ? 0 : message.count);
-                    properties.setExpanded(message, false);
+                    properties.setExpanded(message, false, false);
                 }
 
                 @Override
@@ -5957,8 +5952,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             return;
         }
 
+        boolean scroll = false;
+        if (viewType == ViewType.THREAD) {
+            scroll = properties.getValue("scroll", message.id);
+            properties.setValue("scroll", message.id, false);
+        }
+
         holder.unwire();
-        holder.bindTo(message, false);
+        holder.bindTo(message, scroll);
         holder.wire();
     }
 
@@ -6040,7 +6041,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         boolean getValue(String name, long id);
 
-        void setExpanded(TupleMessageEx message, boolean expanded);
+        void setExpanded(TupleMessageEx message, boolean expanded, boolean scroll);
 
         void setSize(long id, Float size);
 

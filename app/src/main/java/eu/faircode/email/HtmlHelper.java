@@ -77,6 +77,7 @@ import com.steadystate.css.parser.selectors.ClassConditionImpl;
 import com.steadystate.css.parser.selectors.ConditionalSelectorImpl;
 import com.steadystate.css.parser.selectors.ElementSelectorImpl;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Comment;
 import org.jsoup.nodes.Document;
@@ -136,6 +137,8 @@ public class HtmlHelper {
     private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
+    private static String WHITESPACE = " \t\f";
+    private static String WHITESPACE_NL = WHITESPACE + "\r\n";
     private static final String LINE = "----------------------------------------";
     private static final HashMap<String, Integer> x11ColorMap = new HashMap<>();
 
@@ -836,7 +839,7 @@ public class HtmlHelper {
             // separate columns
             if (hasVisibleContent(col.childNodes()))
                 if (col.nextElementSibling() != null)
-                    col.appendText(" ");
+                    col.append("&nbsp;");
 
             if ("th".equals(col.tagName()))
                 col.tagName("strong");
@@ -1376,9 +1379,15 @@ public class HtmlHelper {
 
     private static boolean hasVisibleContent(List<Node> nodes) {
         for (Node node : nodes)
-            if (node instanceof TextNode && !((TextNode) node).isBlank())
+            if (node instanceof TextNode) {
+                String text = ((TextNode) node).getWholeText();
+                for (int i = 0; i < text.length(); i++) {
+                    char kar = text.charAt(i);
+                    if (!StringUtil.isWhitespace(kar) && kar != '\u00a0' /* nbsp */)
+                        return true;
+                }
                 return true;
-            else if (node instanceof Element) {
+            } else if (node instanceof Element) {
                 Element element = (Element) node;
                 if (element.isBlock())
                     return false;
@@ -1924,8 +1933,6 @@ public class HtmlHelper {
             private int plain = 0;
             private List<TextNode> block = new ArrayList<>();
 
-            private String WHITESPACE = " \t\f";
-            private String WHITESPACE_NL = WHITESPACE + "\r\n";
             private Pattern TRIM_WHITESPACE_NL =
                     Pattern.compile("[" + WHITESPACE + "]*\\r?\\n[" + WHITESPACE + "]*");
 
@@ -2018,6 +2025,22 @@ public class HtmlHelper {
                         tnode.text(text);
                     }
                 }
+
+                // Remove blank blocks
+                boolean blank = true;
+                for (int i = 0; i < block.size(); i++) {
+                    text = block.get(i).getWholeText();
+                    for (int j = 0; j < text.length(); j++) {
+                        char kar = text.charAt(j);
+                        if (WHITESPACE.indexOf(kar) < 0 && kar != '\u00a0' /* nbsp */) {
+                            blank = false;
+                            break;
+                        }
+                    }
+                }
+                if (blank)
+                    for (int i = 0; i < block.size(); i++)
+                        block.get(i).text("");
 
                 if (debug) {
                     if (block.size() > 0) {
@@ -2117,36 +2140,23 @@ public class HtmlHelper {
                                         setSpan(ssb, new StrikethroughSpan(), start, ssb.length());
                                     break;
                                 case "text-align":
-                                    boolean table = false;
-                                    Element e = element;
-                                    while (e != null) {
-                                        if ("table".equals(e.tagName()) ||
-                                                "true".equals(e.attr("x-table"))) {
-                                            table = true;
+                                    // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
+                                    Layout.Alignment alignment = null;
+                                    switch (value) {
+                                        case "left":
+                                        case "start":
+                                            alignment = (ltr ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE);
                                             break;
-                                        }
-                                        e = e.parent();
+                                        case "center":
+                                            alignment = Layout.Alignment.ALIGN_CENTER;
+                                            break;
+                                        case "right":
+                                        case "end":
+                                            alignment = (ltr ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL);
+                                            break;
                                     }
-
-                                    if (!table) {
-                                        // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
-                                        Layout.Alignment alignment = null;
-                                        switch (value) {
-                                            case "left":
-                                            case "start":
-                                                alignment = (ltr ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE);
-                                                break;
-                                            case "center":
-                                                alignment = Layout.Alignment.ALIGN_CENTER;
-                                                break;
-                                            case "right":
-                                            case "end":
-                                                alignment = (ltr ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL);
-                                                break;
-                                        }
-                                        if (alignment != null)
-                                            setSpan(ssb, new AlignmentSpan.Standard(alignment), start, ssb.length());
-                                    }
+                                    if (alignment != null)
+                                        setSpan(ssb, new AlignmentSpan.Standard(alignment), start, ssb.length());
                                     break;
                             }
                         }
