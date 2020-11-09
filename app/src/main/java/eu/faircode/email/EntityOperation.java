@@ -101,6 +101,8 @@ public class EntityOperation {
     static final String RULE = "rule";
     static final String PURGE = "purge";
 
+    private static final int MAX_FETCH = 100; // operations
+
     static void queue(Context context, EntityMessage message, String name, Object... values) {
         DB db = DB.getInstance(context);
 
@@ -236,6 +238,7 @@ public class EntityOperation {
                     Long identity = message.identity;
                     long uid = message.uid;
                     Boolean raw = message.raw;
+                    Long stored = message.stored;
                     int notifying = message.notifying;
                     boolean fts = message.fts;
                     Integer importance = message.importance;
@@ -254,6 +257,7 @@ public class EntityOperation {
                     message.identity = null;
                     message.uid = null;
                     message.raw = null;
+                    message.stored = new Date().getTime();
                     message.notifying = 0;
                     message.fts = false;
                     if (reset_importance)
@@ -271,6 +275,7 @@ public class EntityOperation {
                     message.ui_browsed = false;
                     message.error = null;
                     message.id = db.message().insertMessage(message);
+
                     File mtarget = message.getFile(context);
                     long tmpid = message.id;
                     jargs.put(2, tmpid);
@@ -281,6 +286,7 @@ public class EntityOperation {
                     message.identity = identity;
                     message.uid = uid;
                     message.raw = raw;
+                    message.stored = stored;
                     message.notifying = notifying;
                     message.fts = fts;
                     message.importance = importance;
@@ -315,6 +321,12 @@ public class EntityOperation {
                 }
 
                 return;
+            } else if (FETCH.equals(name)) {
+                int count = db.operation().getOperationCount(message.folder, name);
+                if (count >= MAX_FETCH) {
+                    sync(context, message.folder, false);
+                    return;
+                }
 
             } else if (DELETE.equals(name)) {
                 db.message().setMessageUiHide(message.id, true);
@@ -441,7 +453,7 @@ public class EntityOperation {
         Log.i("Queued subscribe=" + subscribe + " folder=" + folder);
     }
 
-    void cleanup(Context context) {
+    void cleanup(Context context, boolean fetch) {
         DB db = DB.getInstance(context);
 
         if (message != null)
@@ -473,7 +485,7 @@ public class EntityOperation {
         if (EntityOperation.SYNC.equals(name))
             db.folder().setFolderSyncState(folder, null);
 
-        if (message != null) {
+        if (fetch && message != null) {
             EntityMessage m = db.message().getMessage(message);
             if (m == null || m.uid == null)
                 return;

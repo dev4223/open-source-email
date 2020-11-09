@@ -617,6 +617,9 @@ public interface DaoMessage {
     @Query("UPDATE message SET received = :received WHERE id = :id")
     int setMessageReceived(long id, long received);
 
+    @Query("UPDATE message SET subject = :subject WHERE id = :id")
+    int setMessageSubject(long id, String subject);
+
     @Query("UPDATE message SET seen = :seen WHERE id = :id")
     int setMessageSeen(long id, boolean seen);
 
@@ -795,7 +798,7 @@ public interface DaoMessage {
             " AND NOT uid IS NULL" +
             " AND (ui_seen OR :unseen)" +
             " AND NOT ui_flagged" +
-            " AND (NOT ui_browsed OR stored < :before)" +
+            " AND stored < :before" + // moved, browsed
             " AND ui_snoozed IS NULL")
     int deleteMessagesBefore(long folder, long before, boolean unseen);
 }

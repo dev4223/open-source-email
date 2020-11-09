@@ -384,6 +384,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvBccTitle;
         private TextView tvIdentityTitle;
         private TextView tvSentTitle;
+        private TextView tvStoredTitle;
         private TextView tvLanguageTitle;
 
         private TextView tvSubmitter;
@@ -396,6 +397,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvIdentity;
         private TextView tvSent;
         private TextView tvReceived;
+        private TextView tvStored;
         private TextView tvSizeEx;
         private TextView tvLanguage;
 
@@ -588,6 +590,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle = vsBody.findViewById(R.id.tvBccTitle);
             tvIdentityTitle = vsBody.findViewById(R.id.tvIdentityTitle);
             tvSentTitle = vsBody.findViewById(R.id.tvSentTitle);
+            tvStoredTitle = vsBody.findViewById(R.id.tvStoredTitle);
             tvLanguageTitle = vsBody.findViewById(R.id.tvLanguageTitle);
 
             tvSubmitter = vsBody.findViewById(R.id.tvSubmitter);
@@ -600,6 +603,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity = vsBody.findViewById(R.id.tvIdentity);
             tvSent = vsBody.findViewById(R.id.tvSent);
             tvReceived = vsBody.findViewById(R.id.tvReceived);
+            tvStored = vsBody.findViewById(R.id.tvStored);
             tvSizeEx = vsBody.findViewById(R.id.tvSizeEx);
             tvLanguage = vsBody.findViewById(R.id.tvLanguage);
 
@@ -1359,6 +1363,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvBccTitle.setVisibility(View.GONE);
             tvIdentityTitle.setVisibility(View.GONE);
             tvSentTitle.setVisibility(View.GONE);
+            tvStoredTitle.setVisibility(View.GONE);
             tvLanguageTitle.setVisibility(View.GONE);
 
             tvSubmitter.setVisibility(View.GONE);
@@ -1371,6 +1376,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvIdentity.setVisibility(View.GONE);
             tvSent.setVisibility(View.GONE);
             tvReceived.setVisibility(View.GONE);
+            tvStored.setVisibility(View.GONE);
             tvSizeEx.setVisibility(View.GONE);
             tvLanguage.setVisibility(View.GONE);
 
@@ -1884,6 +1890,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvReceived.setVisibility(View.VISIBLE);
             tvReceived.setText(DTF.format(message.received));
 
+            tvStoredTitle.setVisibility(show_addresses && (debug || BuildConfig.DEBUG) ? View.VISIBLE : View.GONE);
+            tvStored.setVisibility(show_addresses && (debug || BuildConfig.DEBUG) ? View.VISIBLE : View.GONE);
+            tvStored.setText(DTF.format(message.stored));
+
             if (!message.duplicate)
                 tvSizeEx.setAlpha(message.content ? 1.0f : Helper.LOW_LIGHT);
             
@@ -2339,7 +2349,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }
 
                         // Draw images
-                        SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, true, new Html.ImageGetter() {
+                        SpannableStringBuilder ssb = HtmlHelper.fromDocument(context, document, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
                                 Drawable drawable = ImageHelper.decodeImage(context, message.id, source, show_images, zoom, scale, tvBody);
