@@ -86,7 +86,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
-import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2996,7 +2995,8 @@ class Core {
             if (message.ui_hide &&
                     message.ui_snoozed == null &&
                     (message.ui_busy == null || message.ui_busy < new Date().getTime()) &&
-                    db.operation().getOperationCount(folder.id, message.id) == 0) {
+                    db.operation().getOperationCount(folder.id, message.id) == 0 &&
+                    db.operation().getOperationCount(folder.id, EntityOperation.PURGE) == 0) {
                 update = true;
                 message.ui_hide = false;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " unhide");
@@ -3799,10 +3799,17 @@ class Core {
 
             if (notify_messaging) {
                 // https://developer.android.com/training/cars/messaging
-                Person.Builder me = new Person.Builder()
-                        .setName(MessageHelper.formatAddresses(message.to, name_email, false));
-                Person.Builder you = new Person.Builder()
-                        .setName(MessageHelper.formatAddresses(message.from, name_email, false));
+                String meName = MessageHelper.formatAddresses(message.to, name_email, false);
+                String youName = MessageHelper.formatAddresses(message.from, name_email, false);
+
+                // Names cannot be empty
+                if (TextUtils.isEmpty(meName))
+                    meName = "-";
+                if (TextUtils.isEmpty(youName))
+                    youName = "-";
+
+                Person.Builder me = new Person.Builder().setName(meName);
+                Person.Builder you = new Person.Builder().setName(youName);
 
                 if (info[0].hasPhoto())
                     you.setIcon(IconCompat.createWithBitmap(info[0].getPhotoBitmap()));
@@ -4038,14 +4045,8 @@ class Core {
                     if (!TextUtils.isEmpty(preview))
                         sb.append(preview);
                 }
-                if (sb.length() > 0) {
-                    String ascii = Normalizer
-                            .normalize(sb.toString(), Normalizer.Form.NFKD)
-                            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-                            .replace("ß", "ss")
-                            .replace("ĳ", "ij");
-                    mbuilder.setContentText(ascii);
-                }
+                if (sb.length() > 0)
+                    mbuilder.setContentText(sb.toString());
 
                 // Device
                 if (!notify_messaging) {

@@ -1410,6 +1410,7 @@ If you have at least once a day internet connectivity, it is sufficient to synch
 Note that you can set the number of days to *keep* messages for to a higher number than to *synchronize* messages for.
 You could for example initially synchronize messages for a large number of days and after this has been completed
 reduce the number of days to synchronize messages for, but leave the number of days to keep messages for.
+After decreasing the number of days to keep messages for, you might want to run the cleanup in the miscellaneous settings to remove old files.
 
 In the receive settings you can enable to always synchronize starred messages,
 which will allow you to keep older messages around while synchronizing messages for a limited number of days.
@@ -2252,6 +2253,9 @@ You will likely need to save the associated identity again as well.
 <a name="faq88"></a>
 **(88) How can I use a Yahoo, AOL or Sky account?**
 
+The preferred way to set up a Yahoo account is by using the quick setup wizard,
+which will use OAuth instead of a password and is therefore safer (and easier as well).
+
 To authorize a Yahoo, AOL, or Sky account you will need to create an app password.
 For instructions, please see here:
 
@@ -2293,6 +2297,9 @@ This is why texts with dots are sometimes incorrectly recognized as links, which
 
 Links for the tel, geo, rtsp and xmpp protocols will be recognized too,
 but links for less usual or less safe protocols like telnet and ftp will not be recognized.
+The regex to recognize links is already *very* complex and adding more protocols will make it only slower and possibly cause errors.
+
+<br />
 
 <a name="faq91"></a>
 **~~(91) Can you add periodical synchronization to save battery power?~~**
@@ -2301,7 +2308,6 @@ but links for less usual or less safe protocols like telnet and ftp will not be 
 ~~so periodically synchronizing messages will not result in saving battery power, more likely the contrary.~~
 
 ~~See [this FAQ](#user-content-faq39) about optimizing battery usage.~~
-
 
 <br />
 

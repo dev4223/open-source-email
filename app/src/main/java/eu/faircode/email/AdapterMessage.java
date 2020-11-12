@@ -2007,7 +2007,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindBody(TupleMessageEx message, final boolean scroll) {
-            tvBody.setText(null);
+            if (!Objects.equals(tvBody.getTag(), message.id)) {
+                tvBody.setTag(message.id);
+                tvBody.setText(null);
+            }
             clearActions();
 
             ibSeenBottom.setImageResource(message.ui_seen
@@ -5930,6 +5933,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
     private void _onBindViewHolder(@NonNull ViewHolder holder, int position) {
         TupleMessageEx message = differ.getItem(position);
+        holder.powner.recreate(message == null ? null : message.id);
 
         if (message == null || context == null)
             return;
@@ -5988,11 +5992,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     @Override
     public void onViewDetachedFromWindow(@NonNull ViewHolder holder) {
         holder.cowner.stop();
-        holder.powner.recreate();
     }
 
     @Override
     public void onViewRecycled(@NonNull ViewHolder holder) {
+        holder.cowner.recreate();
+
         if (holder.ibAvatar != null)
             holder.ibAvatar.setImageDrawable(null);
         if (holder.tvBody != null)
@@ -6441,8 +6446,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             ibInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view) {
-                    Helper.viewFAQ(getContext(), 92);
+                public void onClick(View v) {
+                    Helper.viewFAQ(v.getContext(), 92);
                 }
             });
 

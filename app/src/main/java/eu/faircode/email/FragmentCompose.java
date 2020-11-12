@@ -1441,7 +1441,7 @@ public class FragmentCompose extends FragmentBase {
                 onMenuAnswer();
                 return true;
             case R.id.menu_clear:
-                StyleHelper.apply(R.id.menu_clear, null, etBody);
+                StyleHelper.apply(R.id.menu_clear, getViewLifecycleOwner(), null, etBody);
                 return true;
             case R.id.menu_legend:
                 onMenuLegend();
@@ -1718,7 +1718,7 @@ public class FragmentCompose extends FragmentBase {
 
     private boolean onActionStyle(int action, View anchor) {
         Log.i("Style action=" + action);
-        return StyleHelper.apply(action, anchor, etBody);
+        return StyleHelper.apply(action, getViewLifecycleOwner(), anchor, etBody);
     }
 
     private void onActionRecordAudio() {
@@ -1731,7 +1731,7 @@ public class FragmentCompose extends FragmentBase {
             snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Helper.viewFAQ(getContext(), 158);
+                    Helper.viewFAQ(v.getContext(), 158);
                 }
             });
             snackbar.show();
@@ -1779,7 +1779,7 @@ public class FragmentCompose extends FragmentBase {
         snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.viewFAQ(getContext(), 25);
+                Helper.viewFAQ(v.getContext(), 25);
             }
         });
         snackbar.show();
@@ -1969,7 +1969,7 @@ public class FragmentCompose extends FragmentBase {
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Helper.viewFAQ(getContext(), 12);
+                        Helper.viewFAQ(v.getContext(), 12);
                     }
                 });
                 snackbar.show();
@@ -2147,7 +2147,7 @@ public class FragmentCompose extends FragmentBase {
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Helper.viewFAQ(getContext(), 158);
+                        Helper.viewFAQ(v.getContext(), 158);
                     }
                 });
                 snackbar.show();
@@ -3063,7 +3063,7 @@ public class FragmentCompose extends FragmentBase {
         int start = args.getInt("start");
         int end = args.getInt("end");
         etBody.setSelection(start, end);
-        StyleHelper.apply(R.id.menu_link, null, etBody, link);
+        StyleHelper.apply(R.id.menu_link, getViewLifecycleOwner(), null, etBody, link);
     }
 
     private void onActionDiscardConfirmed() {
@@ -4218,7 +4218,7 @@ public class FragmentCompose extends FragmentBase {
         sb.setAction(R.string.title_info, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Helper.viewFAQ(getContext(), 49);
+                Helper.viewFAQ(v.getContext(), 49);
             }
         });
         sb.show();
@@ -5253,17 +5253,17 @@ public class FragmentCompose extends FragmentBase {
                         return true;
                     case KeyEvent.KEYCODE_B:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_bold, null, etBody);
+                            return StyleHelper.apply(R.id.menu_bold, getViewLifecycleOwner(), null, etBody);
                         else
                             return false;
                     case KeyEvent.KEYCODE_I:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_italic, null, etBody);
+                            return StyleHelper.apply(R.id.menu_italic, getViewLifecycleOwner(), null, etBody);
                         else
                             return false;
                     case KeyEvent.KEYCODE_U:
                         if (etBody.hasSelection())
-                            return StyleHelper.apply(R.id.menu_underline, null, etBody);
+                            return StyleHelper.apply(R.id.menu_underline, getViewLifecycleOwner(), null, etBody);
                         else
                             return false;
                 }
@@ -5695,7 +5695,7 @@ public class FragmentCompose extends FragmentBase {
             ibEncryption.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Helper.viewFAQ(getContext(), 12);
+                    Helper.viewFAQ(v.getContext(), 12);
                 }
             });
 

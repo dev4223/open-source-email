@@ -55,7 +55,6 @@ import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.Patterns;
-import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.textclassifier.TextClassificationManager;
 import android.view.textclassifier.TextLanguage;
@@ -367,7 +366,7 @@ public class HtmlHelper {
         boolean text_align = prefs.getBoolean("text_align", true);
         boolean display_hidden = prefs.getBoolean("display_hidden", false);
         boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
-        boolean parse_classes = prefs.getBoolean("parse_classes", false);
+        boolean parse_classes = prefs.getBoolean("parse_classes", true);
         boolean inline_images = prefs.getBoolean("inline_images", false);
         boolean text_separators = prefs.getBoolean("text_separators", false);
 
@@ -464,10 +463,13 @@ public class HtmlHelper {
                 .addAttributes(":all", "style")
                 .addAttributes("div", "x-plain")
                 .removeTags("col", "colgroup")
-                .removeAttributes("table", "width")
+                .removeTags("thead", "tbody", "tfoot")
+                .addAttributes("td", "width")
+                .addAttributes("td", "height")
+                .addAttributes("tr", "width")
                 .addAttributes("tr", "height")
-                .removeAttributes("td", "rowspan", "width")
-                .removeAttributes("th", "rowspan", "width")
+                .removeAttributes("td", "colspan", "rowspan", "width")
+                .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
                 .addProtocols("img", "src", "data")
                 .removeProtocols("a", "href", "ftp")
@@ -727,6 +729,7 @@ public class HtmlHelper {
                             case "text-align":
                                 // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
                                 if (text_align) {
+                                    element.attr("x-align", value);
                                     sb.append("display:block;");
                                     sb.append(key).append(':').append(value).append(';');
                                 }
@@ -750,8 +753,18 @@ public class HtmlHelper {
         }
 
         // Replace headings
-        if (!text_size)
-            document.select("h1,h2,h3,h4,h5,h6").tagName("strong");
+        Elements hs = document.select("h1,h2,h3,h4,h5,h6");
+        if (text_size) {
+            if (text_separators && view)
+                for (Element h : hs)
+                    h.appendElement("hr")
+                            .attr("x-block", "true");
+            else
+                hs.attr("x-line-after", "true");
+        } else {
+            hs.tagName("strong");
+            hs.attr("x-line-after", "true");
+        }
 
         // Paragraphs
         for (Element p : document.select("p")) {
@@ -831,201 +844,97 @@ public class HtmlHelper {
 
         // Tables
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/table
-        boolean tdebug = BuildConfig.DEBUG && false;
-        Elements tables = document.select("table");
-        if (tables.size() > 0)
-            for (int t = tables.size() - 1; t >= 0; t--) {
-                Element table = tables.get(t);
+        for (Element table : document.select("table")) {
+            table.tagName("div");
+            // Ignore summary attribute
+            for (Element row : table.children()) {
+                row.tagName("div");
 
-                // Get rows and caption
-                Boolean heading = null;
-                Elements rows = new Elements();
-                Elements extras = new Elements();
-                for (Element child : table.children()) {
-                    switch (child.tagName()) {
-                        case "thead":
-                        case "tbody":
-                        case "tfoot":
-                            for (Element sub : child.children())
-                                if ("tr".equals(sub.tagName())) {
-                                    rows.add(sub);
-                                    if (!"tbody".equals(child.tagName()) &&
-                                            (heading == null || heading))
-                                        for (Element col : sub.children()) {
-                                            heading = "th".equals(col.tagName());
-                                            if (!heading)
-                                                break;
-                                        }
-                                } else {
-                                    Log.e("Row unexpected tag=" + sub.tagName());
-                                    extras.add(sub);
-                                }
-                            break;
-                        case "tr":
-                            rows.add(child);
-                            break;
-                        default: // caption
-                            extras.add(child);
-                            break;
-                    }
-                }
+                List<Node> merge = new ArrayList<>();
+                for (Element col : row.children()) {
+                    Element next = col.nextElementSibling();
 
-                // Process column spans
-                int maxcols = 0;
-                int mincols = Integer.MAX_VALUE;
-                SparseBooleanArray nomerge = new SparseBooleanArray();
-                for (Element row : rows) {
-                    int cols = 0;
-                    for (Element col : row.children()) {
-                        cols++;
-
-                        switch (col.tagName()) {
-                            case "td":
-                                if (col.childNodeSize() == 1 &&
-                                        (heading == null || !heading)) {
-                                    Node first = col.childNode(0);
-                                    if (first instanceof TextNode) {
-                                        if (((TextNode) first).text().length() != 1)
-                                            nomerge.put(cols - 1, true);
-                                    } else {
-                                        if (!"img".equals(first.nodeName()))
-                                            nomerge.put(cols - 1, true);
-                                    }
-                                } else
-                                    nomerge.put(cols - 1, true);
-                                break;
-                            case "th":
-                                nomerge.put(cols - 1, true);
-                                Element strong = new Element("strong");
-                                for (Node child : new ArrayList<>(col.childNodes())) {
-                                    child.remove();
-                                    strong.appendChild(child);
-                                }
-                                col.appendChild(strong);
-                                break;
-                            default:
-                                Log.e("Column unexpected tag=" + col.tagName());
-                                if (tdebug) {
-                                    col.prependText("COLUMN=" + col.tagName() + "[");
-                                    col.appendText("]");
-                                }
-                                col.attr("x-block", "true");
+                    // Get nodes with content
+                    List<Node> nodes = new ArrayList<>(col.childNodes());
+                    while (nodes.size() > 0) {
+                        Node first = nodes.get(0);
+                        if (first instanceof TextNode && ((TextNode) first).isBlank()) {
+                            nodes.remove(0);
+                            continue;
                         }
 
-                        String span = col.attr("colspan");
-                        if (!TextUtils.isEmpty(span))
-                            try {
-                                int colspan = Integer.parseInt(span);
-                                if (colspan > 1)
-                                    for (int s = 1; s < colspan; s++) {
-                                        cols++;
-                                        Element fill = document.createElement("td");
-                                        for (Attribute attr : col.attributes())
-                                            fill.attr(attr.getKey(), attr.getValue());
-                                        if (tdebug)
-                                            fill.prependText("(" + cols + "+" + s + "/" + (colspan - 1) + ")");
-                                        fill.append("&emsp;");
-                                        col.after(fill);
-                                    }
-                            } catch (NumberFormatException ex) {
-                                Log.w(ex);
-                            }
-                    }
-                    if (cols > maxcols)
-                        maxcols = cols;
-                    if (cols < mincols)
-                        mincols = cols;
-                }
-                if (mincols > maxcols)
-                    mincols = maxcols;
-
-                // Merge columns
-                if (mincols > 1)
-                    for (int col = 0; col < mincols - 1; col++)
-                        if (!nomerge.get(col))
-                            for (Element row : rows) {
-                                Node node = row.child(col).childNode(0);
-                                node.remove();
-                                if (node instanceof Element)
-                                    node.removeAttr("x-block");
-                                row.child(col + 1).prependText("\u00a0").prependChild(node);
-                            }
-
-                // Rebuild table
-                table.tagName("div");
-                table.children().remove(); // leaves nodes
-
-                // Process extras: caption, etc
-                for (Element extra : extras) {
-                    if (tdebug) {
-                        extra.prependText("EXTRA=" + extra.tagName() + "[");
-                        extra.appendText("]");
-                    }
-                    table.appendChild(extra.tagName("div")
-                            .attr("x-block", "true"));
-                }
-
-                if (heading == null || !heading) {
-                    for (Element row : rows) {
-                        Element line = document.createElement("div")
-                                .attr("x-block", "true");
-                        for (Element col : row.children())
-                            line.appendChild(col.tagName("div"));
-
-                        table.appendChild(line);
-
-                        if (text_separators && view)
-                            line.appendElement("hr")
-                                    .attr("x-block", "true")
-                                    .attr("x-dashed", "true");
-                    }
-                } else {
-                    // Process columns
-                    for (int c = 0; c < maxcols; c++) {
-                        Element col = document.createElement("div")
-                                .attr("x-block", "true");
-                        if (tdebug)
-                            col.appendText("merge=" + !nomerge.get(c));
-                        int r = 0;
-                        for (Element row : rows) {
-                            r++;
-                            Elements rowcol = row.children();
-                            if (c < rowcol.size()) {
-                                Element cell = rowcol.get(c).clone().tagName("div");
-                                if (tdebug) {
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append(rowcol.get(c).tagName() + "=" + rowcol.get(c).className());
-                                    for (Node node : rowcol.get(c).childNodes()) {
-                                        sb.append(':');
-                                        if (node instanceof Element)
-                                            sb.append(node.nodeName());
-                                        else if (node instanceof TextNode)
-                                            sb.append("~");
-                                        else
-                                            sb.append(node.getClass().getSimpleName());
-                                    }
-                                    cell.prependText("CELL=" + (t + 1) +
-                                            ":" + r + "/" + rows.size() +
-                                            ":" + (c + 1) + "/" + maxcols + "/" +
-                                            sb.toString() + "[");
-                                    cell.appendText("]");
-                                }
-                                col.appendChild(cell);
-                            }
+                        Node last = nodes.get(nodes.size() - 1);
+                        if (last instanceof TextNode && ((TextNode) last).isBlank()) {
+                            nodes.remove(nodes.size() - 1);
+                            continue;
                         }
 
-                        table.appendChild(col);
-
-                        if (text_separators && view)
-                            col.appendElement("hr")
-                                    .attr("x-block", "true")
-                                    .attr("x-dashed", "true");
+                        break;
                     }
+
+                    // Merge single images into next column
+                    if (nodes.size() == 1) {
+                        Node lonely = nodes.get(0);
+
+                        // prevent extra newlines
+                        lonely.removeAttr("x-paragraph");
+
+                        if (next == null ||
+                                next.attr("x-align")
+                                        .equals(col.attr("x-align"))) {
+                            if (lonely instanceof Element &&
+                                    "img".equals(lonely.nodeName())) {
+                                lonely.remove();
+                                lonely.removeAttr("x-block");
+                                merge.add(lonely);
+                                if (next != null)
+                                    continue;
+                            }
+                        }
+                    }
+
+                    if (merge.size() > 0) {
+                        for (int m = merge.size() - 1; m >= 0; m--)
+                            col.prependChild(merge.get(m));
+                        merge.clear();
+                    }
+
+                    if ("th".equals(col.tagName())) {
+                        Element strong = new Element("strong");
+                        for (Node child : new ArrayList<>(col.childNodes())) {
+                            child.remove();
+                            strong.appendChild(child);
+                        }
+                        col.appendChild(strong);
+                    }
+
+                    // Flow not / left aligned columns
+                    String align = col.attr("x-align");
+                    if (TextUtils.isEmpty(align) ||
+                            "left".equals(align) ||
+                            "start".equals(align))
+                        col.tagName("div").removeAttr("x-block");
+                    else {
+                        if ("true".equals(col.attr("x-line-before")))
+                            col.removeAttr("x-line-before");
+                    }
+
+                    if (next != null && col.childNodeSize() > 0)
+                        col.appendText("\u2002"); // ensp
                 }
+
+                if (merge.size() != 0)
+                    throw new AssertionError("merge");
+
+                if (text_separators && view)
+                    row.appendElement("hr")
+                            .attr("x-block", "true")
+                            .attr("x-dashed", "true");
             }
+        }
 
         // Fix dangling table elements
-        document.select("tbody,thead,tfoot,tr,th,td").tagName("div");
+        document.select("tr,th,td").tagName("div");
 
         // Images
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
@@ -2193,10 +2102,6 @@ public class HtmlHelper {
                     tnode = (TextNode) node;
                     String text = tnode.getWholeText();
                     ssb.append(text);
-                    if (monospaced_pre &&
-                            node.parent() instanceof Element &&
-                            "true".equals(((Element) node.parent()).attr("x-plain")))
-                        setSpan(ssb, new TypefaceSpan("monospace"), ssb.length() - text.length(), ssb.length());
                 }
             }
 
@@ -2437,6 +2342,10 @@ public class HtmlHelper {
                             default:
                                 Log.e("Unknown tag=" + element.tagName());
                         }
+
+                        if (monospaced_pre &&
+                                "true".equals(element.attr("x-plain")))
+                            setSpan(ssb, new TypefaceSpan("monospace"), start, ssb.length());
                     } catch (Throwable ex) {
                         Log.e(ex);
                     }

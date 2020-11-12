@@ -3834,7 +3834,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             @Override
             public void onClick(View v) {
                 snackbar.dismiss();
-                Helper.viewFAQ(getContext(), 147);
+                Helper.viewFAQ(v.getContext(), 147);
                 prefs.edit().putBoolean("third_party_notified", true).apply();
             }
         });
@@ -5588,7 +5588,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 snackbar.setAction(R.string.title_fix, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Helper.viewFAQ(getContext(), 12);
+                        Helper.viewFAQ(v.getContext(), 12);
                     }
                 });
                 snackbar.show();
@@ -7344,7 +7344,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     db.endTransaction();
                 }
 
-                ServiceSynchronize.eval(context, "delete");
+                ServiceSynchronize.eval(context, "purge");
 
                 return null;
             }
@@ -7535,7 +7535,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             btnInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Helper.viewFAQ(getContext(), 104);
+                    Helper.viewFAQ(v.getContext(), 104);
                 }
             });
 
