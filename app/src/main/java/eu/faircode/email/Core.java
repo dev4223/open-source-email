@@ -47,8 +47,6 @@ import androidx.preference.PreferenceManager;
 
 import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.gimap.GmailMessage;
-import com.sun.mail.iap.BadCommandException;
-import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
@@ -59,12 +57,12 @@ import com.sun.mail.imap.IMAPStore;
 import com.sun.mail.imap.protocol.FLAGS;
 import com.sun.mail.imap.protocol.FetchResponse;
 import com.sun.mail.imap.protocol.IMAPProtocol;
+import com.sun.mail.imap.protocol.MailboxInfo;
 import com.sun.mail.imap.protocol.MessageSet;
 import com.sun.mail.imap.protocol.UID;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.sun.mail.pop3.POP3Store;
-import com.sun.mail.util.MessageRemovedIOException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -463,16 +461,16 @@ class Core {
 
                         if (op.tries >= TOTAL_RETRY_MAX ||
                                 ex instanceof OutOfMemoryError ||
-                                ex instanceof MessageRemovedException ||
-                                ex instanceof MessageRemovedIOException ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
+                                (ex instanceof IllegalStateException &&
+                                        EntityOperation.SYNC.equals(op.name) &&
+                                        "This operation is not allowed on a closed folder".equals(ex.getMessage())) ||
                                 ex instanceof SQLiteConstraintException ||
-                                ex.getCause() instanceof MessageRemovedException ||
-                                ex.getCause() instanceof MessageRemovedIOException ||
-                                ex.getCause() instanceof BadCommandException ||
-                                ex.getCause() instanceof CommandFailedException ||
+                                //ex.getCause() instanceof BadCommandException || // BAD
+                                //ex.getCause() instanceof CommandFailedException || // NO
+                                MessageHelper.isRemoved(ex) ||
                                 EntityOperation.ATTACHMENT.equals(op.name) ||
                                 (ConnectionHelper.isIoError(ex) &&
                                         EntityFolder.DRAFTS.equals(folder.type) &&
@@ -483,7 +481,12 @@ class Core {
                             // Drafts: javax.mail.FolderClosedException: * BYE Jakarta Mail Exception:
                             //   javax.net.ssl.SSLException: Write error: ssl=0x8286cac0: I/O error during system call, Broken pipe
                             // Drafts: * BYE Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
-                            Log.w("Unrecoverable");
+                            String msg = "Unrecoverable operation=" + op.name + " tries=" + op.tries + " created=" + new Date(op.created);
+                            EntityLog.log(context, msg +
+                                    " folder=" + folder.id + ":" + folder.name +
+                                    " message=" + (message == null ? null : message.id + ":" + message.subject) +
+                                    " reason=" + Log.formatThrowable(ex, false));
+                            Log.e(new Throwable(msg, ex));
 
                             try {
                                 db.beginTransaction();
@@ -705,7 +708,6 @@ class Core {
 
     private static void onKeyword(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, IMAPFolder ifolder) throws MessagingException, JSONException {
         // Set/reset user flag
-        DB db = DB.getInstance(context);
         // https://tools.ietf.org/html/rfc3501#section-2.3.2
         String keyword = jargs.getString(0);
         boolean set = jargs.getBoolean(1);
@@ -1527,6 +1529,8 @@ class Core {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean sync_folders = (prefs.getBoolean("sync_folders", true) || force);
         boolean sync_shared_folders = prefs.getBoolean("sync_shared_folders", false);
+        boolean subscriptions = prefs.getBoolean("subscriptions", false);
+        boolean sync_subscribed = prefs.getBoolean("sync_subscribed", false);
 
         // Get folder names
         Map<String, EntityFolder> local = new HashMap<>();
@@ -1707,7 +1711,7 @@ class Core {
                         folder.account = account.id;
                         folder.name = fullName;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
-                        folder.synchronize = false;
+                        folder.synchronize = (subscribed && subscriptions && sync_subscribed);
                         folder.subscribed = subscribed;
                         folder.poll = true;
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
@@ -1809,13 +1813,20 @@ class Core {
     private static void onPurgeFolder(Context context, JSONArray jargs, EntityFolder folder, IMAPFolder ifolder) throws MessagingException {
         // Delete all messages from folder
         try {
-            final MessageSet[] sets = new MessageSet[]{new MessageSet(1, ifolder.getMessageCount())};
-
-            Log.i(folder.name + " purge " + MessageSet.toString(sets));
+            Log.i(folder.name + " purge=" + ifolder.getMessageCount());
             ifolder.doCommand(new IMAPFolder.ProtocolCommand() {
                 @Override
                 public Object doCommand(IMAPProtocol protocol) throws ProtocolException {
-                    protocol.storeFlags(sets, new Flags(Flags.Flag.DELETED), true);
+                    MailboxInfo info = protocol.select(ifolder.getFullName());
+                    if (info.total > 0) {
+                        MessageSet[] sets = new MessageSet[]{new MessageSet(1, info.total)};
+                        EntityLog.log(context, folder.name + " purging=" + MessageSet.toString(sets));
+                        try {
+                            protocol.storeFlags(sets, new Flags(Flags.Flag.DELETED), true);
+                        } catch (ProtocolException ex) {
+                            throw new ProtocolException("Purge=" + MessageSet.toString(sets), ex);
+                        }
+                    }
                     return null;
                 }
             });

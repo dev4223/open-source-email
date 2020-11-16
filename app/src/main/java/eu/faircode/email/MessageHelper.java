@@ -21,10 +21,10 @@ package eu.faircode.email;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.MailTo;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import androidx.core.net.MailTo;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.preference.PreferenceManager;
 
@@ -653,7 +653,7 @@ public class MessageHelper {
         String htmlContent = document.html();
         String htmlContentType = "text/html; charset=" + Charset.defaultCharset().name();
 
-        String plainContent = HtmlHelper.getText(context, htmlContent);
+        String plainContent = HtmlHelper.getText(context, document.html());
         String plainContentType = "text/plain; charset=" + Charset.defaultCharset().name();
 
         if (format_flowed) {
@@ -1282,6 +1282,8 @@ public class MessageHelper {
                     String unsubscribe = entry.substring(lt + 1, gt);
                     Uri uri = Uri.parse(unsubscribe);
                     String scheme = uri.getScheme();
+                    if (scheme != null)
+                        scheme = scheme.toLowerCase(Locale.ROOT);
                     if (mailto == null && "mailto".equals(scheme))
                         mailto = unsubscribe;
                     if (link == null && ("http".equals(scheme) || "https".equals(scheme)))
