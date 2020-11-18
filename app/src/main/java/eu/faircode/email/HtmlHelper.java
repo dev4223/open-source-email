@@ -56,9 +56,6 @@ import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.Patterns;
 import android.view.View;
-import android.view.textclassifier.TextClassificationManager;
-import android.view.textclassifier.TextClassifier;
-import android.view.textclassifier.TextLanguage;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -493,7 +490,7 @@ public class HtmlHelper {
 
         // Remove tracking pixels
         if (disable_tracking)
-            removeTrackingPixels(context, document, false);
+            removeTrackingPixels(context, document);
 
         // Font
         for (Element font : document.select("font")) {
@@ -763,6 +760,7 @@ public class HtmlHelper {
 
         // Replace headings
         Elements hs = document.select("h1,h2,h3,h4,h5,h6");
+        hs.attr("x-line-before", "true");
         if (text_size) {
             if (text_separators && view)
                 for (Element h : hs)
@@ -923,6 +921,12 @@ public class HtmlHelper {
 
                     // Flow not / left aligned columns
                     String align = col.attr("x-align");
+                    //if (next == null && row.childrenSize() == 2) {
+                    //    align = "end";
+                    //    String style = col.attr("style");
+                    //    col.attr("style",
+                    //            mergeStyles(style, "text-align:" + align));
+                    //}
                     if (TextUtils.isEmpty(align) ||
                             "left".equals(align) ||
                             "start".equals(align))
@@ -949,26 +953,57 @@ public class HtmlHelper {
         // Fix dangling table elements
         document.select("tr,th,td").tagName("div");
 
+        // Lists
+        for (Element e : document.select("ol,ul")) {
+            if (view) {
+                if (!"false".equals(e.attr("x-line-before")))
+                    e.attr("x-line-before", "true");
+                if (!"false".equals(e.attr("x-line-after")))
+                    e.attr("x-line-after", "true");
+            } else {
+                String style = e.attr("style");
+                e.attr("style",
+                        mergeStyles(style, "margin:0"));
+            }
+        }
+
         // Images
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img
         for (Element img : document.select("img")) {
             String alt = img.attr("alt");
             String src = img.attr("src");
             String tracking = img.attr("x-tracking");
+            boolean isInline = src.startsWith("cid:");
 
             if (TextUtils.isEmpty(src)) {
+                Log.i("Removing empty image");
                 img.remove();
                 continue;
             }
-            if (!show_images && !image_placeholders) {
+
+            if (!show_images && !(inline_images && isInline) && !image_placeholders) {
+                Log.i("Removing placeholder");
                 img.removeAttr("src");
                 continue;
+            }
+
+            // Remove spacer, etc
+            if (!show_images && !(inline_images && isInline) &&
+                    TextUtils.isEmpty(img.attr("x-tracking"))) {
+                Log.i("Removing small image");
+                Integer width = Helper.parseInt(img.attr("width").trim());
+                Integer height = Helper.parseInt(img.attr("height").trim());
+                if ((width != null && width <= SMALL_IMAGE_SIZE) ||
+                        (height != null && height <= SMALL_IMAGE_SIZE)) {
+                    img.remove();
+                    continue;
+                }
             }
 
             if (alt.length() > MAX_ALT)
                 alt = alt.substring(0, MAX_ALT) + "…";
 
-            if (!show_images && !(inline_images && src.startsWith("cid:")) && !TextUtils.isEmpty(alt))
+            if (!show_images && !(inline_images && isInline) && !TextUtils.isEmpty(alt))
                 if (TextUtils.isEmpty(tracking))
                     img.appendText("[" + alt + "]");
                 else {
@@ -1520,7 +1555,7 @@ public class HtmlHelper {
         return sb.toString();
     }
 
-    static void removeTrackingPixels(Context context, Document document, boolean full) {
+    static void removeTrackingPixels(Context context, Document document) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean disconnect_images = prefs.getBoolean("disconnect_images", false);
 
@@ -1562,18 +1597,8 @@ public class HtmlHelper {
 
             Uri uri = Uri.parse(src);
             String host = uri.getHost();
-            if (host == null || hosts.contains(host)) {
-                if (!full) {
-                    // Remove spacer, etc
-                    Integer width = Helper.parseInt(img.attr("width").trim());
-                    Integer height = Helper.parseInt(img.attr("height").trim());
-                    if ((width != null && width <= SMALL_IMAGE_SIZE) ||
-                            (height != null && height <= SMALL_IMAGE_SIZE))
-                        img.remove();
-                }
-
+            if (host == null || hosts.contains(host))
                 continue;
-            }
 
             if (isTrackingPixel(img) || isTrackingHost(host, disconnect_images)) {
                 img.attr("src", sb.toString());
@@ -1686,26 +1711,9 @@ public class HtmlHelper {
             if (!language_detection)
                 return null;
 
-            // Why not ML kit? https://developers.google.com/ml-kit/terms
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                TextClassificationManager tcm =
-                        (TextClassificationManager) context.getSystemService(Context.TEXT_CLASSIFICATION_SERVICE);
-                if (tcm == null)
-                    return null;
-
-                String text = getPreview(body);
-                if (text == null)
-                    return null;
-
-                TextLanguage.Request trequest = new TextLanguage.Request.Builder(text).build();
-                TextClassifier tc = tcm.getTextClassifier();
-                TextLanguage tlanguage = tc.detectLanguage(trequest);
-                if (tlanguage.getLocaleHypothesisCount() > 0)
-                    return tlanguage.getLocale(0).toLocale().getLanguage();
-            }
-
-            return null;
+            String text = getPreview(body);
+            Locale locale = TextHelper.detectLanguage(context, text);
+            return (locale == null ? null : locale.getLanguage());
         } catch (Throwable ex) {
             Log.e(ex);
             return null;

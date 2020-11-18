@@ -108,8 +108,8 @@ import biweekly.ICalendar;
 
 public class MessageHelper {
     private boolean ensuredEnvelope = false;
-    private boolean ensuredEnvelopeAll = false;
-    private boolean ensuredBody = false;
+    private boolean ensuredHeaders = false;
+    private boolean ensuredStructure = false;
     private MimeMessage imessage;
 
     private static File cacheDir = null;
@@ -169,6 +169,7 @@ public class MessageHelper {
         boolean hide_timezone = prefs.getBoolean("hide_timezone", true);
         boolean autocrypt = prefs.getBoolean("autocrypt", true);
         boolean mutual = prefs.getBoolean("autocrypt_mutual", true);
+        boolean encrypt_subject = prefs.getBoolean("encrypt_subject", false);
 
         MimeMessageEx imessage = new MimeMessageEx(isession, message.msgid);
 
@@ -400,6 +401,9 @@ public class MessageHelper {
                 multipart.addBodyPart(bpHeader);
                 multipart.addBodyPart(bpContent);
                 imessage.setContent(multipart);
+
+                if (encrypt_subject)
+                    imessage.setSubject("...");
 
                 return imessage;
             } else if (EntityAttachment.SMIME_SIGNATURE.equals(attachment.encryption)) {
@@ -823,7 +827,7 @@ public class MessageHelper {
     }
 
     String getMessageID() throws MessagingException {
-        ensureMessage(false, false);
+        ensureEnvelope();
 
         // Outlook outbox -> sent
         String header = imessage.getHeader(HEADER_CORRELATION_ID, null);
@@ -833,7 +837,7 @@ public class MessageHelper {
     }
 
     String[] getReferences() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         List<String> result = new ArrayList<>();
         String refs = imessage.getHeader("References", null);
@@ -895,7 +899,7 @@ public class MessageHelper {
     }
 
     String getDeliveredTo() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String header = imessage.getHeader("Delivered-To", null);
         if (header == null)
@@ -911,15 +915,13 @@ public class MessageHelper {
     }
 
     String getInReplyTo() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String header = imessage.getHeader("In-Reply-To", null);
         return (header == null ? null : MimeUtility.unfold(header));
     }
 
     String getThreadId(Context context, long account, long uid) throws MessagingException {
-        ensureMessage(false);
-
         if (imessage instanceof GmailMessage) {
             // https://developers.google.com/gmail/imap/imap-extensions#access_to_the_gmail_thread_id_x-gm-thrid
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -995,7 +997,7 @@ public class MessageHelper {
     Integer getPriority() throws MessagingException {
         Integer priority = null;
 
-        ensureMessage(false);
+        ensureHeaders();
 
         // https://tools.ietf.org/html/rfc2156
         // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcmail/2bb19f1b-b35e-4966-b1cb-1afd044e83ab
@@ -1068,20 +1070,20 @@ public class MessageHelper {
     }
 
     boolean getReceiptRequested() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         return (imessage.getHeader("Return-Receipt-To") != null ||
                 imessage.getHeader("Disposition-Notification-To") != null);
     }
 
     Address[] getReceiptTo() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         return getAddressHeader("Disposition-Notification-To");
     }
 
     String[] getAuthentication() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String[] headers = imessage.getHeader("Authentication-Results");
         if (headers == null)
@@ -1121,7 +1123,7 @@ public class MessageHelper {
     }
 
     String getReceivedFromHost() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String[] received = imessage.getHeader("Received");
         if (received == null || received.length == 0)
@@ -1156,7 +1158,7 @@ public class MessageHelper {
     }
 
     private Address[] getAddressHeader(String name) throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String header = imessage.getHeader(name, ",");
         if (header == null)
@@ -1217,7 +1219,7 @@ public class MessageHelper {
     }
 
     Address[] getListPost() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String list;
         try {
@@ -1257,7 +1259,7 @@ public class MessageHelper {
     }
 
     String getListUnsubscribe() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String list;
         try {
@@ -1305,7 +1307,7 @@ public class MessageHelper {
     }
 
     String getAutocrypt() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String autocrypt = imessage.getHeader("Autocrypt", null);
         if (autocrypt == null)
@@ -1315,7 +1317,7 @@ public class MessageHelper {
     }
 
     String getSubject() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         String subject = imessage.getHeader("Subject", null);
         if (subject == null)
@@ -1333,14 +1335,14 @@ public class MessageHelper {
     }
 
     Long getSize() throws MessagingException {
-        ensureMessage(false);
+        ensureEnvelope();
 
         long size = imessage.getSize();
         return (size < 0 ? null : size);
     }
 
     Long getReceived() throws MessagingException {
-        ensureMessage(false);
+        ensureEnvelope();
 
         Date received = imessage.getReceivedDate();
         if (received == null)
@@ -1350,7 +1352,7 @@ public class MessageHelper {
     }
 
     Long getReceivedHeader() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         // https://tools.ietf.org/html/rfc5321#section-4.4
         // https://tools.ietf.org/html/rfc5322#section-3.6.7
@@ -1372,7 +1374,7 @@ public class MessageHelper {
     }
 
     Long getSent() throws MessagingException {
-        ensureMessage(false);
+        ensureEnvelope();
 
         Date sent = imessage.getSentDate();
         if (sent == null)
@@ -1382,7 +1384,7 @@ public class MessageHelper {
     }
 
     String getHeaders() throws MessagingException {
-        ensureMessage(false);
+        ensureHeaders();
 
         StringBuilder sb = new StringBuilder();
         Enumeration<Header> headers = imessage.getAllHeaders();
@@ -1638,10 +1640,15 @@ public class MessageHelper {
     }
 
     class MessageParts {
+        private String protected_subject;
         private List<PartHolder> text = new ArrayList<>();
         private List<PartHolder> extra = new ArrayList<>();
         private List<AttachmentPart> attachments = new ArrayList<>();
         private ArrayList<String> warnings = new ArrayList<>();
+
+        String getProtectedSubject() {
+            return protected_subject;
+        }
 
         Boolean isPlainOnly() {
             if (text.size() + extra.size() == 0)
@@ -2209,7 +2216,7 @@ public class MessageHelper {
     MessageParts getMessageParts() throws IOException, MessagingException {
         MessageParts parts = new MessageParts();
 
-        ensureMessage(true);
+        ensureStructure();
 
         try {
             MimePart part = imessage;
@@ -2301,6 +2308,19 @@ public class MessageHelper {
     private void getMessageParts(Part part, MessageParts parts, Integer encrypt) throws IOException, MessagingException {
         try {
             Log.d("Part class=" + part.getClass() + " type=" + part.getContentType());
+
+            // https://github.com/autocrypt/protected-headers
+            try {
+                ContentType ct = new ContentType(part.getContentType());
+                if ("v1".equals(ct.getParameter("protected-headers"))) {
+                    String[] subject = part.getHeader("subject");
+                    if (subject != null && subject.length != 0)
+                        parts.protected_subject = subject[0];
+                }
+            } catch (Throwable ex) {
+                Log.e(ex);
+            }
+
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart;
                 Object content = part.getContent();
@@ -2436,28 +2456,38 @@ public class MessageHelper {
         }
     }
 
-    private void ensureMessage(boolean body) throws MessagingException {
-        ensureMessage(body, true);
+    private void ensureEnvelope() throws MessagingException {
+        _ensureMessage(false, false);
     }
 
-    private void ensureMessage(boolean body, boolean all) throws MessagingException {
-        if (body ? ensuredBody : ensuredEnvelopeAll || (ensuredEnvelope && !all))
-            return;
+    private void ensureHeaders() throws MessagingException {
+        _ensureMessage(false, true);
+    }
 
-        if (body)
-            ensuredBody = true;
-        else {
-            if (all)
-                ensuredEnvelopeAll = true;
-            else
-                ensuredEnvelope = true;
+    private void ensureStructure() throws MessagingException {
+        _ensureMessage(true, true);
+    }
+
+    private void _ensureMessage(boolean structure, boolean headers) throws MessagingException {
+        if (structure) {
+            if (ensuredStructure)
+                return;
+            ensuredStructure = true;
+        } else if (headers) {
+            if (ensuredHeaders)
+                return;
+            ensuredHeaders = true;
+        } else {
+            if (ensuredEnvelope)
+                return;
+            ensuredEnvelope = true;
         }
 
-        Log.i("Ensure body=" + body + " all=" + all);
+        Log.i("Ensure structure=" + structure + " headers=" + headers);
 
         try {
             if (imessage instanceof IMAPMessage) {
-                if (body) {
+                if (structure) {
                     String contentType = imessage.getContentType(); // force loadBODYSTRUCTURE
 
                     // Workaround protocol parameter missing
@@ -2483,11 +2513,10 @@ public class MessageHelper {
                         throw new MessagingException("Failed to load IMAP envelope");
                     }
                 } else {
-                    // force loadEnvelope
-                    if (all)
-                        imessage.getAllHeaders();
+                    if (headers)
+                        imessage.getAllHeaders(); // force loadHeaders
                     else
-                        imessage.getMessageID();
+                        imessage.getMessageID(); // force loadEnvelope
                 }
             }
         } catch (MessagingException ex) {

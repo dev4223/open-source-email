@@ -47,6 +47,8 @@ import androidx.preference.PreferenceManager;
 
 import com.sun.mail.gimap.GmailFolder;
 import com.sun.mail.gimap.GmailMessage;
+import com.sun.mail.iap.BadCommandException;
+import com.sun.mail.iap.CommandFailedException;
 import com.sun.mail.iap.ConnectionException;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.iap.Response;
@@ -459,17 +461,18 @@ class Core {
                             db.endTransaction();
                         }
 
+                        if (ifolder != null && !ifolder.isOpen())
+                            break;
+
                         if (op.tries >= TOTAL_RETRY_MAX ||
                                 ex instanceof OutOfMemoryError ||
                                 ex instanceof FileNotFoundException ||
                                 ex instanceof FolderNotFoundException ||
                                 ex instanceof IllegalArgumentException ||
-                                (ex instanceof IllegalStateException &&
-                                        EntityOperation.SYNC.equals(op.name) &&
-                                        "This operation is not allowed on a closed folder".equals(ex.getMessage())) ||
                                 ex instanceof SQLiteConstraintException ||
-                                //ex.getCause() instanceof BadCommandException || // BAD
-                                //ex.getCause() instanceof CommandFailedException || // NO
+                                (!ConnectionHelper.isIoError(ex) &&
+                                        (ex.getCause() instanceof BadCommandException ||
+                                                ex.getCause() instanceof CommandFailedException /* NO */)) ||
                                 MessageHelper.isRemoved(ex) ||
                                 EntityOperation.ATTACHMENT.equals(op.name) ||
                                 (ConnectionHelper.isIoError(ex) &&
@@ -478,6 +481,7 @@ class Core {
                             // com.sun.mail.iap.BadCommandException: B13 BAD [TOOBIG] Message too large
                             // com.sun.mail.iap.CommandFailedException: AY3 NO [CANNOT] Cannot APPEND to a SPAM folder
                             // com.sun.mail.iap.CommandFailedException: B16 NO [ALERT] Cannot MOVE messages out of the Drafts folder
+                            // com.sun.mail.iap.CommandFailedException: AV5 NO [OVERQUOTA] quota exceeded
                             // Drafts: javax.mail.FolderClosedException: * BYE Jakarta Mail Exception:
                             //   javax.net.ssl.SSLException: Write error: ssl=0x8286cac0: I/O error during system call, Broken pipe
                             // Drafts: * BYE Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
@@ -486,7 +490,10 @@ class Core {
                                     " folder=" + folder.id + ":" + folder.name +
                                     " message=" + (message == null ? null : message.id + ":" + message.subject) +
                                     " reason=" + Log.formatThrowable(ex, false));
-                            Log.e(new Throwable(msg, ex));
+                            if (op.tries > 1 ||
+                                    ex.getCause() instanceof BadCommandException ||
+                                    ex.getCause() instanceof CommandFailedException)
+                                Log.e(new Throwable(msg, ex));
 
                             try {
                                 db.beginTransaction();
