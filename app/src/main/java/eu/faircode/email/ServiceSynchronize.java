@@ -964,7 +964,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             EntityLog.log(ServiceSynchronize.this, account.name + " notice: " + message);
 
                             // Store NOOP
-                            //iservice.getStore().isConnected();
+                            try {
+                                iservice.getStore().isConnected();
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
 
                             if ("Still here".equals(message) && !isTransient(account)) {
                                 long now = new Date().getTime();
@@ -1775,11 +1779,22 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     int recently = (lastLost + LOST_RECENTLY < now ? 1 : 2);
                     EntityLog.log(this, account.name + " backoff=" + backoff + " recently=" + recently);
 
+                    if (backoff < CONNECT_BACKOFF_MAX)
+                        state.setBackoff(backoff * 2);
+                    else if (backoff == CONNECT_BACKOFF_MAX)
+                        if (Helper.isCharging(this))
+                            EntityLog.log(this, "Device is charging");
+                        else
+                            state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
+                    else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60)
+                        state.setBackoff(backoff * 2);
+
                     if (backoff <= CONNECT_BACKOFF_MAX) {
                         // Short back-off period, keep device awake
                         try {
-                            db.account().setAccountBackoff(account.id, System.currentTimeMillis() + backoff * 1000L * recently);
-                            state.acquire(backoff * 1000L * recently, true);
+                            long interval = backoff * 1000L * recently;
+                            db.account().setAccountBackoff(account.id, System.currentTimeMillis() + interval);
+                            state.acquire(interval, true);
                         } catch (InterruptedException ex) {
                             Log.w(account.name + " backoff " + ex.toString());
                         } finally {
@@ -1825,16 +1840,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             am.cancel(pi);
                         }
                     }
-
-                    if (backoff < CONNECT_BACKOFF_MAX)
-                        state.setBackoff(backoff * 2);
-                    else if (backoff == CONNECT_BACKOFF_MAX)
-                        if (Helper.isCharging(this))
-                            EntityLog.log(this, "Device is charging");
-                        else
-                            state.setBackoff(CONNECT_BACKOFF_ALARM_START * 60);
-                    else if (backoff < CONNECT_BACKOFF_ALARM_MAX * 60)
-                        state.setBackoff(backoff * 2);
                 }
 
                 currentThread = Thread.currentThread().getId();

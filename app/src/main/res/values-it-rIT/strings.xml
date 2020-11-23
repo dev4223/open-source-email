@@ -254,6 +254,7 @@
     <string name="title_advanced_prefix_once">Prefissa l\'oggetto solo una volta per rispondere o inoltrare</string>
     <string name="title_advanced_separate_reply">Inserisci una riga orizzontale prima dell\'intestazione di una risposta/inoltro</string>
     <string name="title_advanced_extended_reply">Usa intestazione estesa di risposta/inoltro</string>
+    <string name="title_advanced_write_below">Scrivi sotto il testo del mittente</string>
     <string name="title_advanced_quote_reply">Cita il testo nella risposta</string>
     <string name="title_advanced_limit_reply">Limita il numero di citazioni annidate</string>
     <string name="title_advanced_resize_reply">Ridimensiona le immagini nel testo di risposta</string>
@@ -619,9 +620,11 @@
     <string name="title_advanced_browse">Sfoglia i messaggi sul server</string>
     <string name="title_advanced_expand_read">Segna i messaggi come letti in fase di espansione</string>
     <string name="title_synchronize_now">Sincronizza ora</string>
-    <string name="title_synchronize_childs">Sincronizza le sottocartelle</string>
+    <string name="title_synchronize_subfolders">Sottocartelle</string>
     <string name="title_synchronize_more">Sincronizza altri messaggi</string>
     <string name="title_synchronize_enabled">Sincronizza</string>
+    <string name="title_synchronize_batch_enable">Abilita la sincronizzazione</string>
+    <string name="title_synchronize_batch_disable">Disabilita la sincronizzazione</string>
     <string name="title_delete_local">Elimina i messaggi locali</string>
     <string name="title_delete_browsed">Elimina i messaggi sfogliati/ricercati</string>
     <string name="title_empty_trash">Svuota il cestino</string>
@@ -721,6 +724,7 @@
     <string name="title_event">Aggiungi al calendario</string>
     <string name="title_pin">Aggiungi collegamento</string>
     <string name="title_print">Stampa</string>
+    <string name="title_print_header" comment="title_print_header&#10;Title for option to enable/disable printing sender, subject, etc above message text">Stampa l\'intestazione</string>
     <string name="title_show_headers">Visualizza header</string>
     <string name="title_raw_save">Salva messaggio non elaborato</string>
     <string name="title_raw_send">Invia come allegato</string>
@@ -1051,6 +1055,10 @@
     <string name="title_rule_answer_remark">Verrà inviata una sola risposta per qualsiasi conversazione, per evitare ripetizioni di risposta</string>
     <string name="title_rule_name_missing">Nome Regola mancante</string>
     <string name="title_rule_condition_missing">Condizione mancante</string>
+    <string name="title_rule_folder_missing">Cartella mancante</string>
+    <string name="title_rule_identity_missing">Identità mancante</string>
+    <string name="title_rule_answer_missing">Template mancante</string>
+    <string name="title_rule_keyword_missing">Parola chiave mancante</string>
     <string name="title_rule_automation_hint">Questo invierà l\'intento \'%1$s\' con gli extra \'%2$s\'</string>
     <string name="title_rule_execute">Esegui ora</string>
     <string name="title_rule_applied">Messaggi interessati: %1$d</string>

@@ -10,7 +10,7 @@ Jos sinulla on kysymyksiä, ole hyvä ja tarkista ensin alla olevat usein kysyty
 * [Suunnitellut ominaisuudet](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
 * [Usein pyydetyt ominaisuudet](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
 * [Usein Kysytyt Kysymykset](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
-* [Get support](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
+* [Ota yhteyttä](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
 
 ## Tilien valtuutus
 
@@ -47,28 +47,28 @@ Aiheeseen liittyvät kysymykset:
 * Vaihda vasemmalle/oikealle pyyhkäisyn kohdetta: Asetukset, Toiminnot, Aseta pyyhkäisytoiminnot
 * Vaihda salasana: Asetukset, kohta 1, Muokkaa, napauta tiliä, vaihda salasana
 * Aseta allekirjoitus: Asetukset, kohta 2, Muokkaa, napauta identiteettiä, Muokkaa allekirjoitusta.
-* Add CC and BCC addresses: tap the people's icon at the end of the subject
-* Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
-* Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
-* Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
-* Load more messages: long press a folder in the folder list, select *Synchronize more messages*
-* Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
-* Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
-* Delete a folder: long press the folder in the folder list, Edit properties, three-dots menu, Delete
-* Undo send: Outbox, tap message, tap undo icon button
-* Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
-* Change system folders: Setup, step 1, Manage, tap account, at the bottom
-* Export/import settings: Setup, navigation/hamburger menu
+* Lisää CC ja BCC osoitteet: napauta ihmisten kuvaketta aiheen lopussa
+* Mene seuraavaan tai edelliseen viestiin arkistossa/poistossa: käytösasetuksissa pois käytöstä *Sulje automaattisesti keskustelut* ja valitse *Siirry seuraavaan / edelliseen keskusteluun* *Keskustelun sulkemisen yhteydessä*
+* Lisää yhdistettyyn saapuneet-kansioon kansio: paina kansiota kansiolistassa pitkään ja valitse *Näytä yhdistetyssä saapuneet-kansiossa*
+* Lisää yhdistettyyn saapuneet-kansioon kansio: paina kansiota kansiolistassa pitkään ja valitse *Näytä yhdistetyssä saapuneet-kansiossa*
+* Lataa lisää viestejä: paina kansiota pitkään kansioluettelossa, valitse *Synkronoi lisää viestejä*
+* Poista viesti, ohita roskakori: 3-pisteen valikossa juuri viestin tekstin yläpuolella *Poista* tai vaihtoehtoisesti, poista roskapostin kansio tilin asetuksista
+* Poista tili/identiteetti: Aseta vaihe 1/2, Hallitse, napauta tiliä/identiteettiä, kolme-pistettä valikko, Poista
+* Poista kansio: paina kansiota pitkään kansioluettelossa, Muokkaa ominaisuuksia, kolme pistettä valikossa
+* Kumoa lähetetty: Lähtevä, napauta viestiä, napauta kumoa kuvaketta
+* Tallenna lähetetyt viestit saapuneet -kansioon: [katso tämä FAQ](#user-content-faq142)
+* Muuta järjestelmäkansioita: Aseta, vaihe 1, hallinta, napauta tiliä, alhaalla
+* Vienti/tuonti-asetukset: Asennus, navigointi/hamburger valikko
 
 ## Tunnetut ongelmat
 
-* ~~A [bug in Android 5.1 and 6](https://issuetracker.google.com/issues/37054851) causes apps to sometimes show a wrong time format. Toggling the Android setting *Use 24-hour format* might temporarily solve the issue. A workaround was added.~~
-* ~~A [bug in Google Drive](https://issuetracker.google.com/issues/126362828) causes files exported to Google Drive to be empty. Google has fixed this.~~
-* ~~A [bug in AndroidX](https://issuetracker.google.com/issues/78495471) causes FairEmail to occasionally crash on long pressing or swiping. Google has fixed this.~~
-* ~~A [bug in AndroidX ROOM](https://issuetracker.google.com/issues/138441698) causes sometimes a crash with "*... Exception while computing database live data ... Couldn't read row ...*". A workaround was added.~~
-* A [bug in Android](https://issuetracker.google.com/issues/119872129) causes FairEmail to crash with "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
-* A [bug in Android](https://issuetracker.google.com/issues/62427912) sometimes causes a crash with "*... ActivityRecord not found for ...*" after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) might fix the problem.
-* A [bug in Android](https://issuetracker.google.com/issues/37018931) sometimes causes a crash with *... InputChannel is not initialized ...* on some devices.
+* ~~A [vika Android 5.1 ja 6](https://issuetracker.google.com/issues/37054851) aiheuttaa joskus sovellusten näyttämään väärän aikamuodon. Android-asetuksen vaihtaminen *Käytä 24-tunnin formaattia* saattaa tilapäisesti ratkaista ongelman. workaround lisättiin ~~
+* ~~A [vika Google Drivessa](https://issuetracker.google.com/issues/126362828) aiheuttaa sen, että Google Driveen vietävät tiedostot ovat tyhjiä. Google on korjannut tämän.~~
+* ~~A [vika AndroidX:ssa](https://issuetracker.google.com/issues/78495471) aiheuttaa joskus FairEmailin kaatumisen pitkään painamalla tai pyyhkäisemällä. Google on korjannut tämän.~~
+* ~~A [vika AndroidX ROOM:ssa](https://issuetracker.google.com/issues/138441698) aiheuttaa joskus kaatumisen "*... Exception while computing database live data ... Riviä ...* " ei voitu lukea. workaround lisättiin ~~
+* A [vika AndroidX ROOM:ssa](https://issuetracker.google.com/issues/119872129) aiheuttaa joskus kaatumisen "*... Bad notification posted ...*" on some devices once after updating FairEmail and tapping on a notification.
+* A [vika Androidissa](https://issuetracker.google.com/issues/62427912) aiheuttaa joskus kaatumisen "*... Aktiviteettitietuetta ei löydy ...*" FairEmailin päivityksen jälkeen. Uudelleenasennus ([lähde](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) saattaa korjata ongelman.
+* A [vika Androidissa](https://issuetracker.google.com/issues/37018931) aiheuttaa joskus kaatumisen "*... InputChannel is not initialized ...* on some devices.
 * ~~A [bug in LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) sometimes causes a crash with *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
 * A bug in Nova Launcher on Android 5.x causes FairEmail to crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
 * ~~The folder selector sometimes shows no folders for yet unknown reasons. This seems to be fixed.~~
@@ -78,6 +78,7 @@ Aiheeseen liittyvät kysymykset:
 * A preview of a message text doesn't (always) appear on Samsung watches because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. Message preview texts are known to be displayed correctly on Pebble 2, Fitbit Charge 3, Mi band 3, and Xiaomi Amazfit BIP wearables. See also [this FAQ](#user-content-faq126).
 * A [bug in Android 6.0](https://issuetracker.google.com/issues/37068143) causes a crash with *... Invalid offset: ... Valid range is ...* when text is selected and tapping outside of the selected text. This bug has been fixed in Android 6.0.1.
 * Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.
+* Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
 
 ## Suunnitellut ominaisuudet
 
@@ -861,7 +862,7 @@ The error *... Connection refused ...* means that the email server or something 
 
 The error *... Network unreachable ...* means that the email server was not reachable via the current internet connection, for example because internet traffic is restricted to local traffic only.
 
-The error *... Host is unresolved ...* or "*... Unable to resolve host ...* means that the address of the email server could not be resolved. This might be caused by ad blocking or an unreachable or not properly working [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) server.
+The error *... Host is unresolved ...*, *... Unable to resolve host ...* or *... No address associated with hostname ...* means that the address of the email server could not be resolved into an IP address. This might be caused by a VPN, ad blocking or an unreachable or not properly working (local) [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) server.
 
 The error *... Software caused connection abort ...* means that the email server or something between FairEmail and the email server actively terminated an existing connection. This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
@@ -1222,6 +1223,11 @@ You can reduce the data usage basically in the same way as reducing battery usag
 It is inevitable that data will be used to synchronize messages.
 
 If the connection to the email server is lost, FairEmail will always synchronize the messages again to make sure no messages were missed. If the connection is unstable, this can result in extra data usage. In this case, it is a good idea to decrease the number of days to synchronize messages for to a minimum (see the previous question) or to switch to periodically synchronizing of messages (receive settings).
+
+To reduce data usage, you could change these advanced receive settings:
+
+* Check if old messages were removed from the server: disable
+* Synchronize (shared) folder list: disable
 
 By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection. You can change this in the connection settings.
 
@@ -2162,13 +2168,11 @@ Disabling *Partial fetch* will result in more memory usage.
 <a name="faq111"></a>
 **(111) Is OAuth supported?**
 
-OAuth for Gmail is supported via the quick setup wizard. The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts. OAuth for non on-device accounts is not supported because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this.
+OAuth for Gmail is supported via the quick setup wizard. The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts. OAuth for non on-device accounts is not supported because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this. You can read more about this [here](https://www.theregister.com/2019/02/11/google_gmail_developer/).
 
-OAuth for Yandex is supported via the quick setup wizard.
+OAuth for Yandex and Yahoo is supported via the quick setup wizard.
 
 OAuth for Office 365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
-
-OAuth access for Yahoo was requested, but Yahoo never responded to the request. OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL. Verizon owns both AOL and Yahoo, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media). So, it is reasonable to assume that OAuth is not supported by Yahoo anymore too.
 
 <br />
 
@@ -2301,8 +2305,6 @@ FairEmail groups messages based on the standard *Message-ID*, *In-Reply-To* and 
 **(123) What will happen when FairEmail cannot connect to an email server?**
 
 When FairEmail cannot connect to an email server to receive messages, for example when the internet connection is bad or a firewall or a VPN is blocking the connection, FairEmail will wait 8, 16 and 32 seconds while keeping the device awake (=use battery power) and try again to connect. If this fails, FairEmail will schedule an alarm to retry after 15, 30 and 60 minutes and let the device sleep (=no battery usage).
-
-Between connectivity changes there is a wait of 90 seconds to give the email server the opportunity to discover the old connection is broken. This is necessary because the internet connection of a mobile device is often lost abruptly and to prevent the problem described in [this FAQ](#user-content-faq23).
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) does not allow to wake the device earlier than after 15 minutes.
 
@@ -2776,6 +2778,8 @@ Updating once a week will probably be sufficient, please see [here](https://gith
 **(160) Can you add permanent deletion of messages without confirmation?**
 
 Permanent deletion means that messages will *irreversibly* be lost, and to prevent this from happening accidentally, this always needs to be confirmed. Even with a confirmation, some very angry people who lost some of their messages through their own fault contacted me, which was a rather unpleasant experience :-(
+
+Advanced: the IMAP delete flag in combination with the EXPUNGE command is not supportable because both email servers and not all people can handle this, risking unexpected loss of messages. A complicating factor is that not all email servers support [UID EXPUNGE](https://tools.ietf.org/html/rfc4315).
 
 <br />
 

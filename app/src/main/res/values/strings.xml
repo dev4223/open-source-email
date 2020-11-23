@@ -311,6 +311,7 @@
     <string name="title_advanced_prefix_once">Prefix subject only once on replying or forwarding</string>
     <string name="title_advanced_separate_reply">Insert a horizontal line before a reply/forward header</string>
     <string name="title_advanced_extended_reply">Use extended reply/forward header</string>
+    <string name="title_advanced_write_below">Write below the sender\'s text</string>
     <string name="title_advanced_quote_reply">Quote replied text</string>
     <string name="title_advanced_limit_reply">Limit the number of nested quotes</string>
     <string name="title_advanced_resize_reply">Resize images in replied text</string>
@@ -725,9 +726,11 @@
     <string name="title_advanced_expand_read">Mark messages read on expanding</string>
 
     <string name="title_synchronize_now">Synchronize now</string>
-    <string name="title_synchronize_childs">Synchronize child folders</string>
+    <string name="title_synchronize_subfolders">Subfolders</string>
     <string name="title_synchronize_more">Synchronize more messages</string>
     <string name="title_synchronize_enabled">Synchronize</string>
+    <string name="title_synchronize_batch_enable">Enable synchronization</string>
+    <string name="title_synchronize_batch_disable">Disable synchronization</string>
     <string name="title_delete_local">Delete local messages</string>
     <string name="title_delete_browsed">Delete browsed/searched messages</string>
     <string name="title_empty_trash">Empty trash</string>
@@ -833,6 +836,7 @@
     <string name="title_event">Add to calendar</string>
     <string name="title_pin">Add shortcut</string>
     <string name="title_print">Print</string>
+    <string name="title_print_header">Print header</string>
     <string name="title_show_headers">Show headers</string>
     <string name="title_raw_save">Save raw message</string>
     <string name="title_raw_send">Send as attachment</string>
@@ -1192,6 +1196,10 @@
     <string name="title_rule_answer_remark">Only one reply will be sent for any conversation, to avoid reply loops</string>
     <string name="title_rule_name_missing">Rule name missing</string>
     <string name="title_rule_condition_missing">Condition missing</string>
+    <string name="title_rule_folder_missing">Folder missing</string>
+    <string name="title_rule_identity_missing">Identity missing</string>
+    <string name="title_rule_answer_missing">Template missing</string>
+    <string name="title_rule_keyword_missing">Keyword missing</string>
     <string name="title_rule_automation_hint">This will send the intent \'%1$s\' with the extras \'%2$s\'</string>
 
     <string name="title_rule_execute">Execute now</string>
@@ -1366,7 +1374,6 @@
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
     <string name="title_enabled">Enabled</string>
-    <string name="title_disable">Disable</string>
     <string name="title_executing">Executing</string>
     <string name="title_completed">Completed</string>
     <string name="title_default_changed">Default changed</string>

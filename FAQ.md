@@ -162,7 +162,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(32) How can I check if reading email is really safe?](#user-content-faq32)
 * [(33) Why are edited sender addresses not working?](#user-content-faq33)
 * [(34) How are identities matched?](#user-content-faq34)
-* [(35) Why should I be careful with viewing images, attachments, and the original message?](#user-content-faq35)
+* [(35) Why should I be careful with viewing images, attachments, the original message, and opening links?](#user-content-faq35)
 * [(36) How are settings files encrypted?](#user-content-faq36)
 * [(37) How are passwords stored?](#user-content-faq37)
 * [(39) How can I reduce the battery usage of FairEmail?](#user-content-faq39)
@@ -1326,10 +1326,11 @@ Setting identity colors is a pro feature.
 <br />
 
 <a name="faq35"></a>
-**(35) Why should I be careful with viewing images, attachments, and the original message?**
+**(35) Why should I be careful with viewing images, attachments, the original message, and opening links?**
 
-Viewing remotely stored images (see also [this FAQ](#user-content-faq27)) might not only tell the sender that you have seen the message,
+Viewing remotely stored images (see also [this FAQ](#user-content-faq27)) and opening links might not only tell the sender that you have seen the message,
 but will also leak your IP address.
+See also this question: [Why email's link is more dangerous than web search's link?](https://security.stackexchange.com/questions/241139/why-emails-link-is-more-dangerous-than-web-searchs-link).
 
 Opening attachments or viewing an original message might load remote content and execute scripts,
 that might not only cause privacy sensitive information to leak, but can also be a security risk.
@@ -1386,7 +1387,8 @@ The real battery usage can be seen by navigating to this screen:
 *Android settings*, *Battery*, three-dots menu *Battery usage*, three-dots menu *Show full device usage*
 
 As a rule of thumb the battery usage should be below or in any case not be much higher than *Mobile network standby*.
-If this isn't the case, please let me know.
+If this isn't the case, please turn on *Auto optimize* in the receive settings.
+If this doesn't help, please [ask for support](https://contact.faircode.eu/?product=fairemailsupport).
 
 It is inevitable that synchronizing messages will use battery power because it requires network access and accessing the messages database.
 
@@ -1471,6 +1473,11 @@ If the connection to the email server is lost, FairEmail will always synchronize
 If the connection is unstable, this can result in extra data usage.
 In this case, it is a good idea to decrease the number of days to synchronize messages for to a minimum (see the previous question)
 or to switch to periodically synchronizing of messages (receive settings).
+
+To reduce data usage, you could change these advanced receive settings:
+
+* Check if old messages were removed from the server: disable
+* Synchronize (shared) folder list: disable
 
 By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection.
 You can change this in the connection settings.
@@ -1771,6 +1778,8 @@ but even Google's Chrome cannot handle this.
 * Did you know that you can insert the email addresses of an Android contact group via the three dots overflow menu?
 * Did you know that if you select text and hit reply, only the selected text will be quoted?
 * Did you know that you can long press the trash icons (both in the message and the bottom action bar) to permanently delete a message or conversation? (version 1.1368+)
+* Did you know that you can long press the send action to show the send dialog, even if it was disabled?
+* Did you know that you can long press the full screen icon to show the original message text only?
 
 <br />
 

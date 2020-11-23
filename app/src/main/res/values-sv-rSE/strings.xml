@@ -253,6 +253,7 @@
     <string name="title_advanced_prefix_once">Prefix i ämnet endast när du svarar eller vidarebefordrar</string>
     <string name="title_advanced_separate_reply">Infoga en horisontell linje innan ett svar/framåt sidhuvud</string>
     <string name="title_advanced_extended_reply">Använd förlängd svars-/framåtriktad sidhuvud</string>
+    <string name="title_advanced_write_below">Skriv under avsändarens text</string>
     <string name="title_advanced_quote_reply">Citera svarstext</string>
     <string name="title_advanced_limit_reply">Begränsa antalet nästlade citat</string>
     <string name="title_advanced_resize_reply">Ändra storlek på bilder i svarande text</string>
@@ -618,9 +619,11 @@
     <string name="title_advanced_browse">Bläddra bland meddelanden på servern</string>
     <string name="title_advanced_expand_read">Markera meddelanden som lästa vid expanderande</string>
     <string name="title_synchronize_now">Synkronisera nu</string>
-    <string name="title_synchronize_childs">Synkronisera underordnade mappar</string>
+    <string name="title_synchronize_subfolders">Undermappar</string>
     <string name="title_synchronize_more">Synkronisera fler meddelanden</string>
     <string name="title_synchronize_enabled">Synkronisera</string>
+    <string name="title_synchronize_batch_enable">Aktivera synkronisering</string>
+    <string name="title_synchronize_batch_disable">Inaktivera synkronisering</string>
     <string name="title_delete_local">Ta bort lokala meddelanden</string>
     <string name="title_delete_browsed">Ta bort bläddrade/sökta meddelanden</string>
     <string name="title_empty_trash">Töm papperskorg</string>
@@ -720,6 +723,7 @@
     <string name="title_event">Lägg till i kalender</string>
     <string name="title_pin">Lägg till genväg</string>
     <string name="title_print">Skriv ut</string>
+    <string name="title_print_header" comment="title_print_header&#10;Title for option to enable/disable printing sender, subject, etc above message text">Visa header</string>
     <string name="title_show_headers">Visa sidhuvuden</string>
     <string name="title_raw_save">Spara rent meddelande</string>
     <string name="title_raw_send">Skicka som bilaga</string>
@@ -1050,6 +1054,10 @@
     <string name="title_rule_answer_remark">Endast ett svar kommer att skickas för någon konversation, för att undvika svarsloopar</string>
     <string name="title_rule_name_missing">Regelnamn saknas</string>
     <string name="title_rule_condition_missing">Tillstånd saknas</string>
+    <string name="title_rule_folder_missing">Mapp saknas</string>
+    <string name="title_rule_identity_missing">Identitet saknas</string>
+    <string name="title_rule_answer_missing">Mall saknas</string>
+    <string name="title_rule_keyword_missing">Nyckelord saknas</string>
     <string name="title_rule_automation_hint">Detta kommer att skicka avsikten \'%1$s\' med extramaterial \'%2$s\'</string>
     <string name="title_rule_execute">Verkställ nu</string>
     <string name="title_rule_applied">Berörda meddelanden: %1$d</string>

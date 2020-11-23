@@ -78,6 +78,7 @@ Verwandte Fragen:
 * Eine Vorschau eines Nachrichtentextes wird auf Samsung-Uhren nicht (immer) angezeigt, weil [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) wohl ignoriert wird. Bisher ist nur bekannt, dass Nachrichtenvorschautexte auf den Smart-Armbändern „Pebble 2”, „Fitbit Charge 3”, „Mi Band 3” und „Xiaomi Amazfit BIP” korrekt angezeigt werden. Siehe auch [diese FAQ](#user-content-faq126).
 * Ein [Fehler in Android 6.0](https://issuetracker.google.com/issues/37068143) verursacht einen Absturz mit * … Ungültiger Offset: ... Der gültige Bereich ist …* wenn Text ausgewählt ist und außerhalb des ausgewählten Textes angetippt wird. Dieser Fehler wurde in Android 6.0.1 behoben.
 * Interne (Anker-)Links funktionieren nicht, da die Originalnachrichten in einer eingebetteten Web-Ansicht in einer scrollenden Ansicht (der Konversationsliste) angezeigt werden. Dies ist eine Einschränkung von Android, die nicht behoben oder umgangen werden kann.
+* Die Erkennung der Sprache [funktioniert nicht mehr](https://issuetracker.google.com/issues/173337263) auf Pixel-Geräten mit (Update auf?) Android 11
 
 ## Geplante Funktionen
 
@@ -277,8 +278,8 @@ Das Design basiert auf vielen Diskussionen und wenn du möchtest, kannst du auch
 * [(157) Wie kann ich ein Free.fr-Konto einrichten?](#user-content-faq157)
 * [(158) Welche/r Kamera/Audiorekorder ist empfehlenswert?](#user-content-faq158)
 * [(159) Was sind Disconnects Tracker-Schutzlisten?](#user-content-faq159)
-* [(160) Can you add permanent deletion of messages without confirmation?](#user-content-faq160)
-* [(161) Can you add a setting to change the primary and accent color?](#user-content-faq161)
+* [(160) Kannst du eine dauerhafte Löschung von Nachrichten ohne Bestätigung hinzufügen?](#user-content-faq160)
+* [(161) Kannst du eine Einstellung zum Ändern der primären und akzentuierenden Farbe hinzufügen?](#user-content-faq161)
 
 [Ich habe eine weitere Frage.](#user-content-support)
 
@@ -370,7 +371,7 @@ Die Statusleistenbenachrichtigung mit niedriger Priorität zeigt die Anzahl der 
 * *Anhang*: Anhang herunterladen
 * *Synchronisation*: lokale und entfernte Nachrichten synchronisieren
 * *Abonnieren*: entfernten Ordner abonnieren
-* *purge*: delete all messages from remote folder
+* *Bereinigen*: Lösche alle Nachrichten aus dem entfernten Ordner
 * *Senden*: Nachricht senden
 * *Existiert*: Prüfen, ob Nachricht existiert
 * *Regel*: Regel im Text ausführen
@@ -408,7 +409,7 @@ You should either fix the server configuration or accept the fingerprint shown b
 
 Note that this problem can be caused by the server not sending all intermediate certificates too.
 
-*Empty password*
+*Leeres Passwort*
 
 Your username is likely easily guessed, so this is insecure.
 
@@ -421,14 +422,14 @@ If you still want to use an invalid security certificate, an empty password or a
 <br />
 
 <a name="faq5"></a>
-**(5) How can I customize the message view?**
+**(5) Wie kann ich die Nachrichtenanzeige anpassen?**
 
 In the three dot overflow menu you can enable or disable or select:
 
 * *Textgröße*: für drei verschiedene Schriftgrößen
 * *kompakte Ansicht*: für eine mehr verdichtete Nachrichtendarstellung und eine kleinere Text-Schriftart
 
-In the display section of the settings you can enable or disable:
+Im Bereich "Anzeige" der Einstellungen können Sie ein- oder ausschalten:
 
 * *Einheitlicher Posteingang*: Schalten Sie diese Option aus, um stattdessen die Ordner separat aufzulisten, die für den einheitlichen Posteingang ausgewählt wurden
 * *Nach Datum gruppieren*: Zeigt eine Kopfzeile für alle Nachrichten mit dem gleichen Datum anzeigen
@@ -572,23 +573,23 @@ See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 <br />
 
 <a name="faq12"></a>
-**(12) How does encryption/decryption work?**
+**(12) Wie funktioniert die Ver- und Entschlüsselung?**
 
 *General*
 
-Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
+[Sehen Sie hier](https://en.wikipedia.org/wiki/Public-key_cryptography), wie die Verschlüsselung mit öffentlichen/privaten Schlüsseln funktioniert.
 
-Encryption in short:
+Verschlüsselung zusammengefasst:
 
 * **Ausgehende** Nachrichten werden mit dem **öffentlichen Schlüssel** des Empfängers verschlüsselt
 * **Eingehende** Nachrichten werden mit dem **privaten Schlüssel** des Empfängers entschlüsselt
 
-Signing in short:
+Signieren zusammengefasst:
 
 * **Ausgehende** Nachrichten sind mit dem **privaten Schlüssel** des Absenders signiert
 * **Eingehende** Nachrichten werden mit dem **öffentlichen Schlüssel** des Absenders überprüft
 
-To sign/encrypt a message, just select the appropriate method in the send dialog. You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
+Um eine Nachricht zu signieren/verschlüsseln, wählen Sie einfach die entsprechende Methode im Sendedialog aus. You can always open the send dialog using the three-dots overflow menu in case you selected *Don't show again* before.
 
 To verify a signature or to decrypt a received message, open the message and just tap the gesture or padlock icon just below the message action bar.
 
@@ -685,7 +686,7 @@ S/MIME sign/encrypt is a pro feature, but all other PGP and S/MIME operations ar
 <br />
 
 <a name="faq13"></a>
-**(13) How does search on device/server work?**
+**(13) Wie funktioniert die Suche auf Gerät/Server?**
 
 You can start searching for messages on sender (from), recipient (to, cc, bcc), subject, keywords or message text by using the magnify glass in the action bar of a folder. You can also search from any app by selecting *Search email* in the copy/paste popup menu.
 
@@ -861,7 +862,7 @@ The error *... Connection refused ...* means that the email server or something 
 
 The error *... Network unreachable ...* means that the email server was not reachable via the current internet connection, for example because internet traffic is restricted to local traffic only.
 
-The error *... Host is unresolved ...* or "*... Unable to resolve host ...* means that the address of the email server could not be resolved. This might be caused by ad blocking or an unreachable or not properly working [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) server.
+The error *... Host is unresolved ...*, *... Unable to resolve host ...* or *... No address associated with hostname ...* means that the address of the email server could not be resolved into an IP address. This might be caused by a VPN, ad blocking or an unreachable or not properly working (local) [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) server.
 
 The error *... Software caused connection abort ...* means that the email server or something between FairEmail and the email server actively terminated an existing connection. This can for example happen when connectivity was abruptly lost. A typical example is turning on flight mode.
 
@@ -1223,7 +1224,12 @@ It is inevitable that data will be used to synchronize messages.
 
 If the connection to the email server is lost, FairEmail will always synchronize the messages again to make sure no messages were missed. If the connection is unstable, this can result in extra data usage. In this case, it is a good idea to decrease the number of days to synchronize messages for to a minimum (see the previous question) or to switch to periodically synchronizing of messages (receive settings).
 
-By default FairEmail does not download message texts and attachments larger than 256 KiB when there is a metered (mobile or paid Wi-Fi) internet connection. You can change this in the connection settings.
+Um den Datenverbrauch zu reduzieren, könnten Sie diese erweiterten Empfangseinstellungen ändern:
+
+* prüfen, ob alte Nachrichten vom Server entfernt wurden: deaktivieren
+* (freigegebene) Ordnerliste synchronisieren: deaktivieren
+
+Standardmäßig lädt FairEmail keine Nachrichtentexte und Anhänge herunter, die größer als 256 KiB sind, wenn eine gebührenpflichtige Internetverbindung (mobil oder kostenpflichtiges WLAN) besteht. Sie können das in den Verbindungseinstellungen ändern.
 
 <br />
 
@@ -2162,13 +2168,11 @@ Disabling *Partial fetch* will result in more memory usage.
 <a name="faq111"></a>
 **(111) Is OAuth supported?**
 
-OAuth for Gmail is supported via the quick setup wizard. The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts. OAuth for non on-device accounts is not supported because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this.
+OAuth for Gmail is supported via the quick setup wizard. The Android account manager will be used to fetch and refresh OAuth tokens for selected on-device accounts. OAuth for non on-device accounts is not supported because Google requires a [yearly security audit](https://support.google.com/cloud/answer/9110914) ($15,000 to $75,000) for this. You can read more about this [here](https://www.theregister.com/2019/02/11/google_gmail_developer/).
 
-OAuth for Yandex is supported via the quick setup wizard.
+OAuth for Yandex and Yahoo is supported via the quick setup wizard.
 
 OAuth for Office 365 accounts is supported, but Microsoft does not offer OAuth for Outlook, Live and Hotmail accounts (yet?).
-
-OAuth access for Yahoo was requested, but Yahoo never responded to the request. OAuth for AOL [was deactivated](https://www.programmableweb.com/api/aol-open-auth) by AOL. Verizon owns both AOL and Yahoo, collectively named [Oath inc](https://en.wikipedia.org/wiki/Verizon_Media). So, it is reasonable to assume that OAuth is not supported by Yahoo anymore too.
 
 <br />
 
@@ -2236,7 +2240,7 @@ Google manages all purchases, so as a developer I have little control over purch
 * Make sure you installed FairEmail via the right Google account if you configured multiple Google accounts on your device
 * Make sure the Play store app is up to date, please [see here](https://support.google.com/googleplay/answer/1050566?hl=en)
 * Open the Play store app and wait at least a minute to give it time to synchronize with the Google servers
-* Öffnen Sie FairEmail und wechseln Sie zum Bildschirm mit den Profifunktionen, damit FairEmail die Einkäufe überprüfen kann. Oftmals hilft es, auf die Schaltfläche *Kaufen* zu tippen.
+* Open FairEmail and navigate to the pro features screen to let FairEmail check the purchases; sometimes it help to tap the *buy* button
 
 You can also try to clear the cache of the Play store app via the Android apps settings. Restarting the device might be necessary to let the Play store recognize the purchase correctly.
 
@@ -2301,8 +2305,6 @@ FairEmail groups messages based on the standard *Message-ID*, *In-Reply-To* and 
 **(123) What will happen when FairEmail cannot connect to an email server?**
 
 When FairEmail cannot connect to an email server to receive messages, for example when the internet connection is bad or a firewall or a VPN is blocking the connection, FairEmail will wait 8, 16 and 32 seconds while keeping the device awake (=use battery power) and try again to connect. If this fails, FairEmail will schedule an alarm to retry after 15, 30 and 60 minutes and let the device sleep (=no battery usage).
-
-Between connectivity changes there is a wait of 90 seconds to give the email server the opportunity to discover the old connection is broken. This is necessary because the internet connection of a mobile device is often lost abruptly and to prevent the problem described in [this FAQ](#user-content-faq23).
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) does not allow to wake the device earlier than after 15 minutes.
 
@@ -2776,6 +2778,8 @@ Updating once a week will probably be sufficient, please see [here](https://gith
 **(160) Can you add permanent deletion of messages without confirmation?**
 
 Permanent deletion means that messages will *irreversibly* be lost, and to prevent this from happening accidentally, this always needs to be confirmed. Even with a confirmation, some very angry people who lost some of their messages through their own fault contacted me, which was a rather unpleasant experience :-(
+
+Advanced: the IMAP delete flag in combination with the EXPUNGE command is not supportable because both email servers and not all people can handle this, risking unexpected loss of messages. A complicating factor is that not all email servers support [UID EXPUNGE](https://tools.ietf.org/html/rfc4315).
 
 <br />
 

@@ -241,9 +241,10 @@
             android:layout_marginTop="12dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:paddingEnd="12dp"
+            android:tag="ignore"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/etPort"
-            app:srcCompat="@drawable/twotone_account_box_24" />
+            app:srcCompat="@drawable/twotone_settings_24" />
 
         <eu.faircode.email.EditTextPlain
             android:id="@+id/etUser"
