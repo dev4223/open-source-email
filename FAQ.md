@@ -639,6 +639,10 @@ So, unless your provider can enable this extension, you cannot use FairEmail for
 <a name="faq12"></a>
 **(12) How does encryption/decryption work?**
 
+Communication with email servers is always encrypted, unless you explicitly turned this off.
+This question is about optional end-to-end encryption with PGP or S/MIME.
+The sender and recipient should first agree on this and exchange signed messages to transfer their public key to be able to send encrypted messages.
+
 *General*
 
 Please [see here](https://en.wikipedia.org/wiki/Public-key_cryptography) about how public/private key encryption works.
@@ -1135,6 +1139,9 @@ See [here](https://support.google.com/mail/answer/7126229) for details.
 
 When using a Dovecot server,
 you might want to change the setting [mail_max_userip_connections](https://doc.dovecot.org/settings/dovecot_core_settings/#mail-max-userip-connections).
+
+Note that it will take the email server a while to discover broken connections, for example due to going out of range of a network,
+which means that effectively only half of the folder connections are available. For Gmail this would be just 7 connections.
 
 <br />
 
@@ -1867,10 +1874,10 @@ FairEmail shows all attachment types. To distinguish inline and regular attachme
 <a name="faq66"></a>
 **(66) Is FairEmail available in the Google Play Family Library?**
 
-The price of FairEmail is too low, lower than that of most similar apps,
-and there are [too many fees and taxes](#user-content-faq19), Google alone already takes 30 %,
+The price of the few pro features is too low, lower than the price of most similar apps,
+and there are [too many fees and taxes](#user-content-faq19),
 to justify making FairEmail available in the [Google Play Family Library](https://support.google.com/googleone/answer/7007852).
-Note that Google promotes the Family libray, but lets developers pay for it and doesn't contribute anything.
+Note that Google promotes the Family libray, but lets developers pay for it.
 
 <br />
 

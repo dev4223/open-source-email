@@ -3044,7 +3044,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                         (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
                                                 !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt));
                         if (lock)
-                            onMenuResync(message);
+                            properties.lock(message.id);
                         else
                             onActionDecrypt(message, false);
                         break;
@@ -6115,6 +6115,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         void move(long id, String type);
 
         void reply(TupleMessageEx message, String selected, View anchor);
+
+        void lock(long id);
 
         void refresh();
 
