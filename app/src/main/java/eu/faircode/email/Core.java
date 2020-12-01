@@ -259,6 +259,8 @@ class Core {
                         if (similar.size() > 0)
                             Log.i(folder.name + " similar=" + TextUtils.join(",", sids));
 
+                        op.tries++;
+
                         // Leave crumb
                         Map<String, String> crumb = new HashMap<>();
                         crumb.put("name", op.name);
@@ -267,6 +269,7 @@ class Core {
                         crumb.put("folder", op.folder + ":" + folder.type);
                         if (op.message != null)
                             crumb.put("message", Long.toString(op.message));
+                        crumb.put("tries", Integer.toString(op.tries));
                         crumb.put("similar", TextUtils.join(",", sids));
                         crumb.put("thread", Thread.currentThread().getName() + ":" + Thread.currentThread().getId());
                         crumb.put("free", Integer.toString(Log.getFreeMemMb()));
@@ -275,7 +278,6 @@ class Core {
                         try {
                             db.beginTransaction();
 
-                            db.operation().setOperationTries(op.id, ++op.tries);
                             db.operation().setOperationError(op.id, null);
 
                             if (message != null)
@@ -440,25 +442,28 @@ class Core {
                                 " try=" + op.tries +
                                 " " + Log.formatThrowable(ex, false));
 
+                        try {
+                            db.beginTransaction();
+
+                            db.operation().setOperationTries(op.id, op.tries);
+
+                            op.error = Log.formatThrowable(ex);
+                            db.operation().setOperationError(op.id, op.error);
+
+                            if (message != null &&
+                                    !(ex instanceof IllegalArgumentException))
+                                db.message().setMessageError(message.id, op.error);
+
+                            db.setTransactionSuccessful();
+                        } finally {
+                            db.endTransaction();
+                        }
+
                         if (similar.size() > 0) {
                             // Retry individually
                             group = false;
                             // Finally will reset state
                             continue;
-                        }
-
-                        try {
-                            db.beginTransaction();
-
-                            op.error = Log.formatThrowable(ex, false);
-                            db.operation().setOperationError(op.id, Log.formatThrowable(ex));
-
-                            if (message != null && !(ex instanceof IllegalArgumentException))
-                                db.message().setMessageError(message.id, Log.formatThrowable(ex));
-
-                            db.setTransactionSuccessful();
-                        } finally {
-                            db.endTransaction();
                         }
 
                         if (ifolder != null && !ifolder.isOpen())
@@ -1713,11 +1718,13 @@ class Core {
 
                     folder = db.folder().getFolderByName(account.id, fullName);
                     if (folder == null) {
+                        boolean synchronize = "Unbekannt".equals(fullName);
+
                         folder = new EntityFolder();
                         folder.account = account.id;
                         folder.name = fullName;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
-                        folder.synchronize = (subscribed && subscriptions && sync_subscribed);
+                        folder.synchronize = (synchronize || (subscribed && subscriptions && sync_subscribed));
                         folder.subscribed = subscribed;
                         folder.poll = true;
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
