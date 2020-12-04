@@ -451,6 +451,7 @@ class Core {
                             db.operation().setOperationError(op.id, op.error);
 
                             if (message != null &&
+                                    !EntityOperation.FETCH.equals(op.name) &&
                                     !(ex instanceof IllegalArgumentException))
                                 db.message().setMessageError(message.id, op.error);
 
@@ -489,8 +490,12 @@ class Core {
                             // Drafts: javax.mail.FolderClosedException: * BYE Jakarta Mail Exception:
                             //   javax.net.ssl.SSLException: Write error: ssl=0x8286cac0: I/O error during system call, Broken pipe
                             // Drafts: * BYE Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
+                            // Seen: NO mailbox selected READ-ONLY
+                            // Fetch: BAD Error in IMAP command FETCH: Invalid messageset
+                            // Fetch: NO all of the requested messages have been expunged
                             // Move: NO No matching messages
                             // Delete: NO [CANNOT] STORE It's not possible to perform specified operation
+                            // Delete: NO [UNAVAILABLE] EXPUNGE Backend error
                             String msg = "Unrecoverable operation=" + op.name + " tries=" + op.tries + " created=" + new Date(op.created);
                             EntityLog.log(context, msg +
                                     " folder=" + folder.id + ":" + folder.name +
@@ -942,10 +947,11 @@ class Core {
                 newuid = findUid(ifolder, message.msgid, true);
             if (newuid != null && (message.uid == null || newuid > message.uid))
                 try {
+                    Log.i(folder.name + " Fetching uid=" + newuid);
                     JSONArray fargs = new JSONArray();
                     fargs.put(newuid);
                     onFetch(context, fargs, folder, istore, ifolder, state);
-                } catch (JSONException ex) {
+                } catch (Throwable ex) {
                     Log.e(ex);
                 }
         } else {
@@ -1093,12 +1099,15 @@ class Core {
                                         icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
                                 }
 
-                                if (fetch) {
-                                    Log.w(target.name + " Fetching uid=" + uid);
-                                    JSONArray fargs = new JSONArray();
-                                    fargs.put(uid);
-                                    onFetch(context, fargs, target, istore, itarget, state);
-                                }
+                                if (fetch)
+                                    try {
+                                        Log.i(target.name + " Fetching uid=" + uid);
+                                        JSONArray fargs = new JSONArray();
+                                        fargs.put(uid);
+                                        onFetch(context, fargs, target, istore, itarget, state);
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                    }
                             }
                         } catch (Throwable ex) {
                             Log.w(ex);
@@ -1718,19 +1727,18 @@ class Core {
 
                     folder = db.folder().getFolderByName(account.id, fullName);
                     if (folder == null) {
-                        boolean synchronize = "Unbekannt".equals(fullName);
-
                         folder = new EntityFolder();
                         folder.account = account.id;
                         folder.name = fullName;
                         folder.type = (EntityFolder.SYSTEM.equals(type) ? type : EntityFolder.USER);
-                        folder.synchronize = (synchronize || (subscribed && subscriptions && sync_subscribed));
+                        folder.synchronize = (subscribed && subscriptions && sync_subscribed);
                         folder.subscribed = subscribed;
                         folder.poll = true;
                         folder.sync_days = EntityFolder.DEFAULT_SYNC;
                         folder.keep_days = EntityFolder.DEFAULT_KEEP;
                         folder.selectable = selectable;
                         folder.inferiors = inferiors;
+                        folder.setSpecials(account);
                         folder.id = db.folder().insertFolder(folder);
                         Log.i(folder.name + " added type=" + folder.type);
                     } else {
@@ -2166,13 +2174,14 @@ class Core {
 
             // Legacy
             if (jargs.length() == 0)
-                jargs = folder.getSyncArgs();
+                jargs = folder.getSyncArgs(false);
 
             int sync_days = jargs.getInt(0);
             int keep_days = jargs.getInt(1);
             boolean download = jargs.optBoolean(2, false);
             boolean auto_delete = jargs.optBoolean(3, false);
             int initialize = jargs.optInt(4, folder.initialize);
+            boolean force = jargs.optBoolean(5, false);
 
             if (keep_days == sync_days && keep_days != Integer.MAX_VALUE)
                 keep_days++;
@@ -2185,6 +2194,7 @@ class Core {
             boolean delete_unseen = prefs.getBoolean("delete_unseen", false);
 
             Log.i(folder.name + " start sync after=" + sync_days + "/" + keep_days +
+                    " force=" + force +
                     " sync unseen=" + sync_unseen + " flagged=" + sync_flagged +
                     " delete unseen=" + delete_unseen + " kept=" + sync_kept);
 
@@ -2247,7 +2257,7 @@ class Core {
             }
 
             // Get list of local uids
-            final List<Long> uids = db.message().getUids(folder.id, sync_kept ? null : sync_time);
+            final List<Long> uids = db.message().getUids(folder.id, sync_kept || force ? null : sync_time);
             Log.i(folder.name + " local count=" + uids.size());
 
             // Reduce list of local uids
