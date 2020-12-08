@@ -1902,6 +1902,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     getMainHandler().postDelayed(enableSelection, SWIPE_DISABLE_SELECT_DURATION);
             }
 
+            Context context = getContext();
+            if (context == null)
+                return;
+
             int pos = viewHolder.getAdapterPosition();
             if (pos == NO_POSITION)
                 return;
@@ -1937,8 +1941,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             AdapterMessage.ViewHolder holder = ((AdapterMessage.ViewHolder) viewHolder);
             Rect rect = holder.getItemRect();
-            int margin = Helper.dp2pixels(getContext(), 12);
-            int size = Helper.dp2pixels(getContext(), 24);
+            int margin = Helper.dp2pixels(context, 12);
+            int size = Helper.dp2pixels(context, 24);
 
             int icon;
             if (EntityMessage.SWIPE_ACTION_ASK.equals(action))
@@ -1964,8 +1968,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             else
                 icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
 
-            Drawable d = getResources().getDrawable(icon, getContext().getTheme()).mutate();
-            d.setTint(Helper.resolveColor(getContext(), android.R.attr.textColorSecondary));
+            Drawable d = getResources().getDrawable(icon, context.getTheme()).mutate();
+            d.setTint(Helper.resolveColor(context, android.R.attr.textColorSecondary));
 
             if (dX > 0) {
                 // Right swipe
@@ -7641,12 +7645,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             String type;
             String name;
             String display;
+            Integer color;
 
             Folder(Context context, EntityFolder folder) {
                 this.id = folder.id;
                 this.type = folder.type;
                 this.name = folder.name;
                 this.display = folder.getDisplayName(context);
+                this.color = folder.color;
             }
         }
     }
@@ -7911,11 +7917,17 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             List<String> sources = new ArrayList<>();
             List<String> targets = new ArrayList<>();
+            Integer sourceColor = null;
+            Integer targetColor = null;
             for (MessageTarget t : result) {
                 if (!sources.contains(t.sourceFolder.type))
                     sources.add(t.sourceFolder.type);
                 if (!targets.contains(t.targetFolder.type))
                     targets.add(t.targetFolder.type);
+                if (sourceColor == null)
+                    sourceColor = t.sourceFolder.color;
+                if (targetColor == null)
+                    targetColor = t.targetFolder.color;
             }
 
             Drawable source = null;
@@ -7923,17 +7935,26 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 source = getResources().getDrawable(EntityFolder.getIcon(sources.get(0)), null);
                 if (source != null)
                     source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
-            }
+            } else
+                sourceColor = null;
 
             Drawable target = null;
             if (targets.size() == 1) {
                 target = getResources().getDrawable(EntityFolder.getIcon(targets.get(0)), null);
                 if (target != null)
                     target.setBounds(0, 0, target.getIntrinsicWidth(), target.getIntrinsicHeight());
-            }
+            } else
+                targetColor = null;
 
             tvSourceFolders.setCompoundDrawablesRelative(source, null, null, null);
             tvTargetFolders.setCompoundDrawablesRelative(target, null, null, null);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (sourceColor != null)
+                    tvSourceFolders.setCompoundDrawableTintList(ColorStateList.valueOf(sourceColor));
+                if (targetColor != null)
+                    tvTargetFolders.setCompoundDrawableTintList(ColorStateList.valueOf(targetColor));
+            }
 
             if (notagain != null)
                 cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

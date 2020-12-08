@@ -2261,8 +2261,8 @@ public class FragmentCompose extends FragmentBase {
                     if (ex instanceof IOException &&
                             ex.getCause() instanceof ErrnoException &&
                             ((ErrnoException) ex.getCause()).errno == ENOSPC)
-                        ex = new Throwable(getContext().getString(R.string.app_cake), ex);
-                    Log.unexpectedError(getParentFragmentManager(), ex);
+                        ex = new IOException(getContext().getString(R.string.app_cake), ex);
+                    Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof IOException));
                 }
             }
         }.execute(this, args, "compose:attachment:add");
@@ -3223,6 +3223,9 @@ public class FragmentCompose extends FragmentBase {
             try {
                 is = context.getContentResolver().openInputStream(uri);
                 os = new FileOutputStream(file);
+
+                if (is == null)
+                    throw new IOException("Content provider crashed");
 
                 byte[] buffer = new byte[Helper.BUFFER_SIZE];
                 for (int len = is.read(buffer); len != -1; len = is.read(buffer)) {
