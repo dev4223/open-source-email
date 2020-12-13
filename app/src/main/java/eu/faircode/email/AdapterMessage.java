@@ -1735,7 +1735,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean archive = (move && (hasArchive && !inArchive && !inSent && !inTrash && !inJunk));
                     boolean trash = (move || outbox || debug ||
                             message.accountProtocol == EntityAccount.TYPE_POP);
-                    boolean junk = (move && (hasJunk && !inJunk));
+                    boolean junk = (move && hasJunk);
                     boolean inbox = (move && (inArchive || inTrash || inJunk));
                     boolean keywords = (!message.folderReadOnly && message.uid != null &&
                             message.accountProtocol == EntityAccount.TYPE_IMAP);
@@ -3315,6 +3315,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return true;
                     }
                     return false;
+                case KeyEvent.KEYCODE_8:
+                    if (event.isShiftPressed()) {
+                        onToggleFlag(message);
+                        return true;
+                    } else
+                        return false;
+                case KeyEvent.KEYCODE_NUMPAD_MULTIPLY:
+                    onToggleFlag(message);
+                    return true;
                 default:
                     return false;
             }
@@ -4056,6 +4065,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             aargs.putLong("folder", message.folder);
             aargs.putString("type", message.folderType);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
+            aargs.putBoolean("inJunk", EntityFolder.JUNK.equals(message.folderType));
 
             FragmentDialogJunk ask = new FragmentDialogJunk();
             ask.setArguments(aargs);
@@ -6486,6 +6496,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final long folder = args.getLong("folder");
             final String type = args.getString("type");
             final String from = args.getString("from");
+            final boolean inJunk = args.getBoolean("inJunk");
 
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_junk, null);
             final TextView tvMessage = view.findViewById(R.id.tvMessage);
@@ -6493,6 +6504,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final CheckBox cbBlockSender = view.findViewById(R.id.cbBlockSender);
             final CheckBox cbBlockDomain = view.findViewById(R.id.cbBlockDomain);
             final Button btnEditRules = view.findViewById(R.id.btnEditRules);
+            final Group grpInJunk = view.findViewById(R.id.grpInJunk);
 
             tvMessage.setText(getString(R.string.title_ask_spam_who, from));
 
@@ -6516,16 +6528,52 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             btnEditRules.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
-                    lbm.sendBroadcast(
-                            new Intent(ActivityView.ACTION_EDIT_RULES)
-                                    .putExtra("account", account)
-                                    .putExtra("protocol", protocol)
-                                    .putExtra("folder", folder)
-                                    .putExtra("type", type));
-                    dismiss();
+                    if (inJunk) {
+                        new SimpleTask<EntityFolder>() {
+                            @Override
+                            protected EntityFolder onExecute(Context context, Bundle args) throws Throwable {
+                                long account = args.getLong("account");
+
+                                DB db = DB.getInstance(context);
+                                EntityFolder inbox = db.folder().getFolderByType(account, EntityFolder.INBOX);
+
+                                if (inbox == null)
+                                    throw new IllegalArgumentException(context.getString(R.string.title_no_inbox));
+
+                                return inbox;
+                            }
+
+                            @Override
+                            protected void onExecuted(Bundle args, EntityFolder inbox) {
+                                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                                lbm.sendBroadcast(
+                                        new Intent(ActivityView.ACTION_EDIT_RULES)
+                                                .putExtra("account", account)
+                                                .putExtra("protocol", protocol)
+                                                .putExtra("folder", inbox.id)
+                                                .putExtra("type", inbox.type));
+                                dismiss();
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Log.unexpectedError(getParentFragmentManager(), ex);
+                            }
+                        }.execute(FragmentDialogJunk.this, getArguments(), "junk");
+                    } else {
+                        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+                        lbm.sendBroadcast(
+                                new Intent(ActivityView.ACTION_EDIT_RULES)
+                                        .putExtra("account", account)
+                                        .putExtra("protocol", protocol)
+                                        .putExtra("folder", folder)
+                                        .putExtra("type", type));
+                        dismiss();
+                    }
                 }
             });
+
+            grpInJunk.setVisibility(inJunk ? View.GONE : View.VISIBLE);
 
             return new AlertDialog.Builder(getContext())
                     .setView(view)

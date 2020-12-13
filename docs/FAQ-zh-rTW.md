@@ -10,7 +10,7 @@
 * [計畫中的功能](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
 * [頻繁請求的功能](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
 * [頻繁被問起的問題](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
-* [Get support](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
+* [獲取協助](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
 
 ## 認證帳號中
 
@@ -41,17 +41,17 @@ Please see [here](#user-content-faq22) for common error messages and solutions.
 
 <a name="howto">
 
-## How to ...?
+## 如何 ...？
 
-* Change the account name: Setup, step 1, Manage, tap account
-* Change the swipe left/right target: Setup, Behavior, Set swipe actions
-* Change password: Setup, step 1, Manage, tap account, change password
-* Set a signature: Setup, step 2, Manage, tap identity, Edit signature.
-* Add CC and BCC addresses: tap the people's icon at the end of the subject
+* 變更帳號名稱： 設定， 步驟1，管理，輕觸帳號
+* 變更 左/右 滑動動作：點選設定，行為，設置滑動動作
+* 變更密碼：設置，步驟1，管理，輕觸要變更密碼的帳號，變更密碼
+* 設置簽名：設置，步驟二，管理，選擇帳號，變更簽名
+* 新增副本和密件副本郵件地址：輕觸主旨後方的人像圖標
 * Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
 * Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
 * Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
-* Load more messages: long press a folder in the folder list, select *Synchronize more messages*
+* 載入更多訊息：長按資料夾列表中的資料夾，選擇 *同步更多訊息*
 * Delete a message, skipping trash: in the 3-dots menu just above the message text *Delete* or alternatively, unselect the trash folder in the account settings
 * Delete an account/identity: Setup step 1/2, Manage, tap account/identity, three-dots menu, Delete
 * Delete a folder: long press the folder in the folder list, Edit properties, three-dots menu, Delete
@@ -70,7 +70,7 @@ Please see [here](#user-content-faq22) for common error messages and solutions.
 * A [bug in Android](https://issuetracker.google.com/issues/62427912) sometimes causes a crash with "*... ActivityRecord not found for ...*" after updating FairEmail. Reinstalling ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) might fix the problem.
 * A [bug in Android](https://issuetracker.google.com/issues/37018931) sometimes causes a crash with *... InputChannel is not initialized ...* on some devices.
 * ~~A [bug in LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) sometimes causes a crash with *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
-* A bug in Nova Launcher on Android 5.x causes FairEmail to crash with a *java.lang.StackOverflowError* when Nova Launcher has access to the accessibility service.
+* 在Android5.x版本中，Nova Launcher有個與*java.lang.StackOverflowError* 有關的錯誤，當Nova Launcher 有無障礙設定存取權時。
 * ~~The folder selector sometimes shows no folders for yet unknown reasons. This seems to be fixed.~~
 * ~~A [bug in AndroidX](https://issuetracker.google.com/issues/64729576) makes it hard to grap the fast scroller. A workaround was added.~~
 * ~~Encryption with YubiKey results into an infinite loop. This seems to be caused by a [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
@@ -78,7 +78,7 @@ Please see [here](#user-content-faq22) for common error messages and solutions.
 * A preview of a message text doesn't (always) appear on Samsung watches because [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) seem to be ignored. Message preview texts are known to be displayed correctly on Pebble 2, Fitbit Charge 3, Mi band 3, and Xiaomi Amazfit BIP wearables. See also [this FAQ](#user-content-faq126).
 * A [bug in Android 6.0](https://issuetracker.google.com/issues/37068143) causes a crash with *... Invalid offset: ... Valid range is ...* when text is selected and tapping outside of the selected text. This bug has been fixed in Android 6.0.1.
 * Internal (anchor) links will not work because original messages are shown in an embedded WebView in a scrolling view (the conversation list). This is an Android limitation which cannot be fixed or worked around.
-* Language detection [is not working anymore](https://issuetracker.google.com/issues/173337263) on Pixel devices with (upgraded to?) Android 11
+* 自動偵測語言 [不再運作](https://issuetracker.google.com/issues/173337263) ，若您使用的是 Pixel 裝置，版本(升級到？) Android 11
 
 ## 計畫中的功能
 
@@ -121,8 +121,8 @@ The design is based on many discussions and if you like you can discuss about it
 
 ## 常見問題
 
-* [(1) Which permissions are needed and why?](#user-content-faq1)
-* [(2) Why is there a permanent notification shown?](#user-content-faq2)
+* [(1) 我需要給予什麼權限和為什麼需要這些權限?](#user-content-faq1)
+* [(2) 為什麼有個沒辦法清除的通知在狀態欄?](#user-content-faq2)
 * [(3) What are operations and why are they pending?](#user-content-faq3)
 * [(4) How can I use an invalid security certificate / empty password / plain text connection?](#user-content-faq4)
 * [(5) How can I customize the message view?](#user-content-faq5)
@@ -133,45 +133,45 @@ The design is based on many discussions and if you like you can discuss about it
 * [~~(11) Why is POP not supported?~~](#user-content-faq11)
 * [~~(10) What does 'UIDPLUS not supported' mean?~~](#user-content-faq10)
 * [(12) How does encryption/decryption work?](#user-content-faq12)
-* [(13) How does search on device/server work?](#user-content-faq13)
-* [(14) How can I set up an Outlook / Live / Hotmail account?](#user-content-faq14)
-* [(15) Why does the message text keep loading?](#user-content-faq15)
-* [(16) Why are messages not being synchronized?](#user-content-faq16)
-* [~~(17) Why does manual synchronize not work?~~](#user-content-faq17)
-* [(18) Why is the message preview not always shown?](#user-content-faq18)
-* [(19) Why are the pro features so expensive?](#user-content-faq19)
-* [(20) Can I get a refund?](#user-content-faq20)
-* [(21) How do I enable the notification light?](#user-content-faq21)
-* [(22) What does account/folder error ... mean?](#user-content-faq22)
+* [(13) 在 裝置/伺服器 搜尋是如何運作的?](#user-content-faq13)
+* [(14) 我如何建立 Outlook / Live / Hotmail 帳號?](#user-content-faq14)
+* [(15) 為什麼訊息文字一直在載入中?](#user-content-faq15)
+* [(16) 為什麼訊息沒有被同步?](#user-content-faq16)
+* [~~(17) 為什麼手動同步無法運作?~~](#user-content-faq17)
+* [(18) 為什麼訊息預覽並非每次顯示?](#user-content-faq18)
+* [(19) 為什麼專業版功能如此昂貴?](#user-content-faq19)
+* [(20) 我可以退款嗎?](#user-content-faq20)
+* [(21) 如何啟用訊息通知LED燈?](#user-content-faq21)
+* [(22) 帳號/資料夾 錯誤代表什麼意思?](#user-content-faq22)
 * [(23) Why do I get alert .. ?](#user-content-faq23)
 * [(24) What is browse messages on the server?](#user-content-faq24)
 * [(25) Why can't I select/open/save an image, attachment or a file?](#user-content-faq25)
 * [(26) Can I help to translate FairEmail in my own language?](#user-content-faq26)
 * [(27) How can I distinguish between embedded and external images?](#user-content-faq27)
 * [(28) How can I manage status bar notifications?](#user-content-faq28)
-* [(29) How can I get new message notifications for other folders?](#user-content-faq29)
-* [(30) How can I use the provided quick settings?](#user-content-faq30)
-* [(31) How can I use the provided shortcuts?](#user-content-faq31)
-* [(32) How can I check if reading email is really safe?](#user-content-faq32)
-* [(33) Why are edited sender addresses not working?](#user-content-faq33)
-* [(34) How are identities matched?](#user-content-faq34)
-* [(35) Why should I be careful with viewing images, attachments, the original message, and opening links?](#user-content-faq35)
+* [(29) 我如何接收其他資料夾的訊息通知？](#user-content-faq29)
+* [(30) 如何使用程式提供的快速設定？](#user-content-faq30)
+* [(31) 我如何使用程式提供的捷徑？](#user-content-faq31)
+* [(32) 我如何檢驗我所閱讀的電子郵件是安全的？](#user-content-faq32)
+* [(33) 為什麼編輯寄件人地址無法運作？](#user-content-faq33)
+* [(34) 電子郵件身份是怎麼被連結的](#user-content-faq34)
+* [(35) 為什麼在瀏覽圖片、附件、原始訊息、點開連結時需要特別當心？](#user-content-faq35)
 * [(36) How are settings files encrypted?](#user-content-faq36)
-* [(37) How are passwords stored?](#user-content-faq37)
-* [(39) How can I reduce the battery usage of FairEmail?](#user-content-faq39)
-* [(40) How can I reduce the data usage of FairEmail?](#user-content-faq40)
-* [(41) How can I fix the error 'Handshake failed' ?](#user-content-faq41)
+* [(37) 密碼是如何被儲存的？](#user-content-faq37)
+* [(39) 我如何減少FairEmail的電池使用量？](#user-content-faq39)
+* [(40) 如何減少FailEmail的行動數據使用量？](#user-content-faq40)
+* [(41) 如何修復「交握失敗」錯誤？](#user-content-faq41)
 * [(42) Can you add a new provider to the list of providers?](#user-content-faq42)
 * [(43) Can you show the original ... ?](#user-content-faq43)
 * [(44) Can you show contact photos / identicons in the sent folder?](#user-content-faq44)
 * [(45) How can I fix 'This key is not available. To use it, you must import it as one of your own!' ?](#user-content-faq45)
-* [(46) Why does the message list keep refreshing?](#user-content-faq46)
-* [(47) How do I solve the error 'No primary account or no drafts folder' ?](#user-content-faq47)
+* [(46) 為何訊息列表一直在刷新？](#user-content-faq46)
+* [(47) 如何解決「無主要帳號或無草稿資料夾」？](#user-content-faq47)
 * [~~(48) How do I solve the error 'No primary account or no archive folder' ?~~](#user-content-faq48)
 * [(49) How do I fix 'An outdated app sent a file path instead of a file stream' ?](#user-content-faq49)
-* [(50) Can you add an option to synchronize all messages?](#user-content-faq50)
-* [(51) How are folders sorted?](#user-content-faq51)
-* [(52) Why does it take some time to reconnect to an account?](#user-content-faq52)
+* [(50) 開發團隊可以增加一個同步所有訊息的選項嗎？](#user-content-faq50)
+* [(51) 資料夾是如何被分類的？](#user-content-faq51)
+* [(52) 為什麼重新連結至帳號需要花一段時間？](#user-content-faq52)
 * [(53) Can you stick the message action bar to the top/bottom?](#user-content-faq53)
 * [~~(54) How do I use a namespace prefix?~~](#user-content-faq54)
 * [(55) How can I mark all messages as read / move or delete all messages?](#user-content-faq55)
