@@ -1,43 +1,43 @@
-# FairEmail support
+# Hỗ trợ FairEmail
 
-If you have a question, please check the frequently asked questions below first. At the bottom, you can find out how to ask other questions, request features, and report bugs.
+Nếu bạn có câu hỏi, vui lòng kiểm tra các câu hỏi thường gặp bên dưới trước. Ở dưới cùng, bạn có thể tìm hiểu cách đặt các câu hỏi khác, yêu cầu tính năng và báo cáo lỗi.
 
-## Index
+## Mục lục
 
-* [Authorizing accounts](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-authorizing-accounts)
-* [How to ...?](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
-* [Known problems](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-known-problems)
-* [Planned features](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
-* [Frequently requested features](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
-* [Frequently Asked Questions](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
-* [Get support](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
+* [Cấp phép tài khoản](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-authorizing-accounts)
+* [Làm thế nào để ...?](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
+* [Các vấn đề đã biết](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-known-problems)
+* [Các tính năng được lập kế hoạch](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
+* [Các tính năng thường được yêu cầu](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
+* [Các câu hỏi thường gặp](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
+* [Nhận hỗ trợ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
 
-## Authorizing accounts
+## Cấp phép tài khoản
 
-In most cases, the quick setup will be able to automatically identify the correct configuration.
+Trong hầu hết các trường hợp, thiết lập nhanh sẽ có thể tự động xác định cấu hình chính xác.
 
-If the quick setup fails, you'll need to manually set up an account (to receive email) and an identity (to send email). For this you'll need the IMAP and SMTP server addresses and port numbers, whether SSL/TLS or STARTTLS should be used and your username (mostly, but not always, your email address) and your password.
+Nếu thiết lập nhanh không thành công, bạn sẽ cần thiết lập thủ công tài khoản (để nhận email) và danh tính (để gửi email. Đối với điều này, bạn sẽ cần địa chỉ máy chủ IMAP và SMTP và số cổng, cho dù nên sử dụng SSL / TLS hay STARTTLS và tên người dùng của bạn (hầu hết, nhưng không phải lúc nào, địa chỉ email của bạn) và mật khẩu của bạn.
 
-Searching for *IMAP* and the name of the provider is mostly sufficient to find the right documentation.
+Tìm kiếm * IMAP * và tên của nhà cung cấp hầu hết là đủ để tìm tài liệu phù hợp.
 
-In some cases, you'll need to enable external access to your account and/or to use a special (app) password, for instance when two-factor authentication is enabled.
+Trong một số trường hợp, bạn cần bật quyền truy cập bên ngoài vào tài khoản của mình và / hoặc sử dụng mật khẩu (ứng dụng) đặc biệt, ví dụ khi xác thực hai yếu tố được bật.
 
-For authorizing:
+Để ủy quyền:
 
-* Gmail / G suite, see [question 6](#user-content-faq6)
-* Outlook / Live / Hotmail, see [question 14](#user-content-faq14)
-* Office 365, see [question 14](#user-content-faq156)
-* Microsoft Exchange, see [question 8](#user-content-faq8)
-* Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
-* Apple iCloud, see [question 148](#user-content-faq148)
-* Free.fr, see [question 157](#user-content-faq157)
+* Gmail / G suite, xem [ câu hỏi 6 ](#user-content-faq6)
+* Outlook / Live / Hotmail, xem [ câu hỏi 14 ](#user-content-faq14)
+* Office 365, xem [ câu hỏi 14 ](#user-content-faq156)
+* Microsoft Exchange, xem [ câu hỏi 8 ](#user-content-faq8)
+* Yahoo, AOL và Sky, xem [ câu hỏi 88 ](#user-content-faq88)
+* Icloud của Apple, xem [ câu hỏi 148 ](#user-content-faq148)
+* Free.fr, xem [ câu hỏi 157 ](#user-content-faq157)
 
-Please see [here](#user-content-faq22) for common error messages and solutions.
+Vui lòng xem [ tại đây ](#user-content-faq22) để biết các thông báo lỗi phổ biến và giải pháp.
 
-Related questions:
+Câu hỏi liên quan:
 
-* [Is OAuth supported?](#user-content-faq111)
-* [Why is ActiveSync not supported?](#user-content-faq133)
+* [OAuth có được hỗ trợ không?](#user-content-faq111)
+* [Tại sao ActiveSync không được hỗ trợ?](#user-content-faq133)
 
 <a name="howto">
 
@@ -429,34 +429,29 @@ In the three dot overflow menu you can enable or disable or select:
 * *text size*: for three different font sizes
 * *compact view*: for more condensed message items and a smaller message text font
 
-In the display section of the settings you can enable or disable:
+In the display section of the settings you can enable or disable for example:
 
 * *Unified inbox*: to disable the unified inbox and to list the folders selected for the unified inbox instead
+* *Tabular style*: to show a linear list instead of cards
 * *Group by date*: show date header above messages with the same date
 * *Conversation threading*: to disable conversation threading and to show individual messages instead
+* *Conversation action bar*: to disable the bottom navigation bar
+* *Highlight color*: to select a color for the sender of unread messages
 * *Show contact photos*: to hide contact photos
-* *Show identicons*: to show generated contact avatars
 * *Show names and email addresses*: to show names or to show names and email addresses
 * *Show subject italic*: to show the message subject as normal text
 * *Show stars*: to hide stars (favorites)
-* *Show message preview*: to show two lines of the message text
+* *Show message preview*: to show 1-4 lines of the message text
 * *Show address details by default*: to expand the addresses section by default
-* *Use monospaced font for message text*: to use a fixed width typeface for message texts
 * *Automatically show original message for known contacts*: to automatically show original messages for contacts on your device, please read [this FAQ](#user-content-faq35)
 * *Automatically show images for known contacts*: to automatically show images for contacts on your device, please read [this FAQ](#user-content-faq35)
-* *Conversation action bar*: to disable the bottom navigation bar
 
-Note that messages can be previewed only when the message text was downloaded. Larger message texts are not downloaded by default on metered (generally mobile) networks. You can change this in the settings.
-
-If the list of addresses is long, you can collapse the addresses section with the *less* icon at the top of the addresses section.
+Note that messages can be previewed only when the message text was downloaded. Larger message texts are not downloaded by default on metered (generally mobile) networks. You can change this in the connection settings.
 
 Some people ask:
 
 * to show the subject bold, but bold is already being used to highlight unread messages
-* to show the address or subject larger/smaller, but this would interfere with the text size option
 * to move the star to the left, but it is much easier to operate the star on the right side
-
-Unfortunately, it is impossible to make everybody happy and adding lots of settings would not only be confusing, but also never be sufficient.
 
 <br />
 
@@ -1370,7 +1365,7 @@ See also [question 25](#user-content-faq25) and [what Google writes about it](ht
 <a name="faq50"></a>
 **(50) Can you add an option to synchronize all messages?**
 
-A synchronize all (download all) messages will not be added because it can easily result in out of memory errors and the available storage space filling up. It can also easily result in a lot of battery and data usage. Mobile devices are just not very suitable to download and store years of messages. You can better use the search on server function (see [question 13](#user-content-faq13)), which is faster and more efficient. Note that searching through a lot of messages stored locally would only delay searching and use extra battery power.
+You can synchronize more or even all messages by long pressing a folder (inbox) in the folder list of an account (tap on the account name in the navigation menu) and selecting *Synchronize more* in the popup menu.
 
 <br />
 
@@ -1939,6 +1934,8 @@ FairEmail will automatically link not linked web links (http and https) and not 
 
 Links for the tel, geo, rtsp and xmpp protocols will be recognized too, but links for less usual or less safe protocols like telnet and ftp will not be recognized. The regex to recognize links is already *very* complex and adding more protocols will make it only slower and possibly cause errors.
 
+Note that original messages are shown exactly as they are, which means also that links are not automatically added.
+
 <br />
 
 <a name="faq91"></a>
@@ -1954,6 +1951,8 @@ Links for the tel, geo, rtsp and xmpp protocols will be recognized too, but link
 **(92) Can you add spam filtering, verification of the DKIM signature and SPF authorization?**
 
 Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail) signature and [SPF](https://en.wikipedia.org/wiki/Sender_Policy_Framework) authorization is a task of email servers, not of an email client. Servers generally have more memory and computing power, so they are much better suited to this task than battery-powered devices. Also, you'll want spam filtered for all your email clients, possibly including web email, not just one email client. Moreover, email servers have access to information, like the IP address, etc of the connecting server, which an email client has no access to.
+
+Spam filtering based on message headers might have been feasible, but unfortunately this technique is [patented by Microsoft](https://patents.google.com/patent/US7543076).
 
 Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too. Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
 

@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2020 by Marcel Bokhorst (M66B)
+    Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Notification;
@@ -1083,7 +1083,9 @@ class Core {
         }
 
         // Fetch appended/copied when needed
-        boolean fetch = (copy || !"connected".equals(target.state));
+        boolean fetch = (copy ||
+                !"connected".equals(target.state) ||
+                !MessageHelper.hasCapability(ifolder, "IDLE"));
         if (draft || fetch)
             try {
                 Log.i(target.name + " moved message fetch=" + fetch);
@@ -1192,10 +1194,8 @@ class Core {
             throw new IllegalArgumentException("account missing");
 
         try {
-            if (removed) {
-                db.message().deleteMessage(folder.id, uid);
+            if (removed)
                 throw new MessageRemovedException("removed uid=" + uid);
-            }
 
             MimeMessage imessage = (MimeMessage) ifolder.getMessageByUID(uid);
             if (imessage == null)
@@ -1534,7 +1534,7 @@ class Core {
             EntityLog.log(context, "Operation attachment size=" + attachment.size);
     }
 
-    private static void onExists(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws MessagingException {
+    private static void onExists(Context context, JSONArray jargs, EntityFolder folder, EntityMessage message, EntityOperation op, IMAPFolder ifolder) throws MessagingException, IOException {
         if (message.uid != null)
             return;
 
@@ -1554,8 +1554,20 @@ class Core {
             }
 
         if (imessages != null && imessages.length == 1) {
-            long uid = ifolder.getUID(imessages[0]);
-            EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
+            String msgid;
+            try {
+                MessageHelper helper = new MessageHelper((MimeMessage) imessages[0], context);
+                msgid = helper.getMessageID();
+            } catch (MessagingException ex) {
+                Log.e(ex);
+                msgid = message.msgid;
+            }
+            if (Objects.equals(message.msgid, msgid)) {
+                long uid = ifolder.getUID(imessages[0]);
+                EntityOperation.queue(context, folder, EntityOperation.FETCH, uid);
+            } else {
+                EntityOperation.queue(context, message, EntityOperation.ADD);
+            }
         } else {
             if (imessages != null && imessages.length > 1)
                 Log.e(folder.name + " EXISTS messages=" + imessages.length);
@@ -2696,6 +2708,7 @@ class Core {
         String[] labels = helper.getLabels();
         boolean update = false;
         boolean process = false;
+        boolean syncSimilar = false;
 
         DB db = DB.getInstance(context);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -2745,6 +2758,9 @@ class Core {
                         process = true;
                     }
                 }
+
+                if (dup.seen != seen || dup.answered != answered || dup.flagged != flagged)
+                    syncSimilar = true;
 
                 if (dup.flagged && dup.color != null)
                     color = dup.color;
@@ -2855,6 +2871,19 @@ class Core {
             if (message.avatar == null && notify_known && pro)
                 message.ui_ignored = true;
 
+            // For contact forms
+            boolean self = false;
+            if (identity != null && message.from != null)
+                for (Address from : message.from)
+                    if (identity.sameAddress(from) || identity.similarAddress(from)) {
+                        self = true;
+                        break;
+                    }
+            if (!self) {
+                String warning = message.checkReplyDomain(context);
+                message.reply_domain = (warning == null);
+            }
+
             boolean check_mx = prefs.getBoolean("check_mx", false);
             if (check_mx)
                 try {
@@ -2909,32 +2938,6 @@ class Core {
                         Log.w(ex);
                     } catch (Throwable ex) {
                         Log.w(folder.name, ex);
-                    }
-                }
-            }
-
-            boolean check_reply = prefs.getBoolean("check_reply", false);
-            if (check_reply &&
-                    message.from != null && message.from.length > 0 &&
-                    message.reply != null && message.reply.length > 0) {
-                for (Address reply : message.reply) {
-                    String r = ((InternetAddress) reply).getAddress();
-                    int rat = (r == null ? -1 : r.indexOf('@'));
-                    if (rat > 0) {
-                        String rdomain = DnsHelper.getParentDomain(r.substring(rat + 1));
-                        for (Address from : message.from) {
-                            String f = ((InternetAddress) from).getAddress();
-                            int fat = (f == null ? -1 : f.indexOf('@'));
-                            if (fat > 0) {
-                                String fdomain = DnsHelper.getParentDomain(f.substring(fat + 1));
-                                if (!rdomain.equalsIgnoreCase(fdomain)) {
-                                    if (message.warning == null)
-                                        message.warning = context.getString(R.string.title_reply_domain, fdomain, rdomain);
-                                    else
-                                        message.warning += ", " + context.getString(R.string.title_reply_domain, fdomain, rdomain);
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -3023,6 +3026,7 @@ class Core {
                 if (seen)
                     message.ui_ignored = true;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " seen=" + seen);
+                syncSimilar = true;
             }
 
             if ((!message.answered.equals(answered) || !message.ui_answered.equals(message.answered)) &&
@@ -3031,6 +3035,7 @@ class Core {
                 message.answered = answered;
                 message.ui_answered = answered;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " answered=" + answered);
+                syncSimilar = true;
             }
 
             if ((!message.flagged.equals(flagged) || !message.ui_flagged.equals(flagged)) &&
@@ -3041,6 +3046,7 @@ class Core {
                 if (!flagged)
                     message.color = null;
                 Log.i(folder.name + " updated id=" + message.id + " uid=" + message.uid + " flagged=" + flagged);
+                syncSimilar = true;
             }
 
             if (!Objects.equals(flags, message.flags)) {
@@ -3123,6 +3129,24 @@ class Core {
             else
                 Log.d(folder.name + " unchanged uid=" + uid);
         }
+
+        if (syncSimilar && account.isGmail())
+            for (EntityMessage similar : db.message().getMessagesBySimilarity(message.account, message.id, message.msgid)) {
+                if (similar.seen != message.seen) {
+                    Log.i(folder.name + " Synchronize similar id=" + similar.id + " seen=" + message.seen);
+                    db.message().setMessageSeen(similar.id, message.seen);
+                    db.message().setMessageUiSeen(similar.id, message.seen);
+                }
+                if (similar.answered != message.answered) {
+                    Log.i(folder.name + " Synchronize similar id=" + similar.id + " answered=" + message.answered);
+                    db.message().setMessageAnswered(similar.id, message.answered);
+                }
+                if (similar.flagged != flagged) {
+                    Log.i(folder.name + " Synchronize similar id=" + similar.id + " flagged=" + message.flagged);
+                    db.message().setMessageFlagged(similar.id, message.flagged);
+                    db.message().setMessageUiFlagged(similar.id, message.flagged, flagged ? similar.color : null);
+                }
+            }
 
         List<String> fkeywords = new ArrayList<>(Arrays.asList(folder.keywords));
 
@@ -3838,11 +3862,11 @@ class Core {
                 piContent = PendingIntent.getService(context, ServiceUI.PI_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
             } else {
                 Intent thread = new Intent(context, ActivityView.class);
-                thread.setAction("thread:" + message.thread);
+                thread.setAction("thread:" + message.id);
                 thread.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 thread.putExtra("account", message.account);
                 thread.putExtra("folder", message.folder);
-                thread.putExtra("id", message.id);
+                thread.putExtra("thread", message.thread);
                 thread.putExtra("filter_archive", !EntityFolder.ARCHIVE.equals(message.folderType));
                 piContent = PendingIntent.getActivity(context, ActivityView.REQUEST_THREAD, thread, PendingIntent.FLAG_UPDATE_CURRENT);
             }

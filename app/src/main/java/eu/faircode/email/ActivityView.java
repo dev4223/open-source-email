@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2020 by Marcel Bokhorst (M66B)
+    Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
 import android.annotation.SuppressLint;
@@ -1056,7 +1056,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 onMenuOutbox();
 
             } else if (action.startsWith("thread")) {
-                intent.putExtra("thread", action.split(":", 2)[1]);
+                intent.putExtra("id", Long.parseLong(action.split(":", 2)[1]));
                 onViewThread(intent);
 
             } else if (action.equals("widget")) {

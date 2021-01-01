@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2020 by Marcel Bokhorst (M66B)
+    Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
 import android.Manifest;
@@ -1189,6 +1189,7 @@ public class FragmentCompose extends FragmentBase {
                 args.putString("to", a.getString("to"));
                 args.putString("cc", a.getString("cc"));
                 args.putString("bcc", a.getString("bcc"));
+                args.putString("inreplyto", a.getString("inreplyto"));
                 args.putString("subject", a.getString("subject"));
                 args.putString("body", a.getString("body"));
                 args.putString("text", a.getString("text"));
@@ -3568,6 +3569,8 @@ public class FragmentCompose extends FragmentBase {
                             Log.w(ex);
                         }
 
+                        data.draft.inreplyto = args.getString("inreplyto", null);
+
                         data.draft.subject = args.getString("subject", "");
 
                         String b = args.getString("body", "");
@@ -3794,6 +3797,7 @@ public class FragmentCompose extends FragmentBase {
                             if (TextUtils.isEmpty(s)) {
                                 // Get referenced message body
                                 d = JsoupEx.parse(ref.getFile(context));
+                                HtmlHelper.normalizeNamespaces(d, false);
                                 for (Element e : d.select("[x-plain=true]"))
                                     e.removeAttr("x-plain");
 

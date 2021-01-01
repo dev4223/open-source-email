@@ -16,7 +16,7 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2020 by Marcel Bokhorst (M66B)
+    Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
 import android.app.Activity;
@@ -1483,8 +1483,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             EntityAccount account = db.account().getAccount(folder.account);
                             if (account != null && !"connected".equals(account.state)) {
                                 now = false;
-                                if (enabled && !account.ondemand &&
-                                        (pollInterval == 0 || account.poll_exempted))
+                                if (!account.isTransient(context))
                                     force = true;
                             }
                         }
@@ -1974,7 +1973,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             if (dX > 0) {
                 // Right swipe
                 d.setAlpha(Math.round(255 * Math.min(dX / (2 * margin + size), 1.0f)));
-                if (swipes.right_color != null)
+                if (swipes.right_color == null) {
+                    Integer color = EntityFolder.getDefaultColor(swipes.right_type);
+                    if (color != null)
+                        d.setTint(color);
+                } else
                     d.setTint(swipes.right_color);
                 int padding = (rect.height() - size);
                 d.setBounds(
@@ -1986,7 +1989,11 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             } else if (dX < 0) {
                 // Left swipe
                 d.setAlpha(Math.round(255 * Math.min(-dX / (2 * margin + size), 1.0f)));
-                if (swipes.left_color != null)
+                if (swipes.left_color == null) {
+                    Integer color = EntityFolder.getDefaultColor(swipes.left_type);
+                    if (color != null)
+                        d.setTint(color);
+                } else
                     d.setTint(swipes.left_color);
                 int padding = (rect.height() - size);
                 d.setBounds(
@@ -7946,6 +7953,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 source = getResources().getDrawable(EntityFolder.getIcon(sources.get(0)), null);
                 if (source != null)
                     source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
+                if (sourceColor == null)
+                    sourceColor = EntityFolder.getDefaultColor(sources.get(0));
             } else
                 sourceColor = null;
 
@@ -7954,6 +7963,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 target = getResources().getDrawable(EntityFolder.getIcon(targets.get(0)), null);
                 if (target != null)
                     target.setBounds(0, 0, target.getIntrinsicWidth(), target.getIntrinsicHeight());
+                if (targetColor == null)
+                    targetColor = EntityFolder.getDefaultColor(targets.get(0));
             } else
                 targetColor = null;
 

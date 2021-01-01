@@ -16,10 +16,11 @@ package eu.faircode.email;
     You should have received a copy of the GNU General Public License
     along with FairEmail.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2018-2020 by Marcel Bokhorst (M66B)
+    Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -323,6 +324,12 @@ public class EntityFolder extends EntityOrder implements Serializable {
         if (EntityFolder.SYSTEM.equals(type))
             return R.drawable.twotone_folder_special_24;
         return R.drawable.twotone_folder_24;
+    }
+
+    static Integer getDefaultColor(String type) {
+        if (EntityFolder.TRASH.equals(type) || EntityFolder.JUNK.equals(type))
+            return Color.RED;
+        return null;
     }
 
     String getDisplayName(Context context) {
