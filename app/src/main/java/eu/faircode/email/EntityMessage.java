@@ -140,7 +140,7 @@ public class EntityMessage implements Serializable {
     public Boolean reply_domain; // differs from 'from'
     public String avatar; // lookup URI from sender
     public String sender; // sort key: from email address
-    public Address[] submitter;
+    public Address[] submitter; // sent on behalf of
     public Address[] from;
     public Address[] to;
     public Address[] cc;
@@ -185,6 +185,8 @@ public class EntityMessage implements Serializable {
     public Integer notifying = 0;
     @NonNull
     public Boolean fts = false;
+    @NonNull
+    public Boolean auto_classified = false;
     @NonNull
     public Boolean ui_seen = false;
     @NonNull
@@ -486,6 +488,7 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.reply_domain, other.reply_domain) &&
                     Objects.equals(this.avatar, other.avatar) &&
                     Objects.equals(this.sender, other.sender) &&
+                    MessageHelper.equal(this.submitter, other.submitter) &&
                     MessageHelper.equal(this.from, other.from) &&
                     MessageHelper.equal(this.to, other.to) &&
                     MessageHelper.equal(this.cc, other.cc) &&

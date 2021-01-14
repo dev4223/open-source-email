@@ -191,9 +191,6 @@
     <string name="title_setup_defaults">Berrezarri balio lehenetsiak</string>
     <string name="title_setup_reset_questions">Berrezarri galderak</string>
     <string name="title_advanced_hint_title">Aukera aurreratu gehiago</string>
-    <string name="title_advanced_hint_message">        Aukera aurreratuetan sartzen ari zara.
-        Aukera guztiek maiz erabilitako balioak dituzte, nahi izanez gero aldatu ditzakezunak.
-    </string>
     <string name="title_advanced_section_main">Nagusia</string>
     <string name="title_advanced_section_synchronize">Jaso</string>
     <string name="title_advanced_section_send">Bidali</string>
@@ -269,9 +266,6 @@
     <string name="title_advanced_generated_icons">Erakutsi sortutako ikonoak</string>
     <string name="title_advanced_identicons">Erakutsi identikonoak</string>
     <string name="title_advanced_circular">Erakutsi ikono borobilak</string>
-    <string name="title_advanced_color_saturation">Saturazioa</string>
-    <string name="title_advanced_color_value">Distira</string>
-    <string name="title_advanced_color_threshold">Letren kolorearen atalasea</string>
     <string name="title_advanced_name_email">Erakutsi izenak eta e-mail helbideak</string>
     <string name="title_advanced_replace_name">Nahiago kontaktu-izena bidaltzaile-izena baino</string>
     <string name="title_advanced_distinguish_contacts">Azpimarratu igorlea kontaktua jasotzaile lokalki ezaguna bada</string>

@@ -463,7 +463,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
     private void onDebugInfo() {
         new SimpleTask<Long>() {
             @Override
-            protected Long onExecute(Context context, Bundle args) throws IOException {
+            protected Long onExecute(Context context, Bundle args) throws IOException, JSONException {
                 return Log.getDebugInfo(context, R.string.title_debug_info_remark, null, null).id;
             }
 
@@ -628,6 +628,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 jexport.put("accounts", jaccounts);
                 jexport.put("answers", janswers);
                 jexport.put("certificates", jcertificates);
+                jexport.put("classifier", MessageClassifier.toJson());
                 jexport.put("settings", jsettings);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -685,11 +686,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof IllegalArgumentException ||
-                        ex instanceof FileNotFoundException)
-                    ToastEx.makeText(ActivitySetup.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getSupportFragmentManager(), ex);
+                boolean expected =
+                        (ex instanceof IllegalArgumentException ||
+                                ex instanceof FileNotFoundException ||
+                                ex instanceof SecurityException);
+                Log.unexpectedError(getSupportFragmentManager(), ex, !expected);
             }
         }.execute(this, args, "setup:export");
     }
@@ -952,6 +953,9 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         }
                     }
 
+                    if (jimport.has("classifier"))
+                        MessageClassifier.fromJson(jimport.getJSONObject("classifier"));
+
                     // Settings
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = prefs.edit();
@@ -1069,12 +1073,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                     ToastEx.makeText(ActivitySetup.this, R.string.title_setup_password_invalid, Toast.LENGTH_LONG).show();
                 else if (ex instanceof IOException && ex.getCause() instanceof IllegalBlockSizeException)
                     ToastEx.makeText(ActivitySetup.this, R.string.title_setup_import_invalid, Toast.LENGTH_LONG).show();
-                else if (ex instanceof IllegalArgumentException ||
-                        ex instanceof FileNotFoundException ||
-                        ex instanceof JSONException)
-                    ToastEx.makeText(ActivitySetup.this, ex.getMessage(), Toast.LENGTH_LONG).show();
-                else
-                    Log.unexpectedError(getSupportFragmentManager(), ex);
+                else {
+                    boolean expected =
+                            (ex instanceof IllegalArgumentException ||
+                                    ex instanceof FileNotFoundException ||
+                                    ex instanceof JSONException ||
+                                    ex instanceof SecurityException);
+                    Log.unexpectedError(getSupportFragmentManager(), ex, !expected);
+                }
             }
         }.execute(this, args, "setup:import");
     }
@@ -1141,7 +1147,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    Log.unexpectedError(getSupportFragmentManager(), ex, false);
+                    boolean expected = (ex instanceof SecurityException);
+                    Log.unexpectedError(getSupportFragmentManager(), ex, !expected);
                 }
             }.execute(this, args, "setup:cert");
         }

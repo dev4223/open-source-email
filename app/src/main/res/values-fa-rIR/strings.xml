@@ -193,9 +193,6 @@
     <string name="title_setup_defaults">بازیابی پیش‌فرض‌ها</string>
     <string name="title_setup_reset_questions">بازنشانی پرسش‌ها</string>
     <string name="title_advanced_hint_title">گزینه‌های پیشرفته بیشتر</string>
-    <string name="title_advanced_hint_message">        شما در حال پیمایش به گزینه‌های پیشرفته تر هستید.
-        همه گزینه ها معمولاً از مقادیر استاندارد استفاده می كنند كه اگر ترجیح دیگری داشته باشید قابل تغییر هستند.
-    </string>
     <string name="title_advanced_section_main">پایه</string>
     <string name="title_advanced_section_synchronize">دریافت</string>
     <string name="title_advanced_section_send">ارسال</string>
@@ -265,9 +262,6 @@
     <string name="title_advanced_generated_icons">نمایس آیکون‌های تولید شده</string>
     <string name="title_advanced_identicons">نمایش identicons</string>
     <string name="title_advanced_circular">نمایش آیکون‌های گرد</string>
-    <string name="title_advanced_color_saturation">اشباع</string>
-    <string name="title_advanced_color_value">روشنایی</string>
-    <string name="title_advanced_color_threshold">رنگ نویسه آستانه</string>
     <string name="title_advanced_name_email">نام‌ها و نشانی‌های ایمیل را نمایش بده</string>
     <string name="title_advanced_replace_name">نام مخاطب را بر نام فرستنده ترجیح بده</string>
     <string name="title_advanced_show_recipients">گیرندگان را در سرتیتر نمایش بده</string>

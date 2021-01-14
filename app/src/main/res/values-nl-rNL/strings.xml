@@ -77,6 +77,8 @@
     <string name="title_block_sender_hint">        Het blokkeren van een afzender maakt een regel om toekomstige berichten automatisch naar de spam map te verplaatsen.
         Het maken en gebruiken van regels is een pro-functie.
     </string>
+    <string name="title_junk_filter">Lokale spam filter gebruiken</string>
+    <string name="title_junk_filter_hint">Dit kan het batterijgebruik verhogen en berichten onjuist markeren als spam</string>
     <string name="title_notification_sending">Berichten verzenden</string>
     <string name="title_notification_waiting">Wachten op een geschikte verbinding</string>
     <string name="title_notification_idle">Inactief</string>
@@ -130,6 +132,7 @@
     <string name="title_setup_wizard_remark">Ga \'terug\' om naar het postvak in te gaan</string>
     <string name="title_setup_oauth_permission">De e-mailprovider heeft OAuth alleen goedgekeurd voor officiële app versies</string>
     <string name="title_setup_other">Andere provider</string>
+    <string name="title_setup_pop3">POP3 account</string>
     <string name="title_setup_gmail_support">Het autoriseren van Google accounts werkt alleen in officiële versies omdat Android de app handtekening controleert</string>
     <string name="title_setup_gmail_rationale">Geef a.u.b. toestemming om een account te selecteren en uw naam te lezen</string>
     <string name="title_setup_gmail_permissions">Google zal machtigingen vragen om al uw e-mail te lezen, op te stellen, te verzenden en definitief te verwijderen. FairEmail zal uw berichten nooit verwijderen zonder uw expliciete toestemming.</string>
@@ -217,7 +220,7 @@
     <string name="title_setup_reset_questions">Vragen resetten</string>
     <string name="title_advanced_hint_title">Meer geavanceerde opties</string>
     <string name="title_advanced_hint_message">        U navigeert naar de meer geavanceerde opties.
-        Alle opties hebben vaak gebruikte standaardwaarden die gewijzigd kunnen worden als u een andere voorkeur heeft.
+        Alle opties hebben vaak gebruikte standaardwaarden die je niet hoeft te wijzigen tenzij je een andere voorkeur hebt.
     </string>
     <string name="title_advanced_section_main">Hoofd</string>
     <string name="title_advanced_section_synchronize">Ontvangen</string>
@@ -304,9 +307,9 @@
     <string name="title_advanced_generated_icons">Toon gegenereerde iconen</string>
     <string name="title_advanced_identicons">Toon identicons</string>
     <string name="title_advanced_circular">Toon ronde iconen</string>
-    <string name="title_advanced_color_saturation">Verzadiging</string>
-    <string name="title_advanced_color_value">Helderheid</string>
-    <string name="title_advanced_color_threshold">Drempel letterkleur</string>
+    <string name="title_advanced_color_saturation">Verzadiging: %1$s %%</string>
+    <string name="title_advanced_color_value">Helderheid: %1$s %%</string>
+    <string name="title_advanced_color_threshold">Drempel letterkleur: %1$s %%</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
     <string name="title_advanced_replace_name">Geef de voorkeur aan een contactnaam boven een verzonden naam</string>
     <string name="title_advanced_distinguish_contacts">Onderstreep de afzender wanneer de afzender bekend staat als lokaal \'aan\'-contact</string>
@@ -438,6 +441,9 @@
     <string name="title_advanced_language_detection">Taal van bericht detecteren</string>
     <string name="title_advanced_fts">Zoekindex opbouwen</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d berichten geïndexeerd (%3$s)</string>
+    <string name="title_advanced_classification">Berichten classificeren</string>
+    <string name="title_advanced_class_min_chance">Minimale klasse waarschijnlijkheid: %1$s %%</string>
+    <string name="title_advanced_class_min_difference">Minimale klasse verschil: %1$s %%</string>
     <string name="title_advanced_language">Taal</string>
     <string name="title_advanced_language_system">Systeem</string>
     <string name="title_advanced_watchdog">Periodiek controleren of FairEmail nog actief is</string>
@@ -626,6 +632,7 @@
     <string name="title_synchronize_now">Nu synchroniseren</string>
     <string name="title_synchronize_subfolders">Submappen</string>
     <string name="title_synchronize_more">Meer berichten synchroniseren</string>
+    <string name="title_synchronize_more_hint">Dit zal resulteren in een enkele download van oudere berichten, dus het zal niet resulteren in meer batterijgebruik voor dagelijks gebruik</string>
     <string name="title_synchronize_enabled">Synchroniseren</string>
     <string name="title_synchronize_batch_enable">Synchronisatie inschakelen</string>
     <string name="title_synchronize_batch_disable">Synchronisatie uitschakelen</string>
@@ -669,6 +676,8 @@
     <string name="title_poll_folder">Controleer periodiek in plaats van continu synchroniseren</string>
     <string name="title_download_folder">Berichtteksten en bijlagen automatisch downloaden</string>
     <string name="title_notify_folder">Melding bij nieuwe berichten</string>
+    <string name="title_auto_classify_source">Classificeer nieuwe berichten in deze map</string>
+    <string name="title_auto_classify_target">Verplaats automatisch geclassificeerde berichten naar deze map</string>
     <string name="title_sync_days">Synchroniseren van berichten (dagen)</string>
     <string name="title_sync_days_remark">Een hogere waarde verhoogt het batterij- en datagebruik</string>
     <string name="title_keep_days">Bewaren van berichten (dagen)</string>
@@ -1126,6 +1135,7 @@
     <string name="title_legend_encrypted">Is versleuteld</string>
     <string name="title_legend_auth">Authenticatie mislukt</string>
     <string name="title_legend_found">Is gevonden</string>
+    <string name="title_legend_classified">Werd automatisch geclassificeerd</string>
     <string name="title_legend_snoozed">Is gesluimerd</string>
     <string name="title_legend_browsed">Is gebladerd of gezocht</string>
     <string name="title_legend_answered">Is beantwoord</string>
@@ -1193,6 +1203,7 @@
     <string name="title_hint_message_selection">Druk lang op een bericht om meerdere berichten te selecteren; Hou vast en veeg omhoog of omlaag om meer berichten te selecteren</string>
     <string name="title_hint_important">Belangrijk</string>
     <string name="title_hint_sync">Het downloaden van berichten kan enige tijd duren, afhankelijk van de snelheid van de provider, de internet-verbinding en het apparaat en van het aantal berichten. Tijdens het downloaden van berichten kan de app trager reageren.</string>
+    <string name="title_hint_sync_note">Standaard worden niet alle berichten gedownload om de opslagruimte en het batterij- en gegevensgebruik te beperken. U kunt dit wijzigen door lang op een map in de mappenlijst te drukken en \'Meer synchroniseren\' te selecteren.</string>
     <string name="title_hint_battery">Aangezien FairEmail standaard altijd berichten ontvangt, meldt Android dat FairEmail altijd actief is. Daarom lijkt het erop dat FairEmail altijd batterijvermogen gebruikt, maar in feite is dit niet het geval.</string>
     <string name="title_hint_reformat">Standaard formatteert FairEmail berichten opnieuw om privacy- en veiligheidsredenen. Tik op het \'volledig scherm\' pictogram boven de berichttekst om het oorspronkelijke bericht te bekijken.</string>
     <string name="title_hint_design">Het ontwerp is opzettelijk niet afleidend, maar zeer functioneel gehouden. Er zijn veel opties om het uiterlijk aan te passen, maar begrijp alsjeblieft dat het onmogelijk is om iedereen tegelijkertijd helemaal gelukkig te maken.</string>

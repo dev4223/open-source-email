@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -191,7 +192,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -358,18 +358,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
     static final List<String> SORT_DATE_HEADER = Collections.unmodifiableList(Arrays.asList(
             "time", "unread", "starred", "priority"
-    ));
-
-    private static final List<String> DUPLICATE_ORDER = Collections.unmodifiableList(Arrays.asList(
-            EntityFolder.INBOX,
-            EntityFolder.OUTBOX,
-            EntityFolder.DRAFTS,
-            EntityFolder.SENT,
-            EntityFolder.SYSTEM,
-            EntityFolder.USER,
-            EntityFolder.ARCHIVE,
-            EntityFolder.TRASH,
-            EntityFolder.JUNK
     ));
 
     @Override
@@ -1032,43 +1020,91 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                     @Override
                     protected void onExecuted(Bundle args, List<EntityAccount> accounts) {
-                        PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
+                        if (accounts.size() == 1) {
+                            EntityAccount account = accounts.get(0);
+                            if (account.isGmail())
+                                searchArchive(account.id);
+                            else
+                                searchAccount(account.id);
+                        } else {
+                            PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), fabSearch);
 
-                        int order = 0;
+                            int order = 0;
 
-                        SpannableString ss = new SpannableString(getString(R.string.title_search_server));
-                        ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), 0);
-                        ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
-                        popupMenu.getMenu().add(Menu.NONE, 0, order++, ss)
-                                .setEnabled(false);
+                            SpannableString ss = new SpannableString(getString(R.string.title_search_server));
+                            ss.setSpan(new StyleSpan(Typeface.ITALIC), 0, ss.length(), 0);
+                            ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
+                            popupMenu.getMenu().add(Menu.NONE, 0, order++, ss)
+                                    .setEnabled(false);
 
-                        for (EntityAccount account : accounts)
-                            popupMenu.getMenu().add(Menu.NONE, 1, order++, account.name)
-                                    .setIntent(new Intent().putExtra("account", account.id));
+                            for (EntityAccount account : accounts)
+                                popupMenu.getMenu().add(Menu.NONE, 1, order++, account.name)
+                                        .setIntent(new Intent()
+                                                .putExtra("account", account.id)
+                                                .putExtra("gmail", account.isGmail()));
 
-                        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                            popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                                @Override
+                                public boolean onMenuItemClick(MenuItem target) {
+                                    Intent intent = target.getIntent();
+                                    if (intent == null)
+                                        return false;
+
+                                    long account = intent.getLongExtra("account", -1);
+                                    boolean gmail = intent.getBooleanExtra("gmail", false);
+                                    if (gmail)
+                                        searchArchive(account);
+                                    else
+                                        searchAccount(account);
+
+                                    return true;
+                                }
+                            });
+
+                            popupMenu.show();
+                        }
+                    }
+
+                    private void searchAccount(long account) {
+                        Bundle aargs = new Bundle();
+                        aargs.putString("title", getString(R.string.title_search_in));
+                        aargs.putLong("account", account);
+                        aargs.putLongArray("disabled", new long[]{});
+                        aargs.putSerializable("criteria", criteria);
+
+                        FragmentDialogFolder fragment = new FragmentDialogFolder();
+                        fragment.setArguments(aargs);
+                        fragment.setTargetFragment(FragmentMessages.this, REQUEST_SEARCH);
+                        fragment.show(getParentFragmentManager(), "messages:search");
+                    }
+
+                    private void searchArchive(long account) {
+                        Bundle args = new Bundle();
+                        args.putLong("account", account);
+
+                        new SimpleTask<EntityFolder>() {
                             @Override
-                            public boolean onMenuItemClick(MenuItem target) {
-                                Intent intent = target.getIntent();
-                                if (intent == null)
-                                    return false;
+                            protected EntityFolder onExecute(Context context, Bundle args) {
+                                long account = args.getLong("account");
 
-                                Bundle args = new Bundle();
-                                args.putString("title", getString(R.string.title_search_in));
-                                args.putLong("account", intent.getLongExtra("account", -1));
-                                args.putLongArray("disabled", new long[]{});
-                                args.putSerializable("criteria", criteria);
-
-                                FragmentDialogFolder fragment = new FragmentDialogFolder();
-                                fragment.setArguments(args);
-                                fragment.setTargetFragment(FragmentMessages.this, REQUEST_SEARCH);
-                                fragment.show(getParentFragmentManager(), "messages:search");
-
-                                return true;
+                                DB db = DB.getInstance(context);
+                                return db.folder().getFolderByType(account, EntityFolder.ARCHIVE);
                             }
-                        });
 
-                        popupMenu.show();
+                            @Override
+                            protected void onExecuted(Bundle args, EntityFolder archive) {
+                                if (archive == null)
+                                    searchAccount(args.getLong("account"));
+                                else
+                                    search(getContext(), getViewLifecycleOwner(), getParentFragmentManager(),
+                                            archive.account, archive.id, true, criteria);
+                            }
+
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Log.unexpectedError(getParentFragmentManager(), ex);
+                            }
+                        }.execute(FragmentMessages.this, args, "search:folder");
                     }
 
                     @Override
@@ -4669,30 +4705,23 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         // Mark duplicates
         Map<String, List<TupleMessageEx>> duplicates = new HashMap<>();
         for (TupleMessageEx message : messages)
-            if (message != null && !TextUtils.isEmpty(message.msgid)) {
-                if (!duplicates.containsKey(message.msgid))
-                    duplicates.put(message.msgid, new ArrayList<TupleMessageEx>());
-                duplicates.get(message.msgid).add(message);
+            if (message != null &&
+                    !TextUtils.isEmpty(message.hash)) {
+                if (!duplicates.containsKey(message.hash))
+                    duplicates.put(message.hash, new ArrayList<>());
+                duplicates.get(message.hash).add(message);
             }
-        for (String msgid : duplicates.keySet()) {
-            List<TupleMessageEx> dups = duplicates.get(msgid);
-            if (dups.size() > 1) {
-                Collections.sort(dups, new Comparator<TupleMessageEx>() {
-                    @Override
-                    public int compare(TupleMessageEx d1, TupleMessageEx d2) {
-                        Integer o1 = DUPLICATE_ORDER.indexOf(d1.folderType);
-                        Integer o2 = DUPLICATE_ORDER.indexOf(d2.folderType);
-                        return o1.compareTo(o2);
-                    }
-                });
-
-                TupleMessageEx first = dups.get(0);
-                for (int i = 1; i < dups.size(); i++) {
-                    TupleMessageEx dup = dups.get(i);
-                    if (!Objects.equals(first.folderType, dup.folderType))
-                        dup.duplicate = true;
+        for (String hash : duplicates.keySet()) {
+            List<TupleMessageEx> dups = duplicates.get(hash);
+            int base = 0;
+            for (int i = 0; i < dups.size(); i++)
+                if (dups.get(i).folder == folder) {
+                    base = i;
+                    break;
                 }
-            }
+            for (int i = 0; i < dups.size(); i++)
+                if (i != base)
+                    dups.get(i).duplicate = true;
         }
 
         if (autoExpanded) {
@@ -7426,7 +7455,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                             PrintJob job = printManager.print(jobName, adapter, new PrintAttributes.Builder().build());
                             EntityLog.log(context, "Print queued job=" + job.getInfo());
                         } catch (Throwable ex) {
-                            Log.unexpectedError(getParentFragmentManager(), ex);
+                            Log.unexpectedError(getParentFragmentManager(), ex, !(ex instanceof ActivityNotFoundException));
                         } finally {
                             printWebView = null;
                         }

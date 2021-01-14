@@ -69,6 +69,9 @@ public class FragmentFolder extends FragmentBase {
     private EditText etPoll;
     private TextView tvPoll;
     private CheckBox cbDownload;
+    private CheckBox cbAutoClassifySource;
+    private CheckBox cbAutoClassifyTarget;
+    private TextView tvAutoClassifyPro;
     private Button btnInfo;
     private EditText etSyncDays;
     private EditText etKeepDays;
@@ -129,6 +132,9 @@ public class FragmentFolder extends FragmentBase {
         etPoll = view.findViewById(R.id.etPoll);
         tvPoll = view.findViewById(R.id.tvPoll);
         cbDownload = view.findViewById(R.id.cbDownload);
+        cbAutoClassifySource = view.findViewById(R.id.cbAutoClassifySource);
+        cbAutoClassifyTarget = view.findViewById(R.id.cbAutoClassifyTarget);
+        tvAutoClassifyPro = view.findViewById(R.id.tvAutoClassifyPro);
         btnInfo = view.findViewById(R.id.btnInfo);
         etSyncDays = view.findViewById(R.id.etSyncDays);
         etKeepDays = view.findViewById(R.id.etKeepDays);
@@ -175,6 +181,16 @@ public class FragmentFolder extends FragmentBase {
             }
         });
 
+        cbAutoClassifyTarget.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked)
+                    cbAutoClassifySource.setChecked(true);
+            }
+        });
+
+        Helper.linkPro(tvAutoClassifyPro);
+
         btnInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -215,6 +231,9 @@ public class FragmentFolder extends FragmentBase {
         grpImap.setVisibility(imap ? View.VISIBLE : View.GONE);
         tvParent.setText(parent);
         grpParent.setVisibility(parent == null ? View.GONE : View.VISIBLE);
+        cbAutoClassifySource.setVisibility(View.GONE);
+        cbAutoClassifyTarget.setVisibility(View.GONE);
+        tvAutoClassifyPro.setVisibility(View.GONE);
         grpAutoDelete.setVisibility(View.GONE);
         btnSave.setEnabled(false);
         pbSave.setVisibility(View.GONE);
@@ -285,36 +304,39 @@ public class FragmentFolder extends FragmentBase {
                     etPoll.setText(folder == null ? null : Integer.toString(folder.poll_factor));
                     tvPoll.setText(getString(R.string.title_factor_minutes, interval));
                     cbDownload.setChecked(folder == null ? true : folder.download);
+                    cbAutoClassifySource.setChecked(folder == null ? false : folder.auto_classify_source);
+                    cbAutoClassifyTarget.setChecked(folder == null ? false : folder.auto_classify_target);
                     etSyncDays.setText(Integer.toString(folder == null ? EntityFolder.DEFAULT_SYNC : folder.sync_days));
                     if (folder != null && folder.keep_days == Integer.MAX_VALUE)
                         cbKeepAll.setChecked(true);
                     else
                         etKeepDays.setText(Integer.toString(folder == null ? EntityFolder.DEFAULT_KEEP : folder.keep_days));
-
-                    if (!imap || (folder != null && folder.read_only))
-                        grpAutoDelete.setVisibility(View.GONE);
-                    else {
-                        cbAutoDelete.setText(folder != null && EntityFolder.TRASH.equals(folder.type)
-                                ? R.string.title_auto_delete : R.string.title_auto_trash);
-                        cbAutoDelete.setChecked(folder != null && folder.auto_delete);
-                        grpAutoDelete.setVisibility(View.VISIBLE);
-                    }
-
-                    tvInboxRootHint.setVisibility(folder == null && parent == null ? View.VISIBLE : View.GONE);
+                    cbAutoDelete.setChecked(folder != null && folder.auto_delete);
                 }
 
                 Helper.setViewsEnabled(view, true);
 
                 boolean always = (!ondemand && (pollInterval == 0 || exempted));
+                boolean canAutoClassify = (imap && MessageClassifier.isEnabled(getContext()));
+                boolean pro = (ActivityBilling.isPro(getContext()) ||
+                        (folder != null && EntityFolder.JUNK.equals(folder.type)));
 
                 etName.setEnabled(folder == null || EntityFolder.USER.equals(folder.type));
                 cbPoll.setEnabled(cbSynchronize.isChecked() && always);
                 etPoll.setEnabled(cbSynchronize.isChecked() && always);
                 tvPoll.setEnabled(cbSynchronize.isChecked() && always);
                 grpPoll.setVisibility(imap && cbPoll.isEnabled() && cbPoll.isChecked() ? View.VISIBLE : View.GONE);
+                cbAutoClassifyTarget.setEnabled(pro);
+                cbAutoClassifySource.setVisibility(canAutoClassify ? View.VISIBLE : View.GONE);
+                cbAutoClassifyTarget.setVisibility(canAutoClassify ? View.VISIBLE : View.GONE);
+                tvAutoClassifyPro.setVisibility(canAutoClassify && !pro ? View.VISIBLE : View.GONE);
                 etKeepDays.setEnabled(!cbKeepAll.isChecked());
                 cbAutoDelete.setEnabled(!cbKeepAll.isChecked());
+                cbAutoDelete.setText(folder != null && EntityFolder.TRASH.equals(folder.type)
+                        ? R.string.title_auto_delete : R.string.title_auto_trash);
+                grpAutoDelete.setVisibility(!imap || (folder != null && folder.read_only) ? View.GONE : View.VISIBLE);
                 btnSave.setEnabled(true);
+                tvInboxRootHint.setVisibility(folder == null && parent == null ? View.VISIBLE : View.GONE);
 
                 deletable = (folder != null && EntityFolder.USER.equals(folder.type));
                 getActivity().invalidateOptionsMenu();
@@ -404,7 +426,7 @@ public class FragmentFolder extends FragmentBase {
         args.putLong("id", id);
         args.putLong("account", account);
         args.putString("parent", parent);
-        args.putString("name", etName.getText().toString());
+        args.putString("name", etName.getText().toString().trim());
         args.putString("display", etDisplay.getText().toString());
         args.putInt("color", btnColor.getColor());
         args.putBoolean("hide", cbHide.isChecked());
@@ -415,6 +437,8 @@ public class FragmentFolder extends FragmentBase {
         args.putBoolean("poll", cbPoll.isChecked());
         args.putString("factor", etPoll.getText().toString());
         args.putBoolean("download", cbDownload.isChecked());
+        args.putBoolean("auto_classify_source", cbAutoClassifySource.isChecked());
+        args.putBoolean("auto_classify_target", cbAutoClassifyTarget.isChecked());
         args.putString("sync", etSyncDays.getText().toString());
         args.putString("keep", cbKeepAll.isChecked()
                 ? Integer.toString(Integer.MAX_VALUE)
@@ -457,6 +481,8 @@ public class FragmentFolder extends FragmentBase {
                 boolean poll = args.getBoolean("poll");
                 String factor = args.getString("factor");
                 boolean download = args.getBoolean("download");
+                boolean auto_classify_source = args.getBoolean("auto_classify_source");
+                boolean auto_classify_target = args.getBoolean("auto_classify_target");
                 String sync = args.getString("sync");
                 String keep = args.getString("keep");
                 boolean auto_delete = args.getBoolean("auto_delete");
@@ -517,6 +543,10 @@ public class FragmentFolder extends FragmentBase {
                                 return true;
                             if (!Objects.equals(folder.download, download))
                                 return true;
+                            if (!Objects.equals(folder.auto_classify_source, auto_classify_source))
+                                return true;
+                            if (!Objects.equals(folder.auto_classify_target, auto_classify_target))
+                                return true;
                             if (!Objects.equals(folder.sync_days, sync_days))
                                 return true;
                             if (!Objects.equals(folder.keep_days, keep_days))
@@ -560,6 +590,8 @@ public class FragmentFolder extends FragmentBase {
                         create.poll = poll;
                         create.poll_factor = poll_factor;
                         create.download = download;
+                        create.auto_classify_source = auto_classify_source;
+                        create.auto_classify_target = auto_classify_target;
                         create.sync_days = sync_days;
                         create.keep_days = keep_days;
                         create.auto_delete = auto_delete;
@@ -580,6 +612,7 @@ public class FragmentFolder extends FragmentBase {
                                 folder.name.equals(name) ? null : name,
                                 display, color, unified, navigation, notify, hide,
                                 synchronize, poll, poll_factor, download,
+                                auto_classify_source, auto_classify_target,
                                 sync_days, keep_days, auto_delete);
                         db.folder().setFolderError(id, null);
 

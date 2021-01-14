@@ -113,6 +113,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
 
     private static ExecutorService executor = Helper.getBackgroundExecutor(1, "sync");
 
+    private static final long BACKUP_DELAY = 30 * 1000L; // milliseconds
     private static final long PURGE_DELAY = 30 * 1000L; // milliseconds
     private static final long QUIT_DELAY = 5 * 1000L; // milliseconds
     private static final long STILL_THERE_THRESHOLD = 3 * 60 * 1000L; // milliseconds
@@ -120,14 +121,13 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private static final int OPTIMIZE_KEEP_ALIVE_INTERVAL = 12; // minutes
     private static final int OPTIMIZE_POLL_INTERVAL = 15; // minutes
     private static final int CONNECT_BACKOFF_START = 8; // seconds
-    private static final int CONNECT_BACKOFF_MAX = 8; // seconds (totally 8+2x15=38 seconds)
+    private static final int CONNECT_BACKOFF_MAX = 8; // seconds (totally 8+2x20=48 seconds)
     private static final int CONNECT_BACKOFF_ALARM_START = 15; // minutes
     private static final int CONNECT_BACKOFF_ALARM_MAX = 60; // minutes
     private static final long CONNECT_BACKOFF_GRACE = 2 * 60 * 1000L; // milliseconds
     private static final long LOST_RECENTLY = 150 * 1000L; // milliseconds
     private static final int ACCOUNT_ERROR_AFTER = 60; // minutes
     private static final int ACCOUNT_ERROR_AFTER_POLL = 4; // times
-    private static final int BACKOFF_ERROR_AFTER = 16; // seconds
     private static final int FAST_FAIL_THRESHOLD = 75; // percent
     private static final int FETCH_YIELD_DURATION = 50; // milliseconds
 
@@ -145,12 +145,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "sync_kept",
             "sync_folders",
             "sync_shared_folders",
-            "prefer_ip4", "tcp_keep_alive", "ssl_harden", // force reconnect
+            "prefer_ip4", "standalone_vpn", "tcp_keep_alive", "ssl_harden", // force reconnect
             "badge", "unseen_ignored", // force update badge/widget
             "experiments", "debug", "protocol", // force reconnect
-            "auth_plain",
-            "auth_login",
-            "auth_sasl"
+            "auth_plain", "auth_login", "auth_ntlm", "auth_sasl" // force reconnect
     ));
 
     static final int PI_ALARM = 1;
@@ -350,6 +348,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             WorkerFts.cancel(ServiceSynchronize.this);
                         }
 
+                        getMainHandler().removeCallbacks(backup);
+                        getMainHandler().postDelayed(backup, BACKUP_DELAY);
+
                         if (!isBackgroundService(ServiceSynchronize.this))
                             try {
                                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -515,6 +516,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                 List<EntityOperation> ops = db.operation().getOperations(EntityOperation.SYNC);
                                 for (EntityOperation op : ops)
                                     db.folder().setFolderSyncState(op.folder, null);
+
+                                getMainHandler().removeCallbacks(backup);
+                                MessageClassifier.save(ServiceSynchronize.this);
                             } else {
                                 // Yield update notifications/widgets
                                 try {
@@ -540,6 +544,22 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     }
                 });
             }
+
+            private Runnable backup = new Runnable() {
+                @Override
+                public void run() {
+                    queue.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                MessageClassifier.save(ServiceSynchronize.this);
+                            } catch (Throwable ex) {
+                                Log.e(ex);
+                            }
+                        }
+                    });
+                }
+            };
         });
 
         final TwoStateOwner cowner = new TwoStateOwner(this, "liveUnseenNotify");
@@ -990,7 +1010,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                 // Debug
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 boolean subscriptions = prefs.getBoolean("subscriptions", false);
-                boolean experiments = prefs.getBoolean("experiments", false);
                 boolean debug = (prefs.getBoolean("debug", false) || BuildConfig.DEBUG);
 
                 final EmailService iservice = new EmailService(
@@ -1056,6 +1075,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             } else {
                                 Log.e(ex);
                                 try {
+                                    state.setBackoff(2 * CONNECT_BACKOFF_ALARM_MAX * 60);
                                     NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                     nm.notify("receive:" + account.id, 1,
                                             Core.getNotificationError(this, "error", account.name, ex)
@@ -1076,7 +1096,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                     if (!capIdle || account.poll_interval < OPTIMIZE_KEEP_ALIVE_INTERVAL)
                         optimizeAccount(account, "IDLE");
 
-                    final boolean capNotify = (experiments && iservice.hasCapability("NOTIFY"));
+                    final boolean capNotify = iservice.hasCapability("NOTIFY");
 
                     db.account().setAccountState(account.id, "connected");
                     db.account().setAccountError(account.id, null);
@@ -1763,7 +1783,8 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         long delayed = now - account.last_connected - account.poll_interval * 60 * 1000L;
                         long maxDelayed = (pollInterval > 0 && !account.poll_exempted
                                 ? pollInterval * ACCOUNT_ERROR_AFTER_POLL : ACCOUNT_ERROR_AFTER) * 60 * 1000L;
-                        if (delayed > maxDelayed && state.getBackoff() > BACKOFF_ERROR_AFTER) {
+                        if (delayed > maxDelayed &&
+                                state.getBackoff() >= CONNECT_BACKOFF_ALARM_START * 60) {
                             Log.i("Reporting sync error after=" + delayed);
                             Throwable warning = new Throwable(
                                     getString(R.string.title_no_sync,

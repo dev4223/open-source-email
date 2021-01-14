@@ -287,6 +287,8 @@ public interface DaoFolder {
             ", poll = :poll" +
             ", poll_factor = :poll_factor" +
             ", download = :download" +
+            ", auto_classify_source = :auto_classify_source" +
+            ", auto_classify_target = :auto_classify_target" +
             ", `sync_days` = :sync_days" +
             ", `keep_days` = :keep_days" +
             ", auto_delete = :auto_delete" +
@@ -295,6 +297,7 @@ public interface DaoFolder {
             long id, String rename,
             String display, Integer color, boolean unified, boolean navigation, boolean notify, boolean hide,
             boolean synchronize, boolean poll, int poll_factor, boolean download,
+            boolean auto_classify_source, boolean auto_classify_target,
             int sync_days, int keep_days, boolean auto_delete);
 
     @Query("UPDATE folder" +
@@ -342,6 +345,12 @@ public interface DaoFolder {
 
     @Query("UPDATE folder SET poll_count = :count WHERE id = :id AND NOT (poll_count IS :count)")
     int setFolderPollCount(long id, int count);
+
+    @Query("UPDATE folder" +
+            " SET auto_classify_source = :source, auto_classify_target = :target" +
+            " WHERE id = :id" +
+            " AND NOT (auto_classify_source IS :source AND auto_classify_target IS :target)")
+    int setFolderAutoClassify(long id, boolean source, boolean target);
 
     @Query("DELETE FROM folder WHERE id = :id")
     void deleteFolder(long id);

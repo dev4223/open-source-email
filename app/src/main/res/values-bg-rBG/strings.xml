@@ -189,9 +189,6 @@
     <string name="title_setup_defaults">Възстановяване по подразбиране</string>
     <string name="title_setup_reset_questions">Отказване на запитването</string>
     <string name="title_advanced_hint_title">Разширени настройки</string>
-    <string name="title_advanced_hint_message">        Придвижвате се към по-разширените опции.
-        Всички опции обикновено използват стандартни стойности, които могат да бъдат променени, ако имате различни предпочитания.
-        </string>
     <string name="title_advanced_section_main">Основен</string>
     <string name="title_advanced_section_synchronize">Получаване</string>
     <string name="title_advanced_section_send">Изпращане</string>
@@ -269,9 +266,6 @@
     <string name="title_advanced_generated_icons">Показване на генерираните икони</string>
     <string name="title_advanced_identicons">Покажи икони за идентичност</string>
     <string name="title_advanced_circular">Закръглени икони</string>
-    <string name="title_advanced_color_saturation">Наситеност</string>
-    <string name="title_advanced_color_value">Яркост</string>
-    <string name="title_advanced_color_threshold">Бяла или черна буква в генерирани икони</string>
     <string name="title_advanced_name_email">Покажи имена и имейл адреси</string>
     <string name="title_advanced_replace_name">Предпочитано име от контакти пред изпратено име</string>
     <string name="title_advanced_distinguish_contacts">Подчертайте подателя, когато подателят е известен като локаленен „до“ контакт</string>

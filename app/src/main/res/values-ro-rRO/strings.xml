@@ -88,6 +88,8 @@
     <string name="title_block_sender_hint">        Blocarea unui expeditor va crea o regulă ce mută automat orice mesaj viitor în dosarul de spam.
         Crearea și utilizarea regulilor este o caracteristică Pro.
     </string>
+    <string name="title_junk_filter">Utilizați filtrul de spam local</string>
+    <string name="title_junk_filter_hint">Acest lucru poate crește utilizarea bateriei și marchează incorect mesajele ca spam</string>
     <string name="title_notification_sending">Se trimit mesaje</string>
     <string name="title_notification_waiting">Se așteaptă o conexiune adecvată</string>
     <string name="title_notification_idle">Inactiv</string>
@@ -141,6 +143,7 @@
     <string name="title_setup_wizard_remark">Apasă \'înapoi\' pentru a merge la mesaje primite</string>
     <string name="title_setup_oauth_permission">Furnizorul de e-mail a aprobat OAuth numai pentru versiunile oficiale ale aplicației</string>
     <string name="title_setup_other">Alt furnizor</string>
+    <string name="title_setup_pop3">Cont POP3</string>
     <string name="title_setup_gmail_support">Autorizarea conturilor Google v-a funcționa doar în versiunile oficiale pentru că Android verifică semnătura aplicației</string>
     <string name="title_setup_gmail_rationale">Vă rugăm să acordați permisiunea de a selecta un cont și a vă citi numele</string>
     <string name="title_setup_gmail_permissions">Google va cere permisiunea de a citi, compune, trimite și șterge în mod permanent mesajele dumneavoastră. de email. FairEmail nu vă va șterge niciodată mesajele fără consimțământul dumneavoastră explicit.</string>
@@ -227,8 +230,8 @@
     <string name="title_setup_defaults">Restabiliți valorile implicite</string>
     <string name="title_setup_reset_questions">Resetare întrebări</string>
     <string name="title_advanced_hint_title">Opțiuni și mai avansate</string>
-    <string name="title_advanced_hint_message">        Mergeți la opțiunile și mai avansate.
-        Toate opțiunile au valori stardard uzuale care pot fi schimbate dacă aveți alte preferințe.
+    <string name="title_advanced_hint_message">        Navigați la opțiunile mai avansate.
+        Toate opțiunile au utilizat în mod obișnuit valori standard, pe care nu trebuie să o schimbați decât dacă aveți o preferință diferită.
     </string>
     <string name="title_advanced_section_main">Principal</string>
     <string name="title_advanced_section_synchronize">Primire</string>
@@ -315,9 +318,9 @@
     <string name="title_advanced_generated_icons">Arată pictograme cu literă</string>
     <string name="title_advanced_identicons">Arată pictograme generate pe baza identității</string>
     <string name="title_advanced_circular">Arată pictograme rotunde</string>
-    <string name="title_advanced_color_saturation">Saturație</string>
-    <string name="title_advanced_color_value">Luminozitate</string>
-    <string name="title_advanced_color_threshold">Limită culoare literă</string>
+    <string name="title_advanced_color_saturation">Saturație: %1$s %%</string>
+    <string name="title_advanced_color_value">Luminozitate: %1$s %%</string>
+    <string name="title_advanced_color_threshold">Limită culoare literă: %1$s %%</string>
     <string name="title_advanced_name_email">Arată nume și adrese de e-mail</string>
     <string name="title_advanced_replace_name">Preferă nume contact în loc de nume trimis</string>
     <string name="title_advanced_distinguish_contacts">Subliniază expeditorul atunci când este cunoscut drept un contact `către`</string>
@@ -449,6 +452,9 @@
     <string name="title_advanced_language_detection">Detectează limba textului mesajului</string>
     <string name="title_advanced_fts">Creează index de căutare</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mesaje indexate (%3$s)</string>
+    <string name="title_advanced_classification">Clasifică mesajele</string>
+    <string name="title_advanced_class_min_chance">Probabilitate de clasă minimă: %1$s %%</string>
+    <string name="title_advanced_class_min_difference">Diferenţa minimă a clasei: %1$s %%</string>
     <string name="title_advanced_language">Limba</string>
     <string name="title_advanced_language_system">Sistem</string>
     <string name="title_advanced_watchdog">Verifică periodic dacă FairEmail este încă activ</string>
@@ -637,6 +643,7 @@
     <string name="title_synchronize_now">Sincronizează acum</string>
     <string name="title_synchronize_subfolders">Subdosare</string>
     <string name="title_synchronize_more">Sincronizează mai multe mesaje</string>
+    <string name="title_synchronize_more_hint">Acest lucru va duce la o descărcare unică a mesajelor mai vechi, astfel încât nu va duce la o utilizare mai intensă a bateriei pentru uzul cotidian</string>
     <string name="title_synchronize_enabled">Sincronizare</string>
     <string name="title_synchronize_batch_enable">Activează sincronizarea</string>
     <string name="title_synchronize_batch_disable">Dezactivează sincronizarea</string>
@@ -1137,6 +1144,7 @@
     <string name="title_legend_encrypted">Este criptat</string>
     <string name="title_legend_auth">Autentificare eșuată</string>
     <string name="title_legend_found">A fost găsit</string>
+    <string name="title_legend_classified">A fost clasificat automat</string>
     <string name="title_legend_snoozed">Este amânat</string>
     <string name="title_legend_browsed">Este răsfoit sau căutat</string>
     <string name="title_legend_answered">A primit un răspuns</string>
@@ -1204,6 +1212,7 @@
     <string name="title_hint_message_selection">Atingeți lung un mesaj pentru a începe selecția multiplă. Țineți și glisați sus sau jos pentru a selecta mai multe mesaje</string>
     <string name="title_hint_important">Important</string>
     <string name="title_hint_sync">Descărcarea mesajelor poate dura ceva timp, în funcție de viteza furnizorului, conexiunea la internet, de dispozitiv precum și de numărul de mesaje. În timpul descărcării mesajelor aplicația ar putea răspunde mai lent.</string>
+    <string name="title_hint_sync_note">În mod implicit, nu vor fi descărcate toate mesajele pentru a limita spațiul de stocare și bateria și consumul de date. Puteți schimba acest lucru apăsând lung un folder din lista de dosare și selectând \'Sincronizează mai mult\'.</string>
     <string name="title_hint_battery">Deoarece FairEmail primește, în mod implicit, mereu mesaje, Android va raporta FairEmail ca fiind întotdeauna activ. Prin urmare, ar putea părea că FairEmail consumă bateria în mod continuu deși acest lucru nu este de fapt adevărat.</string>
     <string name="title_hint_reformat">În mod implicit, FairEmail reformatează mesajele din motive de confidenţialitate şi securitate. Pentru a vizualiza mesajul original, apăsaţi pictograma \"ecran complet\" deasupra textului mesajului.</string>
     <string name="title_hint_design">Designul este intenționat ca să nu distragă, ci este păstrat foarte funcțional. Există multe opțiuni pentru a personaliza aspectul, dar vă rugăm să înțelegeți că este imposibil să facem pe toată lumea fericită în același timp.</string>

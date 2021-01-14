@@ -10,29 +10,29 @@
 * [Запланированные возможности](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
 * [Часто запрашиваемые возможности](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
 * [Часто задаваемые вопросы](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
-* [Get support](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
+* [Получить поддержка](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
 
-## Авторизация учетных записей
+## Авторизация аккаунта
 
-В большинстве случаев быстрая настройка сможет автоматически определить правильную конфигурацию.
+В большинстве случаев, быстрая настройка сможет автоматически определить правильную конфигурацию.
 
-Если быстрая настройка не удалась, вам нужно вручную настроить учетную запись (чтобы получать электронную почту) и идентификатор (чтобы отправлять электронную почту). Для этого вам нужны адреса IMAP и SMTP-серверов и номера портов, следует ли использовать SSL/TLS или STARTTLS и ваше имя пользователя (большинство, но не всегда, ваш адрес электронной почты) и пароль.
+Если быстрая настройка не удалась, вам нужно вручную настроить учетную запись (чтобы получать электронную почту) и идентификатор (чтобы отправлять электронную почту). Для этого вам нужны адреса IMAP и SMTP-серверов и номера портов, следует использовать SSL/TLS или STARTTLS и ваше имя пользователя (в большинстве, но не всегда, ваш адрес электронной почты) и пароль.
 
 Поиска *IMAP* и название провайдера в большинстве случаев достаточно для поиска необходимой документации.
 
-В некоторых случаях вам нужно разрешить внешний доступ к вашей учетной записи и/или использовать специальный (app) пароль, в частности, когда включена двухфакторная аутентификация.
+В некоторых случаях вам нужно разрешить внешний доступ к вашей учетной записи и/или использовать специальный (app) пароль, в частности, когда включена двухэтапная аутентификация.
 
 Для авторизации:
 
-* Gmail / G suite, см. [вопрос 6](#user-content-faq6)
-* Outlook / Live / Hotmail, см. [вопрос 14](#user-content-faq14)
+* Gmail / G набор, см. [вопрос 6](#user-content-faq6)
+* Outlook / жизнь / Hotmail, см. [вопрос 14](#user-content-faq14)
 * Office 365, см. [вопрос 14](#user-content-faq156)
 * Microsoft Exchange, см. [вопрос 8](#user-content-faq8)
 * Yahoo, AOL и Sky, см. [вопрос 88](#user-content-faq88)
 * Apple iCloud, см. [вопрос 148](#user-content-faq148)
 * Free.fr, см. [вопрос 157](#user-content-faq157)
 
-Пожалуйста, посмотрите [здесь](#user-content-faq22) о частых сообщениях об ошибках и их решения.
+Пожалуйста, посмотрите [здесь](#user-content-faq22) о частых сообщениях об ошибках и их решениях.
 
 Связанные вопросы:
 
@@ -47,7 +47,7 @@
 * Для изменения цели смахивания влево/вправо: Настройка, Поведение, Настройка жестов
 * Изменить пароль: Настройки, Шаг 1, Редактировать, нажать на аккаунт, изменить пароль
 * Установка подписи: Настройки, Шаг 2, Редактировать, нажмите на идентификатор, Изменить подпись.
-* Добавить адреса CC и BCC: нажмите на значок человека в конце темы
+* Добавить адреса CC и BCC: нажмите на иконку человека в конце темы
 * Перейти к следующему/предыдущему сообщению при архивации/удалении: в настройках поведения отключите *Автоматически закрывать диалоги* и выберите *Перейти к следующему/предыдущему диалогу* для *При закрытии диалога*
 * Добавить папку в единый почтовый ящик: долгое нажатие на папку в списке и галочка *Показать в едином почтовом ящике*
 * Добавьте папку в навигационное меню: долгое нажатие на папку в списке и установите флажок *Показать в меню навигации*
@@ -62,23 +62,23 @@
 
 ## Известные проблемы
 
-* ~~ [ошибка в Android 5.1 и 6](https://issuetracker.google.com/issues/37054851) заставляет приложения иногда показывать неправильный формат времени. Переключение настройки Android *Использовать 24-часовой формат *. может временно устранить проблему. Обходное решение было добавлено.~~
+* ~~ [ошибка в Android 5.1 и 6](https://issuetracker.google.com/issues/37054851) заставляет приложение иногда показывать неправильный формат времени. Переключение настройки Android *Использовать 24-часовой формат *. может временно устранить проблему. Было добавлено другое решение.~~
 * ~~[Ошибка в Google Drive](https://issuetracker.google.com/issues/126362828) приводит к экспорту пустых файлов в Google Drive. Google это исправил.~~
 * ~~[Ошибка в AndroidX](https://issuetracker.google.com/issues/78495471) вызывает сбой FairEmail при долгом нажатии или смахивании. Google это исправил.~~
-* ~~[ошибка в AndroidX ROOM](https://issuetracker.google.com/issues/138441698) вызывает сбой с "*... Исключение при обработке базы данных в реальном времени ... Не удалось прочитать строку ...*". Обходное решение было добавлено.~~
-* Ошибка [в Android](https://issuetracker.google.com/issues/119872129) вызывает сбой FairEmail с "*... Плохое уведомление отправлено ...*" на некоторых устройствах после обновления FairEmail и нажатия на уведомление.
-* Ошибка [в Android](https://issuetracker.google.com/issues/62427912) иногда вызывает сбой с "*... Запись активности не найдена для ...*" после обновления FairEmail. Переустановка ([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) может решить эту проблему.
-* Ошибка [в Android](https://issuetracker.google.com/issues/37018931) иногда вызывает сбой с *... InputChannel не инициализирован ...* на некоторых устройствах.
+* ~~[ошибка в AndroidX ROOM](https://issuetracker.google.com/issues/138441698) вызывает сбой с "*... Исключение при обработке базы данных в реальном времени ... Не удалось прочитать строку ...*". Было добавлено другое решение.~~
+* А [ ошибка в Android](https://issuetracker.google.com/issues/119872129) вызывает сбой FairEmail с "*... Отправлено некорректное уведомление...*" на некоторых устройствах после обновления FairEmail и нажатия на уведомление.
+* А [ ошибка в Android](https://issuetracker.google.com/issues/62427912) иногда вызывает сбой с "*... Запись активности не найдена для ...*" после обновления FairEmail. Переустановка ([начало](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) может решить эту проблему.</0></0>
+* А [ ошибка в Android](https://issuetracker.google.com/issues/37018931) иногда вызывает сбой с *... Входной канал не инициализирован ...* на некоторых устройствах.
 * ~~ [ошибка в LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) иногда вызывает сбой *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
 * Ошибка в Nova Launcher на Android 5.x вызывает сбой FairEmail с *java.lang.StackOverflowError*, когда Nova Launcher имеет доступ к службе специальных возможностей.
-* ~~Выбор папки иногда не показывает папок по неизвестным причинам. Похоже, это исправлено.~~
-* ~~ [ошибка в AndroidX](https://issuetracker.google.com/issues/64729576) затрудняет захват быстрой прокрутки. Обходное решение было добавлено.~~
+* ~~Выбор папки иногда не показывает папки по неизвестным причинам. Похоже, это исправлено.~~
+* ~~ [ошибка в AndroidX](https://issuetracker.google.com/issues/64729576) затрудняет захват быстрой прокрутки. Было добавлено другое решение.~~
 * ~~Шифрование с помощью YubiKey приводит к бесконечному циклу. Похоже, что это вызвано ошибкой [в OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
-* Прокрутка к внутренне привязанному местоположению в оригинальных сообщениях не работает. Это не может быть исправлено, потому что исходный вид сообщения содержится в прокрутке.
+* Прокрутка к внутреннему привязанному местоположению в оригинальных сообщениях не работает. Это не может быть исправлено, потому что исходный вид сообщения содержится в прокрутке.
 * Предпросмотр текста сообщения (всегда) не отображается на Samsung watch, потому что [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)), похоже, игнорируется. Предпросмотр текста сообщений корректно работает на устройствах Pebble 2, Fitbit Charge 3, Mi band 3 и Xiaomi Amazfit BIP. См. также [этот FAQ](#user-content-faq126).
-* Ошибка [ в Android 6.0](https://issuetracker.google.com/issues/37068143) вызывает критический сбой с *... Недопустимое смещение: ... Допустимый диапазон - ...* при условии что текст выделен и нажимается за пределами выделенного текста. Эта ошибка была исправлена в Android 6.0.1.
-* Внутренние (анкор) ссылки не будут работать, потому что оригинальные сообщения отображаются во встроенном WebView в прокручиваемом виде (списке разговоров). Это ограничение Android, которое невозможно исправить или обойти.
-* Определение языка [больше не работает](https://issuetracker.google.com/issues/173337263) на устройствах Pixel с (обновленных до) Android 11
+* А [ ошибка в Android 6.0](https://issuetracker.google.com/issues/37068143) вызывает сбой с *... Недопустимое смещение: ... Допустимый диапазон - ...* при условии, что текст выделен и нажимается за пределами выделенного текста. Эта ошибка была исправлена в Android 6.0.1.
+* Внутренние (якорь) ссылки не будут работать, потому что оригинальные сообщения отображаются во встроенном WebView в прокручиваемом виде (списке разговоров). Это ограничение Android, которое невозможно исправить или обойти.
+* Определение языка [больше не работает](https://issuetracker.google.com/issues/173337263) на устройствах Pixel с (обновленных до?) Android 11
 
 ## Запланированные возможности
 
@@ -87,25 +87,25 @@
 * ~~Копировать сообщение~~
 * ~~Цветные звезды~~
 * ~~Настройки уведомлений для папок~~
-* ~~Выбрать локальные изображения для подписей~~ (это не будет добавлено, потому что требуется управление файлами изображений и потому что изображения не отображаются по умолчанию в большинстве почтовых клиентов в любом случае)
+* ~~Выбрать локальные изображения для подписей~~ (это не будет добавлено, потому что требуется управление файлами изображений и изображения не отображаются по умолчанию в большинстве почтовых клиентов в любом случае)
 * ~~Показать сообщения, соответствующие правилу~~
-* ~~[ManageSieve](https://tools.ietf.org/html/rfc5804)~~ (нет поддерживаемых библиотек Java с соответствующей лицензией и без зависимостей, кроме того, у FairEmail есть свои собственные правила фильтрайии)
+* ~~[ManageSieve](https://tools.ietf.org/html/rfc5804)~~ (нет поддерживаемых библиотек Java с соответствующей лицензией и без зависимостей, кроме того, у FairEmail есть свои собственные правила фильтрации)
 * ~~Поиск сообщений с/без вложений~~ (это нельзя добавить, потому что IMAP не поддерживает поиск вложений)
 * ~~Поиск папки~~ (фильтрация списка иерархических папок проблематична)
 * ~~Подсказки поиска~~
 * ~~[Настройка Автоматического Шифрования Сообщения](https://autocrypt.org/autocrypt-spec-1.0.0.pdf) (раздел 4.4)~~ (IMO нецелесообразно позволять почтовому клиенту обрабатывать такие чувствительные данные, как ключи шифрования, в то время как OpenKeychain тоже может экспортировать ключи)
-* ~~Унифицированные папки~~
+* ~~Общие унифицированные папки~~
 * ~~Новое уведомление для каждого аккаунта~~ (реализовано путем добавления условий времени в правила, чтобы сообщения могли быть отложены в выбранные периоды)
-* ~~Копировать учетные записи и идентификаторы~~
+* ~~Копировать аккаунты и идентификаторы~~
 * ~~Pinch zoom~~ (невозможно надежно использовать в прокручиваемом списке; вместо этого можно масштабировать всё сообщение)
 * ~~Более компактный вид папок~~
-* ~~Создавать списки и таблицы~~ (требуется rich text редактор, смотрите [этот FAQ](#user-content-faq99))
-* ~~Масштабирование текста щипком~~
+* ~~Создать списки и таблицы~~ (требуется редактор форматированного текста, смотрите [это FAQ](#user-content-faq99))
+* ~~Размер текста при масштабировании пальцем~~
 * ~~Отображать GIFы-~~
-* ~~Темы~~ (светлая и темная серые темы добавлены, потому что, похоже, большинство людей этого хотят)
+* ~~Темы~~ (светло-серая и темная темы добавлены, потому что, похоже, что большинство людей хотят этого)
 * ~~Временное условие "Любой день"~~ (любой день не подходит для условия от/до даты/времени)
 * ~~Отправить как вложение~~
-* ~~Виджет для выбранной учётной записи~~
+* ~~Виджет для выбранного аккаунта ~~
 * ~~Напоминать о прикреплении файлов~~
 * ~~Выбор доменов для отображения изображений~~ (это будет слишком сложно использовать)
 * ~~Единые просмотр помеченных сообщений~~ (уже есть специальный поиск для этого)
@@ -280,6 +280,8 @@
 * [(159) Что такое списки защиты от отслеживания Disconnects? ](#user-content-faq159)
 * [(160) Можете ли вы добавить возможность перманентно удалять сообщения без подтверждения?](#user-content-faq160)
 * [(161) Можете ли вы добавить возможность изменять первичный и акцентный цвета?](#user-content-faq161)
+* [(162) Is IMAP NOTIFY supported?](#user-content-faq162)
+* [(163) Что такое классификация сообщений?](#user-content-faq163)
 
 [У меня есть еще один вопрос.](#user-content-support)
 
@@ -458,7 +460,7 @@ Some people ask:
 <a name="faq6"></a>
 **(6) How can I login to Gmail / G suite?**
 
-You can use the quick setup wizard to easily setup a Gmail account and identity.
+If you use the Play store or GitHub version of FairEmail, you can use the quick setup wizard to easily setup a Gmail account and identity. The Gmail quick setup wizard is not available for third party builds, like the F-Droid build because Google approved the use of OAuth for official builds only.
 
 If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to setup an account and identity via setup step 1 and 2 instead of via the quick setup wizard.
 
@@ -778,6 +780,8 @@ Some Android versions stop apps and services too aggressively. See [this dedicat
 
 Disabling battery optimizations (setup step 4) reduces the chance Android will stop the synchronization service.
 
+In case of successive connection errors, FairEmail will hold off increasingly longer to not drain the battery of your device. This is described in [this FAQ](#user-content-faq123).
+
 <br />
 
 <a name="faq17"></a>
@@ -824,11 +828,13 @@ If a purchased pro feature doesn't work as intended and this isn't caused by a p
 <a name="faq21"></a>
 **(21) How do I enable the notification light?**
 
-Before Android 8 Oreo: there is an advanced option in the setup for this.
+Before Android 8 Oreo: there is an advanced option in the notification settings of the app for this.
 
-Android 8 Oreo and later: see [here](https://developer.android.com/training/notify-user/channels) about how to configure notification channels. You can use the button *Manage notifications* in the setup to directly go to the Android notification settings. Note that apps cannot change notification settings, including the notification light setting, on Android 8 Oreo and later anymore. Apps designed and targeting older Android versions might still be able to control the contents of notifications, but such apps cannot be updated anymore and recent Android versions will show a warning that such apps are outdated.
+Android 8 Oreo and later: please see [here](https://developer.android.com/training/notify-user/channels) about how to configure notification channels. You can use the button *Default channel* in the notification settings of the app to directly go to the right Android notification channel settings.
 
-Sometimes it is necessary to disable the setting *Show message preview in notifications* or to enable the settings *Show notifications with a preview text only* to workaround a bug in Android. This might apply to notification sounds and vibrations too.
+Note that apps cannot change notification settings, including the notification light setting, on Android 8 Oreo and later anymore.
+
+Sometimes it is necessary to disable the setting *Show message preview in notifications* or to enable the settings *Show notifications with a preview text only* to workaround bugs in Android. This might apply to notification sounds and vibrations too.
 
 Setting a light color before Android 8 is not supported and on Android 8 and later not possible.
 
@@ -1954,7 +1960,11 @@ Spam filtering, verification of the [DKIM](https://en.wikipedia.org/wiki/DomainK
 
 Spam filtering based on message headers might have been feasible, but unfortunately this technique is [patented by Microsoft](https://patents.google.com/patent/US7543076).
 
+Recent versions of FairEmail can filter spam to a certain extend using a message classifier. Please see [this FAQ](#user-content-faq163) for more information about this.
+
 Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too. Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
+
+Note that the POP3 protocol gives access to the inbox only. So, it is won't be possible to report spam for POP3 accounts.
 
 Note that you should not delete spam messages, also not from the spam folder, because the email server uses the messages in the spam folder to "learn" what spam messages are.
 
@@ -2335,15 +2345,11 @@ The message *Message too large or too complex to display* will be shown if there
 <a name="faq125"></a>
 **(125) What are the current experimental features?**
 
-* [IMAP NOTIFY](https://tools.ietf.org/html/rfc5465) support
+*Message classification (version 1.1438+)*
 
-IMAP NOTIFY support means that notifications for added, changed or deleted messages of all *subscribed* folders will be requested and if a notification is received for a subscribed folder, that the folder will be synchronized. Synchronization for subscribed folders can therefore be disable, saving folder connections to the email server.
+Please see [this FAQ](#user-content-faq163) for details.
 
-**Important**: push messages (=always sync) for the inbox needs to be enabled.
-
-**Important**: most email server do not support this! You can check the log via the navigation menu if an email server supports the NOTIFY capability.
-
-You can enable experimental features in the miscellaneous settings.
+Since this is an experimental feature, my advice is to start with just one folder.
 
 <br />
 
@@ -2808,6 +2814,60 @@ If I could, I would add a setting to select the primary and accent color right a
 
 <br />
 
+<a name="faq162"></a>
+**(162) Is IMAP NOTIFY supported?***
+
+Yes, [IMAP NOTIFY](https://tools.ietf.org/html/rfc5465) has been supported since version 1.1413.
+
+IMAP NOTIFY support means that notifications for added, changed or deleted messages of all *subscribed* folders will be requested and if a notification is received for a subscribed folder, that the folder will be synchronized. Synchronization for subscribed folders can therefore be disable, saving folder connections to the email server.
+
+**Important**: push messages (=always sync) for the inbox and subscription management (receive settings) need to be enabled.
+
+**Important**: most email servers do not support this! You can check the log via the navigation menu if an email server supports the NOTIFY capability.
+
+<br />
+
+<a name="faq163"></a>
+**(163) What is message classification?**
+
+*This is an experimental feature!*
+
+Message classification will attempt to automatically group emails into classes, based on their contents, using [Bayesian statistics](https://en.wikipedia.org/wiki/Bayesian_statistics). In the context of FairEmail, a folder is a class. So, for example, the inbox, the spam folder, a 'marketing' folder, etc, etc.
+
+You can enable message classification in the miscellaneous settings. This will enable 'learning' mode only. The classifier will 'learn' from new messages in the inbox and spam folder by default. The folder property *Classify new messages in this folder* will enable or disable 'learning' mode for a folder. You can clear local messages (long press a folder in the folder list of an account) and synchronize the messages again to classify existing messages.
+
+Each folder has an option *Automatically move classified messages to this folder* ('auto classification' for short). When this is turned on, new messages in other folders which the classifier thinks belong to that folder will be automatically moved.
+
+The option *Use local spam filter* in the report spam dialog will turn on message classification in the miscellaneous settings and auto classification for the spam folder. Please understand that this is not a replacement for the spam filter of the email server and can result in [false positives and false negatives](https://en.wikipedia.org/wiki/False_positives_and_false_negatives). See also [this FAQ](#user-content-faq92).
+
+A practical example: suppose there is a folder 'marketing' and auto message classification is enabled for this folder. Each time you move a message into this folder you'll train FairEmail that similar messages belong in this folder. Each time you move a message out of this folder you'll train FairEmail that similar messages do not belong in this folder. After moving some messages into the 'marketing' folder, FairEmail will start moving similar messages automatically into this folder. Or, the other way around, after moving some messages out of the 'marketing' folder, FairEmail will stop moving similar messages automatically into this folder. This will work best with messages with similar content (email addresses, subject and message text).
+
+Classification should be considered as a best guess - it might be a wrong guess, or the classifier might not be confident enough to make any guess. If the classifier is unsure, it will simply leave an email where it is.
+
+To prevent the email server from moving a message into the spam folder again and again, auto classification out of the spam folder will not be done.
+
+The message classifier calculates the probability a message belongs in a folder (class). There are two options in the miscellaneous settings which control if a message will be automatically moved into a folder, provided that auto classification is enabled for the folder:
+
+* *Minimum class probability*: a message will only be moved when the confidence it belongs in a folder is greater than this value (default 20 %)
+* *Minimum class difference*: a message will only be moved when the difference in confidence between one class and the next most likely class is greater than this value (default 50 %)
+
+Both conditions must be satisfied before a message will be moved.
+
+Considering the defaults option values:
+
+* Apples 40 % and bananas 30 % would be disregarded because the difference of 25 % is below the minimum of 50 %
+* Apples 15 % and bananas 5 % would be disregarded because the probability for apples is below the minimum of 20 %
+* Apples 50 % and bananas 20 % would result in selecting apples
+
+Classification is optimized to use as little resources as possible, but will inevitably use some extra battery power.
+
+You can delete all classification data by turning classification in the miscellaneous settings three times off.
+
+[Filter rules](#user-content-faq71) will be executed before classification.
+
+Message classification is a pro feature, except for the spam folder.
+
+<br />
 
 ## Get support
 
@@ -2834,4 +2894,4 @@ GitHub issues are disabled due to frequent misusage.
 
 <br />
 
-Copyright &copy; 2018-2020 Marcel Bokhorst.
+Copyright &copy; 2018-2021 Marcel Bokhorst.

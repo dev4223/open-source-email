@@ -498,6 +498,7 @@ class Core {
                             // Fetch: NO The specified message set is invalid.
                             // Fetch: NO [SERVERBUG] SELECT Server error - Please try again later
                             // Fetch: NO [SERVERBUG] UID FETCH Server error - Please try again later
+                            // Fetch: NO Invalid message number (took n ms)
                             // Move: NO Over quota
                             // Move: NO No matching messages
                             // Move: NO [EXPUNGEISSUED] Some of the requested messages no longer exist
@@ -505,6 +506,7 @@ class Core {
                             // Move: NO MOVE failed or partially completed.
                             // Move: NO mailbox selected READ-ONLY
                             // Move: NO read only
+                            // Add: BAD Data length exceeds limit
                             // Delete: NO [CANNOT] STORE It's not possible to perform specified operation
                             // Delete: NO [UNAVAILABLE] EXPUNGE Backend error
                             // Delete: NO mailbox selected READ-ONLY
@@ -798,17 +800,18 @@ class Core {
                 return;
             }
 
-            Message[] imessages;
+            boolean archived;
             Folder iarchive = istore.getFolder(archive.name);
             try {
                 iarchive.open(Folder.READ_ONLY);
-                imessages = ifolder.search(new MessageIDTerm(message.msgid));
+                Message[] imessages = iarchive.search(new MessageIDTerm(message.msgid));
+                archived = (imessages != null && imessages.length > 0);
             } finally {
                 if (iarchive.isOpen())
                     iarchive.close();
             }
 
-            if (imessages != null && imessages.length > 0)
+            if (archived)
                 try {
                     Message imessage = ifolder.getMessageByUID(message.uid);
                     if (imessage == null)
@@ -996,6 +999,10 @@ class Core {
             throw new FolderNotFoundException();
         if (folder.id.equals(target.id))
             throw new IllegalArgumentException("self");
+
+        // De-classify
+        for (EntityMessage message : messages)
+            MessageClassifier.classify(message, folder, target, context);
 
         IMAPFolder itarget = (IMAPFolder) istore.getFolder(target.name);
 
@@ -1194,8 +1201,10 @@ class Core {
             throw new IllegalArgumentException("account missing");
 
         try {
-            if (removed)
+            if (removed) {
+                db.message().deleteMessage(folder.id, uid);
                 throw new MessageRemovedException("removed uid=" + uid);
+            }
 
             MimeMessage imessage = (MimeMessage) ifolder.getMessageByUID(uid);
             if (imessage == null)
@@ -1381,7 +1390,7 @@ class Core {
             // Synchronize will delete messages when needed
             db.message().setMessageUiHide(message.id, true);
         } else
-            db.message().deleteMessage(folder.id, message.id);
+            db.message().deleteMessage(message.id);
 
         if (!EntityFolder.DRAFTS.equals(folder.type) &&
                 !EntityFolder.TRASH.equals(folder.type)) {
@@ -1496,6 +1505,7 @@ class Core {
                 parts.isPlainOnly(),
                 HtmlHelper.getPreview(body),
                 parts.getWarnings(message.warning));
+        MessageClassifier.classify(message, folder, null, context);
 
         if (body != null)
             EntityLog.log(context, "Operation body size=" + body.length());
@@ -2153,7 +2163,7 @@ class Core {
                         message.ui_ignored = false;
                         message.ui_browsed = false;
 
-                        if (MessageHelper.equal(message.submitter, message.from))
+                        if (MessageHelper.equalEmail(message.submitter, message.from))
                             message.submitter = null;
 
                         if (message.size == null && message.total != null)
@@ -2244,6 +2254,8 @@ class Core {
             int initialize = jargs.optInt(4, folder.initialize);
             boolean force = jargs.optBoolean(5, false);
 
+            if (force)
+                sync_days = keep_days;
             if (keep_days == sync_days && keep_days != Integer.MAX_VALUE)
                 keep_days++;
 
@@ -2587,8 +2599,10 @@ class Core {
             }
 
             // Delete not synchronized messages without uid
-            if (!EntityFolder.isOutgoing(folder.type))
-                db.message().deleteOrphans(folder.id);
+            if (!EntityFolder.isOutgoing(folder.type)) {
+                int orphans = db.message().deleteOrphans(folder.id);
+                Log.i(folder.name + " deleted orphans=" + orphans);
+            }
 
             int count = MessageHelper.getMessageCount(ifolder);
             db.folder().setFolderTotal(folder.id, count < 0 ? null : count);
@@ -2849,7 +2863,7 @@ class Core {
             if (message.flagged)
                 message.color = color;
 
-            if (MessageHelper.equal(message.submitter, message.from))
+            if (MessageHelper.equalEmail(message.submitter, message.from))
                 message.submitter = null;
 
             // Borrow reply name from sender name
@@ -2958,7 +2972,9 @@ class Core {
                 }
 
                 runRules(context, imessage, account, folder, message, rules);
-                reportNewMessage(context, account, folder, message);
+                if (download && !message.ui_hide &&
+                        MessageClassifier.isEnabled(context) && folder.auto_classify_source)
+                    db.message().setMessageUiHide(message.id, true);
 
                 db.setTransactionSuccessful();
             } catch (SQLiteConstraintException ex) {
@@ -2979,7 +2995,7 @@ class Core {
                 updateContactInfo(context, folder, message);
 
             // Download small messages inline
-            if (download && message.size != null && !message.ui_hide) {
+            if (download && !message.ui_hide) {
                 long maxSize;
                 if (state == null || state.networkState.isUnmetered())
                     maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
@@ -2989,7 +3005,8 @@ class Core {
                         maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
                 }
 
-                if (message.size < maxSize) {
+                if ((message.size != null && message.size < maxSize) ||
+                        (MessageClassifier.isEnabled(context)) && folder.auto_classify_source) {
                     String body = parts.getHtml(context);
                     File file = message.getFile(context);
                     Helper.writeText(file, body);
@@ -2999,6 +3016,10 @@ class Core {
                             parts.isPlainOnly(),
                             HtmlHelper.getPreview(body),
                             parts.getWarnings(message.warning));
+                    MessageClassifier.classify(message, folder, null, context);
+                    if (!message.ui_hide)
+                        db.message().setMessageUiHide(message.id, false);
+
                     if (stats != null && body != null)
                         stats.content += body.length();
                     Log.i(folder.name + " inline downloaded message id=" + message.id +
@@ -3008,6 +3029,8 @@ class Core {
                         reportEmptyMessage(context, state, account, istore);
                 }
             }
+
+            reportNewMessage(context, account, folder, message);
         } else {
             if (process) {
                 EntityIdentity identity = matchIdentity(context, folder, message);
@@ -3113,21 +3136,22 @@ class Core {
 
                     db.message().updateMessage(message);
 
-                    if (process) {
+                    if (process)
                         runRules(context, imessage, account, folder, message, rules);
-                        reportNewMessage(context, account, folder, message);
-                    }
 
                     db.setTransactionSuccessful();
                 } finally {
                     db.endTransaction();
                 }
 
-            if (process)
+            if (process) {
                 updateContactInfo(context, folder, message);
-
-            else
+                MessageClassifier.classify(message, folder, null, context);
+            } else
                 Log.d(folder.name + " unchanged uid=" + uid);
+
+            if (process)
+                reportNewMessage(context, account, folder, message);
         }
 
         if (syncSimilar && account.isGmail())
@@ -3427,6 +3451,8 @@ class Core {
                             parts.isPlainOnly(),
                             HtmlHelper.getPreview(body),
                             parts.getWarnings(message.warning));
+                    MessageClassifier.classify(message, folder, null, context);
+
                     if (stats != null && body != null)
                         stats.content += body.length();
                     Log.i(folder.name + " downloaded message id=" + message.id +

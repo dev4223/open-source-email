@@ -77,6 +77,8 @@
     <string name="title_block_sender_hint">        Att blockera en avsändare skapar en regel att framtida meddelanden automatiskt ska flyttas till skräppostmappen.
         Att skapa och använda regler är en pro-funktion.
     </string>
+    <string name="title_junk_filter">Använd lokalt skräppostfilter</string>
+    <string name="title_junk_filter_hint">Detta kan öka batterianvändningen och felaktigt markera meddelanden som skräppost</string>
     <string name="title_notification_sending">Skickar meddelanden</string>
     <string name="title_notification_waiting">Väntar på lämplig anslutning</string>
     <string name="title_notification_idle">Inaktiv</string>
@@ -131,6 +133,7 @@
     <string name="title_setup_wizard_remark">Gå \"tillbaka\" för att gå till inkorgen</string>
     <string name="title_setup_oauth_permission">E-postleverantören har godkänt OAuth endast för officiella appversioner</string>
     <string name="title_setup_other">Annan leverantör</string>
+    <string name="title_setup_pop3">POP3-konto</string>
     <string name="title_setup_gmail_support">Godkännande av Google-konton fungerar endast i officiella versioner eftersom Android kontrollerar appens signatur</string>
     <string name="title_setup_gmail_rationale">Vänligen bevilja behörigheter för att välja ett konto och läsa ditt namn</string>
     <string name="title_setup_gmail_permissions">Google kommer att be om behörighet att läsa, komponera, skicka och permanent ta bort all din e-post. FairEmail kommer aldrig att ta bort dina meddelanden utan ditt uttryckliga medgivande.</string>
@@ -217,7 +220,7 @@
     <string name="title_setup_defaults">Återställ standardvärden</string>
     <string name="title_setup_reset_questions">Återställ frågor</string>
     <string name="title_advanced_hint_title">Mer avancerade alternativ</string>
-    <string name="title_advanced_hint_message">        Du navigerar till de mer avancerade alternativen.
+    <string name="title_advanced_hint_message">Du navigerar till de mer avancerade alternativen.
         Alla alternativ har använt standardvärden som kan ändras om du har en annan inställning.    </string>
     <string name="title_advanced_section_main">Huvudsaklig</string>
     <string name="title_advanced_section_synchronize">Ta emot</string>
@@ -304,9 +307,9 @@
     <string name="title_advanced_generated_icons">Visa genererade ikoner</string>
     <string name="title_advanced_identicons">Visa identicons</string>
     <string name="title_advanced_circular">Visa runda ikoner</string>
-    <string name="title_advanced_color_saturation">Mättnad</string>
-    <string name="title_advanced_color_value">Ljusstyrka</string>
-    <string name="title_advanced_color_threshold">Tröskelbokstavsfärg</string>
+    <string name="title_advanced_color_saturation">Mättnad: %1$s %%</string>
+    <string name="title_advanced_color_value">Ljusstyrka: %1$s %%</string>
+    <string name="title_advanced_color_threshold">Tröskelvärde för brevfärg: %1$s %%</string>
     <string name="title_advanced_name_email">Visa namn och e-postadresser</string>
     <string name="title_advanced_replace_name">Föredrar ett kontaktnamn över ett skickat namn</string>
     <string name="title_advanced_distinguish_contacts">Understryk avsändaren när avsändaren är känd som lokal \"till\" kontakt</string>
@@ -438,6 +441,9 @@
     <string name="title_advanced_language_detection">Detektera textens språk</string>
     <string name="title_advanced_fts">Bygg sökindex</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d meddelanden indexerade (%3$s)</string>
+    <string name="title_advanced_classification">Klassificera meddelanden</string>
+    <string name="title_advanced_class_min_chance">Minsta sannolikhet för klass: %1$s %%</string>
+    <string name="title_advanced_class_min_difference">Minsta klasskillnad: %1$s %%</string>
     <string name="title_advanced_language">Språk</string>
     <string name="title_advanced_language_system">System</string>
     <string name="title_advanced_watchdog">Kontrollera regelbundet om FairEmail fortfarande är aktiv</string>
@@ -626,6 +632,7 @@
     <string name="title_synchronize_now">Synkronisera nu</string>
     <string name="title_synchronize_subfolders">Undermappar</string>
     <string name="title_synchronize_more">Synkronisera fler meddelanden</string>
+    <string name="title_synchronize_more_hint">Detta kommer att resultera i en enda nedladdning av äldre meddelanden, så det kommer inte att resultera i mer batterianvändning för dagligt bruk</string>
     <string name="title_synchronize_enabled">Synkronisera</string>
     <string name="title_synchronize_batch_enable">Aktivera synkronisering</string>
     <string name="title_synchronize_batch_disable">Inaktivera synkronisering</string>
@@ -1126,6 +1133,7 @@
     <string name="title_legend_encrypted">Är krypterad</string>
     <string name="title_legend_auth">Autentisering misslyckades</string>
     <string name="title_legend_found">Hittades</string>
+    <string name="title_legend_classified">Kategoriserades automatiskt</string>
     <string name="title_legend_snoozed">Slumrar</string>
     <string name="title_legend_browsed">Bläddrat eller sökt</string>
     <string name="title_legend_answered">Har besvarats</string>
@@ -1193,6 +1201,7 @@
     <string name="title_hint_message_selection">Långt tryck på ett meddelande för att börja välja flera meddelanden; håll och svep uppåt eller nedåt för att välja fler meddelanden</string>
     <string name="title_hint_important">Viktigt</string>
     <string name="title_hint_sync">Hämtning av meddelanden kan ta lite tid, beroende på leverantörens hastighet, internetanslutning och enhet och på antalet meddelanden. När du hämtar meddelanden kan appen svara långsammare.</string>
+    <string name="title_hint_sync_note">Som standard laddas inte alla meddelanden ner för att begränsa lagringsutrymme och batteri- och dataanvändning. Du kan ändra detta genom att länge trycka på en mapp i mapplistan och välja \"Synkronisera mer\".</string>
     <string name="title_hint_battery">Eftersom FairEmail som standard alltid tar emot meddelanden, kommer Android att rapportera FairEmail som alltid aktiv. Därför kan det se ut som om FairEmail alltid förbrukar batterikraft även om detta i själva verket inte är fallet.</string>
     <string name="title_hint_reformat">Som standard formaterar FairEmail meddelanden av sekretess- och säkerhetsskäl. För att visa det ursprungliga meddelandet trycker du på ikonen \"helskärm\" ovanför meddelandetexten.</string>
     <string name="title_hint_design">Designen är avsiktligt inte distraherande, men hålls mycket funktionell. Det finns många alternativ för att anpassa utseendet, men vänligen förstå att det är omöjligt att göra alla helt glada på samma gång.</string>
