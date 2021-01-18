@@ -181,11 +181,18 @@ public class FragmentFolder extends FragmentBase {
             }
         });
 
-        cbAutoClassifyTarget.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        cbDownload.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked)
-                    cbAutoClassifySource.setChecked(true);
+                cbAutoClassifySource.setEnabled(isChecked);
+                cbAutoClassifyTarget.setEnabled(isChecked && cbAutoClassifySource.isChecked());
+            }
+        });
+
+        cbAutoClassifySource.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                cbAutoClassifyTarget.setEnabled(isChecked);
             }
         });
 
@@ -326,7 +333,8 @@ public class FragmentFolder extends FragmentBase {
                 etPoll.setEnabled(cbSynchronize.isChecked() && always);
                 tvPoll.setEnabled(cbSynchronize.isChecked() && always);
                 grpPoll.setVisibility(imap && cbPoll.isEnabled() && cbPoll.isChecked() ? View.VISIBLE : View.GONE);
-                cbAutoClassifyTarget.setEnabled(pro);
+                cbAutoClassifySource.setEnabled(cbDownload.isChecked());
+                cbAutoClassifyTarget.setEnabled(cbDownload.isChecked() && cbAutoClassifySource.isChecked());
                 cbAutoClassifySource.setVisibility(canAutoClassify ? View.VISIBLE : View.GONE);
                 cbAutoClassifyTarget.setVisibility(canAutoClassify ? View.VISIBLE : View.GONE);
                 tvAutoClassifyPro.setVisibility(canAutoClassify && !pro ? View.VISIBLE : View.GONE);
