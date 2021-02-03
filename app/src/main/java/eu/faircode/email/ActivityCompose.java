@@ -60,6 +60,12 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
     @Override
     public void onBackStackChanged() {
         if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            Intent intent = getIntent();
+            if (intent != null && isShared(intent.getAction())) {
+                finishAffinity();
+                return;
+            }
+
             Intent parent = getParentActivityIntent();
             if (parent != null)
                 if (shouldUpRecreateTask(parent))
@@ -78,10 +84,8 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
     private void handle(Intent intent) {
         Bundle args;
         String action = intent.getAction();
-        if (Intent.ACTION_VIEW.equals(action) ||
-                Intent.ACTION_SENDTO.equals(action) ||
-                Intent.ACTION_SEND.equals(action) ||
-                Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+        if (isShared(action)) {
+            Helper.excludeFromRecents(this);
 
             args = new Bundle();
             args.putString("action", "new");
@@ -171,9 +175,16 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
 
             if (intent.hasExtra(Intent.EXTRA_STREAM))
                 if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-                    ArrayList<Uri> uris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-                    if (uris != null)
-                        args.putParcelableArrayList("attachments", uris);
+                    ArrayList<Uri> streams = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+                    if (streams != null) {
+                        // Some apps send null streams
+                        ArrayList<Uri> uris = new ArrayList<>();
+                        for (Uri stream : streams)
+                            if (stream != null)
+                                uris.add(stream);
+                        if (uris.size() > 0)
+                            args.putParcelableArrayList("attachments", uris);
+                    }
                 } else {
                     Uri stream = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                     if (stream != null) {
@@ -191,5 +202,12 @@ public class ActivityCompose extends ActivityBase implements FragmentManager.OnB
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("compose");
         fragmentTransaction.commit();
+    }
+
+    private static boolean isShared(String action) {
+        return (Intent.ACTION_VIEW.equals(action) ||
+                Intent.ACTION_SENDTO.equals(action) ||
+                Intent.ACTION_SEND.equals(action) ||
+                Intent.ACTION_SEND_MULTIPLE.equals(action));
     }
 }

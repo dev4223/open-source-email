@@ -51,9 +51,6 @@ public class WorkerCleanup extends Worker {
     private static final long KEEP_FILES_DURATION = 3600 * 1000L; // milliseconds
     private static final long KEEP_IMAGES_DURATION = 3 * 24 * 3600 * 1000L; // milliseconds
     private static final long KEEP_CONTACTS_DURATION = 180 * 24 * 3600 * 1000L; // milliseconds
-    private static final long KEEP_LOG_DURATION = 24 * 3600 * 1000L; // milliseconds
-
-    static final int LOG_DELETE_BATCH_SIZE = 100;
 
     public WorkerCleanup(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -63,7 +60,9 @@ public class WorkerCleanup extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        Log.i("Running " + getName());
+        EntityLog.log(getApplicationContext(),
+                "Running " + getName() +
+                        " process=" + android.os.Process.myPid());
 
         Thread.currentThread().setPriority(THREAD_PRIORITY_BACKGROUND);
         cleanup(getApplicationContext(), false);
@@ -194,7 +193,6 @@ public class WorkerCleanup extends Worker {
             File[] references = new File(context.getFilesDir(), "references").listFiles();
             File[] photos = new File(context.getCacheDir(), "photo").listFiles();
             File[] calendars = new File(context.getCacheDir(), "calendar").listFiles();
-            File[] shared = new File(context.getCacheDir(), "shared").listFiles();
 
             if (messages != null)
                 files.addAll(Arrays.asList(messages));
@@ -206,8 +204,6 @@ public class WorkerCleanup extends Worker {
                 files.addAll(Arrays.asList(photos));
             if (calendars != null)
                 files.addAll(Arrays.asList(calendars));
-            if (shared != null)
-                files.addAll(Arrays.asList(shared));
 
             // Cleanup message files
             Log.i("Cleanup message files");
@@ -268,6 +264,16 @@ public class WorkerCleanup extends Worker {
                         }
                     }
 
+            // Cleanup shared files
+            File[] shared = new File(context.getCacheDir(), "shared").listFiles();
+            if (shared != null)
+                for (File file : shared)
+                    if (manual || file.lastModified() + KEEP_FILES_DURATION < now) {
+                        Log.i("Deleting " + file);
+                        if (!file.delete())
+                            Log.w("Error deleting " + file);
+                    }
+
             // Cleanup contact info
             if (manual)
                 ContactInfo.clearCache(context, true);
@@ -295,16 +301,13 @@ public class WorkerCleanup extends Worker {
             }
 
             Log.i("Cleanup contacts");
-            int contacts = db.contact().deleteContacts(now - KEEP_CONTACTS_DURATION);
-            Log.i("Deleted contacts=" + contacts);
-
-            Log.i("Cleanup log");
-            long before = now - KEEP_LOG_DURATION;
-            while (true) {
-                int logs = db.log().deleteLogs(before, LOG_DELETE_BATCH_SIZE);
-                Log.i("Deleted logs=" + logs + " before=" + new Date(before));
-                if (logs < LOG_DELETE_BATCH_SIZE)
-                    break;
+            try {
+                db.beginTransaction();
+                int contacts = db.contact().deleteContacts(now - KEEP_CONTACTS_DURATION);
+                db.setTransactionSuccessful();
+                Log.i("Deleted contacts=" + contacts);
+            } finally {
+                db.endTransaction();
             }
 
             if (BuildConfig.DEBUG) {

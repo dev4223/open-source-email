@@ -170,7 +170,6 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
             }
         });
 
-        swLanguageDetection.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
         swLanguageDetection.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -446,7 +445,7 @@ public class FragmentOptionsBehavior extends FragmentBase implements SharedPrefe
         etDefaultSnooze.setHint("1");
 
         swPull.setChecked(prefs.getBoolean("pull", true));
-        swAutoScroll.setChecked(prefs.getBoolean("autoscroll", true));
+        swAutoScroll.setChecked(prefs.getBoolean("autoscroll", false));
         swQuickFilter.setChecked(prefs.getBoolean("quick_filter", false));
         swQuickScroll.setChecked(prefs.getBoolean("quick_scroll", true));
 

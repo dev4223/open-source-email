@@ -63,6 +63,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.json.JSONArray;
@@ -1121,7 +1122,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                             // throws DecoderException extends IllegalStateException
                             PemObject pem = new PemReader(new InputStreamReader(is)).readPemObject();
                             if (pem == null)
-                                throw new IllegalStateException("Invalid key file");
+                                throw new IllegalArgumentException("Invalid key file");
                             ByteArrayInputStream bis = new ByteArrayInputStream(pem.getContent());
                             cert = (X509Certificate) fact.generateCertificate(bis);
                         }
@@ -1147,7 +1148,11 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
 
                 @Override
                 protected void onException(Bundle args, Throwable ex) {
-                    boolean expected = (ex instanceof SecurityException);
+                    // DecoderException: unable to decode base64 string: invalid characters encountered in base64 data
+                    boolean expected =
+                            (ex instanceof IllegalArgumentException ||
+                                    ex instanceof DecoderException ||
+                                    ex instanceof SecurityException);
                     Log.unexpectedError(getSupportFragmentManager(), ex, !expected);
                 }
             }.execute(this, args, "setup:cert");

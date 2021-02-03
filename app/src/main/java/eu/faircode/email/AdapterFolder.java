@@ -28,8 +28,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -49,7 +52,6 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -57,6 +59,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -378,7 +383,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
         @Override
         public void onClick(View view) {
             if (view.getId() == R.id.btnHelp)
-                Helper.viewFAQ(context, 22);
+                Helper.viewFAQ(view.getContext(), 22);
             else {
                 int pos = getAdapterPosition();
                 if (pos == RecyclerView.NO_POSITION)
@@ -549,7 +554,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             }
 
             if (EntityFolder.INBOX.equals(folder.type) && folder.accountProtocol == EntityAccount.TYPE_POP)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_rules, 11, R.string.title_edit_rules);
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_edit_rules, order++, R.string.title_edit_rules);
 
             int childs = 0;
             if (folder.child_refs != null)
@@ -566,11 +571,14 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             }
 
             if (folder.account != null && folder.accountProtocol == EntityAccount.TYPE_IMAP)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_create_sub_folder, 16, R.string.title_create_sub_folder)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_create_sub_folder, order++, R.string.title_create_sub_folder)
                         .setEnabled(folder.inferiors);
 
+            if (ShortcutManagerCompat.isRequestPinShortcutSupported(context))
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_pin, order++, R.string.title_pin);
+
             if (!folder.selectable && debug)
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, 17, R.string.title_delete)
+                popupMenu.getMenu().add(Menu.NONE, R.string.title_delete, order++, R.string.title_delete)
                         .setEnabled(folder.inferiors);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -653,6 +661,10 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
 
                         case R.string.title_create_sub_folder:
                             onActionCreateFolder();
+                            return true;
+
+                        case R.string.title_pin:
+                            onActionPinFolder();
                             return true;
 
                         case R.string.title_delete:
@@ -863,7 +875,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                         context.startActivity(intent);
                     } catch (ActivityNotFoundException ex) {
                         Log.w(ex);
-                        ToastEx.makeText(context, context.getString(R.string.title_no_viewer, intent), Toast.LENGTH_LONG).show();
+                        Helper.reportNoViewer(context, intent);
                     }
                 }
 
@@ -878,6 +890,35 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
                             new Intent(ActivityView.ACTION_EDIT_FOLDER)
                                     .putExtra("account", folder.account)
                                     .putExtra("parent", folder.name));
+                }
+
+                private void onActionPinFolder() {
+                    Intent view = new Intent(context, ActivityView.class);
+                    view.setAction("folder:" + folder.id);
+                    view.putExtra("account", folder.account);
+                    view.putExtra("type", folder.type);
+                    view.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+                    int resid = EntityFolder.getIcon(folder.type);
+                    Drawable d = context.getDrawable(resid);
+                    Bitmap bm = Bitmap.createBitmap(
+                            d.getIntrinsicWidth(),
+                            d.getIntrinsicHeight(),
+                            Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bm);
+                    d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                    d.setTint(folder.color == null ? Color.DKGRAY : folder.color);
+                    d.draw(canvas);
+
+                    IconCompat icon = IconCompat.createWithBitmap(bm);
+                    String id = "folder:" + folder.id;
+                    ShortcutInfoCompat.Builder builder = new ShortcutInfoCompat.Builder(context, id)
+                            .setIcon(icon)
+                            .setShortLabel(folder.getDisplayName(context))
+                            .setLongLabel(folder.getDisplayName(context))
+                            .setIntent(view);
+
+                    ShortcutManagerCompat.requestPinShortcut(context, builder.build(), null);
                 }
 
                 private void onActionDeleteFolder() {

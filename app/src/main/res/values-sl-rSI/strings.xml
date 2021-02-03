@@ -3,7 +3,6 @@
     <string name="app_search">Iskanje FairEmail</string>
     <string name="app_changelog">Dnevnik sprememb</string>
     <string name="app_welcome">FairEmail je odprtokodni program za e-pošto, ki se osredotoča na zasebnost in varnost.  Zaradi tega lahko nekatere značilnosti delujejo drugače, kot ste navajeni.</string>
-    <string name="app_limitations">Na primer sporočila bodo vedno preoblikovana, da se odstranijo nevarni elementi in izboljša berljivost, odpiranje povezav pa je treba potrditi.</string>
     <string name="app_crash">FairEmail na tej napravi ni podprt, ker hrošči v Androidu povzročajo sesutja.</string>
     <string name="app_exit">Za izhod še enkrat pritisnite \'Nazaj\'.</string>
     <string name="channel_send">Pošlji</string>
@@ -119,19 +118,11 @@
     <string name="title_edit_folder">Uredi mapo</string>
     <string name="title_setup">Nastavitve</string>
     <string name="title_setup_help">Pomoč</string>
-    <string name="title_setup_welcome">        Prejemanje in pošiljanje sporočil zahteva nastavitev računa in identitete, kot v vsakem drugem e-poštnem programu.
-        Hitra nastavitev bo ustvarila tako račun kot identiteto tako, da vas vpraša za vaše ime, e-poštni naslov in geslo.
-        Po potrebi lahko račune in identitete (vzdevke) ustvarite tudi ročno.
-        Nestandardni protokoli, kot sta Microsoft Exchange Web Services in Microsoft ActiveSync, niso podprti.  Oglejte si tudi opis programa.
-    </string>
     <string name="title_setup_quick">Hitra nastavitev</string>
-    <string name="title_setup_quick_remark">Za hitro nastavitev računa in identitete za večino ponudnikov.</string>
     <string name="title_setup_quick_hint">Hitra nastavitev bo podatke o nastavitvah pridobila iz autoconfig.thunderbird.net.</string>
     <string name="title_setup_quick_imap">Strežnik IMAP za prejemanje sporočil</string>
     <string name="title_setup_quick_smtp">Strežnik SMTP za pošiljanje sporočil</string>
     <string name="title_setup_wizard">Čarovnik</string>
-    <string name="title_setup_wizard_multiple">Čarovnika za namestitev lahko uporabite večkrat za nastavitev več računov.</string>
-    <string name="title_setup_wizard_remark">Pojdite \'Nazaj\' za vrnitev v \'Prejeto\'.</string>
     <string name="title_setup_other">Drug ponudnik</string>
     <string name="title_setup_gmail_support">Overjanje računov Google bo delovalo samo v uradnih različicah, ker Android preveri podpis programa.</string>
     <string name="title_setup_gmail_rationale">Odobrite dovoljenja za izbiro računa in branje vašega imena.</string>
@@ -142,27 +133,16 @@
     <string name="title_setup_select_account">Izberite račun.</string>
     <string name="title_setup_instructions">Navodila za nastavitev</string>
     <string name="title_setup_no_settings">Nastavitev za domeno \'%1$s\' ni bilo mogoče najti.</string>
-    <string name="title_setup_no_settings_hint">Poizkusite nastaviti račun in identiteto v 1. in 2. koraku z uporabo nastavitev od svojega e-poštnega ponudnika.</string>
     <string name="title_setup_no_auth_hint">Preverite e-poštni naslov in geslo in se prepričajte, da je za vaš račun omogočen zunanji dostop (IMAP/SMTP).</string>
-    <string name="title_setup_quick_success">Račun in identiteta sta bila uspešno dodana.</string>
-    <string name="title_setup_quick_failed">Račun in identiteto lahko poizkusite nastaviti tudi spodaj.</string>
     <string name="title_setup_manage">Upravljaj</string>
     <string name="title_setup_grant">Odobri</string>
     <string name="title_setup_grant_again">Odobri zahtevana dovoljenja</string>
-    <string name="title_setup_account">Nastavite račune</string>
-    <string name="title_setup_account_remark">Za prejemanje e-pošte.</string>
-    <string name="title_setup_account_hint">Za spremembo barve ciljno mapo povlecite levo/desno itd.</string>
-    <string name="title_setup_identity">Nastavite identitete</string>
-    <string name="title_setup_identity_remark">Za pošiljanje e-pošte.</string>
-    <string name="title_setup_identity_hint">Za spremembo imena, barve, podpisa itd.</string>
     <string name="title_setup_permissions">Odobrite dovoljenja</string>
     <string name="title_setup_permissions_remark">Za dostop do podatkov o stikih (izbirno).</string>
-    <string name="title_setup_doze">Nastavite optimizacijo baterije</string>
     <string name="title_setup_doze_instructions">V naslednjem pogovornem oknu na vrhu izberite \"Vse aplikacije\", izberite ta program, in izberite in potrdite \"Ne optimiziraj\".</string>
     <string name="title_setup_doze_battery">Visoka poraba energije?</string>
     <string name="title_setup_doze_stopped">Se je sinhronizacija ustavila?</string>
     <string name="title_setup_data">Ohranjevalnik podatkov je omogočen.</string>
-    <string name="title_setup_inbox">Pojdite na sporočila</string>
     <string name="title_setup_go">Pojdi</string>
     <string name="title_setup_to_do">Za narediti</string>
     <string name="title_setup_done">Končano</string>
@@ -204,7 +184,6 @@
     <string name="title_setup_defaults">Obnovi privzeto</string>
     <string name="title_setup_reset_questions">Ponastavi vprašanja</string>
     <string name="title_advanced_hint_title">Več naprednih nastavitev</string>
-    <string name="title_advanced_section_main">Osnovno</string>
     <string name="title_advanced_section_synchronize">Prejemanje</string>
     <string name="title_advanced_section_send">Pošiljanje</string>
     <string name="title_advanced_section_connection">Povezava</string>
@@ -359,9 +338,6 @@
     <string name="title_advanced_manage_keys">Upravljaj z zasebnimi ključi</string>
     <string name="title_advanced_external_search">Dovoli drugim programom iskati v sporočilih</string>
     <string name="title_advanced_shortcuts">V Androidovem meniju za deljenje prikaži pogosto uporabljene stike</string>
-    <string name="title_advanced_conversation_actions">Predlagaj dejanja</string>
-    <string name="title_advanced_conversation_actions_replies">Predlagaj besedila za odgovor</string>
-    <string name="title_advanced_language_detection">Zaznaj jezik besedila sporočila</string>
     <string name="title_advanced_fts">Zgradi iskalno kazalo</string>
     <string name="title_advanced_fts_indexed">V kazalo je bilo dodanih %1$d/%2$d sporočil (%3$s)</string>
     <string name="title_advanced_watchdog">Občasno preveri, ali je FairEmail še vedno dejaven</string>
@@ -504,7 +480,6 @@
     <string name="title_advanced_browse">Brskaj za sporočila na strežniku</string>
     <string name="title_advanced_expand_read">Označi sporočila kot prebrana ob razširitvi</string>
     <string name="title_synchronize_now">Sinhroniziraj zdaj</string>
-    <string name="title_synchronize_more">Sinhroniziraj več sporočil</string>
     <string name="title_synchronize_enabled">Sinhroniziraj</string>
     <string name="title_delete_local">Izbriši krajevna sporočila</string>
     <string name="title_delete_browsed">Izbriši prebrskana/iskana sporočila</string>

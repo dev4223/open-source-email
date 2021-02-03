@@ -31,6 +31,7 @@ import androidx.preference.PreferenceManager;
 import com.sun.mail.gimap.GmailMessage;
 import com.sun.mail.iap.ProtocolException;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.IMAPInputStream;
 import com.sun.mail.imap.IMAPMessage;
 import com.sun.mail.imap.protocol.IMAPProtocol;
 import com.sun.mail.util.ASCIIUtility;
@@ -123,7 +124,6 @@ public class MessageHelper {
     private static final long ATTACHMENT_PROGRESS_UPDATE = 1500L; // milliseconds
     private static final int MAX_META_EXCERPT = 1024; // characters
     private static final int FORMAT_FLOWED_LINE_LENGTH = 72;
-    private static final long MIN_REQUIRED_SPACE = 250 * 1024L * 1024L;
 
     private static final List<Charset> CHARSET16 = Collections.unmodifiableList(Arrays.asList(
             StandardCharsets.UTF_16,
@@ -539,7 +539,7 @@ public class MessageHelper {
     }
 
     static void build(Context context, EntityMessage message, List<EntityAttachment> attachments, EntityIdentity identity, boolean send, MimeMessage imessage) throws IOException, MessagingException {
-        if (message.receipt != null && message.receipt) {
+        if (EntityMessage.DSN_RECEIPT.equals(message.dsn)) {
             // https://www.ietf.org/rfc/rfc3798.txt
             Multipart report = new MimeMultipart("report; report-type=disposition-notification");
 
@@ -555,7 +555,10 @@ public class MessageHelper {
                 from = ((InternetAddress) message.from[0]).getAddress();
 
             StringBuilder sb = new StringBuilder();
-            sb.append("Reporting-UA: ").append(BuildConfig.APPLICATION_ID).append("; ").append(BuildConfig.VERSION_NAME).append("\r\n");
+            sb.append("Reporting-UA: ")
+                    .append(BuildConfig.APPLICATION_ID).append("; ")
+                    .append(context.getString(R.string.app_name)).append(' ')
+                    .append(BuildConfig.VERSION_NAME).append("\r\n");
             if (from != null)
                 sb.append("Original-Recipient: rfc822;").append(from).append("\r\n");
             sb.append("Disposition: manual-action/MDN-sent-manually; displayed").append("\r\n");
@@ -569,6 +572,43 @@ public class MessageHelper {
             //headersPart.setContent("", "text/rfc822-headers; name=\"MDNPart3.txt\"");
             //headersPart.setDisposition(Part.INLINE);
             //report.addBodyPart(headersPart);
+
+            imessage.setContent(report);
+            return;
+        } else if (EntityMessage.DSN_HARD_BOUNCE.equals(message.dsn)) {
+            // https://tools.ietf.org/html/rfc3464
+            Multipart report = new MimeMultipart("report; report-type=delivery-status");
+
+            String html = Helper.readText(message.getFile(context));
+            String plainContent = HtmlHelper.getText(context, html);
+
+            BodyPart plainPart = new MimeBodyPart();
+            plainPart.setContent(plainContent, "text/plain; charset=" + Charset.defaultCharset().name());
+            report.addBodyPart(plainPart);
+
+            String from = null;
+            if (message.from != null && message.from.length > 0)
+                from = ((InternetAddress) message.from[0]).getAddress();
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Reporting-MTA: dns;").append("dummy.faircode.eu").append("\r\n");
+            sb.append("\r\n");
+
+            if (from != null)
+                sb.append("Final-Recipient: rfc822;").append(from).append("\r\n");
+
+            sb.append("Action: failed").append("\r\n");
+            sb.append("Status: 5.1.1").append("\r\n"); // https://tools.ietf.org/html/rfc3463
+            sb.append("Diagnostic-Code: smtp; 550 user unknown").append("\r\n");
+
+            MailDateFormat mdf = new MailDateFormat();
+            mdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            sb.append("Last-Attempt-Date: ").append(mdf.format(message.received)).append("\r\n");
+
+            BodyPart dnsPart = new MimeBodyPart();
+            dnsPart.setContent(sb.toString(), "message/delivery-status");
+            dnsPart.setDisposition(Part.INLINE);
+            report.addBodyPart(dnsPart);
 
             imessage.setContent(report);
             return;
@@ -800,7 +840,7 @@ public class MessageHelper {
 
     MessageHelper(MimeMessage message, Context context) throws IOException {
         long cake = Helper.getAvailableStorageSpace();
-        if (cake < MIN_REQUIRED_SPACE)
+        if (cake < Helper.MIN_REQUIRED_SPACE)
             throw new IOException(context.getString(R.string.app_cake));
         if (cacheDir == null)
             cacheDir = context.getCacheDir();
@@ -1085,8 +1125,6 @@ public class MessageHelper {
     }
 
     Address[] getReceiptTo() throws MessagingException {
-        ensureHeaders();
-
         return getAddressHeader("Disposition-Notification-To");
     }
 
@@ -1197,6 +1235,10 @@ public class MessageHelper {
         }
 
         return addresses;
+    }
+
+    Address[] getReturnPath() throws MessagingException {
+        return getAddressHeader("Return-Path");
     }
 
     Address[] getSender() throws MessagingException {
@@ -1748,7 +1790,7 @@ public class MessageHelper {
                         result = (String) content;
                     else if (content instanceof InputStream)
                         // Typically com.sun.mail.util.QPDecoderStream
-                        result = Helper.readStream((InputStream) content, StandardCharsets.UTF_8.name());
+                        result = Helper.readStream((InputStream) content);
                     else
                         result = content.toString();
                 } catch (IOException | FolderClosedException | MessageRemovedException ex) {
@@ -2356,11 +2398,15 @@ public class MessageHelper {
 
             if (part.isMimeType("multipart/*")) {
                 Multipart multipart;
-                Object content = part.getContent();
+                Object content = part.getContent(); // Should always be Multipart
                 if (content instanceof Multipart)
                     multipart = (Multipart) part.getContent();
                 else if (content instanceof String) {
                     String text = (String) content;
+                    String sample = text.substring(0, Math.min(200, text.length()));
+                    throw new ParseException(content.getClass().getName() + ": " + sample);
+                } else if (content instanceof IMAPInputStream) {
+                    String text = Helper.readStream((IMAPInputStream) content);
                     String sample = text.substring(0, Math.min(200, text.length()));
                     throw new ParseException(content.getClass().getName() + ": " + sample);
                 } else
@@ -2525,7 +2571,10 @@ public class MessageHelper {
         } catch (FolderClosedException ex) {
             throw ex;
         } catch (MessagingException ex) {
-            Log.w(ex);
+            if (ex instanceof ParseException)
+                Log.e(ex);
+            else
+                Log.w(ex);
             parts.warnings.add(Log.formatThrowable(ex, false));
         }
     }

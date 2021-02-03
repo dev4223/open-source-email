@@ -50,6 +50,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -139,6 +140,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.webkit.WebViewFeature;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -262,6 +264,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean collapse_quotes;
     private boolean authentication;
     private boolean language_detection;
+    private List<String> languages;
     private static boolean debug;
 
     private boolean gotoTop = false;
@@ -317,7 +320,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             "DTAG_image".toLowerCase(Locale.ROOT),
             "$X-Me-Annot-1".toLowerCase(Locale.ROOT),
             "$X-Me-Annot-2".toLowerCase(Locale.ROOT),
-            "\\Unseen".toLowerCase(Locale.ROOT) // Mail.ru
+            "\\Unseen".toLowerCase(Locale.ROOT), // Mail.ru
+            "$sent".toLowerCase(Locale.ROOT), // Kmail
+            "$attachment".toLowerCase(Locale.ROOT), // Kmail
+            "$signed".toLowerCase(Locale.ROOT), // Kmail
+            "$encrypted".toLowerCase(Locale.ROOT) // Kmail
     ));
 
     public class ViewHolder extends RecyclerView.ViewHolder implements
@@ -357,6 +364,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageView ivThread;
         private TextView tvExpand;
         private TextView tvPreview;
+        private TextView tvNotes;
         private TextView tvError;
         private ImageButton ibHelp;
 
@@ -429,6 +437,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private ImageButton ibSearch;
         private ImageButton ibSeen;
         private ImageButton ibAnswer;
+        private ImageButton ibNotes;
         private ImageButton ibLabels;
         private ImageButton ibKeywords;
         private ImageButton ibCopy;
@@ -521,6 +530,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvKeywords = itemView.findViewById(R.id.tvKeywords);
             tvExpand = itemView.findViewById(R.id.tvExpand);
             tvPreview = itemView.findViewById(R.id.tvPreview);
+            tvNotes = itemView.findViewById(R.id.tvNotes);
             tvFolder = itemView.findViewById(R.id.tvFolder);
             tvLabels = itemView.findViewById(R.id.tvLabels);
             tvCount = itemView.findViewById(R.id.tvCount);
@@ -656,6 +666,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSearch = vsBody.findViewById(R.id.ibSearch);
             ibSeen = vsBody.findViewById(R.id.ibSeen);
             ibAnswer = vsBody.findViewById(R.id.ibAnswer);
+            ibNotes = vsBody.findViewById(R.id.ibNotes);
             ibLabels = vsBody.findViewById(R.id.ibLabels);
             ibKeywords = vsBody.findViewById(R.id.ibKeywords);
             ibCopy = vsBody.findViewById(R.id.ibCopy);
@@ -762,6 +773,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSearch.setOnClickListener(this);
                 ibSeen.setOnClickListener(this);
                 ibAnswer.setOnClickListener(this);
+                ibNotes.setOnClickListener(this);
                 ibLabels.setOnClickListener(this);
                 ibKeywords.setOnClickListener(this);
                 ibCopy.setOnClickListener(this);
@@ -872,6 +884,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSearch.setOnClickListener(null);
                 ibSeen.setOnClickListener(null);
                 ibAnswer.setOnClickListener(null);
+                ibNotes.setOnClickListener(null);
                 ibLabels.setOnClickListener(null);
                 ibKeywords.setOnClickListener(null);
                 ibCopy.setOnClickListener(null);
@@ -953,10 +966,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean inbox = EntityFolder.INBOX.equals(message.folderType);
             boolean outbox = EntityFolder.OUTBOX.equals(message.folderType);
             boolean outgoing = isOutgoing(message);
-            boolean reverse = (EntityFolder.isOutgoing(message.folderType) &&
-                    (viewType != ViewType.THREAD || !threading) && !show_recipients);
-            Address[] senders = ContactInfo.fillIn(reverse ? message.to : message.senders, prefer_contact);
-            Address[] recipients = ContactInfo.fillIn(reverse ? message.from : message.recipients, prefer_contact);
+            boolean reverse = (outgoing && (viewType != ViewType.THREAD || !threading));
+            Address[] addresses = (reverse ? message.to : message.from);
+            Address[] senders = ContactInfo.fillIn(
+                    reverse && !show_recipients ? message.to : message.senders, prefer_contact);
+            Address[] recipients = ContactInfo.fillIn(
+                    reverse && !show_recipients ? message.from : message.recipients, prefer_contact);
             boolean authenticated =
                     !(Boolean.FALSE.equals(message.dkim) ||
                             Boolean.FALSE.equals(message.spf) ||
@@ -986,6 +1001,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvFolder.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvLabels.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
                 tvPreview.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
+                tvNotes.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * 0.9f);
             }
 
             // Selected / disabled
@@ -1024,6 +1040,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvCount.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 ivThread.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvPreview.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
+                tvNotes.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
                 tvError.setAlpha(dim ? Helper.LOW_LIGHT : 1.0f);
             }
 
@@ -1215,6 +1232,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvPreview.setText(message.preview);
             tvPreview.setVisibility(preview && !TextUtils.isEmpty(message.preview) ? View.VISIBLE : View.GONE);
 
+            tvNotes.setText(message.notes);
+            tvNotes.setVisibility(TextUtils.isEmpty(message.notes) ? View.GONE : View.VISIBLE);
+
             // Error / warning
             String error = message.error;
             if (message.warning != null)
@@ -1248,12 +1268,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
 
             // Contact info
-            List<Address> all = new ArrayList<>();
-            if (senders != null)
-                all.addAll(Arrays.asList(senders));
-            if (show_recipients && recipients != null)
-                all.addAll(Arrays.asList(recipients));
-            ContactInfo[] info = ContactInfo.getCached(context, message.account, message.folderType, all.toArray(new Address[0]));
+            ContactInfo[] info = ContactInfo.getCached(context, message.account, message.folderType, addresses);
             if (info == null) {
                 if (taskContactInfo != null)
                     taskContactInfo.cancel(context);
@@ -1262,27 +1277,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 aargs.putLong("id", message.id);
                 aargs.putLong("account", message.account);
                 aargs.putString("folderType", message.folderType);
-                aargs.putSerializable("senders", senders);
-                aargs.putSerializable("recipients", show_recipients ? recipients : null);
+                aargs.putSerializable("addresses", addresses);
 
                 taskContactInfo = new SimpleTask<ContactInfo[]>() {
                     @Override
                     protected ContactInfo[] onExecute(Context context, Bundle args) {
                         long account = args.getLong("account");
                         String folderType = args.getString("folderType");
-                        Address[] senders = (Address[]) args.getSerializable("senders");
-                        Address[] recipients = (Address[]) args.getSerializable("recipients");
-
-                        if (senders == null)
-                            senders = new Address[0];
-                        if (recipients == null)
-                            recipients = new Address[0];
-
-                        Address[] all = new Address[senders.length + recipients.length];
-                        System.arraycopy(senders, 0, all, 0, senders.length);
-                        System.arraycopy(recipients, 0, all, senders.length, recipients.length);
-
-                        return ContactInfo.get(context, account, folderType, all);
+                        Address[] addresses = (Address[]) args.getSerializable("addresses");
+                        return ContactInfo.get(context, account, folderType, addresses);
                     }
 
                     @Override
@@ -1294,7 +1297,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (amessage == null || !amessage.id.equals(id))
                             return;
 
-                        bindContactInfo(amessage, info, senders, recipients);
+                        bindContactInfo(amessage, info, addresses);
                     }
 
                     @Override
@@ -1304,7 +1307,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }.setLog(false);
                 taskContactInfo.execute(context, owner, aargs, "message:avatar");
             } else
-                bindContactInfo(message, info, senders, show_recipients ? recipients : null);
+                bindContactInfo(message, info, addresses);
 
             if (viewType == ViewType.THREAD)
                 if (expanded)
@@ -1421,6 +1424,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSearch.setVisibility(View.GONE);
             ibSeen.setVisibility(View.GONE);
             ibAnswer.setVisibility(View.GONE);
+            ibNotes.setVisibility(View.GONE);
             ibLabels.setVisibility(View.GONE);
             ibKeywords.setVisibility(View.GONE);
             ibCopy.setVisibility(View.GONE);
@@ -1545,7 +1549,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibFlagged.setVisibility(View.GONE);
         }
 
-        private void bindContactInfo(TupleMessageEx message, ContactInfo[] info, Address[] senders, Address[] recipients) {
+        private void bindContactInfo(TupleMessageEx message, ContactInfo[] info, Address[] addresses) {
             if (avatars) {
                 ContactInfo main = (info.length > 0 ? info[0] : null);
                 if (main == null || !main.hasPhoto()) {
@@ -1563,8 +1567,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (distinguish_contacts) {
                 boolean known = false;
-                if (senders != null)
-                    for (int i = 0; i < senders.length; i++)
+                if (addresses != null)
+                    for (int i = 0; i < addresses.length; i++)
                         if (info[i].isKnown()) {
                             known = true;
                             break;
@@ -1619,6 +1623,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibSearch.setVisibility(View.GONE);
             ibSeen.setVisibility(View.GONE);
             ibAnswer.setVisibility(View.GONE);
+            ibNotes.setVisibility(View.GONE);
             ibLabels.setVisibility(View.GONE);
             ibKeywords.setVisibility(View.GONE);
             ibCopy.setVisibility(View.GONE);
@@ -1773,6 +1778,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean button_move = prefs.getBoolean("button_move", true);
                     boolean button_copy = prefs.getBoolean("button_copy", false);
                     boolean button_keywords = prefs.getBoolean("button_keywords", false);
+                    boolean button_notes = prefs.getBoolean("button_notes", false);
                     boolean button_seen = prefs.getBoolean("button_seen", false);
                     boolean button_search = prefs.getBoolean("button_search", false);
                     boolean button_event = prefs.getBoolean("button_event", false);
@@ -1793,6 +1799,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibSearch.setVisibility(tools && button_search && (froms > 0 || tos > 0) ? View.VISIBLE : View.GONE);
                     ibSeen.setVisibility(tools && button_seen && !outbox && seen ? View.VISIBLE : View.GONE);
                     ibAnswer.setVisibility(!tools || outbox || (!expand_all && expand_one) ? View.GONE : View.VISIBLE);
+                    ibNotes.setVisibility(tools && button_notes ? View.VISIBLE : View.GONE);
                     ibLabels.setVisibility(tools && labels_header && labels ? View.VISIBLE : View.GONE);
                     ibKeywords.setVisibility(tools && button_keywords && keywords ? View.VISIBLE : View.GONE);
                     ibCopy.setVisibility(tools && button_copy && move ? View.VISIBLE : View.GONE);
@@ -1929,12 +1936,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .append(message.total == null ? "-" : Helper.humanReadableByteCount(message.total));
             tvSizeEx.setText(size.toString());
 
-            
-
-           
-
-
-
             // dev4223: textsize when email is expanded
             // from: small
             // subject: bigger
@@ -1943,14 +1944,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 tvSubjectEx.setTextSize(TypedValue.COMPLEX_UNIT_PX, (font_size_subject == null ? textSize : font_size_subject));
             }
 
+            boolean showLanguage = (language_detection && message.language != null &&
+                    (show_addresses ||
+                            (languages != null && !languages.contains(message.language))));
+            tvLanguageTitle.setVisibility(showLanguage ? View.VISIBLE : View.GONE);
+            tvLanguage.setVisibility(showLanguage ? View.VISIBLE : View.GONE);
 
-
-            tvLanguageTitle.setVisibility(
-                    show_addresses && language_detection && message.language != null
-                            ? View.VISIBLE : View.GONE);
-            tvLanguage.setVisibility(
-                    show_addresses && language_detection && message.language != null
-                            ? View.VISIBLE : View.GONE);
             tvLanguage.setText(message.language == null ? null : new Locale(message.language).getDisplayLanguage());
 
             
@@ -2049,11 +2048,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             if (message.from != null)
                 for (Address sender : message.from) {
                     String from = ((InternetAddress) sender).getAddress();
-                    if (prefs.getBoolean(from + ".show_full", false)) {
+                    if (TextUtils.isEmpty(from))
+                        continue;
+                    int at = from.indexOf('@');
+                    String domain = (at < 0 ? from : from.substring(at));
+                    if (prefs.getBoolean(from + ".show_full", false) ||
+                            prefs.getBoolean(domain + ".show_full", false)) {
                         properties.setValue("full", message.id, true);
                         properties.setValue("full_asked", message.id, true);
                     }
-                    if (prefs.getBoolean(from + ".show_images", false)) {
+                    if (prefs.getBoolean(from + ".show_images", false) ||
+                            prefs.getBoolean(domain + ".show_images", false)) {
                         properties.setValue("images", message.id, true);
                         properties.setValue("images_asked", message.id, true);
                     }
@@ -2329,7 +2334,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     // Format message
                     if (show_full) {
-                        if (HtmlHelper.truncate(document, false))
+                        if (HtmlHelper.truncate(document, HtmlHelper.MAX_FULL_TEXT_SIZE))
                             document.body()
                                     .appendElement("br")
                                     .appendElement("p")
@@ -2970,7 +2975,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             context.startActivity((Intent) result);
                         } catch (ActivityNotFoundException ex) {
                             Log.w(ex);
-                            ToastEx.makeText(context, context.getString(R.string.title_no_viewer, result), Toast.LENGTH_LONG).show();
+                            Helper.reportNoViewer(context, (Intent) result);
                         }
                     }
                 }
@@ -2985,10 +2990,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private boolean isOutgoing(TupleMessageEx message) {
             if (EntityFolder.isOutgoing(message.folderType))
                 return true;
-            else
-                return (message.identityEmail != null &&
-                        message.from != null && message.from.length == 1 &&
-                        message.identityEmail.equalsIgnoreCase(((InternetAddress) message.from[0]).getAddress()));
+            else {
+                if (message.identityEmail == null)
+                    return false;
+                if (message.from == null)
+                    return false;
+                for (Address from : message.from)
+                    if (message.identityEmail.equalsIgnoreCase(((InternetAddress) from).getAddress()))
+                        return true;
+                return false;
+            }
         }
 
         private TupleMessageEx getMessage() {
@@ -3116,6 +3127,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         break;
                     case R.id.ibAnswer:
                         onActionAnswer(message, ibAnswer);
+                        break;
+                    case R.id.ibNotes:
+                        onMenuNotes(message);
                         break;
                     case R.id.ibLabels:
                         onActionLabels(message);
@@ -3366,9 +3380,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     context.startActivity(intent);
                 } catch (ActivityNotFoundException ex) {
                     Log.w(ex);
-                    ToastEx.makeText(context,
-                            context.getString(R.string.title_no_viewer, intent),
-                            Toast.LENGTH_LONG).show();
+                    Helper.reportNoViewer(context, intent);
                 }
             }
         }
@@ -3480,7 +3492,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onReceipt(TupleMessageEx message) {
             Intent reply = new Intent(context, ActivityCompose.class)
-                    .putExtra("action", "receipt")
+                    .putExtra("action", "dsn")
+                    .putExtra("dsn", EntityMessage.DSN_RECEIPT)
                     .putExtra("reference", message.id);
             context.startActivity(reply);
         }
@@ -3609,7 +3622,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         context.startActivity(intent);
                     } catch (ActivityNotFoundException ex) {
                         Log.w(ex);
-                        ToastEx.makeText(context, context.getString(R.string.title_no_viewer, intent), Toast.LENGTH_LONG).show();
+                        Helper.reportNoViewer(context, intent);
                     }
                 }
 
@@ -3651,6 +3664,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
                     lookupUri = ContactsContract.Contacts.getLookupUri(contactId, lookupKey);
                 }
+            } catch (Throwable ex) {
+                Log.e(ex);
             }
 
             if (lookupUri == null) {
@@ -3691,7 +3706,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         Helper.getChooser(context, pick), FragmentMessages.REQUEST_PICK_CONTACT);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, pick), Toast.LENGTH_LONG).show();
+                Helper.reportNoViewer(context, pick);
             } catch (Throwable ex) {
                 Log.unexpectedError(parentFragment.getParentFragmentManager(), ex, false);
             }
@@ -3801,7 +3816,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     SharedPreferences.Editor editor = prefs.edit();
                     for (Address sender : message.from) {
                         String from = ((InternetAddress) sender).getAddress();
+                        if (TextUtils.isEmpty(from))
+                            continue;
+                        int at = from.indexOf('@');
+                        String domain = (at < 0 ? from : from.substring(at));
                         editor.remove(from + (full ? ".show_full" : ".show_images"));
+                        editor.remove(domain + (full ? ".show_full" : ".show_images"));
                     }
                     editor.apply();
                 }
@@ -3817,10 +3837,50 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             View dview = LayoutInflater.from(context).inflate(
                     full ? R.layout.dialog_show_full : R.layout.dialog_show_images, null);
             CheckBox cbNotAgain = dview.findViewById(R.id.cbNotAgain);
-            CheckBox cbAlwaysImages = dview.findViewById(R.id.cbAlwaysImages);
+            CheckBox cbNotAgainDomain = dview.findViewById(R.id.cbNotAgainDomain);
+
+            if (message.from == null || message.from.length == 0) {
+                cbNotAgain.setVisibility(View.GONE);
+                cbNotAgainDomain.setVisibility(View.GONE);
+            } else {
+                List<String> froms = new ArrayList<>();
+                List<String> domains = new ArrayList<>();
+                for (Address address : message.from) {
+                    String from = ((InternetAddress) address).getAddress();
+                    froms.add(from);
+                    int at = from.indexOf('@');
+                    String domain = (at < 0 ? from : from.substring(at));
+                    domains.add(domain);
+                }
+                cbNotAgain.setText(context.getString(R.string.title_no_ask_for_again,
+                        TextUtils.join(", ", froms)));
+                cbNotAgainDomain.setText(context.getString(R.string.title_no_ask_for_again,
+                        TextUtils.join(", ", domains)));
+            }
+
+            cbNotAgainDomain.setEnabled(false);
+            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    cbNotAgainDomain.setEnabled(isChecked);
+                }
+            });
 
             if (full) {
+                TextView tvDark = dview.findViewById(R.id.tvDark);
+                CheckBox cbDark = dview.findViewById(R.id.cbDark);
+                CheckBox cbAlwaysImages = dview.findViewById(R.id.cbAlwaysImages);
+
+                boolean confirm_html = prefs.getBoolean("confirm_html", true);
+                cbDark.setChecked(prefs.getBoolean("html_dark", confirm_html));
                 cbAlwaysImages.setChecked(prefs.getBoolean("html_always_images", false));
+
+                cbDark.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        prefs.edit().putBoolean("html_dark", isChecked).apply();
+                    }
+                });
 
                 cbAlwaysImages.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
@@ -3828,33 +3888,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         prefs.edit().putBoolean("html_always_images", isChecked).apply();
                     }
                 });
-            }
 
-            if (message.from == null || message.from.length == 0)
-                cbNotAgain.setVisibility(View.GONE);
-            else {
-                List<String> froms = new ArrayList<>();
-                for (Address address : message.from)
-                    froms.add(((InternetAddress) address).getAddress());
-                cbNotAgain.setText(context.getString(R.string.title_no_ask_for_again,
-                        TextUtils.join(", ", froms)));
-            }
+                boolean isDark = Helper.isDarkTheme(context);
+                boolean canDark = WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK);
 
-            cbNotAgain.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    SharedPreferences.Editor editor = prefs.edit();
-                    for (Address sender : message.from) {
-                        String from = ((InternetAddress) sender).getAddress();
-                        editor.putBoolean(from + (full ? ".show_full" : ".show_images"), isChecked);
-                    }
-                    editor.apply();
-                }
-            });
+                tvDark.setVisibility(isDark && !canDark ? View.VISIBLE : View.GONE);
+                cbDark.setVisibility(isDark && canDark ? View.VISIBLE : View.GONE);
 
-            if (full) {
-                TextView tvDark = dview.findViewById(R.id.tvDark);
-                tvDark.setVisibility(Helper.isDarkTheme(context) ? View.VISIBLE : View.GONE);
             } else {
                 boolean disable_tracking = prefs.getBoolean("disable_tracking", true);
 
@@ -3866,7 +3906,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ivInfo.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Helper.viewFAQ(context, 82);
+                        Helper.viewFAQ(v.getContext(), 82);
                     }
                 });
             }
@@ -3879,6 +3919,21 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         public void onClick(DialogInterface dialog, int which) {
                             properties.setValue(full ? "full" : "images", message.id, true);
                             properties.setValue(full ? "full_asked" : "images_asked", message.id, true);
+
+                            SharedPreferences.Editor editor = prefs.edit();
+                            for (Address sender : message.from) {
+                                String from = ((InternetAddress) sender).getAddress();
+                                if (TextUtils.isEmpty(from))
+                                    continue;
+                                int at = from.indexOf('@');
+                                String domain = (at < 0 ? from : from.substring(at));
+                                editor.putBoolean(from + (full ? ".show_full" : ".show_images"),
+                                        cbNotAgain.isChecked());
+                                editor.putBoolean(domain + (full ? ".show_full" : ".show_images"),
+                                        cbNotAgain.isChecked() && cbNotAgainDomain.isChecked());
+                            }
+                            editor.apply();
+
                             if (full)
                                 onShowFullConfirmed(message);
                             else
@@ -4095,6 +4150,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void onActionJunk(TupleMessageEx message) {
+            boolean canBlock = false;
+            if (message.from != null && message.from.length > 0) {
+                String email = ((InternetAddress) message.from[0]).getAddress();
+                canBlock = !TextUtils.isEmpty(email) && Helper.EMAIL_ADDRESS.matcher(email).matches();
+            }
+
             Bundle aargs = new Bundle();
             aargs.putLong("id", message.id);
             aargs.putLong("account", message.account);
@@ -4103,6 +4164,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             aargs.putString("type", message.folderType);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
             aargs.putBoolean("inJunk", EntityFolder.JUNK.equals(message.folderType));
+            aargs.putBoolean("canBlock", canBlock);
 
             FragmentDialogJunk ask = new FragmentDialogJunk();
             ask.setArguments(aargs);
@@ -4132,6 +4194,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean button_move = prefs.getBoolean("button_move", true);
             boolean button_copy = prefs.getBoolean("button_copy", false);
             boolean button_keywords = prefs.getBoolean("button_keywords", false);
+            boolean button_notes = prefs.getBoolean("button_notes", false);
             boolean button_seen = prefs.getBoolean("button_seen", false);
             boolean button_search = prefs.getBoolean("button_search", false);
             boolean button_event = prefs.getBoolean("button_event", false);
@@ -4149,6 +4212,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             popupMenu.getMenu().findItem(R.id.menu_button_move).setChecked(button_move);
             popupMenu.getMenu().findItem(R.id.menu_button_copy).setChecked(button_copy);
             popupMenu.getMenu().findItem(R.id.menu_button_keywords).setChecked(button_keywords);
+            popupMenu.getMenu().findItem(R.id.menu_button_notes).setChecked(button_notes);
             popupMenu.getMenu().findItem(R.id.menu_button_seen).setChecked(button_seen);
             popupMenu.getMenu().findItem(R.id.menu_button_search).setChecked(button_search);
             popupMenu.getMenu().findItem(R.id.menu_button_event).setChecked(button_event);
@@ -4227,6 +4291,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         case R.id.menu_button_keywords:
                             onMenuButton(message, "keywords", target.isChecked());
                             return true;
+                        case R.id.menu_button_notes:
+                            onMenuButton(message, "notes", target.isChecked());
+                            return true;
                         case R.id.menu_button_seen:
                             onMenuButton(message, "seen", target.isChecked());
                             return true;
@@ -4281,6 +4348,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             return true;
                         case R.id.menu_resync:
                             onMenuResync(message);
+                            return true;
+                        case R.id.menu_edit_notes:
+                            onMenuNotes(message);
                             return true;
                         case R.id.menu_search_in_text:
                             onMenuSearch(message);
@@ -4509,7 +4579,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }.execute(context, owner, args, "view:cid");
 
             else
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
+                Helper.reportNoViewer(context, uri);
         }
 
         private void onMenuButton(final TupleMessageEx message, String button, boolean isChecked) {
@@ -4718,6 +4788,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Log.unexpectedError(parentFragment.getParentFragmentManager(), ex);
                 }
             }.execute(context, owner, args, "message:resync");
+        }
+
+        private void onMenuNotes(TupleMessageEx message) {
+            Bundle args = new Bundle();
+            args.putLong("id", message.id);
+            args.putString("notes", message.notes);
+
+            FragmentDialogNotes fragment = new FragmentDialogNotes();
+            fragment.setArguments(args);
+            fragment.show(parentFragment.getParentFragmentManager(), "edit:notes");
         }
 
         private void onMenuSearch(TupleMessageEx message) {
@@ -4942,9 +5022,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     PackageManager pm = context.getPackageManager();
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R &&
                             intent.resolveActivity(pm) == null) // system whitelisted
-                        Snackbar.make(parentFragment.getView(),
-                                context.getString(R.string.title_no_viewer, intent), Snackbar.LENGTH_LONG)
-                                .setGestureInsetBottomIgnored(true).show();
+                        Helper.reportNoViewer(context, intent);
                     else
                         context.startActivity(intent);
                 }
@@ -5457,6 +5535,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.authentication = prefs.getBoolean("authentication", true);
         this.language_detection = prefs.getBoolean("language_detection", false);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            languages = new ArrayList<>();
+            LocaleList ll = context.getResources().getConfiguration().getLocales();
+            for (int i = 0; i < ll.size(); i++)
+                languages.add(ll.get(i).getLanguage());
+        } else
+            languages = null;
+
         debug = prefs.getBoolean("debug", false);
 
         DiffUtil.ItemCallback<TupleMessageEx> callback = new DiffUtil.ItemCallback<TupleMessageEx>() {
@@ -5621,6 +5707,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (!Objects.equals(prev.preview, next.preview)) {
                     same = false;
                     log("preview changed", next.id);
+                }
+                if (!Objects.equals(prev.notes, next.notes)) {
+                    same = false;
+                    log("notes changed", next.id);
                 }
                 if (!Objects.equals(prev.sent, next.sent)) {
                     same = false;
@@ -6548,6 +6638,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final String type = args.getString("type");
             final String from = args.getString("from");
             final boolean inJunk = args.getBoolean("inJunk");
+            final boolean canBlock = args.getBoolean("canBlock");
 
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_junk, null);
             final TextView tvMessage = view.findViewById(R.id.tvMessage);
@@ -6568,7 +6659,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             });
 
-            cbBlockSender.setEnabled(ActivityBilling.isPro(getContext()));
+            cbBlockSender.setEnabled(canBlock && ActivityBilling.isPro(getContext()));
             cbBlockDomain.setEnabled(false);
 
             cbBlockSender.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -6738,6 +6829,53 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             getArguments().putBoolean("block_sender", cbBlockSender.isChecked());
                             getArguments().putBoolean("block_domain", cbBlockDomain.isChecked());
                             sendResult(RESULT_OK);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogNotes extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final long id = getArguments().getLong("id");
+            final String notes = getArguments().getString("notes");
+
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_notes, null);
+            final EditText etNote = view.findViewById(R.id.etNote);
+            etNote.setText(notes);
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Bundle args = new Bundle();
+                            args.putLong("id", id);
+                            args.putString("notes", etNote.getText().toString());
+
+                            new SimpleTask<Void>() {
+                                @Override
+                                protected Void onExecute(Context context, Bundle args) {
+                                    long id = args.getLong("id");
+                                    String notes = args.getString("notes");
+
+                                    if ("".equals(notes.trim()))
+                                        notes = null;
+
+                                    DB db = DB.getInstance(context);
+                                    db.message().setMessageNotes(id, notes);
+
+                                    return null;
+                                }
+
+                                @Override
+                                protected void onException(Bundle args, Throwable ex) {
+                                    Log.unexpectedError(getParentFragmentManager(), ex);
+                                }
+                            }.execute(getContext(), getActivity(), args, "message:note");
                         }
                     })
                     .setNegativeButton(android.R.string.cancel, null)

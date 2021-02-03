@@ -498,7 +498,9 @@ class Core {
                             // Fetch: NO The specified message set is invalid.
                             // Fetch: NO [SERVERBUG] SELECT Server error - Please try again later
                             // Fetch: NO [SERVERBUG] UID FETCH Server error - Please try again later
-                            // Fetch: NO Invalid message number (took n ms)
+                            // Fetch: NO Invalid message number (took 123 ms)
+                            // Fetch: BAD Internal Server Error
+                            // Fetch UID: NO Some messages could not be FETCHed (Failure)
                             // Move: NO Over quota
                             // Move: NO No matching messages
                             // Move: NO [EXPUNGEISSUED] Some of the requested messages no longer exist
@@ -506,10 +508,18 @@ class Core {
                             // Move: NO MOVE failed or partially completed.
                             // Move: NO mailbox selected READ-ONLY
                             // Move: NO read only
+                            // Move: NO COPY failed
+                            // Move: NO [SERVERBUG] Internal error occurred. Refer to server log for more information.
                             // Add: BAD Data length exceeds limit
+                            // Add: NO [LIMIT] APPEND Command exceeds the maximum allowed size
+                            // Add: NO APPEND failed: Unknown flag: SEEN
+                            // Add: BAD mtd: internal error: APPEND Message too long. 12345678
                             // Delete: NO [CANNOT] STORE It's not possible to perform specified operation
                             // Delete: NO [UNAVAILABLE] EXPUNGE Backend error
                             // Delete: NO mailbox selected READ-ONLY
+                            // Flags: NO mailbox selected READ-ONLY
+                            // Keyword: NO STORE completed
+                            // Search: BAD command syntax error
 
                             String msg = "Unrecoverable operation=" + op.name + " tries=" + op.tries + " created=" + new Date(op.created);
 
@@ -959,7 +969,7 @@ class Core {
                 if (newuid == null)
                     newuid = found;
                 else if (!newuid.equals(found)) {
-                    Log.e(folder.name + " Added=" + newuid + " found=" + found);
+                    Log.w(folder.name + " Added=" + newuid + " found=" + found);
                     newuid = Math.max(newuid, found);
                 }
 
@@ -1499,11 +1509,14 @@ class Core {
         String body = parts.getHtml(context);
         File file = message.getFile(context);
         Helper.writeText(file, body);
+        String text = HtmlHelper.getFullText(body);
+        message.preview = HtmlHelper.getPreview(text);
+        message.language = HtmlHelper.getLanguage(context, message.subject, text);
         db.message().setMessageContent(message.id,
                 true,
-                HtmlHelper.getLanguage(context, body),
+                message.language,
                 parts.isPlainOnly(),
-                HtmlHelper.getPreview(body),
+                message.preview,
                 parts.getWarnings(message.warning));
         MessageClassifier.classify(message, folder, null, context);
 
@@ -1559,8 +1572,9 @@ class Core {
                         new AndTerm(
                                 new SentDateTerm(ComparisonTerm.GE, new Date()),
                                 new HeaderTerm(MessageHelper.HEADER_CORRELATION_ID, message.msgid)));
-            } catch (MessagingException ex) {
+            } catch (Throwable ex) {
                 Log.e(ex);
+                // Seznam: Jakarta Mail Exception: java.io.IOException: Connection dropped by server?
             }
 
         if (imessages != null && imessages.length == 1) {
@@ -1581,6 +1595,7 @@ class Core {
         } else {
             if (imessages != null && imessages.length > 1)
                 Log.e(folder.name + " EXISTS messages=" + imessages.length);
+            EntityLog.log(context, folder.name + " EXISTS messages=" + imessages.length);
             EntityOperation.queue(context, message, EntityOperation.ADD);
         }
     }
@@ -2133,6 +2148,7 @@ class Core {
                         message.dkim = MessageHelper.getAuthentication("dkim", authentication);
                         message.spf = MessageHelper.getAuthentication("spf", authentication);
                         message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+                        message.return_path = helper.getReturnPath();
                         message.submitter = helper.getSender();
                         message.from = helper.getFrom();
                         message.to = helper.getTo();
@@ -2208,11 +2224,14 @@ class Core {
                         String body = parts.getHtml(context);
                         File file = message.getFile(context);
                         Helper.writeText(file, body);
+                        String text = HtmlHelper.getFullText(body);
+                        message.preview = HtmlHelper.getPreview(text);
+                        message.language = HtmlHelper.getLanguage(context, message.subject, text);
                         db.message().setMessageContent(message.id,
                                 true,
-                                HtmlHelper.getLanguage(context, body),
+                                message.language,
                                 parts.isPlainOnly(),
-                                HtmlHelper.getPreview(body),
+                                message.preview,
                                 parts.getWarnings(message.warning));
 
                         for (EntityAttachment attachment : parts.getAttachments())
@@ -2254,8 +2273,6 @@ class Core {
             int initialize = jargs.optInt(4, folder.initialize);
             boolean force = jargs.optBoolean(5, false);
 
-            if (force)
-                sync_days = keep_days;
             if (keep_days == sync_days && keep_days != Integer.MAX_VALUE)
                 keep_days++;
 
@@ -2352,6 +2369,7 @@ class Core {
             } catch (MessagingException ex) {
                 Log.w(ex.getMessage());
                 // Fallback to date only search
+                // BAD Could not parse command
                 imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
             }
             if (imessages == null)
@@ -2829,6 +2847,7 @@ class Core {
             message.dkim = MessageHelper.getAuthentication("dkim", authentication);
             message.spf = MessageHelper.getAuthentication("spf", authentication);
             message.dmarc = MessageHelper.getAuthentication("dmarc", authentication);
+            message.return_path = helper.getReturnPath();
             message.submitter = helper.getSender();
             message.from = helper.getFrom();
             message.to = helper.getTo();
@@ -2959,6 +2978,7 @@ class Core {
             try {
                 db.beginTransaction();
 
+                message.notifying = EntityMessage.NOTIFYING_IGNORE;
                 message.id = db.message().insertMessage(message);
                 Log.i(folder.name + " added id=" + message.id + " uid=" + message.uid);
 
@@ -2974,7 +2994,7 @@ class Core {
                 runRules(context, imessage, account, folder, message, rules);
                 if (download && !message.ui_hide &&
                         MessageClassifier.isEnabled(context) && folder.auto_classify_source)
-                    db.message().setMessageUiHide(message.id, true);
+                    db.message().setMessageUiHide(message.id, true); // keep local value
 
                 db.setTransactionSuccessful();
             } catch (SQLiteConstraintException ex) {
@@ -2991,45 +3011,52 @@ class Core {
                 db.endTransaction();
             }
 
-            if (message.received > account.created)
-                updateContactInfo(context, folder, message);
+            try {
+                if (message.received > account.created)
+                    updateContactInfo(context, folder, message);
 
-            // Download small messages inline
-            if (download && !message.ui_hide) {
-                long maxSize;
-                if (state == null || state.networkState.isUnmetered())
-                    maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
-                else {
-                    maxSize = prefs.getInt("download", MessageHelper.DEFAULT_DOWNLOAD_SIZE);
-                    if (maxSize == 0 || maxSize > MessageHelper.SMALL_MESSAGE_SIZE)
+                // Download small messages inline
+                if (download && !message.ui_hide) {
+                    long maxSize;
+                    if (state == null || state.networkState.isUnmetered())
                         maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
-                }
-
-                if ((message.size != null && message.size < maxSize) ||
-                        (MessageClassifier.isEnabled(context)) && folder.auto_classify_source)
-                    try {
-                        String body = parts.getHtml(context);
-                        File file = message.getFile(context);
-                        Helper.writeText(file, body);
-                        db.message().setMessageContent(message.id,
-                                true,
-                                HtmlHelper.getLanguage(context, body),
-                                parts.isPlainOnly(),
-                                HtmlHelper.getPreview(body),
-                                parts.getWarnings(message.warning));
-                        MessageClassifier.classify(message, folder, null, context);
-
-                        if (stats != null && body != null)
-                            stats.content += body.length();
-                        Log.i(folder.name + " inline downloaded message id=" + message.id +
-                                " size=" + message.size + "/" + (body == null ? null : body.length()));
-
-                        if (TextUtils.isEmpty(body) && parts.hasBody())
-                            reportEmptyMessage(context, state, account, istore);
-                    } finally {
-                        if (!message.ui_hide)
-                            db.message().setMessageUiHide(message.id, false);
+                    else {
+                        maxSize = prefs.getInt("download", MessageHelper.DEFAULT_DOWNLOAD_SIZE);
+                        if (maxSize == 0 || maxSize > MessageHelper.SMALL_MESSAGE_SIZE)
+                            maxSize = MessageHelper.SMALL_MESSAGE_SIZE;
                     }
+
+                    if ((message.size != null && message.size < maxSize) ||
+                            (MessageClassifier.isEnabled(context)) && folder.auto_classify_source)
+                        try {
+                            String body = parts.getHtml(context);
+                            File file = message.getFile(context);
+                            Helper.writeText(file, body);
+                            String text = HtmlHelper.getFullText(body);
+                            message.preview = HtmlHelper.getPreview(text);
+                            message.language = HtmlHelper.getLanguage(context, message.subject, text);
+                            db.message().setMessageContent(message.id,
+                                    true,
+                                    message.language,
+                                    parts.isPlainOnly(),
+                                    message.preview,
+                                    parts.getWarnings(message.warning));
+                            MessageClassifier.classify(message, folder, null, context);
+
+                            if (stats != null && body != null)
+                                stats.content += body.length();
+                            Log.i(folder.name + " inline downloaded message id=" + message.id +
+                                    " size=" + message.size + "/" + (body == null ? null : body.length()));
+
+                            if (TextUtils.isEmpty(body) && parts.hasBody())
+                                reportEmptyMessage(context, state, account, istore);
+                        } finally {
+                            if (!message.ui_hide)
+                                db.message().setMessageUiHide(message.id, false);
+                        }
+                }
+            } finally {
+                db.message().setMessageNotifying(message.id, 0);
             }
 
             reportNewMessage(context, account, folder, message);
@@ -3447,11 +3474,14 @@ class Core {
                     String body = parts.getHtml(context);
                     File file = message.getFile(context);
                     Helper.writeText(file, body);
+                    String text = HtmlHelper.getFullText(body);
+                    message.preview = HtmlHelper.getPreview(text);
+                    message.language = HtmlHelper.getLanguage(context, message.subject, text);
                     db.message().setMessageContent(message.id,
                             true,
-                            HtmlHelper.getLanguage(context, body),
+                            message.language,
                             parts.isPlainOnly(),
-                            HtmlHelper.getPreview(body),
+                            message.preview,
                             parts.getWarnings(message.warning));
                     MessageClassifier.classify(message, folder, null, context);
 
@@ -3548,6 +3578,11 @@ class Core {
 
         // Current
         for (TupleMessageEx message : messages) {
+            if (message.notifying == EntityMessage.NOTIFYING_IGNORE) {
+                Log.e("Notify ignore");
+                continue;
+            }
+
             // Check if notification channel enabled
             if (message.notifying == 0 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && pro) {
                 String channelId = message.getNotificationChannelId();
@@ -4471,7 +4506,7 @@ class Core {
                     Thread.State state = thread.getState();
                     if (thread.isAlive()) {
                         if (interrupted)
-                            Log.e("Join " + name + " failed state=" + state + " interrupted=" + interrupted);
+                            Log.w("Join " + name + " failed state=" + state + " interrupted=" + interrupted);
                         if (interrupted)
                             joined = true; // give up
                         else {

@@ -21,6 +21,7 @@ package eu.faircode.email;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -104,6 +105,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -145,6 +147,7 @@ public class Helper {
     static final float LOW_LIGHT = 0.6f;
 
     static final int BUFFER_SIZE = 8192; // Same as in Files class
+    static final long MIN_REQUIRED_SPACE = 250 * 1024L * 1024L;
 
     static final String PGP_BEGIN_MESSAGE = "-----BEGIN PGP MESSAGE-----";
     static final String PGP_END_MESSAGE = "-----END PGP MESSAGE-----";
@@ -573,15 +576,12 @@ public class Helper {
             }
 
             // Check if viewer available
-            if (ris == null || ris.size() == 0) {
+            if (ris == null || ris.size() == 0)
                 if (isTnef(type, null))
                     viewFAQ(context, 155);
-                else {
-                    String message = context.getString(R.string.title_no_viewer,
-                            type != null ? type : name != null ? name : file.getName());
-                    ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
-                }
-            } else
+                else
+                    reportNoViewer(context, intent);
+            else
                 context.startActivity(intent);
         } else
             context.startActivity(intent);
@@ -609,7 +609,7 @@ public class Helper {
                 context.startActivity(intent);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
+                reportNoViewer(context, intent);
             }
     }
 
@@ -634,7 +634,7 @@ public class Helper {
                 context.startActivity(view);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
+                reportNoViewer(context, uri);
             } catch (Throwable ex) {
                 Log.e(ex);
                 ToastEx.makeText(context, Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
@@ -657,7 +657,7 @@ public class Helper {
                 customTabsIntent.launchUrl(context, uri);
             } catch (ActivityNotFoundException ex) {
                 Log.w(ex);
-                ToastEx.makeText(context, context.getString(R.string.title_no_viewer, uri), Toast.LENGTH_LONG).show();
+                reportNoViewer(context, uri);
             } catch (Throwable ex) {
                 Log.e(ex);
                 ToastEx.makeText(context, Log.formatThrowable(ex, false), Toast.LENGTH_LONG).show();
@@ -737,8 +737,49 @@ public class Helper {
         return 0;
     }
 
-    static boolean isFoldable() {
+    static boolean isSurfaceDuo() {
         return ("Microsoft".equalsIgnoreCase(Build.MANUFACTURER) && "Surface Duo".equals(Build.MODEL));
+    }
+
+    static void reportNoViewer(Context context, Uri uri) {
+        reportNoViewer(context, new Intent().setData(uri));
+    }
+
+    static void reportNoViewer(Context context, Intent intent) {
+        StringBuilder sb = new StringBuilder();
+
+        String title = intent.getStringExtra(Intent.EXTRA_TITLE);
+        if (TextUtils.isEmpty(title)) {
+            Uri data = intent.getData();
+            if (data == null)
+                sb.append(intent.toString());
+            else
+                sb.append(data.toString());
+        } else
+            sb.append(title);
+
+        String type = intent.getType();
+        if (!TextUtils.isEmpty(type))
+            sb.append(' ').append(type);
+
+        String message = context.getString(R.string.title_no_viewer, sb.toString());
+        ToastEx.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
+    static void excludeFromRecents(Context context) {
+        try {
+            ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null)
+                return;
+
+            List<ActivityManager.AppTask> tasks = am.getAppTasks();
+            if (tasks == null || tasks.size() == 0)
+                return;
+
+            tasks.get(0).setExcludeFromRecents(true);
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
     }
 
     // Graphics
@@ -851,6 +892,31 @@ public class Helper {
         return !Character.isISOControl(c);
     }
     // https://issuetracker.google.com/issues/37054851
+
+    static boolean isRtl(String text) {
+        if (TextUtils.isEmpty(text))
+            return false;
+
+        int rtl = 0;
+        int ltr = 0;
+        for (int i = 0; i < text.length(); i++)
+            switch (Character.getDirectionality(text.charAt(i))) {
+                case java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT:
+                case java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC:
+                case java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING:
+                case java.lang.Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE:
+                    rtl++;
+                    break;
+
+                case java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT:
+                case java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING:
+                case java.lang.Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE:
+                    ltr++;
+                    break;
+            }
+
+        return (rtl > ltr);
+    }
 
     static DateFormat getTimeInstance(Context context) {
         return Helper.getTimeInstance(context, SimpleDateFormat.MEDIUM);
@@ -1139,7 +1205,11 @@ public class Helper {
         }
     }
 
-    static String readStream(InputStream is, String charset) throws IOException {
+    static String readStream(InputStream is) throws IOException {
+        return readStream(is, StandardCharsets.UTF_8);
+    }
+
+    static String readStream(InputStream is, Charset charset) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream(Math.max(BUFFER_SIZE, is.available()));
         byte[] buffer = new byte[BUFFER_SIZE];
         for (int len = is.read(buffer); len != -1; len = is.read(buffer))
@@ -1149,7 +1219,7 @@ public class Helper {
 
     static String readText(File file) throws IOException {
         try (FileInputStream in = new FileInputStream(file)) {
-            return readStream(in, StandardCharsets.UTF_8.name());
+            return readStream(in);
         }
     }
 
@@ -1211,6 +1281,18 @@ public class Helper {
     static long getTotalStorageSpace() {
         StatFs stats = new StatFs(Environment.getDataDirectory().getAbsolutePath());
         return stats.getTotalBytes();
+    }
+
+    static long getSize(File dir) {
+        long size = 0;
+        File[] listed = dir.listFiles();
+        if (listed != null)
+            for (File file : listed)
+                if (file.isDirectory())
+                    size += getSize(file);
+                else
+                    size += file.length();
+        return size;
     }
 
     static void openAdvanced(Intent intent) {

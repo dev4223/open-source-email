@@ -475,7 +475,8 @@ public interface DaoMessage {
             " WHERE account.`synchronize`" +
             " AND folder.notify" +
             " AND (account.created IS NULL OR message.received > account.created OR message.sent > account.created)" +
-            " AND (notifying <> 0 OR NOT (message.ui_seen OR message.ui_hide))" +
+            " AND message.notifying <> " + EntityMessage.NOTIFYING_IGNORE +
+            " AND (message.notifying <> 0 OR NOT (message.ui_seen OR message.ui_hide))" +
             " ORDER BY message.received DESC")
     LiveData<List<TupleMessageEx>> liveUnseenNotify();
 
@@ -487,6 +488,7 @@ public interface DaoMessage {
             " WHERE (:account IS NULL OR account.id = :account)" +
             " AND account.`synchronize`" +
             " AND folder.notify" +
+            " AND message.notifying <> " + EntityMessage.NOTIFYING_IGNORE +
             " AND NOT (message.ui_seen OR message.ui_hide)" +
             " GROUP BY account.id" +
             " ORDER BY account.id")
@@ -499,6 +501,7 @@ public interface DaoMessage {
             " WHERE (:account IS NULL OR account.id = :account)" +
             " AND account.`synchronize`" +
             " AND folder.notify" +
+            " AND message.notifying <> " + EntityMessage.NOTIFYING_IGNORE +
             " AND NOT (message.ui_seen OR message.ui_hide)")
     TupleMessageStats getWidgetUnseen(Long account);
 
@@ -699,6 +702,9 @@ public interface DaoMessage {
             "  OR NOT (warning IS :warning))")
     int setMessageContent(long id, boolean content, String language, Boolean plain_only, String preview, String warning);
 
+    @Query("UPDATE message SET notes = :notes WHERE id = :id AND NOT (notes IS :notes)")
+    int setMessageNotes(long id, String notes);
+
     @Query("UPDATE message" +
             " SET size = :size, total = :total" +
             " WHERE id = :id" +
@@ -790,7 +796,7 @@ public interface DaoMessage {
             " AND NOT EXISTS" +
             "  (SELECT * FROM operation" +
             "  WHERE operation.message = message.id" +
-            "  AND operation.name = '" + EntityOperation.ADD + "')"+
+            "  AND operation.name = '" + EntityOperation.ADD + "')" +
             " AND NOT EXISTS" +
             "  (SELECT * FROM operation o" +
             "  JOIN message m ON m.id = o.message" +

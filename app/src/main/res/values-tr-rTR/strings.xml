@@ -3,7 +3,6 @@
     <string name="app_search">FairEmail arama</string>
     <string name="app_changelog">Değişiklik günlüğü</string>
     <string name="app_welcome">FairEmail gizlilik ve güvenlik odaklı açık kaynaklı bir e-posta uygulamasıdır. Bu nedenle, bazı özellikler alışkın olduğunuzdan farklı şekilde çalışabilir.</string>
-    <string name="app_limitations">Örneğin, güvenli olmayan öğeleri çıkarmak ve okunabilirliği arttırmak için, iletiler daima tekrardan düzenlenecektir ve bağlantıları açmak güvenlik açısından doğrulama gerektirecektir.</string>
     <string name="app_crash">FairEmail bu aygıtı desteklemiyor. Çünkü Androiddeki hatalar çökmelere neden oluyor</string>
     <string name="app_exit">Çıkmak için tekrar \'Geri\'yi tıklayın</string>
     <string name="app_cake">Yeterli depolama alanı kalmadı</string>
@@ -77,6 +76,8 @@
     <string name="title_block_sender_hint">        Göndereni engellemek, gelecekteki iletileri otomatik olarak spam klasörüne taşımak için bir kural oluşturacaktır.
         Kural oluşturma ve kullanma, pro sürümüne has bir özelliktir.
     </string>
+    <string name="title_junk_filter">Yerel spam filtreleri</string>
+    <string name="title_junk_filter_hint">Bu, pil kullanımını artırabilir ve iletileri yanlış olarak spam işaretleyebilir</string>
     <string name="title_notification_sending">İletileri gönderiliyor</string>
     <string name="title_notification_waiting">Uygun bağlantı bekleniyor</string>
     <string name="title_notification_idle">Dışarıda</string>
@@ -114,23 +115,16 @@
     <string name="title_edit_folder">Klasörü düzenle</string>
     <string name="title_setup">Ayarlar</string>
     <string name="title_setup_help">Yardım</string>
-    <string name="title_setup_welcome">E-posta alıp göndermek için herhangi bir e-posta uygulamasında olduğu gibi bir hesap kurmanız gerekmektedir.
-        Hızlı kurulum, sadece birkaç bilgi sorarak hem bir hesap hem de bir kimlik oluşturmanıza yardımcı olur.
-        Hesapları ve kimlikleri ihtiyaç duyduğunuzda elle de kurabilirsiniz.
-        Microsoft Exchange veya ActiveSync gibi standart dışı protokoller desteklenmemektedir, daha fazlası için uygulama ayrıntılarına bakabilirsiniz.
-    </string>
     <string name="title_setup_quick">Hızlı Kurulum</string>
-    <string name="title_setup_quick_remark">Bir hesabı çabucak kurmak için ve çoğu e posta sağlayıcı için kimlik ayarları</string>
     <string name="title_setup_quick_support">Bazı sağlayıcılar hesap eklemeyi zorlaştırır. Lütfen bunun için FairEmail\'i suçlamayın, bunun yerine destek isteyin.</string>
     <string name="title_setup_quick_hint">Hızlı kurulum, yapılandırma bilgilerini autoconfig.thunderbird.net adresinden alır</string>
     <string name="title_setup_quick_imap">İleti almak için IMAP sunucusu</string>
     <string name="title_setup_quick_smtp">İleti göndermek için SMTP sunucusu</string>
     <string name="title_setup_wizard">Yardımcı</string>
-    <string name="title_setup_wizard_multiple">Kurulum sihirbazı, birden fazla hesabı ayarlamak için birden çok kez kullanılabilir</string>
     <string name="title_setup_wizard_new">Yeni bir e-posta adresi istiyorum</string>
-    <string name="title_setup_wizard_remark">Gelen kutusuna gitmek için \'geri\' gidin</string>
     <string name="title_setup_oauth_permission">E-posta sağlayıcısı OAuth\'u yalnızca resmi uygulama sürümleri için onayladı</string>
     <string name="title_setup_other">Diğer sağlayıcı</string>
+    <string name="title_setup_pop3">POP3 hesabı</string>
     <string name="title_setup_gmail_support">Google hesaplarını yetkilendirmek sadece resmi versiyonlarda çalışacaktır çünkü Android uygulama imzasını kontrol etmektedir</string>
     <string name="title_setup_gmail_rationale">Lütfen bir hesap seçmek ve isminizi okumak için izin verin</string>
     <string name="title_setup_gmail_permissions">Google, tüm e-postalarınızı okumak, oluşturmak, göndermek ve kalıcı olarak silmek için izin isteyecektir. FairEmail, açık onayınız olmadan mesajlarınızı asla silmeyecektir.</string>
@@ -145,26 +139,16 @@
     <string name="title_setup_select_account">Hesap seç</string>
     <string name="title_setup_instructions">Kurulum yönergeleri</string>
     <string name="title_setup_no_settings">\'%1$s\' alan adı için ayar bulunamadı</string>
-    <string name="title_setup_no_settings_hint">Lütfen e-posta sağlayıcınız tarafından sağlanan ayarları kullanarak 1. ve 2. kurulum adımında bir hesap ve kimlik ayarlamaya çalışın</string>
     <string name="title_setup_no_auth_hint">Lütfen e-posta adresinizi ve parolanızı tekrar kontrol edin ve hesabınız için harici erişimin (IMAP/SMTP) etkinleştirilmiş olduğundan emin olun</string>
     <string name="title_setup_app_password_hint">Bu sağlayıcı, hesabınızın parolası yerine ayrı bir uygulama parolası istemektedir. Ayrıntılar için sağlayıcınızın size sunduğu yönergelere bakınız</string>
     <string name="title_setup_no_inbox">Gelen kutusu bulunamadı</string>
     <string name="title_setup_advanced_protection">Gelişmiş koruma programına dahil olduğunuzda, üçüncü parti bir e-posta istemcisi kullanamazsınız. Bu, Google\'ın bir kısıtlamasıdır.</string>
-    <string name="title_setup_quick_success">Bir hesap ve bir kimlik başarıyla eklendi</string>
-    <string name="title_setup_quick_failed">Bir hesap ve kimlik yapılandırmayı aşağıdan da deneyebilirsiniz</string>
     <string name="title_setup_manage">Yönet</string>
     <string name="title_setup_grant">İzin</string>
     <string name="title_setup_grant_again">Gerekli izinleri ver</string>
-    <string name="title_setup_account">Kurulum hesapları</string>
-    <string name="title_setup_account_remark">E-posta almak için</string>
-    <string name="title_setup_account_hint">Rengi değiştirmek için hedef klasörü sola/sağa kaydırın, vb</string>
-    <string name="title_setup_identity">Kurulum kimlikleri</string>
-    <string name="title_setup_identity_remark">E-posta göndermek için</string>
-    <string name="title_setup_identity_hint">Ad, renk, imza vb. değiştirmek için</string>
     <string name="title_setup_identity_what">Kimlik nedir?</string>
     <string name="title_setup_permissions">Verilen izinler</string>
     <string name="title_setup_permissions_remark">İletişim bilgilerine erişim için (isteğe bağlı)</string>
-    <string name="title_setup_doze">Pil optimizasyonlarını ayarla</string>
     <string name="title_setup_doze_remark">Güvenilir bir şekilde e-posta almak için</string>
     <string name="title_setup_doze_hint">Bu çelişkili görünse de pil optimizasyonlarını kapatmak daha az pil kullanımına neden olacaktır</string>
     <string name="title_setup_doze_instructions">Sonraki iletişim kutusunda, en üstteki \"Tüm uygulamalar\" seçeneğini işaretleyin, bu uygulamayı seçin ve \"optimize etme\" seçeneğini onaylayın</string>
@@ -172,7 +156,6 @@
     <string name="title_setup_doze_stopped">Eşzamanlama durdu mu?</string>
     <string name="title_setup_data">Veri koruyucu etkin</string>
     <string name="title_setup_advanced_options">Gelişmiş seçenekleri göster</string>
-    <string name="title_setup_inbox">İletilere git</string>
     <string name="title_setup_go">Git</string>
     <string name="title_setup_to_do">Yapılacak</string>
     <string name="title_setup_done">Bitti</string>
@@ -217,7 +200,9 @@
     <string name="title_setup_defaults">Öntanımlıları geri yükle</string>
     <string name="title_setup_reset_questions">Soruları sıfırla</string>
     <string name="title_advanced_hint_title">Daha gelişmiş seçenekler</string>
-    <string name="title_advanced_section_main">Temel</string>
+    <string name="title_advanced_hint_message">        Daha gelişmiş seçeneklere gidiyorsunuz.
+        Tüm seçenekler, farklı bir tercihiniz olmadığı sürece değiştirmenizin gerekmediği yaygın kullanılan varsayılan değerlere sahiptir.
+    </string>
     <string name="title_advanced_section_synchronize">Gelen</string>
     <string name="title_advanced_section_send">Gönder</string>
     <string name="title_advanced_section_connection">Bağlantı</string>
@@ -302,6 +287,8 @@
     <string name="title_advanced_generated_icons">Oluşturulan simgeleri göster</string>
     <string name="title_advanced_identicons">Kimliklerini göster</string>
     <string name="title_advanced_circular">Yuvarlak simgeleri göster</string>
+    <string name="title_advanced_color_saturation">Doygunluk: %1$s %%</string>
+    <string name="title_advanced_color_value">Parlaklık: %1$s %%</string>
     <string name="title_advanced_name_email">Adları ve e-posta adreslarini göster</string>
     <string name="title_advanced_replace_name">Gönderilen ad yerine kişi adı tercih et</string>
     <string name="title_advanced_distinguish_contacts">Gönderen yerel \'alıcı\' kişisi olarak biliniyorsa gönderenin altını çiz</string>
@@ -405,6 +392,7 @@
     <string name="title_advanced_tracking">Takip resimlerini tanımaya ve devre dışı bırakmaya çalışın</string>
     <string name="title_advanced_hide_timezone">İletileri saat dilimi verisi olmadan gönder</string>
     <string name="title_advanced_display_hidden">Gizli mesaj metinlerini göster</string>
+    <string name="title_advanced_incognito_keyboard">Gizli klavye kullan (Android 8+)</string>
     <string name="title_advanced_secure">Son kullanılan uygulamalar ekranından gizle ve ekran görüntüsü alınmasını engelle</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Biyometrik doğrulama süresi bitti</string>
@@ -417,6 +405,7 @@
     <string name="title_advanced_openpgp">OpenPGP sağlayıcı</string>
     <string name="title_advanced_autocrypt">Autocrypt kullan</string>
     <string name="title_advanced_autocrypt_mutual">Autocrypt karşılıklı mod</string>
+    <string name="title_advanced_encrypt_subject">Konuyu şifrele</string>
     <string name="title_advanced_check_certificate">Göndermeden önce genel anahtarı kontrol et</string>
     <string name="title_advanced_manage_certificates">Genel anahtarları yönet</string>
     <string name="title_advanced_import_key">Özel anahtarı içe aktar</string>
@@ -427,11 +416,13 @@
     </string>
     <string name="title_advanced_external_search">Diğer uygulamaların mesajlarda arama yapmasına izin ver</string>
     <string name="title_advanced_shortcuts">Sık kullanılan kişileri Android\'in paylaşma menüsünde göster</string>
-    <string name="title_advanced_conversation_actions">Eylemler öner</string>
-    <string name="title_advanced_conversation_actions_replies">Yanıt metinleri öner</string>
-    <string name="title_advanced_language_detection">İletinin dilini tespit et</string>
+    <string name="title_advanced_conversation_actions">Eylem öner (Android 10+)</string>
+    <string name="title_advanced_conversation_actions_replies">Yanıt iletileri öner (Android 10+)</string>
     <string name="title_advanced_fts">Arama indeksini oluştur</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mesaj indekslendi (%3$s)</string>
+    <string name="title_advanced_classification">İletileri sınıflandır</string>
+    <string name="title_advanced_class_min_chance">En düşük sınıflandırma olasılığı: %1$s %%</string>
+    <string name="title_advanced_class_min_difference">En düşük sınıflandırma farkı: %1$s %%</string>
     <string name="title_advanced_language">Dil</string>
     <string name="title_advanced_language_system">Sistem</string>
     <string name="title_advanced_watchdog">Düzenli aralıklarla FairEmail hala etkin mi diye kontrol et</string>
@@ -616,7 +607,6 @@
     <string name="title_advanced_expand_read">Genişletirken mesajları okundu olarak işaretle</string>
     <string name="title_synchronize_now">Şimdi eşzamanla</string>
     <string name="title_synchronize_subfolders">Alt Klasörler</string>
-    <string name="title_synchronize_more">Daha fazla ileti senkronize et</string>
     <string name="title_synchronize_enabled">Eşzamanlama</string>
     <string name="title_synchronize_batch_enable">Senkronizasyonunu Etkinleştir</string>
     <string name="title_synchronize_batch_disable">Senkronizasyonunu Devre Dışı Bırak</string>
@@ -637,6 +627,13 @@
     <string name="title_empty_trash_all_ask">Tüm hesapların çöpe atılan tüm mesajları kalıcı olarak silinsin mi?</string>
     <string name="title_empty_spam_all_ask">Tüm hesapların tüm spam mesajları kalıcı olarak silinsin mi?</string>
     <string name="title_empty_all">Bu, tüm mesajları hem cihazdan hem de sunucudan silmektedir/siler</string>
+    <string name="title_delete_operation_title">İşlemleri sil</string>
+    <string name="title_delete_operation_error">Hata mesajı olan</string>
+    <string name="title_delete_operation_fetch">Alma işlemleri</string>
+    <string name="title_delete_operation_move">Taşıma işlemleri</string>
+    <string name="title_delete_operation_flag">İşaretleme işlemleri</string>
+    <string name="title_delete_operation_delete">Silme işlemleri</string>
+    <string name="title_delete_operation_deleted">%1$d işlem silindi</string>
     <string name="title_delete_contacts">Tüm yerel rehber silinsin mi?</string>
     <string name="title_no_operations">Bekleyen işlem yok</string>
     <string name="title_hint_operations">İşlemleri silmek mesajların kaybolmasına ve senkronizasyon sorunlarına neden olabilir</string>
@@ -653,11 +650,15 @@
     <string name="title_poll_folder">Sürekli eşzamanlama yerine belirli aralıklarla bakın</string>
     <string name="title_download_folder">İleti metinlerini ve eklerini otomatik olarak indir</string>
     <string name="title_notify_folder">Yeni iletileri bildir</string>
+    <string name="title_auto_classify_source">Bu klasördeki yeni iletileri sınıflandır</string>
+    <string name="title_auto_classify_target">Sınıflandırılmış iletileri otomatik olarak bu klasöre taşı</string>
     <string name="title_sync_days">İletileri eşzamanla (gün)</string>
     <string name="title_sync_days_remark">Bu değerin artırılması, pil ve veri kullanımını artıracak</string>
     <string name="title_keep_days">İletileri sakla (günler)</string>
     <string name="title_keep_days_remark">Eski mesajlar cihazdan silinecek, fakat sunucuda kalmaya devam edecektir</string>
     <string name="title_keep_all">Tüm iletileri sakla</string>
+    <string name="title_poll_system">Sistem klasörlerinin belirli zaman aralıklarıyla yeni iletileri kontrol etmesine ayarla</string>
+    <string name="title_poll_user">Kullanıcı klasörlerinin belirli zaman aralıklarıyla yeni iletileri kontrol etmesine ayarla</string>
     <string name="title_auto_trash">Eski iletileri otomatik olarak çöpe taşı</string>
     <string name="title_auto_delete">Eski iletileri otomatik olarak kalıcı sil</string>
     <string name="title_auto_delete_hint">Eski mesajlar, artık cihazda tutulmayan mesajlardır</string>
@@ -883,6 +884,8 @@
     <string name="title_text_reminder">İleti boş</string>
     <string name="title_attachment_keywords">eklendi,ek,ekler,dahil edildi</string>
     <string name="title_attachment_reminder">Bir ek eklemek niyetinde misiniz?</string>
+    <string name="title_plain_reminder">Tüm biçimlendirme kaybolacak</string>
+    <string name="title_size_reminder">İleti (%1$s) sunucu sınırından (%2$s) yüksek</string>
     <string name="title_attachments_missing">Tüm ekler indirilmedi</string>
     <string name="title_draft_deleted">Taslak silindi</string>
     <string name="title_draft_saved">Taslak kaydedildi</string>

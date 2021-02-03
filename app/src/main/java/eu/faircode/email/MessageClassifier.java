@@ -64,6 +64,9 @@ public class MessageClassifier {
             if (!folder.auto_classify_source)
                 return;
 
+            if (target != null && !target.auto_classify_source)
+                return;
+
             long start = new Date().getTime();
 
             // Build text to classify
@@ -396,7 +399,12 @@ public class MessageClassifier {
         File file = getFile(context);
         if (file.exists()) {
             String json = Helper.readText(file);
-            fromJson(new JSONObject(json));
+            try {
+                fromJson(new JSONObject(json));
+            } catch (JSONException ex) {
+                Log.e(ex);
+                file.delete();
+            }
         }
 
         loaded = true;

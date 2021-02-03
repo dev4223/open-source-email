@@ -33,6 +33,7 @@ import android.os.Looper;
 import android.util.Printer;
 import android.webkit.CookieManager;
 
+import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
 import java.util.Date;
@@ -40,7 +41,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class ApplicationEx extends Application implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class ApplicationEx extends Application
+        implements androidx.work.Configuration.Provider, SharedPreferences.OnSharedPreferenceChangeListener {
     private Thread.UncaughtExceptionHandler prev = null;
 
     @Override
@@ -77,7 +79,10 @@ public class ApplicationEx extends Application implements SharedPreferences.OnSh
         super.onCreate();
 
         long start = new Date().getTime();
-        Log.logMemory(this, "App create version=" + BuildConfig.VERSION_NAME);
+        EntityLog.log(this, "App create" +
+                " version=" + BuildConfig.VERSION_NAME +
+                " process=" + android.os.Process.myPid());
+        Log.logMemory(this, "App");
 
         getMainLooper().setMessageLogging(new Printer() {
             @Override
@@ -133,6 +138,7 @@ public class ApplicationEx extends Application implements SharedPreferences.OnSh
             CookieManager.getInstance().setAcceptCookie(false);
 
         MessageHelper.setSystemProperties(this);
+
         ContactInfo.init(this);
 
         DisconnectBlacklist.init(this);
@@ -150,16 +156,17 @@ public class ApplicationEx extends Application implements SharedPreferences.OnSh
 
         registerReceiver(onScreenOff, new IntentFilter(Intent.ACTION_SCREEN_OFF));
 
-        if (BuildConfig.DEBUG)
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    DnsHelper.test(ApplicationEx.this);
-                }
-            }).start();
-
         long end = new Date().getTime();
         Log.i("App created " + (end - start) + " ms");
+    }
+
+    @NonNull
+    @Override
+    public androidx.work.Configuration getWorkManagerConfiguration() {
+        // https://developer.android.com/topic/libraries/architecture/workmanager/advanced/custom-configuration
+        return new androidx.work.Configuration.Builder()
+                .setMinimumLoggingLevel(android.util.Log.INFO)
+                .build();
     }
 
     @Override
@@ -398,6 +405,12 @@ public class ApplicationEx extends Application implements SharedPreferences.OnSh
         } else if (version < 1461) {
             if (!prefs.contains("theme"))
                 editor.putString("theme", "blue_orange_light");
+        } else if (version < 1463) {
+            if (!prefs.contains("autoscroll"))
+                editor.putBoolean("autoscroll", true);
+        } else if (version < 1477) {
+            if (!BuildConfig.DEBUG)
+                editor.remove("experiments");
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !BuildConfig.DEBUG)

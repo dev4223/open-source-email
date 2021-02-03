@@ -2003,7 +2003,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             else
                 icon = EntityFolder.getIcon(dX > 0 ? swipes.right_type : swipes.left_type);
 
-            Drawable d = getResources().getDrawable(icon, context.getTheme()).mutate();
+            Drawable d = context.getDrawable(icon).mutate();
             d.setTint(Helper.resolveColor(context, android.R.attr.textColorSecondary));
 
             if (dX > 0) {
@@ -2261,6 +2261,12 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         }
 
         private void onSwipeJunk(final @NonNull TupleMessageEx message) {
+            boolean canBlock = false;
+            if (message.from != null && message.from.length > 0) {
+                String email = ((InternetAddress) message.from[0]).getAddress();
+                canBlock = !TextUtils.isEmpty(email) && Helper.EMAIL_ADDRESS.matcher(email).matches();
+            }
+
             Bundle aargs = new Bundle();
             aargs.putLong("id", message.id);
             aargs.putLong("account", message.account);
@@ -2269,6 +2275,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             aargs.putString("type", message.folderType);
             aargs.putString("from", MessageHelper.formatAddresses(message.from));
             aargs.putBoolean("inJunk", EntityFolder.JUNK.equals(message.folderType));
+            aargs.putBoolean("canBlock", canBlock);
 
             AdapterMessage.FragmentDialogJunk ask = new AdapterMessage.FragmentDialogJunk();
             ask.setArguments(aargs);
@@ -2403,6 +2410,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 if (data.identities == null)
                     data.identities = new ArrayList<>();
 
+                final Context context = getContext();
+                if (context == null)
+                    return;
+
                 final Address[] to =
                         message.replySelf(data.identities, message.account)
                                 ? message.to
@@ -2412,13 +2423,19 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
                 int answers = args.getInt("answers");
 
-                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), anchor);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                boolean experiments = prefs.getBoolean("experiments", false);
+
+                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), anchor);
                 popupMenu.inflate(R.menu.popup_reply);
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setVisible(recipients.length > 0);
                 popupMenu.getMenu().findItem(R.id.menu_reply_list).setVisible(message.list_post != null);
                 popupMenu.getMenu().findItem(R.id.menu_reply_receipt).setVisible(message.receipt_to != null);
+                popupMenu.getMenu().findItem(R.id.menu_reply_hard_bounce)
+                        .setVisible(experiments && (BuildConfig.DEBUG ||
+                                (message.return_path != null && message.return_path.length > 0)));
                 popupMenu.getMenu().findItem(R.id.menu_new_message).setVisible(to != null && to.length > 0);
-                popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !ActivityBilling.isPro(getContext()));
+                popupMenu.getMenu().findItem(R.id.menu_reply_answer).setVisible(answers != 0 || !ActivityBilling.isPro(context));
 
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_sender).setEnabled(message.content);
                 popupMenu.getMenu().findItem(R.id.menu_reply_to_all).setEnabled(message.content);
@@ -2439,7 +2456,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     @Override
                     public boolean onMenuItemClick(MenuItem target) {
                         if (target.getGroupId() == 1) {
-                            startActivity(new Intent(getContext(), ActivityCompose.class)
+                            startActivity(new Intent(context, ActivityCompose.class)
                                     .putExtra("action", "reply")
                                     .putExtra("reference", message.id)
                                     .putExtra("answer", target.getIntent().getLongExtra("id", -1)));
@@ -2458,7 +2475,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                                 onMenuReply(message, "list", selected);
                                 return true;
                             case R.id.menu_reply_receipt:
-                                onMenuReply(message, "receipt");
+                                onMenuDsn(message, EntityMessage.DSN_RECEIPT);
+                                return true;
+                            case R.id.menu_reply_hard_bounce:
+                                onMenuDsn(message, EntityMessage.DSN_HARD_BOUNCE);
                                 return true;
                             case R.id.menu_forward:
                                 onMenuReply(message, "forward");
@@ -2496,6 +2516,14 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 .putExtra("action", action)
                 .putExtra("reference", message.id)
                 .putExtra("selected", selected);
+        startActivity(reply);
+    }
+
+    private void onMenuDsn(TupleMessageEx message, int type) {
+        Intent reply = new Intent(getContext(), ActivityCompose.class)
+                .putExtra("action", "dsn")
+                .putExtra("reference", message.id)
+                .putExtra("dsn", type);
         startActivity(reply);
     }
 
@@ -2902,6 +2930,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         Bundle args = new Bundle();
         args.putLongArray("ids", id == null ? getSelection() : new long[]{id});
         args.putBoolean("seen", seen);
+        args.putBoolean("threading", threading && id == null);
 
         //if (selectionTracker != null)
         //    selectionTracker.clearSelection();
@@ -2911,6 +2940,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected Void onExecute(Context context, Bundle args) {
                 long[] ids = args.getLongArray("ids");
                 boolean seen = args.getBoolean("seen");
+                boolean threading = args.getBoolean("threading");
 
                 DB db = DB.getInstance(context);
                 try {
@@ -3039,6 +3069,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         args.putBoolean("flagged", flagged);
         if (color != null)
             args.putInt("color", color);
+        args.putBoolean("threading", threading && id == null);
 
         //selectionTracker.clearSelection();
 
@@ -3048,6 +3079,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 long[] ids = args.getLongArray("ids");
                 boolean flagged = args.getBoolean("flagged");
                 Integer color = (args.containsKey("color") ? args.getInt("color") : null);
+                boolean threading = args.getBoolean("threading");
 
                 DB db = DB.getInstance(context);
                 try {
@@ -3984,8 +4016,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 (viewType == AdapterMessage.ViewType.UNIFIED ||
                         (viewType == AdapterMessage.ViewType.FOLDER && !outbox));
 
-        String filter_language = prefs.getString("filter_language", null);
-        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown || !TextUtils.isEmpty(filter_language));
+        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown);
         MenuItem menuFilter = menu.findItem(R.id.menu_filter);
         menuFilter.setShowAsAction(folder && filter_active
                 ? MenuItem.SHOW_AS_ACTION_ALWAYS
@@ -4056,8 +4087,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
         menu.findItem(R.id.menu_compact).setChecked(compact);
 
-        menu.findItem(R.id.menu_select_language).setVisible(
-                language_detection && folder && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q);
+        menu.findItem(R.id.menu_select_language).setVisible(language_detection && folder);
         menu.findItem(R.id.menu_select_all).setVisible(folder);
         menu.findItem(R.id.menu_select_found).setVisible(viewType == AdapterMessage.ViewType.SEARCH);
         menu.findItem(R.id.menu_mark_all_read).setVisible(folder);
@@ -4422,8 +4452,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 boolean filter_unflagged = prefs.getBoolean("filter_unflagged", false);
                 boolean filter_unknown = prefs.getBoolean("filter_unknown", false);
                 boolean filter_snoozed = prefs.getBoolean("filter_snoozed", true);
-                String filter_language = prefs.getString("filter_language", null);
                 boolean language_detection = prefs.getBoolean("language_detection", false);
+                String filter_language = prefs.getString("filter_language", null);
 
                 DB db = DB.getInstance(context);
                 try {
@@ -4515,7 +4545,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             tvSelectedCount.setText(NF.format(count));
             if (count > (BuildConfig.DEBUG ? 10 : MAX_MORE)) {
                 int ts = Math.round(tvSelectedCount.getTextSize());
-                Drawable w = context.getResources().getDrawable(R.drawable.twotone_warning_24, context.getTheme());
+                Drawable w = context.getDrawable(R.drawable.twotone_warning_24);
                 w.setBounds(0, 0, ts, ts);
                 w.setTint(tvSelectedCount.getCurrentTextColor());
                 tvSelectedCount.setCompoundDrawablesRelative(null, null, w, null);
@@ -4650,7 +4680,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     return;
             } else {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-                boolean autoscroll = prefs.getBoolean("autoscroll", true);
+                boolean autoscroll = prefs.getBoolean("autoscroll", false);
                 if (autoscroll) {
                     ActivityView activity = (ActivityView) getActivity();
                     if (activity != null &&
@@ -4684,8 +4714,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         boolean filter_seen = prefs.getBoolean("filter_seen", false);
         boolean filter_unflagged = prefs.getBoolean("filter_unflagged", false);
         boolean filter_unknown = prefs.getBoolean("filter_unknown", false);
+        boolean language_detection = prefs.getBoolean("language_detection", false);
         String filter_language = prefs.getString("filter_language", null);
-        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown || !TextUtils.isEmpty(filter_language));
+        boolean filter_active = (filter_seen || filter_unflagged || filter_unknown ||
+                (language_detection && !TextUtils.isEmpty(filter_language)));
 
         boolean none = (items == 0 && !loading && tasks == 0 && initialized);
         boolean filtered = (filter_active && viewType != AdapterMessage.ViewType.SEARCH);
@@ -8000,7 +8032,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             Drawable source = null;
             if (sources.size() == 1) {
-                source = getResources().getDrawable(EntityFolder.getIcon(sources.get(0)), null);
+                source = getContext().getDrawable(EntityFolder.getIcon(sources.get(0)));
                 if (source != null)
                     source.setBounds(0, 0, source.getIntrinsicWidth(), source.getIntrinsicHeight());
                 if (sourceColor == null)
@@ -8010,7 +8042,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             Drawable target = null;
             if (targets.size() == 1) {
-                target = getResources().getDrawable(EntityFolder.getIcon(targets.get(0)), null);
+                target = getContext().getDrawable(EntityFolder.getIcon(targets.get(0)));
                 if (target != null)
                     target.setBounds(0, 0, target.getIntrinsicWidth(), target.getIntrinsicHeight());
                 if (targetColor == null)

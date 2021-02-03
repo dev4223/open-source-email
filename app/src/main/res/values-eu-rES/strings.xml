@@ -3,7 +3,6 @@
     <string name="app_search">FairEmail bilaketa</string>
     <string name="app_changelog">Aldaketen erregistroa</string>
     <string name="app_welcome">FairEmail kode irekiko email aplikazio bat da, pribatutasuna eta segurtasuna aintzat dituena. Horregatik ezaugarri batzuk ohi ez bezala funtzionatu dezakete.</string>
-    <string name="app_limitations">Adibidez, mezuei beti aldatuko zaie formatua elementu ez seguruak kentzeko eta irakurterraztasuna hobetzeko, eta estekak irekitzea segurtasunagatik baieztatu egin behar da.</string>
     <string name="app_crash">FairEmail-ek ez du gailu honentzako euskarririk Android akatsek kraskatzea eragiten dutelako</string>
     <string name="app_exit">Jo \'atzera\' berriro irteteko</string>
     <string name="channel_service">Jaso</string>
@@ -102,18 +101,11 @@
     <string name="title_edit_folder">Editatu karpeta</string>
     <string name="title_setup">Ezarpenak</string>
     <string name="title_setup_help">Laguntza</string>
-    <string name="title_setup_welcome">Mezuak jaso eta bidaltzeko kontu eta identitate bat ezarri behar da beste edozein e-mail aplikaziotan bezala.
-        Ezarpen azkarrak kontua eta identitatea sortuko ditu zure izena, e-mail helbidea eta pasahitza bakarrik galdetuta.
-        Kontuak eta identitateak (ezizenak) eskuz ezarri daitezke ere behar izatekotan.
-        Ez dira onartzen protokolo ez estandarrak, Microsoft Exchange Web Services eta Microsoft ActiveSync bezalakoak, ikus aplikazioaren deskribapena ere.    </string>
     <string name="title_setup_quick">Ezarpen azkarra</string>
-    <string name="title_setup_quick_remark">Kontu eta identitate bat azkar ezartzeko hornitzaile gehienekin</string>
     <string name="title_setup_quick_hint">Ezarpen azkar honek konfigurazioaren informazioa autoconfig.thunderbird.net helbidetik eskuratuko du</string>
     <string name="title_setup_quick_imap">IMAP zerbitzaria mezuak jasotzeko</string>
     <string name="title_setup_quick_smtp">SMTP zerbitzaria mezuak igortzeko</string>
     <string name="title_setup_wizard">Morroia</string>
-    <string name="title_setup_wizard_multiple">Instalatzeko morroia hainbat aldiz erabil daiteke zenbait kontu konfiguratzeko</string>
-    <string name="title_setup_wizard_remark">Jo \'atzera\' sarrera ontzira joateko</string>
     <string name="title_setup_other">Beste hornitzaile bat</string>
     <string name="title_setup_gmail_support">Google kontuak autorizatzea bertsio ofizialetan besterik ez dabil Androidek aplikazioaren sinadura egiaztatzen duelako</string>
     <string name="title_setup_gmail_rationale">Eman baimena kontu bat aukeratu eta zure izena irakurtzeko</string>
@@ -125,29 +117,18 @@
     <string name="title_setup_select_account">Hautatu kontua</string>
     <string name="title_setup_instructions">Ezartzeko argibideak</string>
     <string name="title_setup_no_settings">Ez da \'%1$s\' domeinuarentzat ezarpenik aurkitu</string>
-    <string name="title_setup_no_settings_hint">Saiatu kontu eta identitate bat konfiguratzen 1. eta 2. konfigurazio-urratsean, zure posta elektronikoaren hornitzaileak emandako ezarpenak erabiliz</string>
     <string name="title_setup_no_auth_hint">Egiaztatu zure helbide elektronikoa eta pasahitza eta ziurtatu kanpoko sarbidea (IMAP / SMTP) gaituta dagoela zure konturako</string>
     <string name="title_setup_app_password_hint">Hornitzaile honek aplikazio-pasahitza eskatzen du kontu-pasahitzaren ordez, egiaztatu zure hornitzailearen argibideak</string>
-    <string name="title_setup_quick_success">Kontu eta identitate bat gehitu dira</string>
-    <string name="title_setup_quick_failed">Kontu eta identitate bat konfiguratzen saiatu zaitezke hemen azpian</string>
     <string name="title_setup_manage">Kudeatu</string>
     <string name="title_setup_grant">Eman</string>
     <string name="title_setup_grant_again">Eman eskatzen dituen baimenak</string>
-    <string name="title_setup_account">Ezarri kontuak</string>
-    <string name="title_setup_account_remark">E-maila jasotzeko</string>
-    <string name="title_setup_account_hint">Kolorea aldatzeko pasatu hatza ezkerrera/eskuinera karpetan, eta abar</string>
-    <string name="title_setup_identity">Ezarri identitateak</string>
-    <string name="title_setup_identity_remark">E-maila bidaltzeko</string>
-    <string name="title_setup_identity_hint">Izena, kolorea, sinadura eta abar aldatzeko</string>
     <string name="title_setup_permissions">Eman baimenak</string>
     <string name="title_setup_permissions_remark">Kontaktuen informazioa atzitzeko (aukerakoa)</string>
-    <string name="title_setup_doze">Ezarri bateria optimizazioak</string>
     <string name="title_setup_doze_instructions">Hurrengo elkarrizketa-koadroan, hautatu \'Aplikazio guztiak\' goialdean, gero hautatu aplikazio hau eta baieztatu \"Ez optimizatu\"</string>
     <string name="title_setup_doze_battery">Bateria-erabilera handia?</string>
     <string name="title_setup_doze_stopped">Sinkronizazioa gelditu da?</string>
     <string name="title_setup_data">Datuen aurreztailea gaituta dago</string>
     <string name="title_setup_advanced_options">Erakutsi aukera aurreratuak</string>
-    <string name="title_setup_inbox">Joan mezuetara</string>
     <string name="title_setup_go">Goazen</string>
     <string name="title_setup_to_do">Egiteke</string>
     <string name="title_setup_done">Eginda</string>
@@ -191,7 +172,6 @@
     <string name="title_setup_defaults">Berrezarri balio lehenetsiak</string>
     <string name="title_setup_reset_questions">Berrezarri galderak</string>
     <string name="title_advanced_hint_title">Aukera aurreratu gehiago</string>
-    <string name="title_advanced_section_main">Nagusia</string>
     <string name="title_advanced_section_synchronize">Jaso</string>
     <string name="title_advanced_section_send">Bidali</string>
     <string name="title_advanced_section_connection">Konexioa</string>
@@ -365,9 +345,6 @@
     <string name="title_advanced_ca">Instalatutako CA ziurtagiriak</string>
     <string name="title_advanced_external_search">Baimendu beste aplikazioei mezuetan bilatzea</string>
     <string name="title_advanced_shortcuts">Erakutsi maiz erabilitako kontaktuak Android partekatzeko menuan</string>
-    <string name="title_advanced_conversation_actions">Iradoki ekintzak</string>
-    <string name="title_advanced_conversation_actions_replies">Iradoki erantzuteko testuak</string>
-    <string name="title_advanced_language_detection">Detektatu mezuen testuaren hizkuntza</string>
     <string name="title_advanced_fts">Sortu bilaketa-indizea</string>
     <string name="title_advanced_fts_indexed">%1$d / %2$d mezu indexatuak (%3$s)</string>
     <string name="title_advanced_language_system">Sistema</string>
@@ -534,7 +511,6 @@
     <string name="title_advanced_expand_read">Mezuak zabaltzean markatu irakurrita gisa</string>
     <string name="title_synchronize_now">Sinkronizatu orain</string>
     <string name="title_synchronize_subfolders">Azpikarpetak</string>
-    <string name="title_synchronize_more">Sinkronizatu mezu gehiago</string>
     <string name="title_synchronize_enabled">Sinkronizatu</string>
     <string name="title_synchronize_batch_enable">Gaitu sinkronizazioa</string>
     <string name="title_synchronize_batch_disable">Desgaitu sinkronizazioa</string>

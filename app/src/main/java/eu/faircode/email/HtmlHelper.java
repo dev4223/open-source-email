@@ -55,11 +55,9 @@ import android.text.style.URLSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Base64;
 import android.util.Patterns;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.ColorUtils;
@@ -130,7 +128,7 @@ public class HtmlHelper {
     private static final int MAX_ALT = 250;
     private static final int MAX_AUTO_LINK = 250;
     private static final int MAX_FORMAT_TEXT_SIZE = 200 * 1024; // characters
-    private static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
+    static final int MAX_FULL_TEXT_SIZE = 1024 * 1024; // characters
     private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
@@ -403,7 +401,7 @@ public class HtmlHelper {
         normalizeNamespaces(parsed, display_hidden);
 
         // Limit length
-        if (view && truncate(parsed, true)) {
+        if (view && truncate(parsed, MAX_FORMAT_TEXT_SIZE)) {
             parsed.body()
                     .appendElement("p")
                     .appendElement("em")
@@ -1564,7 +1562,7 @@ public class HtmlHelper {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean disconnect_images = prefs.getBoolean("disconnect_images", false);
 
-        Drawable d = ContextCompat.getDrawable(context, R.drawable.twotone_my_location_24);
+        Drawable d = context.getDrawable(R.drawable.twotone_my_location_24);
         d.setTint(Helper.resolveColor(context, R.attr.colorWarning));
         Bitmap bm = Bitmap.createBitmap(d.getIntrinsicWidth(), d.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bm);
@@ -1709,15 +1707,22 @@ public class HtmlHelper {
         Log.d(document.head().html());
     }
 
-    static String getLanguage(Context context, String body) {
+    static String getLanguage(Context context, String subject, String text) {
         try {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean language_detection = prefs.getBoolean("language_detection", false);
             if (!language_detection)
                 return null;
 
-            String text = getPreview(body);
-            Locale locale = TextHelper.detectLanguage(context, text);
+            StringBuilder sb = new StringBuilder();
+            if (!TextUtils.isEmpty(subject))
+                sb.append(subject).append('\n');
+            if (!TextUtils.isEmpty(text))
+                sb.append(text);
+            if (sb.length() == 0)
+                return null;
+
+            Locale locale = TextHelper.detectLanguage(context, sb.toString());
             return (locale == null ? null : locale.getLanguage());
         } catch (Throwable ex) {
             Log.e(ex);
@@ -1725,25 +1730,22 @@ public class HtmlHelper {
         }
     }
 
-    static String getPreview(String body) {
-        try {
-            if (body == null)
-                return null;
-            Document d = JsoupEx.parse(body);
-            return _getText(d, false);
-        } catch (OutOfMemoryError ex) {
-            Log.e(ex);
+    static String getPreview(String text) {
+        if (text == null)
             return null;
-        }
+
+        String preview = text
+                .replace("\u200C", "") // Zero-width non-joiner
+                .replaceAll("\\s+", " ");
+        return truncate(preview, PREVIEW_SIZE);
     }
 
-    @Deprecated
     static String getFullText(String body) {
         try {
             if (body == null)
                 return null;
             Document d = JsoupEx.parse(body);
-            return _getText(d, true);
+            return _getText(d);
         } catch (OutOfMemoryError ex) {
             Log.e(ex);
             return null;
@@ -1753,29 +1755,22 @@ public class HtmlHelper {
     static String getFullText(File file) throws IOException {
         try {
             Document d = JsoupEx.parse(file);
-            return _getText(d, true);
+            return _getText(d);
         } catch (OutOfMemoryError ex) {
             Log.e(ex);
             return null;
         }
     }
 
-    private static String _getText(Document d, boolean full) {
-        truncate(d, !full);
+    private static String _getText(Document d) {
+        truncate(d, MAX_FULL_TEXT_SIZE);
 
         for (Element bq : d.select("blockquote")) {
             bq.prependChild(new TextNode("["));
             bq.appendChild(new TextNode("]"));
         }
 
-        String text = d.text();
-        if (full)
-            return text;
-
-        String preview = text
-                .replace("\u200C", "") // Zero-width non-joiner
-                .replaceAll("\\s+", " ");
-        return truncate(preview, PREVIEW_SIZE);
+        return d.text();
     }
 
     static String truncate(String text, int at) {
@@ -1793,7 +1788,7 @@ public class HtmlHelper {
     static String getText(Context context, String html) {
         Document d = sanitizeCompose(context, html, false);
 
-        truncate(d, true);
+        truncate(d, MAX_FORMAT_TEXT_SIZE);
 
         SpannableStringBuilder ssb = fromDocument(context, d, null, null);
 
@@ -1880,9 +1875,8 @@ public class HtmlHelper {
         }
     }
 
-    static boolean truncate(Document d, boolean reformat) {
+    static boolean truncate(Document d, int max) {
         final int[] length = new int[1];
-        int max = (reformat ? MAX_FORMAT_TEXT_SIZE : MAX_FULL_TEXT_SIZE);
 
         NodeTraversor.filter(new NodeFilter() {
             @Override
@@ -1956,7 +1950,6 @@ public class HtmlHelper {
         final int dp3 = Helper.dp2pixels(context, 3);
         final int dp6 = Helper.dp2pixels(context, 6);
         final int dp24 = Helper.dp2pixels(context, 24);
-        final boolean ltr = (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR);
 
         int message_zoom = prefs.getInt("message_zoom", 100);
         float textSize = Helper.getTextSize(context, 0) * message_zoom / 100f;
@@ -2190,17 +2183,18 @@ public class HtmlHelper {
                                 case "text-align":
                                     // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
                                     Layout.Alignment alignment = null;
+                                    boolean rtl = Helper.isRtl(ssb.subSequence(start, ssb.length()).toString());
                                     switch (value) {
                                         case "left":
                                         case "start":
-                                            alignment = (ltr ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE);
+                                            alignment = (rtl ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL);
                                             break;
                                         case "center":
                                             alignment = Layout.Alignment.ALIGN_CENTER;
                                             break;
                                         case "right":
                                         case "end":
-                                            alignment = (ltr ? Layout.Alignment.ALIGN_OPPOSITE : Layout.Alignment.ALIGN_NORMAL);
+                                            alignment = (rtl ? Layout.Alignment.ALIGN_NORMAL : Layout.Alignment.ALIGN_OPPOSITE);
                                             break;
                                     }
                                     if (alignment != null)

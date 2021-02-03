@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="tile_synchronize">Synchronise</string>
-    <string name="title_setup_account_hint">To change colour, swipe left/right target folder, etc</string>
-    <string name="title_setup_identity_hint">To change name, colour, signature, etc</string>
-    <string name="title_setup_doze">Setup battery optimisations</string>
     <string name="title_setup_doze_instructions">In the next dialog, select \"All apps\" at the top, select this app and select and confirm \"Don\'t optimise\"</string>
     <string name="title_setup_theme_reverse">Reverse colours</string>
     <string name="title_advanced_sync_folders">Synchronise folder list</string>
@@ -24,7 +21,6 @@
     <string name="title_account_ondemand">Synchronise manually</string>
     <string name="title_account_gmail">For reliable synchronisation of a Gmail account, the Gmail quick setup wizard should be used whenever possible</string>
     <string name="title_no_sync">Synchronisation errors since %1$s</string>
-    <string name="title_synchronize_more">Synchronise more messages</string>
     <string name="title_synchronize_enabled">Synchronise</string>
     <string name="title_empty_trash">Empty bin</string>
     <string name="title_empty_trash_ask">Delete all deleted messages permanently?</string>
