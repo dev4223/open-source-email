@@ -1,22 +1,22 @@
-# Поддержка FairEmail
+# Техподдержка FairEmail
 
-Если у вас есть вопросы, сначала ознакомьтесь со списком часто задаваемых вопросов ниже. Внизу вы можете выяснить, как задавать другие вопросы, запрашивать новые возможности и сообщать об ошибках.
+Если возник вопрос, пожалуйста, сначала ниже посмотрите список частых вопросов. Внизу объясняется, как задавать прочие вопросы, запрашивать новые функции и сообщать о багах.
 
-## Индекс
+## Оглавление
 
 * [Авторизация аккаунтов](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-authorizing-accounts)
-* [Как мне...?](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
+* [Узнайте, как...](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-howto)
 * [Известные проблемы](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-known-problems)
-* [Запланированные возможности](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
-* [Часто запрашиваемые возможности](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
-* [Часто задаваемые вопросы](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
-* [Получить поддержка](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
+* [Будущие функции](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-planned-features)
+* [Часто запрашиваемые функции](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-requested-features)
+* [Частые вопросы](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-frequently-asked-questions)
+* [Получить техподдержку](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support)
 
-## Авторизация аккаунта
+## Авторизация аккаунтов
 
-In most cases, the quick setup wizard will be able to automatically identify the correct configuration.
+Как правило, мастер быстрой настройки сам определяет верную конфигурацию.
 
-If the quick setup wizard fails, you'll need to manually set up an account (to receive email) and an identity (to send email). Для этого вам нужны адреса IMAP и SMTP-серверов и номера портов, следует использовать SSL/TLS или STARTTLS и ваше имя пользователя (в большинстве, но не всегда, ваш адрес электронной почты) и пароль.
+Если мастер быстрой настройки не сделает этого, вам нужно будет вручную настроить аккаунт (чтобы получать эл. почту) и задать личные данные (чтобы отправлять эл. почту). Для этого нужно задать адреса серверов IMAP и SMTP и номера портов, выбрать между использованием SSL/TLS или STARTTLS, а также ввести имя пользователя (как правило, хотя не всегда, это адрес эл. почты) и пароль.
 
 Поиска *IMAP* и название провайдера в большинстве случаев достаточно для поиска необходимой документации.
 
@@ -466,6 +466,12 @@ Some people ask:
 If you use the Play store or GitHub version of FairEmail, you can use the quick setup wizard to easily setup a Gmail account and identity. The Gmail quick setup wizard is not available for third party builds, like the F-Droid build because Google approved the use of OAuth for official builds only.
 
 If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to set up an account and identity via the manual setup instead of via the quick setup wizard.
+
+**Важно**: иногда Google выводит это предупреждение:
+
+*[ALERT] Пожалуйста, войдите с помощью своего веб браузера: https://support.google.com/mail/accounts/answer/78754 (Неудача)*
+
+This Google security check is triggered more often with *less secure apps* enabled, less with an app password, and hardly when using an on-device account (OAuth).
 
 Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
@@ -2358,9 +2364,15 @@ Please see [this FAQ](#user-content-faq163) for details.
 
 Since this is an experimental feature, my advice is to start with just one folder.
 
-*Send user unknown (version 1.1477+)*
+<br />
 
-Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) *User unknown* via the answer menu.
+*Send hard bounce (version 1.1477+)*
+
+Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) (=hard bounce) via the reply/answer menu.
+
+Hard bounces will mostly be processed automatically because they affect the reputation of the email provider. The bounce address (=*Return-Path* header) is mostly very specific, so the email server can determine the sending account.
+
+For some background, see for [this Wikipedia article](https://en.wikipedia.org/wiki/Bounce_message).
 
 <br />
 
@@ -2886,6 +2898,8 @@ Message classification is a pro feature, except for the spam folder.
 **(164) Can you add customizable themes?**
 
 Unfortunately, Android [does not support](https://stackoverflow.com/a/26511725/1794097) dynamic themes, which means all themes need [to be predefined](https://github.com/M66B/FairEmail/blob/master/app/src/main/res/values/styles.xml).
+
+Since for each theme there needs to be a light, dark and black variant, it is not feasible to add for each color combination (literally millions) a predefined theme.
 
 Moreover, a theme is more than just a few colors. For example themes with a yellow accent color use a darker link color for enough contrast.
 

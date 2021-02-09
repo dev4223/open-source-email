@@ -230,6 +230,7 @@
     <string name="title_setup_theme_system">Системная</string>
     <string name="title_setup_theme_black_background">Чёрный фон</string>
     <string name="title_setup_theme_system_hint">Системная тема автоматически переключится на светлую или тёмную в зависимости от времени суток, если поддерживается Android</string>
+    <string name="title_setup_theme_more_colors">Я хочу больше цветов</string>
     <string name="title_setup_advanced">Дополнительные настройки</string>
     <string name="title_setup_options">Параметры</string>
     <string name="title_setup_defaults">Вернуть настройки по умолчанию</string>
@@ -561,6 +562,7 @@
     <string name="title_identity_max_size">Максимальный размер сообщения (МБ)</string>
     <string name="title_identity_receipt">Запрашивать уведомление о доставке/прочтении по умолчанию</string>
     <string name="title_identity_use_ip_hint">В случае ошибки \"invalid greeting\", \"requires valid address\" или аналогичной, попробуйте изменить этот параметр</string>
+    <string name="title_identity_self_hint">Также предотвращает ответ себе</string>
     <string name="title_optional">Необязательно</string>
     <string name="title_recommended">Рекомендуется</string>
     <string name="title_account_linked">Связанная учётная запись</string>
@@ -793,7 +795,7 @@
     <string name="title_reply_to_all">Ответить всем</string>
     <string name="title_reply_list">Ответить в рассылку</string>
     <string name="title_reply_receipt">Отправить квитанцию о прочтении</string>
-    <string name="title_reply_address_unknown">Отправить сообщение \'адресе неизвестен\'</string>
+    <string name="title_reply_hard_bounce">Отправить жёсткий отказ</string>
     <string name="title_reply_template">Ответить с шаблоном</string>
     <string name="title_move_undo">Перемещение в %1$s (%2$d)</string>
     <string name="title_open_with">Открыть с помощью</string>
@@ -927,7 +929,7 @@
     <string name="title_key_missing">Нет ключа для %1$s</string>
     <string name="title_send_reminder_remark">Напоминания можно повторно включить в настройках отправки</string>
     <string name="title_send_plain_text">Только простой текст</string>
-    <string name="title_send_dsn" comment="title_send_dsn&#10;Title for delivery/disposition notifications&#10;(receipts and 'address unknown' messages)">Отчёт о состоянии</string>
+    <string name="title_send_dsn">Отчёт о состоянии</string>
     <string name="title_send_receipt">Запросить уведомление</string>
     <string name="title_send_receipt_remark">Большинство провайдеров и клиентов электронной почты игнорируют запросы о доставке</string>
     <string name="title_from_missing">Отсутствует отправитель</string>
@@ -939,6 +941,7 @@
     <string name="title_attachment_keywords">attached,attachment,attachments,included,вложение,вложения,вложении,приложено</string>
     <string name="title_attachment_reminder">Вы хотите добавить вложение?</string>
     <string name="title_plain_reminder">Всё форматирование будет утрачено</string>
+    <string name="title_dsn_reminder">Жёсткие отказы наносят ущерб репутации электронной почты оригинального отправителя!</string>
     <string name="title_size_reminder">Сообщение (%1$s) больше, чем лимит сервера (%2$s)</string>
     <string name="title_attachments_missing">Не все вложения загружены</string>
     <string name="title_dialog_hint">Этот диалог можно снова включить через верхнее меню трёх точек в панели действий</string>

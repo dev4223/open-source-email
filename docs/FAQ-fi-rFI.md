@@ -14,9 +14,9 @@ Jos sinulla on kysymyksiä, ole hyvä ja tarkista ensin alla olevat usein kysyty
 
 ## Tilien valtuutus
 
-In most cases, the quick setup wizard will be able to automatically identify the correct configuration.
+Useimmissa tapauksissa pika-asennus pystyy automaattisesti tunnistamaan oikeat asetukset.
 
-If the quick setup wizard fails, you'll need to manually set up an account (to receive email) and an identity (to send email). Tätä varten tarvitset IMAP- ja SMTP-palvelimien osoitteet ja porttinumerot, tiedon käytetäänkö SSL/TLS- tai STARTTLS-salausta ja käyttäjätunnuksesi (useimmiten sähköpostiosoitteesi, mutta ei aina) ja salasanasi.
+Jos pika-asennus epäonnistuu, sinun on määritettävä tili manuaalisesti (sähköpostin vastaanottamiseksi) ja identiteetti (sähköpostin lähettämiseksi). Tätä varten tarvitset IMAP- ja SMTP-palvelimien osoitteet ja porttinumerot, tiedon käytetäänkö SSL/TLS- tai STARTTLS-salausta ja käyttäjätunnuksesi (useimmiten sähköpostiosoitteesi, mutta ei aina) ja salasanasi.
 
 Hakemalla *IMAP* ja palveluntarjoajan nimi riittää useimmiten oikean dokumentaation löytämiseen.
 
@@ -43,7 +43,7 @@ Aiheeseen liittyvät kysymykset:
 
 ## Kuinka ...?
 
-* Change the account name: Settings, tap Manual setup and more options, tap Accounts, tap account
+* Vaihda tilin nimi: Asetukset, napauta Manuaalinen asennus ja lisää vaihtoehtoja, napauta Tilejä, napauta tiliä
 * Change the swipe left/right target: Settings, tab page Behavior, Set swipe actions
 * Change password: Settings, tap Manual setup and more options, tap Accounts, tap account, change password
 * Set a signature: Settings, tap Manual setup and more options, tap Identities, tap identity, Edit signature.
@@ -466,6 +466,12 @@ Some people ask:
 If you use the Play store or GitHub version of FairEmail, you can use the quick setup wizard to easily setup a Gmail account and identity. The Gmail quick setup wizard is not available for third party builds, like the F-Droid build because Google approved the use of OAuth for official builds only.
 
 If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. To use a password you'll need to set up an account and identity via the manual setup instead of via the quick setup wizard.
+
+**Important**: sometimes Google issues this alert:
+
+*[ALERT] Please log in via your web browser: https://support.google.com/mail/accounts/answer/78754 (Failure)*
+
+This Google security check is triggered more often with *less secure apps* enabled, less with an app password, and hardly when using an on-device account (OAuth).
 
 Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
@@ -2358,9 +2364,15 @@ Please see [this FAQ](#user-content-faq163) for details.
 
 Since this is an experimental feature, my advice is to start with just one folder.
 
-*Send user unknown (version 1.1477+)*
+<br />
 
-Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) *User unknown* via the answer menu.
+*Send hard bounce (version 1.1477+)*
+
+Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) (=hard bounce) via the reply/answer menu.
+
+Hard bounces will mostly be processed automatically because they affect the reputation of the email provider. The bounce address (=*Return-Path* header) is mostly very specific, so the email server can determine the sending account.
+
+For some background, see for [this Wikipedia article](https://en.wikipedia.org/wiki/Bounce_message).
 
 <br />
 
@@ -2886,6 +2898,8 @@ Message classification is a pro feature, except for the spam folder.
 **(164) Can you add customizable themes?**
 
 Unfortunately, Android [does not support](https://stackoverflow.com/a/26511725/1794097) dynamic themes, which means all themes need [to be predefined](https://github.com/M66B/FairEmail/blob/master/app/src/main/res/values/styles.xml).
+
+Since for each theme there needs to be a light, dark and black variant, it is not feasible to add for each color combination (literally millions) a predefined theme.
 
 Moreover, a theme is more than just a few colors. For example themes with a yellow accent color use a darker link color for enough contrast.
 

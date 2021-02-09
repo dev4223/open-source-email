@@ -208,6 +208,7 @@
     <string name="title_setup_theme_system">Σύμφωνα με το σύστημα</string>
     <string name="title_setup_theme_black_background">Μαύρο φόντο</string>
     <string name="title_setup_theme_system_hint">Με την επιλογή αυτή θα εναλλάσσονται αυτόματα το φωτεινό και σκοτεινό θέμα ανάλογα με τη λειτουργία ημέρας/νύχτας, εφόσον η δυνατότητα αυτή υποστηρίζεται από το Andoid</string>
+    <string name="title_setup_theme_more_colors">Θέλω περισσότερα χρώματα</string>
     <string name="title_setup_advanced">Για προχωρημένους</string>
     <string name="title_setup_options">Επιλογές</string>
     <string name="title_setup_defaults">Επαναφορά προεπιλογών</string>
@@ -537,6 +538,7 @@
     <string name="title_identity_max_size">Μέγιστο μέγεθος αρχείου (MB)</string>
     <string name="title_identity_receipt">Αίτημα αποδεικτικού παράδοσης/ανάγνωσης από προεπιλογή</string>
     <string name="title_identity_use_ip_hint">Σε περιπτώσεις σφαλμάτων όπως: \"\'invalid greeting\'\", \"requires valid address\", ή άλλου παρόμοιου, δοκιμάστε να αλλάξετε αυτή τη ρύθμιση</string>
+    <string name="title_identity_self_hint">Σας αποτρέπει, επίσης, από το να απαντάτε στον εαυτό σας</string>
     <string name="title_optional">Προαιρετικό</string>
     <string name="title_recommended">Προτείνεται</string>
     <string name="title_account_linked">Συνδεδεμένος λογαριασμός</string>
@@ -769,6 +771,7 @@
     <string name="title_reply_to_all">Απάντηση σε όλους</string>
     <string name="title_reply_list">Απάντηση σε λίστα</string>
     <string name="title_reply_receipt">Αποστολή αποδεικτικού ανάγνωσης</string>
+    <string name="title_reply_hard_bounce">Αποστολή σκληρής αναπήδησης (hard bounce)</string>
     <string name="title_reply_template">Απάντηση με ένα πρότυπο</string>
     <string name="title_move_undo">Μετακίνηση προς %1$s (%2$d)</string>
     <string name="title_open_with">Άνοιγμα με</string>
@@ -902,7 +905,7 @@
     <string name="title_key_missing">Κανένα κλειδί για %1$s</string>
     <string name="title_send_reminder_remark">Οι ειδοποιήσεις μπορούν πάλι να ενεργοποιηθούν από τις ρυθμίσεις αποστολής</string>
     <string name="title_send_plain_text">Απλό κείμενο μόνο</string>
-    <string name="title_send_dsn" comment="title_send_dsn&#10;Title for delivery/disposition notifications&#10;(receipts and 'address unknown' messages)">Αναφορά κατάστασης</string>
+    <string name="title_send_dsn">Αναφορά κατάστασης</string>
     <string name="title_send_receipt">Αίτημα για αποδεικτικό</string>
     <string name="title_send_receipt_remark">Οι περισσότεροι πάροχοι και πελάτες ταχυδρομείου αγνοούν τα αιτήματα αποδεικτικού</string>
     <string name="title_from_missing">Λείπει αποστολέας</string>
@@ -914,6 +917,7 @@
     <string name="title_attachment_keywords">συνημμένο, συνημμένα, επισυνάπτω, επισυνάπτεται, επισυνάπονται, έγγραφο, έγγραφα, αρχείο, αρχεία, έντυπο, έντυπα, δικαιολογητικό, δικαιολογητικά, πιστοποιητικό, πιστοποιητικά, βιογραφικό, συνοδευτική επιστολή</string>
     <string name="title_attachment_reminder">Θα θέλατε να προσθέσετε ένα συνημμένο;</string>
     <string name="title_plain_reminder">Όλη η μορφοποίηση θα χαθεί</string>
+    <string name="title_dsn_reminder">Οι σκληρές αναπηδήσεις (hard bounces) βλάπτουν την αξιοπιστία της ηλ. διεύθυνσης του αρχικού αποστολέα!</string>
     <string name="title_size_reminder">Μήνυμα (%1$s) πιο μεγάλο από το όριο του διακομιστή (%2$s)</string>
     <string name="title_attachments_missing">Δεν έχουν κατέβει όλα τα συνημμένα</string>
     <string name="title_dialog_hint">Ο διάλογος αυτός μπορεί να ενεργοποιηθεί πάλι από το μενού με τις τρεις τελείες στην πάνω γραμμή ενεργειών</string>

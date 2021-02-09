@@ -917,6 +917,22 @@ public class Log {
              */
             return false;
 
+        if (ex instanceof NullPointerException &&
+                stack.length > 0 &&
+                "android.app.ActivityThread".equals(stack[0].getClassName()) &&
+                "handleStopActivity".equals(stack[0].getMethodName()))
+            /*
+                Android: 6.0.1
+                java.lang.NullPointerException: Attempt to read from field 'android.app.Activity android.app.ActivityThread$ActivityClientRecord.activity' on a null object reference
+                  at android.app.ActivityThread.handleStopActivity(ActivityThread.java:4766)
+                  at android.app.ActivityThread.access$1400(ActivityThread.java:221)
+                  at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1823)
+                  at android.os.Handler.dispatchMessage(Handler.java:102)
+                  at android.os.Looper.loop(Looper.java:158)
+                  at android.app.ActivityThread.main(ActivityThread.java:7224)
+             */
+            return false;
+
         if (ex instanceof IndexOutOfBoundsException &&
                 stack.length > 0 &&
                 "android.text.SpannableStringInternal".equals(stack[0].getClassName()) &&
@@ -1076,6 +1092,12 @@ public class Log {
              */
             return false;
 
+        for (StackTraceElement ste : stack) {
+            String clazz = ste.getClassName();
+            if (clazz != null && clazz.startsWith("org.chromium.net."))
+                return false;
+        }
+
         if (isDead(ex))
             return false;
 
@@ -1083,7 +1105,7 @@ public class Log {
             return true;
 
         while (ex != null) {
-            for (StackTraceElement ste : ex.getStackTrace())
+            for (StackTraceElement ste :stack)
                 if (ste.getClassName().startsWith(BuildConfig.APPLICATION_ID))
                     return true;
             ex = ex.getCause();

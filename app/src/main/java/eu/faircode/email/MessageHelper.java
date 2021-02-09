@@ -117,7 +117,7 @@ public class MessageHelper {
     private static File cacheDir = null;
 
     static final int SMALL_MESSAGE_SIZE = 192 * 1024; // bytes
-    static final int DEFAULT_DOWNLOAD_SIZE = 256 * 1024; // bytes
+    static final int DEFAULT_DOWNLOAD_SIZE = 512 * 1024; // bytes
     static final String HEADER_CORRELATION_ID = "X-Correlation-ID";
 
     private static final int MAX_MESSAGE_SIZE = 10 * 1024 * 1024; // bytes
@@ -591,7 +591,7 @@ public class MessageHelper {
                 from = ((InternetAddress) message.from[0]).getAddress();
 
             StringBuilder sb = new StringBuilder();
-            sb.append("Reporting-MTA: dns;").append("dummy.faircode.eu").append("\r\n");
+            sb.append("Reporting-MTA: dns;").append(EmailService.getDefaultEhlo()).append("\r\n");
             sb.append("\r\n");
 
             if (from != null)
@@ -711,12 +711,22 @@ public class MessageHelper {
             List<String> flowed = new ArrayList<>();
             for (String line : plainContent.split("\\r?\\n")) {
                 if (line.contains(" ") && !"-- ".equals(line)) {
-                    StringBuffer sb = new StringBuffer();
+                    StringBuilder sb = new StringBuilder();
                     for (String word : line.split(" ")) {
                         if (sb.length() + word.length() > FORMAT_FLOWED_LINE_LENGTH) {
                             sb.append(' ');
                             flowed.add(sb.toString());
-                            sb = new StringBuffer();
+
+                            int i = 0;
+                            if (sb.length() > 0 && sb.charAt(0) == '>') {
+                                i++;
+                                while (i < sb.length() &&
+                                        (sb.charAt(i) == '>' || sb.charAt(i) == ' '))
+                                    i++;
+                            }
+                            String prefix = sb.substring(0, i).trim();
+
+                            sb = new StringBuilder(prefix);
                         }
                         if (sb.length() > 0)
                             sb.append(' ');
@@ -1214,10 +1224,14 @@ public class MessageHelper {
         header = header.replaceAll("\\?=[\\r\\n\\t ]+=\\?", "\\?==\\?");
         Address[] addresses = InternetAddress.parseHeader(header, false);
 
+        List<Address> result = new ArrayList<>();
         for (Address address : addresses) {
             InternetAddress iaddress = (InternetAddress) address;
             String email = iaddress.getAddress();
             String personal = iaddress.getPersonal();
+
+            if (TextUtils.isEmpty(email) && TextUtils.isEmpty(personal))
+                continue;
 
             email = decodeMime(email);
             if (!Helper.isSingleScript(email))
@@ -1232,9 +1246,11 @@ public class MessageHelper {
                     Log.w(ex);
                 }
             }
+
+            result.add(address);
         }
 
-        return addresses;
+        return (result.size() == 0 ? null : result.toArray(new Address[0]));
     }
 
     Address[] getReturnPath() throws MessagingException {
@@ -1914,23 +1930,28 @@ public class MessageHelper {
                 } else if (h.isDSN()) {
                     StringBuilder report = new StringBuilder();
                     report.append("<hr><div style=\"font-family: monospace; font-size: small;\">");
-                    for (String line : result.split("\\r?\\n")) {
-                        if (line.length() > 0)
-                            if (Character.isWhitespace(line.charAt(0)))
-                                report.append(line).append("<br />");
+                    for (String line : result.split("\\r?\\n"))
+                        if (line.length() == 0)
+                            report.append("<br>");
+                        else if (Character.isWhitespace(line.charAt(0)))
+                            report.append(line).append("<br>");
+                        else {
+                            int colon = line.indexOf(':');
+                            if (colon < 0)
+                                report.append(line);
                             else {
-                                int colon = line.indexOf(':');
-                                if (colon < 0)
-                                    report.append(line);
-                                else
-                                    report
-                                            .append("<strong>")
-                                            .append(line.substring(0, colon))
-                                            .append("</strong>")
-                                            .append(line.substring(colon))
-                                            .append("<br />");
+                                String name = line.substring(0, colon).trim();
+                                String value = line.substring(colon + 1).trim();
+                                value = decodeMime(value);
+                                report
+                                        .append("<strong>")
+                                        .append(TextUtils.htmlEncode(name))
+                                        .append("</strong>")
+                                        .append(": ")
+                                        .append(TextUtils.htmlEncode(value))
+                                        .append("<br>");
                             }
-                    }
+                        }
                     report.append("</div>");
                     result = report.toString();
                 } else
@@ -2347,8 +2368,10 @@ public class MessageHelper {
                         parts.attachments.add(apart);
 
                         return parts;
-                    }
-                }
+                    } else
+                        Log.e(ct + " parts=" + multipart.getCount());
+                } else
+                    Log.e(ct.toString());
             } else if (part.isMimeType("multipart/encrypted")) {
                 ContentType ct = new ContentType(part.getContentType());
                 String protocol = ct.getParameter("protocol");
@@ -2358,19 +2381,24 @@ public class MessageHelper {
                         // Ignore header
                         getMessageParts(multipart.getBodyPart(1), parts, EntityAttachment.PGP_MESSAGE);
                         return parts;
-                    }
-                }
+                    } else
+                        Log.e(ct + " parts=" + multipart.getCount());
+                } else
+                    Log.e(ct.toString());
             } else if (part.isMimeType("application/pkcs7-mime") ||
                     part.isMimeType("application/x-pkcs7-mime")) {
                 ContentType ct = new ContentType(part.getContentType());
                 String smimeType = ct.getParameter("smime-type");
-                if ("enveloped-data".equals(smimeType)) {
+                if ("enveloped-data".equalsIgnoreCase(smimeType) ||
+                        "smime.p7m".equalsIgnoreCase(ct.getParameter("name"))) {
                     getMessageParts(part, parts, EntityAttachment.SMIME_MESSAGE);
                     return parts;
-                } else if ("signed-data".equals(smimeType)) {
+                } else if ("signed-data".equalsIgnoreCase(smimeType) ||
+                        "smime.p7s".equalsIgnoreCase(ct.getParameter("name"))) {
                     getMessageParts(part, parts, EntityAttachment.SMIME_SIGNED_DATA);
                     return parts;
-                }
+                } else
+                    Log.e(ct.toString());
             }
         } catch (ParseException ex) {
             Log.w(ex);
@@ -2410,7 +2438,7 @@ public class MessageHelper {
                     String sample = text.substring(0, Math.min(200, text.length()));
                     throw new ParseException(content.getClass().getName() + ": " + sample);
                 } else
-                    throw new ParseException(content.getClass().getName());
+                    throw new IllegalArgumentException(content.getClass().getName());
 
                 boolean other = false;
                 List<Part> plain = new ArrayList<>();
@@ -2461,14 +2489,14 @@ public class MessageHelper {
                     // From the body structure:
                     // 1. disposition filename
                     // 2. content type name
-                    filename = part.getFileName();
+                    filename = part.getFileName(); // IMAPBodyPart/BODYSTRUCTURE
                     if (filename != null) {
                         // https://tools.ietf.org/html/rfc2231
                         // http://kb.mozillazine.org/Attachments_renamed
                         // https://blog.nodemailer.com/2017/01/27/the-mess-that-is-attachment-filenames/
                         int q1 = filename.indexOf('\'');
                         int q2 = filename.indexOf('\'', q1 + 1);
-                        if (q1 >= 0 && q2 > 0 && false) {
+                        if (q1 >= 0 && q2 > 0) {
                             try {
                                 String charset = filename.substring(0, q1);
                                 String language = filename.substring(q1 + 1, q2);

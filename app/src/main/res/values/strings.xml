@@ -258,6 +258,7 @@
     <string name="title_setup_theme_black_background">Black background</string>
 
     <string name="title_setup_theme_system_hint">This will automatically switch to a light/dark theme on day/night mode, if supported by Android</string>
+    <string name="title_setup_theme_more_colors">I want more colors</string>
 
     <string name="title_setup_advanced">Advanced</string>
 
@@ -639,6 +640,7 @@
     <string name="title_identity_max_size">Maximum message size (MB)</string>
     <string name="title_identity_receipt">Request delivery/read receipt by default</string>
     <string name="title_identity_use_ip_hint">In case of \'invalid greeting\', \'requires valid address\' or a similar error, try to change this setting</string>
+    <string name="title_identity_self_hint">Also prevents you from replying to yourself</string>
     <string name="title_optional">Optional</string>
     <string name="title_recommended">Recommended</string>
     <string name="title_account_linked">Linked account</string>
@@ -1049,7 +1051,7 @@
     <string name="title_attachment_keywords">attached,attachment,attachments,included</string>
     <string name="title_attachment_reminder">Did you intend to add an attachment?</string>
     <string name="title_plain_reminder">All formatting will be lost</string>
-    <string name="title_dsn_reminder">Hard bounces damage the email reputation of the recipient!</string>
+    <string name="title_dsn_reminder">Hard bounces damage the email reputation of the original sender!</string>
     <string name="title_size_reminder">Message (%1$s) larger than server limit (%2$s)</string>
     <string name="title_attachments_missing">Not all attachments have been downloaded</string>
     <string name="title_dialog_hint">This dialog can be enabled again via the three-dots menu in the top action bar</string>

@@ -652,12 +652,18 @@ class Core {
                             Log.i(name + " deleting uid=" + muid + " for msgid=" + msgid);
                             iexisting.setFlag(Flags.Flag.DELETED, true);
                             purged = true;
-                        } catch (MessageRemovedException ignored) {
+                        } catch (MessagingException ignored) {
                             Log.w(name + " existing gone uid=" + muid + " for msgid=" + msgid);
                         }
                 }
+
                 if (purged)
-                    ifolder.expunge();
+                    try {
+                        ifolder.expunge();
+                    } catch (MessagingException ex) {
+                        // NO EXPUNGE failed.
+                        Log.e(ex);
+                    }
             }
         }
 
@@ -964,14 +970,18 @@ class Core {
             db.message().setMessageUid(message.id, null);
 
             // Some providers do not list the new message yet
-            Long found = findUid(ifolder, message.msgid, true);
-            if (found != null)
-                if (newuid == null)
-                    newuid = found;
-                else if (!newuid.equals(found)) {
-                    Log.w(folder.name + " Added=" + newuid + " found=" + found);
-                    newuid = Math.max(newuid, found);
-                }
+            try {
+                Long found = findUid(ifolder, message.msgid, true);
+                if (found != null)
+                    if (newuid == null)
+                        newuid = found;
+                    else if (!newuid.equals(found)) {
+                        Log.w(folder.name + " Added=" + newuid + " found=" + found);
+                        newuid = Math.max(newuid, found);
+                    }
+            } catch (MessagingException ex) {
+                Log.w(ex);
+            }
 
             if (newuid != null && (message.uid == null || newuid > message.uid))
                 try {
@@ -1009,6 +1019,8 @@ class Core {
             throw new FolderNotFoundException();
         if (folder.id.equals(target.id))
             throw new IllegalArgumentException("self");
+        if (!target.selectable)
+            throw new IllegalArgumentException("not selectable");
 
         // De-classify
         for (EntityMessage message : messages)
@@ -1108,44 +1120,51 @@ class Core {
                 Log.i(target.name + " moved message fetch=" + fetch);
                 itarget.open(READ_WRITE);
 
+                boolean sync = false;
                 for (EntityMessage message : map.values())
-                    if (!TextUtils.isEmpty(message.msgid))
-                        try {
-                            Long uid = findUid(itarget, message.msgid, false);
-                            if (uid != null) {
-                                if (draft) {
-                                    Message icopy = itarget.getMessageByUID(uid);
-                                    if (icopy == null) {
-                                        Log.w(target.name + " Gone uid=" + uid);
-                                        continue;
-                                    }
+                    try {
+                        if (TextUtils.isEmpty(message.msgid))
+                            throw new IllegalArgumentException("move: msgid missing");
 
-                                    // Mark read
-                                    if (seen && !icopy.isSet(Flags.Flag.SEEN) && flags.contains(Flags.Flag.SEEN))
-                                        icopy.setFlag(Flags.Flag.SEEN, true);
+                        Long uid = findUid(itarget, message.msgid, false);
+                        if (uid == null)
+                            throw new IllegalArgumentException("move: uid not found");
 
-                                    // Remove star
-                                    if (unflag && icopy.isSet(Flags.Flag.FLAGGED) && flags.contains(Flags.Flag.FLAGGED))
-                                        icopy.setFlag(Flags.Flag.FLAGGED, false);
+                        if (draft) {
+                            Message icopy = itarget.getMessageByUID(uid);
+                            if (icopy != null)
+                                throw new IllegalArgumentException("move: gone uid=" + uid);
 
-                                    // Set drafts flag
-                                    if (flags.contains(Flags.Flag.DRAFT))
-                                        icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
-                                }
+                            // Mark read
+                            if (seen && !icopy.isSet(Flags.Flag.SEEN) && flags.contains(Flags.Flag.SEEN))
+                                icopy.setFlag(Flags.Flag.SEEN, true);
 
-                                if (fetch)
-                                    try {
-                                        Log.i(target.name + " Fetching uid=" + uid);
-                                        JSONArray fargs = new JSONArray();
-                                        fargs.put(uid);
-                                        onFetch(context, fargs, target, istore, itarget, state);
-                                    } catch (Throwable ex) {
-                                        Log.e(ex);
-                                    }
-                            }
-                        } catch (Throwable ex) {
-                            Log.w(ex);
+                            // Remove star
+                            if (unflag && icopy.isSet(Flags.Flag.FLAGGED) && flags.contains(Flags.Flag.FLAGGED))
+                                icopy.setFlag(Flags.Flag.FLAGGED, false);
+
+                            // Set drafts flag
+                            if (flags.contains(Flags.Flag.DRAFT))
+                                icopy.setFlag(Flags.Flag.DRAFT, EntityFolder.DRAFTS.equals(target.type));
                         }
+
+                        if (fetch) {
+                            Log.i(target.name + " Fetching uid=" + uid);
+                            JSONArray fargs = new JSONArray();
+                            fargs.put(uid);
+                            onFetch(context, fargs, target, istore, itarget, state);
+                        }
+                    } catch (Throwable ex) {
+                        if (ex instanceof IllegalArgumentException)
+                            Log.i(ex);
+                        else
+                            Log.e(ex);
+                        if (fetch)
+                            sync = true;
+                    }
+
+                if (sync)
+                    EntityOperation.sync(context, target.id, false);
             } catch (Throwable ex) {
                 Log.w(ex);
             } finally {
@@ -1336,7 +1355,7 @@ class Core {
                 }
 
             if (deleted)
-                ifolder.expunge();
+                ifolder.expunge(); // NO EXPUNGE failed.
 
             db.message().deleteMessage(message.id);
         } finally {
@@ -1738,9 +1757,9 @@ class Core {
         if (sync_shared_folders) {
             // https://tools.ietf.org/html/rfc2342
             Folder[] namespaces = istore.getSharedNamespaces();
-            Log.i("Namespaces=" + namespaces.length);
+            EntityLog.log(context, "Namespaces=" + namespaces.length);
             for (Folder namespace : namespaces) {
-                Log.i("Namespace=" + namespace.getFullName());
+                EntityLog.log(context, "Namespace=" + namespace.getFullName());
                 if (namespace.getSeparator() == separator) {
                     try {
                         ifolders.addAll(Arrays.asList(namespace.list("*")));
@@ -2238,8 +2257,8 @@ class Core {
                             if (attachment.subsequence == null)
                                 parts.downloadAttachment(context, attachment);
 
-                        if (message.received > account.created)
-                            updateContactInfo(context, folder, message);
+
+                        updateContactInfo(context, account, folder, message);
                     } catch (Throwable ex) {
                         db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
                     }
@@ -3012,8 +3031,7 @@ class Core {
             }
 
             try {
-                if (message.received > account.created)
-                    updateContactInfo(context, folder, message);
+                updateContactInfo(context, account, folder, message);
 
                 // Download small messages inline
                 if (download && !message.ui_hide) {
@@ -3174,7 +3192,7 @@ class Core {
                 }
 
             if (process) {
-                updateContactInfo(context, folder, message);
+                updateContactInfo(context, account, folder, message);
                 MessageClassifier.classify(message, folder, null, context);
             } else
                 Log.d(folder.name + " unchanged uid=" + uid);
@@ -3316,14 +3334,24 @@ class Core {
         }
     }
 
-    private static void updateContactInfo(Context context, final EntityFolder folder, final EntityMessage message) {
-        DB db = DB.getInstance(context);
+    private static void updateContactInfo(
+            Context context, EntityAccount account, final EntityFolder folder, final EntityMessage message) {
+        if (message.received < account.created)
+            return;
 
         if (EntityFolder.DRAFTS.equals(folder.type) ||
                 EntityFolder.ARCHIVE.equals(folder.type) ||
                 EntityFolder.TRASH.equals(folder.type) ||
                 EntityFolder.JUNK.equals(folder.type))
             return;
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
+        boolean suggest_received = prefs.getBoolean("suggest_received", false);
+        if (!suggest_sent && !suggest_received)
+            return;
+
+        DB db = DB.getInstance(context);
 
         int type = (folder.isOutgoing() ? EntityContact.TYPE_TO : EntityContact.TYPE_FROM);
 
@@ -3344,10 +3372,6 @@ class Core {
                 }
             }
         }
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean suggest_sent = prefs.getBoolean("suggest_sent", true);
-        boolean suggest_received = prefs.getBoolean("suggest_received", false);
 
         if (type == EntityContact.TYPE_TO && !suggest_sent)
             return;
