@@ -19,6 +19,7 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
+import android.Manifest;
 import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -232,7 +233,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
         }));
 
-        menus.add(new NavMenuItem(R.drawable.twotone_question_answer_24, R.string.menu_faq, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_support_24, R.string.menu_faq, new Runnable() {
             @Override
             public void run() {
                 drawerLayout.closeDrawer(drawerContainer);
@@ -630,7 +631,6 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 jexport.put("accounts", jaccounts);
                 jexport.put("answers", janswers);
                 jexport.put("certificates", jcertificates);
-                jexport.put("classifier", MessageClassifier.toJson());
                 jexport.put("settings", jsettings);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -713,7 +713,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 Uri uri = args.getParcelable("uri");
                 String password = args.getString("password");
 
-                if (!"content".equals(uri.getScheme())) {
+                if (!"content".equals(uri.getScheme()) &&
+                        !Helper.hasPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                     Log.w("Import uri=" + uri);
                     throw new IllegalArgumentException(context.getString(R.string.title_no_stream));
                 }
@@ -955,9 +956,6 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         }
                     }
 
-                    if (jimport.has("classifier"))
-                        MessageClassifier.fromJson(jimport.getJSONObject("classifier"));
-
                     // Settings
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                     SharedPreferences.Editor editor = prefs.edit();
@@ -1078,6 +1076,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 else {
                     boolean expected =
                             (ex instanceof IllegalArgumentException ||
+                                    ex instanceof IOException ||
                                     ex instanceof FileNotFoundException ||
                                     ex instanceof JSONException ||
                                     ex instanceof SecurityException);

@@ -242,7 +242,6 @@
     <string name="title_advanced_sync_folders">Synkronisér mappeliste</string>
     <string name="title_advanced_sync_shared_folders">Synkronisér delte mappelister</string>
     <string name="title_advanced_subscriptions">Håndér mappeabonnementer</string>
-    <string name="title_advanced_sync_subscribed">Synkronisér automatisk mappeabonnementer</string>
     <string name="title_advanced_check_mx">Tjek afsenderadresser ved beskedsynkroniseringer</string>
     <string name="title_advanced_tune_keep_alive">Justér automatisk hold i live intervallet</string>
     <string name="title_advanced_keyboard">Vis tastatur som standard</string>
@@ -489,6 +488,7 @@
     <string name="title_advanced_gravatars_hint">Der kan være en fortrolighedsrisiko</string>
     <string name="title_advanced_name_email_hint">Når deaktiveret, vises kun navne, når de er tilgængelige</string>
     <string name="title_advanced_preview_hint">Kun tilgængelig, når beskedtekst er downloadet</string>
+    <string name="title_advanced_preview_lines_hint">Maks. %s tegn i alt</string>
     <string name="title_advanced_preview_issue">Rulning kan, grundet en fejl i visse Android-versioner, være langsom, når antallet af linjer er flere end én</string>
     <string name="title_advanced_overview_mode_hint">Dette kan resultere i meget små skrifttyper</string>
     <string name="title_advanced_placeholders_hint">Dette gælder kun omformaterede beskeder</string>
@@ -540,6 +540,7 @@
     <string name="title_identity_max_size">Maks. beskedstørrelse (MBb)</string>
     <string name="title_identity_receipt">Bed automatisk om leverings/læstkvittering som standard</string>
     <string name="title_identity_use_ip_hint">I tilfælde af \'ugyldig hilsen\', \'kræver gyldig adresse\' eller lignende fejl, prøv da at ændre denne indstilling</string>
+    <string name="title_identity_self_hint">Forhindrer dig oså i at svare dig selv</string>
     <string name="title_optional">Valgfrit</string>
     <string name="title_recommended">Anbefalet</string>
     <string name="title_account_linked">Forbundet konto</string>
@@ -600,6 +601,7 @@
     <string name="title_no_inbox">Indbakke ikke fundet</string>
     <string name="title_no_drafts">Ingen Kladde-mappe</string>
     <string name="title_no_junk_folder">Der er ikke valgt nogen spammappe til denne konto</string>
+    <string name="title_default_composable">Standard-e-mailadressen bestemmes af den primære kontos primære identitet</string>
     <string name="title_no_composable">Afsendelse af e-mails kræver, at en identitet opsættes samt valg af en Kladde-mappe under kontoindstillingerne</string>
     <string name="title_no_standard">Denne udbyder benytter en proprietær e-mailprotokol, og det er derfor ikke muligt at benytte tredjeparts e-mailklienter</string>
     <string name="title_no_idle">Denne udbyder understøtter ikke push-beskeder. Dette vil forsinke modtagelsen af nye beskeder samt forøge strømforbruget.</string>
@@ -713,7 +715,6 @@
     <string name="title_duplicate_in">Dubletbeskeder i %1$s</string>
     <string name="title_subject_reply">Sv: %1$s</string>
     <string name="title_subject_forward">Vs: %1$s</string>
-    <string name="title_buttons">Knapper</string>
     <string name="title_seen">Markér som læst</string>
     <string name="title_unseen">Markér som ulæst</string>
     <string name="title_toggle_seen">Slå læst til/fra</string>
@@ -850,6 +851,7 @@
     <string name="title_send_now">Send nu</string>
     <string name="title_send_via">Send via</string>
     <string name="title_send_at">Sendt kl. &#8230;</string>
+    <string name="title_send_auto_archive">Arkivér besvarede beskeder</string>
     <string name="title_send_encryption">Kryptering</string>
     <string name="title_send_priority">Prioritet</string>
     <string name="title_no_server">Ingen server fundet på \'%1$s\'</string>
@@ -1285,7 +1287,7 @@
     <string name="title_pro_activated">Alle Pro-funktioner er aktiveret</string>
     <string name="title_pro_valid">Alle Pro-funktioner er aktiveret</string>
     <string name="title_pro_invalid">Ugyldigt svar</string>
-    <string name="title_pro_support">FairEmail behøver din støtte. Tryk hér for at købe Pro-funktioner og holde projektet kørende.</string>
+    <string name="title_pro_support">FairEmail behøver din hjælp. Tryk for at købe Pro-funktioner for at holde projektet i gang, eller deaktivér denne meddelelse.</string>
     <string name="title_boundary_error">Fejl under download af beskeder fra mailserveren</string>
     <string name="title_boundary_retry">Forsøg igen</string>
     <string name="title_unexpected_error">Uventet fejl</string>
@@ -1427,6 +1429,7 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
+        <item>5</item>
     </string-array>
     <string-array name="fontSizeNames">
         <item>Standard</item>

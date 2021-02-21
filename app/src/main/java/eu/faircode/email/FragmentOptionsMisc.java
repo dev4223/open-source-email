@@ -109,6 +109,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
     private SwitchCompat swProtocol;
     private SwitchCompat swDebug;
+    private SwitchCompat swExpunge;
     private SwitchCompat swAuthPlain;
     private SwitchCompat swAuthLogin;
     private SwitchCompat swAuthNtlm;
@@ -133,7 +134,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "classification", "class_min_probability", "class_min_difference",
             "language", "watchdog", "updates",
             "experiments", "query_threads", "crash_reports", "cleanup_attachments",
-            "protocol", "debug", "auth_plain", "auth_login", "auth_ntlm", "auth_sasl"
+            "protocol", "debug", "perform_expunge", "auth_plain", "auth_login", "auth_ntlm", "auth_sasl"
     };
 
     private final static String[] RESET_QUESTIONS = new String[]{
@@ -142,7 +143,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "reply_hint", "html_always_images", "open_full_confirmed", "print_html_confirmed", "reformatted_hint",
             "selected_folders", "move_1_confirmed", "move_n_confirmed",
             "last_search_senders", "last_search_recipients", "last_search_subject", "last_search_keywords", "last_search_message", "last_search",
-            "identities_asked", "cc_bcc", "inline_image_hint", "compose_reference", "send_dialog",
+            "identities_asked", "identities_primary_hint",
+            "cc_bcc", "inline_image_hint", "compose_reference", "send_dialog",
             "setup_reminder", "setup_advanced"
     };
 
@@ -200,6 +202,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         swProtocol = view.findViewById(R.id.swProtocol);
         swDebug = view.findViewById(R.id.swDebug);
+        swExpunge = view.findViewById(R.id.swExpunge);
         swAuthPlain = view.findViewById(R.id.swAuthPlain);
         swAuthLogin = view.findViewById(R.id.swAuthLogin);
         swAuthNtlm = view.findViewById(R.id.swAuthNtlm);
@@ -466,6 +469,14 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("protocol", checked).apply();
+            }
+        });
+
+        swExpunge.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("perform_expunge", checked).apply();
+                ServiceSynchronize.reload(getContext(), null, true, "perform_expunge");
             }
         });
 
@@ -845,6 +856,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         swProtocol.setChecked(prefs.getBoolean("protocol", false));
         swDebug.setChecked(prefs.getBoolean("debug", false));
+        swExpunge.setChecked(prefs.getBoolean("perform_expunge", true));
         swAuthPlain.setChecked(prefs.getBoolean("auth_plain", true));
         swAuthLogin.setChecked(prefs.getBoolean("auth_login", true));
         swAuthNtlm.setChecked(prefs.getBoolean("auth_ntlm", true));

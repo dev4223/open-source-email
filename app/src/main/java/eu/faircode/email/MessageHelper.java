@@ -869,6 +869,10 @@ public class MessageHelper {
         return imessage.isSet(Flags.Flag.FLAGGED);
     }
 
+    boolean getDeleted() throws MessagingException {
+        return imessage.isSet(Flags.Flag.DELETED);
+    }
+
     String getFlags() throws MessagingException {
         if (!BuildConfig.DEBUG)
             return null;
@@ -2368,8 +2372,13 @@ public class MessageHelper {
                         parts.attachments.add(apart);
 
                         return parts;
-                    } else
-                        Log.e(ct + " parts=" + multipart.getCount());
+                    } else {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(ct);
+                        for (int i = 0; i < multipart.getCount(); i++)
+                            sb.append(' ').append(i).append('=').append(multipart.getBodyPart(i).getContentType());
+                        Log.e(sb.toString());
+                    }
                 } else
                     Log.e(ct.toString());
             } else if (part.isMimeType("multipart/encrypted")) {
@@ -2381,24 +2390,38 @@ public class MessageHelper {
                         // Ignore header
                         getMessageParts(multipart.getBodyPart(1), parts, EntityAttachment.PGP_MESSAGE);
                         return parts;
-                    } else
-                        Log.e(ct + " parts=" + multipart.getCount());
+                    } else {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(ct);
+                        for (int i = 0; i < multipart.getCount(); i++)
+                            sb.append(' ').append(i).append('=').append(multipart.getBodyPart(i).getContentType());
+                        Log.e(sb.toString());
+                    }
                 } else
                     Log.e(ct.toString());
             } else if (part.isMimeType("application/pkcs7-mime") ||
                     part.isMimeType("application/x-pkcs7-mime")) {
                 ContentType ct = new ContentType(part.getContentType());
                 String smimeType = ct.getParameter("smime-type");
-                if ("enveloped-data".equalsIgnoreCase(smimeType) ||
-                        "smime.p7m".equalsIgnoreCase(ct.getParameter("name"))) {
+                if ("enveloped-data".equalsIgnoreCase(smimeType)) {
                     getMessageParts(part, parts, EntityAttachment.SMIME_MESSAGE);
                     return parts;
-                } else if ("signed-data".equalsIgnoreCase(smimeType) ||
-                        "smime.p7s".equalsIgnoreCase(ct.getParameter("name"))) {
+                } else if ("signed-data".equalsIgnoreCase(smimeType)) {
                     getMessageParts(part, parts, EntityAttachment.SMIME_SIGNED_DATA);
                     return parts;
-                } else
+                } else {
+                    if (TextUtils.isEmpty(smimeType)) {
+                        String name = ct.getParameter("name");
+                        if ("smime.p7m".equalsIgnoreCase(name)) {
+                            getMessageParts(part, parts, EntityAttachment.SMIME_MESSAGE);
+                            return parts;
+                        } else if ("smime.p7s".equalsIgnoreCase(name)) {
+                            getMessageParts(part, parts, EntityAttachment.SMIME_SIGNED_DATA);
+                            return parts;
+                        }
+                    }
                     Log.e(ct.toString());
+                }
             }
         } catch (ParseException ex) {
             Log.w(ex);
@@ -2522,22 +2545,6 @@ public class MessageHelper {
                 try {
                     // From the body structure
                     contentType = new ContentType(part.getContentType());
-
-                    // Workaround bodystructure not matching header
-                    if (part instanceof MimeMessage &&
-                            "text/plain".equalsIgnoreCase(contentType.getBaseType()))
-                        try {
-                            String[] c = part.getHeader("Content-type");
-                            if (c != null && c.length > 0) {
-                                ContentType ct = new ContentType(c[0]);
-                                if ("text/html".equalsIgnoreCase(ct.getBaseType())) {
-                                    Log.e("Inconsistent bs=" + contentType + " header=" + ct);
-                                    contentType = ct;
-                                }
-                            }
-                        } catch (MessagingException ex) {
-                            Log.w(ex);
-                        }
                 } catch (ParseException ex) {
                     if (part instanceof MimeMessage)
                         Log.w("MimeMessage content type=" + ex.getMessage());

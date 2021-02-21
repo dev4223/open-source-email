@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.bugsnag.android.gradle'
 
-def getVersionCode = { -> return 1484 }
-def getReleaseName = { -> return "\"Isasicursor\"" }
+def getVersionCode = { -> return 1495 }
+def getReleaseName = { -> return "\"Kaatedocus\"" }
 // https://en.wikipedia.org/wiki/List_of_dinosaur_genera
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -238,21 +238,21 @@ dependencies {
     def annotation_version = "1.1.0-beta01"
     def core_version = "1.5.0-alpha05"
     def appcompat_version = "1.3.0-beta01"
-    def activity_version = "1.2.0-rc01"
-    def fragment_version = "1.3.0-rc02"
+    def activity_version = "1.2.0"
+    def fragment_version = "1.3.0"
     def webkit_version = "1.4.0"
     def recyclerview_version = "1.2.0-beta01"
     def coordinatorlayout_version = "1.1.0"
     def constraintlayout_version = "2.0.2"
-    def material_version = "1.3.0-rc01"
+    def material_version = "1.3.0"
     def browser_version = "1.3.0"
     def lbm_version = "1.0.0"
     def swiperefresh_version = "1.2.0-alpha01"
     def documentfile_version = "1.0.1"
-    def lifecycle_version = "2.3.0-rc01"
+    def lifecycle_version = "2.3.0"
     def lifecycle_extensions_version = "2.2.0"
     def sqlite_version = "2.1.0"
-    def room_version = "2.3.0-beta01"
+    def room_version = "2.3.0-beta02"
     def paging_version = "2.1.2" // 3.0.0-alpha11
     def preference_version = "1.1.1"
     def work_version = "2.5.0"

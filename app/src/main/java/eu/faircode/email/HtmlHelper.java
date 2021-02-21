@@ -116,7 +116,7 @@ import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
 import static org.w3c.css.sac.Condition.SAC_CLASS_CONDITION;
 
 public class HtmlHelper {
-    private static final int PREVIEW_SIZE = 500; // characters
+    static final int PREVIEW_SIZE = 500; // characters
 
     private static final int DEFAULT_FONT_SIZE = 16; // pixels
     private static final int DEFAULT_FONT_SIZE_PT = 12; // points
@@ -1791,6 +1791,18 @@ public class HtmlHelper {
         truncate(d, MAX_FORMAT_TEXT_SIZE);
 
         SpannableStringBuilder ssb = fromDocument(context, d, null, null);
+
+        for (StyleSpan span : ssb.getSpans(0, ssb.length(), StyleSpan.class)) {
+            int start = ssb.getSpanStart(span);
+            int end = ssb.getSpanEnd(span);
+            if (span.getStyle() == Typeface.ITALIC) {
+                ssb.insert(end, "*");
+                ssb.insert(start, "*");
+            } else if (span.getStyle() == Typeface.BOLD) {
+                ssb.insert(end, "**");
+                ssb.insert(start, "**");
+            }
+        }
 
         for (URLSpan span : ssb.getSpans(0, ssb.length(), URLSpan.class)) {
             String url = span.getURL();

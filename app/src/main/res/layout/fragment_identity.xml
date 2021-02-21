@@ -418,6 +418,7 @@
                 android:layout_height="wrap_content"
                 android:autofillHints="password"
                 android:inputType="textPassword"
+                android:maxLength="20000"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -865,7 +866,7 @@
                 tvUser,etUser,tvPassword,tilPassword,tvCaseSensitiveHint,btnCertificate,tvCertificate,
                 tvRealm,etRealm,
                 cbUseIp,tvUseIpHint,tvEhlo,etEhlo,
-                cbSynchronize,cbPrimary,cbSelf,
+                cbSynchronize,cbPrimary,cbSelf,tvSelfHint,
                 cbSenderExtra,tvSenderExtra,etSenderExtra,ibSenderExtra,tvSenderExtraHint,
                 tvReplyTo,etReplyTo,tvCc,etCc,tvCcHint,tvBcc,etBcc,tvBccHint,
                 cbUnicode,tvUnicodeHint,tvMaxSize,etMaxSize" />

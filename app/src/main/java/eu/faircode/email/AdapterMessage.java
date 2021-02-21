@@ -210,6 +210,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private SharedPreferences prefs;
     private boolean accessibility;
 
+    private int dp1;
+    private int dp12;
+    private int dp60;
+
     private boolean suitable;
     private boolean unmetered;
 
@@ -231,11 +235,13 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
     private boolean pin;
     private boolean contacts;
     private float textSize;
-    private int dp60;
 
     private boolean date;
+    private boolean cards;
+    private boolean shadow_unread;
     private boolean threading;
     private boolean threading_unread;
+    private boolean indentation;
     private boolean avatars;
     private boolean color_stripe;
     private boolean name_email;
@@ -303,6 +309,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             "zanpid", // Zanox (Awin)
 
             "kclickid" // https://support.freespee.com/hc/en-us/articles/202577831-Kenshoo-integration
+    ));
+
+    // https://github.com/snarfed/granary/blob/master/granary/facebook.py#L1789
+
+    private static final List<String> FACEBOOK_WHITELIST_PATH = Collections.unmodifiableList(Arrays.asList(
+            "/nd/", "/n/", "/story.php"
+    ));
+
+    private static final List<String> FACEBOOK_WHITELIST_QUERY = Collections.unmodifiableList(Arrays.asList(
+            "story_fbid", "fbid", "id", "comment_id"
     ));
 
     // https://www.iana.org/assignments/imap-jmap-keywords/imap-jmap-keywords.xhtml
@@ -1009,7 +1025,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             view.setAlpha(
                     (EntityFolder.OUTBOX.equals(message.folderType)
                             ? message.identitySynchronize == null || !message.identitySynchronize
-                            : message.uid == null && message.accountProtocol == EntityAccount.TYPE_IMAP)
+                            : message.accountProtocol == EntityAccount.TYPE_IMAP && (message.uid == null || message.ui_deleted))
                             ? Helper.LOW_LIGHT : 1.0f);
 
             // Duplicate
@@ -1473,7 +1489,24 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         }
 
         private void bindSeen(TupleMessageEx message) {
-        	if (textSize != 0) {
+            if (cards && shadow_unread) {
+                boolean shadow = (message.unseen > 0);
+                int color = (shadow
+                        ? ColorUtils.setAlphaComponent(colorAccent, 127)
+                        : Color.TRANSPARENT);
+                if (!Objects.equals(itemView.getTag(), shadow)) {
+                    itemView.setTag(shadow);
+
+                    itemView.setBackgroundColor(color);
+
+                    ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) itemView.getLayoutParams();
+                    lparam.topMargin = (shadow ? dp1 : 0);
+                    lparam.bottomMargin = (shadow ? dp1 : 0);
+                    itemView.setLayoutParams(lparam);
+                }
+            }
+
+            if (textSize != 0) {
                 float fz_sender = (font_size_sender == null ? textSize : font_size_sender) * (message.unseen > 0 ? 1.1f : 1f);
                 float fz_subject = (font_size_subject == null ? textSize : font_size_subject) * 0.9f;
                 tvFrom.setTextSize(TypedValue.COMPLEX_UNIT_PX, fz_sender);
@@ -1604,7 +1637,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             bindAddresses(message);
             bindHeaders(message, false);
-            bindAttachments(message, properties.getAttachments(message.id));
+            bindAttachments(message, properties.getAttachments(message.id), false);
 
             // Actions
             vSeparator.setVisibility(View.VISIBLE);
@@ -1656,6 +1689,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }
             }
             pbBody.setVisibility(View.GONE);
+
+            clearCalendar();
+            grpCalendar.setVisibility(View.GONE);
+            grpCalendarResponse.setVisibility(View.GONE);
+
             grpAction.setVisibility(View.GONE);
             clearActions();
             ibTrashBottom.setVisibility(View.GONE);
@@ -1692,7 +1730,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             (inlineImages > lastInlineImages && (show_images || inline)))
                         bindBody(message, false);
 
-                    bindAttachments(message, attachments);
+                    bindAttachments(message, attachments, true);
                 }
             });
 
@@ -1705,20 +1743,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             sargs.putLong("id", message.id);
             sargs.putLong("account", message.account);
 
-            new SimpleTask<List<EntityFolder>>() {
+            new SimpleTask<ToolData>() {
                 @Override
-                protected List<EntityFolder> onExecute(Context context, Bundle args) {
+                protected ToolData onExecute(Context context, Bundle args) {
+                    long id = args.getLong("id");
                     long aid = args.getLong("account");
+
+                    ToolData data = new ToolData();
 
                     DB db = DB.getInstance(context);
                     EntityAccount account = db.account().getAccount(aid);
-                    args.putBoolean("gmail", account != null && account.isGmail());
+                    data.isGmail = (account != null && account.isGmail());
+                    data.folders = db.folder().getSystemFolders(aid);
+                    data.attachments = db.attachment().getAttachments(id);
 
-                    return db.folder().getSystemFolders(aid);
+                    return data;
                 }
 
                 @Override
-                protected void onExecuted(Bundle args, List<EntityFolder> folders) {
+                protected void onExecuted(Bundle args, ToolData data) {
                     long id = args.getLong("id");
                     TupleMessageEx amessage = getMessage();
                     if (amessage == null || !amessage.id.equals(id))
@@ -1728,14 +1771,15 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!show_expanded)
                         return;
 
-                    boolean gmail = args.getBoolean("gmail");
+                    if (!attachments_alt && bind)
+                        bindAttachments(message, data.attachments, false);
 
                     boolean hasInbox = false;
                     boolean hasArchive = false;
                     boolean hasTrash = false;
                     boolean hasJunk = false;
-                    if (folders != null)
-                        for (EntityFolder folder : folders)
+                    if (data.folders != null)
+                        for (EntityFolder folder : data.folders)
                             if (folder.selectable)
                                 if (EntityFolder.INBOX.equals(folder.type))
                                     hasInbox = true;
@@ -1762,7 +1806,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean inbox = (move && hasInbox && (inArchive || inTrash || inJunk));
                     boolean keywords = (!message.folderReadOnly && message.uid != null &&
                             message.accountProtocol == EntityAccount.TYPE_IMAP);
-                    boolean labels = (gmail && move && !inTrash && !inJunk && !outbox);
+                    boolean labels = (data.isGmail && move && !inTrash && !inJunk && !outbox);
                     boolean seen = (!(message.folderReadOnly || message.uid == null) ||
                             message.accountProtocol == EntityAccount.TYPE_POP);
 
@@ -2176,7 +2220,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     return false;
 
                                 Uri uri = Uri.parse(url);
-                                return ViewHolder.this.onOpenLink(uri, null);
+                                return ViewHolder.this.onOpenLink(uri, null, false);
                             }
                         });
                 webView.setImages(show_images, inline);
@@ -2440,8 +2484,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     if (!show_expanded)
                         return;
 
+                    boolean show_full = args.getBoolean("show_full");
                     boolean has_images = args.getBoolean("has_images");
-                    boolean show_full = properties.getValue("full", message.id);
                     boolean always_images = prefs.getBoolean("html_always_images", false);
 
                     // Show images
@@ -2471,7 +2515,24 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     boolean signed_data = args.getBoolean("signed_data");
                     tvSignedData.setVisibility(signed_data ? View.VISIBLE : View.GONE);
 
-                    if (result instanceof Spanned) {
+                    if (show_full) {
+                        ((WebViewEx) wvBody).setOnPageLoaded(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    bindConversationActions(message, args.getParcelable("actions"));
+                                    cowner.start(); // Show attachments
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                }
+                            }
+                        });
+
+                        if (result == null)
+                            ((WebView) wvBody).loadDataWithBaseURL(null, "", "text/html", StandardCharsets.UTF_8.name(), null);
+                        else
+                            ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", StandardCharsets.UTF_8.name(), null);
+                    } else {
                         tvBody.post(new Runnable() {
                             @Override
                             public void run() {
@@ -2480,111 +2541,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     tvBody.setTextIsSelectable(false);
                                     tvBody.setTextIsSelectable(true);
                                     tvBody.setMovementMethod(new TouchHandler(message));
+
+                                    bindConversationActions(message, args.getParcelable("actions"));
+                                    cowner.start(); // Show attachments
                                 } catch (Throwable ex) {
                                     Log.e(ex);
                                 }
                             }
                         });
-                    } else if (result instanceof String)
-                        ((WebView) wvBody).loadDataWithBaseURL(null, (String) result, "text/html", StandardCharsets.UTF_8.name(), null);
-                    else if (result == null) {
-                        if (show_full)
-                            ((WebView) wvBody).loadDataWithBaseURL(null, "", "text/html", StandardCharsets.UTF_8.name(), null);
-                        else
-                            tvBody.setText(null);
-                    } else
-                        throw new IllegalStateException("Result=" + result);
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        boolean has = false;
-                        ConversationActions cactions = args.getParcelable("actions");
-                        if (cactions != null) {
-                            List<ConversationAction> actions = cactions.getConversationActions();
-                            for (final ConversationAction action : actions) {
-                                final CharSequence text;
-                                final CharSequence title;
-                                final String type = action.getType();
-                                final RemoteAction raction = action.getAction();
-
-                                switch (type) {
-                                    case ConversationAction.TYPE_TEXT_REPLY:
-                                        text = action.getTextReply();
-                                        title = context.getString(R.string.title_conversation_action_reply, text);
-                                        break;
-                                    case "copy":
-                                        Bundle extras = action.getExtras().getParcelable("entities-extras");
-                                        if (extras == null)
-                                            continue;
-                                        text = extras.getString("text");
-                                        title = context.getString(R.string.title_conversation_action_copy, text);
-                                        break;
-                                    default:
-                                        if (raction == null) {
-                                            Log.w("Unknown action type=" + type);
-                                            continue;
-                                        }
-                                        text = null;
-                                        title = raction.getTitle();
-                                        if (TextUtils.isEmpty(title)) {
-                                            Log.e("Empty action type=" + type);
-                                            continue;
-                                        }
-                                }
-
-                                Button button = new Button(context, null, android.R.attr.buttonStyleSmall);
-                                button.setId(View.generateViewId());
-                                button.setText(title);
-                                button.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        try {
-                                            switch (type) {
-                                                case ConversationAction.TYPE_TEXT_REPLY:
-                                                    onReply();
-                                                    break;
-                                                case "copy":
-                                                    onCopy();
-                                                    break;
-                                                default:
-                                                    raction.getActionIntent().send();
-                                            }
-                                        } catch (Throwable ex) {
-                                            Log.e(ex);
-                                        }
-                                    }
-
-                                    private void onReply() {
-                                        Intent reply = new Intent(context, ActivityCompose.class)
-                                                .putExtra("action", "reply")
-                                                .putExtra("reference", message.id)
-                                                .putExtra("text", action.getTextReply());
-                                        context.startActivity(reply);
-                                    }
-
-                                    private void onCopy() {
-                                        ClipboardManager clipboard =
-                                                (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                                        if (clipboard != null) {
-                                            ClipData clip = ClipData.newPlainText(title, text);
-                                            clipboard.setPrimaryClip(clip);
-                                            ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
-                                        }
-                                    }
-                                });
-
-                                ((ConstraintLayout) flow.getParent()).addView(button);
-                                flow.addView(button);
-                                has = true;
-                            }
-                            grpAction.setVisibility(has ? View.VISIBLE : View.GONE);
-                        }
                     }
 
                     if (scroll)
                         properties.scrollTo(getAdapterPosition(), 0);
-
-                    // Show attachments
-                    cowner.start();
 
                     boolean auto_decrypt = prefs.getBoolean("auto_decrypt", false);
                     if (auto_decrypt &&
@@ -2625,7 +2593,93 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }.setCount(false).execute(context, owner, args, "message:body");
         }
 
-        private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments) {
+        private void bindConversationActions(TupleMessageEx message, ConversationActions cactions) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                boolean has = false;
+                if (cactions != null) {
+                    List<ConversationAction> actions = cactions.getConversationActions();
+                    for (final ConversationAction action : actions) {
+                        final CharSequence text;
+                        final CharSequence title;
+                        final String type = action.getType();
+                        final RemoteAction raction = action.getAction();
+
+                        switch (type) {
+                            case ConversationAction.TYPE_TEXT_REPLY:
+                                text = action.getTextReply();
+                                title = context.getString(R.string.title_conversation_action_reply, text);
+                                break;
+                            case "copy":
+                                Bundle extras = action.getExtras().getParcelable("entities-extras");
+                                if (extras == null)
+                                    continue;
+                                text = extras.getString("text");
+                                title = context.getString(R.string.title_conversation_action_copy, text);
+                                break;
+                            default:
+                                if (raction == null) {
+                                    Log.w("Unknown action type=" + type);
+                                    continue;
+                                }
+                                text = null;
+                                title = raction.getTitle();
+                                if (TextUtils.isEmpty(title)) {
+                                    Log.e("Empty action type=" + type);
+                                    continue;
+                                }
+                        }
+
+                        Button button = new Button(context, null, android.R.attr.buttonStyleSmall);
+                        button.setId(View.generateViewId());
+                        button.setText(title);
+                        button.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                try {
+                                    switch (type) {
+                                        case ConversationAction.TYPE_TEXT_REPLY:
+                                            onReply();
+                                            break;
+                                        case "copy":
+                                            onCopy();
+                                            break;
+                                        default:
+                                            raction.getActionIntent().send();
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.e(ex);
+                                }
+                            }
+
+                            private void onReply() {
+                                Intent reply = new Intent(context, ActivityCompose.class)
+                                        .putExtra("action", "reply")
+                                        .putExtra("reference", message.id)
+                                        .putExtra("text", action.getTextReply());
+                                context.startActivity(reply);
+                            }
+
+                            private void onCopy() {
+                                ClipboardManager clipboard =
+                                        (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                if (clipboard != null) {
+                                    ClipData clip = ClipData.newPlainText(title, text);
+                                    clipboard.setPrimaryClip(clip);
+                                    ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+
+                        ((ConstraintLayout) flow.getParent()).addView(button);
+                        flow.addView(button);
+                        has = true;
+                    }
+                    grpAction.setVisibility(has ? View.VISIBLE : View.GONE);
+                }
+            }
+        }
+
+        private void bindAttachments(final TupleMessageEx message, @Nullable List<EntityAttachment> attachments, boolean bind_extras) {
             if (attachments == null)
                 attachments = new ArrayList<>();
             properties.setAttachments(message.id, attachments);
@@ -2639,7 +2693,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int download = 0;
             boolean save = (attachments.size() > 1);
             boolean downloading = false;
-            boolean calendar = false;
+            EntityAttachment calendar = null;
 
             List<EntityAttachment> a = new ArrayList<>();
             for (EntityAttachment attachment : attachments) {
@@ -2657,18 +2711,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 if (show_inline || !inline || !attachment.available)
                     a.add(attachment);
 
-                if (attachment.available && "text/calendar".equals(attachment.getMimeType())) {
-                    calendar = true;
-                    bindCalendar(message, attachment);
-                }
+                if (attachment.available &&
+                        "text/calendar".equals(attachment.getMimeType()))
+                    calendar = attachment;
             }
             adapterAttachment.set(a);
 
-            if (!calendar) {
-                clearCalendar();
-                grpCalendar.setVisibility(View.GONE);
-                grpCalendarResponse.setVisibility(View.GONE);
-            }
+            if (calendar != null && bind_extras)
+                bindCalendar(message, calendar);
 
             cbInline.setOnCheckedChangeListener(null);
             cbInline.setChecked(show_inline);
@@ -2686,14 +2736,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     DB.getInstance(context).attachment().liveAttachments(message.id).observe(cowner, new Observer<List<EntityAttachment>>() {
                         @Override
                         public void onChanged(@Nullable List<EntityAttachment> attachments) {
-                            bindAttachments(message, attachments);
+                            bindAttachments(message, attachments, true);
                         }
                     });
                 }
             });
 
             List<EntityAttachment> images = new ArrayList<>();
-            if (thumbnails)
+            if (thumbnails && bind_extras)
                 for (EntityAttachment attachment : attachments)
                     if (attachment.isAttachment() && attachment.isImage())
                         images.add(attachment);
@@ -3834,7 +3884,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 });
 
                 boolean isDark = Helper.isDarkTheme(context);
-                boolean canDark = WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK);
+                boolean canDark = WebViewEx.isFeatureSupported(WebViewFeature.FORCE_DARK);
 
                 tvDark.setVisibility(isDark && !canDark ? View.VISIBLE : View.GONE);
                 cbDark.setVisibility(isDark && canDark ? View.VISIBLE : View.GONE);
@@ -3865,17 +3915,18 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             properties.setValue(full ? "full_asked" : "images_asked", message.id, true);
 
                             SharedPreferences.Editor editor = prefs.edit();
-                            for (Address sender : message.from) {
-                                String from = ((InternetAddress) sender).getAddress();
-                                if (TextUtils.isEmpty(from))
-                                    continue;
-                                int at = from.indexOf('@');
-                                String domain = (at < 0 ? from : from.substring(at));
-                                editor.putBoolean(from + (full ? ".show_full" : ".show_images"),
-                                        cbNotAgain.isChecked());
-                                editor.putBoolean(domain + (full ? ".show_full" : ".show_images"),
-                                        cbNotAgain.isChecked() && cbNotAgainDomain.isChecked());
-                            }
+                            if (message.from != null)
+                                for (Address sender : message.from) {
+                                    String from = ((InternetAddress) sender).getAddress();
+                                    if (TextUtils.isEmpty(from))
+                                        continue;
+                                    int at = from.indexOf('@');
+                                    String domain = (at < 0 ? from : from.substring(at));
+                                    editor.putBoolean(from + (full ? ".show_full" : ".show_images"),
+                                            cbNotAgain.isChecked());
+                                    editor.putBoolean(domain + (full ? ".show_full" : ".show_images"),
+                                            cbNotAgain.isChecked() && cbNotAgainDomain.isChecked());
+                                }
                             editor.apply();
 
                             if (full)
@@ -3992,7 +4043,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         private void onActionUnsubscribe(TupleMessageEx message) {
             Uri uri = Uri.parse(message.unsubscribe);
-            onOpenLink(uri, context.getString(R.string.title_legend_show_unsubscribe));
+            onOpenLink(uri, context.getString(R.string.title_legend_show_unsubscribe), true);
         }
 
         private void onActionDecrypt(TupleMessageEx message, boolean auto) {
@@ -4131,39 +4182,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             boolean show_headers = properties.getValue("headers", message.id);
             boolean full = properties.getValue("full", message.id);
 
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean button_junk = prefs.getBoolean("button_junk", true);
-            boolean button_trash = prefs.getBoolean("button_trash", true);
-            boolean button_archive = prefs.getBoolean("button_archive", true);
-            boolean button_move = prefs.getBoolean("button_move", true);
-            boolean button_copy = prefs.getBoolean("button_copy", false);
-            boolean button_keywords = prefs.getBoolean("button_keywords", false);
-            boolean button_notes = prefs.getBoolean("button_notes", false);
-            boolean button_seen = prefs.getBoolean("button_seen", false);
-            boolean button_search = prefs.getBoolean("button_search", false);
-            boolean button_event = prefs.getBoolean("button_event", false);
-            boolean button_share = prefs.getBoolean("button_share", false);
-            boolean button_print = prefs.getBoolean("button_print", false);
-            boolean button_unsubscribe = prefs.getBoolean("button_unsubscribe", true);
-            boolean button_rule = prefs.getBoolean("button_rule", false);
-
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibMore);
             popupMenu.inflate(R.menu.popup_message_more);
-
-            popupMenu.getMenu().findItem(R.id.menu_button_junk).setChecked(button_junk);
-            popupMenu.getMenu().findItem(R.id.menu_button_trash).setChecked(button_trash);
-            popupMenu.getMenu().findItem(R.id.menu_button_archive).setChecked(button_archive);
-            popupMenu.getMenu().findItem(R.id.menu_button_move).setChecked(button_move);
-            popupMenu.getMenu().findItem(R.id.menu_button_copy).setChecked(button_copy);
-            popupMenu.getMenu().findItem(R.id.menu_button_keywords).setChecked(button_keywords);
-            popupMenu.getMenu().findItem(R.id.menu_button_notes).setChecked(button_notes);
-            popupMenu.getMenu().findItem(R.id.menu_button_seen).setChecked(button_seen);
-            popupMenu.getMenu().findItem(R.id.menu_button_search).setChecked(button_search);
-            popupMenu.getMenu().findItem(R.id.menu_button_event).setChecked(button_event);
-            popupMenu.getMenu().findItem(R.id.menu_button_share).setChecked(button_share);
-            popupMenu.getMenu().findItem(R.id.menu_button_print).setChecked(button_print);
-            popupMenu.getMenu().findItem(R.id.menu_button_unsubscribe).setChecked(button_unsubscribe);
-            popupMenu.getMenu().findItem(R.id.menu_button_rule).setChecked(button_rule);
 
             popupMenu.getMenu().findItem(R.id.menu_unseen).setTitle(message.ui_seen ? R.string.title_unseen : R.string.title_seen);
             popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(
@@ -4217,48 +4237,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 @Override
                 public boolean onMenuItemClick(MenuItem target) {
                     int itemId = target.getItemId();
-                    if (itemId == R.id.menu_button_junk) {
-                        onMenuButton(message, "junk", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_trash) {
-                        onMenuButton(message, "trash", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_archive) {
-                        onMenuButton(message, "archive", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_move) {
-                        onMenuButton(message, "move", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_copy) {
-                        onMenuButton(message, "copy", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_keywords) {
-                        onMenuButton(message, "keywords", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_notes) {
-                        onMenuButton(message, "notes", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_seen) {
-                        onMenuButton(message, "seen", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_search) {
-                        onMenuButton(message, "search", target.isChecked());
-                        bindAddresses(message);
-                        return true;
-                    } else if (itemId == R.id.menu_button_event) {
-                        onMenuButton(message, "event", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_share) {
-                        onMenuButton(message, "share", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_print) {
-                        onMenuButton(message, "print", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_unsubscribe) {
-                        onMenuButton(message, "unsubscribe", target.isChecked());
-                        return true;
-                    } else if (itemId == R.id.menu_button_rule) {
-                        onMenuButton(message, "rule", target.isChecked());
+                    if (itemId == R.id.menu_button) {
+                        FragmentDialogButtons buttons = new FragmentDialogButtons();
+                        buttons.setTargetFragment(parentFragment, FragmentMessages.REQUEST_BUTTONS);
+                        buttons.show(parentFragment.getParentFragmentManager(), "dialog:buttons");
                         return true;
                     } else if (itemId == R.id.menu_unseen) {
                         onMenuUnseen(message);
@@ -4363,7 +4345,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(image[0].getSource());
                             Uri uri = Uri.parse(a.getSource());
                             if ("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                                if (onOpenLink(uri, null))
+                                if (onOpenLink(uri, null, false))
                                     return true;
                         }
                     }
@@ -4382,7 +4364,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         if (url.equals(title))
                             title = null;
 
-                        if (onOpenLink(uri, title))
+                        if (onOpenLink(uri, title, false))
                             return true;
                     }
 
@@ -4406,7 +4388,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             }
         }
 
-        private boolean onOpenLink(final Uri uri, String title) {
+        private boolean onOpenLink(final Uri uri, String title, boolean always_confirm) {
             Log.i("Opening uri=" + uri + " title=" + title);
 
             if ("eu.faircode.email".equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
@@ -4434,7 +4416,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 boolean confirm_link =
                         !"https".equals(uri.getScheme()) || TextUtils.isEmpty(uri.getHost()) ||
                                 prefs.getBoolean(uri.getHost() + ".confirm_link", true);
-                if (confirm_links && confirm_link) {
+                if (always_confirm || (confirm_links && confirm_link)) {
                     Bundle args = new Bundle();
                     args.putParcelable("uri", uri);
                     args.putString("title", title);
@@ -4488,7 +4470,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 }.execute(context, owner, args, "view:cid");
 
             else if ("http".equals(scheme) || "https".equals(scheme))
-                onOpenLink(uri, null);
+                onOpenLink(uri, null, false);
 
             else if ("data".equals(scheme))
                 new SimpleTask<File>() {
@@ -4523,12 +4505,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             else
                 Helper.reportNoViewer(context, uri);
-        }
-
-        private void onMenuButton(final TupleMessageEx message, String button, boolean isChecked) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            prefs.edit().putBoolean("button_" + button, !isChecked).apply();
-            setupTools(message, false, false);
         }
 
         private void onMenuUnseen(final TupleMessageEx message) {
@@ -5371,6 +5347,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 return TextUtils.join(", ", result);
             }
         };
+
+        private class ToolData {
+            private boolean isGmail;
+            private List<EntityFolder> folders;
+            private List<EntityAttachment> attachments;
+        }
     }
 
     AdapterMessage(Fragment parentFragment,
@@ -5392,6 +5374,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.owner = parentFragment.getViewLifecycleOwner();
         this.inflater = LayoutInflater.from(context);
         this.prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        this.dp1 = Helper.dp2pixels(context, 1);
+        this.dp12 = Helper.dp2pixels(context, 12);
+        this.dp60 = Helper.dp2pixels(context, 60);
 
         AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
         this.accessibility = (am != null && am.isEnabled());
@@ -5427,7 +5413,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         this.pin = ShortcutManagerCompat.isRequestPinShortcutSupported(context);
         this.contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         this.textSize = Helper.getTextSize(context, zoom);
-        this.dp60 = Helper.dp2pixels(context, 60);
 
         boolean contacts = Helper.hasPermission(context, Manifest.permission.READ_CONTACTS);
         boolean avatars = prefs.getBoolean("avatars", true);
@@ -5436,8 +5421,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         boolean generated = prefs.getBoolean("generated_icons", true);
 
         this.date = prefs.getBoolean("date", true);
+        this.cards = prefs.getBoolean("cards", true);
+        this.shadow_unread = prefs.getBoolean("shadow_unread", false);
         this.threading = prefs.getBoolean("threading", true);
         this.threading_unread = threading && prefs.getBoolean("threading_unread", false);
+        this.indentation = prefs.getBoolean("indentation", false);
+
         this.avatars = (contacts && avatars) || (gravatars || favicons || generated);
         this.color_stripe = prefs.getBoolean("color_stripe", true);
         this.name_email = prefs.getBoolean("name_email", false);
@@ -5667,6 +5656,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 // seen
                 // answered
                 // flagged
+                // deleted
                 if (debug && !Objects.equals(prev.flags, next.flags)) {
                     same = false;
                     log("flags changed", next.id);
@@ -5693,6 +5683,10 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     same = false;
                     log("ui_flagged changed", next.id);
                 }
+                if (!prev.ui_deleted.equals(next.ui_deleted)) {
+                    same = false;
+                    log("ui_deleted changed", next.id);
+                }
                 if (!prev.ui_hide.equals(next.ui_hide)) {
                     same = false;
                     log("ui_hide changed", next.id);
@@ -5702,6 +5696,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     log("ui_found changed", next.id);
                 }
                 // ui_ignored
+                // ui_silent
                 if (!prev.ui_browsed.equals(next.ui_browsed)) {
                     same = false;
                     log("ui_browsed changed", next.id);
@@ -6087,9 +6082,12 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
         message.resolveKeywordColors(context);
 
-        if (viewType == ViewType.THREAD) {
+        if (viewType == ViewType.THREAD && cards && threading && indentation) {
             boolean outgoing = holder.isOutgoing(message);
-            holder.card.setOutgoing(outgoing);
+            ViewGroup.MarginLayoutParams lparam = (ViewGroup.MarginLayoutParams) holder.itemView.getLayoutParams();
+            lparam.setMarginStart(outgoing ? dp12 : 0);
+            lparam.setMarginEnd(outgoing ? 0 : dp12);
+            holder.itemView.setLayoutParams(lparam);
         }
 
         if (filter_duplicates && message.duplicate) {
@@ -6523,13 +6521,26 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             builder = url.buildUpon();
 
             builder.clearQuery();
-            for (String key : url.getQueryParameterNames())
+            String host = uri.getHost();
+            String path = uri.getPath();
+            if (host != null)
+                host = host.toLowerCase(Locale.ROOT);
+            if (path != null)
+                path = path.toLowerCase(Locale.ROOT);
+            boolean first = "www.facebook.com".equals(host);
+            for (String key : url.getQueryParameterNames()) {
                 // https://en.wikipedia.org/wiki/UTM_parameters
                 // https://docs.oracle.com/en/cloud/saas/marketing/eloqua-user/Help/EloquaAsynchronousTrackingScripts/EloquaTrackingParameters.htm
-                if (key.toLowerCase(Locale.ROOT).startsWith("utm_") ||
-                        key.toLowerCase(Locale.ROOT).startsWith("elq") ||
-                        PARANOID_QUERY.contains(key.toLowerCase(Locale.ROOT)) ||
-                        ("snr".equals(key) && "store.steampowered.com".equals(uri.getHost())))
+                String lkey = key.toLowerCase(Locale.ROOT);
+                if (PARANOID_QUERY.contains(lkey) ||
+                        lkey.startsWith("utm_") ||
+                        lkey.startsWith("elq") ||
+                        ((host != null && host.endsWith("facebook.com")) &&
+                                !first &&
+                                FACEBOOK_WHITELIST_PATH.contains(path) &&
+                                !FACEBOOK_WHITELIST_QUERY.contains(lkey)) ||
+                        ("store.steampowered.com".equals(host) &&
+                                "snr".equals(lkey)))
                     changed = true;
                 else if (!TextUtils.isEmpty(key))
                     for (String value : url.getQueryParameters(key)) {
@@ -6544,6 +6555,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         }
                         builder.appendQueryParameter(key, value);
                     }
+                first = false;
+            }
 
             return (changed ? builder.build() : null);
         }
@@ -7078,6 +7091,78 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            sendResult(Activity.RESULT_OK);
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            sendResult(Activity.RESULT_CANCELED);
+                        }
+                    })
+                    .create();
+        }
+    }
+
+    public static class FragmentDialogButtons extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final Context context = getContext();
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+            final View dview = LayoutInflater.from(context).inflate(R.layout.dialog_buttons, null);
+            final CheckBox cbJunk = dview.findViewById(R.id.cbJunk);
+            final CheckBox cbTrash = dview.findViewById(R.id.cbTrash);
+            final CheckBox cbArchive = dview.findViewById(R.id.cbArchive);
+            final CheckBox cbMove = dview.findViewById(R.id.cbMove);
+            final CheckBox cbCopy = dview.findViewById(R.id.cbCopy);
+            final CheckBox cbKeywords = dview.findViewById(R.id.cbKeywords);
+            final CheckBox cbNotes = dview.findViewById(R.id.cbNotes);
+            final CheckBox cbSeen = dview.findViewById(R.id.cbSeen);
+            final CheckBox cbSearch = dview.findViewById(R.id.cbSearch);
+            final CheckBox cbEvent = dview.findViewById(R.id.cbEvent);
+            final CheckBox cbShare = dview.findViewById(R.id.cbShare);
+            final CheckBox cbPrint = dview.findViewById(R.id.cbPrint);
+            final CheckBox cbUnsubscribe = dview.findViewById(R.id.cbUnsubscribe);
+            final CheckBox cbRule = dview.findViewById(R.id.cbRule);
+
+            cbJunk.setChecked(prefs.getBoolean("button_junk", true));
+            cbTrash.setChecked(prefs.getBoolean("button_trash", true));
+            cbArchive.setChecked(prefs.getBoolean("button_archive", true));
+            cbMove.setChecked(prefs.getBoolean("button_move", true));
+            cbCopy.setChecked(prefs.getBoolean("button_copy", false));
+            cbKeywords.setChecked(prefs.getBoolean("button_keywords", false));
+            cbNotes.setChecked(prefs.getBoolean("button_notes", false));
+            cbSeen.setChecked(prefs.getBoolean("button_seen", false));
+            cbSearch.setChecked(prefs.getBoolean("button_search", false));
+            cbEvent.setChecked(prefs.getBoolean("button_event", false));
+            cbShare.setChecked(prefs.getBoolean("button_share", false));
+            cbPrint.setChecked(prefs.getBoolean("button_print", false));
+            cbUnsubscribe.setChecked(prefs.getBoolean("button_unsubscribe", true));
+            cbRule.setChecked(prefs.getBoolean("button_rule", false));
+
+            return new AlertDialog.Builder(getContext())
+                    .setView(dview)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SharedPreferences.Editor editor = prefs.edit();
+                            editor.putBoolean("button_junk", cbJunk.isChecked());
+                            editor.putBoolean("button_trash", cbTrash.isChecked());
+                            editor.putBoolean("button_archive", cbArchive.isChecked());
+                            editor.putBoolean("button_move", cbMove.isChecked());
+                            editor.putBoolean("button_copy", cbCopy.isChecked());
+                            editor.putBoolean("button_keywords", cbKeywords.isChecked());
+                            editor.putBoolean("button_notes", cbNotes.isChecked());
+                            editor.putBoolean("button_seen", cbSeen.isChecked());
+                            editor.putBoolean("button_search", cbSearch.isChecked());
+                            editor.putBoolean("button_event", cbEvent.isChecked());
+                            editor.putBoolean("button_share", cbShare.isChecked());
+                            editor.putBoolean("button_print", cbPrint.isChecked());
+                            editor.putBoolean("button_unsubscribe", cbUnsubscribe.isChecked());
+                            editor.putBoolean("button_rule", cbRule.isChecked());
+                            editor.apply();
                             sendResult(Activity.RESULT_OK);
                         }
                     })

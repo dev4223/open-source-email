@@ -29,6 +29,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteFullException;
@@ -1098,6 +1100,38 @@ public class Log {
                 return false;
         }
 
+        if (ex instanceof SecurityException &&
+                ex.getMessage() != null &&
+                ex.getMessage().contains("com.opera.browser"))
+            /*
+                java.lang.SecurityException: Permission Denial: starting Intent { act=android.intent.action.VIEW dat=https://tracking.dpd.de/... cmp=com.opera.browser/.leanplum.LeanplumCatchActivity (has extras) } from ProcessRecord{3d9efb1 6332:eu.faircode.email/u0a54} (pid=6332, uid=10054) not exported from uid 10113
+                  at android.os.Parcel.readException(Parcel.java:1951)
+                  at android.os.Parcel.readException(Parcel.java:1897)
+                  at android.app.IActivityManager$Stub$Proxy.startActivity(IActivityManager.java:4430)
+                  at android.app.Instrumentation.execStartActivity(Instrumentation.java:1610)
+                  at android.app.ContextImpl.startActivity(ContextImpl.java:862)
+                  at android.app.ContextImpl.startActivity(ContextImpl.java:839)
+                  at android.view.textclassifier.TextClassification.lambda$-android_view_textclassifier_TextClassification_5020(TextClassification.java:166)
+                  at android.view.textclassifier.-$Lambda$mxr44OLodDKdoE5ddAZvMdsFssQ.$m$0(Unknown Source:8)
+                  at android.view.textclassifier.-$Lambda$mxr44OLodDKdoE5ddAZvMdsFssQ.onClick(Unknown Source:0)
+                  at org.chromium.content.browser.selection.SelectionPopupControllerImpl.m(chromium-SystemWebViewGoogle.aab-stable-432415203:17)
+                  at y5.onActionItemClicked(chromium-SystemWebViewGoogle.aab-stable-432415203:20)
+                  at Bn.onActionItemClicked(chromium-SystemWebViewGoogle.aab-stable-432415203:1)
+                  at com.android.internal.policy.DecorView$ActionModeCallback2Wrapper.onActionItemClicked(DecorView.java:2472)
+                  at com.android.internal.view.FloatingActionMode$3.onMenuItemSelected(FloatingActionMode.java:101)
+                  at com.android.internal.view.menu.MenuBuilder.dispatchMenuItemSelected(MenuBuilder.java:761)
+                  at com.android.internal.view.menu.MenuItemImpl.invoke(MenuItemImpl.java:167)
+                  at com.android.internal.view.menu.MenuBuilder.performItemAction(MenuBuilder.java:908)
+                  at com.android.internal.view.menu.MenuBuilder.performItemAction(MenuBuilder.java:898)
+                  at com.android.internal.view.FloatingActionMode.lambda$-com_android_internal_view_FloatingActionMode_5176(FloatingActionMode.java:129)
+                  at com.android.internal.view.-$Lambda$IoKM3AcgDw3Ok5aFi0zlym2p3IA.$m$0(Unknown Source:4)
+                  at com.android.internal.view.-$Lambda$IoKM3AcgDw3Ok5aFi0zlym2p3IA.onMenuItemClick(Unknown Source:0)
+                  at com.android.internal.widget.FloatingToolbar$FloatingToolbarPopup$2.onClick(FloatingToolbar.java:423)
+                  at android.view.View.performClick(View.java:6320)
+                  at android.view.View$PerformClick.run(View.java:25087)
+             */
+            return false;
+
         if (isDead(ex))
             return false;
 
@@ -1105,7 +1139,7 @@ public class Log {
             return true;
 
         while (ex != null) {
-            for (StackTraceElement ste :stack)
+            for (StackTraceElement ste : stack)
                 if (ste.getClassName().startsWith(BuildConfig.APPLICATION_ID))
                     return true;
             ex = ex.getCause();
@@ -1305,8 +1339,8 @@ public class Log {
             attachLogcat(context, draft.id, 6);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 attachNotificationInfo(context, draft.id, 7);
-            if (MessageClassifier.isEnabled(context))
-                attachClassifierData(context, draft.id, 8);
+            //if (MessageClassifier.isEnabled(context))
+            //    attachClassifierData(context, draft.id, 8);
 
             EntityOperation.queue(context, draft, EntityOperation.ADD);
 
@@ -1423,8 +1457,8 @@ public class Log {
         ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         am.getMemoryInfo(mi);
-        sb.append(String.format("Memory class: %d MB/%s\r\n",
-                am.getMemoryClass(), Helper.humanReadableByteCount(mi.totalMem)));
+        sb.append(String.format("Memory class: %d/%d MB/%s\r\n",
+                am.getMemoryClass(), am.getLargeMemoryClass(), Helper.humanReadableByteCount(mi.totalMem)));
 
         sb.append(String.format("Storage space: %s/%s App: %s\r\n",
                 Helper.humanReadableByteCount(Helper.getAvailableStorageSpace()),
@@ -1474,6 +1508,22 @@ public class Log {
         if (reporting) {
             String uuid = prefs.getString("uuid", null);
             sb.append(String.format("UUID: %s\r\n", uuid == null ? "-" : uuid));
+        }
+
+        sb.append("\r\n");
+
+        try {
+            PackageInfo pi = context.getPackageManager()
+                    .getPackageInfo(BuildConfig.APPLICATION_ID, PackageManager.GET_PERMISSIONS);
+            for (int i = 0; i < pi.requestedPermissions.length; i++)
+                if (pi.requestedPermissions[i] != null &&
+                        pi.requestedPermissions[i].startsWith("android.permission.")) {
+                    boolean granted = ((pi.requestedPermissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_GRANTED) != 0);
+                    sb.append(pi.requestedPermissions[i].replace("android.permission.", ""))
+                            .append('=').append(granted).append("\r\n");
+                }
+        } catch (Throwable ex) {
+            sb.append(ex.toString()).append("\r\n");
         }
 
         sb.append("\r\n");
