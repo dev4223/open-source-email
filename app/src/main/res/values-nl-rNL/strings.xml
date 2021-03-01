@@ -159,6 +159,7 @@
     <string name="title_setup_grant_again">Verleen de vereiste machtigingen</string>
     <string name="title_setup_exchange_support">Wordt Microsoft Exchange ondersteund?</string>
     <string name="title_setup_identity_what">Wat is een identiteit?</string>
+    <string name="title_setup_free">Is deze app gratis te gebruiken?</string>
     <string name="title_setup_permissions">Toestemmingen verlenen</string>
     <string name="title_setup_permissions_remark">Voor toegang tot contactinformatie (optioneel)</string>
     <string name="title_setup_doze">Batterij-optimalisaties uitschakelen</string>
@@ -178,6 +179,7 @@
     <string name="title_setup_configuring">Account configureren &#8230;</string>
     <string name="title_setup_export">Exporteer instellingen</string>
     <string name="title_setup_import">Importeer instellingen</string>
+    <string name="title_setup_export_do">Het wachtwoord wordt gebruikt om de instellingen te versleutelen en is vereist om de instellingen opnieuw te importeren</string>
     <string name="title_setup_import_do">Geïmporteerde accounts worden toegevoegd zonder de bestaande te overschrijven</string>
     <string name="title_setup_password">Wachtwoord</string>
     <string name="title_setup_password_chars">Wachtwoord bevat controle of witruimte tekens</string>
@@ -243,6 +245,7 @@
     <string name="title_advanced_sync_folders">Lijst met mappen synchroniseren</string>
     <string name="title_advanced_sync_shared_folders">Lijst met gedeelde mappen synchroniseren</string>
     <string name="title_advanced_subscriptions">Beheer map abonnementen</string>
+    <string name="title_advanced_check_reply_domain">Controleer het antwoordadres bij het synchroniseren van berichten</string>
     <string name="title_advanced_check_mx">Controleer e-mailadressen van de afzenders bij het synchroniseren van berichten</string>
     <string name="title_advanced_tune_keep_alive">De keep-alive interval automatisch aanpassen</string>
     <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
@@ -309,6 +312,7 @@
     <string name="title_advanced_color_threshold">Drempel letterkleur: %1$s %%</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
     <string name="title_advanced_replace_name">Geef de voorkeur aan een contactnaam boven een verzonden naam</string>
+    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Alleen contactnamen weergeven</string>
     <string name="title_advanced_distinguish_contacts">Onderstreep de afzender wanneer de afzender bekend staat als lokaal \'aan\'-contact</string>
     <string name="title_advanced_show_recipients">Geadresseerden in berichtkop tonen</string>
     <string name="title_advanced_font_size_sender">Tekengrootte afzender</string>
@@ -450,7 +454,8 @@
     <string name="title_advanced_experiments">Probeer experimentele functies</string>
     <string name="title_advanced_query_threads">Beperk parallelle database toegang</string>
     <string name="title_advanced_crash_reports">Foutrapporten verzenden</string>
-    <string name="title_advanced_protocol">Protocolregistratie</string>
+    <string name="title_advanced_protocol">Protocol logging</string>
+    <string name="title_advanced_log_info">Debug logging</string>
     <string name="title_advanced_debug">Foutopsporing modus</string>
     <string name="title_advanced_cleanup_attachments">Bijlagen van oude berichten verwijderen</string>
     <string name="title_advanced_cleanup">Opruimen</string>
@@ -467,6 +472,7 @@
     <string name="title_advanced_sync_kept_hint">Dit zal extra gegevens en extra batterijvermogen gebruiken, vooral als er veel berichten op het apparaat zijn opgeslagen</string>
     <string name="title_advanced_gmail_thread_hint">Dit geldt alleen voor nieuw ontvangen berichten en kan bestaande groepen verbreken</string>
     <string name="title_advanced_sync_folders_hint">Dit uitschakelen zal het gebruik van gegevens en batterij enigszins verminderen, maar zal ook het bijwerken van de lijst met mappen uitschakelen</string>
+    <string name="title_advanced_check_reply_hint">Hiermee wordt gecontroleerd of de domeinnaam van de afzender en het antwoordadres hetzelfde zijn</string>
     <string name="title_advanced_lookup_mx_hint">Dit zal controleren of DNS MX records bestaan</string>
     <string name="title_advanced_sync_delay_hint">Dit zal de synchronisatie van berichten vertragen</string>
     <string name="title_advanced_suggest_local_hint">Naast contacten die door Android worden geleverd. Contactgegevens worden alleen opgeslagen voor nieuw verzonden of ontvangen berichten wanneer ingeschakeld.</string>
@@ -523,7 +529,7 @@
     <string name="title_advanced_english_hint">Dit zal de app herstarten</string>
     <string name="title_advanced_experiments_hint">Lijst van huidige experimentele functies</string>
     <string name="title_advanced_protocol_hint">Dit zal het gebruik van de batterij en de opslagruimte aanzienlijk verhogen!</string>
-    <string name="title_advanced_debug_hint">Extra logging inschakelen en lelijke debug informatie tonen op verschillende plaatsen</string>
+    <string name="title_advanced_debug_hint">Dit toont lelijke debug informatie op verschillende plaatsen</string>
     <string name="title_advanced_cleanup_attachments_hint">Dit zal bijlagen verwijderen van berichten die niet meer worden gesynchroniseerd bij handmatig opruimen</string>
     <string name="title_advanced_cleanup_hint">Dit zal alle tijdelijke bestanden verwijderen</string>
     <string name="title_advanced_never_favorite">Nooit favoriet</string>
@@ -740,6 +746,8 @@
     <string name="title_pin">Snelkoppeling toevoegen</string>
     <string name="title_print">Afdrukken</string>
     <string name="title_print_header">Kop afdrukken</string>
+    <string name="title_print_images">Afbeeldingen afdrukken</string>
+    <string name="title_print_images_remark">Afbeeldingen downloaden kan enige tijd duren</string>
     <string name="title_show_headers">Toon koppen</string>
     <string name="title_raw_save">Ruw bericht opslaan</string>
     <string name="title_raw_send">Stuur als bijlage</string>
@@ -975,6 +983,7 @@
     <string name="title_search_in_subject">In onderwerp</string>
     <string name="title_search_in_keywords">In sleutelwoorden (indien ondersteund)</string>
     <string name="title_search_in_message">In bericht tekst</string>
+    <string name="title_search_in_notes">In lokale notities</string>
     <string name="title_search_with">Zoekopdracht beperken tot</string>
     <string name="title_search_with_unseen">Ongelezen</string>
     <string name="title_search_with_flagged">Met ster</string>

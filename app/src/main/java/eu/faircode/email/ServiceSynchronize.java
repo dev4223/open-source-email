@@ -145,7 +145,6 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             "sync_folders",
             "sync_shared_folders",
             "prefer_ip4", "standalone_vpn", "tcp_keep_alive", "ssl_harden", // force reconnect
-            "badge", "unseen_ignored", // force update badge/widget
             "experiments", "debug", "protocol", // force reconnect
             "auth_plain", "auth_login", "auth_ntlm", "auth_sasl" // force reconnect
     ));
@@ -253,6 +252,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                         if (account > 0 && !current.accountState.id.equals(account))
                             continue;
 
+                        boolean sync = current.command.getBoolean("sync", false);
+                        boolean force = current.command.getBoolean("force", false);
+
                         int index = accountStates.indexOf(current);
                         if (index < 0) {
                             if (current.canRun()) {
@@ -267,12 +269,10 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                                         " state=" + current.accountState.state +
                                         " active=" + current.networkState.getActive());
                                 event = true;
-                                start(current, current.accountState.isEnabled(current.enabled), false);
+                                start(current, current.accountState.isEnabled(current.enabled) || sync, force);
                             }
                         } else {
                             boolean reload = false;
-                            boolean sync = current.command.getBoolean("sync", false);
-                            boolean force = current.command.getBoolean("force", false);
                             switch (current.command.getString("name")) {
                                 case "reload":
                                     reload = true;
@@ -868,7 +868,7 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
         schedule(this, true);
 
         Bundle command = new Bundle();
-        command.putString("name", "eval");
+        command.putString("name", "reload"); // eval will not work if manual sync running
         command.putBoolean("sync", true);
         liveAccountNetworkState.post(command);
     }
@@ -876,7 +876,9 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
     private void onWatchdog(Intent intent) {
         EntityLog.log(this, "Watchdog");
         schedule(this, false);
-        updateNetworkState(null, "watchdog");
+
+        if (lastNetworkState == null || !lastNetworkState.isSuitable())
+            updateNetworkState(null, "watchdog");
     }
 
     private NotificationCompat.Builder getNotificationService(Integer accounts, Integer operations) {
@@ -1325,32 +1327,30 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
                             });
 
                             // Idle folder
-                            if (!account.isTransient(this)) {
-                                Thread idler = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            Log.i(folder.name + " start idle");
-                                            while (ifolder.isOpen() && state.isRunning() && state.isRecoverable()) {
-                                                Log.i(folder.name + " do idle");
-                                                ifolder.idle(false);
-                                                state.activity();
-                                            }
-                                        } catch (Throwable ex) {
-                                            Log.e(folder.name, ex);
-                                            EntityLog.log(
-                                                    ServiceSynchronize.this,
-                                                    folder.name + " " + Log.formatThrowable(ex, false));
-                                            state.error(new FolderClosedException(ifolder, "IDLE", new Exception(ex)));
-                                        } finally {
-                                            Log.i(folder.name + " end idle");
+                            Thread idler = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Log.i(folder.name + " start idle");
+                                        while (ifolder.isOpen() && state.isRunning() && state.isRecoverable()) {
+                                            Log.i(folder.name + " do idle");
+                                            ifolder.idle(false);
+                                            state.activity();
                                         }
+                                    } catch (Throwable ex) {
+                                        Log.e(folder.name, ex);
+                                        EntityLog.log(
+                                                ServiceSynchronize.this,
+                                                folder.name + " " + Log.formatThrowable(ex, false));
+                                        state.error(new FolderClosedException(ifolder, "IDLE", new Exception(ex)));
+                                    } finally {
+                                        Log.i(folder.name + " end idle");
                                     }
-                                }, "idler." + folder.id);
-                                idler.setPriority(THREAD_PRIORITY_BACKGROUND);
-                                idler.start();
-                                idlers.add(idler);
-                            }
+                                }
+                            }, "idler." + folder.id);
+                            idler.setPriority(THREAD_PRIORITY_BACKGROUND);
+                            idler.start();
+                            idlers.add(idler);
 
                             EntityOperation.sync(this, folder.id, false, force && !forced);
 
@@ -2406,6 +2406,11 @@ public class ServiceSynchronize extends ServiceBase implements SharedPreferences
             start(context,
                     new Intent(context, ServiceSynchronize.class)
                             .setAction("watchdog"));
+    }
+
+    static void restart(Context context) {
+        context.stopService(new Intent(context, ServiceSynchronize.class));
+        eval(context, "restart");
     }
 
     private static void start(Context context, Intent intent) {

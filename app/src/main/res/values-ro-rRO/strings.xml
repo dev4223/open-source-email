@@ -534,7 +534,6 @@
     <string name="title_advanced_english_hint">Aplicația se va restarta</string>
     <string name="title_advanced_experiments_hint">Lista de funcții experimentale curente</string>
     <string name="title_advanced_protocol_hint">Acest lucru va crește semnificativ utilizarea bateriei și a spațiului de stocare!</string>
-    <string name="title_advanced_debug_hint">Activează jurnalul suplimentar și arată informații de depanare urâte în diferite locuri</string>
     <string name="title_advanced_cleanup_attachments_hint">Când se curăță manual, se vor elimina atașamentele din mesajele care nu mai sunt sincronizate</string>
     <string name="title_advanced_cleanup_hint">Se vor șterge toate fișierele temporare</string>
     <string name="title_advanced_never_favorite">Niciodată favorit</string>
@@ -751,6 +750,8 @@
     <string name="title_pin">Adaugă scurtătură</string>
     <string name="title_print">Tipărire</string>
     <string name="title_print_header">Tipărire antet</string>
+    <string name="title_print_images">Imprimare imagini</string>
+    <string name="title_print_images_remark">Descărcarea imaginilor ar putea dura ceva timp</string>
     <string name="title_show_headers">Arată antetul</string>
     <string name="title_raw_save">Salvează mesaj original</string>
     <string name="title_raw_send">Trimite ca atașament</string>
@@ -761,6 +762,8 @@
     <string name="title_download_all">Descarcă tot</string>
     <string name="title_save_all">Salvează tot</string>
     <string name="title_save_eml">Salvează mesaj original în fișier</string>
+    <string name="title_buttons">Selectare butoane</string>
+    <string name="title_configure_buttons">Configurare butoane &#8230;</string>
     <string name="title_trash">Gunoi</string>
     <string name="title_copy">Copiere &#8230;</string>
     <string name="title_copy_to">Copiază în &#8230;</string>

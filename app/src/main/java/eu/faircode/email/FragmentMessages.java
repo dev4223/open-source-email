@@ -150,6 +150,7 @@ import org.bouncycastle.util.Store;
 import org.json.JSONException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openintents.openpgp.AutocryptPeerUpdate;
 import org.openintents.openpgp.OpenPgpError;
 import org.openintents.openpgp.OpenPgpSignatureResult;
@@ -166,6 +167,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -198,6 +201,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import javax.mail.Address;
 import javax.mail.MessageRemovedException;
@@ -2414,15 +2420,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 boolean canBounce = false;
                 if (message.return_path != null && message.return_path.length == 1) {
                     canBounce = true;
-                    List<Address> addresses = new ArrayList<>();
-                    if (message.to != null)
-                        addresses.addAll(Arrays.asList(message.to));
-                    if (message.cc != null)
-                        addresses.addAll(Arrays.asList(message.cc));
-                    if (message.bcc != null)
-                        addresses.addAll(Arrays.asList(message.bcc));
-                    for (Address address : addresses)
-                        if (MessageHelper.equalEmail(address, message.return_path[0])) {
+                    for (EntityIdentity identity : data.identities)
+                        if (identity.similarAddress(message.return_path[0])) {
                             canBounce = false;
                             break;
                         }
@@ -4778,8 +4777,10 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
 
             int count = 0;
             int unseen = 0;
+            int flagged = 0;
             TupleMessageEx single = null;
             TupleMessageEx see = null;
+            TupleMessageEx flag = null;
             for (TupleMessageEx message : messages) {
                 if (message == null)
                     continue;
@@ -4788,10 +4789,16 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         !EntityFolder.DRAFTS.equals(message.folderType) &&
                         !EntityFolder.TRASH.equals(message.folderType)) {
                     count++;
+
                     single = message;
                     if (!message.ui_seen) {
                         unseen++;
                         see = message;
+                    }
+
+                    if (message.ui_flagged) {
+                        flagged++;
+                        flag = message;
                     }
                 }
 
@@ -4810,6 +4817,8 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                     expand = single;
                 else if (unseen == 1)
                     expand = see;
+                else if (unseen == 0 && flagged == 1)
+                    expand = flag;
                 else if (messages.size() == 1)
                     expand = messages.get(0);
                 else if (messages.size() > 0) {
@@ -5066,7 +5075,7 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
             protected void onException(Bundle args, Throwable ex) {
                 Log.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, args, "messages:expand");
+        }.setLog(false).execute(this, args, "messages:expand");
     }
 
     private void handleAutoClose() {
@@ -7341,11 +7350,25 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
     }
 
     private void onPrint(Bundle args) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        boolean print_html_header = prefs.getBoolean("print_html_header", true);
+        boolean print_html_images = prefs.getBoolean("print_html_images", true);
+
+        args.putBoolean("print_html_header", print_html_header);
+        args.putBoolean("print_html_images", print_html_images);
+
         new SimpleTask<String[]>() {
+            private final ExecutorService executor = Helper.getBackgroundExecutor(0, "print");
+
             @Override
             protected String[] onExecute(Context context, Bundle args) throws IOException {
                 long id = args.getLong("id");
                 boolean headers = args.getBoolean("headers");
+                boolean print_html_header = args.getBoolean("print_html_header");
+                boolean print_html_images = args.getBoolean("print_html_images");
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                int timeout = prefs.getInt("timeout", ImageHelper.DOWNLOAD_TIMEOUT) * 1000;
 
                 DB db = DB.getInstance(context);
                 EntityMessage message = db.message().getMessage(id);
@@ -7363,6 +7386,62 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 Document document = JsoupEx.parse(file);
                 HtmlHelper.embedInlineImages(context, id, document, true);
 
+                // onPageFinished will not be called if not all images can be loaded
+                File dir = new File(context.getCacheDir(), "images");
+                List<Future<Void>> futures = new ArrayList<>();
+                Elements imgs = document.select("img");
+                for (int i = 0; i < imgs.size(); i++) {
+                    Element img = imgs.get(i);
+                    String src = img.attr("src");
+                    if (src.startsWith("http:") || src.startsWith("https:")) {
+                        final File out = new File(dir, id + "." + i + ".print");
+                        img.attr("src", "file:" + out.getAbsolutePath());
+
+                        if (print_html_images) {
+                            if (out.exists() && out.length() > 0)
+                                continue;
+                        } else {
+                            out.delete();
+                            continue;
+                        }
+
+                        futures.add(executor.submit(new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                try (OutputStream os = new FileOutputStream(out)) {
+                                    URL url = new URL(src);
+                                    Log.i("Caching url=" + url);
+
+                                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                                    connection.setRequestMethod("GET");
+                                    connection.setReadTimeout(timeout);
+                                    connection.setConnectTimeout(timeout);
+                                    connection.setInstanceFollowRedirects(true);
+                                    connection.connect();
+
+                                    try {
+                                        Helper.copy(connection.getInputStream(), os);
+                                    } finally {
+                                        connection.disconnect();
+                                    }
+                                } catch (Throwable ex) {
+                                    Log.w(ex);
+                                }
+
+                                return null;
+                            }
+                        }));
+                    } else
+                        img.removeAttr("src");
+                }
+
+                for (Future<Void> future : futures)
+                    try {
+                        future.get();
+                    } catch (Throwable ex) {
+                        Log.w(ex);
+                    }
+
                 // @page WordSection1 {size:612.0pt 792.0pt; margin:70.85pt 70.85pt 70.85pt 70.85pt;}
                 // div.WordSection1 {page:WordSection1;}
                 // <body><div class=WordSection1>
@@ -7373,8 +7452,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                         element.removeClass(clazz);
                 }
 
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                boolean print_html_header = prefs.getBoolean("print_html_header", true);
                 if (print_html_header) {
                     Element header = document.createElement("p");
 
@@ -7470,14 +7547,15 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
                 }
 
                 final Context context = activity.getOriginalContext();
+                boolean print_html_images = args.getBoolean("print_html_images");
 
                 // https://developer.android.com/training/printing/html-docs.html
                 printWebView = new WebView(context);
 
                 WebSettings settings = printWebView.getSettings();
-                settings.setLoadsImagesAutomatically(true);
+                settings.setLoadsImagesAutomatically(print_html_images);
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                settings.setAllowFileAccess(false);
+                settings.setAllowFileAccess(true);
 
                 printWebView.setWebViewClient(new WebViewClient() {
                     public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -7603,14 +7681,6 @@ public class FragmentMessages extends FragmentBase implements SharedPreferences.
         edit.setAction(Intent.ACTION_EDIT);
         edit.setDataAndTypeAndNormalize(lookupUri, ContactsContract.Contacts.CONTENT_ITEM_TYPE);
         startActivity(edit);
-    }
-
-    static void search(
-            final Context context, final LifecycleOwner owner, final FragmentManager manager,
-            long account, long folder, boolean server, String query) {
-        search(context, owner, manager,
-                account, folder,
-                server, new BoundaryCallbackMessages.SearchCriteria(query));
     }
 
     static void search(

@@ -271,6 +271,9 @@ public class FragmentCompose extends FragmentBase {
 
     private Uri photoURI = null;
 
+    private int pickRequest;
+    private Uri pickUri;
+
     private OpenPgpServiceConnection pgpService;
     private String[] pgpUserIds;
     private long[] pgpKeyIds;
@@ -297,6 +300,7 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_LINK = 12;
     private static final int REQUEST_DISCARD = 13;
     private static final int REQUEST_SEND = 14;
+    private static final int REQUEST_PERMISSION = 15;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -454,6 +458,7 @@ public class FragmentCompose extends FragmentBase {
                     return;
                 }
 
+                // https://developer.android.com/guide/topics/providers/contacts-provider#Intents
                 Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Email.CONTENT_URI);
                 startActivityForResult(Helper.getChooser(getContext(), pick), request);
             }
@@ -1149,6 +1154,9 @@ public class FragmentCompose extends FragmentBase {
         outState.putBoolean("fair:show_images", show_images);
         outState.putParcelable("fair:photo", photoURI);
 
+        outState.putInt("fair:pickRequest", pickRequest);
+        outState.putParcelable("fair:pickUri", pickUri);
+
         super.onSaveInstanceState(outState);
     }
 
@@ -1205,6 +1213,9 @@ public class FragmentCompose extends FragmentBase {
             working = savedInstanceState.getLong("fair:working");
             show_images = savedInstanceState.getBoolean("fair:show_images");
             photoURI = savedInstanceState.getParcelable("fair:photo");
+
+            pickRequest = savedInstanceState.getInt("fair:pickRequest");
+            pickUri = savedInstanceState.getParcelable("fair:pickUri");
 
             Bundle args = new Bundle();
             args.putString("action", working < 0 ? "new" : "edit");
@@ -2051,6 +2062,11 @@ public class FragmentCompose extends FragmentBase {
                                 ContactsContract.Contacts.DISPLAY_NAME
                         },
                         null, null, null)) {
+                    // https://issuetracker.google.com/issues/118400813
+                    // https://developer.android.com/guide/topics/providers/content-provider-basics#DisplayResults
+                    if (cursor != null && cursor.getCount() == 0)
+                        throw new SecurityException("Could not retrieve selected contact");
+
                     if (cursor != null && cursor.moveToFirst()) {
                         int colEmail = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
                         int colName = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
@@ -2108,9 +2124,24 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                Log.unexpectedError(getParentFragmentManager(), ex);
+                if (ex instanceof SecurityException) {
+                    pickRequest = requestCode;
+                    pickUri = uri;
+                    String permission = Manifest.permission.READ_CONTACTS;
+                    requestPermissions(new String[]{permission}, REQUEST_PERMISSION);
+                } else
+                    Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:picked");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++)
+            if (Manifest.permission.READ_CONTACTS.equals(permissions[i]))
+                if (pickUri != null &&
+                        grantResults[i] == PackageManager.PERMISSION_GRANTED)
+                    onPickContact(pickRequest, new Intent().setData(pickUri));
     }
 
     private void onAddImage(boolean photo) {
@@ -2502,6 +2533,8 @@ public class FragmentCompose extends FragmentBase {
                                     // Get public key
                                     Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                     intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
+                                    intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE, true);
+                                    intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email);
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                     intent.putExtra(BuildConfig.APPLICATION_ID, largs);
                                     return intent;
@@ -2520,6 +2553,8 @@ public class FragmentCompose extends FragmentBase {
                                 // Get public key
                                 Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                 intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
+                                intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE, true);
+                                intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email);
                                 intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                 intent.putExtra(BuildConfig.APPLICATION_ID, largs);
                                 return intent;
@@ -3528,12 +3563,12 @@ public class FragmentCompose extends FragmentBase {
                     if (plain_only)
                         data.draft.plain_only = true;
 
-                    if (encrypt_default)
+                    if (encrypt_default || selected.encrypt_default)
                         if (selected.encrypt == 0)
                             data.draft.ui_encrypt = EntityMessage.PGP_SIGNENCRYPT;
                         else
                             data.draft.ui_encrypt = EntityMessage.SMIME_SIGNENCRYPT;
-                    else if (sign_default)
+                    else if (sign_default || selected.sign_default)
                         if (selected.encrypt == 0)
                             data.draft.ui_encrypt = EntityMessage.PGP_SIGNONLY;
                         else
@@ -4145,6 +4180,7 @@ public class FragmentCompose extends FragmentBase {
             if (data.draft.identity != null)
                 for (int pos = 0; pos < data.identities.size(); pos++) {
                     if (data.identities.get(pos).id.equals(data.draft.identity)) {
+                        spIdentity.setTag(pos);
                         spIdentity.setSelection(pos);
                         break;
                     }
@@ -5325,7 +5361,10 @@ public class FragmentCompose extends FragmentBase {
 
             setBodyPadding();
 
-            updateEncryption();
+            if (!Objects.equals(spIdentity.getTag(), position)) {
+                spIdentity.setTag(position);
+                updateEncryption(identity);
+            }
         }
 
         @Override
@@ -5338,11 +5377,10 @@ public class FragmentCompose extends FragmentBase {
 
             setBodyPadding();
 
-            updateEncryption();
+            updateEncryption(null);
         }
 
-        private void updateEncryption() {
-            EntityIdentity identity = (EntityIdentity) spIdentity.getSelectedItem();
+        private void updateEncryption(EntityIdentity identity) {
             if (identity == null)
                 return;
 
@@ -5357,35 +5395,37 @@ public class FragmentCompose extends FragmentBase {
                     long iid = args.getLong("identity");
 
                     DB db = DB.getInstance(context);
-                    EntityMessage draft = db.message().getMessage(id);
-                    if (draft == null ||
-                            draft.ui_encrypt == null || EntityMessage.ENCRYPT_NONE.equals(draft.ui_encrypt))
-                        return null;
 
-                    if (draft.identity != null && draft.identity.equals(iid))
-                        return draft.ui_encrypt;
+                    EntityMessage draft = db.message().getMessage(id);
+                    if (draft == null)
+                        return null;
 
                     EntityIdentity identity = db.identity().getIdentity(iid);
                     if (identity == null)
-                        return null;
+                        return draft.ui_encrypt;
 
-                    int encrypt = draft.ui_encrypt;
+                    if (identity.encrypt_default)
+                        draft.ui_encrypt = EntityMessage.PGP_SIGNENCRYPT;
+                    else if (identity.sign_default)
+                        draft.ui_encrypt = EntityMessage.PGP_SIGNONLY;
+                    else
+                        draft.ui_encrypt = null;
+
                     if (identity.encrypt == 0) {
                         if (EntityMessage.SMIME_SIGNONLY.equals(draft.ui_encrypt))
-                            encrypt = EntityMessage.PGP_SIGNONLY;
+                            draft.ui_encrypt = EntityMessage.PGP_SIGNONLY;
                         else if (EntityMessage.SMIME_SIGNENCRYPT.equals(draft.ui_encrypt))
-                            encrypt = EntityMessage.PGP_SIGNENCRYPT;
+                            draft.ui_encrypt = EntityMessage.PGP_SIGNENCRYPT;
                     } else {
                         if (EntityMessage.PGP_SIGNONLY.equals(draft.ui_encrypt))
-                            encrypt = EntityMessage.SMIME_SIGNONLY;
+                            draft.ui_encrypt = EntityMessage.SMIME_SIGNONLY;
                         else if (EntityMessage.PGP_SIGNENCRYPT.equals(draft.ui_encrypt))
-                            encrypt = EntityMessage.SMIME_SIGNENCRYPT;
+                            draft.ui_encrypt = EntityMessage.SMIME_SIGNENCRYPT;
                     }
 
-                    if (draft.ui_encrypt != encrypt)
-                        db.message().setMessageUiEncrypt(draft.id, encrypt);
+                    db.message().setMessageUiEncrypt(draft.id, draft.ui_encrypt);
 
-                    return encrypt;
+                    return draft.ui_encrypt;
                 }
 
                 @Override

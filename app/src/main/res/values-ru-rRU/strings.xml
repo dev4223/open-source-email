@@ -181,6 +181,7 @@
     <string name="title_setup_grant_again">Предоставить необходимые разрешения</string>
     <string name="title_setup_exchange_support">Поддерживается ли Microsoft Exchange?</string>
     <string name="title_setup_identity_what">Что такое идентификатор?</string>
+    <string name="title_setup_free">Это бесплатное приложение?</string>
     <string name="title_setup_permissions">Предоставить доступ</string>
     <string name="title_setup_permissions_remark">Доступ к контактной информации (необязательно)</string>
     <string name="title_setup_doze">Отключить оптимизацию энергопотребления</string>
@@ -200,6 +201,7 @@
     <string name="title_setup_configuring">Настройка учётной записи&#8230;</string>
     <string name="title_setup_export">Экспорт настроек</string>
     <string name="title_setup_import">Импорт настроек</string>
+    <string name="title_setup_export_do">Пароль используется для шифрования настроек и потребуется при их импортировании</string>
     <string name="title_setup_import_do">Импортированные учётные записи будут добавлены без перезаписи существующих</string>
     <string name="title_setup_password">Пароль</string>
     <string name="title_setup_password_chars">Пароль содержит управляющие символы или пробелы</string>
@@ -265,6 +267,7 @@
     <string name="title_advanced_sync_folders">Синхронизировать список папок</string>
     <string name="title_advanced_sync_shared_folders">Синхронизировать списки общих папок</string>
     <string name="title_advanced_subscriptions">Управление подпиской на папки</string>
+    <string name="title_advanced_check_reply_domain">Проверять адрес для ответа при синхронизации сообщений</string>
     <string name="title_advanced_check_mx">Проверять адреса электронной почты отправителя при синхронизации сообщений</string>
     <string name="title_advanced_tune_keep_alive">Автоматически настраивать интервал keep-alive</string>
     <string name="title_advanced_keyboard">Показывать клавиатуру по умолчанию</string>
@@ -331,6 +334,7 @@
     <string name="title_advanced_color_threshold">Порог яркости отображения букв: %1$s %%</string>
     <string name="title_advanced_name_email">Показывать имена и адреса электронной почты</string>
     <string name="title_advanced_replace_name">Предпочитать имя контакта вместо имени отправителя</string>
+    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Показывать только имена контактов</string>
     <string name="title_advanced_distinguish_contacts">Подчёркивать отправителя, если он известен как локальный контакт \"Кому\"</string>
     <string name="title_advanced_show_recipients">Показывать получателей в заголовке сообщения</string>
     <string name="title_advanced_font_size_sender">Размера текста поля \"Отправитель\"</string>
@@ -473,6 +477,7 @@
     <string name="title_advanced_query_threads">Ограничение одновременного доступа к базе данных</string>
     <string name="title_advanced_crash_reports">Отправлять отчёты об ошибках</string>
     <string name="title_advanced_protocol">Журнал протокола</string>
+    <string name="title_advanced_log_info">Журнал отладки</string>
     <string name="title_advanced_debug">Режим отладки</string>
     <string name="title_advanced_cleanup_attachments">Удалять вложения старых сообщений</string>
     <string name="title_advanced_cleanup">Очистка</string>
@@ -489,6 +494,7 @@
     <string name="title_advanced_sync_kept_hint">Это приведёт к большему потреблению трафика и заряда батареи, особенно если на устройстве хранится много сообщений</string>
     <string name="title_advanced_gmail_thread_hint">Это относится только к вновь полученным сообщениям и может нарушить существующие группы</string>
     <string name="title_advanced_sync_folders_hint">Отключение этой функции уменьшит потребление трафика и заряда батареи, но также отключит обновление списка папок</string>
+    <string name="title_advanced_check_reply_hint">Проверяет, совпадает ли доменное имя отправителя и адреса для ответа</string>
     <string name="title_advanced_lookup_mx_hint">Проверка наличия записей DNS MX</string>
     <string name="title_advanced_sync_delay_hint">Это замедлит синхронизацию сообщений</string>
     <string name="title_advanced_suggest_local_hint">В дополнение к контактам, предоставляемым Android. Контактные данные будут сохранены только для вновь отправленных или полученных сообщений при включении этой функции.</string>
@@ -545,7 +551,7 @@
     <string name="title_advanced_english_hint">Произойдёт перезапуск приложения</string>
     <string name="title_advanced_experiments_hint">Список текущих экспериментальных функций</string>
     <string name="title_advanced_protocol_hint">Значительно увеличится использование батареи и занимаемое место в хранилище!</string>
-    <string name="title_advanced_debug_hint">Включить дополнительное журналирование и показывать отладочную информацию в различных местах</string>
+    <string name="title_advanced_debug_hint">Отображение отладочной информации в различных местах</string>
     <string name="title_advanced_cleanup_attachments_hint">При ручной очистке будут удалены вложения сообщений, которые больше не синхронизируются</string>
     <string name="title_advanced_cleanup_hint">Это действие удалит все временные файлы</string>
     <string name="title_advanced_never_favorite">Никогда не помечать избранным</string>
@@ -762,6 +768,8 @@
     <string name="title_pin">Добавить ярлык</string>
     <string name="title_print">Печать</string>
     <string name="title_print_header">Печать заголовка</string>
+    <string name="title_print_images">Печать изображений</string>
+    <string name="title_print_images_remark">Загрузка изображений может занять некоторое время</string>
     <string name="title_show_headers">Показать заголовки</string>
     <string name="title_raw_save">Сохранить оригинал сообщения</string>
     <string name="title_raw_send">Отправить как вложение</string>
@@ -997,6 +1005,7 @@
     <string name="title_search_in_subject">В теме</string>
     <string name="title_search_in_keywords">В ключевых словах (если возможно)</string>
     <string name="title_search_in_message">В тексте сообщения</string>
+    <string name="title_search_in_notes">В локальных заметках</string>
     <string name="title_search_with">Ограничение поиска</string>
     <string name="title_search_with_unseen">Не прочитано</string>
     <string name="title_search_with_flagged">Избранное</string>

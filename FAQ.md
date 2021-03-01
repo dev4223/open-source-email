@@ -268,7 +268,7 @@ Fonts, sizes, colors, etc should be material design whenever possible.
 * [(135) Why are trashed messages and drafts shown in conversations?](#user-content-faq135)
 * [(136) How can I delete an account/identity/folder?](#user-content-faq136)
 * [(137) How can I reset 'Don't ask again'?](#user-content-faq137)
-* [(138) Can you add calendar/contact management/synchronizing?](#user-content-faq138)
+* [(138) Can you add calendar/contact/tasks/notes management?](#user-content-faq138)
 * [(139) How do I fix 'User is authenticated but not connected'?](#user-content-faq139)
 * [(140) Why does the message text contain strange characters?](#user-content-faq140)
 * [(141) How can I fix 'A drafts folder is required to send messages'?](#user-content-faq141)
@@ -310,7 +310,7 @@ The following Android permissions are needed:
 * *foreground service* (FOREGROUND_SERVICE): to run a foreground service on Android 9 Pie and later, see also the next question
 * *prevent device from sleeping* (WAKE_LOCK): to keep the device awake while synchronizing messages
 * *in-app billing* (BILLING): to allow in-app purchases
-* Optional: *read your contacts* (READ_CONTACTS): to autocomplete addresses and to show photos
+* Optional: *read your contacts* (READ_CONTACTS): to auto complete addresses, to show contact photos and [to pick contacts](https://developer.android.com/guide/components/intents-common#PickContactDat)
 * Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
 * Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
 * Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
@@ -509,7 +509,7 @@ you can use the quick setup wizard to easily setup a Gmail account and identity.
 The Gmail quick setup wizard is not available for third party builds, like the F-Droid build
 because Google approved the use of OAuth for official builds only.
 
-If you don't want to use an on-device Gmail account,
+If you don't want to use or can't use an on-device Google account, for example on recent Huawei devices,
 you can either enable access for "less secure apps" and use your account password (not advised)
 or enable two factor authentication and use an app specific password.
 To use a password you'll need to set up an account and identity via the manual setup instead of via the quick setup wizard.
@@ -743,6 +743,7 @@ Common errors:
 
 * *No key*: there is no PGP key available for one of the listed email addresses
 * *Missing key for encryption*: there is probably a key selected in FairEmail that does not exist in the OpenKeychain app anymore. Resetting the key (see above) will probably fix this problem.
+* *Key for signature verification is missing*: the public key for the sender is not available in the OpenKeychain app. This can also be caused by Autocrypt being disabled in the encryption settings or by the Autocrypt header not being sent.
 
 *S/MIME*
 
@@ -961,6 +962,14 @@ See also [this FAQ](#user-content-faq15).
 <a name="faq19"></a>
 **(19) Why are the pro features so expensive?**
 
+First of all, **FairEmail is basically free to use** and only some advanced features need to be purchased.
+
+Zuerst, **FairEmail ist grundsätzlich kostenlos** und nur einige erweiterte Funktionen müssen gekauft werden.
+
+Tout d'abord, **FairEmail est au fond gratuit** et seulement quelques fonctionnalités avancées doivent être achetés.
+
+Please see the Play store description of the app or [see here](https://email.faircode.eu/#pro) for a complete list of pro features.
+
 The right question is "*why are there so many taxes and fees?*":
 
 * VAT: 25 % (depending on your country)
@@ -970,10 +979,9 @@ The right question is "*why are there so many taxes and fees?*":
 
 So, what is left for the developer is just a fraction of what you pay.
 
-Note that only some convenience and advanced features need to be purchased which means that FairEmail is basically free to use.
-
 Also note that most free apps will appear not to be sustainable in the end, whereas FairEmail is properly maintained and supported,
 and that free apps may have a catch, like sending privacy sensitive information to the internet.
+There are no privacy violating ads in the app either.
 
 I have been working on FairEmail almost every day for more than two years, so I think the price is more than reasonable.
 For this reason there won't be discounts either.
@@ -1018,13 +1026,14 @@ FairEmail does not hide errors like similar apps often do, so it is easier to di
 
 FairEmail will automatically try to connect again after a delay.
 This delay will be doubled after each failed attempt to prevent draining the battery and to prevent from being locked out permanently.
+Please see [this FAQ](#user-content-faq123) for more information about this.
 
 There are general errors and errors specific to Gmail accounts (see below).
 
 **General errors**
 
 <a name="authfailed"></a>
-The error *... Authentication failed ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect.
+The error *... **Authentication failed** ...* or *... AUTHENTICATE failed ...* likely means that your username or password was incorrect.
 Some providers expect as username just *username* and others your full email address *username@example.com*.
 When copying/pasting to enter a username or password, invisible characters might be copied, which could cause this problem as well.
 Some password managers are known to do this incorrectly too.
@@ -1033,6 +1042,13 @@ Some providers require using an app password instead of the account password, so
 Sometimes it is necessary to enable external access (IMAP/SMTP) on the website of the provider first.
 Other possible causes are that the account is blocked or that logging in has been administratively restricted in some way,
 for example by allowing to login from certain networks / IP addresses only.
+
+If needed, you can update a password in the account settings:
+navigation menu (left side menu), tap *Settings*, tap *Manual setup and more options*, tap *Accounts* and tap on the account.
+Changing the account password will in most cases automatically change the password of related identities too.
+If the account was authorized with OAuth via the quick setup wizard instead of with a password,
+you can run the quick setup wizard again and tick *Authorize existing account again* to authenticate the account again.
+Note that this requires a recent version of the app.
 
 The error *... Too many bad auth attempts ...* likely means that you are using a Yahoo account password instead of an app password.
 Please see [this FAQ](#user-content-faq88) about how to set up a Yahoo account.
@@ -1985,6 +2001,7 @@ When navigation to a conversation one message will be expanded if:
 
 * There is just one message in the conversation
 * There is exactly one unread message in the conversation
+* There is exactly one starred (favorite) message in the conversation (from version 1.1508)
 
 There is one exception: the message was not downloaded yet
 and the message is too large to download automatically on a metered (mobile) connection.
@@ -2421,6 +2438,10 @@ You can enable/disable [authentication verification](https://en.wikipedia.org/wi
 FairEmail can show a warning flag too if the domain name of the (reply) email address of the sender does not define an MX record pointing to an email server.
 This can be enabled in the receive settings. Be aware that this will slow down synchronization of messages significantly.
 
+If the domain name of the sender and the domain name of the reply address differ,
+the warning flag will be shown too because this is most often the case with phishing messages.
+If desired, this can be disabled in the receive settings (from version 1.1506).
+
 If legitimate messages are failing authentication, you should notify the sender because this will result in a high risk of messages ending up in the spam folder.
 Moreover, without proper authentication there is a risk the sender will be impersonated.
 The sender might use [this tool](https://www.mail-tester.com/) to check authentication and other things.
@@ -2587,6 +2608,8 @@ So, you don't have to disable this option if you don't have an EU SIM or are not
 Please [see here](https://github.com/leolin310148/ShortcutBadger#supported-launchers)
 for a list of launchers which can show the number of unread messages.
 
+Note that Nova Launcher requires Tesla Unread, which is [not supported anymore](https://forum.xda-developers.com/android/general/bad-news-tesla-unread-devoloper-t3920415).
+
 Note that the notification setting *Show launcher icon with number of new messages* needs to be enabled (default enabled).
 
 Only *new* unread messages in folders set to show new message notifications will be counted,
@@ -2604,8 +2627,6 @@ This could be caused by a bug in the launcher app or in your Android version.
 Please double check if the notification dot is disabled for the receive (service) notification channel.
 You can go to the right notification channel settings via the notification settings of FairEmail.
 This might not be obvious, but you can tap on the channel name for more settings.
-
-Note that Tesla Unread is [not supported anymore](https://forum.xda-developers.com/android/general/bad-news-tesla-unread-devoloper-t3920415).
 
 FairEmail does send a new message count intent as well:
 
@@ -2765,6 +2786,9 @@ Reverted [commit](https://github.com/M66B/FairEmail/commit/2c80c25b8aa75af2287f4
 <a name="faq38"></a>
 <a name="faq117"></a>
 **(117) Can you help me restore my purchase?**
+
+First of all, a purchase will be available on all devices logged into the same Google account,
+*if* the app is installed via the same Google account too. You can select the account in the Play store app.
 
 Google manages all purchases, so as a developer I have little control over purchases.
 So, basically the only thing I can do, is give some advice:
@@ -3076,9 +3100,9 @@ You can reset all questions set to be not asked again in the miscellaneous setti
 <br />
 
 <a name="faq138"></a>
-**(138) Can you add calendar/contact management/synchronizing?**
+**(138) Can you add calendar/contact/tasks/notes management?**
 
-Calendar and contact management can better be done by a separate, specialized app.
+Calendar, contact, task and note management can better be done by a separate, specialized app.
 Note that FairEmail is a specialized email app, not an office suite.
 
 Also, I prefer to do a few things very well, instead of many things only half.

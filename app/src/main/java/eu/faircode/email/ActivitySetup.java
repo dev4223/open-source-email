@@ -247,6 +247,14 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
         }).setExternal(true));
 
+        menus.add(new NavMenuItem(R.drawable.twotone_feedback_24, R.string.menu_issue, new Runnable() {
+            @Override
+            public void run() {
+                drawerLayout.closeDrawer(drawerContainer);
+                onMenuIssue();
+            }
+        }).setExternal(true));
+
         menus.add(new NavMenuItem(R.drawable.twotone_account_box_24, R.string.menu_privacy, new Runnable() {
             @Override
             public void run() {
@@ -261,7 +269,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                 drawerLayout.closeDrawer(drawerContainer);
                 onMenuAbout();
             }
-        }));
+        }).setSubtitle(BuildConfig.VERSION_NAME));
 
         adapter.set(menus);
 
@@ -486,6 +494,10 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
 
         }.execute(this, new Bundle(), "debug:info");
+    }
+
+    private void onMenuIssue() {
+        startActivity(Helper.getIntentIssue(this));
     }
 
     private void onMenuPrivacy() {
@@ -981,7 +993,8 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
                         if ("secure".equals(key) ||
                                 "shortcuts".equals(key) ||
                                 "language".equals(key) ||
-                                "query_threads".equals(key))
+                                "query_threads".equals(key) ||
+                                "wal".equals(key))
                             continue;
 
                         if (key != null && key.startsWith("widget."))
@@ -1295,9 +1308,13 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             final boolean export = getArguments().getBoolean("export");
 
             View dview = LayoutInflater.from(getContext()).inflate(R.layout.dialog_password, null);
+            TextView tvCaption = dview.findViewById(R.id.tvCaption);
             etPassword1 = dview.findViewById(R.id.tilPassword1);
             etPassword2 = dview.findViewById(R.id.tilPassword2);
+            TextView tvExportHint = dview.findViewById(R.id.tvExportHint);
             TextView tvImportHint = dview.findViewById(R.id.tvImportHint);
+
+            tvCaption.setText(export ? R.string.title_setup_export : R.string.title_setup_import);
 
             if (savedInstanceState != null) {
                 etPassword1.getEditText().setText(savedInstanceState.getString("fair:password1"));
@@ -1305,6 +1322,7 @@ public class ActivitySetup extends ActivityBase implements FragmentManager.OnBac
             }
 
             etPassword2.setVisibility(export ? View.VISIBLE : View.GONE);
+            tvExportHint.setVisibility(export ? View.VISIBLE : View.GONE);
             tvImportHint.setVisibility(export ? View.GONE : View.VISIBLE);
 
             return new AlertDialog.Builder(getContext())

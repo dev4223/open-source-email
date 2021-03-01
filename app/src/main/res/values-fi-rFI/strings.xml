@@ -158,6 +158,7 @@
     <string name="title_setup_grant_again">Myönnä vaaditut oikeudet</string>
     <string name="title_setup_exchange_support">Onko Microsoft Exchange tuettu?</string>
     <string name="title_setup_identity_what">Mikä on identiteetti?</string>
+    <string name="title_setup_free">Onko tämän sovelluksen käyttäminen ilmaista?</string>
     <string name="title_setup_permissions">Myönnä käyttöoikeudet</string>
     <string name="title_setup_permissions_remark">Laitteen yhteystietoihin pääsemiseksi (valinnainen)</string>
     <string name="title_setup_doze">Ota akun käytön optimointi pois käytöstä</string>
@@ -521,7 +522,6 @@
     <string name="title_advanced_english_hint">Tämä käynnistää sovelluksen uudelleen</string>
     <string name="title_advanced_experiments_hint">Lista kokeellisista ominaisuuksista</string>
     <string name="title_advanced_protocol_hint">Tämä lisää merkittävästi akun ja tallennustilan käyttöä!</string>
-    <string name="title_advanced_debug_hint">Salli ylimääräinen lokitietojen tallennus ja näytä rumia debug-tietoja eri paikoissa</string>
     <string name="title_advanced_cleanup_attachments_hint">Manuaalisesti siivottaessa tämä poistaa liitteet viesteistä, joita ei enää synkronoida</string>
     <string name="title_advanced_cleanup_hint">Tämä poistaa kaikki väliaikaiset tiedostot</string>
     <string name="title_advanced_never_favorite">Ei koskaan suosikiksi</string>
@@ -693,7 +693,7 @@
     <string name="title_folder_name_missing">Kansion nimi puuttuu</string>
     <string name="title_folder_exists">Kansio %1$s on olemassa</string>
     <string name="title_folder_delete">Poistetaanko tämä kansio ja sen sisältämät viestit pysyvästi?</string>
-    <string name="title_months">Kuukaudet</string>
+    <string name="title_months">Kuukautta</string>
     <string name="title_months_all">Kaikki</string>
     <string name="title_folder_unified">Yhdistetty saapuneet</string>
     <string name="title_folder_inbox">Saapuneet</string>
@@ -738,6 +738,8 @@
     <string name="title_pin">Lisää pikakuvake</string>
     <string name="title_print">Tulosta</string>
     <string name="title_print_header">Tulosta tunnistetiedot</string>
+    <string name="title_print_images">Tulosta kuvia</string>
+    <string name="title_print_images_remark">Kuvien lataaminen saattaa kestää jonkin aikaa</string>
     <string name="title_show_headers">Näytä tunnistetiedot</string>
     <string name="title_raw_save">Tallenna raakaviesti</string>
     <string name="title_raw_send">Lähetä liitteenä</string>
@@ -748,6 +750,8 @@
     <string name="title_download_all">Lataa kaikki</string>
     <string name="title_save_all">Tallenna kaikki</string>
     <string name="title_save_eml">Tallenna raakaviestitiedosto</string>
+    <string name="title_buttons">Valitse painikkeita</string>
+    <string name="title_configure_buttons">Määritä painikkeet &#8230;</string>
     <string name="title_trash">Siirrä roskakoriin</string>
     <string name="title_copy">Kopioi &#8230;</string>
     <string name="title_copy_to">Kopioi kansioon &#8230;</string>

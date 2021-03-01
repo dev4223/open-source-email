@@ -123,24 +123,48 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import io.requery.android.database.CursorWindowAllocationException;
 
 public class Log {
-    private static boolean debug = false;
+    private static int level = android.util.Log.INFO;
     private static final int MAX_CRASH_REPORTS = 5;
     private static final String TAG = "fairemail";
 
-    public static void setDebug(boolean value) {
-        debug = value;
+    public static void setLevel(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean debug = prefs.getBoolean("debug", false);
+        if (debug)
+            level = android.util.Log.DEBUG;
+        else
+            level = prefs.getInt("log_level", getDefaultLogLevel());
+        android.util.Log.d(TAG, "Log level=" + level);
+    }
+
+    public static int getDefaultLogLevel() {
+        return (BuildConfig.DEBUG ? android.util.Log.INFO : android.util.Log.WARN);
     }
 
     public static int d(String msg) {
-        if (debug)
+        if (level <= android.util.Log.DEBUG)
             return android.util.Log.d(TAG, msg);
         else
             return 0;
     }
 
+    public static int d(String tag, String msg) {
+        if (level <= android.util.Log.DEBUG)
+            return android.util.Log.d(tag, msg);
+        else
+            return 0;
+    }
+
     public static int i(String msg) {
-        if (BuildConfig.BETA_RELEASE)
+        if (level <= android.util.Log.INFO)
             return android.util.Log.i(TAG, msg);
+        else
+            return 0;
+    }
+
+    public static int i(String tag, String msg) {
+        if (level <= android.util.Log.INFO)
+            return android.util.Log.i(tag, msg);
         else
             return 0;
     }
@@ -262,14 +286,14 @@ public class Log {
     }
 
     static void setup(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        debug = prefs.getBoolean("debug", false);
-
+        setLevel(context);
         setupBugsnag(context);
     }
 
     private static void setupBugsnag(final Context context) {
         try {
+            Log.i("Configuring Bugsnag");
+
             // https://docs.bugsnag.com/platforms/android/sdk/
             com.bugsnag.android.Configuration config =
                     new com.bugsnag.android.Configuration("9d2d57476a0614974449a3ec33f2604a");
@@ -977,6 +1001,57 @@ public class Log {
                   at android.widget.EditText.setSelection(EditText.java:118)
                   at android.widget.NumberPicker$SetSelectionCommand.run(NumberPicker.java:2246)
                   at android.os.Handler.handleCallback(Handler.java:751)
+             */
+        }
+
+        if (ex instanceof IndexOutOfBoundsException) {
+            for (StackTraceElement ste : stack)
+                if ("android.graphics.Paint".equals(ste.getClassName()) &&
+                        "getTextRunCursor".equals(ste.getMethodName()))
+                    return false;
+            /*
+                Android 6.0.1
+                java.lang.IndexOutOfBoundsException
+                  at android.graphics.Paint.getTextRunCursor(Paint.java:2160)
+                  at android.graphics.Paint.getTextRunCursor(Paint.java:2112)
+                  at android.widget.Editor.getNextCursorOffset(Editor.java:924)
+                  at android.widget.Editor.access$4700(Editor.java:126)
+                  at android.widget.Editor$SelectionEndHandleView.positionAndAdjustForCrossingHandles(Editor.java:4708)
+                  at android.widget.Editor$SelectionEndHandleView.updatePosition(Editor.java:4692)
+                  at android.widget.Editor$HandleView.onTouchEvent(Editor.java:4012)
+                  at android.widget.Editor$SelectionEndHandleView.onTouchEvent(Editor.java:4726)
+                  at android.view.View.dispatchTouchEvent(View.java:9377)
+                  at android.view.ViewGroup.dispatchTransformedTouchEvent(ViewGroup.java:2554)
+                  at android.view.ViewGroup.dispatchTouchEvent(ViewGroup.java:2255)
+                  at android.widget.PopupWindow$PopupDecorView.dispatchTouchEvent(PopupWindow.java:2015)
+                  at android.view.View.dispatchPointerEvent(View.java:9597)
+                  at android.view.ViewRootImpl$ViewPostImeInputStage.processPointerEvent(ViewRootImpl.java:4234)
+                  at android.view.ViewRootImpl$ViewPostImeInputStage.onProcess(ViewRootImpl.java:4100)
+                  at android.view.ViewRootImpl$InputStage.deliver(ViewRootImpl.java:3646)
+                  at android.view.ViewRootImpl$InputStage.onDeliverToNext(ViewRootImpl.java:3699)
+                  at android.view.ViewRootImpl$InputStage.forward(ViewRootImpl.java:3665)
+                  at android.view.ViewRootImpl$AsyncInputStage.forward(ViewRootImpl.java:3791)
+                  at android.view.ViewRootImpl$InputStage.apply(ViewRootImpl.java:3673)
+                  at android.view.ViewRootImpl$AsyncInputStage.apply(ViewRootImpl.java:3848)
+                  at android.view.ViewRootImpl$InputStage.deliver(ViewRootImpl.java:3646)
+                  at android.view.ViewRootImpl$InputStage.onDeliverToNext(ViewRootImpl.java:3699)
+                  at android.view.ViewRootImpl$InputStage.forward(ViewRootImpl.java:3665)
+                  at android.view.ViewRootImpl$InputStage.apply(ViewRootImpl.java:3673)
+                  at android.view.ViewRootImpl$InputStage.deliver(ViewRootImpl.java:3646)
+                  at android.view.ViewRootImpl.deliverInputEvent(ViewRootImpl.java:5926)
+                  at android.view.ViewRootImpl.doProcessInputEvents(ViewRootImpl.java:5900)
+                  at android.view.ViewRootImpl.enqueueInputEvent(ViewRootImpl.java:5861)
+                  at android.view.ViewRootImpl$WindowInputEventReceiver.onInputEvent(ViewRootImpl.java:6029)
+                  at android.view.InputEventReceiver.dispatchInputEvent(InputEventReceiver.java:185)
+                  at android.view.InputEventReceiver.nativeConsumeBatchedInputEvents(Native Method)
+                  at android.view.InputEventReceiver.consumeBatchedInputEvents(InputEventReceiver.java:176)
+                  at android.view.ViewRootImpl.doConsumeBatchedInput(ViewRootImpl.java:6000)
+                  at android.view.ViewRootImpl$ConsumeBatchedInputRunnable.run(ViewRootImpl.java:6052)
+                  at android.view.Choreographer$CallbackRecord.run(Choreographer.java:858)
+                  at android.view.Choreographer.doCallbacks(Choreographer.java:670)
+                  at android.view.Choreographer.doFrame(Choreographer.java:600)
+                  at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:844)
+                  at android.os.Handler.handleCallback(Handler.java:739)
              */
         }
 

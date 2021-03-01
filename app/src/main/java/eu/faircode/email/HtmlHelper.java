@@ -1375,9 +1375,11 @@ public class HtmlHelper {
             if (value.endsWith("pc")) // 6 pc = 72 pt
                 return Float.parseFloat(value.substring(0, value.length() - 2).trim()) / 12 / DEFAULT_FONT_SIZE_PT;
             if (value.endsWith("cm")) // 1 inch = 2.54 cm
-                return Float.parseFloat(value.substring(0, value.length() - 2).trim()) / 2.54f / 72 / DEFAULT_FONT_SIZE_PT;
+                return Float.parseFloat(value.substring(0, value.length() - 2).trim()) / 2.54f * 72 / DEFAULT_FONT_SIZE_PT;
+            if (value.endsWith("mm")) // 1 inch = 25.4 mm
+                return Float.parseFloat(value.substring(0, value.length() - 2).trim()) / 25.4f * 72 / DEFAULT_FONT_SIZE_PT;
             if (value.endsWith("in")) // 1 inch = 72pt
-                return Float.parseFloat(value.substring(0, value.length() - 2).trim()) / 72 / DEFAULT_FONT_SIZE_PT;
+                return Float.parseFloat(value.substring(0, value.length() - 2).trim()) * 72 / DEFAULT_FONT_SIZE_PT;
             return Float.parseFloat(value.trim()) / DEFAULT_FONT_SIZE;
         } catch (NumberFormatException ex) {
             Log.i(ex);
@@ -1796,12 +1798,19 @@ public class HtmlHelper {
             int start = ssb.getSpanStart(span);
             int end = ssb.getSpanEnd(span);
             if (span.getStyle() == Typeface.ITALIC) {
+                ssb.insert(end, "/");
+                ssb.insert(start, "/");
+            } else if (span.getStyle() == Typeface.BOLD) {
                 ssb.insert(end, "*");
                 ssb.insert(start, "*");
-            } else if (span.getStyle() == Typeface.BOLD) {
-                ssb.insert(end, "**");
-                ssb.insert(start, "**");
             }
+        }
+
+        for (UnderlineSpan span : ssb.getSpans(0, ssb.length(), UnderlineSpan.class)) {
+            int start = ssb.getSpanStart(span);
+            int end = ssb.getSpanEnd(span);
+            ssb.insert(end, "_");
+            ssb.insert(start, "_");
         }
 
         for (URLSpan span : ssb.getSpans(0, ssb.length(), URLSpan.class)) {
@@ -1859,7 +1868,7 @@ public class HtmlHelper {
     }
 
     static Spanned highlightHeaders(Context context, String headers) {
-        int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
+        int colorAccent = Helper.resolveColor(context, android.R.attr.textColorLink);
         SpannableStringBuilder ssb = new SpannableStringBuilder(headers);
         int index = 0;
         for (String line : headers.split("\n")) {

@@ -257,7 +257,7 @@ public class WorkerCleanup extends Worker {
             if (images != null)
                 for (File file : images)
                     if (manual || file.lastModified() + KEEP_FILES_DURATION < now) {
-                        long id = Long.parseLong(file.getName().split("_")[0]);
+                        long id = Long.parseLong(file.getName().split("[_\\.]")[0]);
                         EntityMessage message = db.message().getMessage(id);
                         if (manual || message == null ||
                                 file.lastModified() + KEEP_IMAGES_DURATION < now) {
@@ -322,6 +322,8 @@ public class WorkerCleanup extends Worker {
                 }
                 EntityLog.log(context, "Analyze=" + (new Date().getTime() - analyze) + " ms");
             }
+
+            DB.createEmergencyBackup(context);
 
             if (manual) {
                 // https://www.sqlite.org/lang_vacuum.html

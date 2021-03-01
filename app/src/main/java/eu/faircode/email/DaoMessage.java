@@ -236,7 +236,8 @@ public interface DaoMessage {
             " WHEN folder.type = '" + EntityFolder.JUNK + "' THEN 6" +
             " WHEN folder.type = '" + EntityFolder.SYSTEM + "' THEN 7" +
             " WHEN folder.type = '" + EntityFolder.USER + "' THEN 8" +
-            " WHEN folder.type = '" + EntityFolder.ARCHIVE + "' THEN 9" +
+            " WHEN folder.type = '" + EntityFolder.ARCHIVE + "' THEN" +
+            "  CASE WHEN :filter_archive THEN 9 ELSE 0 END" +
             " ELSE 999 END")
         // The folder type sort order should match the duplicate algorithm
     DataSource.Factory<Integer, TupleMessageEx> pagedThread(
@@ -314,6 +315,7 @@ public interface DaoMessage {
             " OR (:subject AND `subject` LIKE :find COLLATE NOCASE)" + // unsuitable index
             " OR (:keywords AND `keywords` LIKE :find COLLATE NOCASE)" + // no index
             " OR (:message AND `preview` LIKE :find COLLATE NOCASE)" + // no index
+            " OR (:notes AND `notes` LIKE :find COLLATE NOCASE)" + // no index
             " OR (attachment.name LIKE :find COLLATE NOCASE)" + // no index
             " OR (attachment.type LIKE :find COLLATE NOCASE)) AS matched" + // no index
             " FROM message" +
@@ -334,7 +336,7 @@ public interface DaoMessage {
             " LIMIT :limit OFFSET :offset")
     List<TupleMatch> matchMessages(
             Long account, Long folder, String find,
-            boolean senders, boolean recipients, boolean subject, boolean keywords, boolean message,
+            boolean senders, boolean recipients, boolean subject, boolean keywords, boolean message, boolean notes,
             boolean unseen, boolean flagged, boolean hidden, boolean encrypted, boolean attachments,
             int type_count, String[] types,
             Integer size,
@@ -481,7 +483,9 @@ public interface DaoMessage {
     LiveData<List<TupleMessageEx>> liveUnseenNotify();
 
     @Transaction
-    @Query("SELECT account.id AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
+    @Query("SELECT account.id AS account," +
+            " COUNT(message.id) AS unseen," +
+            " SUM(CASE WHEN account.created IS NULL OR message.received > account.created OR message.sent > account.created THEN NOT ui_ignored ELSE 0 END) AS notifying" +
             " FROM message" +
             " JOIN account_view AS account ON account.id = message.account" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +
@@ -494,7 +498,9 @@ public interface DaoMessage {
             " ORDER BY account.id")
     LiveData<List<TupleMessageStats>> liveWidgetUnseen(Long account);
 
-    @Query("SELECT :account AS account, COUNT(message.id) AS unseen, SUM(ABS(notifying)) AS notifying" +
+    @Query("SELECT :account AS account," +
+            " COUNT(message.id) AS unseen," +
+            " SUM(CASE WHEN account.created IS NULL OR message.received > account.created OR message.sent > account.created THEN NOT ui_ignored ELSE 0 END) AS notifying" +
             " FROM message" +
             " JOIN account_view AS account ON account.id = message.account" +
             " JOIN folder_view AS folder ON folder.id = message.folder" +

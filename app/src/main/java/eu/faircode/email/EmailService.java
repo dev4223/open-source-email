@@ -462,14 +462,18 @@ public class EmailService implements AutoCloseable {
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             boolean prefer_ip4 = prefs.getBoolean("prefer_ip4", true);
-            if (prefer_ip4 && main instanceof Inet6Address) {
-                for (InetAddress iaddr : InetAddress.getAllByName(host))
-                    if (iaddr instanceof Inet4Address) {
-                        main = iaddr;
-                        EntityLog.log(context, "Preferring=" + main);
-                        break;
-                    }
-            }
+            if (prefer_ip4 &&
+                    main instanceof Inet6Address)
+                try {
+                    for (InetAddress iaddr : InetAddress.getAllByName(host))
+                        if (iaddr instanceof Inet4Address) {
+                            main = iaddr;
+                            EntityLog.log(context, "Preferring=" + main);
+                            break;
+                        }
+                } catch (UnknownHostException ex) {
+                    Log.w(ex);
+                }
 
             EntityLog.log(context, "Connecting to " + main);
             _connect(main, port, require_id, user, authenticator, factory);
@@ -573,8 +577,10 @@ public class EmailService implements AutoCloseable {
                             if (!line.endsWith("ignoring socket timeout"))
                                 if (log)
                                     EntityLog.log(context, user + " " + line);
-                                else
-                                    android.util.Log.i("javamail", user + " " + line);
+                                else {
+                                    if (BuildConfig.DEBUG)
+                                        Log.i("javamail", user + " " + line);
+                                }
                             bos.reset();
                         } else
                             bos.write(b);

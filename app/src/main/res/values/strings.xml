@@ -203,6 +203,7 @@
     <string name="title_setup_grant_again">Grant required permissions</string>
     <string name="title_setup_exchange_support">Is Microsoft Exchange supported?</string>
     <string name="title_setup_identity_what">What is an identity?</string>
+    <string name="title_setup_free">Is this app free to use?</string>
     <string name="title_setup_permissions">Grant permissions</string>
     <string name="title_setup_permissions_remark">To access contact information (optional)</string>
     <string name="title_setup_doze">Disable battery optimizations</string>
@@ -223,6 +224,7 @@
 
     <string name="title_setup_export">Export settings</string>
     <string name="title_setup_import">Import settings</string>
+    <string name="title_setup_export_do">The password is used to encrypt the settings and is required to import the settings again</string>
     <string name="title_setup_import_do">Imported accounts will be added without overwriting any existing ones</string>
     <string name="title_setup_password">Password</string>
     <string name="title_setup_password_chars">Password contains control or whitespace characters</string>
@@ -300,6 +302,7 @@
     <string name="title_advanced_sync_folders">Synchronize folder list</string>
     <string name="title_advanced_sync_shared_folders">Synchronize shared folder lists</string>
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
+    <string name="title_advanced_check_reply_domain">Check reply address on synchronizing messages</string>
     <string name="title_advanced_check_mx">Check sender email addresses on synchronizing messages</string>
     <string name="title_advanced_tune_keep_alive">Automatically tune the keep-alive interval</string>
 
@@ -372,6 +375,7 @@
     <string name="title_advanced_color_threshold">Threshold letter color: %1$s %%</string>
     <string name="title_advanced_name_email">Show names and email addresses</string>
     <string name="title_advanced_replace_name">Prefer a contact name over a sent name</string>
+    <string name="title_advanced_only_name">Display contact names only</string>
     <string name="title_advanced_distinguish_contacts">Underline the sender when the sender is known as local \'to\' contact</string>
     <string name="title_advanced_show_recipients">Show recipients in message header</string>
     <string name="title_advanced_font_size_sender">Text size sender</string>
@@ -531,8 +535,10 @@
     <string name="title_advanced_updates">Check for GitHub updates</string>
     <string name="title_advanced_experiments">Try experimental features</string>
     <string name="title_advanced_query_threads">Limit parallel database access</string>
+    <string name="title_advanced_wal">WAL (debug only)</string>
     <string name="title_advanced_crash_reports">Send error reports</string>
     <string name="title_advanced_protocol">Protocol logging</string>
+    <string name="title_advanced_log_info">Debug logging</string>
     <string name="title_advanced_debug">Debug mode</string>
     <string name="title_advanced_cleanup_attachments">Delete attachments of old messages</string>
     <string name="title_advanced_cleanup">Cleanup</string>
@@ -557,6 +563,7 @@
     <string name="title_advanced_sync_kept_hint">This will transfer extra data and consume extra battery power, especially if a lot of messages are stored on the device</string>
     <string name="title_advanced_gmail_thread_hint">This only applies to newly received messages and can break existing groups</string>
     <string name="title_advanced_sync_folders_hint">Disabling this will reduce data and battery usage somewhat, but will disable updating the list of folders too</string>
+    <string name="title_advanced_check_reply_hint">This will check if the domain name of the sender and the reply address are the same</string>
     <string name="title_advanced_lookup_mx_hint">This will check if DNS MX records exist</string>
     <string name="title_advanced_sync_delay_hint">This will slow down synchronizing messages</string>
 
@@ -621,7 +628,7 @@
     <string name="title_advanced_english_hint">This will restart the app</string>
     <string name="title_advanced_experiments_hint">List of current experimental features</string>
     <string name="title_advanced_protocol_hint">This will significantly increase battery and storage space usage!</string>
-    <string name="title_advanced_debug_hint">Enable extra logging and show ugly debug information at various places</string>
+    <string name="title_advanced_debug_hint">This will show ugly debug information at various places</string>
     <string name="title_advanced_cleanup_attachments_hint">When manually cleaning, this will remove attachments from messages that are no longer synchronized</string>
     <string name="title_advanced_cleanup_hint">This will delete all temporary files</string>
 
@@ -725,6 +732,7 @@
     <string name="title_identity_delete">Delete this identity permanently?</string>
     <string name="title_edit_html">Edit as HTML</string>
     <string name="title_sign_key">Sign key: %1$s</string>
+    <string name="title_created_at">Created: %1$s</string>
     <string name="title_last_connected">Last connected: %1$s</string>
     <string name="title_backoff_until">Waiting after failure until: %1$s</string>
     <string name="title_storage_quota">Server storage usage: %1$s/%2$s</string>
@@ -856,6 +864,8 @@
     <string name="title_pin">Add shortcut</string>
     <string name="title_print">Print</string>
     <string name="title_print_header">Print header</string>
+    <string name="title_print_images">Print images</string>
+    <string name="title_print_images_remark">Downloading images might take some time</string>
     <string name="title_show_headers">Show headers</string>
     <string name="title_raw_save">Save raw message</string>
     <string name="title_raw_send">Send as attachment</string>
@@ -1112,6 +1122,7 @@
     <string name="title_search_in_subject">In subject</string>
     <string name="title_search_in_keywords">In keywords (if supported)</string>
     <string name="title_search_in_message">In message text</string>
+    <string name="title_search_in_notes">In local notes</string>
     <string name="title_search_with">Limit search to</string>
     <string name="title_search_with_unseen">Unread</string>
     <string name="title_search_with_flagged">Starred</string>

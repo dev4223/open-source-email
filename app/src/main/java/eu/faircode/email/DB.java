@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +65,7 @@ import static eu.faircode.email.ServiceAuthenticator.AUTH_TYPE_PASSWORD;
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 @Database(
-        version = 188,
+        version = 189,
         entities = {
                 EntityIdentity.class,
                 EntityAccount.class,
@@ -113,6 +114,7 @@ public abstract class DB extends RoomDatabase {
 
     private static final String DB_NAME = "fairemail";
     private static final int DB_CHECKPOINT = 1000; // requery/sqlite-android default
+    private static final int DB_CACHE_SIZE = -5000; // https://www.sqlite.org/pragma.html#pragma_cache_size
 
     private static final String[] DB_TABLES = new String[]{
             "identity", "account", "folder", "message", "attachment", "operation", "contact", "certificate", "answer", "rule", "log"};
@@ -124,7 +126,7 @@ public abstract class DB extends RoomDatabase {
             File dbfile = configuration.context.getDatabasePath(DB_NAME);
             if (dbfile.exists()) {
                 try (SQLiteDatabase db = SQLiteDatabase.openDatabase(dbfile.getPath(), null, SQLiteDatabase.OPEN_READWRITE)) {
-                    Log.i("DB checkpoint=" + DB_CHECKPOINT);
+                    Log.i("Set PRAGMA wal_autocheckpoint=" + DB_CHECKPOINT);
                     try (Cursor cursor = db.rawQuery("PRAGMA wal_autocheckpoint=" + DB_CHECKPOINT + ";", null)) {
                         cursor.moveToNext(); // required
                     }
@@ -218,11 +220,100 @@ public abstract class DB extends RoomDatabase {
         });
     }
 
+    static void createEmergencyBackup(Context context) {
+        Log.i("Creating emergency backup");
+        try {
+            DB db = DB.getInstance(context);
+
+            JSONArray jaccounts = new JSONArray();
+            List<EntityAccount> accounts = db.account().getAccounts();
+            for (EntityAccount account : accounts) {
+                JSONObject jaccount = account.toJSON();
+
+                JSONArray jfolders = new JSONArray();
+                List<EntityFolder> folders = db.folder().getFolders(account.id, false, true);
+                for (EntityFolder folder : folders)
+                    jfolders.put(folder.toJSON());
+                jaccount.put("folders", jfolders);
+
+                JSONArray jidentities = new JSONArray();
+                List<EntityIdentity> identities = db.identity().getIdentities(account.id);
+                for (EntityIdentity identity : identities)
+                    jidentities.put(identity.toJSON());
+                jaccount.put("identities", jidentities);
+
+                jaccounts.put(jaccount);
+            }
+
+            File emergency = new File(context.getFilesDir(), "emergency.json");
+            Helper.writeText(emergency, jaccounts.toString(2));
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
+    private static void checkEmergencyBackup(Context context) {
+        try {
+            File dbfile = context.getDatabasePath(DB_NAME);
+            if (dbfile.exists()) {
+                Log.i("Emergency restore /dbfile");
+                return;
+            }
+
+            File emergency = new File(context.getFilesDir(), "emergency.json");
+            if (!emergency.exists()) {
+                Log.i("Emergency restore /json");
+                return;
+            }
+
+            DB db = DB.getInstance(context);
+            if (db.account().getAccounts().size() > 0) {
+                Log.e("Emergency restore /accounts");
+                return;
+            }
+
+            Log.e("Emergency restore");
+
+            String json = Helper.readText(emergency);
+            JSONArray jaccounts = new JSONArray(json);
+            for (int a = 0; a < jaccounts.length(); a++) {
+                JSONObject jaccount = jaccounts.getJSONObject(a);
+                EntityAccount account = EntityAccount.fromJSON(jaccount);
+                account.created = new Date().getTime();
+                account.id = db.account().insertAccount(account);
+
+                JSONArray jfolders = jaccount.getJSONArray("folders");
+                for (int f = 0; f < jfolders.length(); f++) {
+                    EntityFolder folder = EntityFolder.fromJSON(jfolders.getJSONObject(f));
+                    folder.account = account.id;
+                    db.folder().insertFolder(folder);
+                }
+
+                JSONArray jidentities = jaccount.getJSONArray("identities");
+                for (int i = 0; i < jidentities.length(); i++) {
+                    EntityIdentity identity = EntityIdentity.fromJSON(jidentities.getJSONObject(i));
+                    identity.account = account.id;
+                    db.identity().insertIdentity(identity);
+                }
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+    }
+
     public static synchronized DB getInstance(Context context) {
         if (sInstance == null) {
+            Log.i("Creating database instance");
             Context acontext = context.getApplicationContext();
 
             sInstance = migrate(acontext, getBuilder(acontext)).build();
+
+            sInstance.getQueryExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    checkEmergencyBackup(acontext);
+                }
+            });
 
             try {
                 Log.i("Disabling view invalidation");
@@ -265,14 +356,17 @@ public abstract class DB extends RoomDatabase {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         int threads = prefs.getInt("query_threads", 4); // AndroidX default thread count: 4
-        Log.i("Query threads=" + threads);
-        ExecutorService executor = Helper.getBackgroundExecutor(threads, "query");
+        boolean wal = prefs.getBoolean("wal", true);
+        Log.i("DB query threads=" + threads + " wal=" + wal);
+        ExecutorService executorQuery = Helper.getBackgroundExecutor(threads, "query");
+        ExecutorService executorTransaction = Helper.getBackgroundExecutor(0, "transaction");
 
         return Room
                 .databaseBuilder(context, DB.class, DB_NAME)
                 .openHelperFactory(new RequerySQLiteOpenHelperFactory())
-                .setQueryExecutor(executor)
-                .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING) // using the latest sqlite
+                .setQueryExecutor(executorQuery)
+                .setTransactionExecutor(executorTransaction)
+                .setJournalMode(wal ? JournalMode.WRITE_AHEAD_LOGGING : JournalMode.TRUNCATE) // using the latest sqlite
                 .addCallback(new Callback() {
                     @Override
                     public void onOpen(@NonNull SupportSQLiteDatabase db) {
@@ -280,12 +374,25 @@ public abstract class DB extends RoomDatabase {
                                 " version=" + db.getVersion() +
                                 " WAL=" + db.isWriteAheadLoggingEnabled());
 
-                        try (Cursor cursor = db.query("PRAGMA journal_mode;")) {
-                            Log.i("journal_mode=" + (cursor.moveToNext() ? cursor.getString(0) : "?"));
-                        }
+                        // https://www.sqlite.org/pragma.html
+                        for (String pragma : new String[]{
+                                "synchronous", "journal_mode",
+                                "wal_checkpoint", "wal_autocheckpoint",
+                                "page_count", "page_size",
+                                "cache_size"})
+                            try (Cursor cursor = db.query("PRAGMA " + pragma + ";")) {
+                                Log.i("Get PRAGMA " + pragma + "=" + (cursor.moveToNext() ? cursor.getString(0) : "?"));
+                            }
 
-                        try (Cursor cursor = db.query("PRAGMA wal_autocheckpoint;")) {
-                            Log.i("wal_autocheckpoint=" + (cursor.moveToNext() ? cursor.getInt(0) : "?"));
+                        if (BuildConfig.DEBUG) {
+                            Log.i("Set PRAGMA cache_size=" + DB_CACHE_SIZE);
+                            try (Cursor cursor = db.query("PRAGMA cache_size=" + DB_CACHE_SIZE + ";", null)) {
+                                cursor.moveToNext(); // required
+                            }
+
+                            try (Cursor cursor = db.query("PRAGMA cache_size;")) {
+                                Log.i("Get PRAGMA cache_size=" + (cursor.moveToNext() ? cursor.getInt(0) : "?"));
+                            }
                         }
 
                         if (BuildConfig.DEBUG && false) {
@@ -1838,7 +1945,37 @@ public abstract class DB extends RoomDatabase {
                         Log.i("DB migration from version " + startVersion + " to " + endVersion);
                         db.execSQL("ALTER TABLE `message` ADD COLUMN `ui_silent` INTEGER NOT NULL DEFAULT 0");
                     }
+                })
+                .addMigrations(new Migration(188, 189) {
+                    @Override
+                    public void migrate(@NonNull SupportSQLiteDatabase db) {
+                        Log.i("DB migration from version " + startVersion + " to " + endVersion);
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `sign_default` INTEGER NOT NULL DEFAULT 0");
+                        db.execSQL("ALTER TABLE `identity` ADD COLUMN `encrypt_default` INTEGER NOT NULL DEFAULT 0");
+                    }
                 });
+    }
+
+    public void checkpoint(Context context) {
+        if (!BuildConfig.DEBUG)
+            return;
+
+        // https://www.sqlite.org/pragma.html#pragma_wal_checkpoint
+        long start = new Date().getTime();
+        StringBuilder sb = new StringBuilder();
+        SupportSQLiteDatabase db = getInstance(context).getOpenHelper().getWritableDatabase();
+        try (Cursor cursor = db.query("PRAGMA wal_checkpoint(PASSIVE);")) {
+            if (cursor.moveToNext()) {
+                for (int i = 0; i < cursor.getColumnCount(); i++) {
+                    if (i > 0)
+                        sb.append(",");
+                    sb.append(cursor.getInt(i));
+                }
+            }
+        }
+
+        long elapse = new Date().getTime() - start;
+        Log.i("PRAGMA wal_checkpoint=" + sb + " elapse=" + elapse);
     }
 
     @Override
