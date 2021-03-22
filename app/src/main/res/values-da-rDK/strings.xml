@@ -125,7 +125,7 @@
     <string name="title_setup_wizard">Guide</string>
     <string name="title_setup_wizard_multiple">Installationsguiden kan anvendes flere gange til opsætning af flere konti</string>
     <string name="title_setup_wizard_new">Jeg behøver en ny e-mailadresse</string>
-    <string name="title_setup_manual">Manuel opsætning og flere muligheder</string>
+    <string name="title_setup_manual">Manuel opsætning og kontoindstillinger</string>
     <string name="title_setup_account_remark">Modtag e-mail</string>
     <string name="title_setup_identity_remark">Send e-mail</string>
     <string name="title_setup_account_identity_hint">Du kan indstille navn, farve og stryg handlinger i kontoindstillingerne, og konfigurere en signatur i identitetsindstillingerne</string>
@@ -163,7 +163,7 @@
     <string name="title_setup_doze">Deaktivér batterioptimering</string>
     <string name="title_setup_doze_remark">For pålidelig modtagelse af e-mail</string>
     <string name="title_setup_doze_hint">Selv om dette kan lyde selvmodsigende, vil deaktivering af batterioptimering resultere i lavere batteriforbrug</string>
-    <string name="title_setup_doze_instructions">Vælg \"Alle apps\" øverst i næste dialogboks, vælg denne app og vælg \"Optimér ikke\"</string>
+    <string name="title_setup_doze_instructions">Ændr i næste Android-dialog \"Ikke optimeret\" til \"Alle apps\", vælg denne app og \"Optimér ikke\"</string>
     <string name="title_setup_doze_battery">Højt strømforbrug?</string>
     <string name="title_setup_doze_stopped">Synk stoppet?</string>
     <string name="title_setup_data">Datasparer er aktiveret</string>
@@ -218,7 +218,6 @@
     <string name="title_advanced_hint_message">        De mere avancerede indstillinger tilgås nu.
         Alle valgmuligheder har almindeligt brugte standardværdier, som kan ændres jf. dine præferencer.
     </string>
-    <string name="title_advanced_section_main">Start</string>
     <string name="title_advanced_section_synchronize">Modtag</string>
     <string name="title_advanced_section_send">Send</string>
     <string name="title_advanced_section_connection">Forbindelse</string>
@@ -247,6 +246,7 @@
     <string name="title_advanced_tune_keep_alive">Justér automatisk hold i live intervallet</string>
     <string name="title_advanced_keyboard">Vis tastatur som standard</string>
     <string name="title_advanced_keyboard_no_fullscreen">Forhindr fuldskærmstastatur</string>
+    <string name="title_advanced_suggest_names">Brugernavne og e-mailadresser</string>
     <string name="title_advanced_suggest_local">Foreslår lokalt lagrede kontakter</string>
     <string name="title_advanced_suggest_sent">Foreslå adresser fra sendte beskeder</string>
     <string name="title_advanced_suggest_received">Foreslå adresser fra modtagne beskeder</string>
@@ -274,6 +274,7 @@
     <string name="title_advanced_download">Download automatisk beskeder og vedhæftninger på forbrugsbaserede forbindelser</string>
     <string name="title_advanced_roaming">Download beskeder og vedhæftninger under roaming</string>
     <string name="title_advanced_rlah">Roam, som var du hjemme</string>
+    <string name="title_advanced_validated">Kræv en valideret (kontrolleret) forbindelse</string>
     <string name="title_advanced_timeout">Forbindelses-timeout (sekunder)</string>
     <string name="title_advanced_prefer_ip4">Foretræk IPv4 frem for IPv6</string>
     <string name="title_advanced_ssl_harden">Hærd SSL-forbindelser</string>
@@ -308,7 +309,7 @@
     <string name="title_advanced_color_threshold">Grænseværdi, bogstavsfarve: %1$s %%</string>
     <string name="title_advanced_name_email">Vis navne og e-mailadresser</string>
     <string name="title_advanced_replace_name">Foretræk Kontakt- fremfor Afsendernavn</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Vis kun kontaktnavne</string>
+    <string name="title_advanced_only_name">Vis kun kontaktnavne</string>
     <string name="title_advanced_distinguish_contacts">Understreg afsender, når denne er kendt som lokal \'Til\'-kontakt</string>
     <string name="title_advanced_show_recipients">Vis modtagere i beskedhoved</string>
     <string name="title_advanced_font_size_sender">Tekststørrelse, Afsender</string>
@@ -447,6 +448,7 @@
     <string name="title_advanced_watchdog">Tjek periodisk om FairEmail stadig er aktiv</string>
     <string name="title_advanced_optimize">Optimér automatisk</string>
     <string name="title_advanced_updates">Tjek for GitHub-opdateringer</string>
+    <string name="title_advanced_check_weekly">Tjek ugentligt i stedet for dagligt</string>
     <string name="title_advanced_experiments">Prøv eksperimentelle funktioner</string>
     <string name="title_advanced_query_threads">Begræns parallel databaseadgang</string>
     <string name="title_advanced_crash_reports">Send fejlrapporter</string>
@@ -470,6 +472,7 @@
     <string name="title_advanced_sync_folders_hint">Deaktivering af dette reducerer data- og strømforbruget noget, men deaktiverer også mappelisteopdatering</string>
     <string name="title_advanced_lookup_mx_hint">Dette tjekker, om der findes DNS MX-poster</string>
     <string name="title_advanced_sync_delay_hint">Dette vil forøge beskedsynkroniseringstiden</string>
+    <string name="title_advanced_suggest_names_hint">Hvis deaktiveret, bruges kun e-mailadresser ved valg af kontakter</string>
     <string name="title_advanced_suggest_local_hint">Ud over kontakter fra Android. Kontaktdata gemmes kun for nyligt afsendte eller modtagne beskeder, når aktiveret.</string>
     <string name="title_advanced_usenet_hint">Indsæt \'-- \' mellem teksten og signaturen</string>
     <string name="title_advanced_send_reminders_hint">Vis en advarsel, når beskedtekst eller emne er tomt, eller en vedhæftet fil muligvis mangler</string>
@@ -477,6 +480,7 @@
     <string name="title_advanced_metered_warning">Deaktivering af denne indstilling vil ikke gøre det muligt at modtage og sende meddelelser på mobildataforbindelser</string>
     <string name="title_advanced_rlah_hint">Antager ingen roaming inden for EU</string>
     <string name="title_advanced_tcp_keep_alive_hint">Aktivering af dette kan på visse enheder forårsage forbindelsesproblemer</string>
+    <string name="title_advanced_validate_hint">Dette kan betyde, at beskeder i visse situationer ikke synkes, bl.a. ved brug af VPN</string>
     <string name="title_advanced_timeout_hint">Læse-/skrive-timeout indstilles til det dobbelte af forbindelses-timeout. Højere værdier vil resultere i øget batteriforbrug.</string>
     <string name="title_advanced_ssl_harden_hint">Aktivering af dette vil deaktivere svage SSL-protokoller og algoritmer, hvilket kan føre til forbindelsesproblemer</string>
     <string name="title_advanced_roaming_hint">Beskedoverskrifter hentes altid under roaming. Du kan benytte enhedens roamingindstilling til at deaktivere mobilnetværk under roaming.</string>
@@ -676,6 +680,7 @@
     <string name="title_navigation_folder">Vis i navigationsmenu</string>
     <string name="title_synchronize_folder">Synkronisér (modtag beskeder)</string>
     <string name="title_poll_folder">Tjek periodisk i stedet for kontinuerlig synkronisering</string>
+    <string name="title_poll_folder_remark">De fleste e-mailservere tillader kun push-beskeder for en håndfuld mapper!</string>
     <string name="title_download_folder">Auto-download beskedtekst og vedhæftninger</string>
     <string name="title_notify_folder">Notificér ved nye beskeder</string>
     <string name="title_auto_classify_source">\'Klassificér nye bskeder\' in denne mappe</string>
@@ -752,6 +757,8 @@
     <string name="title_download_all">Download alle</string>
     <string name="title_save_all">Gem alt</string>
     <string name="title_save_eml">Gem besked i råformatsfil</string>
+    <string name="title_raw_remaining">Rå beskeder at downloade: %1$d</string>
+    <string name="title_ask_raw">Beskedvideresendelse kræver download af de rå (originelle) beskeder fra serveren, hvilket kræver Internetforbindelse.</string>
     <string name="title_trash">Papirkurv</string>
     <string name="title_copy">Kopiér &#8230;</string>
     <string name="title_copy_to">Kopiér til &#8230;</string>
@@ -1032,8 +1039,11 @@
     <string name="title_answer_favorite">Favorit</string>
     <string name="title_answer_hide">Skjul fra menuer</string>
     <string name="title_answer_text">Skabelontekst</string>
-    <string name="title_answer_template_name">$name$ bliver erstattet med afsenders fulde navn</string>
-    <string name="title_answer_template_email">$email$ bliver erstattet med afsenders e-mailadresse</string>
+    <string name="title_answer_placeholder">Variabel</string>
+    <string name="title_answer_placeholder_name">Afsenders: fulde navn</string>
+    <string name="title_answer_placeholder_email">Afsenders e-mailadresse</string>
+    <string name="title_answer_placeholder_firstname">Afsenders: fornavn</string>
+    <string name="title_answer_placeholder_lastname">Afsenders: efternavn</string>
     <string name="title_rule_noop">Ingen handling</string>
     <string name="title_rule_seen">Markér som læst</string>
     <string name="title_rule_unseen">Markér som ulæst</string>
@@ -1390,6 +1400,9 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

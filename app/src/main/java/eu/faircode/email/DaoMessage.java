@@ -274,6 +274,11 @@ public interface DaoMessage {
             " AND folder.type <> '" + EntityFolder.OUTBOX + "'")
     LiveData<TupleFtsStats> liveFts();
 
+    @Query("SELECT COUNT(*) FROM message" +
+            " WHERE id IN (:ids)" +
+            " AND raw IS NULL or NOT raw")
+    LiveData<Integer> liveRaw(long[] ids);
+
     @Query("SELECT *" +
             " FROM message" +
             " WHERE id = :id")
@@ -332,7 +337,8 @@ public interface DaoMessage {
             " AND (:size IS NULL OR total > :size)" +
             " AND (:after IS NULL OR received > :after)" +
             " AND (:before IS NULL OR received < :before)" +
-            " ORDER BY received DESC" +
+            " GROUP BY message.id" +
+            " ORDER BY matched DESC, received DESC" +
             " LIMIT :limit OFFSET :offset")
     List<TupleMatch> matchMessages(
             Long account, Long folder, String find,

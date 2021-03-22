@@ -2,7 +2,7 @@
 
 Si vous avez une question, veuillez d'abord consulter ci-dessous la liste des questions fréquemment posées. [En bas](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support), vous trouverez comment poser d'autres questions, demander des fonctionnalités et signaler des bogues.
 
-Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [Ganz unten erfahren Sie](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support), wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
+Si vous avez une question, veuillez d'abord consulter la Foire aux questions (FAQ) ci-dessous. [ En bas ](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support), vous trouverez comment poser d'autres questions, demander des fonctions et signaler des erreurs.
 
 ## Sommaire
 
@@ -258,7 +258,7 @@ La conception est basée sur de nombreuses discussions et si vous le souhaitez, 
 * [(135) Pourquoi les messages de la corbeille et les brouillons sont-ils affichés dans les conversations ?](#user-content-faq135)
 * [(136) Comment puis-je supprimer un compte/identité/dossier ?](#user-content-faq136)
 * [(137) Comment puis-je réinitialiser "Ne plus demander à nouveau" ?](#user-content-faq137)
-* [(138) Can you add calendar/contact/tasks/notes management?](#user-content-faq138)
+* [(138) Peut-on ajouter une gestion de calendrier/contact/tâches/notes ?](#user-content-faq138)
 * [(139) Comment puis-je corriger "L'utilisateur est authentifié mais pas connecté" ?](#user-content-faq139)
 * [(140) Pourquoi le texte du message contient-il des caractères étranges ?](#user-content-faq140)
 * [(141) Comment puis-je réparer le dossier 'Un brouillon est requis pour envoyer des messages' ?](#user-content-faq141)
@@ -285,7 +285,7 @@ La conception est basée sur de nombreuses discussions et si vous le souhaitez, 
 * [(162) L'IMAP NOTIFY est-il pris en charge ?](#user-content-faq162)
 * [(163) Qu'est-ce que la classification des messages ?](#user-content-faq163)
 * [(164) Pouvez-vous ajouter des thèmes personnalisables ?](#user-content-faq164)
-* [(165) Is Android Auto supported?](#user-content-faq165)
+* [(165) Est-ce qu'Android Auto est pris en charge ?](#user-content-faq165)
 
 [J’ai une autre question.](#user-content-support)
 
@@ -381,7 +381,7 @@ La notification de faible priorité dans la barre d'état montre le nombre d'op�
 * *envoyer* : envoyer un message
 * *existe* : vérifiez si le message existe
 * *règle* : exécute la règle sur le corps du texte
-* *expunge*: permanently delete messages
+* *expunge* : supprimer définitivement les messages
 
 Les opérations ne sont traitées que lorsqu'il y a une connexion au serveur de messagerie ou lors d'une synchronisation manuelle. Voir aussi [cette question](#user-content-faq16).
 
@@ -396,9 +396,11 @@ Les opérations ne sont traitées que lorsqu'il y a une connexion au serveur de 
 
 Ceci peut être dû à l'utilisation d'un nom de serveur incorrect, donc vérifiez d'abord le nom du serveur dans les paramètres avancés de l'identité/du compte (tapez sur Configuration manuelle et Plus d'options). Veuillez consulter la documentation de votre fournisseur de messagerie concernant le nom du serveur.
 
-You should try to fix this by contacting your provider or by getting a valid security certificate because invalid security certificates are insecure and allow [man-in-the-middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack). If money is an obstacle, you can get free security certificates from [Let’s Encrypt](https://letsencrypt.org).
+Vous pouvez résoudre le problème en contactant votre hébergeur ou en obtenant un certificat valide. En effet, les certificats de sécurité non valide ne sont pas sécurisés et permettent des [Attaque de l'homme du milieu](https://en.wikipedia.org/wiki/Man-in-the-middle_attack). Si vous souhaitez une alternative gratuite, vous pouvez obtenir un certificat gratuit depuis [Let’s Encrypt](https://letsencrypt.org).
 
-Alternatively, you can accept the fingerprint of invalid server certificates like this:
+L'option la plus rapide, mais également la moins sécurisée (non recommandée), est d'activer *Autoriser les connexions non sécurisées* dans le menu des identités avancé (menu de navigation, *Paramètres*, *Configuration manuelle et plus d'options*, *Identités*, Sélectionnez l'identité voulue, *Avancé*).
+
+Vous pouvez également accepter l'empreinte de certificats de sécurité invalide comme suit:
 
 1. Assurez-vous que vous utilisez une connexion internet fiable (pas de réseaux Wi-Fi publics, etc)
 1. Aller à l'écran de configuration rapide via le menu de navigation (Faites glisser depuis le côté gauche vers l'intérieur)
@@ -406,39 +408,47 @@ Alternatively, you can accept the fingerprint of invalid server certificates lik
 1. Contrôlez/enregistrez le compte et l'identité
 1. Cochez la case en dessous du message d'erreur et enregistrez à nouveau
 
-This will "pin" the server certificate to prevent man-in-the-middle attacks.
+Cela gardera le certificat du serveur pour éviter une attaque de l'homme du milieu.
 
-Note that older Android versions might not recognize newer certification authorities like Let’s Encrypt causing connections to be considered insecure, see also [here](https://developer.android.com/training/articles/security-ssl).
+Notez que d'anciennes versions d'Android pourraient ne pas reconnaître les plus récentes autorités de certification comme Let's Encrypt résultant d'un connexion classée comme non sécurisée, voir [plus d'information](https://developer.android.com/training/articles/security-ssl).
 
-*Trust anchor for certification path not found*
+<br />
 
-*... java.security.cert.CertPathValidatorException: Trust anchor for certification path not found ...* means that the default Android trust manager was not able to verify the server certificate chain.
+*Ancre de confiance pour le chemin de certification introuvable*
 
-You should either fix the server configuration or accept the fingerprint shown below the error message.
+*... java.security.cert.CertPathValidatorException: Ancre de confiance pour le chemin de certification introuvable... * signifie que le gestionnaire de confiance Android par défaut n'a pas pu vérifier la chaîne de certificats du serveur.
 
-Note that this problem can be caused by the server not sending all intermediate certificates too.
+Ceci peut être dû au fait que le certificat racine n'est pas installé sur votre appareil ou parce que des certificats intermédiaires sont manquants, par exemple parce que le serveur de messagerie ne les a pas envoyés.
+
+Vous pouvez résoudre le premier problème en téléchargeant et installant le certificat racine à partir du site web du fournisseur du certificat.
+
+Le deuxième problème doit être résolu en modifiant la configuration du serveur ou en important les certificats intermédiaires sur votre appareil.
+
+Vous pouvez également épingler le certificat, voir ci-dessus.
+
+<br />
 
 *Mot de passe vide*
 
-Your username is likely easily guessed, so this is insecure.
+Votre nom d'utilisateur est probablement facile à deviner, donc ce n'est pas sécurisé.
 
-*Plain text connection*
+*Connexion en clair*
 
-Your username and password and all messages will be sent and received unencrypted, which is **very insecure** because a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) is very simple on an unencrypted connection.
+Votre nom d'utilisateur et votre mot de passe ainsi que tous les messages seront envoyés et reçus non chiffrés, qui est **très peu sécurisé** car une [attaque man-in-the-middle](https://en.wikipedia.org/wiki/Man-in-the-middle_attack) est très facile sur une connexion non chiffrée.
 
-If you still want to use an invalid security certificate, an empty password or a plain text connection you'll need to enable insecure connections in the account and/or identity settings. STARTTLS should be selected for plain text connections. If you enable insecure connections, you should connect via private, trusted networks only and never via public networks, like offered in hotels, airports, etc.
+Si vous voulez toujours utiliser un certificat de sécurité invalide, un mot de passe vide ou une connexion en clair, vous aurez besoin d'activer les connexions non sécurisées dans les paramètres du compte et/ou de l'identité. STARTTLS doit être sélectionné pour les connexions en clair. Si vous activez les connexions non sécurisées, vous devrez vous connecter via des réseaux privés et de confiance uniquement et jamais via des réseaux publics comme ceux offerts dans les hôtels, les aéroports, etc.
 
 <br />
 
 <a name="faq5"></a>
-Comment personnaliser l'affichage des messages
+**(5) Comment puis-je personnaliser la vue des messages ?**
 
 Dans le menu à trois points, vous pouvez activer ou désactiver ou sélectionner :
 
 * *taille de texte* : pour trois tailles de police différentes
 * *Vue compacte* : pour des éléments de message plus condensés et une police de texte de message plus petite
 
-Dans la section "Affichage" vous pouvez activer ou désactiver par exemple :
+Dans l'onglet Affichage des paramètres, vous pouvez activer ou désactiver par exemple :
 
 * *Boîte de réception unifiée* : pour désactiver la boîte de réception unifiée et pour lister les dossiers sélectionnés pour la boîte de réception unifiée
 * *Style tabulaire*: afficher une liste linéaire au lieu de cartes
@@ -453,9 +463,9 @@ Dans la section "Affichage" vous pouvez activer ou désactiver par exemple :
 * *Afficher l'aperçu du message*: pour afficher 1-4 lignes du corps du message
 * *Afficher par défaut les détails de l'adresse*: pour développer par défaut la section d'adresses
 * *Afficher automatiquement le message original pour les contacts connus*: pour automatiquement afficher les messages originaux pour les contacts de votre appareil, merci de lire [cette FAQ](#user-content-faq35)
-* *Afficher automatiquement les images pour les contacts connus*: pour automatiquement afficher les images pour les contacts de votre appareil, merci de lire[cette FAQ](#user-content-faq35)
+* *Afficher automatiquement les images pour les contacts connus*: pour automatiquement afficher les images pour les contacts de votre appareil, merci de lire [cette FAQ](#user-content-faq35)
 
-Attention, les messages ne peuvent être prévisualisés que lorsque le texte du message a été téléchargé. Par défaut, les messages textes les plus volumineux ne sont pas téléchargés sur les réseaux limités (généralement mobiles). Ceci peut être changé dans la section "Connexion" des paramètres.
+Notez que l'aperçu du message ne peut être affiché que lorsque le texte de celui-ci a été téléchargé. Les textes de messages plus volumineux ne sont pas téléchargés par défaut sur les réseaux limités (généralement mobiles). Vous pouvez changer ceci dans les paramètres de connexion.
 
 Certaines personnes demandent :
 
@@ -467,60 +477,60 @@ Certaines personnes demandent :
 <a name="faq6"></a>
 **(6) Comment puis-je me connecter à Gmail / G suite ?**
 
-Si vous utilisez la version Play Store ou GitHub de FairEmail, vous pouvez utiliser l'assistant de configuration rapide pour configurer facilement un compte Gmail et une identité. L'assistant de configuration rapide de Gmail n'est pas disponible pour les versions tierces, comme la version F-Droid, parce que Google n'a approuve l'utilisation d'OAuth que pour les versions officielles.
+Si vous utilisez la version Play Store ou GitHub de FairEmail, vous pouvez utiliser l'assistant de configuration rapide pour configurer facilement un compte Gmail et une identité. La mise en place rapide de Gmail n'est pas disponible pour les versions tierces, dont celles venant de F-Droid car Google approuve l'utilisation de l'OAuth uniquement sur les versions officielles.
 
-If you don't want to use an on-device Gmail account, you can either enable access for "less secure apps" and use your account password (not advised) or enable two factor authentication and use an app specific password. Pour utiliser un mot de passe, vous devrez configurer manuellement un compte et une identité au lieu de l’assistant de configuration rapide.
+Si vous ne voulez ou ne pouvez pas utiliser de compte Google sur votre appareil, par exemple sur les appareils Huawei récents, vous pouvez soit autoriser l'accès pour les "applications moins sécurisées" et utiliser le mot de passe de votre compte (non recommandé) ou activer la double authentification et utiliser le mot de passe d'application. Pour utiliser un mot de passe vous devez créer un compte et vous identifier via la configuration manuelle au lieu de l'assistant de configuration.
 
-**Important**: parfois Google publie cette alerte :
+**Important**: Quelquefois Google envoie cette alerte:
 
-*[ALERT] Veuillez vous connecter via votre navigateur web : https://support.google.com/mail/accounts/answer/78754 (Echec)*
+*[ALERT] Please log in via your web browser: https://support.google.com/mail/accounts/answer/78754 (Failure)*
 
-Cette vérification de sécurité de Google est plus souvent déclenchée lorsque l'option *applications moins sécurisées* est activée. Elle l'est moins avec un mot de passe d'application et elle est presque jamais déclenchée lorsque vous utilisez un compte sur l'appareil (OAuth).
+This Google security check is triggered more often with *less secure apps* enabled, less with an app password, and hardly when using an on-device account (OAuth).
 
-Veuillez consulter [cette FAQ](#user-content-faq111) pour savoir pourquoi seuls les comptes sur l'appareil peuvent être utilisés.
+Référez-vous [à cette FAQ](#user-content-faq111) pour voir comment les comptes sur appareils peuvent être utilisés.
 
-Notez qu'un mot de passe spécifique à l'application est nécessaire lorsque l'authentification à deux facteurs est activée.
-
-<br />
-
-*Mot de passe spécifique à l'application*
-
-Voir [ici](https://support.google.com/accounts/answer/185833) sur la façon de générer un mot de passe spécifique à l'application.
+Note that an app specific password is required when two factor authentication is enabled.
 
 <br />
 
-*Autoriser les "Applications moins sécurisées"*
+*App specific password*
 
-**Important **: l'utilisation de cette méthode n'est pas recommandée car elle est moins fiable.
-
-**Important **: Les comptes Gsuite autorisés avec un nom d'utilisateur/mot de passe cesseront de fonctionner [dans un avenir proche](https://gsuiteupdates.googleblog.com/2019/12/less-secure-apps-oauth-google-username-password-incorrect.html).
-
-Voir [ici](https://support.google.com/accounts/answer/6010255) comment autoriser les "applications moins sécurisées" ou aller [directement au paramètre en question](https://www.google.com/settings/security/lesssecureapps).
-
-Si vous utilisez plusieurs comptes Gmail, assurez-vous de modifier le paramètre "Autoriser les applications moins sécurisées" du ou des comptes concernés.
-
-Sachez que vous devez quitter l'écran de paramétrage des "applications moins sécurisées" en utilisant la flèche de retour arrière pour que le paramètre soit appliqué.
-
-Si vous utilisez cette méthode, vous devriez utiliser un [mot de passe robuste](https://en.wikipedia.org/wiki/Password_strength) pour votre compte Gmail, ce qui est de toute façon une bonne idée. Notez que l'utilisation du protocole [standard](https://tools.ietf.org/html/rfc3501) IMAP n'est en soi pas moins sécurisée.
-
-Lorsque les "applications moins sécurisées" ne sont pas activées, vous obtiendrez l'erreur *L'authentification a échoué - identifiants non valides* pour les comptes (IMAP) et *nom d'utilisateur et mot de passe non acceptés* pour les identités (SMTP).
+See [here](https://support.google.com/accounts/answer/185833) about how to generate an app specific password.
 
 <br />
 
-*Général*
+*Enable "Less secure apps"*
 
-Il se peut que vous obteniez l'alerte "*S'il vous plaît connectez-vous via votre navigateur web*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. Ceci peut être évité en utilisant l'assistant de configuration rapide de Gmail ou un mot de passe spécifique d'application.
+**Important**: using this method is not recommended because it is less reliable.
 
-Voir [ici](https://support.google.com/mail/answer/7126229) pour les instructions de Google et [ici](https://support.google.com/mail/accounts/answer/78754) pour le dépannage.
+**Important**: Gsuite accounts authorized with a username/password will stop working [in the near future](https://gsuiteupdates.googleblog.com/2019/12/less-secure-apps-oauth-google-username-password-incorrect.html).
+
+See [here](https://support.google.com/accounts/answer/6010255) about how to enable "less secure apps" or go [directy to the setting](https://www.google.com/settings/security/lesssecureapps).
+
+If you use multiple Gmail accounts, make sure you change the "less secure apps" setting of the right account(s).
+
+Be aware that you need to leave the "less secure apps" settings screen by using the back arrow to apply the setting.
+
+If you use this method, you should use a [strong password](https://en.wikipedia.org/wiki/Password_strength) for your Gmail account, which is a good idea anyway. Note that using the [standard](https://tools.ietf.org/html/rfc3501) IMAP protocol in itself is not less secure.
+
+When "less secure apps" is not enabled, you'll get the error *Authentication failed - invalid credentials* for accounts (IMAP) and *Username and Password not accepted* for identities (SMTP).
+
+<br />
+
+*General*
+
+You might get the alert "*Please log in via your web browser*". This happens when Google considers the network that connects you to the internet (this could be a VPN) to be unsafe. This can be prevented by using the Gmail quick setup wizard or an app specific password.
+
+See [here](https://support.google.com/mail/answer/7126229) for Google's instructions and [here](https://support.google.com/mail/accounts/answer/78754) for troubleshooting.
 
 <br />
 
 <a name="faq7"></a>
-**(7) Pourquoi les messages envoyés n'apparaissent-ils pas (directement) dans le dossier « Envoyés » ? **
+**(7) Why are sent messages not appearing (directly) in the sent folder?**
 
-Les messages envoyés sont normalement déplacés de la boîte d'envoi vers le dossier Envoyés dès que votre fournisseur ajoute les messages envoyés au dossier Envoyés. Ceci nécessite qu'un dossier Envoyés soit sélectionné dans les paramètres du compte et que le dossier Envoyés soit configuré pour être synchronisé.
+Sent messages are normally moved from the outbox to the sent folder as soon as your provider adds sent messages to the sent folder. This requires a sent folder to be selected in the account settings and the sent folder to be set to synchronizing.
 
-Certains fournisseurs ne gardent pas de trace des messages envoyés ou le serveur SMTP utilisé peut ne pas être lié au fournisseur. Dans ce cas, FairEmail ajoutera automatiquement les messages envoyés au dossier Envoyés lors de la synchronisation du dossier Envoyés qui se produira après l'envoi d'un message. Notez que cela entraînera un trafic Internet supplémentaire.
+Some providers do not keep track of sent messages or the used SMTP server might not be related to the provider. In these cases FairEmail, will automatically add sent messages to the sent folder on synchronizing the sent folder, which will happen after a message have been sent. Note that this will result in extra internet traffic.
 
 ~~If this doesn't happen, your provider might not keep track of sent messages or you might be using an SMTP server not related to the provider.~~ ~~In these cases you can enable the advanced identity setting *Store sent messages* to let FairEmail add sent messages to the sent folder right after sending a message.~~ ~~Note that enabling this setting might result in duplicate messages if your provider adds sent messages to the sent folder too.~~ ~~Also beware that enabling this setting will result in extra data usage, especially when when sending messages with large attachments.~~
 
@@ -548,7 +558,7 @@ Please see [this FAQ](#user-content-faq111) about OAuth support.
 <br />
 
 <a name="faq9"></a>
-**(9) Qu'est-ce que les identités / Comment ajouter un alias ?**
+**(9) What are identities / how do I add an alias?**
 
 Identities represent email addresses you are sending *from* via an email (SMTP) server.
 
@@ -565,14 +575,14 @@ See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 <br />
 
 <a name="faq10"></a>
-**~~(10) Que signifie "UIDPLUS n'est pas pris en charge" ?~~**
+**~~(10) What does 'UIDPLUS not supported' mean?~~**
 
 ~~The error message *UIDPLUS not supported* means that your email provider does not provide the IMAP [UIDPLUS extension](https://tools.ietf.org/html/rfc4315). This IMAP extension is required to implement two way synchronization, which is not an optional feature. So, unless your provider can enable this extension, you cannot use FairEmail for this provider.~~
 
 <br />
 
 <a name="faq11"></a>
-**~~(11) Pourquoi POP n'est pas pris en charge ?~~**
+**~~(11) Why is POP not supported?~~**
 
 ~~Besides that any decent email provider supports [IMAP](https://en.wikipedia.org/wiki/Internet_Message_Access_Protocol) these days,~~ ~~using [POP](https://en.wikipedia.org/wiki/Post_Office_Protocol) will result in unnecessary extra battery usage and delayed new message notifications.~~ ~~Moreover, POP is unsuitable for two way synchronization and more often than not people read and write messages on different devices these days.~~
 
@@ -587,9 +597,11 @@ See [this FAQ](#user-content-faq33) on editing the username of email addresses.
 <br />
 
 <a name="faq12"></a>
-**(12) Comment fonctionne le chiffrement/déchiffrement ?**
+**(12) How does encryption/decryption work?**
 
 Communication with email servers is always encrypted, unless you explicitly turned this off. This question is about optional end-to-end encryption with PGP or S/MIME. The sender and recipient should first agree on this and exchange signed messages to transfer their public key to be able to send encrypted messages.
+
+<br />
 
 *General*
 
@@ -614,6 +626,8 @@ The first time you send a signed/encrypted message you might be asked for a sign
 In the encryption settings you can select the default encryption method (PGP or S/MIME), enable *Sign by default*, *Encrypt by default* and *Automatically decrypt messages*, but be aware that automatic decryption is not possible if user interaction is required, like selecting a key or reading a security token.
 
 The to be encrypted message text/attachments and the decrypted message text/attachments are stored locally only and will never be added to the remote server. If you want to undo decryption, you can use the *resync* menu item in the three-dots menu of the message action bar.
+
+<br />
 
 *PGP*
 
@@ -650,6 +664,8 @@ Common errors:
 * *Aucune clé*: il n'y a pas de clé PGP disponible pour l'une des adresses e-mail listées
 * *Clé manquante pour le chiffrement*: il y a probablement une clé sélectionnée dans FairEmail qui n'existe plus dans l'application OpenKeychain. La réinitialisation de la clé (voir ci-dessus) résoudra probablement ce problème.
 * *Key for signature verification is missing*: the public key for the sender is not available in the OpenKeychain app. This can also be caused by Autocrypt being disabled in the encryption settings or by the Autocrypt header not being sent.
+
+<br />
 
 *S/MIME*
 
@@ -700,12 +716,22 @@ openssl pkcs12 -in filename.pfx/p12 -clcerts -nokeys -out cert.pem
 
 You can decode S/MIME signatures, etc, [here](https://lapo.it/asn1js/).
 
+<br />
+
+*pretty Easy privacy*
+
+There is still [no approved standard](https://tools.ietf.org/id/draft-birk-pep-00.html) for pretty Easy privacy (p≡p) and not many people are using it.
+
+However, FairEmail can send and receive PGP encrypted messages, which are compatible with p≡p. Also, FairEmail understands incoming p≡p messages since version 1.1519, so the encrypted subject will be shown and the embedded message text will be shown more nicely.
+
+<br />
+
 S/MIME sign/encrypt is a pro feature, but all other PGP and S/MIME operations are free to use.
 
 <br />
 
 <a name="faq13"></a>
-**(13) Comment fonctionne la recherche sur l'appareil /sur le serveur ?**
+**(13) How does search on device/server work?**
 
 You can start searching for messages on sender (from), recipient (to, cc, bcc), subject, keywords or message text by using the magnify glass in the action bar of a folder. You can also search from any app by selecting *Search email* in the copy/paste popup menu.
 
@@ -752,7 +778,7 @@ Searching on the device is a free feature, using the search index and searching 
 <br />
 
 <a name="faq14"></a>
-**(14) Comment puis-je configurer un compte Outlook / Live / Hotmail ?**
+**(14) How can I set up an Outlook / Live / Hotmail account?**
 
 An Outlook / Live / Hotmail account can be set up via the quick setup wizard and selecting *Outlook*.
 
@@ -765,7 +791,7 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 <br />
 
 <a name="faq15"></a>
-**(15) Pourquoi le texte du message continue-t-il de se charger indéfiniment ?**
+**(15) Why does the message text keep loading?**
 
 The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and will be fetched on demand on expanding a message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
 
@@ -780,7 +806,7 @@ Mobile connections are almost always metered and some (paid) Wi-Fi hotspots are 
 <br />
 
 <a name="faq16"></a>
-**(16) Pourquoi les messages ne sont-ils pas synchronisés ?**
+**(16) Why are messages not being synchronized?**
 
 Possible causes of messages not being synchronized (sent or received) are:
 
@@ -805,7 +831,7 @@ In case of successive connection errors, FairEmail will hold off increasingly lo
 <br />
 
 <a name="faq17"></a>
-**~~(17) Pourquoi la synchronisation manuelle ne fonctionne pas ?~~**
+**~~(17) Why does manual synchronize not work?~~**
 
 ~~If the *Synchronize now* menu is dimmed, there is no connection to the account.~~
 
@@ -814,14 +840,14 @@ In case of successive connection errors, FairEmail will hold off increasingly lo
 <br />
 
 <a name="faq18"></a>
-**(18) Pourquoi l'aperçu du message ne s'affiche pas toujours ?**
+**(18) Why is the message preview not always shown?**
 
 The preview of the message text cannot be shown if the message body has not been downloaded yet. See also [this FAQ](#user-content-faq15).
 
 <br />
 
 <a name="faq19"></a>
-**(19) Pourquoi les fonctionnalités pro sont-elles si chères ?**
+**(19) Why are the pro features so expensive?**
 
 First of all, **FairEmail is basically free to use** and only some advanced features need to be purchased.
 
@@ -913,6 +939,8 @@ The error *... connection failure ...* could indicate [Too many simultaneous con
 
 The warning *... Unsupported encoding ...* means that the character set of the message is unknown or not supported. FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in showing the message correctly.
 
+The error *... Login Rate Limit Hit ...* means that there were too many login attempts with an incorrect password. Please double check your password or authenticate the account again with the quick setup wizard (OAuth only).
+
 Please [see here](#user-content-faq4) for the errors *... Untrusted ... not in certificate ...*, *... Invalid security certificate (Can't verify identity of server) ...* or *... Trust anchor for certification path not found ...*
 
 Please [see here](#user-content-faq127) for the error *... Syntactically invalid HELO argument(s) ...*.
@@ -949,6 +977,7 @@ SMTP servers can reject messages for [a variety of reasons](https://en.wikipedia
 * *550 Spam message rejected because IP is listed by ...* means that the email server rejected to send a message from the current (public) network address because it was misused to send spam by (hopefully) somebody else before. Please try to enable flight mode for 10 minutes to acquire a new network address.
 * *550 We're sorry, but we can't send your email. Either the subject matter, a link, or an attachment potentially contains spam, or phishing or malware.* means that the email provider considers an outgong message as harmful.
 * *571 5.7.1 Message contains spam or virus or sender is blocked ...* means that the email server considered an outgoing message as spam. This probably means that the spam filters of the email server are too strict. You'll need to contact the email provider for support on this.
+* *451 4.7.0 Temporary server error. Please try again later. PRX4 ...* : veuillez [voir ici](https://www.limilabs.com/blog/office365-temporary-server-error-please-try-again-later-prx4) ou [voir ici](https://judeperera.wordpress.com/2019/10/11/fixing-451-4-7-0-temporary-server-error-please-try-again-later-prx4/).
 
 If you want to use the Gmail SMTP server to workaround a too strict outgoing spam filter or to improve delivery of messages:
 
@@ -1606,15 +1635,17 @@ The price of the few pro features is too low, lower than the price of most simil
 <a name="faq67"></a>
 **(67) How can I snooze conversations?**
 
-Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*. Alternatively, in the expanded message view use *Snooze ...* in the message three-dots 'more' menu or the timelapse action in the bottom action bar. Select the time the conversation(s) should snooze and confirm by tapping OK. The conversations will be hidden for the selected time and shown again afterwards. You will receive a new message notification as reminder.
+Multiple select one of more conversations (long press to start multiple selecting), tap the three dot button and select *Snooze ...*. Alternatively, in the expanded message view use *Snooze ...* in the message three-dots 'more' menu or the time-lapse action in the bottom action bar. Select the time the conversation(s) should snooze and confirm by tapping OK. The conversations will be hidden for the selected time and shown again afterwards. You will receive a new message notification as reminder.
 
-It is also possible to snooze messages with [a rule](#user-content-faq71).
+It is also possible to snooze messages with [a rule](#user-content-faq71), which will also allow you to move messages to a folder to let them be auto snoozed.
 
 You can show snoozed messages by unchecking *Filter out* > *Hidden* in the three dot overflow menu.
 
 You can tap on the small snooze icon to see until when a conversation is snoozed.
 
 By selecting a zero snooze duration you can cancel snoozing.
+
+Third party apps do not have access to the Gmail snoozed messages folder.
 
 <br />
 
@@ -2164,7 +2195,7 @@ Depending on what you want, the notification settings *Let the number of new mes
 
 This feature depends on support of your launcher. FairEmail merely 'broadcasts' the number of unread messages using the ShortcutBadger library. If it doesn't work, this cannot be fixed by changes in FairEmail.
 
-Some launchers display '1' for [the monitoring notification](#user-content-faq2), despite FairEmail explicitly requesting not to show a badge for this notification. This could be caused by a bug in the launcher app or in your Android version. Please double check if the notification dot is disabled for the receive (service) notification channel. You can go to the right notification channel settings via the notification settings of FairEmail. This might not be obvious, but you can tap on the channel name for more settings.
+Some launchers display a dot or a '1' for [the monitoring notification](#user-content-faq2), despite FairEmail explicitly requesting not to show a *badge* for this notification. This could be caused by a bug in the launcher app or in your Android version. Please double check if the notification dot (badge) is disabled for the receive (service) notification channel. You can go to the right notification channel settings via the notification settings of FairEmail. This might not be obvious, but you can tap on the channel name for more settings.
 
 FairEmail does send a new message count intent as well:
 
@@ -2362,7 +2393,7 @@ FairEmail groups messages based on the standard *Message-ID*, *In-Reply-To* and 
 <a name="faq123"></a>
 **(123) What will happen when FairEmail cannot connect to an email server?**
 
-If FairEmail cannot connect to an email server to synchronize messages, for example if the internet connection is bad or a firewall or a VPN is blocking the connection, FairEmail will retry two times after waiting 4 and 8 seconds while keeping the device awake (=use battery power). If this fails, FairEmail will schedule an alarm to retry after 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
+Si FairEmail ne peut pas se connecter à un serveur de messagerie pour synchroniser les messages par exemple si la connexion Internet est mauvaise ou si un pare-feu ou un VPN bloque la connexion, FairEmail réessaiera une fois après avoir attendu 8 secondes tout en gardant l'appareil éveillé (=utilise de la batterie). If this fails, FairEmail will schedule an alarm to retry after 15, 30 and eventually every 60 minutes and let the device sleep (=no battery usage).
 
 Note that [Android doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) does not allow to wake the device earlier than after 15 minutes.
 
@@ -2399,10 +2430,6 @@ Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) (=har
 Hard bounces will mostly be processed automatically because they affect the reputation of the email provider. The bounce address (=*Return-Path* header) is mostly very specific, so the email server can determine the sending account.
 
 For some background, see for [this Wikipedia article](https://en.wikipedia.org/wiki/Bounce_message).
-
-<br />
-
-*Background for unread messages*
 
 <br />
 
@@ -2601,7 +2628,7 @@ You can fix this problem by manually selecting the drafts folder in the account 
 
 Some providers, like Gmail, allow enabling/disabling IMAP for individual folders. So, if a folder is not visible, you might need to enable IMAP for the folder.
 
-Quick link for Gmail: [https://mail.google.com/mail/u/0/#settings/labels](https://mail.google.com/mail/u/0/#settings/labels)
+Quick link for Gmail (will work on a desktop computer only): [https://mail.google.com/mail/u/0/#settings/labels](https://mail.google.com/mail/u/0/#settings/labels)
 
 <br />
 

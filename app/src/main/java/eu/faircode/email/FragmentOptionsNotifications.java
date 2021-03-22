@@ -42,7 +42,6 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -514,19 +513,10 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_default) {
-            onMenuDefault();
+            FragmentOptions.reset(getContext(), RESET_OPTIONS);
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void onMenuDefault() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        SharedPreferences.Editor editor = prefs.edit();
-        for (String option : RESET_OPTIONS)
-            editor.remove(option);
-        editor.apply();
-        ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
     }
 
     private void setOptions() {
@@ -560,7 +550,7 @@ public class FragmentOptionsNotifications extends FragmentBase implements Shared
         swNotifyPreviewOnly.setChecked(prefs.getBoolean("notify_preview_only", false));
         swWearablePreview.setChecked(prefs.getBoolean("wearable_preview", false));
         swMessagingStyle.setChecked(prefs.getBoolean("notify_messaging", false));
-        swBiometricsNotify.setChecked(prefs.getBoolean("biometrics_notify", false));
+        swBiometricsNotify.setChecked(prefs.getBoolean("biometrics_notify", true));
         swAlertOnce.setChecked(!prefs.getBoolean("alert_once", true));
 
         enableOptions();

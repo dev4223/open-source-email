@@ -22,13 +22,16 @@ package eu.faircode.email;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.os.Bundle;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
+import android.text.style.RelativeSizeSpan;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,6 +42,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -250,7 +254,7 @@ public class FragmentOptions extends FragmentBase {
                         views = new View[TAB_PAGES.length];
                         LayoutInflater inflater = LayoutInflater.from(searchView.getContext());
                         for (int tab = 0; tab < TAB_PAGES.length; tab++) {
-                            titles[tab] = (String) adapter.getPageTitle(tab);
+                            titles[tab] = adapter.getPageTitle(tab).toString();
                             views[tab] = inflater.inflate(TAB_PAGES[tab], null);
                         }
                     }
@@ -334,6 +338,24 @@ public class FragmentOptions extends FragmentBase {
         }
     }
 
+    static void reset(Context context, String[] options) {
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.title_setup_defaults)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        for (String option : options)
+                            editor.remove(option);
+                        editor.apply();
+                        ToastEx.makeText(context, R.string.title_setup_done, Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
     public static class FragmentDialogStill extends FragmentDialogBase {
         @NonNull
         @Override
@@ -411,6 +433,17 @@ public class FragmentOptions extends FragmentBase {
 
         @Override
         public CharSequence getPageTitle(int position) {
+            CharSequence title = getTitle(position);
+            if (position == 0)
+                return title;
+
+            SpannableStringBuilder ssb = new SpannableStringBuilder(title);
+            ssb.setSpan(new RelativeSizeSpan(0.85f), 0, ssb.length(), 0);
+            return ssb;
+        }
+
+        @NotNull
+        private CharSequence getTitle(int position) {
             switch (position) {
                 case 0:
                     return getString(R.string.title_advanced_section_main);

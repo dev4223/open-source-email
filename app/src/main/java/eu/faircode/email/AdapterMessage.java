@@ -431,6 +431,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private TextView tvKeywordsEx;
 
         private TextView tvHeaders;
+        private ImageButton ibCloseHeaders;
         private ContentLoadingProgressBar pbHeaders;
         private TextView tvNoInternetHeaders;
 
@@ -641,6 +642,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             tvKeywordsEx = vsBody.findViewById(R.id.tvKeywordsEx);
 
             tvHeaders = vsBody.findViewById(R.id.tvHeaders);
+            ibCloseHeaders = vsBody.findViewById(R.id.ibCloseHeaders);
             pbHeaders = vsBody.findViewById(R.id.pbHeaders);
             tvNoInternetHeaders = vsBody.findViewById(R.id.tvNoInternetHeaders);
 
@@ -774,6 +776,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibPinContact.setOnClickListener(this);
                 ibAddContact.setOnClickListener(this);
 
+                ibCloseHeaders.setOnClickListener(this);
+
                 ibSaveAttachments.setOnClickListener(this);
                 ibDownloadAttachments.setOnClickListener(this);
 
@@ -792,6 +796,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSeen.setOnClickListener(this);
                 ibAnswer.setOnClickListener(this);
                 ibNotes.setOnClickListener(this);
+                ibNotes.setOnLongClickListener(this);
                 ibLabels.setOnClickListener(this);
                 ibKeywords.setOnClickListener(this);
                 ibCopy.setOnClickListener(this);
@@ -885,6 +890,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibPinContact.setOnClickListener(null);
                 ibAddContact.setOnClickListener(null);
 
+                ibCloseHeaders.setOnClickListener(null);
+
                 ibSaveAttachments.setOnClickListener(null);
                 ibDownloadAttachments.setOnClickListener(null);
 
@@ -903,6 +910,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 ibSeen.setOnClickListener(null);
                 ibAnswer.setOnClickListener(null);
                 ibNotes.setOnClickListener(null);
+                ibNotes.setOnLongClickListener(null);
                 ibLabels.setOnClickListener(null);
                 ibKeywords.setOnClickListener(null);
                 ibCopy.setOnClickListener(null);
@@ -1887,6 +1895,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 return ssb;
 
             for (int i = 0; i < addresses.length; i++) {
+                if (i > 0)
+                    ssb.append("; ");
+
                 if (addresses[i] instanceof InternetAddress) {
                     InternetAddress address = (InternetAddress) addresses[i];
                     String email = address.getAddress();
@@ -3160,6 +3171,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                 int id = view.getId();
                 if (id == R.id.ibExpanderAddress) {
                     onToggleAddresses(message);
+                } else if (id == R.id.ibCloseHeaders) {
+                    onMenuShowHeaders(message);
                 } else if (id == R.id.ibSaveAttachments) {
                     onSaveAttachments(message);
                 } else if (id == R.id.ibDownloadAttachments) {
@@ -3174,14 +3187,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                     !EntityMessage.PGP_SIGNENCRYPT.equals(message.encrypt)) ||
                                     (EntityMessage.SMIME_SIGNENCRYPT.equals(message.ui_encrypt) &&
                                             !EntityMessage.SMIME_SIGNENCRYPT.equals(message.encrypt));
-                    if (lock)
+                    if (lock) {
                         properties.lock(message.id);
-                    else
+                        properties.setExpanded(message, false, false);
+                        properties.setHeight(message.id, null);
+                    } else
                         onActionDecrypt(message, false);
                 } else if (id == R.id.ibVerify) {
                     onActionDecrypt(message, false);
                 } else if (id == R.id.ibUndo) {
-                    FragmentMessages.onActionUndo(message, context, owner, parentFragment.getParentFragmentManager());
+                    FragmentMessages.onActionUndoSend(message, context, owner, parentFragment.getParentFragmentManager());
                 } else if (id == R.id.ibRule) {
                     onMenuCreateRule(message);
                 } else if (id == R.id.ibUnsubscribe) {
@@ -3348,6 +3363,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             int id = view.getId();
             if (id == R.id.ibFlagged) {
                 onMenuColoredStar(message);
+                return true;
+            } else if (id == R.id.ibNotes) {
+                onActionCopyNote(message);
                 return true;
             } else if (id == R.id.ibFull) {
                 onActionOpenFull(message);
@@ -3840,6 +3858,16 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                             .putExtra("id", message.id));
         }
 
+        private void onActionCopyNote(TupleMessageEx message) {
+            ClipboardManager clipboard =
+                    (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard != null && !TextUtils.isEmpty(message.notes)) {
+                ClipData clip = ClipData.newPlainText(context.getString(R.string.app_name), message.notes);
+                clipboard.setPrimaryClip(clip);
+                ToastEx.makeText(context, R.string.title_clipboard_copied, Toast.LENGTH_LONG).show();
+            }
+        }
+
         private void onShow(final TupleMessageEx message, boolean full) {
             if (full && tvReformatted.getVisibility() == View.VISIBLE) {
                 prefs.edit().putBoolean("reformatted_hint", false).apply();
@@ -4178,6 +4206,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onActionDelete(TupleMessageEx message) {
             Bundle aargs = new Bundle();
             aargs.putString("question", context.getString(R.string.title_ask_delete));
+            aargs.putString("remark", message.getRemark());
             aargs.putLong("id", message.id);
             aargs.putBoolean("warning", true);
 
@@ -4434,7 +4463,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private boolean onOpenLink(final Uri uri, String title, boolean always_confirm) {
             Log.i("Opening uri=" + uri + " title=" + title);
 
-            if ("eu.faircode.email".equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
+            if ("email.faircode.eu".equals(uri.getHost()) && "/activate/".equals(uri.getPath())) {
                 try {
                     if (ActivityBilling.activatePro(context, uri))
                         ToastEx.makeText(context, R.string.title_pro_valid, Toast.LENGTH_LONG).show();
@@ -4696,6 +4725,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         private void onMenuDelete(final TupleMessageEx message) {
             Bundle aargs = new Bundle();
             aargs.putString("question", context.getString(R.string.title_ask_delete));
+            aargs.putString("remark", message.getRemark());
             aargs.putLong("id", message.id);
             aargs.putBoolean("warning", true);
 
@@ -5080,6 +5110,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, file);
 
                     Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setPackage(BuildConfig.APPLICATION_ID);
                     send.putExtra(Intent.EXTRA_STREAM, uri);
                     send.setType("message/rfc822");
                     send.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -6840,18 +6871,25 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             final long id = getArguments().getLong("id");
             final String notes = getArguments().getString("notes");
 
-            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_notes, null);
-            final EditText etNote = view.findViewById(R.id.etNote);
-            etNote.setText(notes);
+            final Context context = getContext();
+            final InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
 
-            return new AlertDialog.Builder(getContext())
+            View view = LayoutInflater.from(context).inflate(R.layout.dialog_notes, null);
+            final EditText etNotes = view.findViewById(R.id.etNotes);
+            etNotes.setText(notes);
+            etNotes.selectAll();
+
+            etNotes.requestFocus();
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+            return new AlertDialog.Builder(context)
                     .setView(view)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Bundle args = new Bundle();
                             args.putLong("id", id);
-                            args.putString("notes", etNote.getText().toString());
+                            args.putString("notes", etNotes.getText().toString());
 
                             new SimpleTask<Void>() {
                                 @Override
@@ -6961,11 +6999,17 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             final long id = getArguments().getLong("id");
 
-            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_keyword_add, null);
+            final Context context = getContext();
+            final InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            View view = LayoutInflater.from(context).inflate(R.layout.dialog_keyword_add, null);
             final EditText etKeyword = view.findViewById(R.id.etKeyword);
             etKeyword.setText(null);
 
-            return new AlertDialog.Builder(getContext())
+            etKeyword.requestFocus();
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+
+            return new AlertDialog.Builder(context)
                     .setView(view)
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override

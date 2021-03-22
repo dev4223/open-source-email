@@ -146,7 +146,7 @@
     <string name="title_setup_wizard">Kreator</string>
     <string name="title_setup_wizard_multiple">Kreator może być używany wielokrotnie, aby skonfigurować wiele kont</string>
     <string name="title_setup_wizard_new">Potrzebujesz nowego adresu e-mail?</string>
-    <string name="title_setup_manual">Konfiguracja ręczna i więcej opcji</string>
+    <string name="title_setup_manual">Ręczna konfiguracja i opcje konta</string>
     <string name="title_setup_account_remark">Odbieranie wiadomości e-mail</string>
     <string name="title_setup_identity_remark">Wysyłanie wiadomości e-mail</string>
     <string name="title_setup_account_identity_hint">Możesz skonfigurować nazwę, kolor i akcje przesuwania w ustawieniach konta oraz skonfigurować podpis w ustawieniach tożsamości</string>
@@ -186,7 +186,7 @@
     <string name="title_setup_doze">Wyłącz optymalizację baterii</string>
     <string name="title_setup_doze_remark">Aby niezawodnie odbierać wiadomości e-mail</string>
     <string name="title_setup_doze_hint">Może to brzmieć sprzecznie, ale wyłączenie optymalizacji baterii spowoduje mniejsze zużycie baterii</string>
-    <string name="title_setup_doze_instructions">W następnym oknie dialogowym, na górze wybierz \"Wszystkie aplikacje\", odszukaj FairEmail i zaznacz \"Nie optymalizuj\"</string>
+    <string name="title_setup_doze_instructions">W następnym oknie dialogowym Androida zmień \"Nie zoptymalizowane\" na \"Wszystkie aplikacje\", wybierz tę aplikację i wybierz \"Nie optymalizuj\"</string>
     <string name="title_setup_doze_battery">Wysokie użycie baterii?</string>
     <string name="title_setup_doze_stopped">Synchronizacja zatrzymana?</string>
     <string name="title_setup_data">Oszczędzanie danych jest włączone</string>
@@ -241,7 +241,7 @@
     <string name="title_advanced_hint_message">        Przechodzisz do bardziej zaawansowanych opcji.
          Wszystkie opcje mają powszechnie używane wartości standardowe, których nie trzeba zmieniać, chyba że masz inne preferencje.
     </string>
-    <string name="title_advanced_section_main">Rozpocznij</string>
+    <string name="title_advanced_section_main">Główne</string>
     <string name="title_advanced_section_synchronize">Odbieranie</string>
     <string name="title_advanced_section_send">Wysyłanie</string>
     <string name="title_advanced_section_connection">Połączenie</string>
@@ -271,6 +271,7 @@
     <string name="title_advanced_tune_keep_alive">Automatycznie dostosuj interwał zachowania aktywności</string>
     <string name="title_advanced_keyboard">Domyślnie pokaż klawiaturę</string>
     <string name="title_advanced_keyboard_no_fullscreen">Blokuj klawiaturę pełnoekranową</string>
+    <string name="title_advanced_suggest_names">Użyj nazw i adresów e-mail</string>
     <string name="title_advanced_suggest_local">Proponuj kontakty przechowywane lokalnie</string>
     <string name="title_advanced_suggest_sent">Proponuj adresy znalezione w wysłanych wiadomościach</string>
     <string name="title_advanced_suggest_received">Proponuj adresy znalezione w otrzymanych wiadomościach</string>
@@ -298,6 +299,7 @@
     <string name="title_advanced_download">Automatycznie pobieraj wiadomości i załączniki przy połączeniach taryfowych do</string>
     <string name="title_advanced_roaming">Pobieraj wiadomości i załączniki podczas roamingu</string>
     <string name="title_advanced_rlah">Roaming jak w domu</string>
+    <string name="title_advanced_validated">Wymagaj zweryfikowanego (sprawdzonego) połączenia</string>
     <string name="title_advanced_timeout">Limit czasu połączenia (sekundy)</string>
     <string name="title_advanced_prefer_ip4">Preferuj IPv4 nad IPv6</string>
     <string name="title_advanced_ssl_harden">Wzmocnij połączenia SSL</string>
@@ -333,7 +335,7 @@
     <string name="title_advanced_color_threshold">Próg koloru czcionki: %1$s %%</string>
     <string name="title_advanced_name_email">Pokaż nazwy i adresy e-mail</string>
     <string name="title_advanced_replace_name">Preferuj nazwę kontaktu nad nazwą wysłaną</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Wyświetlaj tylko nazwy kontaktów</string>
+    <string name="title_advanced_only_name">Wyświetlaj tylko nazwy kontaktów</string>
     <string name="title_advanced_distinguish_contacts">Podkreśl nadawcę, gdy znany jest jako lokalny kontakt „do”</string>
     <string name="title_advanced_show_recipients">Pokaż odbiorców w nagłówku wiadomości</string>
     <string name="title_advanced_font_size_sender">Rozmiar tekstu nadawcy</string>
@@ -472,6 +474,7 @@
     <string name="title_advanced_watchdog">Okresowo sprawdzaj, czy FairEmail jest nadal aktywny</string>
     <string name="title_advanced_optimize">Optymalizuj automatycznie</string>
     <string name="title_advanced_updates">Sprawdź aktualizacje GitHub</string>
+    <string name="title_advanced_check_weekly">Sprawdzaj co tydzień zamiast codziennie</string>
     <string name="title_advanced_experiments">Wypróbuj funkcje eksperymentalne</string>
     <string name="title_advanced_query_threads">Ogranicz równoległy dostęp do bazy danych</string>
     <string name="title_advanced_crash_reports">Wyślij raport o błędach</string>
@@ -496,6 +499,7 @@
     <string name="title_advanced_check_reply_hint">Spowoduje to sprawdzenie, czy nazwa domeny nadawcy i adres odpowiedzi są takie same</string>
     <string name="title_advanced_lookup_mx_hint">To sprawdzi, czy istnieją rekordy MX DNS</string>
     <string name="title_advanced_sync_delay_hint">Wydłuży to synchronizację wiadomości</string>
+    <string name="title_advanced_suggest_names_hint">Jeśli wyłączone, tylko adresy e-mail będą używane podczas wybierania kontaktów</string>
     <string name="title_advanced_suggest_local_hint">Oprócz kontaktów dostarczanych przez Androida. Dane kontaktowe będą przechowywane dla nowo wysłanych lub odebranych wiadomości tylko kiedy włączone.</string>
     <string name="title_advanced_usenet_hint">Wstaw \'-- \' między tekstem a podpisem</string>
     <string name="title_advanced_send_reminders_hint">Pokaż ostrzeżenie, gdy tekst wiadomości lub temat jest pusty lub gdy może brakować załącznika</string>
@@ -503,6 +507,7 @@
     <string name="title_advanced_metered_warning">Wyłączenie tej opcji uniemożliwi odbieranie i wysyłanie wiadomości przy użyciu komórkowego połączenia internetowego</string>
     <string name="title_advanced_rlah_hint">Zakładając brak roamingu w UE</string>
     <string name="title_advanced_tcp_keep_alive_hint">Włączenie tego może powodować problemy z połączeniem na niektórych urządzeniach</string>
+    <string name="title_advanced_validate_hint">Może to skutkować brakiem synchronizacji wiadomości, na przykład podczas korzystania z VPN, ale również w innych sytuacjach</string>
     <string name="title_advanced_timeout_hint">Limit czasu odczytu/zapisu zostanie ustawiony na dwukrotność limitu czasu połączenia. Wyższe wartości spowodują większe zużycie baterii.</string>
     <string name="title_advanced_ssl_harden_hint">Włączenie tego spowoduje wyłączenie słabych protokołów SSL i szyfrowania, co może prowadzić do problemów z połączeniem</string>
     <string name="title_advanced_roaming_hint">Nagłówki wiadomości będą zawsze pobierane podczas roamingu. Możesz użyć ustawienia roamingu urządzenia, aby wyłączyć Internet podczas roamingu.</string>
@@ -512,6 +517,7 @@
     <string name="title_advanced_beige_hint">Tylko jasne motywy</string>
     <string name="title_advanced_date_hint">Wiadomości są pogrupowane według daty, tylko jeśli są posortowane według czasu</string>
     <string name="title_advanced_navbar_colorize_hint">Czy to zadziała zależy od wersji i wariantu Androida</string>
+    <string name="title_advanced_split_hint">Spowoduje to podzielenie ekranu na części</string>
     <string name="title_advanced_threading_hint">Grupuj wiadomości powiązane ze sobą</string>
     <string name="title_advanced_highlight_hint">Do podświetlenia zostanie użyty akcent kolorystyczny motywu</string>
     <string name="title_advanced_gravatars_hint">Może istnieć ryzyko naruszenia prywatności</string>
@@ -597,6 +603,7 @@
     <string name="title_port">Numer portu</string>
     <string name="title_user">Nazwa użytkownika</string>
     <string name="title_password">Hasło</string>
+    <string name="title_password_storage">Jak przechowywane są hasła?</string>
     <string name="title_case_sensitive">W nazwach użytkowników i hasłach rozróżniane są małe i wielkie litery</string>
     <string name="title_client_certificate">Certyfikat klienta</string>
     <string name="title_realm">Realm</string>
@@ -702,6 +709,7 @@
     <string name="title_navigation_folder">Pokaż w menu nawigacji</string>
     <string name="title_synchronize_folder">Synchronizuj (odbierz wiadomości)</string>
     <string name="title_poll_folder">Sprawdzaj cyklicznie zamiast ciągłej synchronizacji</string>
+    <string name="title_poll_folder_remark">Większość serwerów e-mail pozwala na wysyłanie wiadomości tylko dla kilku folderów!</string>
     <string name="title_download_folder">Automatycznie pobieraj treści wiadomości i załączniki</string>
     <string name="title_notify_folder">Powiadom o nowych wiadomościach</string>
     <string name="title_auto_classify_source">Klasyfikuj nowe wiadomości w tym folderze</string>
@@ -779,6 +787,8 @@
     <string name="title_download_all">Pobierz wszystkie</string>
     <string name="title_save_all">Zapisz wszystkie</string>
     <string name="title_save_eml">Zapisz nieprzetworzony plik wiadomości</string>
+    <string name="title_raw_remaining">Surowe wiadomości (RAW) do pobrania: %1$d</string>
+    <string name="title_ask_raw">Aby przesyłać wiadomości dalej, należy pobrać surowe (oryginalne) wiadomości z serwera. Wymaga to połączenia z Internetem.</string>
     <string name="title_buttons">Wybierz przyciski</string>
     <string name="title_configure_buttons">Konfiguruj przyciski &#8230;</string>
     <string name="title_trash">Kosz</string>
@@ -929,6 +939,7 @@
     <string name="title_media_toolbar">Pasek mediów</string>
     <string name="title_insert_contact_group">Wstaw grupę kontaktów</string>
     <string name="title_insert_template">Wstaw szablon</string>
+    <string name="title_create_template">Utwórz szablon</string>
     <string name="title_edit_plain_text">Edytuj jako zwykły tekst</string>
     <string name="title_edit_formatted_text">Edytuj jako sformatowany tekst</string>
     <string name="title_select_certificate">Wybierz klucz publiczny</string>
@@ -1063,8 +1074,11 @@
     <string name="title_answer_favorite">Ulubione</string>
     <string name="title_answer_hide">Ukryj z menu</string>
     <string name="title_answer_text">Tekst szablonu</string>
-    <string name="title_answer_template_name">$name$ zostanie zastąpiony przez pełną nazwę nadawcy</string>
-    <string name="title_answer_template_email">$email$ zostanie zastąpiony przez adres nadawcy wiadomości</string>
+    <string name="title_answer_placeholder">Symbol zastępczy</string>
+    <string name="title_answer_placeholder_name">Pełna nazwa nadawcy</string>
+    <string name="title_answer_placeholder_email">Adres e-mail nadawcy</string>
+    <string name="title_answer_placeholder_firstname">Imię nadawcy</string>
+    <string name="title_answer_placeholder_lastname">Nazwisko nadawcy</string>
     <string name="title_rule_noop">Brak akcji</string>
     <string name="title_rule_seen">Oznacz jako przeczytane</string>
     <string name="title_rule_unseen">Oznacz jako nieprzeczytane</string>
@@ -1422,6 +1436,9 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

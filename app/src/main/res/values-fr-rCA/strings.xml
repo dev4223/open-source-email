@@ -125,7 +125,7 @@
     <string name="title_setup_wizard">Assistant</string>
     <string name="title_setup_wizard_multiple">L\'assistant peut être utilisé plusieurs fois pour configurer plusieurs comptes</string>
     <string name="title_setup_wizard_new">J\'ai besoin d\'une nouvelle adresse courriel</string>
-    <string name="title_setup_manual">Configuration manuelle et plus d\'options</string>
+    <string name="title_setup_manual">Configuration manuelle et options des comptes</string>
     <string name="title_setup_account_remark">Recevoir des courriels</string>
     <string name="title_setup_identity_remark">Envoyer des courriels</string>
     <string name="title_setup_account_identity_hint">Vous pouvez configurer le nom, la couleur et les actions de balayage dans les paramètres du compte et configurer une signature dans les paramètres d\'identité</string>
@@ -159,13 +159,13 @@
     <string name="title_setup_grant_again">Accorder les autorisations requises</string>
     <string name="title_setup_exchange_support">Microsoft Exchange est-il pris en charge ?</string>
     <string name="title_setup_identity_what">Qu\'est-ce qu\'une identité?</string>
-    <string name="title_setup_free">L\'utilisation de cette application est-elle gratuite ?</string>
+    <string name="title_setup_free">L\'utilisation de cette application est-elle gratuite?</string>
     <string name="title_setup_permissions">Accorder les autorisations</string>
     <string name="title_setup_permissions_remark">Pour accéder aux informations de contact (facultatif)</string>
     <string name="title_setup_doze">Désactiver les optimisations de la pile</string>
     <string name="title_setup_doze_remark">Recevoir des courriels de manière fiable</string>
     <string name="title_setup_doze_hint">Bien que cela puisse paraître contradictoire, désactiver les optimisations de la pile réduira l\'utilisation de la pile</string>
-    <string name="title_setup_doze_instructions">Sur le prochain écran, sélectionnez « Toutes les applications » en haut, recherchez cette application puis sélectionnez et validez « Ne pas optimiser »</string>
+    <string name="title_setup_doze_instructions">Dans la prochaine fenêtre de dialogue Android, changez « Non optimisées » en « Toutes les applications », sélectionnez cette application et cochez « Ne pas optimiser »</string>
     <string name="title_setup_doze_battery">Utilisation élevée de la pile?</string>
     <string name="title_setup_doze_stopped">Synchronisation arrêtée?</string>
     <string name="title_setup_data">L\'économiseur de données est activé</string>
@@ -220,7 +220,7 @@
     <string name="title_advanced_hint_message">        Vous parcourez les paramètres avancés.
         Toutes les options ont des valeurs par défaut couramment utilisées que vous n\'avez pas besoin de modifier sauf si vous avez une préférence différente.
     </string>
-    <string name="title_advanced_section_main">Début</string>
+    <string name="title_advanced_section_main">Principal</string>
     <string name="title_advanced_section_synchronize">Réception</string>
     <string name="title_advanced_section_send">Envoi</string>
     <string name="title_advanced_section_connection">Connexion</string>
@@ -250,6 +250,7 @@
     <string name="title_advanced_tune_keep_alive">Ajuster automatiquement l\'intervalle de connexion</string>
     <string name="title_advanced_keyboard">Afficher le clavier par défaut</string>
     <string name="title_advanced_keyboard_no_fullscreen">Ne pas afficher le clavier en plein écran</string>
+    <string name="title_advanced_suggest_names">Utiliser les noms et les adresses courriel</string>
     <string name="title_advanced_suggest_local">Suggérer les contacts stockés localement</string>
     <string name="title_advanced_suggest_sent">Suggérer les adresses trouvées dans les messages envoyés</string>
     <string name="title_advanced_suggest_received">Suggérer les adresses trouvées dans les messages reçus</string>
@@ -277,6 +278,7 @@
     <string name="title_advanced_download">Télécharger automatiquement les messages et les pièces jointes sur une connexion limitée jusqu’à</string>
     <string name="title_advanced_roaming">Télécharger les messages et les pièces jointes en itinérance</string>
     <string name="title_advanced_rlah">Ignorer l’itinérance chez soi</string>
+    <string name="title_advanced_validated">Nécessite une connexion validée (vérifiée)</string>
     <string name="title_advanced_timeout">Délai d’expiration de la connexion (secondes)</string>
     <string name="title_advanced_prefer_ip4">Préférer IPv4 à IPv6</string>
     <string name="title_advanced_ssl_harden">Renforcer les connexions SSL</string>
@@ -312,7 +314,7 @@
     <string name="title_advanced_color_threshold">Seuil de couleur de lettre : %1$s %%</string>
     <string name="title_advanced_name_email">Afficher les noms et les adresses courriel</string>
     <string name="title_advanced_replace_name">Préférer un nom de contact à un nom d’envoi</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Afficher uniquement le nom des contacts</string>
+    <string name="title_advanced_only_name">Afficher uniquement le nom des contacts</string>
     <string name="title_advanced_distinguish_contacts">Souligner l’expéditeur quand il est connu comme contact local</string>
     <string name="title_advanced_show_recipients">Afficher les destinataires dans l’en-tête du message</string>
     <string name="title_advanced_font_size_sender">Taille de police du champ « Expéditeur »</string>
@@ -451,6 +453,7 @@
     <string name="title_advanced_watchdog">Vérifier périodiquement si FairEmail est toujours actif</string>
     <string name="title_advanced_optimize">Optimiser automatiquement</string>
     <string name="title_advanced_updates">Rechercher des mises à jour sur GitHub</string>
+    <string name="title_advanced_check_weekly">Vérifier une fois par semaine au lieu d\'une fois par jour</string>
     <string name="title_advanced_experiments">Essayer les fonctionnalités expérimentales</string>
     <string name="title_advanced_query_threads">Limiter les accès multiples à la base de données</string>
     <string name="title_advanced_crash_reports">Envoyer les rapports d’erreur</string>
@@ -475,6 +478,7 @@
     <string name="title_advanced_check_reply_hint">Ceci vérifiera si le nom de domaine de l\'expéditeur et l\'adresse de réponse sont les mêmes</string>
     <string name="title_advanced_lookup_mx_hint">Ceci vérifiera si des enregistrements MX DNS existent</string>
     <string name="title_advanced_sync_delay_hint">Ceci ralentira la synchronisation des messages</string>
+    <string name="title_advanced_suggest_names_hint">Si désactivé, seules les adresses courriel seront utilisées lors de la sélection des contacts</string>
     <string name="title_advanced_suggest_local_hint">En plus des contacts fournis par Android. Les données de contact seront stockées pour les messages récemment envoyés ou reçus uniquement lorsque ceci est activé.</string>
     <string name="title_advanced_usenet_hint">Insérer -- entre le texte et la signature</string>
     <string name="title_advanced_send_reminders_hint">Afficher un avertissement quand le texte du message ou l’objet sont vides ou quand une pièce jointe semble avoir été oubliée</string>
@@ -482,6 +486,7 @@
     <string name="title_advanced_metered_warning">Désactiver cette option désactivera la réception et l’envoi de messages sur les connexions Internet mobiles</string>
     <string name="title_advanced_rlah_hint">Considérer qu’il n’y a pas d’itinérance au sein de l’UE</string>
     <string name="title_advanced_tcp_keep_alive_hint">Activer ceci peut provoquer des problèmes de connexion sur certains appareils</string>
+    <string name="title_advanced_validate_hint">Ceci peut entraîner la non-synchronisation des messages, par exemple lors de l\'utilisation d\'un RPV mais aussi dans d\'autres situations</string>
     <string name="title_advanced_timeout_hint">Le délai d’expiration de la connexion sera doublé s’il reste encore des opérations de lecture/écriture. Des valeurs plus élevées entraîneront une utilisation acrue de la pile.</string>
     <string name="title_advanced_ssl_harden_hint">Activer ceci désactivera les protocoles et algorithmes SSL faibles, ce qui peut entraîner des problèmes de connexion</string>
     <string name="title_advanced_roaming_hint">Les en-têtes des messages seront toujours récupérés en itinérance. Vous pouvez utiliser les paramètres d’itinérance de l’appareil pour désactiver l’accès Internet en itinérance.</string>
@@ -491,6 +496,7 @@
     <string name="title_advanced_beige_hint">Thèmes clairs uniquement</string>
     <string name="title_advanced_date_hint">Les messages ne sont regroupés par date que s’ils sont triés par ordre chronologique</string>
     <string name="title_advanced_navbar_colorize_hint">Le fonctionnement dépend de la version et de la variante d’Android</string>
+    <string name="title_advanced_split_hint">Ceci divisera l\'écran en plusieurs parties</string>
     <string name="title_advanced_threading_hint">Grouper les messages liés les uns aux autres</string>
     <string name="title_advanced_highlight_hint">La couleur d’accentuation du thème sera utilisée pour la surbrillance</string>
     <string name="title_advanced_gravatars_hint">Cela pourrait présenter un risque pour la confidentialité</string>
@@ -576,6 +582,7 @@
     <string name="title_port">Numéro de port</string>
     <string name="title_user">Nom d’utilisateur</string>
     <string name="title_password">Mot de passe</string>
+    <string name="title_password_storage">Comment les mots de passe sont-ils stockés?</string>
     <string name="title_case_sensitive">Les noms d\'utilisateur et les mots de passe sont généralement sensibles à la casse</string>
     <string name="title_client_certificate">Certificat client</string>
     <string name="title_realm">Domaine</string>
@@ -681,6 +688,7 @@
     <string name="title_navigation_folder">Afficher dans le menu de navigation</string>
     <string name="title_synchronize_folder">Synchroniser (recevoir les messages)</string>
     <string name="title_poll_folder">Vérifier périodiquement au lieu de synchroniser en continu</string>
+    <string name="title_poll_folder_remark">La plupart des serveurs de messagerie autorisent les messages poussés pour un petit nombre de dossiers seulement!</string>
     <string name="title_download_folder">Télécharger automatiquement le texte des messages et les pièces-jointes</string>
     <string name="title_notify_folder">Notifier les nouveaux messages</string>
     <string name="title_auto_classify_source">Classer les nouveaux messages de ce dossier</string>
@@ -758,6 +766,8 @@
     <string name="title_download_all">Télécharger tout</string>
     <string name="title_save_all">Enregistrer tout</string>
     <string name="title_save_eml">Enregistrer le message original dans un fichier</string>
+    <string name="title_raw_remaining">Messages bruts à télécharger : %1$d</string>
+    <string name="title_ask_raw">Pour transférer des messages, les messages bruts (originaux) doivent être téléchargés depuis le serveur. Ceci nécessite une connexion Internet.</string>
     <string name="title_buttons">Sélectionner les boutons</string>
     <string name="title_configure_buttons">Configurer les boutons&#8230;</string>
     <string name="title_trash">Supprimer</string>
@@ -908,6 +918,7 @@
     <string name="title_media_toolbar">Barre d’outils média</string>
     <string name="title_insert_contact_group">Insérer un groupe de contacts</string>
     <string name="title_insert_template">Insérer un modèle</string>
+    <string name="title_create_template">Créer un modèle</string>
     <string name="title_edit_plain_text">Modifier comme texte brut</string>
     <string name="title_edit_formatted_text">Modifier comme texte reformaté</string>
     <string name="title_select_certificate">Sélectionner la clé publique</string>
@@ -1042,8 +1053,11 @@
     <string name="title_answer_favorite">Favori</string>
     <string name="title_answer_hide">Masquer du menu « Répondre »</string>
     <string name="title_answer_text">Texte du modèle</string>
-    <string name="title_answer_template_name">$name$ sera remplacé par le nom complet de l\'expéditeur</string>
-    <string name="title_answer_template_email">$email$ sera remplacé par l’adresse courriel de l’expéditeur</string>
+    <string name="title_answer_placeholder">Place réservée</string>
+    <string name="title_answer_placeholder_name">Nom complet de l\'expéditeur</string>
+    <string name="title_answer_placeholder_email">Adresse courriel de l’expéditeur</string>
+    <string name="title_answer_placeholder_firstname">Prénom de l\'expéditeur</string>
+    <string name="title_answer_placeholder_lastname">Nom de l\'expéditeur</string>
     <string name="title_rule_noop">Aucune action</string>
     <string name="title_rule_seen">Marquer comme lu</string>
     <string name="title_rule_unseen">Marquer comme non lu</string>
@@ -1400,6 +1414,9 @@
         <item>512 Ko</item>
         <item>1 Mo</item>
         <item>2 Mo</item>
+        <item>4 Mo</item>
+        <item>8 Mo</item>
+        <item>16 Mo</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

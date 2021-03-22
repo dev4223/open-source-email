@@ -127,7 +127,6 @@
     <string name="title_setup_identity_what">هویت چیست؟</string>
     <string name="title_setup_permissions">دادن دسترسی</string>
     <string name="title_setup_permissions_remark">برای دسترسی به اطلاعات مخاطبین (اختیاری)</string>
-    <string name="title_setup_doze_instructions">در قسمت بعد \"تمام برنامه‌ها\" را از قسمت بالا انتخاب کرده و سپس این برنامه را انتخاب کنید و گزینه \"عدم بهینه سازی\" را انتخاب و تایید نمایید.</string>
     <string name="title_setup_doze_battery">آیا مصرف باتری زیاد است؟</string>
     <string name="title_setup_doze_stopped">همگام‌سازی متوقف شده؟</string>
     <string name="title_setup_data">سرور داده فعال شده است</string>
@@ -765,8 +764,6 @@
     <string name="title_answer_favorite">مورد پسند</string>
     <string name="title_answer_hide">پنهان کردن از فهرست‌ها</string>
     <string name="title_answer_text">متن الگو</string>
-    <string name="title_answer_template_name">$name$ با نام کامل فرستنده جایگزین خواهد شد</string>
-    <string name="title_answer_template_email">$email$ با نشانی ایمیل فرستنده جایگزین خواهد شد</string>
     <string name="title_rule_noop">بدون کنش</string>
     <string name="title_rule_seen">علامت‌گذاری به‌عنوان خوانده شده</string>
     <string name="title_rule_unseen">علامت‌گذاری به‌عنوان خوانده نشده</string>
@@ -1077,6 +1074,9 @@
         <item>512 کیلوبایت</item>
         <item>1 مگابایت</item>
         <item>2 مگابایت</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

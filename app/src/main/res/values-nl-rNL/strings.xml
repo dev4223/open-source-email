@@ -125,7 +125,7 @@
     <string name="title_setup_wizard">Wizard</string>
     <string name="title_setup_wizard_multiple">De wizard kan meerdere keren gebruikt worden om meerdere accounts in te stellen</string>
     <string name="title_setup_wizard_new">Ik heb een nieuw e-mailadres nodig</string>
-    <string name="title_setup_manual">Handmatig instellen en meer opties</string>
+    <string name="title_setup_manual">Handmatig instellen en account opties</string>
     <string name="title_setup_account_remark">E-mail ontvangen</string>
     <string name="title_setup_identity_remark">E-mail verzenden</string>
     <string name="title_setup_account_identity_hint">U kunt de naam, kleur en veegacties configureren in de accountinstellingen en een handtekening configureren in de identiteitsinstellingen</string>
@@ -165,7 +165,7 @@
     <string name="title_setup_doze">Batterij-optimalisaties uitschakelen</string>
     <string name="title_setup_doze_remark">Om betrouwbaar e-mail te ontvangen</string>
     <string name="title_setup_doze_hint">Hoewel dit tegenstrijdig kan klinken, zal het uitschakelen van accuoptimalisaties resulteren in minder batterijverbruik</string>
-    <string name="title_setup_doze_instructions">In het volgende dialoogvenster, selecteer \"Alle apps\" bovenin, selecteer deze app en bevestig met \"Niet optimaliseren\"</string>
+    <string name="title_setup_doze_instructions">In het volgende Android dialoogvenster wijzig \"Niet geoptimaliseerd\" naar \"Alle apps\", selecteer deze app en selecteer \"Niet optimaliseren\"</string>
     <string name="title_setup_doze_battery">Hoog accugebruik?</string>
     <string name="title_setup_doze_stopped">Sync gestopt?</string>
     <string name="title_setup_data">Gegevensbesparing is ingeschakeld</string>
@@ -220,7 +220,7 @@
     <string name="title_advanced_hint_message">        U navigeert naar de meer geavanceerde opties.
         Alle opties hebben vaak gebruikte standaardwaarden die je niet hoeft te wijzigen tenzij je een andere voorkeur hebt.
     </string>
-    <string name="title_advanced_section_main">Start</string>
+    <string name="title_advanced_section_main">Hoofd</string>
     <string name="title_advanced_section_synchronize">Ontvangen</string>
     <string name="title_advanced_section_send">Verzenden</string>
     <string name="title_advanced_section_connection">Verbinding</string>
@@ -250,6 +250,7 @@
     <string name="title_advanced_tune_keep_alive">De keep-alive interval automatisch aanpassen</string>
     <string name="title_advanced_keyboard">Toon standaard het toetsenbord</string>
     <string name="title_advanced_keyboard_no_fullscreen">Toetsenbord in volledige scherm voorkomen</string>
+    <string name="title_advanced_suggest_names">Gebruik namen en e-mailadressen</string>
     <string name="title_advanced_suggest_local">Suggereer lokaal opgeslagen contacten</string>
     <string name="title_advanced_suggest_sent">Suggereer adressen gevonden in verzonden berichten</string>
     <string name="title_advanced_suggest_received">Suggereer adressen gevonden in ontvangen berichten</string>
@@ -277,6 +278,7 @@
     <string name="title_advanced_download">Automatisch downloaden van berichten en bijlagen op een gemeten verbinding tot</string>
     <string name="title_advanced_roaming">Download berichten en bijlagen tijdens roaming</string>
     <string name="title_advanced_rlah">Roam zoals thuis</string>
+    <string name="title_advanced_validated">Vereis een gevalideerde (gecontroleerde) verbinding</string>
     <string name="title_advanced_timeout">Verbinding timeout (seconden)</string>
     <string name="title_advanced_prefer_ip4">Geef de voorkeur aan IPv4 boven IPv6</string>
     <string name="title_advanced_ssl_harden">Verhard SSL-verbindingen</string>
@@ -312,7 +314,7 @@
     <string name="title_advanced_color_threshold">Drempel letterkleur: %1$s %%</string>
     <string name="title_advanced_name_email">Toon namen en e-mailadressen</string>
     <string name="title_advanced_replace_name">Geef de voorkeur aan een contactnaam boven een verzonden naam</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Alleen contactnamen weergeven</string>
+    <string name="title_advanced_only_name">Alleen contactnamen weergeven</string>
     <string name="title_advanced_distinguish_contacts">Onderstreep de afzender wanneer de afzender bekend staat als lokaal \'aan\'-contact</string>
     <string name="title_advanced_show_recipients">Geadresseerden in berichtkop tonen</string>
     <string name="title_advanced_font_size_sender">Tekengrootte afzender</string>
@@ -451,6 +453,7 @@
     <string name="title_advanced_watchdog">Periodiek controleren of FairEmail nog actief is</string>
     <string name="title_advanced_optimize">Automatisch optimaliseren</string>
     <string name="title_advanced_updates">Controleren op GitHub updates</string>
+    <string name="title_advanced_check_weekly">Controleer wekelijks in plaats van dagelijks</string>
     <string name="title_advanced_experiments">Probeer experimentele functies</string>
     <string name="title_advanced_query_threads">Beperk parallelle database toegang</string>
     <string name="title_advanced_crash_reports">Foutrapporten verzenden</string>
@@ -475,6 +478,7 @@
     <string name="title_advanced_check_reply_hint">Hiermee wordt gecontroleerd of de domeinnaam van de afzender en het antwoordadres hetzelfde zijn</string>
     <string name="title_advanced_lookup_mx_hint">Dit zal controleren of DNS MX records bestaan</string>
     <string name="title_advanced_sync_delay_hint">Dit zal de synchronisatie van berichten vertragen</string>
+    <string name="title_advanced_suggest_names_hint">Indien uitgeschakeld, worden alleen e-mailadressen gebruikt bij het selecteren van contacten</string>
     <string name="title_advanced_suggest_local_hint">Naast contacten die door Android worden geleverd. Contactgegevens worden alleen opgeslagen voor nieuw verzonden of ontvangen berichten wanneer ingeschakeld.</string>
     <string name="title_advanced_usenet_hint">Voeg \'-- \' in tussen de tekst en de handtekening</string>
     <string name="title_advanced_send_reminders_hint">Toon een waarschuwing wanneer de berichttekst of het onderwerp leeg is of wanneer een bijlage zou kunnen ontbreken</string>
@@ -482,6 +486,7 @@
     <string name="title_advanced_metered_warning">Uitschakelen van deze optie zal het ontvangen en verzenden van berichten op mobiele internetverbindingen uitschakelen</string>
     <string name="title_advanced_rlah_hint">Veronderstel geen roaming binnen de EU</string>
     <string name="title_advanced_tcp_keep_alive_hint">Dit inschakelen kan verbindingsproblemen veroorzaken op sommige apparaten</string>
+    <string name="title_advanced_validate_hint">Dit kan resulteren in het niet synchroniseren van berichten, bijvoorbeeld bij het gebruik van een VPN, maar ook in andere situaties</string>
     <string name="title_advanced_timeout_hint">De lees/schrijf time-out wordt ingesteld op de dubbele waarde van de verbinding time-out. Hogere waarden zullen leiden tot meer batterijgebruik.</string>
     <string name="title_advanced_ssl_harden_hint">Door dit in te schakelen, worden zwakke SSL-protocollen en -coderingen uitgeschakeld, wat kan leiden tot verbindingsproblemen</string>
     <string name="title_advanced_roaming_hint">Berichtkoppen zullen altijd worden opgehaald bij roaming. Je kunt de roaming-instelling van het apparaat gebruiken om internet uit te schakelen tijdens roaming.</string>
@@ -491,6 +496,7 @@
     <string name="title_advanced_beige_hint">Alleen lichte thema\'s</string>
     <string name="title_advanced_date_hint">Berichten worden alleen op datum gegroepeerd als ze op tijd zijn gesorteerd</string>
     <string name="title_advanced_navbar_colorize_hint">Of dit werkt hangt af van de Android-versie en -variant</string>
+    <string name="title_advanced_split_hint">Dit zal het scherm opsplitsen in delen</string>
     <string name="title_advanced_threading_hint">Groepeer gerelateerde berichten</string>
     <string name="title_advanced_highlight_hint">De accentkleur van het thema wordt gebruikt voor markering</string>
     <string name="title_advanced_gravatars_hint">Er is mogelijk een privacyrisico</string>
@@ -576,6 +582,7 @@
     <string name="title_port">Poortnummer</string>
     <string name="title_user">Gebruikersnaam</string>
     <string name="title_password">Wachtwoord</string>
+    <string name="title_password_storage">Hoe worden wachtwoorden bewaard?</string>
     <string name="title_case_sensitive">Gebruikersnamen en wachtwoorden zijn meestal hoofdlettergevoelig</string>
     <string name="title_client_certificate">Cliëntcertificaat</string>
     <string name="title_realm">Realm</string>
@@ -681,6 +688,7 @@
     <string name="title_navigation_folder">Toon in navigatiemenu</string>
     <string name="title_synchronize_folder">Synchroniseren (ontvang berichten)</string>
     <string name="title_poll_folder">Controleer periodiek in plaats van continu synchroniseren</string>
+    <string name="title_poll_folder_remark">De meeste e-mailservers staan push-berichten slechts voor een handvol mappen toe!</string>
     <string name="title_download_folder">Berichtteksten en bijlagen automatisch downloaden</string>
     <string name="title_notify_folder">Melding bij nieuwe berichten</string>
     <string name="title_auto_classify_source">Classificeer nieuwe berichten in deze map</string>
@@ -758,6 +766,8 @@
     <string name="title_download_all">Alles downloaden</string>
     <string name="title_save_all">Alles opslaan</string>
     <string name="title_save_eml">Ruw bericht opslaan</string>
+    <string name="title_raw_remaining">Ruwe berichten om te downloaden: %1$d</string>
+    <string name="title_ask_raw">Om berichten door te sturen, moeten de ruwe (originele) berichten worden gedownload van de server. Dit vereist een internetverbinding.</string>
     <string name="title_buttons">Selecteer knoppen</string>
     <string name="title_configure_buttons">Configureer knoppen &#8230;</string>
     <string name="title_trash">Prullenbak</string>
@@ -908,6 +918,7 @@
     <string name="title_media_toolbar">Media werkbalk</string>
     <string name="title_insert_contact_group">Contactgroep toevoegen</string>
     <string name="title_insert_template">Sjabloon invoegen</string>
+    <string name="title_create_template">Maak sjabloon</string>
     <string name="title_edit_plain_text">Bewerk als platte tekst</string>
     <string name="title_edit_formatted_text">Bewerk als geformatteerde tekst</string>
     <string name="title_select_certificate">Selecteer publieke sleutel</string>
@@ -1042,8 +1053,11 @@
     <string name="title_answer_favorite">Favoriet</string>
     <string name="title_answer_hide">Verbergen in menu\'s</string>
     <string name="title_answer_text">Sjabloontekst</string>
-    <string name="title_answer_template_name">$name$ zal worden vervangen door de volledige naam van de afzender</string>
-    <string name="title_answer_template_email">$email$ zal worden vervangen door het e-mail adres van de afzender</string>
+    <string name="title_answer_placeholder">Plaatshouder</string>
+    <string name="title_answer_placeholder_name">Volledige naam afzender</string>
+    <string name="title_answer_placeholder_email">E-mailadres afzender</string>
+    <string name="title_answer_placeholder_firstname">Voornaam afzender</string>
+    <string name="title_answer_placeholder_lastname">Achternaam afzender</string>
     <string name="title_rule_noop">Geen actie</string>
     <string name="title_rule_seen">Markeer als gelezen</string>
     <string name="title_rule_unseen">Markeren als ongelezen</string>
@@ -1399,6 +1413,9 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

@@ -155,6 +155,8 @@ class Core {
     private static final int TOTAL_RETRY_MAX = LOCAL_RETRY_MAX * 5;
     private static final int MAX_PREVIEW = 5000; // characters
     private static final long EXISTS_RETRY_DELAY = 20 * 1000L; // milliseconds
+    private static final int FIND_RETRY_COUNT = 3; // times
+    private static final long FIND_RETRY_DELAY = 5 * 1000L; // milliseconds
 
     static void processOperations(
             Context context,
@@ -326,7 +328,9 @@ class Core {
                                     break;
 
                                 case EntityOperation.SYNC:
+                                    Helper.gc();
                                     onSynchronizeMessages(context, jargs, account, folder, (POP3Folder) ifolder, (POP3Store) istore, state);
+                                    Helper.gc();
                                     break;
 
                                 case EntityOperation.PURGE:
@@ -404,7 +408,9 @@ class Core {
                                     break;
 
                                 case EntityOperation.SYNC:
+                                    Helper.gc();
                                     onSynchronizeMessages(context, jargs, account, folder, (IMAPStore) istore, (IMAPFolder) ifolder, state);
+                                    Helper.gc();
                                     break;
 
                                 case EntityOperation.SUBSCRIBE:
@@ -511,7 +517,9 @@ class Core {
                             // Fetch: NO Invalid message number (took 123 ms)
                             // Fetch: BAD Internal Server Error
                             // Fetch UID: NO Some messages could not be FETCHed (Failure)
-                            // fetch UID: NO [LIMIT] UID FETCH Rate limit hit.
+                            // Fetch UID: NO [LIMIT] UID FETCH Rate limit hit.
+                            // Fetch UID: NO Server Unavailable. 15
+                            // Fetch UID: NO [UNAVAILABLE] Failed to open mailbox
                             // Move: NO Over quota
                             // Move: NO No matching messages
                             // Move: NO [EXPUNGEISSUED] Some of the requested messages no longer exist
@@ -525,11 +533,13 @@ class Core {
                             // Move: NO mailbox selected READ-ONLY
                             // Move: NO System Error (Failure)
                             // Move: NO APPEND processing failed.
+                            // Copy: NO Client tried to access nonexistent namespace. (Mailbox name should probably be prefixed with: INBOX.) (n.nnn + n.nnn secs).
                             // Add: BAD Data length exceeds limit
                             // Add: NO [LIMIT] APPEND Command exceeds the maximum allowed size
                             // Add: NO APPEND failed: Unknown flag: SEEN
                             // Add: BAD mtd: internal error: APPEND Message too long. 12345678
                             // Add: NO [OVERQUOTA] Not enough disk quota (n.nnn + n.nnn + n.nnn secs).
+                            // Add: NO [OVERQUOTA] Quota exceeded (mailbox for user is full) (n.nnn + n.nnn secs).
                             // Add: NO APPEND failed
                             // Delete: NO [CANNOT] STORE It's not possible to perform specified operation
                             // Delete: NO [UNAVAILABLE] EXPUNGE Backend error
@@ -948,17 +958,13 @@ class Core {
 
             Log.i(folder.name + " reading " + file);
             try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-                imessage = new MimeMessage(isession, is);
+                imessage = new MimeMessageEx(isession, is, message.msgid);
             }
 
-            // Check message ID to check raw message file content
-            MessageHelper helper = new MessageHelper(imessage, context);
-            String msgid = helper.getMessageID();
-            if (TextUtils.isEmpty(message.msgid) || !Objects.equals(message.msgid, msgid)) {
-                String msg = "Inconsistent msgid=" + message.msgid + "/" + msgid;
-                Log.e(msg);
-                throw new IllegalArgumentException(msg);
-            }
+            imessage.removeHeader(MessageHelper.HEADER_CORRELATION_ID);
+            imessage.addHeader(MessageHelper.HEADER_CORRELATION_ID, message.msgid);
+
+            imessage.saveChanges();
         }
 
         db.message().setMessageRaw(message.id, true);
@@ -971,18 +977,17 @@ class Core {
                         " size=" + Helper.humanReadableByteCount(size) +
                         "/" + Helper.humanReadableByteCount(account.max_size) +
                         " host=" + account.host;
-                Log.e(msg);
+                Log.w(msg);
                 throw new IllegalArgumentException(msg);
             }
         }
 
         // Handle auto read
-        if (flags.contains(Flags.Flag.SEEN)) {
+        if (flags.contains(Flags.Flag.SEEN))
             if (autoread && !imessage.isSet(Flags.Flag.SEEN)) {
                 Log.i(folder.name + " autoread");
                 imessage.setFlag(Flags.Flag.SEEN, true);
             }
-        }
 
         // Handle draft
         if (flags.contains(Flags.Flag.DRAFT))
@@ -1028,19 +1033,50 @@ class Core {
                     Log.e(ex);
                 }
         } else {
-            Long found = findUid(context, ifolder, message.msgid, false);
-            if (found == null) {
-                String msg = "Added message not found msgid" + message.msgid;
-                Log.e(msg);
-                throw new IllegalArgumentException(msg);
+            // Lookup added message
+            int count = 0;
+            Long found = newuid;
+            while (found == null && count++ < FIND_RETRY_COUNT) {
+                found = findUid(context, ifolder, message.msgid, false);
+                if (found == null)
+                    try {
+                        Thread.sleep(FIND_RETRY_DELAY);
+                    } catch (InterruptedException ex) {
+                        Log.e(ex);
+                    }
             }
 
-            // Mark source read
-            if (autoread)
-                EntityOperation.queue(context, message, EntityOperation.SEEN, true);
+            try {
+                db.beginTransaction();
 
-            // Delete source
-            EntityOperation.queue(context, message, EntityOperation.DELETE);
+                if (found == null) {
+                    db.message().setMessageError(message.id,
+                            "Message not found in target folder " + account.name + "/" + folder.name);
+                    db.message().setMessageUiHide(message.id, false);
+                } else {
+                    // Mark source read
+                    if (autoread)
+                        EntityOperation.queue(context, message, EntityOperation.SEEN, true);
+
+                    // Delete source
+                    EntityOperation.queue(context, message, EntityOperation.DELETE);
+                }
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+
+            // Fetch target
+            if (found != null)
+                try {
+                    Log.i(folder.name + " Fetching uid=" + found);
+                    JSONArray fargs = new JSONArray();
+                    fargs.put(found);
+                    onFetch(context, fargs, folder, istore, ifolder, state);
+                } catch (Throwable ex) {
+                    Log.e(ex);
+                }
         }
     }
 
@@ -1721,52 +1757,62 @@ class Core {
         List<EntityFolder> folders = db.folder().getFolders(account.id, false, false);
         for (EntityFolder folder : folders)
             if (folder.tbc != null) {
-                Log.i(folder.name + " creating");
-                Folder ifolder = istore.getFolder(folder.name);
-                if (!ifolder.exists()) {
-                    ifolder.create(Folder.HOLDS_MESSAGES);
-                    ifolder.setSubscribed(true);
+                try {
+                    Log.i(folder.name + " creating");
+                    Folder ifolder = istore.getFolder(folder.name);
+                    if (!ifolder.exists()) {
+                        ifolder.create(Folder.HOLDS_MESSAGES);
+                        ifolder.setSubscribed(true);
+                    }
+                    local.put(folder.name, folder);
+                } finally {
+                    db.folder().resetFolderTbc(folder.id);
+                    sync_folders = true;
                 }
-                db.folder().resetFolderTbc(folder.id);
-                local.put(folder.name, folder);
-                sync_folders = true;
 
             } else if (folder.rename != null) {
-                Log.i(folder.name + " rename into " + folder.rename);
-                Folder ifolder = istore.getFolder(folder.name);
-                if (ifolder.exists()) {
-                    // https://tools.ietf.org/html/rfc3501#section-6.3.9
-                    boolean subscribed = ifolder.isSubscribed();
-                    if (subscribed)
-                        ifolder.setSubscribed(false);
+                try {
+                    Log.i(folder.name + " rename into " + folder.rename);
+                    Folder ifolder = istore.getFolder(folder.name);
+                    if (ifolder.exists()) {
+                        // https://tools.ietf.org/html/rfc3501#section-6.3.9
+                        boolean subscribed = ifolder.isSubscribed();
+                        if (subscribed)
+                            ifolder.setSubscribed(false);
 
-                    Folder itarget = istore.getFolder(folder.rename);
-                    ifolder.renameTo(itarget);
+                        Folder itarget = istore.getFolder(folder.rename);
+                        ifolder.renameTo(itarget);
 
-                    if (subscribed && folder.selectable)
-                        try {
-                            itarget.open(READ_WRITE);
-                            itarget.setSubscribed(subscribed);
-                            itarget.close();
-                        } catch (MessagingException ex) {
-                            Log.w(ex);
-                        }
+                        if (subscribed && folder.selectable)
+                            try {
+                                itarget.open(READ_WRITE);
+                                itarget.setSubscribed(subscribed);
+                                itarget.close();
+                            } catch (MessagingException ex) {
+                                Log.w(ex);
+                            }
 
-                    db.folder().renameFolder(folder.account, folder.name, folder.rename);
-                    folder.name = folder.rename;
+                        db.folder().renameFolder(folder.account, folder.name, folder.rename);
+                        folder.name = folder.rename;
+                    }
+                } finally {
+                    db.folder().resetFolderRename(folder.id);
+                    sync_folders = true;
                 }
-                db.folder().resetFolderRename(folder.id);
-                sync_folders = true;
 
             } else if (folder.tbd != null && folder.tbd) {
-                Log.i(folder.name + " deleting");
-                Folder ifolder = istore.getFolder(folder.name);
-                if (ifolder.exists()) {
-                    ifolder.setSubscribed(false);
-                    ifolder.delete(false);
+                try {
+                    Log.i(folder.name + " deleting");
+                    Folder ifolder = istore.getFolder(folder.name);
+                    if (ifolder.exists()) {
+                        ifolder.setSubscribed(false);
+                        ifolder.delete(false);
+                    }
+                    db.folder().deleteFolder(folder.id);
+                } finally {
+                    db.folder().resetFolderTbd(folder.id);
+                    sync_folders = true;
                 }
-                db.folder().deleteFolder(folder.id);
-                sync_folders = true;
 
             } else {
                 if (EntityFolder.DRAFTS.equals(folder.type))
@@ -1901,6 +1947,9 @@ class Core {
             }
             selectable = selectable && ((ifolder.getType() & IMAPFolder.HOLDS_MESSAGES) != 0);
             inferiors = inferiors && ((ifolder.getType() & IMAPFolder.HOLDS_FOLDERS) != 0);
+
+            if (EntityFolder.INBOX.equals(type))
+                selectable = true;
 
             Log.i(account.name + ":" + fullName + " type=" + type +
                     " subscribed=" + subscribed +
@@ -2497,7 +2546,7 @@ class Core {
             try {
                 imessages = ifolder.search(searchTerm);
             } catch (MessagingException ex) {
-                Log.w(ex.getMessage());
+                Log.w(ex);
                 // Fallback to date only search
                 // BAD Could not parse command
                 imessages = ifolder.search(new ReceivedDateTerm(ComparisonTerm.GE, new Date(sync_time)));
@@ -3764,7 +3813,7 @@ class Core {
         boolean wearable_preview = prefs.getBoolean("wearable_preview", false);
         boolean biometrics = prefs.getBoolean("biometrics", false);
         String pin = prefs.getString("pin", null);
-        boolean biometric_notify = prefs.getBoolean("biometrics_notify", false);
+        boolean biometric_notify = prefs.getBoolean("biometrics_notify", true);
         boolean pro = ActivityBilling.isPro(context);
 
         boolean redacted = ((biometrics || !TextUtils.isEmpty(pin)) && !biometric_notify);
@@ -4337,22 +4386,24 @@ class Core {
                 }
             }
 
-            if (notify_reply && message.content &&
-                    db.identity().getComposableIdentities(message.account).size() > 0) {
-                Intent reply = new Intent(context, ActivityCompose.class)
-                        .putExtra("action", "reply")
-                        .putExtra("reference", message.id)
-                        .putExtra("group", group);
-                reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                PendingIntent piReply = PendingIntent.getActivity(context, ActivityCompose.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
-                NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
-                        R.drawable.twotone_reply_24,
-                        context.getString(R.string.title_advanced_notify_action_reply),
-                        piReply)
-                        .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
-                        .setShowsUserInterface(true)
-                        .setAllowGeneratedReplies(false);
-                mbuilder.addAction(actionReply.build());
+            if (notify_reply && message.content) {
+                List<TupleIdentityEx> identities = db.identity().getComposableIdentities(message.account);
+                if (identities != null && identities.size() > 0) {
+                    Intent reply = new Intent(context, ActivityCompose.class)
+                            .putExtra("action", "reply")
+                            .putExtra("reference", message.id)
+                            .putExtra("group", group);
+                    reply.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    PendingIntent piReply = PendingIntent.getActivity(context, ActivityCompose.PI_REPLY, reply, PendingIntent.FLAG_UPDATE_CURRENT);
+                    NotificationCompat.Action.Builder actionReply = new NotificationCompat.Action.Builder(
+                            R.drawable.twotone_reply_24,
+                            context.getString(R.string.title_advanced_notify_action_reply),
+                            piReply)
+                            .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_REPLY)
+                            .setShowsUserInterface(true)
+                            .setAllowGeneratedReplies(false);
+                    mbuilder.addAction(actionReply.build());
+                }
             }
 
             if (notify_reply_direct &&

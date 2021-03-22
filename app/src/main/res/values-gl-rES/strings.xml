@@ -124,7 +124,6 @@
     <string name="title_setup_wizard">Asistente</string>
     <string name="title_setup_wizard_multiple">O asistente pódese empregar varias veces para configurar varias contas</string>
     <string name="title_setup_wizard_new">Preciso un novo enderezo de email</string>
-    <string name="title_setup_manual">Configuración manual e máis opcións</string>
     <string name="title_setup_account_remark">Recibir correo electrónico</string>
     <string name="title_setup_identity_remark">Enviar correo electrónico</string>
     <string name="title_setup_account_identity_hint">Pode configurar o nome, a cor e as accións de esvarado na configuración das contas, e configurar unha sinatura na configuración de identidade</string>
@@ -164,7 +163,6 @@
     <string name="title_setup_doze">Desactivar as optimizacións da batería</string>
     <string name="title_setup_doze_remark">Para recibir o correo de maneira fiable</string>
     <string name="title_setup_doze_hint">Aínda que poida soar contraditorio, desactivar as optimizacións da batería podería resultar nun menor uso da batería</string>
-    <string name="title_setup_doze_instructions">No seguinte diálogo, seleccione \"Todas as aplicacións\" na parte superior, seleccione esta aplicación e seleccione e confirme \"Non optimizar\"</string>
     <string name="title_setup_doze_battery">Uso elevado da batería?</string>
     <string name="title_setup_doze_stopped">Detívose a sincronización?</string>
     <string name="title_setup_data">O aforro de datos está activado</string>
@@ -219,7 +217,6 @@
     <string name="title_advanced_hint_message">        Vostede está navegando cara as opcións máis avanzadas.
         Todas as opcións teñen valores comúns, que non precisan ser cambiadas de non ser que  vostede teña una preferencia diferente.
     </string>
-    <string name="title_advanced_section_main">Inicio</string>
     <string name="title_advanced_section_synchronize">Recibir</string>
     <string name="title_advanced_section_send">Enviar</string>
     <string name="title_advanced_section_connection">Conexión</string>
@@ -311,7 +308,7 @@
     <string name="title_advanced_color_threshold">Limiar da cor das letras: %1$s %%</string>
     <string name="title_advanced_name_email">Mostrar nomes e enderezos de email</string>
     <string name="title_advanced_replace_name">Preferir o nome de contacto ao nome do envío</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">Só mostrar o nome dos contactos</string>
+    <string name="title_advanced_only_name">Só mostrar o nome dos contactos</string>
     <string name="title_advanced_distinguish_contacts">Suliñar o remitente cando este é recoñecido como un destinatario local</string>
     <string name="title_advanced_show_recipients">Mostrar os destinatarios nas cabeceiras das mensaxes</string>
     <string name="title_advanced_font_size_sender">Tamaño do texto do remitente</string>
@@ -1035,8 +1032,6 @@
     <string name="title_answer_favorite">Favorito</string>
     <string name="title_answer_hide">Agachar nos menús</string>
     <string name="title_answer_text">Texto do patrón</string>
-    <string name="title_answer_template_name">$name$ trocarase polo nome completo do remitente</string>
-    <string name="title_answer_template_email">$email$ trocarase pola dirección de email do remitente</string>
     <string name="title_rule_noop">Sen acción</string>
     <string name="title_rule_seen">Marcar como lida</string>
     <string name="title_rule_unseen">Marcar como non lida</string>
@@ -1393,6 +1388,9 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

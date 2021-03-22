@@ -113,7 +113,7 @@
     <string name="title_setup_wizard">向导</string>
     <string name="title_setup_wizard_multiple">该向导可多次使用以设置多个帐户</string>
     <string name="title_setup_wizard_new">我需要一个新的邮件地址</string>
-    <string name="title_setup_manual">手动设置及更多选项</string>
+    <string name="title_setup_manual">手动设置和更多账户选项</string>
     <string name="title_setup_account_remark">接收电子邮件</string>
     <string name="title_setup_identity_remark">发送电子邮件</string>
     <string name="title_setup_account_identity_hint">你可以在帐户设置中配置名称、颜色和滑动操作，以及在身份设置中配置签名</string>
@@ -153,7 +153,7 @@
     <string name="title_setup_doze">禁用电池优化</string>
     <string name="title_setup_doze_remark">使接收邮件更可靠</string>
     <string name="title_setup_doze_hint">虽然这听起来自相矛盾，但关闭电池优化将减少电池用量</string>
-    <string name="title_setup_doze_instructions">在下以个界面，选择最上面的\"所有应用\"，找到此应用并选择\"不优化\"</string>
+    <string name="title_setup_doze_instructions">请在下一页面中，将 \"未优化\" 切换为 \"所有应用\"，然后下拉找到本应用，并选择\"不优化\"</string>
     <string name="title_setup_doze_battery">太耗电？</string>
     <string name="title_setup_doze_stopped">同步已停止？</string>
     <string name="title_setup_data">已启用数据节省</string>
@@ -208,7 +208,7 @@
     <string name="title_advanced_hint_message">        您正在前往更多的高级选项
         所有选项默认均使用可更改的常用标准值
     </string>
-    <string name="title_advanced_section_main">开始</string>
+    <string name="title_advanced_section_main">主要</string>
     <string name="title_advanced_section_synchronize">接收</string>
     <string name="title_advanced_section_send">发送</string>
     <string name="title_advanced_section_connection">连接</string>
@@ -238,6 +238,7 @@
     <string name="title_advanced_tune_keep_alive">自动调整保持活动时间间隔</string>
     <string name="title_advanced_keyboard">默认显示键盘</string>
     <string name="title_advanced_keyboard_no_fullscreen">防止全屏键盘</string>
+    <string name="title_advanced_suggest_names">使用名称和电子邮件地址</string>
     <string name="title_advanced_suggest_local">建议本地存储的联系人</string>
     <string name="title_advanced_suggest_sent">建议在已发送消息中找到的地址</string>
     <string name="title_advanced_suggest_received">建议在已收到消息中找到的地址</string>
@@ -265,6 +266,7 @@
     <string name="title_advanced_download">在计量的连接下自动下载邮件和附件, 最高可达</string>
     <string name="title_advanced_roaming">漫游时下载邮件和附件</string>
     <string name="title_advanced_rlah">国内漫游</string>
+    <string name="title_advanced_validated">需要已验证 (已检查) 的连接</string>
     <string name="title_advanced_timeout">连接超时 (秒)</string>
     <string name="title_advanced_prefer_ip4">IPv4 优先于 IPv6</string>
     <string name="title_advanced_ssl_harden">加强 SSL 连接</string>
@@ -300,7 +302,7 @@
     <string name="title_advanced_color_threshold">字母颜色阈值：%1$s %%</string>
     <string name="title_advanced_name_email">显示名称和电子邮件地址</string>
     <string name="title_advanced_replace_name">优先使用联系人姓名而不是发送名称</string>
-    <string name="title_advanced_only_name" comment="title_advanced_only_name&#10;Title for option to show names from the Android address book only">仅显示联系人姓名</string>
+    <string name="title_advanced_only_name">仅显示联系人姓名</string>
     <string name="title_advanced_distinguish_contacts">下划线发件人(当其为本地发送给的联系人时)</string>
     <string name="title_advanced_show_recipients">在邮件头中显示收件人</string>
     <string name="title_advanced_font_size_sender">发件人文本大小</string>
@@ -439,6 +441,7 @@
     <string name="title_advanced_watchdog">定期检查 FairEmail 是否仍在运行</string>
     <string name="title_advanced_optimize">自动优化</string>
     <string name="title_advanced_updates">检查 GitHub 更新</string>
+    <string name="title_advanced_check_weekly">每周而不是每天检查</string>
     <string name="title_advanced_experiments">尝试实验性功能</string>
     <string name="title_advanced_query_threads">限制并行数据库访问</string>
     <string name="title_advanced_crash_reports">发送错误报告</string>
@@ -463,6 +466,7 @@
     <string name="title_advanced_check_reply_hint">这会检查发送者的域名和回复地址是否相同</string>
     <string name="title_advanced_lookup_mx_hint">这将检查 DNS MX 记录是否存在</string>
     <string name="title_advanced_sync_delay_hint">这将减缓同步消息的速度</string>
+    <string name="title_advanced_suggest_names_hint">如果禁用，选择联系人时将只使用电子邮件地址</string>
     <string name="title_advanced_suggest_local_hint">除了Android提供的联系人，只有在设置中允许，应用才会储存新接收或发送消息的联系人数据。</string>
     <string name="title_advanced_usenet_hint">在文本和签名之间插入 \'-- \'</string>
     <string name="title_advanced_send_reminders_hint">当消息文本或主题为空或缺失某个附件时显示警告</string>
@@ -470,6 +474,7 @@
     <string name="title_advanced_metered_warning">禁用此选项将禁止在使用移动互联网连接时接收和发送消息</string>
     <string name="title_advanced_rlah_hint">假定欧盟境内不漫游</string>
     <string name="title_advanced_tcp_keep_alive_hint">启用此选项可能会在某些设备上造成连接问题</string>
+    <string name="title_advanced_validate_hint">这可能导致消息不同步，例如在使用 VPN 时，其他情况下也可能发生</string>
     <string name="title_advanced_timeout_hint">读/写超时时间将翻倍，值越高将越耗电</string>
     <string name="title_advanced_ssl_harden_hint">启用此选项将禁用较弱的SSL协议和密码，这可能导致连接问题</string>
     <string name="title_advanced_roaming_hint">当漫游时，将始终获取消息头。您可以使用设备的漫游设置在漫游时禁用互联网。</string>
@@ -479,6 +484,7 @@
     <string name="title_advanced_beige_hint">仅限浅色主题</string>
     <string name="title_advanced_date_hint">若按时间对消息排序，将仅按日期对消息分组</string>
     <string name="title_advanced_navbar_colorize_hint">这是否正常工作取决于Android版本和变体</string>
+    <string name="title_advanced_split_hint">这将把屏幕分割成几部分</string>
     <string name="title_advanced_threading_hint">合并相同主题为一封会话</string>
     <string name="title_advanced_highlight_hint">主题的强调色将用于高亮文本颜色</string>
     <string name="title_advanced_gravatars_hint">可能存在隐私风险</string>
@@ -564,6 +570,7 @@
     <string name="title_port">端口号</string>
     <string name="title_user">用户名</string>
     <string name="title_password">密码</string>
+    <string name="title_password_storage">密码是如何存储的？</string>
     <string name="title_case_sensitive">用户名和密码通常是区分大小写的</string>
     <string name="title_client_certificate">客户端证书</string>
     <string name="title_realm">移动数据库</string>
@@ -669,6 +676,7 @@
     <string name="title_navigation_folder">在导航菜单中显示</string>
     <string name="title_synchronize_folder">同步(接收邮件)</string>
     <string name="title_poll_folder">定期检查而非持续同步</string>
+    <string name="title_poll_folder_remark">大多数电子邮件服务器仅允许少数文件夹推送消息！</string>
     <string name="title_download_folder">自动下载邮件文本和附件</string>
     <string name="title_notify_folder">通知新邮件</string>
     <string name="title_auto_classify_source">对此文件夹中的新消息进行分类</string>
@@ -746,6 +754,8 @@
     <string name="title_download_all">全部下载</string>
     <string name="title_save_all">全部保存</string>
     <string name="title_save_eml">保存原始消息文件</string>
+    <string name="title_raw_remaining">要下载的原始消息： %1$d</string>
+    <string name="title_ask_raw">要转发消息，需要从服务器下载原始消息。这需要互联网连接。</string>
     <string name="title_buttons">选择按钮</string>
     <string name="title_configure_buttons">配置按钮 &#8230;</string>
     <string name="title_trash">回收站</string>
@@ -896,6 +906,7 @@
     <string name="title_media_toolbar">媒体工具栏</string>
     <string name="title_insert_contact_group">插入联系人组</string>
     <string name="title_insert_template">插入模板</string>
+    <string name="title_create_template">创建模板</string>
     <string name="title_edit_plain_text">以纯文本形式编辑</string>
     <string name="title_edit_formatted_text">编辑为重新格式化的文本</string>
     <string name="title_select_certificate">选择公钥</string>
@@ -1030,8 +1041,11 @@
     <string name="title_answer_favorite">收藏</string>
     <string name="title_answer_hide">从菜单中隐藏</string>
     <string name="title_answer_text">模板内容</string>
-    <string name="title_answer_template_name">$name$ 将被发件人的全名取代</string>
-    <string name="title_answer_template_email">$email$ 将被发件人的邮件地址取代</string>
+    <string name="title_answer_placeholder">占位符</string>
+    <string name="title_answer_placeholder_name">发件人全名</string>
+    <string name="title_answer_placeholder_email">发件人电子邮件地址</string>
+    <string name="title_answer_placeholder_firstname">发件人名字</string>
+    <string name="title_answer_placeholder_lastname">发件人姓氏</string>
     <string name="title_rule_noop">无操作</string>
     <string name="title_rule_seen">标记为已读</string>
     <string name="title_rule_unseen">标记为未读</string>
@@ -1386,6 +1400,9 @@
         <item>512 KB</item>
         <item>1 MB</item>
         <item>2 MB</item>
+        <item>4 MB</item>
+        <item>8 MB</item>
+        <item>16 MB</item>
         <item>∞</item>
     </string-array>
     <string-array name="onCloseNames">

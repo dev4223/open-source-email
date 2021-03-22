@@ -434,8 +434,7 @@ public class HtmlHelper {
                 .removeAttributes("th", "colspan", "rowspan", "width")
                 .addProtocols("img", "src", "cid")
                 .addProtocols("img", "src", "data")
-                .removeProtocols("a", "href", "ftp")
-                .addProtocols("a", "href", "full", "xmpp", "geo", "tel");
+                .removeTags("a").addAttributes("a", "href", "title");
         if (text_color)
             whitelist.addAttributes("font", "color");
         if (text_size)
@@ -547,7 +546,7 @@ public class HtmlHelper {
                                 if (color == null)
                                     element.removeAttr("color");
                                 else {
-                                    if (view)
+                                    if (view || Helper.isDarkTheme(context))
                                         color = adjustColor(dark, textColorPrimary, color);
 
                                     // fromHtml does not support transparency

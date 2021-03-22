@@ -95,6 +95,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private ImageButton ibResetLanguage;
     private SwitchCompat swWatchdog;
     private SwitchCompat swUpdates;
+    private SwitchCompat swCheckWeekly;
     private SwitchCompat swExperiments;
     private TextView tvExperimentsHint;
     private SwitchCompat swCrashReports;
@@ -121,10 +122,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private TextView tvMemoryUsage;
     private TextView tvStorageUsage;
     private TextView tvFingerprint;
+    private Button btnGC;
     private Button btnCharsets;
     private Button btnCiphers;
     private Button btnFiles;
 
+    private Group grpUpdates;
     private Group grpDebug;
 
     private NumberFormat NF = NumberFormat.getNumberInstance();
@@ -148,6 +151,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             "selected_folders", "move_1_confirmed", "move_n_confirmed",
             "last_search_senders", "last_search_recipients", "last_search_subject", "last_search_keywords", "last_search_message", "last_search",
             "identities_asked", "identities_primary_hint",
+            "raw_asked",
             "cc_bcc", "inline_image_hint", "compose_reference", "send_dialog",
             "setup_reminder", "setup_advanced"
     };
@@ -192,6 +196,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         ibResetLanguage = view.findViewById(R.id.ibResetLanguage);
         swWatchdog = view.findViewById(R.id.swWatchdog);
         swUpdates = view.findViewById(R.id.swUpdates);
+        swCheckWeekly = view.findViewById(R.id.swWeekly);
         swExperiments = view.findViewById(R.id.swExperiments);
         tvExperimentsHint = view.findViewById(R.id.tvExperimentsHint);
         swCrashReports = view.findViewById(R.id.swCrashReports);
@@ -218,10 +223,12 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         tvMemoryUsage = view.findViewById(R.id.tvMemoryUsage);
         tvStorageUsage = view.findViewById(R.id.tvStorageUsage);
         tvFingerprint = view.findViewById(R.id.tvFingerprint);
+        btnGC = view.findViewById(R.id.btnGC);
         btnCharsets = view.findViewById(R.id.btnCharsets);
         btnCiphers = view.findViewById(R.id.btnCiphers);
         btnFiles = view.findViewById(R.id.btnFiles);
 
+        grpUpdates = view.findViewById(R.id.grpUpdates);
         grpDebug = view.findViewById(R.id.grpDebug);
 
         setOptions();
@@ -348,7 +355,30 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                     onNothingSelected(adapterView);
                 else {
                     String tag = languages.get(position - 1).first;
-                    prefs.edit().putString("language", tag).commit(); // apply won't work here
+                    if (tag.equals(spLanguage.getTag()))
+                        return;
+
+                    new AlertDialog.Builder(view.getContext())
+                            .setTitle(languages.get(position - 1).second)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    prefs.edit().putString("language", tag).commit(); // apply won't work here
+                                }
+                            })
+                            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // Do nothing
+                                }
+                            })
+                            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                                @Override
+                                public void onDismiss(DialogInterface dialog) {
+                                    setOptions();
+                                }
+                            })
+                            .show();
                 }
             }
 
@@ -376,10 +406,18 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("updates", checked).apply();
+                swCheckWeekly.setEnabled(checked);
                 if (!checked) {
                     NotificationManager nm = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
                     nm.cancel(Helper.NOTIFICATION_UPDATE);
                 }
+            }
+        });
+
+        swCheckWeekly.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("weekly", checked).apply();
             }
         });
 
@@ -524,6 +562,13 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("auth_sasl", checked).apply();
+            }
+        });
+
+        btnGC.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Helper.gc();
             }
         });
 
@@ -774,19 +819,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_default) {
-            onMenuDefault();
+            FragmentOptions.reset(getContext(), RESET_OPTIONS);
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void onMenuDefault() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-        SharedPreferences.Editor editor = prefs.edit();
-        for (String option : RESET_OPTIONS)
-            editor.remove(option);
-        editor.apply();
-        ToastEx.makeText(getContext(), R.string.title_setup_done, Toast.LENGTH_LONG).show();
     }
 
     private void onResetQuestions() {
@@ -856,6 +892,8 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                 selected = pos + 1;
         }
 
+        spLanguage.setTag(language);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, android.R.id.text1, display);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spLanguage.setAdapter(adapter);
@@ -864,9 +902,11 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         swWatchdog.setChecked(prefs.getBoolean("watchdog", true));
         swUpdates.setChecked(prefs.getBoolean("updates", true));
-        swUpdates.setVisibility(
-                Helper.isPlayStoreInstall() || !Helper.hasValidFingerprint(getContext())
-                        ? View.GONE : View.VISIBLE);
+        swCheckWeekly.setChecked(prefs.getBoolean("weekly", false));
+        swCheckWeekly.setEnabled(swUpdates.isChecked());
+        grpUpdates.setVisibility(!BuildConfig.DEBUG &&
+                (Helper.isPlayStoreInstall() || !Helper.hasValidFingerprint(getContext()))
+                ? View.GONE : View.VISIBLE);
         swExperiments.setChecked(prefs.getBoolean("experiments", false));
         swCrashReports.setChecked(prefs.getBoolean("crash_reports", false));
         tvUuid.setText(prefs.getString("uuid", null));
