@@ -1238,6 +1238,7 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
             }
 
             if (!subscribed_only ||
+                    EntityFolder.INBOX.equals(parent.type) ||
                     parent.accountProtocol != EntityAccount.TYPE_IMAP ||
                     (parent.subscribed != null && parent.subscribed) ||
                     (childs != null && childs.size() > 0)) {
@@ -1340,6 +1341,6 @@ public class AdapterFolder extends RecyclerView.Adapter<AdapterFolder.ViewHolder
     }
 
     interface IFolderSelectedListener {
-        void onFolderSelected(TupleFolderEx folder);
+        void onFolderSelected(@NonNull TupleFolderEx folder);
     }
 }
