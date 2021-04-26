@@ -1982,28 +1982,19 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             // 2: tvTo.setVisibility((!show_recipients || show_addresses) && (message.to != null && message.to.length > 0) ? View.VISIBLE : View.GONE);
             tvToTitle.setVisibility(show_addresses && (message.to != null && message.to.length > 0) ? View.VISIBLE : View.GONE);
             tvTo.setVisibility(show_addresses && (message.to != null && message.to.length > 0) ? View.VISIBLE : View.GONE);
-            if (show_addresses || (message.to == null || message.to.length < MAX_RECIPIENTS))
-                tvTo.setText(to);
-            else
-                tvTo.setText(formatAddresses(message.to, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
+            tvTo.setText(formatAddresses(message.to, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
 
             tvReplyToTitle.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
             tvReplyTo.setVisibility(show_addresses && !TextUtils.isEmpty(replyto) ? View.VISIBLE : View.GONE);
             tvReplyTo.setText(replyto);
-
+            
             tvCcTitle.setVisibility(show_addresses && (message.cc != null && message.cc.length != 0) ? View.VISIBLE : View.GONE);
             tvCc.setVisibility(show_addresses && (message.cc != null && message.cc.length != 0) ? View.VISIBLE : View.GONE);
-            if (show_addresses || (message.cc == null || message.cc.length < MAX_RECIPIENTS))
-                tvCc.setText(cc);
-            else
-                tvCc.setText(formatAddresses(message.cc, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
+            tvCc.setText(formatAddresses(message.cc, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
 
             tvBccTitle.setVisibility(show_addresses && (message.bcc != null && message.bcc.length != 0) ? View.VISIBLE : View.GONE);
             tvBcc.setVisibility(show_addresses && (message.bcc != null && message.bcc.length != 0) ? View.VISIBLE : View.GONE);
-            if (show_addresses || (message.bcc == null || message.bcc.length < MAX_RECIPIENTS))
-                tvBcc.setText(bcc);
-            else
-                tvBcc.setText(formatAddresses(message.bcc, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
+            tvBcc.setText(formatAddresses(message.bcc, full, show_addresses ? Integer.MAX_VALUE : maxRecipients));
 
             InternetAddress via = null;
             if (message.identityEmail != null)
