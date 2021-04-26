@@ -21,15 +21,25 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <eu.faircode.email.FixedTextView
+            android:id="@+id/tvHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/title_buttons_hint"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
         <CheckBox
             android:id="@+id/cbJunk"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="12dp"
             android:text="@string/title_spam"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+            app:layout_constraintTop_toBottomOf="@id/tvHint" />
 
         <CheckBox
             android:id="@+id/cbTrash"
@@ -102,6 +112,16 @@
             app:layout_constraintTop_toBottomOf="@id/cbNotes" />
 
         <CheckBox
+            android:id="@+id/cbHide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/title_toggle_hide"
+            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cbSeen" />
+
+        <CheckBox
             android:id="@+id/cbSearch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -109,7 +129,7 @@
             android:text="@string/title_search"
             android:textAppearance="@style/TextAppearance.AppCompat.Small"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cbSeen" />
+            app:layout_constraintTop_toBottomOf="@id/cbHide" />
 
         <CheckBox
             android:id="@+id/cbEvent"

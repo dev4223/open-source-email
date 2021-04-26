@@ -37,6 +37,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -68,6 +69,7 @@ import android.text.style.ImageSpan;
 import android.text.style.ParagraphStyle;
 import android.text.style.QuoteSpan;
 import android.text.style.URLSpan;
+import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -179,6 +181,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import javax.activation.DataHandler;
@@ -303,6 +306,8 @@ public class FragmentCompose extends FragmentBase {
     private static final int REQUEST_DISCARD = 13;
     private static final int REQUEST_SEND = 14;
     private static final int REQUEST_PERMISSION = 15;
+
+    private static ExecutorService executor = Helper.getBackgroundExecutor(1, "encrypt");
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -469,6 +474,15 @@ public class FragmentCompose extends FragmentBase {
         ibToAdd.setOnClickListener(onPick);
         ibCcAdd.setOnClickListener(onPick);
         ibBccAdd.setOnClickListener(onPick);
+
+        tvPlainTextOnly.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle args = new Bundle();
+                args.putBoolean("force_dialog", true);
+                onAction(R.id.action_check, args, "force");
+            }
+        });
 
         setZoom();
 
@@ -2626,7 +2640,7 @@ public class FragmentCompose extends FragmentBase {
                                     Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                     intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
                                     intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE, true);
-                                    intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email);
+                                    intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email.toLowerCase());
                                     intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                     intent.putExtra(BuildConfig.APPLICATION_ID, largs);
                                     return intent;
@@ -2646,7 +2660,7 @@ public class FragmentCompose extends FragmentBase {
                                 Intent intent = new Intent(OpenPgpApi.ACTION_GET_KEY);
                                 intent.putExtra(OpenPgpApi.EXTRA_KEY_ID, pgpSignKeyId);
                                 intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE, true);
-                                intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email);
+                                intent.putExtra(OpenPgpApi.EXTRA_MINIMIZE_USER_ID, identity.email.toLowerCase());
                                 intent.putExtra(OpenPgpApi.EXTRA_REQUEST_ASCII_ARMOR, true);
                                 intent.putExtra(BuildConfig.APPLICATION_ID, largs);
                                 return intent;
@@ -2758,7 +2772,7 @@ public class FragmentCompose extends FragmentBase {
                 } else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
-        }.execute(this, args, "compose:pgp");
+        }.setExecutor(executor).execute(this, args, "compose:pgp");
     }
 
     private void onSmime(Bundle args, final int action, final Bundle extras) {
@@ -3118,7 +3132,7 @@ public class FragmentCompose extends FragmentBase {
                     Log.unexpectedError(getParentFragmentManager(), ex, !expected);
                 }
             }
-        }.execute(this, args, "compose:s/mime");
+        }.setExecutor(executor).execute(this, args, "compose:s/mime");
     }
 
     private void onContactGroupSelected(Bundle args) {
@@ -3819,12 +3833,8 @@ public class FragmentCompose extends FragmentBase {
                         // Subject
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action)) {
-                            if (prefix_once) {
-                                for (String re : Helper.getStrings(context, ref.language, R.string.title_subject_reply, ""))
-                                    subject = unprefix(subject, re);
-                                for (String re : Helper.getStrings(context, ref.language, R.string.title_subject_reply_alt, ""))
-                                    subject = unprefix(subject, re);
-                            }
+                            if (prefix_once)
+                                subject = collapsePrefixes(context, ref.language, subject, false);
                             data.draft.subject = Helper.getString(context, ref.language, R.string.title_subject_reply, subject);
 
                             String t = args.getString("text");
@@ -3839,12 +3849,8 @@ public class FragmentCompose extends FragmentBase {
                                 document.body().appendChild(div);
                             }
                         } else if ("forward".equals(action)) {
-                            if (prefix_once) {
-                                for (String fwd : Helper.getStrings(context, ref.language, R.string.title_subject_forward, ""))
-                                    subject = unprefix(subject, fwd);
-                                for (String fwd : Helper.getStrings(context, ref.language, R.string.title_subject_forward_alt, ""))
-                                    subject = unprefix(subject, fwd);
-                            }
+                            if (prefix_once)
+                                subject = collapsePrefixes(context, ref.language, subject, true);
                             data.draft.subject = Helper.getString(context, ref.language, R.string.title_subject_forward, subject);
                         } else if ("editasnew".equals(action)) {
                             if (ref.from != null && ref.from.length == 1) {
@@ -3880,8 +3886,17 @@ public class FragmentCompose extends FragmentBase {
                             String[] texts;
                             if (EntityMessage.DSN_HARD_BOUNCE.equals(dsn))
                                 texts = new String[]{context.getString(R.string.title_hard_bounce_text)};
-                            else
-                                texts = Helper.getStrings(context, ref.language, R.string.title_receipt_text);
+                            else {
+                                EntityAnswer receipt = db.answer().getReceiptAnswer();
+                                if (receipt == null)
+                                    texts = Helper.getStrings(context, ref.language, R.string.title_receipt_text);
+                                else {
+                                    texts = new String[0];
+                                    Document d = JsoupEx.parse(receipt.getText(null));
+                                    document.body().append(d.body().html());
+                                }
+                            }
+
                             for (int i = 0; i < texts.length; i++) {
                                 if (i > 0)
                                     document.body()
@@ -5142,7 +5157,10 @@ public class FragmentCompose extends FragmentBase {
                 showDraft(draft);
 
             } else if (action == R.id.action_save) {
-                // Do nothing
+                etBody.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null)
+                    imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
 
             } else if (action == R.id.action_check) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -5253,12 +5271,40 @@ public class FragmentCompose extends FragmentBase {
         getActivity().invalidateOptionsMenu();
     }
 
-    private static String unprefix(String subject, String prefix) {
+    private static String collapsePrefixes(Context context, String language, String subject, boolean forward) {
+        List<Pair<String, Boolean>> prefixes = new ArrayList<>();
+        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply, ""))
+            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
+        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply_alt, ""))
+            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
+        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward, ""))
+            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
+        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward_alt, ""))
+            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
+
+        List<Boolean> scanned = new ArrayList<>();
         subject = subject.trim();
-        prefix = prefix.trim().toLowerCase();
-        while (subject.toLowerCase().startsWith(prefix))
-            subject = subject.substring(prefix.length()).trim();
-        return subject;
+        while (true) {
+            boolean found = false;
+            for (Pair<String, Boolean> prefix : prefixes)
+                if (subject.toLowerCase().startsWith(prefix.first)) {
+                    found = true;
+                    int count = scanned.size();
+                    if (!prefix.second.equals(count == 0 ? forward : scanned.get(count - 1)))
+                        scanned.add(prefix.second);
+                    subject = subject.substring(prefix.first.length()).trim();
+                    break;
+                }
+            if (!found)
+                break;
+        }
+
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < scanned.size(); i++)
+            result.append(context.getString(scanned.get(i) ? R.string.title_subject_forward : R.string.title_subject_reply, ""));
+        result.append(subject);
+
+        return result.toString();
     }
 
     private static void addSignature(Context context, Document document, EntityMessage message, EntityIdentity identity) {
@@ -5836,6 +5882,7 @@ public class FragmentCompose extends FragmentBase {
             final SwitchCompat swSendReminders = dview.findViewById(R.id.swSendReminders);
             final TextView tvSendRemindersHint = dview.findViewById(R.id.tvSendRemindersHint);
             final TextView tvTo = dview.findViewById(R.id.tvTo);
+            final TextView tvViaTitle = dview.findViewById(R.id.tvViaTitle);
             final TextView tvVia = dview.findViewById(R.id.tvVia);
             final CheckBox cbPlainOnly = dview.findViewById(R.id.cbPlainOnly);
             final TextView tvPlainHint = dview.findViewById(R.id.tvPlainHint);
@@ -6129,6 +6176,8 @@ public class FragmentCompose extends FragmentBase {
                                 MessageHelper.formatAddresses(tos, name_email, false), extra));
                     tvTo.setTextColor(Helper.resolveColor(context,
                             to + extra > RECIPIENTS_WARNING ? R.attr.colorWarning : android.R.attr.textColorPrimary));
+                    if (draft.identityColor != null && draft.identityColor != Color.TRANSPARENT)
+                        tvViaTitle.setTextColor(draft.identityColor);
                     tvVia.setText(draft.identityEmail);
 
                     cbPlainOnly.setChecked(draft.plain_only != null && draft.plain_only && !dsn);

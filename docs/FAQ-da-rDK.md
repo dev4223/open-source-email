@@ -303,12 +303,13 @@ Flg. Android-tilladelser kræves:
 * *forgrundstjeneste* (FOREGROUND_SERVICE): For at køre en forgrundstjeneste på Android 9 Pie og senere, se også næste spørgsmål
 * *forhindre enhed i at sove* (WAKE_LOCK): For at holde enheden vågen, mens beskeder synkroniseres
 * *in-app fakturering* (BILLING): For at tillade køb direkte i appen
-* Valgfrit: *Læs dine kontakter* (READ_CONTACTS): For automatisk at udfylde adresser, vise kontaktfotos samt [vælge kontakter](https://developer.android.com/guide/components/intents-common#PickContactDat)
-* Valgfri: *læse indholdet af dit SD-kort* (READ_EXTERNAL_STORAGE): For at acceptere filer fra andre, forældede apps, se også [denne FAQ](#user-content-faq49)
-* Valgfri: *benyt fingeraftrykshardware* (USE_FINGERPRINT) og benyt *biometrisk hardware* (USE_BIOMETRIC): For at benytte biometrisk godkendelse
-* Valgfri: *find konti på enheden* (GET_ACCOUNTS): For at vælge en konto ifm. Gmails hurtig-opsætning
-* Android 5.1 Lollipop og ældre: *Benyt konti på enheden* (USE_CREDENTIALS): For at vælge en konto ifm. Gmails hurtig-opsætning (senere Android-version benytter ikke denne forespørgsel)
-* Android 5.1 Lollipop og ældre: *Læse profil* (READ_PROFILE): For at læse dit navn ifm. Gmails hurtig-opsætning (senere Android-version benytter ikke denne forespørgsel)
+* *planlæg eksakt alarm* (SCHEDULE_EXACT_ALARM): For præcis alarmplanlægning (Android 12 og senere)
+* Valgfrit: *Læs kontakter* (READ_CONTACTS): For automatisk adresseautofuldførelse, kontaktfotovisning samt [kontaktvalg](https://developer.android.com/guide/components/intents-common#PickContactDat)
+* Valgfri: *Læs SD-kortindhold* (READ_EXTERNAL_STORAGE): For at acceptere filer fra andre, forældede apps (tjek også [denne FAQ](#user-content-faq49))
+* Valgfri: Benyt *fingeraftrykshardware* (USE_FINGERPRINT) og *biometrisk hardware* (USE_BIOMETRIC): For at benytte biometrisk godkendelse
+* Valgfri: *Find konti på enheden* (GET_ACCOUNTS): For at vælge en konto ifm. Gmails hurtig-opsæning
+* Op til Android 5.1 Lollipop: *Benyt konti på enheden* (USE_CREDENTIALS): For kontovalg ifm. Gmails hurtigopsætning (senere OS-version benytter ikke denne forespørgsel)
+* Op til Android 5.1 Lollipop: *Læs profil* (READ_PROFILE): For at læse brugerens navn ifm. Gmails hurtigopsætning (senere OS-version benytter ikke denne forespørgsel)
 
 [Valgfrie tilladelser](https://developer.android.com/training/permissions/requesting) understøttes kun på Android 6 Marshmallow og nyere. Tidligere Android-versioner anmoder om at tildele de valgfri tilladelser ved installation af FairEmail.
 
@@ -680,7 +681,7 @@ Note that certificates can contains multiple keys for multiple purposes,  for ex
 
 Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
 
-The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
+The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. Langt tryk på Send-knappen for at ændre en identitets krypteringsmetode. Bruges både PGP- og S/MIME-kryptering for samme e-mailadresse, kan det være nyttigt at kopiere identiteten, så krypteringsmetoden kan ændres ved at vælge en af de to identiteter. Langt tryk på en identitet på identitetslisten (via manuel opsætning i hovedopsætningsskærmen) for at kopiere denne.
 
 To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.
 
@@ -796,7 +797,7 @@ For setting up an Office 365 account, please see [this FAQ](#user-content-faq156
 <a name="faq15"></a>
 **(15) Why does the message text keep loading?**
 
-The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and will be fetched on demand on expanding a message. The message text will keep loading if there is no connection to the account, see also the next question, or if there other operations, like synchronizing messages, are being executed.
+The message header and message body are fetched separately from the server. The message text of larger messages is not being pre-fetched on metered connections and will be fetched on demand on expanding a message. En beskedtekst vil kontinuerligt blive genindlæst ved manglende kontoforbindelse. Tjek også næste spørgsmål, eller hvorvidt andre operationer evt. afvikles.
 
 You can check the account and folder list for the account and folder state (see the legend for the meaning of the icons) and the operation list accessible via the main navigation menu for pending operations (see [this FAQ](#user-content-faq3) for the meaning of the operations).
 
@@ -1565,6 +1566,7 @@ For security reasons the files with the original message texts are not accessibl
 * Did you know that you can long press the trash icons (both in the message and the bottom action bar) to permanently delete a message or conversation? (version 1.1368+)
 * Did you know that you can long press the send action to show the send dialog, even if it was disabled?
 * Did you know that you can long press the full screen icon to show the original message text only?
+* Vidste du, at et langt tryk på svar-knappen muliggør at svare afsenderen? (siden version 1.1562)
 
 <br />
 
@@ -2788,6 +2790,8 @@ An email client is meant to read and write messages, not to backup and restore m
 Instead, the email provider/server is responsible for backups.
 
 If you want to make a backup yourself, you could use a tool like [imapsync](https://imapsync.lamiral.info/).
+
+Since version 1.1556 it is possible to export all messages of a POP3 folder in mbox format according to [RFC4155](https://www.ietf.org/rfc/rfc4155.txt), which might be useful to save sent messages if the email server doesn't.
 
 If you want to import an mbox file to an existing email account, you can use Thunderbird on a desktop computer and the [ImportExportTools](https://addons.thunderbird.net/nl/thunderbird/addon/importexporttools/) add-on.
 

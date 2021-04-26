@@ -11,6 +11,7 @@
     <string name="channel_service">Réception</string>
     <string name="channel_send">Envoi</string>
     <string name="channel_notification">E-mail</string>
+    <string name="channel_progress">Progression</string>
     <string name="channel_update">Mises à jour</string>
     <string name="channel_warning">Avertissements</string>
     <string name="channel_error">Erreurs</string>
@@ -19,6 +20,7 @@
     <string name="channel_service_description">Synchronisation et surveillance des comptes</string>
     <string name="channel_send_description">Envoi des messages</string>
     <string name="channel_notification_description">Notifications de nouveaux messages</string>
+    <string name="channel_progress_description">Notifications d\'avancement des actions de longue durée</string>
     <plurals name="page_conversation">
         <item quantity="one">Conversation</item>
         <item quantity="other">Conversations</item>
@@ -119,8 +121,8 @@
     <string name="title_setup_help">Aide</string>
     <string name="title_setup_quick">Configuration rapide</string>
     <string name="title_setup_intro">La configuration d\'un compte se fait en trois étapes seulement et après cela, vous pouvez envoyer et recevoir des e-mails</string>
-    <string name="title_setup_simple">Il n\'est pas nécessaire de changer d\'autres options</string>
-    <string name="title_setup_quick_accounts">Ajouter des comptes</string>
+    <string name="title_setup_simple">Il n\'est pas nécessaire de modifier d\'autres options</string>
+    <string name="title_setup_quick_accounts">Ajouter ou modifier des comptes</string>
     <string name="title_setup_quick_support">Certains fournisseurs rendent difficile l\'ajout d\'un compte. Ne blâmez pas FairEmail pour ceci mais demandez de l\'aide à la place.</string>
     <string name="title_setup_quick_hint">L’assistant récupérera les informations de configuration de autoconfig.thunderbird.net</string>
     <string name="title_setup_quick_imap">Serveur IMAP pour la réception des messages</string>
@@ -286,6 +288,8 @@
     <string name="title_advanced_download">Télécharger automatiquement les messages et les pièces jointes sur les connexions limitées jusqu’à</string>
     <string name="title_advanced_roaming">Télécharger les messages et les pièces jointes en itinérance</string>
     <string name="title_advanced_rlah">Ignorer l\'itinérance en Europe</string>
+    <string name="title_advanced_download_headers">Télécharger tous les en-têtes de message</string>
+    <string name="title_advanced_download_eml">Télécharger les fichiers de messages bruts</string>
     <string name="title_advanced_validated">Nécessite une connexion validée (vérifiée)</string>
     <string name="title_advanced_timeout">Délai d’expiration de la connexion (secondes)</string>
     <string name="title_advanced_prefer_ip4">Préférer IPv4 à IPv6</string>
@@ -345,7 +349,7 @@
     <string name="title_advanced_overview_mode">Zoomer sur les messages originaux pour les adapter à l\'écran</string>
     <string name="title_advanced_contrast">Utiliser un contraste élevé pour le texte du message</string>
     <string name="title_advanced_monospaced">Utiliser une police à espacement fixe pour le texte du message</string>
-    <string name="title_advanced_monospaced_pre">Utiliser la police à espacement fixe pour le texte préformaté</string>
+    <string name="title_advanced_monospaced_pre">Utiliser une police à espacement fixe pour le texte préformaté</string>
     <string name="title_advanced_text_color">Afficher les couleurs du texte</string>
     <string name="title_advanced_text_size">Utiliser la taille du texte</string>
     <string name="title_advanced_text_font">Utiliser les polices de caractères</string>
@@ -354,6 +358,7 @@
     <string name="title_advanced_collapse_quotes">Replier le texte cité</string>
     <string name="title_advanced_image_placeholders">Afficher les espaces réservés aux images</string>
     <string name="title_advanced_images_inline">Afficher automatiquement les images incluses</string>
+    <string name="title_advanced_button_extra">Afficher des boutons supplémentaires en bas du message</string>
     <string name="title_advanced_seekbar">Indiquer la position relative de la conversation avec un point</string>
     <string name="title_advanced_actionbar">Afficher la barre d\'action de conversation</string>
     <string name="title_advanced_actionbar_color">Utiliser la couleur du compte comme couleur de fond de la barre d’action de conversation</string>
@@ -409,6 +414,7 @@
     <string name="title_advanced_notify_action_reply_direct">Répondre directement</string>
     <string name="title_advanced_notify_action_flag">Suivre</string>
     <string name="title_advanced_notify_action_seen">Marquer lu</string>
+    <string name="title_advanced_notify_action_hide">Masquer</string>
     <string name="title_advanced_notify_action_snooze">Reporter</string>
     <string name="title_advanced_notify_remove">Supprimer les notifications de nouveaux messages en tapant dessus</string>
     <string name="title_advanced_notify_clear">Supprimer les notifications de nouveaux messages lors de la visualisation de la liste des messages</string>
@@ -494,6 +500,7 @@
     <string name="title_advanced_metered_hint">Les connexions limitées sont généralement des connexions mobiles ou des points d\'accès Wi-Fi payants</string>
     <string name="title_advanced_metered_warning">La désactivation de cette option empêchera la réception et l’envoi de messages sur les connexions de données mobiles</string>
     <string name="title_advanced_rlah_hint">Considérer qu’il n’y a pas d’itinérance au sein de l’Union Européenne (Roam Like at Home)</string>
+    <string name="title_advanced_usage_hint">Ceci augmentera l\'utilisation de la batterie, des données et de l\'espace de stockage</string>
     <string name="title_advanced_tcp_keep_alive_hint">Activer ceci peut provoquer des problèmes de connexion sur certains appareils</string>
     <string name="title_advanced_validate_hint">Ceci peut entraîner la non-synchronisation des messages, par exemple lors de l\'utilisation d\'un VPN mais aussi dans d\'autres situations</string>
     <string name="title_advanced_timeout_hint">Le délai d’expiration de la connexion sera doublé s’il reste encore des opérations de lecture/écriture. Des valeurs plus élevées entraîneront une utilisation accrue de la batterie.</string>
@@ -556,6 +563,7 @@
     <string name="title_identity_email">Votre adresse e-mail</string>
     <string name="title_identity_color_hint">Les couleurs d’identité ont la priorité sur les couleurs de dossiers et de comptes</string>
     <string name="title_advanced_sender">Autoriser la modification de l’adresse de l’expéditeur</string>
+    <string name="title_advanced_sender_name">Utiliser le nom lorsque l\'adresse de l\'expéditeur a été modifiée</string>
     <string name="title_advanced_sender_regex">Expression régulière pour faire correspondre le nom d’utilisateur des adresses e-mail entrantes</string>
     <string name="title_identity_reply_to">Répondre à l\'adresse</string>
     <string name="title_identity_unicode">Utiliser le transport Unicode</string>
@@ -572,6 +580,7 @@
     <string name="title_account_interval_hint">Fréquence de rafraîchissement de la connexion pour les messages push ou fréquence de vérification des nouveaux messages</string>
     <string name="title_account_partial_fetch_hint">Désactiver ceci seulement dans le cas de messages vides ou de pièces jointes corrompues</string>
     <string name="title_color">Couleur</string>
+    <string name="title_transparent">Transparent</string>
     <string name="title_account_ondemand">Synchroniser manuellement</string>
     <string name="title_account_notify">Notifications séparées</string>
     <string name="title_account_left">Balayer vers la gauche</string>
@@ -610,7 +619,7 @@
     <string name="title_received_header">Utiliser l\'en-tête « Reçu »</string>
     <string name="title_date_header">Utiliser l\'en-tête « Date » (heure d\'envoi)</string>
     <string name="title_date_remark">Les modifications seront appliquées uniquement aux nouveaux messages</string>
-    <string name="title_related_identity">Ajouter une identité liée</string>
+    <string name="title_related_identity">Ajouter une identité liée (serveur SMTP)</string>
     <string name="title_check">Vérifier</string>
     <string name="title_trust">Faire confiance au certificat du serveur avec l\'empreinte digitale %1$s</string>
     <string name="title_no_name">Nom manquant</string>
@@ -643,6 +652,9 @@
     <string name="title_backoff_until">Attente après l\'échec jusqu\'à : %1$s</string>
     <string name="title_storage_quota">Utilisation du stockage sur le serveur : %1$s/%2$s</string>
     <string name="title_pop_support">Le protocole POP3 prend en charge le téléchargement et la suppression des messages depuis la boîte de réception uniquement. POP3 ne permet pas de marquer les messages comme lus, de les déplacer, etc. POP3 utilisera davantage de batterie et de données qu’IMAP. Par conséquent, envisagez d’utiliser le protocole IMAP lorsque cela est possible.</string>
+    <string name="title_pop_sent">Si votre appareil est perdu ou volé, les messages envoyés pourraient être perdus.</string>
+    <string name="title_pop_warning">Si un serveur POP3 ne prend pas en charge la commande UIDL, l\'utilisation des données peut être élevée. Ajustez donc la fréquence de synchronisation ci-dessous en conséquence.</string>
+    <string name="title_pop_folders">Le protocole POP3 ne permet pas la création de dossiers</string>
     <string name="title_oauth_support">OAuth n\'est pas pris en charge</string>
     <string name="title_review">Récapitulatif</string>
     <string name="title_hint_alias">Appuyer longuement sur une identité pour afficher les options, comme copier afin de créer des identités alias</string>
@@ -665,6 +677,8 @@
     <string name="title_empty_spam">Vider les indésirables</string>
     <string name="title_edit_properties">Modifier les propriétés</string>
     <string name="title_edit_rules">Modifier les règles</string>
+    <string name="title_execute_rules">Exécuter les règles</string>
+    <string name="title_export_messages">Exporter les messages</string>
     <string name="title_create_channel">Créer un canal de notification</string>
     <string name="title_edit_channel">Modifier un canal de notification</string>
     <string name="title_delete_channel">Supprimer un canal de notification</string>
@@ -741,13 +755,14 @@
     <string name="title_duplicate_in">Message en double dans %1$s</string>
     <string name="title_subject_reply">Re: %1$s</string>
     <string name="title_subject_forward">Tr: %1$s</string>
-    <string name="title_subject_reply_alt" comment="title_subject_reply_alt&#10;Alternative reply prefix (for removal only).">Re: %1$s</string>
-    <string name="title_subject_forward_alt" comment="title_subject_forward_alt&#10;Alternative forward prefix (for removal only).">Tr: %1$s</string>
+    <string name="title_subject_reply_alt">Re: %1$s</string>
+    <string name="title_subject_forward_alt">Tr: %1$s</string>
     <string name="title_seen">Marquer comme lu</string>
     <string name="title_unseen">Marquer comme non lu</string>
     <string name="title_toggle_seen">Marquer lu/non lu</string>
     <string name="title_hide">Masquer</string>
     <string name="title_unhide">Afficher</string>
+    <string name="title_toggle_hide">Activer/désactiver masquer</string>
     <string name="title_flag">Marquer comme suivi</string>
     <string name="title_flag_color">Couleur de suivi&#8230;</string>
     <string name="title_unflag">Ne plus marquer comme suivi</string>
@@ -781,6 +796,7 @@
     <string name="title_raw_remaining">Messages bruts à télécharger : %1$d</string>
     <string name="title_ask_raw">Pour transférer des messages, les messages bruts (originaux) doivent être téléchargés depuis le serveur. Ceci nécessite une connexion Internet.</string>
     <string name="title_buttons">Sélectionner les boutons</string>
+    <string name="title_buttons_hint">Les actions réellement disponibles dépendent du type de compte et de la configuration</string>
     <string name="title_configure_buttons">Configurer les boutons&#8230;</string>
     <string name="title_trash">Supprimer</string>
     <string name="title_copy">Copier&#8230;</string>
@@ -810,7 +826,7 @@
     <string name="title_reply_hard_bounce">Envoyer un refus permanent</string>
     <string name="title_reply_template">Répondre avec un modèle</string>
     <string name="title_move_undo">Déplacement vers %1$s (%2$d)</string>
-    <string name="title_open_with">Ouvrir avec</string>
+    <string name="title_open_with">Ouvrir avec&#8230;</string>
     <string name="title_authentication_failed">L\'authentification %1$s a échoué</string>
     <string name="title_receipt_subject">Confirmation de lecture : %1$s</string>
     <string name="title_receipt_text">Cette confirmation atteste seulement que le message a été affiché. Il n\'y a aucune garantie que le destinataire ait lu le contenu du message.</string>
@@ -877,6 +893,7 @@
     <string name="title_via_identity">Via :</string>
     <string name="title_sent">Envoyé :</string>
     <string name="title_received">Reçu :</string>
+    <string name="title_date">Date :</string>
     <string name="title_stored">Stocké :</string>
     <string name="title_size">Taille :</string>
     <string name="title_language">Langue :</string>
@@ -1069,6 +1086,7 @@
     <string name="title_answer_group">Groupe de modèles (optionnel)</string>
     <string name="title_answer_standard">Par défaut</string>
     <string name="title_answer_favorite">Favori</string>
+    <string name="title_answer_receipt" comment="title_answer_receipt&#10;Title for option to use template as read receipt text">Utiliser comme confirmation de lecture</string>
     <string name="title_answer_hide">Masquer du menu « Répondre »</string>
     <string name="title_answer_text">Texte du modèle</string>
     <string name="title_answer_placeholder">Place réservée</string>
@@ -1283,7 +1301,7 @@
     <string name="title_undo">Annuler</string>
     <string name="title_redo">Rétablir</string>
     <string name="title_add">Ajouter</string>
-    <string name="title_browse">Ouvrir avec</string>
+    <string name="title_browse">Ouvrir avec&#8230;</string>
     <string name="title_info">Info</string>
     <string name="title_download">Télécharger</string>
     <string name="title_report">Signaler</string>

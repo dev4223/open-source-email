@@ -84,9 +84,10 @@ public class ActivityWidgetSync extends ActivityBase {
                                 btnColor.setColor(selectedColor);
                             }
                         })
-                        .setNegativeButton(R.string.title_reset, new DialogInterface.OnClickListener() {
+                        .setNegativeButton(R.string.title_transparent, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                cbSemiTransparent.setChecked(false);
                                 btnColor.setColor(Color.TRANSPARENT);
                             }
                         })
@@ -111,6 +112,8 @@ public class ActivityWidgetSync extends ActivityBase {
                 finish();
             }
         });
+
+        btnColor.setColor(Color.TRANSPARENT);
 
         setResult(RESULT_CANCELED, resultValue);
     }

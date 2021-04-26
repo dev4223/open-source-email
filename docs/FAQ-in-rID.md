@@ -2,7 +2,7 @@
 
 # Bantuan FairEmail
 
-If you have a question, please check the following frequently asked questions first. [At the bottom](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support), you can find out how to ask other questions, request features, and report bugs.
+Jika anda memiliki pertanyaan, silahkan terlebih dahulu periksa pertanyaan yang sering diajukan di bawah ini. %Pada bagian bawah%, anda bisa mencari tahu bagaimana menanyakan pertanyaannya lain, memintar fitur, dan melaporkan kesalahan.
 
 Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [Ganz unten erfahren Sie](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-get-support), wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
 
@@ -303,12 +303,13 @@ The following Android permissions are needed:
 * *servis latar depan* (FOREGROUND_SERVICE): untuk menjalankan servis latar depan pada Android 9 Pie dan sebelumnya, lihat juga pertanyaan selanjutnya
 * *mencegah perangkat untuk tidur* (WAKE_LOCK): untuk membuat perangkat tetap terbangun saat mensingkronisasi pesan
 * *penagihan dalam aplikasi* (BILLING): untuk mengizinkan pembelian di dalam aplikasi
+* *schedule exact alarm* (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later)
 * Optional: *read your contacts* (READ_CONTACTS): to auto complete addresses, to show contact photos and [to pick contacts](https://developer.android.com/guide/components/intents-common#PickContactDat)
-* Opsional: *membaca isi dari kartu SD anda* (READ_EXTERNAL_STORAGE): untuk meneruma berkas dari yang lain, aplikasi yang telah kadauwarsa, lihat juga [FAQ ini](#user-content-faq49)
-* Opsional: *gunakan perangkat sidik jari* (USE_FINGERPRINT) dan gunakan *perangkat biometrik* (USE_BIOMETRIC): untuk menggunakan autentikasi biometrik
-* Opsional: *cari akun di perangkat* (GET_ACCOUNTS): untuk memilih akun ketika menggunakan pengaturan cepat Gmail
-* Android 5.1 Lollipop dan sebelumnya: *gunakan akun di perangkat* (USE_CREDENTIALS): untuk memilih akun saat menggunakan pengaturan cepat Gmail (tidak dapat digunakan dalam versi Android yang lebih lama)
-* Android 5.1 Lollipop dan sebelumnya: *membaca profil* (READ_PROFILE): untuk membaca nama saat menggunakan saat menggunakan pengaturan cepat Gmail (tidak dapat digunakan dalam versi Android yang lebih lama)
+* Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
+* Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
+* Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
+* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)
+* Android 5.1 Lollipop and before: *Read profile* (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)
 
 [Optional permissions](https://developer.android.com/training/permissions/requesting) are supported on Android 6 Marshmallow and later only. On earlier Android versions you will be asked to grant the optional permissions on installing FairEmail.
 
@@ -680,7 +681,7 @@ Note that certificates can contains multiple keys for multiple purposes,  for ex
 
 Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
 
-The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You might need to enable the send options in the three dots menu again to be able to select the encryption method.
+The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You can long press on the send button to change the encryption method for an identity. If you use both PGP and S/MIME encryption for the same email address, it might be useful to copy the identity, so you can change the encryption method by selecting one of the two identities. You can long press an identity in the list of identities (via manual setup in the main setup screen) to copy an identity.
 
 To allow different private keys for the same email address, FairEmail will always let you select a key when there are multiple identities with the same email address for the same account.
 
@@ -1565,6 +1566,7 @@ For security reasons the files with the original message texts are not accessibl
 * Did you know that you can long press the trash icons (both in the message and the bottom action bar) to permanently delete a message or conversation? (version 1.1368+)
 * Did you know that you can long press the send action to show the send dialog, even if it was disabled?
 * Did you know that you can long press the full screen icon to show the original message text only?
+* Did you know that you can long press the answer button to reply to the sender? (since version 1.1562)
 
 <br />
 
@@ -2788,6 +2790,8 @@ An email client is meant to read and write messages, not to backup and restore m
 Instead, the email provider/server is responsible for backups.
 
 If you want to make a backup yourself, you could use a tool like [imapsync](https://imapsync.lamiral.info/).
+
+Since version 1.1556 it is possible to export all messages of a POP3 folder in mbox format according to [RFC4155](https://www.ietf.org/rfc/rfc4155.txt), which might be useful to save sent messages if the email server doesn't.
 
 If you want to import an mbox file to an existing email account, you can use Thunderbird on a desktop computer and the [ImportExportTools](https://addons.thunderbird.net/nl/thunderbird/addon/importexporttools/) add-on.
 
