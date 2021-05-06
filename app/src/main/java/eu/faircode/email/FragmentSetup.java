@@ -45,7 +45,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -92,6 +91,7 @@ public class FragmentSetup extends FragmentBase {
     private Button btnInbox;
 
     private Group grpManual;
+    private Group grpDoze;
     private Group grpBackgroundRestricted;
     private Group grpDataSaver;
 
@@ -157,6 +157,7 @@ public class FragmentSetup extends FragmentBase {
         btnInbox = view.findViewById(R.id.btnInbox);
 
         grpManual = view.findViewById(R.id.grpManual);
+        grpDoze = view.findViewById(R.id.grpDoze);
         grpBackgroundRestricted = view.findViewById(R.id.grpBackgroundRestricted);
         grpDataSaver = view.findViewById(R.id.grpDataSaver);
 
@@ -180,7 +181,6 @@ public class FragmentSetup extends FragmentBase {
 
                 int order = 1;
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_gmail, order++, R.string.title_setup_gmail);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_outlook, order++, R.string.title_setup_outlook);
 
                 for (EmailProvider provider : EmailProvider.loadProfiles(getContext()))
                     if (provider.oauth != null &&
@@ -192,7 +192,6 @@ public class FragmentSetup extends FragmentBase {
                                         .putExtra("name", provider.name)
                                         .putExtra("askAccount", provider.oauth.askAccount));
 
-                //popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_activesync, order++, R.string.title_setup_activesync);
                 popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_other, order++, R.string.title_setup_other);
 
                 SpannableString ss = new SpannableString(getString(R.string.title_setup_pop3));
@@ -203,30 +202,49 @@ public class FragmentSetup extends FragmentBase {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
+
                         int itemId = item.getItemId();
                         if (itemId == R.string.title_setup_gmail) {
                             if (Helper.hasValidFingerprint(getContext()) || BuildConfig.DEBUG)
                                 lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_GMAIL));
                             else
-                                ToastEx.makeText(getContext(), R.string.title_setup_gmail_support, Toast.LENGTH_LONG).show();
+                                new AlertDialog.Builder(getContext())
+                                        .setTitle(item.getTitle())
+                                        .setMessage(R.string.title_setup_gmail_support)
+                                        .setNeutralButton(R.string.title_info, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Helper.viewFAQ(getContext(), 6);
+                                            }
+                                        })
+                                        .setNegativeButton(android.R.string.cancel, null)
+                                        .show();
                             return true;
-                        } else if (itemId == R.string.title_setup_activesync) {
-                            Helper.viewFAQ(getContext(), 133);
-                            return true;
-                        } else if (itemId == R.string.title_setup_outlook || itemId == R.string.title_setup_other) {
+                        } else if (itemId == R.string.title_setup_other) {
                             lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_SETUP));
                             return true;
                         } else if (itemId == R.string.title_setup_pop3) {
                             lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_POP3));
                             return true;
                         }
+
                         if (item.getIntent() == null)
                             return false;
                         else {
                             if (Helper.hasValidFingerprint(getContext()) || BuildConfig.DEBUG)
                                 lbm.sendBroadcast(item.getIntent());
                             else
-                                ToastEx.makeText(getContext(), R.string.title_setup_oauth_permission, Toast.LENGTH_LONG).show();
+                                new AlertDialog.Builder(getContext())
+                                        .setTitle(item.getTitle())
+                                        .setMessage(R.string.title_setup_oauth_permission)
+                                        .setNeutralButton(R.string.title_info, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Helper.viewFAQ(getContext(), 147);
+                                            }
+                                        })
+                                        .setNegativeButton(android.R.string.cancel, null)
+                                        .show();
                             return true;
                         }
                     }
@@ -387,6 +405,7 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox.setEnabled(false);
 
+        grpDoze.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? View.GONE : View.VISIBLE);
         grpBackgroundRestricted.setVisibility(View.GONE);
         grpDataSaver.setVisibility(View.GONE);
 
@@ -464,26 +483,23 @@ public class FragmentSetup extends FragmentBase {
         super.onResume();
 
         // Doze
-        Boolean ignoring = true;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Boolean ignoring = Helper.isIgnoringOptimizations(getContext());
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
+            btnDoze.setEnabled(false);
+        else {
             Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             PackageManager pm = getContext().getPackageManager();
-            if (intent.resolveActivity(pm) != null) { // system whitelisted
-                ignoring = Helper.isIgnoringOptimizations(getContext());
-                if (ignoring == null)
-                    ignoring = true;
-            }
+            if (intent.resolveActivity(pm) == null)
+                btnDoze.setEnabled(false);
+            else
+                btnDoze.setEnabled((ignoring != null && !ignoring) || BuildConfig.DEBUG);
         }
 
-        btnDoze.setEnabled(!ignoring);
-
-        // https://issuetracker.google.com/issues/37070074
-        //ignoring = (ignoring || Build.VERSION.SDK_INT != Build.VERSION_CODES.M);
-
-        tvDozeDone.setText(ignoring ? R.string.title_setup_done : R.string.title_setup_to_do);
-        tvDozeDone.setTextColor(ignoring ? textColorPrimary : colorWarning);
-        tvDozeDone.setTypeface(null, ignoring ? Typeface.NORMAL : Typeface.BOLD);
-        tvDozeDone.setCompoundDrawablesWithIntrinsicBounds(ignoring ? check : null, null, null, null);
+        tvDozeDone.setText(ignoring == null || ignoring ? R.string.title_setup_done : R.string.title_setup_to_do);
+        tvDozeDone.setTextColor(ignoring == null || ignoring ? textColorPrimary : colorWarning);
+        tvDozeDone.setTypeface(null, ignoring == null || ignoring ? Typeface.NORMAL : Typeface.BOLD);
+        tvDozeDone.setCompoundDrawablesWithIntrinsicBounds(ignoring == null || ignoring ? check : null, null, null, null);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             ActivityManager am = (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
