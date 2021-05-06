@@ -36,13 +36,13 @@ import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextDirectionHeuristics;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.AlignmentSpan;
 import android.text.style.BulletSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
-import android.text.style.LeadingMarginSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.ReplacementSpan;
@@ -133,8 +133,6 @@ public class HtmlHelper {
     private static final int SMALL_IMAGE_SIZE = 5; // pixels
     private static final int TRACKING_PIXEL_SURFACE = 25; // pixels
     private static final float[] HEADING_SIZES = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f};
-    private static String WHITESPACE = " \t\f";
-    private static String WHITESPACE_NL = WHITESPACE + "\r\n";
     private static final String LINE = "----------------------------------------";
     private static final HashMap<String, Integer> x11ColorMap = new HashMap<>();
 
@@ -970,10 +968,14 @@ public class HtmlHelper {
         // Lists
         for (Element e : document.select("ol,ul,blockquote")) {
             if (view) {
-                if (!"false".equals(e.attr("x-line-before")))
-                    e.attr("x-line-before", "true");
-                if (!"false".equals(e.attr("x-line-after")))
-                    e.attr("x-line-after", "true");
+                Element parent = e.parent();
+                if ("blockquote".equals(e.tagName()) || parent == null ||
+                        !("ol".equals(parent.tagName()) || "ul".equals(parent.tagName()))) {
+                    if (!"false".equals(e.attr("x-line-before")))
+                        e.attr("x-line-before", "true");
+                    if (!"false".equals(e.attr("x-line-after")))
+                        e.attr("x-line-after", "true");
+                }
             } else {
                 String style = e.attr("style");
                 e.attr("style",
@@ -1740,7 +1742,7 @@ public class HtmlHelper {
                 for (int i = 0; i < param.length; i++) {
                     String[] kv = param[i].split("=");
                     if (kv.length == 2) {
-                        switch (kv[0].replace(" ", "").toLowerCase()) {
+                        switch (kv[0].replace(" ", "").toLowerCase(Locale.ROOT)) {
                             case "user-scalable":
                                 kv[1] = "yes";
                                 param[i] = TextUtils.join("=", kv);
@@ -1912,12 +1914,21 @@ public class HtmlHelper {
 
         for (BulletSpan span : ssb.getSpans(0, ssb.length(), BulletSpan.class)) {
             int start = ssb.getSpanStart(span);
-            ssb.insert(start, "* ");
-        }
-
-        for (NumberSpan span : ssb.getSpans(0, ssb.length(), NumberSpan.class)) {
-            int start = ssb.getSpanStart(span);
-            ssb.insert(start, "- ");
+            if (span instanceof NumberSpan) {
+                NumberSpan ns = (NumberSpan) span;
+                ssb.insert(start, ns.getIndex() + ". ");
+                int level = ns.getLevel();
+                for (int l = 1; l <= level; l++)
+                    ssb.insert(start, "\t");
+            } else {
+                ssb.insert(start, "* ");
+                if (span instanceof BulletSpanEx) {
+                    BulletSpanEx bs = (BulletSpanEx) span;
+                    int level = bs.getLevel();
+                    for (int l = 1; l <= level; l++)
+                        ssb.insert(start, "\t");
+                }
+            }
         }
 
         return ssb.toString();
@@ -2037,8 +2048,7 @@ public class HtmlHelper {
             private int plain = 0;
             private List<TextNode> block = new ArrayList<>();
 
-            private Pattern TRIM_WHITESPACE_NL =
-                    Pattern.compile("[" + WHITESPACE + "]*\\r?\\n[" + WHITESPACE + "]*");
+            private final Pattern FOLD_WHITESPACE = Pattern.compile("[ \t\f\r\n]+");
 
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
 
@@ -2078,13 +2088,9 @@ public class HtmlHelper {
                 // https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace
                 TextNode tnode;
                 String text;
-                int index;
                 for (int i = 0; i < block.size(); ) {
                     tnode = block.get(i);
                     text = tnode.getWholeText();
-
-                    // Remove whitespace before/after newlines
-                    text = TRIM_WHITESPACE_NL.matcher(text).replaceAll(" ");
 
                     if ("-- ".equals(text)) {
                         tnode.text(text);
@@ -2092,23 +2098,17 @@ public class HtmlHelper {
                         continue;
                     }
 
-                    // Remove leading whitespace
-                    if (i == 0 || endsWithWhitespace(block.get(i - 1).text())) {
-                        index = 0;
-                        while (isWhiteSpace(text, index))
-                            index++;
+                    // Fold white space
+                    text = FOLD_WHITESPACE.matcher(text).replaceAll(" ");
 
-                        if (index > 0)
-                            text = text.substring(index);
-                    }
+                    // Conditionally remove leading whitespace
+                    if (isSpace(text, 0) &&
+                            (i == 0 || endsWithSpace(block.get(i - 1).text())))
+                        text = text.substring(1);
 
-                    // Remove multiple trailing whitespace
-                    index = text.length() - 1;
-                    while (isWhiteSpace(text, index) &&
-                            (isWhiteSpace(text, index - 1) || i == block.size() - 1))
-                        index--;
-
-                    text = text.substring(0, index + 1);
+                    // Conditionally remove trailing whitespace
+                    if (i == block.size() - 1 && endsWithSpace(text))
+                        text = text.substring(0, text.length() - 1);
 
                     tnode.text(text);
 
@@ -2118,23 +2118,13 @@ public class HtmlHelper {
                         i++;
                 }
 
-                // Remove last trailing whitespace
-                if (block.size() > 0) {
-                    tnode = block.get(block.size() - 1);
-                    text = tnode.getWholeText();
-                    if (!"-- ".equals(text) && endsWithWhitespace(text)) {
-                        text = text.substring(0, text.length() - 1);
-                        tnode.text(text);
-                    }
-                }
-
-                // Remove blank blocks
+                // Remove all blank blocks
                 boolean blank = true;
                 for (int i = 0; i < block.size(); i++) {
                     text = block.get(i).getWholeText();
                     for (int j = 0; j < text.length(); j++) {
                         char kar = text.charAt(j);
-                        if (WHITESPACE.indexOf(kar) < 0) {
+                        if (kar != ' ') {
                             blank = false;
                             break;
                         }
@@ -2154,15 +2144,14 @@ public class HtmlHelper {
                 }
             }
 
-            boolean isWhiteSpace(String text, int index) {
+            boolean isSpace(String text, int index) {
                 if (index < 0 || index >= text.length())
                     return false;
-                char kar = text.charAt(index);
-                return (WHITESPACE_NL.indexOf(kar) >= 0);
+                return (text.charAt(index) == ' ');
             }
 
-            boolean endsWithWhitespace(String text) {
-                return isWhiteSpace(text, text.length() - 1);
+            boolean endsWithSpace(String text) {
+                return isSpace(text, text.length() - 1);
             }
         }, document.body());
 
@@ -2260,7 +2249,7 @@ public class HtmlHelper {
                                 case "text-align":
                                     // https://developer.mozilla.org/en-US/docs/Web/CSS/text-align
                                     Layout.Alignment alignment = null;
-                                    boolean rtl = Helper.isRtl(ssb.subSequence(start, ssb.length()).toString());
+                                    boolean rtl = TextDirectionHeuristics.FIRSTSTRONG_LTR.isRtl(ssb, start, ssb.length() - start);
                                     switch (value) {
                                         case "left":
                                         case "start":
@@ -2391,23 +2380,32 @@ public class HtmlHelper {
                                 if (ssb.length() == 0 || ssb.charAt(ssb.length() - 1) != '\n')
                                     ssb.append("\n");
 
+                                int level = 0;
+                                Element type = null;
                                 Element parent = element.parent();
-                                while (parent != null &&
-                                        !"ol".equals(parent.tagName()) &&
-                                        !"ul".equals(parent.tagName()))
+                                while (parent != null) {
+                                    if ("ol".equals(parent.tagName()) || "ul".equals(parent.tagName())) {
+                                        level++;
+                                        if (type == null)
+                                            type = parent;
+                                    }
                                     parent = parent.parent();
-                                if (parent == null || "ul".equals(parent.tagName()))
+                                }
+                                if (level > 0)
+                                    level--;
+
+                                if (type == null || "ul".equals(type.tagName())) {
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                        setSpan(ssb, new BulletSpan(dp6, colorAccent), start, ssb.length());
+                                        setSpan(ssb, new BulletSpanEx(dp24, dp6, colorAccent, level), start, ssb.length());
                                     else
-                                        setSpan(ssb, new BulletSpan(dp6, colorAccent, dp3), start, ssb.length());
-                                else {
+                                        setSpan(ssb, new BulletSpanEx(dp24, dp6, colorAccent, dp3, level), start, ssb.length());
+                                } else {
                                     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ol
                                     int index = 0;
-                                    String s = parent.attr("start");
+                                    String s = type.attr("start");
                                     if (!TextUtils.isEmpty(s) && TextUtils.isDigitsOnly(s))
                                         index = Integer.parseInt(s) - 1;
-                                    for (Node child : parent.childNodes()) {
+                                    for (Node child : type.childNodes()) {
                                         if (child instanceof Element &&
                                                 child.nodeName().equals(element.tagName())) {
                                             index++;
@@ -2416,8 +2414,9 @@ public class HtmlHelper {
                                         }
                                     }
 
-                                    setSpan(ssb, new NumberSpan(dp6, colorAccent, textSize, index), start, ssb.length());
+                                    setSpan(ssb, new NumberSpan(dp24, dp6, colorAccent, textSize, level, index), start, ssb.length());
                                 }
+
                                 break;
                             case "pre":
                                 // Signature
@@ -2428,15 +2427,6 @@ public class HtmlHelper {
                                 break;
                             case "ol":
                             case "ul":
-                                int llevel = 0;
-                                Element lparent = element.parent();
-                                while (lparent != null) {
-                                    if ("ol".equals(lparent.tagName()) || "ul".equals(lparent.tagName()))
-                                        llevel++;
-                                    lparent = lparent.parent();
-                                }
-                                if (llevel > 0)
-                                    setSpan(ssb, new LeadingMarginSpan.Standard(llevel * dp24), start, ssb.length());
                                 break;
                             case "meta":
                                 // Signature
@@ -2548,7 +2538,7 @@ public class HtmlHelper {
                     ssb.replace(i, i + 1, "_");
                 else if (kar == '\u00A0')
                     ssb.replace(i, i + 1, "•");
-                else if (!Character.isLetterOrDigit(kar))
+                else if (!Helper.isPrintableChar(kar))
                     ssb.replace(i, i + 1, "{" + Integer.toHexString(kar) + "}");
             }
 

@@ -56,14 +56,18 @@ public interface DaoAnswer {
     LiveData<List<EntityAnswer>> liveAnswers();
 
     @Query("SELECT COUNT(*) FROM answer" +
-            " WHERE NOT hide")
-    Integer getAnswerCount();
+            " WHERE NOT hide" +
+            " AND (:favorite OR NOT favorite)")
+    Integer getAnswerCount(boolean favorite);
 
     @Insert
     long insertAnswer(EntityAnswer answer);
 
     @Update
     int updateAnswer(EntityAnswer answer);
+
+    @Query("UPDATE answer SET favorite = :favorite WHERE id = :id AND NOT (favorite IS :favorite)")
+    int setAnswerFavorite(long id, boolean favorite);
 
     @Query("UPDATE answer SET hide = :hide WHERE id = :id AND NOT (hide IS :hide)")
     int setAnswerHidden(long id, boolean hide);

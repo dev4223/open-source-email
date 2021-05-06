@@ -40,7 +40,6 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.AlarmManagerCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.Person;
 import androidx.core.app.RemoteInput;
@@ -68,6 +67,7 @@ import com.sun.mail.imap.protocol.UID;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.pop3.POP3Message;
 import com.sun.mail.pop3.POP3Store;
+import com.sun.mail.util.MessageRemovedIOException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -186,6 +186,9 @@ class Core {
 
             DB db = DB.getInstance(context);
 
+            NotificationManager nm =
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
             int retry = 0;
             boolean group = true;
             Log.i(folder.name + " executing operations=" + ops.size());
@@ -202,6 +205,10 @@ class Core {
                             " args=" + op.args +
                             " group=" + group +
                             " retry=" + retry);
+
+                    if (EntityOperation.HEADERS.equals(op.name) ||
+                            EntityOperation.RAW.equals(op.name))
+                        nm.cancel(op.name + ":" + op.message, 1);
 
                     if (!Objects.equals(folder.id, op.folder))
                         throw new IllegalArgumentException("Invalid folder=" + folder.id + "/" + op.folder);
@@ -488,6 +495,7 @@ class Core {
 
                             if (message != null &&
                                     !EntityOperation.FETCH.equals(op.name) &&
+                                    !EntityOperation.ATTACHMENT.equals(op.name) &&
                                     !(ex instanceof IllegalArgumentException))
                                 db.message().setMessageError(message.id, op.error);
 
@@ -513,6 +521,8 @@ class Core {
                                         (ex.getCause() instanceof BadCommandException ||
                                                 ex.getCause() instanceof CommandFailedException /* NO */)) ||
                                 MessageHelper.isRemoved(ex) ||
+                                EntityOperation.HEADERS.equals(op.name) ||
+                                EntityOperation.RAW.equals(op.name) ||
                                 EntityOperation.ATTACHMENT.equals(op.name) ||
                                 (EntityOperation.ADD.equals(op.name) &&
                                         EntityFolder.DRAFTS.equals(folder.type))) {
@@ -600,6 +610,18 @@ class Core {
                             }
 
                             ops.remove(op);
+
+                            int resid = context.getResources().getIdentifier(
+                                    "title_op_title_" + op.name,
+                                    "string",
+                                    context.getPackageName());
+                            String title = (resid == 0 ? null : context.getString(resid));
+                            if (title != null) {
+                                NotificationCompat.Builder builder =
+                                        getNotificationError(context, "warning", title, ex);
+                                nm.notify(op.name + ":" + op.message, 1, builder.build());
+                            }
+
                         } else {
                             retry++;
                             if (retry < LOCAL_RETRY_MAX &&
@@ -1408,7 +1430,7 @@ class Core {
             } finally {
                 ((IMAPMessage) imessage).invalidateHeaders();
             }
-        } catch (MessageRemovedException ex) {
+        } catch (MessageRemovedException | MessageRemovedIOException ex) {
             Log.i(ex);
 
             if (account.isGmail() && EntityFolder.USER.equals(folder.type)) {
@@ -1750,7 +1772,7 @@ class Core {
                     context, ServiceSend.PI_EXISTS, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            AlarmManagerCompat.setAndAllowWhileIdle(am, AlarmManager.RTC_WAKEUP, next, piExists);
+            AlarmManagerCompatEx.setAndAllowWhileIdle(context, am, AlarmManager.RTC_WAKEUP, next, piExists);
             return;
         }
 
@@ -2701,9 +2723,11 @@ class Core {
                             uids.remove(ifolder.getUID(imessages[i]));
                     } catch (MessageRemovedException ex) {
                         Log.w(folder.name, ex);
+                    } catch (FolderClosedException ex) {
+                        throw ex;
                     } catch (Throwable ex) {
                         Log.e(folder.name, ex);
-                        EntityLog.log(context, folder.name + " " + Log.formatThrowable(ex, false));
+                        EntityLog.log(context, folder.name + " expunge " + Log.formatThrowable(ex, false));
                         db.folder().setFolderError(folder.id, Log.formatThrowable(ex));
                     }
 
@@ -3997,13 +4021,13 @@ class Core {
 
             if (notifications.size() == 0) {
                 String tag = "unseen." + group + "." + 0;
-                Log.i("Notify cancel tag=" + tag);
+                EntityLog.log(context, "Notify cancel tag=" + tag);
                 nm.cancel(tag, 1);
             }
 
             for (Long id : remove) {
                 String tag = "unseen." + group + "." + Math.abs(id);
-                Log.i("Notify cancel tag=" + tag + " id=" + id);
+                EntityLog.log(context, "Notify cancel tag=" + tag + " id=" + id);
                 nm.cancel(tag, 1);
 
                 data.groupNotifying.get(group).remove(id);

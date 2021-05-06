@@ -1501,13 +1501,14 @@ public class Log {
 
         // Get version info
         String installer = context.getPackageManager().getInstallerPackageName(BuildConfig.APPLICATION_ID);
-        sb.append(String.format("%s: %s/%s %s/%s%s%s%s\r\n",
+        sb.append(String.format("%s: %s/%s %s/%s%s%s%s%s\r\n",
                 context.getString(R.string.app_name),
                 BuildConfig.APPLICATION_ID,
                 installer,
                 BuildConfig.VERSION_NAME,
                 Helper.hasValidFingerprint(context) ? "1" : "3",
                 BuildConfig.PLAY_STORE_RELEASE ? "p" : "",
+                Helper.hasPlayStore(context) ? "s" : "",
                 BuildConfig.DEBUG ? "d" : "",
                 ActivityBilling.isPro(context) ? "+" : ""));
         sb.append(String.format("Android: %s (SDK %d)\r\n", Build.VERSION.RELEASE, Build.VERSION.SDK_INT));
@@ -1679,7 +1680,13 @@ public class Log {
         File file = attachment.getFile(context);
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file))) {
             List<EntityAccount> accounts = db.account().getAccounts();
-            size += write(os, "accounts=" + accounts.size() + "\r\n\r\n");
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean enabled = prefs.getBoolean("enabled", true);
+            int pollInterval = ServiceSynchronize.getPollInterval(context);
+
+            size += write(os, "accounts=" + accounts.size() +
+                    " enabled=" + enabled +
+                    " interval=" + pollInterval + "\r\n\r\n");
 
             for (EntityAccount account : accounts) {
                 if (account.synchronize) {

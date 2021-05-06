@@ -19,7 +19,6 @@ package eu.faircode.email;
     Copyright 2018-2021 by Marcel Bokhorst (M66B)
 */
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -27,8 +26,6 @@ import android.graphics.Typeface;
 import android.os.Build;
 import android.text.Editable;
 import android.text.Layout;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.AlignmentSpan;
@@ -48,7 +45,6 @@ import android.util.Pair;
 import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
 import androidx.appcompat.widget.PopupMenu;
@@ -68,57 +64,55 @@ public class StyleHelper {
         Log.i("Style action=" + action);
 
         try {
-            int start = etBody.getSelectionStart();
-            int end = etBody.getSelectionEnd();
+            int _start = etBody.getSelectionStart();
+            int _end = etBody.getSelectionEnd();
 
-            if (start < 0)
-                start = 0;
-            if (end < 0)
-                end = 0;
+            if (_start < 0)
+                _start = 0;
+            if (_end < 0)
+                _end = 0;
 
-            if (start > end) {
-                int tmp = start;
-                start = end;
-                end = tmp;
+            if (_start > _end) {
+                int tmp = _start;
+                _start = _end;
+                _end = tmp;
             }
 
-            SpannableString ss = new SpannableString(etBody.getText());
+            final Editable edit = etBody.getText();
+            final int start = _start;
+            final int end = _end;
 
             if (action == R.id.menu_bold || action == R.id.menu_italic) {
                 int style = (action == R.id.menu_bold ? Typeface.BOLD : Typeface.ITALIC);
                 boolean has = false;
-                for (StyleSpan span : ss.getSpans(start, end, StyleSpan.class))
+                for (StyleSpan span : edit.getSpans(start, end, StyleSpan.class))
                     if (span.getStyle() == style) {
                         has = true;
-                        ss.removeSpan(span);
+                        edit.removeSpan(span);
                     }
 
                 if (!has)
-                    ss.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    edit.setSpan(new StyleSpan(style), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                etBody.setText(ss);
+                etBody.setText(edit);
                 etBody.setSelection(start, end);
 
                 return true;
             } else if (action == R.id.menu_underline) {
                 boolean has = false;
-                for (UnderlineSpan span : ss.getSpans(start, end, UnderlineSpan.class)) {
+                for (UnderlineSpan span : edit.getSpans(start, end, UnderlineSpan.class)) {
                     has = true;
-                    ss.removeSpan(span);
+                    edit.removeSpan(span);
                 }
 
                 if (!has)
-                    ss.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    edit.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                etBody.setText(ss);
+                etBody.setText(edit);
                 etBody.setSelection(start, end);
 
                 return true;
             } else if (action == R.id.menu_style) {
-                final int s = start;
-                final int e = end;
-                final SpannableStringBuilder t = new SpannableStringBuilder(ss);
-
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(anchor.getContext(), owner, anchor);
                 popupMenu.inflate(R.menu.popup_style);
 
@@ -127,6 +121,16 @@ public class StyleHelper {
                 for (int i = 0; i < fontNames.length; i++)
                     smenu.add(R.id.group_style_font, i, 0, fontNames[i]);
                 smenu.add(R.id.group_style_font, fontNames.length, 0, R.string.title_style_font_default);
+
+                int level = -1;
+                BulletSpan[] spans = edit.getSpans(start, end, BulletSpan.class);
+                for (BulletSpan span : spans)
+                    if (span instanceof NumberSpan)
+                        level = ((NumberSpan) span).getLevel();
+                    else if (span instanceof BulletSpanEx)
+                        level = ((BulletSpanEx) span).getLevel();
+                popupMenu.getMenu().findItem(R.id.menu_style_list_increase).setVisible(level >= 0);
+                popupMenu.getMenu().findItem(R.id.menu_style_list_decrease).setVisible(level > 0);
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
@@ -140,7 +144,11 @@ public class StyleHelper {
                             } else if (groupId == R.id.group_style_align) {
                                 return setAlignment(item);
                             } else if (groupId == R.id.group_style_list) {
-                                return setList(item);
+                                if (item.getItemId() == R.id.menu_style_list_increase ||
+                                        item.getItemId() == R.id.menu_style_list_decrease)
+                                    return setListLevel(item);
+                                else
+                                    return setList(item);
                             } else if (groupId == R.id.group_style_font) {
                                 return setFont(item);
                             } else if (groupId == R.id.group_style_blockquote) {
@@ -158,9 +166,9 @@ public class StyleHelper {
                     }
 
                     private boolean setSize(MenuItem item) {
-                        RelativeSizeSpan[] spans = t.getSpans(s, e, RelativeSizeSpan.class);
+                        RelativeSizeSpan[] spans = edit.getSpans(start, end, RelativeSizeSpan.class);
                         for (RelativeSizeSpan span : spans)
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
 
                         Float size;
                         if (item.getItemId() == R.id.menu_style_size_small)
@@ -171,18 +179,16 @@ public class StyleHelper {
                             size = null;
 
                         if (size != null)
-                            t.setSpan(new RelativeSizeSpan(size), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            edit.setSpan(new RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                        etBody.setText(t);
-                        etBody.setSelection(s, e);
+                        etBody.setText(edit);
+                        etBody.setSelection(start, end);
 
                         return true;
                     }
 
                     private boolean setColor(MenuItem item) {
-                        InputMethodManager imm = (InputMethodManager) etBody.getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
-                        if (imm != null)
-                            imm.hideSoftInputFromWindow(etBody.getWindowToken(), 0);
+                        Helper.hideKeyboard(etBody);
 
                         Context context = etBody.getContext();
                         int editTextColor = Helper.resolveColor(context, android.R.attr.editTextColor);
@@ -214,24 +220,24 @@ public class StyleHelper {
                     }
 
                     private void _setColor(Integer color) {
-                        for (ForegroundColorSpan span : t.getSpans(s, e, ForegroundColorSpan.class))
-                            t.removeSpan(span);
+                        for (ForegroundColorSpan span : edit.getSpans(start, end, ForegroundColorSpan.class))
+                            edit.removeSpan(span);
 
                         if (color != null)
-                            t.setSpan(new ForegroundColorSpan(color), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            edit.setSpan(new ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                        etBody.setText(t);
-                        etBody.setSelection(s, e);
+                        etBody.setText(edit);
+                        etBody.setSelection(start, end);
                     }
 
                     private boolean setAlignment(MenuItem item) {
-                        Pair<Integer, Integer> paragraph = ensureParagraph(t, s, e);
-                        int start = paragraph.first;
-                        int end = paragraph.second;
+                        Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        int s = paragraph.first;
+                        int e = paragraph.second;
 
-                        AlignmentSpan[] spans = t.getSpans(start, end, AlignmentSpan.class);
+                        AlignmentSpan[] spans = edit.getSpans(s, e, AlignmentSpan.class);
                         for (AlignmentSpan span : spans)
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
 
                         Layout.Alignment alignment = null;
                         boolean ltr = (TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_LTR);
@@ -245,10 +251,35 @@ public class StyleHelper {
                         }
 
                         if (alignment != null)
-                            t.setSpan(new AlignmentSpan.Standard(alignment),
-                                    start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
+                            edit.setSpan(new AlignmentSpan.Standard(alignment),
+                                    s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
 
-                        etBody.setText(t);
+                        etBody.setText(edit);
+                        etBody.setSelection(s, e);
+
+                        return true;
+                    }
+
+                    private boolean setListLevel(MenuItem item) {
+                        Context context = etBody.getContext();
+                        int add = (item.getItemId() == R.id.menu_style_list_increase ? 1 : -1);
+
+                        boolean renum = false;
+                        BulletSpan[] spans = edit.getSpans(start, end, BulletSpan.class);
+                        for (BulletSpan span : spans)
+                            if (span instanceof BulletSpanEx) {
+                                BulletSpanEx bs = (BulletSpanEx) span;
+                                bs.setLevel(bs.getLevel() + add);
+                            } else if (span instanceof NumberSpan) {
+                                renum = true;
+                                NumberSpan ns = (NumberSpan) span;
+                                ns.setLevel(ns.getLevel() + add);
+                            }
+
+                        if (renum)
+                            renumber(edit, false, context);
+
+                        etBody.setText(edit);
                         etBody.setSelection(start, end);
 
                         return true;
@@ -260,59 +291,62 @@ public class StyleHelper {
                         int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
                         int dp3 = Helper.dp2pixels(context, 3);
                         int dp6 = Helper.dp2pixels(context, 6);
+                        int dp24 = Helper.dp2pixels(context, 24);
 
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
                         int message_zoom = prefs.getInt("message_zoom", 100);
                         float textSize = Helper.getTextSize(context, 0) * message_zoom / 100f;
 
-                        Pair<Integer, Integer> paragraph = ensureParagraph(t, s, e);
-                        int start = paragraph.first;
-                        int end = paragraph.second;
+                        Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        int s = paragraph.first;
+                        int e = paragraph.second;
 
                         // Remove existing bullets
-                        BulletSpan[] spans = t.getSpans(start, end, BulletSpan.class);
+                        BulletSpan[] spans = edit.getSpans(s, e, BulletSpan.class);
                         for (BulletSpan span : spans)
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
 
-                        int i = start;
-                        int j = start + 1;
+                        int i = s;
+                        int j = s + 1;
                         int index = 1;
-                        while (j < end) {
-                            if (i > 0 && t.charAt(i - 1) == '\n' && t.charAt(j) == '\n') {
-                                Log.i("Insert " + i + "..." + (j + 1) + " size=" + end);
+                        while (j < e) {
+                            if (i > 0 && edit.charAt(i - 1) == '\n' && edit.charAt(j) == '\n') {
+                                Log.i("Insert " + i + "..." + (j + 1) + " size=" + e);
                                 if (item.getItemId() == R.id.menu_style_list_bullets)
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                        t.setSpan(new BulletSpan(dp6, colorAccent), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
+                                        edit.setSpan(new BulletSpanEx(dp24, dp6, colorAccent, 0), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
                                     else
-                                        t.setSpan(new BulletSpan(dp6, colorAccent, dp3), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
+                                        edit.setSpan(new BulletSpanEx(dp24, dp6, colorAccent, dp3, 0), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
                                 else
-                                    t.setSpan(new NumberSpan(dp6, colorAccent, textSize, index++), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
+                                    edit.setSpan(new NumberSpan(dp24, dp6, colorAccent, textSize, 0, index++), i, j + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE | Spanned.SPAN_PARAGRAPH);
 
                                 i = j + 1;
                             }
                             j++;
                         }
 
-                        etBody.setText(t);
-                        etBody.setSelection(start, end);
+                        renumber(edit, false, context);
+
+                        etBody.setText(edit);
+                        etBody.setSelection(s, e);
 
                         return true;
                     }
 
                     private boolean setFont(MenuItem item) {
-                        TypefaceSpan[] spans = t.getSpans(s, e, TypefaceSpan.class);
+                        TypefaceSpan[] spans = edit.getSpans(start, end, TypefaceSpan.class);
                         for (TypefaceSpan span : spans)
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
 
                         int id = item.getItemId();
                         String[] names = anchor.getResources().getStringArray(R.array.fontNameValues);
                         String face = (id < names.length ? names[id] : null);
 
                         if (face != null)
-                            t.setSpan(new TypefaceSpan(face), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            edit.setSpan(new TypefaceSpan(face), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                        etBody.setText(t);
-                        etBody.setSelection(s, e);
+                        etBody.setText(edit);
+                        etBody.setSelection(start, end);
 
                         return true;
                     }
@@ -324,66 +358,65 @@ public class StyleHelper {
                         int dp3 = Helper.dp2pixels(context, 3);
                         int dp6 = Helper.dp2pixels(context, 6);
 
-                        Pair<Integer, Integer> paragraph = ensureParagraph(t, s, e);
-                        int start = paragraph.first;
-                        int end = paragraph.second;
+                        Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        int s = paragraph.first;
+                        int e = paragraph.second;
 
-                        QuoteSpan[] spans = t.getSpans(s, e, QuoteSpan.class);
+                        QuoteSpan[] spans = edit.getSpans(s, e, QuoteSpan.class);
                         for (QuoteSpan span : spans)
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
 
                         QuoteSpan q;
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
                             q = new QuoteSpan(colorPrimary);
                         else
                             q = new QuoteSpan(colorPrimary, dp3, dp6);
-                        t.setSpan(q, start, end, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                        edit.setSpan(q, s, e, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
 
-                        etBody.setText(t);
-                        etBody.setSelection(start, end);
+                        etBody.setText(edit);
+                        etBody.setSelection(s, e);
 
                         return true;
                     }
 
                     private boolean setStrikeThrough(MenuItem item) {
                         boolean has = false;
-                        for (StrikethroughSpan span : t.getSpans(s, e, StrikethroughSpan.class)) {
+                        for (StrikethroughSpan span : edit.getSpans(start, end, StrikethroughSpan.class)) {
                             has = true;
-                            t.removeSpan(span);
+                            edit.removeSpan(span);
                         }
 
                         if (!has)
-                            t.setSpan(new StrikethroughSpan(), s, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            edit.setSpan(new StrikethroughSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                        etBody.setText(t);
-                        etBody.setSelection(s, e);
+                        etBody.setText(edit);
+                        etBody.setSelection(start, end);
 
                         return true;
                     }
 
                     private boolean clear(MenuItem item) {
-                        int start = s;
-                        int end = e;
+                        int e = end;
 
                         // Expand to paragraph (block quotes)
-                        if (end + 1 < t.length() && t.charAt(end) == '\n')
-                            end++;
+                        if (e + 1 < edit.length() && edit.charAt(e) == '\n')
+                            e++;
 
-                        for (Object span : t.getSpans(start, end, Object.class))
+                        for (Object span : edit.getSpans(start, e, Object.class))
                             if (!(span instanceof ImageSpan)) {
-                                int sstart = t.getSpanStart(span);
-                                int send = t.getSpanEnd(span);
-                                int flags = t.getSpanFlags(span);
+                                int sstart = edit.getSpanStart(span);
+                                int send = edit.getSpanEnd(span);
+                                int flags = edit.getSpanFlags(span);
                                 if (sstart < start && send > start)
-                                    setSpan(t, span, sstart, start, flags, etBody.getContext());
+                                    setSpan(edit, span, sstart, start, flags, etBody.getContext());
                                 if (sstart < end && send > end)
-                                    setSpan(t, span, end, send, flags, etBody.getContext());
+                                    setSpan(edit, span, e, send, flags, etBody.getContext());
 
-                                t.removeSpan(span);
+                                edit.removeSpan(span);
                             }
 
-                        etBody.setText(t);
-                        etBody.setSelection(s, e);
+                        etBody.setText(edit);
+                        etBody.setSelection(start, e);
 
                         return true;
                     }
@@ -396,36 +429,36 @@ public class StyleHelper {
                 String url = (String) args[0];
 
                 List<Object> spans = new ArrayList<>();
-                for (Object span : ss.getSpans(start, end, Object.class)) {
+                for (Object span : edit.getSpans(start, end, Object.class)) {
                     if (!(span instanceof URLSpan))
                         spans.add(span);
-                    ss.removeSpan(span);
+                    edit.removeSpan(span);
                 }
 
                 if (url != null) {
+                    int e = end;
                     if (start == end) {
                         etBody.getText().insert(start, url);
-                        end += url.length();
-                        ss = new SpannableString(etBody.getText());
+                        e += url.length();
                     }
 
-                    ss.setSpan(new URLSpan(url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    edit.setSpan(new URLSpan(url), start, e, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
 
                 // Restore other spans
                 for (Object span : spans)
-                    ss.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    edit.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-                etBody.setText(ss);
+                etBody.setText(edit);
                 etBody.setSelection(end, end);
 
                 return true;
             } else if (action == R.id.menu_clear) {
-                for (Object span : ss.getSpans(0, etBody.length(), Object.class))
+                for (Object span : edit.getSpans(0, etBody.length(), Object.class))
                     if (!(span instanceof ImageSpan))
-                        ss.removeSpan(span);
+                        edit.removeSpan(span);
 
-                etBody.setText(ss);
+                etBody.setText(edit);
                 etBody.setSelection(start, end);
 
                 return true;
@@ -437,26 +470,26 @@ public class StyleHelper {
         }
     }
 
-    static void setSpan(SpannableStringBuilder ss, Object span, int start, int end, int flags, Context context) {
+    static void setSpan(Editable edit, Object span, int start, int end, int flags, Context context) {
         if (span instanceof CharacterStyle)
-            ss.setSpan(CharacterStyle.wrap((CharacterStyle) span), start, end, flags);
+            edit.setSpan(CharacterStyle.wrap((CharacterStyle) span), start, end, flags);
         else if (span instanceof QuoteSpan) {
             ParagraphStyle ps = (ParagraphStyle) span;
-            Pair<Integer, Integer> p = ensureParagraph(ss, start, end);
-            ss.setSpan(clone(span, ps.getClass(), context), p.first, p.second, flags);
+            Pair<Integer, Integer> p = ensureParagraph(edit, start, end);
+            edit.setSpan(clone(span, ps.getClass(), context), p.first, p.second, flags);
         }
     }
 
-    static private Pair<Integer, Integer> ensureParagraph(SpannableStringBuilder t, int s, int e) {
+    static private Pair<Integer, Integer> ensureParagraph(Editable edit, int s, int e) {
         int start = s;
         int end = e;
 
         // Expand selection at start
-        while (start > 0 && t.charAt(start - 1) != '\n')
+        while (start > 0 && edit.charAt(start - 1) != '\n')
             start--;
 
         // Expand selection at end
-        while (end > 0 && end < t.length() && t.charAt(end - 1) != '\n')
+        while (end > 0 && end < edit.length() && edit.charAt(end - 1) != '\n')
             end++;
 
         // Nothing to do
@@ -464,22 +497,22 @@ public class StyleHelper {
             return null;
 
         // Create paragraph at start
-        if (start == 0 && t.charAt(start) != '\n') {
-            t.insert(0, "\n");
+        if (start == 0 && edit.charAt(start) != '\n') {
+            edit.insert(0, "\n");
             start++;
             end++;
         }
 
         // Create paragraph at end
-        if (end == t.length() && t.charAt(end - 1) != '\n') {
-            t.append("\n");
+        if (end == edit.length() && edit.charAt(end - 1) != '\n') {
+            edit.append("\n");
             end++;
         }
 
-        if (end == t.length())
-            t.append("\n"); // workaround Android bug
+        if (end == edit.length())
+            edit.append("\n"); // workaround Android bug
 
-        return new Pair(start, end);
+        return new Pair<>(start, end);
     }
 
     static <T extends ParagraphStyle> T clone(Object span, Class<T> type, Context context) {
@@ -492,16 +525,18 @@ public class StyleHelper {
         } else if (NumberSpan.class.isAssignableFrom(type)) {
             NumberSpan n = (NumberSpan) span;
             int dp6 = Helper.dp2pixels(context, 6);
+            int dp24 = Helper.dp2pixels(context, 24);
             int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
-            return (T) new NumberSpan(dp6, colorAccent, n.getTextSize(), n.getIndex() + 1);
-        } else if (BulletSpan.class.isAssignableFrom(type)) {
-            BulletSpan b = (BulletSpan) span;
+            return (T) new NumberSpan(dp24, dp6, colorAccent, n.getTextSize(), n.getLevel(), n.getIndex() + 1);
+        } else if (BulletSpanEx.class.isAssignableFrom(type)) {
+            BulletSpanEx b = (BulletSpanEx) span;
+            int dp24 = Helper.dp2pixels(context, 24);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
                 int dp6 = Helper.dp2pixels(context, 6);
                 int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
-                return (T) new BulletSpan(dp6, colorAccent);
+                return (T) new BulletSpanEx(dp24, dp6, colorAccent, b.getLevel());
             } else
-                return (T) new BulletSpan(b.getGapWidth(), b.getColor(), b.getBulletRadius());
+                return (T) new BulletSpanEx(dp24, b.getGapWidth(), b.getColor(), b.getBulletRadius(), b.getLevel());
 
         } else
             throw new IllegalArgumentException(type.getName());
@@ -509,13 +544,14 @@ public class StyleHelper {
 
     static void renumber(Editable text, boolean clean, Context context) {
         int dp6 = Helper.dp2pixels(context, 6);
+        int dp24 = Helper.dp2pixels(context, 24);
         int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
 
         Log.i("Renumber clean=" + clean + " text=" + text);
 
         int next;
-        int index = 1;
         int pos = -1;
+        List<Integer> levels = new ArrayList<>();
         for (int i = 0; i < text.length(); i = next) {
             next = text.nextSpanTransition(i, text.length(), NumberSpan.class);
             Log.i("Bullet span next=" + next);
@@ -532,16 +568,33 @@ public class StyleHelper {
                     continue;
                 }
 
-                if (span instanceof NumberSpan) {
-                    if (start == pos)
-                        index++;
-                    else
-                        index = 1;
+                int level;
+                if (span instanceof NumberSpan)
+                    level = ((NumberSpan) span).getLevel();
+                else if (span instanceof BulletSpanEx)
+                    level = ((BulletSpanEx) span).getLevel();
+                else
+                    level = 0;
 
+                if (start != pos)
+                    levels.clear();
+                while (levels.size() > level + 1)
+                    levels.remove(levels.size() - 1);
+                if (levels.size() == level + 1 && !(span instanceof NumberSpan))
+                    levels.remove(level);
+                while (levels.size() < level + 1)
+                    levels.add(0);
+
+                int index = levels.get(level) + 1;
+                levels.remove(level);
+                levels.add(level, index);
+
+                if (span instanceof NumberSpan) {
                     NumberSpan ns = (NumberSpan) span;
                     if (index != ns.getIndex()) {
-                        NumberSpan clone = new NumberSpan(dp6, colorAccent, ns.getTextSize(), index);
                         text.removeSpan(span);
+                        // Text size needs measuring
+                        NumberSpan clone = new NumberSpan(dp24, dp6, colorAccent, ns.getTextSize(), level, index);
                         text.setSpan(clone, start, end, flags);
                     }
 
