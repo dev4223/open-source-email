@@ -48,6 +48,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
@@ -65,6 +66,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
     private SwitchCompat swBeige;
     private SwitchCompat swShadow;
     private SwitchCompat swDate;
+    private SwitchCompat swDateBold;
     private SwitchCompat swNavBarColorize;
     private SwitchCompat swPortrait2;
     private SwitchCompat swLandscape;
@@ -142,7 +144,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
 
     private final static String[] RESET_OPTIONS = new String[]{
             "theme", "startup", "cards", "beige", "shadow_unread",
-            "date", "navbar_colorize", "portrait2", "landscape", "landscape3",
+            "date", "date_bold", "navbar_colorize", "portrait2", "landscape", "landscape3",
             "threading", "threading_unread", "indentation", "seekbar", "actionbar", "actionbar_color",
             "highlight_unread", "highlight_color", "color_stripe",
             "avatars", "gravatars", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
@@ -173,6 +175,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swBeige = view.findViewById(R.id.swBeige);
         swShadow = view.findViewById(R.id.swShadow);
         swDate = view.findViewById(R.id.swDate);
+        swDateBold = view.findViewById(R.id.swDateBold);
         swNavBarColorize = view.findViewById(R.id.swNavBarColorize);
         swPortrait2 = view.findViewById(R.id.swPortrait2);
         swLandscape = view.findViewById(R.id.swLandscape);
@@ -282,6 +285,7 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swBeige.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                getActivity().getIntent().putExtra("tab", "display");
                 prefs.edit().putBoolean("beige", checked).apply();
             }
         });
@@ -297,6 +301,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("date", checked).apply();
+                swDateBold.setEnabled(checked);
+            }
+        });
+
+        swDateBold.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("date_bold", checked).apply();
             }
         });
 
@@ -852,6 +864,14 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
             }
         });
 
+        // Initialize
+        if (!Helper.isDarkTheme(getContext())) {
+            boolean beige = prefs.getBoolean("beige", true);
+            view.setBackgroundColor(ContextCompat.getColor(getContext(), beige
+                    ? R.color.lightColorBackground_cards_beige
+                    : R.color.lightColorBackground_cards));
+        }
+
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 
         return view;
@@ -908,6 +928,8 @@ public class FragmentOptionsDisplay extends FragmentBase implements SharedPrefer
         swBeige.setEnabled(swCards.isChecked());
         swShadow.setEnabled(swCards.isChecked());
         swDate.setChecked(prefs.getBoolean("date", true));
+        swDateBold.setChecked(prefs.getBoolean("date_bold", false));
+        swDateBold.setEnabled(swDate.isChecked());
         swNavBarColorize.setChecked(prefs.getBoolean("navbar_colorize", false));
         swPortrait2.setChecked(prefs.getBoolean("portrait2", false));
         swLandscape.setChecked(prefs.getBoolean("landscape", true));

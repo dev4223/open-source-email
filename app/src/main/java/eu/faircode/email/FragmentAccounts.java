@@ -122,7 +122,11 @@ public class FragmentAccounts extends FragmentBase {
         btnGrant.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestPermissions(Helper.getOAuthPermissions(), REQUEST_IMPORT_OAUTH);
+                try {
+                    requestPermissions(Helper.getOAuthPermissions(), REQUEST_IMPORT_OAUTH);
+                } catch (Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
             }
         });
 
@@ -198,7 +202,7 @@ public class FragmentAccounts extends FragmentBase {
         });
 
         animator = ObjectAnimator.ofFloat(fab, "alpha", 0.5f, 1.0f);
-        animator.setDuration(500L);
+        animator.setDuration(750L);
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.addUpdateListener(new ObjectAnimator.AnimatorUpdateListener() {
@@ -234,7 +238,8 @@ public class FragmentAccounts extends FragmentBase {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        DB db = DB.getInstance(getContext());
+        final Context context = getContext();
+        final DB db = DB.getInstance(context);
 
         // Observe accounts
         db.account().liveAccountsEx(settings)
@@ -257,10 +262,15 @@ public class FragmentAccounts extends FragmentBase {
                         pbWait.setVisibility(View.GONE);
                         grpReady.setVisibility(View.VISIBLE);
 
-                        if (accounts.size() == 0)
-                            animator.start();
-                        else
-                            animator.end();
+                        if (accounts.size() == 0) {
+                            fab.setCustomSize(Helper.dp2pixels(context, 3 * 56 / 2));
+                            if (!animator.isStarted())
+                                animator.start();
+                        } else {
+                            fab.clearCustomSize();
+                            if (animator.isStarted())
+                                animator.end();
+                        }
                     }
                 });
     }

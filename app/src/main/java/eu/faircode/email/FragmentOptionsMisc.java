@@ -53,7 +53,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.cardview.widget.CardView;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -130,7 +132,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
     private Button btnFiles;
 
     private Group grpUpdates;
-    private Group grpDebug;
+    private CardView cardDebug;
 
     private NumberFormat NF = NumberFormat.getNumberInstance();
 
@@ -236,7 +238,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
         btnFiles = view.findViewById(R.id.btnFiles);
 
         grpUpdates = view.findViewById(R.id.grpUpdates);
-        grpDebug = view.findViewById(R.id.grpDebug);
+        cardDebug = view.findViewById(R.id.cardDebug);
 
         setOptions();
 
@@ -508,7 +510,14 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
                 prefs.edit().putBoolean("debug", checked).apply();
-                grpDebug.setVisibility(checked || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+                cardDebug.setVisibility(checked || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+                if (checked)
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            view.scrollTo(0, swDebug.getTop());
+                        }
+                    });
             }
         });
 
@@ -770,6 +779,14 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
             }
         });
 
+        // Initialize
+        if (!Helper.isDarkTheme(getContext())) {
+            boolean beige = prefs.getBoolean("beige", true);
+            view.setBackgroundColor(ContextCompat.getColor(getContext(), beige
+                    ? R.color.lightColorBackground_cards_beige
+                    : R.color.lightColorBackground_cards));
+        }
+
         tvFtsIndexed.setText(null);
 
         DB db = DB.getInstance(getContext());
@@ -859,7 +876,10 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
                         for (String option : RESET_QUESTIONS)
                             editor.remove(option);
                         for (String key : prefs.getAll().keySet())
-                            if (key.endsWith(".show_full") || key.endsWith(".show_images") || key.endsWith(".confirm_link"))
+                            if (key.startsWith("translated_") ||
+                                    key.endsWith(".show_full") ||
+                                    key.endsWith(".show_images") ||
+                                    key.endsWith(".confirm_link"))
                                 editor.remove(key);
                         editor.apply();
 
@@ -972,7 +992,7 @@ public class FragmentOptionsMisc extends FragmentBase implements SharedPreferenc
 
         tvFingerprint.setText(Helper.getFingerprint(getContext()));
 
-        grpDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
+        cardDebug.setVisibility(swDebug.isChecked() || BuildConfig.DEBUG ? View.VISIBLE : View.GONE);
     }
 
     private void updateUsage() {

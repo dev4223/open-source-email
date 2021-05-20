@@ -50,6 +50,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 import androidx.webkit.WebViewFeature;
@@ -72,6 +73,8 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
     private SwitchCompat swIncognitoKeyboard;
     private ImageButton ibIncognitoKeyboard;
     private SwitchCompat swSecure;
+    private SwitchCompat swGenericUserAgent;
+    private TextView tvGenericUserAgent;
     private SwitchCompat swSafeBrowsing;
     private ImageButton ibSafeBrowsing;
     private ImageButton ibDisconnectBlacklist;
@@ -87,7 +90,8 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             "confirm_links", "browse_links", "confirm_images", "confirm_html",
             "disable_tracking", "hide_timezone",
             "pin", "biometrics", "biometrics_timeout",
-            "display_hidden", "incognito_keyboard", "secure", "safe_browsing",
+            "display_hidden", "incognito_keyboard", "secure",
+            "generic_ua", "safe_browsing",
             "disconnect_auto_update", "disconnect_links", "disconnect_images"
     };
 
@@ -114,6 +118,8 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swIncognitoKeyboard = view.findViewById(R.id.swIncognitoKeyboard);
         ibIncognitoKeyboard = view.findViewById(R.id.ibIncognitoKeyboard);
         swSecure = view.findViewById(R.id.swSecure);
+        swGenericUserAgent = view.findViewById(R.id.swGenericUserAgent);
+        tvGenericUserAgent = view.findViewById(R.id.tvGenericUserAgent);
         swSafeBrowsing = view.findViewById(R.id.swSafeBrowsing);
         ibSafeBrowsing = view.findViewById(R.id.ibSafeBrowsing);
         ibDisconnectBlacklist = view.findViewById(R.id.ibDisconnectBlacklist);
@@ -255,6 +261,13 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
+        swGenericUserAgent.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                prefs.edit().putBoolean("generic_ua", checked).apply();
+            }
+        });
+
         swSafeBrowsing.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
@@ -333,6 +346,14 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
             }
         });
 
+        // Initialize
+        if (!Helper.isDarkTheme(getContext())) {
+            boolean beige = prefs.getBoolean("beige", true);
+            view.setBackgroundColor(ContextCompat.getColor(getContext(), beige
+                    ? R.color.lightColorBackground_cards_beige
+                    : R.color.lightColorBackground_cards));
+        }
+
         PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
 
         return view;
@@ -397,6 +418,9 @@ public class FragmentOptionsPrivacy extends FragmentBase implements SharedPrefer
         swDisplayHidden.setChecked(prefs.getBoolean("display_hidden", false));
         swIncognitoKeyboard.setChecked(prefs.getBoolean("incognito_keyboard", false));
         swSecure.setChecked(prefs.getBoolean("secure", false));
+
+        tvGenericUserAgent.setText(WebViewEx.getUserAgent(getContext()));
+        swGenericUserAgent.setChecked(prefs.getBoolean("generic_ua", true));
         swSafeBrowsing.setChecked(prefs.getBoolean("safe_browsing", false));
 
         long time = prefs.getLong("disconnect_last", -1);

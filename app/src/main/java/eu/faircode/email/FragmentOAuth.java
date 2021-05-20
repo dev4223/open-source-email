@@ -70,6 +70,7 @@ import net.openid.appauth.browser.VersionedBrowserMatcher;
 
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -479,9 +480,14 @@ public class FragmentOAuth extends FragmentBase {
                     connection.setRequestMethod("GET");
                     connection.setReadTimeout(MAILRU_TIMEOUT);
                     connection.setConnectTimeout(MAILRU_TIMEOUT);
+                    connection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
                     connection.connect();
 
                     try {
+                        int status = connection.getResponseCode();
+                        if (status != HttpsURLConnection.HTTP_OK)
+                            throw new FileNotFoundException("Error " + status + ":" + connection.getResponseMessage());
+
                         String json = Helper.readStream(connection.getInputStream());
                         Log.i("json=" + json);
                         JSONObject data = new JSONObject(json);

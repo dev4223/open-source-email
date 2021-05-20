@@ -80,7 +80,6 @@
     <string name="title_notification_sending_failed">Gửi đến %1$s thất bại</string>
     <string name="title_notification_redacted">Đã rút lại: xác thực sinh trắc học hoặc mã PIN được bật</string>
     <string name="title_factor_minutes">%1$d phút</string>
-    <string name="menu_exit">Thoát</string>
     <string name="menu_answers">Mẫu</string>
     <string name="menu_operations">Hoạt động</string>
     <string name="menu_contacts">Liên hệ cục bộ</string>
@@ -171,6 +170,7 @@
     <string name="title_setup_still">Vẫn cần làm</string>
     <string name="title_setup_error">Lỗi</string>
     <string name="title_setup_configuring">Đang thiết lập tài khoản &#8230;</string>
+    <string name="title_setup_close">Đóng cài đặt</string>
     <string name="title_setup_export">Xuất cài đặt</string>
     <string name="title_setup_import">Nhập cài đặt</string>
     <string name="title_setup_export_do">Mật khẩu này được sử dụng để mã hoá cài đặt và được yêu cầu để nhập cài đặt lại</string>
@@ -298,6 +298,7 @@
     <string name="title_advanced_cards_beige">Sử dụng nền màu be khi sử dụng kiểu thẻ</string>
     <string name="title_advanced_cards_shadow">Sử dụng cái bóng cho thư chưa đọc khi dùng kiểu thẻ</string>
     <string name="title_advanced_date_header">Nhóm theo ngày</string>
+    <string name="title_advanced_date_bold">Hiện ngày bằng chữ đậm</string>
     <string name="title_advanced_threading">Chia cuộc hội thoại thành các chủ đề</string>
     <string name="title_advanced_threading_unread">Hiện số thư chưa đọc trong các cuộc hội thoại</string>
     <string name="title_advanced_indentation">Lùi trái/phải các thư đã nhận/đã gửi trong cuộc hội thoại</string>
@@ -426,6 +427,7 @@
     <string name="title_advanced_secure">Ẩn khỏi màn hình đa nhiệm và ngăn chặn chụp màn hình</string>
     <string name="title_advanced_pin">Mã PIN</string>
     <string name="title_advanced_biometrics_timeout">Thời gian chờ xác thực sinh trắc học</string>
+    <string name="title_advanced_generic_user_agent">Sử dụng tác nhân người dùng trình duyệt chung chung</string>
     <string name="title_advanced_disconnect_auto_update">Tự động cập nhật các danh sách hàng tuần</string>
     <string name="title_advanced_disconnect_links">Sử dụng các danh sách để cảnh báo về các liên kết theo dõi</string>
     <string name="title_advanced_disconnect_images">Sử dụng các danh sách để nhận ra các hình ảnh theo dõi</string>
@@ -811,7 +813,7 @@
     <string name="title_move_to_account">Di chuyển vào %1$s &#8230;</string>
     <string name="title_report_spam">Coi là thư rác</string>
     <string name="title_delete_permanently">Xóa vĩnh viễn</string>
-    <string name="title_no_undo">Việc này không thể được hoàn tác!</string>
+    <string name="title_no_undo">Tôi hiểu điều này không thể hoàn tác được</string>
     <string name="title_snooze">Đặt báo lại &#8230;</string>
     <string name="title_archive">Lưu trữ</string>
     <string name="title_reply">Trả lời</string>
@@ -896,6 +898,7 @@
     <string name="title_subject">Chủ đề:</string>
     <string name="title_attachment">Tệp đính kèm:</string>
     <string name="title_body_hint">Thư của bạn</string>
+    <string name="title_body_hint_style">Bạn có thể chọn văn bản để định dạng nó</string>
     <string name="title_discard">Bỏ</string>
     <string name="title_save">Lưu</string>
     <string name="title_send">Gửi</string>
@@ -923,6 +926,8 @@
     <string name="title_style_list">Danh sách</string>
     <string name="title_style_list_bullets">Gạch đầu dòng</string>
     <string name="title_style_list_numbered">Đánh số</string>
+    <string name="title_style_list_level_increase">Tăng thụt lề</string>
+    <string name="title_style_list_level_decrease">Giảm thụt lề</string>
     <string name="title_style_font">Phông chữ</string>
     <string name="title_style_font_default">Mặc định</string>
     <string name="title_style_blockquote">Trích dẫn khối</string>
@@ -949,6 +954,11 @@
     <string name="title_insert_contact_group">Chèn nhóm liên hệ</string>
     <string name="title_insert_template">Chèn mẫu</string>
     <string name="title_create_template">Tạo mẫu</string>
+    <string name="title_translate">Dịch</string>
+    <string name="title_translate_configure">Thiết lập &#8230;</string>
+    <string name="title_translate_key">Nhập mã khóa</string>
+    <string name="title_translating">Đang dịch &#8230;</string>
+    <string name="title_translate_small">Sử dụng phông chữ nhỏ cho văn bản nguồn</string>
     <string name="title_edit_plain_text">Chỉnh sửa dưới dạng văn bản thường</string>
     <string name="title_edit_formatted_text">Chỉnh sửa dưới dạng văn bản được định dạng lại</string>
     <string name="title_select_certificate">Chọn mã khoá công khai</string>
@@ -1169,9 +1179,10 @@
     <string name="title_legend_synchronize_off">Đồng bộ hóa đang tắt</string>
     <string name="title_legend_synchronize_poll">Đồng bộ hoá định kỳ</string>
     <string name="title_legend_disconnected">Đã ngắt kết nối</string>
-    <string name="title_legend_backoff">Đang đợi sau khi thất bại</string>
     <string name="title_legend_connecting">Đang kết nối</string>
     <string name="title_legend_connected">Đã kết nối</string>
+    <string name="title_legend_backoff">Đang đợi sau khi thất bại</string>
+    <string name="title_legend_quota">Hộp thư sắp đầy</string>
     <string name="title_legend_executing">Đang thực thi các hoạt động</string>
     <string name="title_legend_synchronizing">Đang đồng bộ hóa</string>
     <string name="title_legend_downloading">Đang tải xuống</string>
@@ -1538,6 +1549,8 @@
         <item>Chữ viết tay</item>
         <item>Serif</item>
         <item>Sans-serif</item>
-        <item>Một khoảng cách</item>
+        <item>Đơn cách</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

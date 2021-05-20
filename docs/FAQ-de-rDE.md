@@ -435,7 +435,7 @@ Sie können das Zertifikat auch anpinnen, siehe oben.
 
 *Leeres Passwort*
 
-Ihr Benutzername ist möglicherweise leicht zu erraten, daher ist das unsicher.
+Ihr Benutzername ist wahrscheinlich leicht zu erraten, daher ist dieser äußerst unsicher, es sei denn, der SMTP-Server ist nur über ein eingeschränktes lokales Netzwerk oder ein VPN verfügbar.
 
 *Klartextverbindung*
 
@@ -680,7 +680,7 @@ Private Schlüssel werden von Android gespeichert und können über die erweiter
 
 Beachten Sie, dass Zertifikate mehrere Schlüssel für mehrere Zwecke enthalten können, zum Beispiel zur Authentifizierung, Verschlüsselung und Signierung. Android importiert nur den ersten Schlüssel, um alle Schlüssel zu importieren, muss das Zertifikat zuerst aufgeteilt werden. Das ist nicht sehr einfach, und es wird empfohlen, den Zertifikatlieferanten um Unterstützung zu bitten.
 
-Beachten Sie, dass S/MIME-Signierung mit anderen Algorithmen als RSA zwar unterstützt wird, aber andere E-Mail-Clients dies möglicherweise nicht unterstützen. S/MIME-Verschlüsselung ist nur mit symmetrischen Algorithmen möglich, das heißt in der Praxis RSA.
+Beachten Sie, dass S/MIME-Signierung mit anderen Algorithmen als RSA zwar unterstützt wird, aber andere E-Mail-Clients dies möglicherweise nicht unterstützen. S/MIME-Verschlüsselung ist nur mit asymmetrischen Algorithmen möglich, das heißt in der Praxis RSA.
 
 Die Standard-Verschlüsselungsmethode ist PGP, aber die zuletzt verwendete Verschlüsselungsmethode wird für die ausgewählte Identität gespeichert. Sie können lange auf den Sendenknopf drücken, um die Verschlüsselungsmethode für eine Identität zu ändern. Wenn Sie sowohl PGP als auch S/MIME-Verschlüsselung für die gleiche E-Mail-Adresse verwenden, kann es sinnvoll sein, die Identität zu kopieren, damit Sie die Verschlüsselungsmethode ändern können, indem Sie eine der beiden Identitäten auswählen. Sie können in der Liste der Identitäten lange auf eine Identität drücken (über die manuelle Einrichtung im Hauptbildschirm), um eine Identität zu kopieren.
 
@@ -856,7 +856,7 @@ Die Vorschau des Nachrichtentextes kann nicht angezeigt werden, wenn der Nachric
 
 Zuallererst: **FairEmail ist grundsätzlich kostenlos zu nutzen** und nur einige erweiterte Funktionen müssen gekauft werden.
 
-Zuerst, **FairEmail ist grundsätzlich kostenlos** und nur einige erweiterte Funktionen müssen gekauft werden.
+Zuerst: **FairEmail ist grundsätzlich kostenlos**, nur einige erweiterte Funktionen müssen gekauft werden.
 
 Tout d'abord, **FairEmail est au fond gratuit** et seulement quelques fonctionnalités avancées doivent être achetés.
 
@@ -1138,7 +1138,7 @@ Es stehen Schnelleinstellungen (im Einstellungs-Menü) zur Verfügung:
 * global die Synchronisierung aktivieren/deaktivieren
 * zeige die Anzahl neuer Nachrichten und markiere sie als gesehen (nicht gelesen)
 
-Schnelleinstellungen erfordern Android 7.0 Nougat oder höher. The usage of settings tiles is explained [here](https://support.google.com/android/answer/9083864).
+Schnelleinstellungen erfordern Android 7.0 Nougat oder höher. Die Verwendung von Schnelleinstellungen wird hier [erklärt](https://support.google.com/android/answer/9083864).
 
 <br />
 
@@ -1784,18 +1784,18 @@ Es können nur ein Primärkonto sowie eine primäre Identität pro Konto existie
 <a name="faq73"></a>
 **(73) Ist das Verschieben von Nachrichten über Konten hinweg sicher/effizient?**
 
-Moving messages across accounts is safe because the raw, original messages will be downloaded and moved and because the source messages will be deleted only after the target messages have been added
+Das Verschieben von Nachrichten über Konten hinweg ist sicher, weil die rohen, ursprünglichen Nachrichten heruntergeladen und verschoben werden und weil die Quellnachrichten erst gelöscht werden, nachdem die Zielnachrichten hinzugefügt wurden
 
-Batch moving messages across accounts is efficient if both the source folder and target folder are set to synchronize, else FairEmail needs to connect to the folder(s) for each message.
+Das Stapelverschieben von Nachrichten über Konten hinweg ist effizient, wenn sowohl der Quellordner als auch der Zielordner auf Synchronisation eingestellt sind, andernfalls muss FairEmail für jede Nachricht eine Verbindung zu dem/den Ordner(n) herstellen.
 
 <br />
 
 <a name="faq74"></a>
-**(74) Why do I see duplicate messages?**
+**(74) Warum sehe ich doppelte Nachrichten?**
 
-Some providers, notably Gmail, list all messages in all folders, except trashed messages, in the archive (all messages) folder too. FairEmail shows all these messages in a non obtrusive way to indicate that these messages are in fact the same message.
+Bei einigen Anbietern, insbesondere bei Google Mail, werden alle Nachrichten in allen Ordnern, mit Ausnahme der gelöschten Nachrichten, auch im Archivordner (alle Nachrichten) aufgelistet. FairEmail zeigt alle diese Nachrichten in einer nicht aufdringlichen Art und Weise an, um darauf hinzuweisen, dass diese Nachrichten tatsächlich die gleiche Nachricht sind.
 
-Gmail allows one message to have multiple labels, which are presented to FairEmail as folders. This means that messages with multiple labels will be shown multiple times as well.
+In Gmail kann eine Nachricht mehrere Labels haben, die FairEmail als Ordner präsentiert werden. Das bedeutet, dass Nachrichten mit mehreren Labels auch mehrfach angezeigt werden.
 
 <br />
 
@@ -1807,35 +1807,35 @@ Eine Menge Wissen und Erfahrung ist erforderlich, um erfolgreich eine App für e
 <br />
 
 <a name="faq76"></a>
-**(76) What does 'Clear local messages' do?**
+**(76) Was macht 'Lösche lokale Nachrichten'?**
 
-The folder menu *Clear local messages* removes messages from the device which are present on the server too. It does not delete messages from the server. This can be useful after changing the folder settings to not download the message content (text and attachments), for example to save space.
+Die Option *Lokale Nachrichten löschen* entfernt Nachrichten vom Gerät, die auf dem Server noch vorhanden sind. Sie löscht keine Nachrichten vom Server. Dies kann nützlich sein, wenn die Ordnereinstellungen geändert werden, um den Nachrichteninhalt (Text und Anhänge) nicht herunterzuladen, zum Beispiel um Speicherplatz zu sparen.
 
 <br />
 
 <a name="faq77"></a>
-**(77) Why are messages sometimes shown with a small delay?**
+**(77) Warum werden Nachrichten manchmal mit einer kleinen Verzögerung angezeigt?**
 
-Depending on the speed of your device (processor speed and maybe even more memory speed) messages might be displayed with a small delay. FairEmail is designed to dynamically handle a large number of messages without running out of memory. This means that messages needs to be read from a database and that this database needs to be watched for changes, both of which might cause small delays.
+Abhängig von der Geschwindigkeit Ihres Geräts (Prozessorgeschwindigkeit und vielleicht sogar noch mehr Speichergeschwindigkeit) können Nachrichten mit einer kleinen Verzögerung angezeigt werden. FairEmail ist so konzipiert, dass eine große Anzahl von Nachrichten dynamisch bearbeitet werden kann, ohne dass der Speicher voll wird. Das bedeutet, dass Nachrichten aus einer Datenbank gelesen werden müssen sowie diese Datenbank auf Änderungen überwacht werden muss; beides kann zu kleinen Verzögerungen führen.
 
-Some convenience features, like grouping messages to display conversation threads and determining the previous/next message, take a little extra time. Note that there is no *the* next message because in the meantime a new message might have been arrived.
+Einige Komfortfunktionen, wie z. B. das Gruppieren von Nachrichten zur Anzeige von Gesprächsthemen und das Ermitteln der vorherigen/nächsten Nachricht, benötigen etwas mehr Zeit. Beachten Sie, dass es keine *die* nächste Nachricht gibt, da in der Zwischenzeit eine neue Nachricht eingetroffen sein könnte.
 
-When comparing the speed of FairEmail with similar apps this should be part of the comparison. It is easy to write a similar, faster app which just displays a lineair list of messages while possible using too much memory, but it is not so easy to properly manage resource usage and to offer more advanced features like conversation threading.
+Wenn Sie die Geschwindigkeit von FairEmail mit ähnlichen Apps vergleichen, sollte dies ein Teil des Vergleichs sein. Es ist einfach, eine ähnliche, schnellere App zu schreiben, die nur eine Zeilenliste von Nachrichten anzeigt und dabei möglicherweise zu viel Speicher verbraucht, aber es ist nicht so einfach, die Ressourcennutzung richtig zu verwalten und fortgeschrittenere Funktionen wie Konversationsthreading anzubieten.
 
-FairEmail is based on the state-of-the-art [Android architecture components](https://developer.android.com/topic/libraries/architecture/), so there is little room for performance improvements.
+FairEmail basiert auf den modernsten [Android-Architekturkomponenten](https://developer.android.com/topic/libraries/architecture/), daher gibt es wenig Spielraum für Leistungsverbesserungen.
 
 <br />
 
 <a name="faq78"></a>
-**(78) How do I use schedules?**
+**(78) Wie verwende ich Zeitpläne?**
 
-In the receive settings you can enable scheduling and set a time period and the days of the week *when* messages should be *received*. Note that an end time equal to or earlier than the start time is considered to be 24 hours later.
+In den Empfangseinstellungen können Sie die Terminierung aktivieren und einen Zeitraum und die Wochentage festlegen, an denen *Meldungen **empfangen* werden sollen. Beachten Sie, dass eine Endzeit, die gleich oder früher als die Startzeit ist, als 24 Stunden später angesehen wird.
 
 Automation, see below, can be used for more advanced schedules, like for example multiple synchronization periods per day or different synchronization periods for different days.
 
 It is possible to install FairEmail in multiple user profiles, for example a personal and a work profile, and to configure FairEmail differently in each profile, which is another possibility to have different synchronization schedules and to synchronize a different set of accounts.
 
-It is also possible to create [filter rules](#user-content-faq71) with a time condition and to snooze messages until the end time of the time condition. This way it is possible to *snooze* business related messages until the start of the business hours. This also means that the messages will be on your device for when there is (temporarily) no internet connection.
+Außerdem ist es möglich, [Filterregeln](#user-content-faq71) mit einer Zeitbedingung zu erstellen und Meldungen bis zum Ende der Zeitbedingung zurückzustellen. Auf diese Weise ist es möglich, dienstliche Nachrichten bis zum Beginn der Arbeitszeit *zurückzustellen*. This also means that the messages will be on your device for when there is (temporarily) no internet connection.
 
 Note that recent Android versions allow overriding DND (Do Not Disturb) per notification channel and per app, which could be used to (not) silence specific (business) notifications. Please [see here](https://support.google.com/android/answer/9069335) for more information.
 
@@ -2131,7 +2131,7 @@ After revoking contacts permissions Android does not allow FairEmail access to y
 <a name="faq99"></a>
 **(99) Can you add a rich text or markdown editor?**
 
-FairEmail provides common text formatting (bold, italic, underline, text size and color) via a toolbar that appears after selecting some text.
+FairEmail bietet eine einfache Textformatierung (fett, kursiv, unterstrichen, Textgröße und -farbe) über eine Symbolleiste, die nach der Auswahl eines Textes erscheint.
 
 A [Rich text](https://en.wikipedia.org/wiki/Formatted_text) or [Markdown](https://en.wikipedia.org/wiki/Markdown) editor would not be used by many people on a small mobile device and, more important, Android doesn't support a rich text editor and most rich text editor open source projects are abandoned. See [here](https://forum.xda-developers.com/showpost.php?p=79061829&postcount=4919) for some more details about this.
 
@@ -2155,7 +2155,7 @@ category:forums
 category:promotions
 ```
 
-Unfortunately, this is not possible for snoozed messages folder.
+Leider ist das für den Ordner »Zurückgestellte Nachrichten« nicht möglich.
 
 You can use *Force sync* in the three-dots menu of the unified inbox to let FairEmail synchronize the folder list again and you can long press the folders to enable synchronization.
 
@@ -3013,13 +3013,13 @@ The developers guide is [here](https://developer.android.com/training/cars/messa
 <a name="faq166"></a>
 **(166) Kann ich eine Nachricht über mehrere Geräte hinweg zurückstellen?**
 
-First of all, there is no standard for snoozing messages, so all snooze implementations are custom solutions.
+Erstens gibt es keinen Standard für das Zurückstellen von Nachrichten, so dass alle Umsetzungen benutzerdefinierte Lösungen sind.
 
-Some email providers, like Gmail, move snoozed messages to a special folder. Unfortunately, third party apps have no access to this special folder.
+Einige E-Mail-Anbieter, wie z. B. Gmail, verschieben zurückgestellte Nachrichten in einen speziellen Ordner. Leider haben Drittanbieter-Apps keinen Zugriff auf diesen speziellen Ordner.
 
-Moving a message to another folder and back might fail and might not be possible if there is no internet connection. This is problematic because a message can be snoozed only after moving the message.
+Das Verschieben einer Nachricht in einen anderen Ordner und zurück könnte fehlschlagen und ist möglicherweise nicht möglich, wenn keine Internetverbindung besteht. Das ist problematisch, weil eine Nachricht erst nach dem Verschieben der Nachricht zurückgestellt werden kann.
 
-To prevent these issues, snoozing is done locally on the device by hiding the message while it is snoozing. Unfortunately, it is not possible to hide messages on the email server too.
+Um diese Probleme zu vermeiden, wird das Schlummern lokal auf dem Gerät durchgeführt, indem die Nachricht während des Schlummerns versteckt wird. Leider ist es nicht möglich, Nachrichten auch auf dem E-Mail-Server zu verstecken.
 
 <br />
 

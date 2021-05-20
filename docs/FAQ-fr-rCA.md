@@ -68,19 +68,19 @@ En rapport avec:
 
 * ~~Un [bogue dans Android 5.1 et 6](https://issuetracker.google.com/issues/37054851) fait que les applications affichent parfois un mauvais format d'heure. Changer les paramètres de Android sur *Utiliser le format 24 heures* pourrait résoudre temporairement le problème. Une solution de contournement a été ajoutée.~~
 * ~~Un [bogue dans Google Drive](https://issuetracker.google.com/issues/126362828) vide le dossier des fichiers exportés vers Google Drive. Google a corrigé ceci.~~
-* ~~A [bug dans AndroidX](https://issuetracker.google.com/issues/78495471) provoque un plantage occasionnel de FairEmail en appui long ou en glissant. Google a corrigé ceci.~~
-* ~~Un [bug dans AndroidX ROOM](https://issuetracker.google.com/issues/138441698) provoque parfois un plantage avec "*... Exception lors du calcul de la base de données en direct... Impossible de lire la ligne ...*". Une solution de contournement a été ajoutée.~~
+* ~~Un [bogue dans AndroidX](https://issuetracker.google.com/issues/78495471) provoque un plantage occasionnel de FairEmail en appui long ou en glissant. Google a corrigé ceci.~~
+* ~~Une [erreur dans AndroidX ROOM](https://issuetracker.google.com/issues/138441698) provoque parfois un plantage avec "*... Exception lors du calcul de la base de données en direct... Impossible de lire la ligne ...*". Une solution de contournement a été ajoutée.~~
 * Un [bug dans Android](https://issuetracker.google.com/issues/119872129) provoque parfois un plantage de FairEmail avec "*... Mauvaise notification postée ...*" sur certains appareils une fois après la mise à jour de FairEmail et en appuyant sur une notification.
 * Un [bug dans Android](https://issuetracker.google.com/issues/62427912) provoque parfois un plantage avec "*... ActivityRecord introuvable pour ...*" après la mise à jour de FairEmail. La réinstallation([source](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) pourrait résoudre le problème.
 * Un [bug dans Android](https://issuetracker.google.com/issues/37018931) provoque parfois un plantage avec *... InputChannel n'est pas initialisé ...* sur certains appareils.
-* ~~A [bug dans LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) provoque parfois un plantage avec *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
+* ~~Un [bogue dans LineageOS](https://review.lineageos.org/c/LineageOS/android_frameworks_base/+/265273) provoque parfois un plantage avec *... java.lang.ArrayIndexOutOfBoundsException: length=...; index=... ...*.~~
 * Un bug dans Nova Launcher sur Android 5.x provoque le plantage de FairEmail avec une exception *java.lang.StackOverflowError* lorsque Nova Launcher a accès au service d'accessibilité.
 * ~~Le sélecteur de dossier ne montre parfois aucun dossier pour des raisons encore inconnues. Cela semble être réparé.~~
-* ~~Un [bug dans AndroidX](https://issuetracker.google.com/issues/64729576) rend difficile le défilement rapide. Une solution de contournement a été ajoutée.~~
+* ~~Une [erreur dans AndroidX](https://issuetracker.google.com/issues/64729576) rend difficile le défilement rapide. Une solution de contournement a été ajoutée.~~
 * ~~Le chiffrement avec YubiKey se traduit par une boucle infinie. Cela semble être causé par un [bug dans OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2507).~~
 * Le défilement vers un emplacement lié en interne dans les messages originaux ne fonctionne pas. Ceci ne peut pas être corrigé car la vue du message d'origine est contenue dans une vue déroulante.
 * Un aperçu d'un message texte n'apparaît pas (toujours) sur les montres Samsung car [setLocalOnly](https://developer.android.com/reference/androidx/core/app/NotificationCompat.Builder.html#setLocalOnly(boolean)) semble être ignoré. Les textes de prévisualisation des messages sont censés être affichés correctement sur les objets connectés Pebble 2, Fitbit Charge 3, Mi band 3 et Xiaomi Amazfit BIP. Voir aussi [cette FAQ](#user-content-faq126).
-* Un [bug sur Android 6.0](https://issuetracker.google.com/issues/37068143) provoque un plantage *... Invalid offset: ... Valid range is ...* lorsque du texte est sélectionné et en tapotant à côté de ce dernier. Ce bogue a été corrigé dans Android 6.0.1.
+* Une [erreur sur Android 6.0](https://issuetracker.google.com/issues/37068143) provoque un plantage *... Invalid offset: ... Valid range is ...* lorsque du texte est sélectionné et en tapotant à côté de ce dernier. Ce bogue a été corrigé dans Android 6.0.1.
 * Les liens internes (ancrés) ne fonctionneront pas parce que les messages originaux sont affichés dans une WebView intégrée dans une vue défilante (la liste des conversations). Il s'agit d'une limitation Android qui ne peut être ni corrigée ni contournée.
 * La détection de la langue [ne fonctionne plus](https://issuetracker.google.com/issues/173337263) sur les appareils Pixel avec (mise à jour vers ?) Android 11
 * Un bogue [dans OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) provoque des signatures PGP invalides lors de l'utilisation d'un jeton matériel.
@@ -435,7 +435,7 @@ Vous pouvez également épingler le certificat, voir ci-dessus.
 
 *Mot de passe vide*
 
-Votre nom d'utilisateur est probablement facile à deviner, donc ce n'est pas sécurisé.
+Votre nom d'utilisateur peut être facilement deviné, donc c'est assez peu sûr, sauf si le serveur SMTP n'est disponible que via un réseau local restreint ou un VPN.
 
 *Connexion en clair*
 
@@ -680,7 +680,7 @@ Les clés privées sont stockées par Android et peuvent être importées via le
 
 Notez que les certificats peuvent contenir plusieurs clés à des fins multiples, par exemple pour l'authentification, le chiffrement et la signature. Android importe seulement la première clé, afin d'importer toutes les clés, le certificat doit d'abord être divisé. Ce n'est pas très trivial et il est conseillé de demander l'aide du fournisseur de certificats.
 
-Notez que la signature S/MIME avec d'autres algorithmes que RSA est prise en charge, mais soyez conscient que d'autres clients de messagerie pourraient ne pas la prendre en charge. L'encryptage S/MIME n'est possible uniquement qu'avec des algorithmes symétriques, ce qui signifie dans la pratique l'utilisation de RSA.
+Notez que la signature S/MIME avec d'autres algorithmes que RSA est prise en charge, mais soyez conscient que d'autres clients de messagerie pourraient ne pas la prendre en charge. Le chiffrement S/MIME n'est possible qu'avec des algorithmes symétriques ce qui signifie dans la pratique, l'utilisation de RSA.
 
 La méthode de cryptage par défaut est PGP, mais la dernière méthode de cryptage utilisée sera mémorisée pour l'identité sélectionnée pour la prochaine fois. Vous pouvez appuyer longuement sur le bouton Envoyer pour modifier la méthode de chiffrement pour une identité. Si vous utilisez à la fois le chiffrement PGP et S/MIME pour la même adresse e-mail, il peut être utile de copier l'identité afin que vous puissiez changer la méthode de chiffrement en sélectionnant l'une des deux identités. Vous pouvez appuyer longuement sur une identité dans la liste des identités (via la configuration manuelle dans l'écran principal de configuration) pour copier une identité.
 
@@ -762,7 +762,7 @@ La recherche d'un grand nombre de messages sur l'appareil n'est pas très rapide
 
 Cela signifie que la recherche d'un texte de message nécessite que les fichiers contenant le texte du message soient être ouverts un par un pour vérifier si le texte recherché est contenu dans le fichier, qui est un processus relativement coûteux.
 
-Dans les *paramètres divers* vous pouvez activer *Construire l'index de recherche* pour augmenter significativement la vitesse de recherche sur l'appareil, mais soyez conscient que cela augmentera l'utilisation de la batterie et de l'espace de stockage. L'index de recherche est basé sur des mots, donc la recherche de texte partiel n'est pas possible. La recherche à l'aide de l'index de recherche est par défaut ET, donc la recherche de *pomme orange* recherche la pomme ET l'orange. Words separated by commas result in searching for OR, so for example *apple, orange* will search for apple OR orange. Les deux peuvent être combinées, donc la recherche de *pomme, banane orange* va chercher pomme OU (orange ET banane). L'utilisation de l'index de recherche est une fonctionnalité pro.
+Dans les *paramètres divers* vous pouvez activer *Construire l'index de recherche* pour augmenter significativement la vitesse de recherche sur l'appareil, mais soyez conscient que cela augmentera l'utilisation de la batterie et de l'espace de stockage. L'index de recherche est basé sur des mots, donc la recherche de texte partiel n'est pas possible. La recherche à l'aide de l'index de recherche est par défaut ET, donc la recherche de *pomme orange* recherche la pomme ET l'orange. Les mots séparés par des virgules génèrent une recherche avec OU. Par exemple * pomme, orange * recherchera pomme OU orange. Les deux peuvent être combinées, donc la recherche de *pomme, banane orange* va chercher pomme OU (orange ET banane). L'utilisation de l'index de recherche est une fonctionnalité pro.
 
 Depuis la version 1.1315, il est possible d'utiliser des expressions de recherche telles que:
 
@@ -1809,20 +1809,20 @@ Beaucoup de connaissances et d'expérience sont nécessaires pour développer av
 <a name="faq76"></a>
 **(76) Que fait 'Effacer les messages locaux' ?**
 
-The folder menu *Clear local messages* removes messages from the device which are present on the server too. It does not delete messages from the server. This can be useful after changing the folder settings to not download the message content (text and attachments), for example to save space.
+Le menu dossiers *Effacer les messages locaux* supprime les messages de l'appareil qui sont présents sur le serveur. Il ne supprime pas les messages du serveur. Cela peut être utile après avoir modifié les paramètres du dossier pour ne pas télécharger le contenu du message (texte et pièces jointes), par exemple pour économiser de l'espace.
 
 <br />
 
 <a name="faq77"></a>
-**(77) Why are messages sometimes shown with a small delay?**
+**(77) Pourquoi les messages sont-ils parfois affichés avec un petit retard ?**
 
-Depending on the speed of your device (processor speed and maybe even more memory speed) messages might be displayed with a small delay. FairEmail is designed to dynamically handle a large number of messages without running out of memory. This means that messages needs to be read from a database and that this database needs to be watched for changes, both of which might cause small delays.
+Selon la vitesse de votre appareil (vitesse du processeur et probablement surtout la vitesse de la mémoire) des messages peuvent s'afficher avec un petit délai. FairEmail est conçu pour gérer dynamiquement un grand nombre de messages sans epuiser la totalité de la mémoire. Cela signifie que les messages doivent être lus depuis une base de données et que cette base de données doit être surveillée pour des modifications. toutes deux peuvent entraîner de petits retards.
 
-Some convenience features, like grouping messages to display conversation threads and determining the previous/next message, take a little extra time. Note that there is no *the* next message because in the meantime a new message might have been arrived.
+Certaines fonctionnalités pratiques comme le regroupement des messages pour afficher les fils de conversation et déterminer le message précédent/suivant, prennent un peu plus de temps. Notez qu'il n'y a pas *le* message suivant car entre-temps un nouveau message pourrait être arrivé.
 
-When comparing the speed of FairEmail with similar apps this should be part of the comparison. It is easy to write a similar, faster app which just displays a lineair list of messages while possible using too much memory, but it is not so easy to properly manage resource usage and to offer more advanced features like conversation threading.
+Lorsque vous comparez la vitesse de FairEmail avec des applications similaires, cela devrait faire partie de la comparaison. Il est facile d'écrire une application similaire et plus rapide qui affiche simplement une liste de messages, probablement en utilisant trop de mémoire, mais il n'est pas si facile de gérer correctement l'utilisation des ressources et d'offrir des fonctionnalités plus avancées comme les fils de conversations.
 
-FairEmail is based on the state-of-the-art [Android architecture components](https://developer.android.com/topic/libraries/architecture/), so there is little room for performance improvements.
+FairEmail est basé sur les [composants d'architecture Android dernier cri](https://developer.android.com/topic/libraries/architecture/), donc il y a peu de place pour des améliorations de performance.
 
 <br />
 

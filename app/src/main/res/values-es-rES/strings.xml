@@ -91,7 +91,6 @@
     <string name="title_notification_sending_failed">El envío a %1$s falló</string>
     <string name="title_notification_redacted">Redactado: autenticación biométrica o PIN habilitada</string>
     <string name="title_factor_minutes">%1$d minutos</string>
-    <string name="menu_exit">Salir</string>
     <string name="menu_answers">Plantillas</string>
     <string name="menu_operations">Operaciones</string>
     <string name="menu_contacts">Contactos locales</string>
@@ -182,6 +181,7 @@
     <string name="title_setup_still">Aún por hacer</string>
     <string name="title_setup_error">Error</string>
     <string name="title_setup_configuring">Configurando cuenta &#8230;</string>
+    <string name="title_setup_close">Cerrar ajustes</string>
     <string name="title_setup_export">Exportar ajustes</string>
     <string name="title_setup_import">Importar ajustes</string>
     <string name="title_setup_export_do">La contraseña se utiliza para cifrar la configuración y es necesaria para importar la configuración de nuevo</string>
@@ -309,6 +309,7 @@
     <string name="title_advanced_cards_beige">Usar fondo beige al usar el estilo de tarjeta</string>
     <string name="title_advanced_cards_shadow">Usar sombra para mensajes no leídos al usar estilo de tarjeta</string>
     <string name="title_advanced_date_header">Agrupar por fecha</string>
+    <string name="title_advanced_date_bold">Mostrar fecha en negrita</string>
     <string name="title_advanced_threading">Hilos de conversación</string>
     <string name="title_advanced_threading_unread">Mostrar número de mensajes no leídos en conversaciones</string>
     <string name="title_advanced_indentation">Sangría izquierda/derecha para mensajes recibidos/enviados en conversaciones</string>
@@ -437,6 +438,7 @@
     <string name="title_advanced_secure">Ocultar de la pantalla de aplicaciones recientes e impedir capturas de pantallas</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Límite de tiempo para autenticación biométrica</string>
+    <string name="title_advanced_generic_user_agent">Usar agente de usuario de navegador genérico</string>
     <string name="title_advanced_disconnect_auto_update">Actualizar las listas automáticamente en forma semanal</string>
     <string name="title_advanced_disconnect_links">Usar listas para advertir sobre enlaces de seguimiento</string>
     <string name="title_advanced_disconnect_images">Usar listas para reconocer imágenes de rastreo</string>
@@ -823,7 +825,7 @@
     <string name="title_move_to_account">Mover a %1$s &#8230;</string>
     <string name="title_report_spam">Tratar como spam</string>
     <string name="title_delete_permanently">Borrar permanentemente</string>
-    <string name="title_no_undo">¡Esto no se puede deshacer!</string>
+    <string name="title_no_undo">Entiendo que esto no se puede deshacer</string>
     <string name="title_snooze">Posponer &#8230;</string>
     <string name="title_archive">Archivar</string>
     <string name="title_reply">Responder</string>
@@ -908,6 +910,7 @@
     <string name="title_subject">Asunto:</string>
     <string name="title_attachment">Adjunto:</string>
     <string name="title_body_hint">Su mensaje</string>
+    <string name="title_body_hint_style">Puede seleccionar texto para formatearlo</string>
     <string name="title_discard">Descartar</string>
     <string name="title_save">Guardar</string>
     <string name="title_send">Enviar</string>
@@ -935,8 +938,8 @@
     <string name="title_style_list">Lista</string>
     <string name="title_style_list_bullets">Viñetas</string>
     <string name="title_style_list_numbered">Numeradas</string>
-    <string name="title_style_list_level_increase" comment="title_style_list_level_increase&#10;Title for menu item to create sub lists&#10;">Aumentar sangría</string>
-    <string name="title_style_list_level_decrease" comment="title_style_list_level_decrease&#10;Title for menu item to create sub lists&#10;">Disminuir sangría</string>
+    <string name="title_style_list_level_increase">Aumentar sangría</string>
+    <string name="title_style_list_level_decrease">Disminuir sangría</string>
     <string name="title_style_font">Fuente</string>
     <string name="title_style_font_default">Por defecto</string>
     <string name="title_style_blockquote">Citar en bloque</string>
@@ -963,6 +966,9 @@
     <string name="title_insert_contact_group">Insertar grupo de contactos</string>
     <string name="title_insert_template">Insertar plantilla</string>
     <string name="title_create_template">Crear plantilla</string>
+    <string name="title_translate">Traducir</string>
+    <string name="title_translate_key">Introducir clave</string>
+    <string name="title_translating">Traduciendo &#8230;</string>
     <string name="title_edit_plain_text">Editar como texto plano</string>
     <string name="title_edit_formatted_text">Editar como texto con formato</string>
     <string name="title_select_certificate">Seleccionar clave pública</string>
@@ -1183,9 +1189,10 @@
     <string name="title_legend_synchronize_off">Sincronización desactivada</string>
     <string name="title_legend_synchronize_poll">Sincronizar periódicamente</string>
     <string name="title_legend_disconnected">Desconectado</string>
-    <string name="title_legend_backoff">Esperando después de un error</string>
     <string name="title_legend_connecting">Conectando</string>
     <string name="title_legend_connected">Conectado</string>
+    <string name="title_legend_backoff">Esperando después de un error</string>
+    <string name="title_legend_quota">Buzón casi lleno</string>
     <string name="title_legend_executing">Ejecutando operaciones</string>
     <string name="title_legend_synchronizing">Sincronizando</string>
     <string name="title_legend_downloading">Descargando</string>
@@ -1561,5 +1568,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Monoespaciado</item>
+        <item>Fantasía</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

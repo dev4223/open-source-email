@@ -503,7 +503,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
             }
         }));
 
-        menus.add(new NavMenuItem(R.drawable.twotone_reply_24, R.string.menu_answers, new Runnable() {
+        menus.add(new NavMenuItem(R.drawable.twotone_text_snippet_24, R.string.menu_answers, new Runnable() {
             @Override
             public void run() {
                 if (!drawerLayout.isLocked(drawerContainer))
@@ -580,7 +580,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 }
             }).setExternal(true));
 
-        extra.add(new NavMenuItem(R.drawable.twotone_account_box_24, R.string.menu_privacy, new Runnable() {
+        extra.add(new NavMenuItem(R.drawable.twotone_account_circle_24, R.string.menu_privacy, new Runnable() {
             @Override
             public void run() {
                 if (!drawerLayout.isLocked(drawerContainer))
@@ -956,6 +956,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                     urlConnection.setReadTimeout(UPDATE_TIMEOUT);
                     urlConnection.setConnectTimeout(UPDATE_TIMEOUT);
                     urlConnection.setDoOutput(false);
+                    urlConnection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
                     urlConnection.connect();
 
                     int status = urlConnection.getResponseCode();
@@ -1045,10 +1046,11 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 builder.setContentIntent(piUpdate);
 
                 Intent manage = new Intent(ActivityView.this, ActivitySetup.class)
+                        .setAction("misc")
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         .putExtra("tab", "misc");
                 PendingIntent piManage = PendingIntentCompat.getActivity(
-                        ActivityView.this, ActivitySetup.REQUEST_MANAGE, manage, PendingIntent.FLAG_UPDATE_CURRENT);
+                        ActivityView.this, ActivitySetup.PI_MISC, manage, PendingIntent.FLAG_UPDATE_CURRENT);
                 NotificationCompat.Action.Builder actionManage = new NotificationCompat.Action.Builder(
                         R.drawable.twotone_settings_24,
                         getString(R.string.title_setup_manage),

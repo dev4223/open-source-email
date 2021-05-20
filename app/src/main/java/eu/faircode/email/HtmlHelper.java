@@ -24,9 +24,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.DashPathEffect;
-import android.graphics.Paint;
-import android.graphics.PathEffect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -37,7 +34,6 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextDirectionHeuristics;
-import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.AlignmentSpan;
 import android.text.style.BulletSpan;
@@ -45,7 +41,6 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.text.style.QuoteSpan;
 import android.text.style.RelativeSizeSpan;
-import android.text.style.ReplacementSpan;
 import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 import android.text.style.SubscriptSpan;
@@ -119,10 +114,10 @@ import static org.w3c.css.sac.Condition.SAC_CLASS_CONDITION;
 public class HtmlHelper {
     static final int PREVIEW_SIZE = 500; // characters
 
+    static final float FONT_SMALL = 0.8f;
+    static final float FONT_LARGE = 1.25f;
     private static final int DEFAULT_FONT_SIZE = 16; // pixels
     private static final int DEFAULT_FONT_SIZE_PT = 12; // points
-    private static final float FONT_SMALL = 0.8f;
-    private static final float FONT_LARGE = 1.25f;
     private static final int GRAY_THRESHOLD = Math.round(255 * 0.2f);
     private static final float MIN_LUMINANCE = 0.7f;
     private static final int TAB_SIZE = 2;
@@ -423,6 +418,7 @@ public class HtmlHelper {
                 .addAttributes(":all", "class")
                 .addAttributes(":all", "style")
                 .addAttributes("span", "dir")
+                .addAttributes("li", "dir")
                 .addAttributes("div", "x-plain")
                 .removeTags("col", "colgroup")
                 .removeTags("thead", "tbody", "tfoot")
@@ -980,6 +976,17 @@ public class HtmlHelper {
                 String style = e.attr("style");
                 e.attr("style",
                         mergeStyles(style, "margin-top:0;margin-bottom:0"));
+
+                int ltr = 0;
+                int rtl = 0;
+                for (Element li : e.children()) {
+                    if ("rtl".equals(li.attr("dir")))
+                        rtl++;
+                    else
+                        ltr++;
+                    li.removeAttr("dir");
+                }
+                e.attr("dir", rtl > ltr ? "rtl" : "ltr");
             }
         }
 
@@ -1034,19 +1041,25 @@ public class HtmlHelper {
                 int width = 0;
                 int height = 0;
 
-                String awidth = img.attr("width");
+                // Relative sizes (%) = use image size
+
+                String awidth = img.attr("width").replace(" ", "");
                 for (int i = 0; i < awidth.length(); i++)
                     if (Character.isDigit(awidth.charAt(i)))
                         width = width * 10 + (byte) awidth.charAt(i) - (byte) '0';
-                    else
+                    else {
+                        width = 0;
                         break;
+                    }
 
-                String aheight = img.attr("height");
+                String aheight = img.attr("height").replace(" ", "");
                 for (int i = 0; i < aheight.length(); i++)
                     if (Character.isDigit(aheight.charAt(i)))
                         height = height * 10 + (byte) aheight.charAt(i) - (byte) '0';
-                    else
+                    else {
+                        height = 0;
                         break;
+                    }
 
                 if (width != 0 || height != 0) {
                     ImageHelper.AnnotatedSource a = new ImageHelper.AnnotatedSource(
@@ -2037,7 +2050,11 @@ public class HtmlHelper {
         final int colorSeparator = Helper.resolveColor(context, R.attr.colorSeparator);
         final int dp3 = Helper.dp2pixels(context, 3);
         final int dp6 = Helper.dp2pixels(context, 6);
-        final int dp24 = Helper.dp2pixels(context, 24);
+        int bulletGap = context.getResources().getDimensionPixelSize(R.dimen.bullet_gap_size);
+        int bulletRadius = context.getResources().getDimensionPixelSize(R.dimen.bullet_radius_size);
+        int bulletIndent = context.getResources().getDimensionPixelSize(R.dimen.bullet_indent_size);
+        int quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
+        int quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
 
         int message_zoom = prefs.getInt("message_zoom", 100);
         float textSize = Helper.getTextSize(context, 0) * message_zoom / 100f;
@@ -2305,7 +2322,7 @@ public class HtmlHelper {
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
                                     setSpan(ssb, new QuoteSpan(colorPrimary), start, ssb.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
                                 else
-                                    setSpan(ssb, new QuoteSpan(colorPrimary, dp3, dp6), start, ssb.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                                    setSpan(ssb, new QuoteSpan(colorPrimary, quoteStripe, quoteGap), start, ssb.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
                                 break;
                             case "br":
                                 ssb.append('\n');
@@ -2396,9 +2413,9 @@ public class HtmlHelper {
 
                                 if (type == null || "ul".equals(type.tagName())) {
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                        setSpan(ssb, new BulletSpanEx(dp24, dp6, colorAccent, level), start, ssb.length());
+                                        setSpan(ssb, new BulletSpanEx(bulletIndent, bulletGap, colorAccent, level), start, ssb.length());
                                     else
-                                        setSpan(ssb, new BulletSpanEx(dp24, dp6, colorAccent, dp3, level), start, ssb.length());
+                                        setSpan(ssb, new BulletSpanEx(bulletIndent, bulletGap, colorAccent, bulletRadius, level), start, ssb.length());
                                 } else {
                                     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/ol
                                     int index = 0;
@@ -2414,7 +2431,7 @@ public class HtmlHelper {
                                         }
                                     }
 
-                                    setSpan(ssb, new NumberSpan(dp24, dp6, colorAccent, textSize, level, index), start, ssb.length());
+                                    setSpan(ssb, new NumberSpan(bulletIndent, bulletGap, colorAccent, textSize, level, index), start, ssb.length());
                                 }
 
                                 break;
@@ -2679,68 +2696,5 @@ public class HtmlHelper {
                         spanned.getSpanEnd(spans[i]),
                         spanned.getSpanFlags(spans[i]));
         return reverse;
-    }
-
-    public static class LineSpan extends ReplacementSpan {
-        private int lineColor;
-        private float strokeWidth;
-        private float dashLength;
-
-        LineSpan(int lineColor, float strokeWidth, float dashLength) {
-            this.lineColor = lineColor;
-            this.strokeWidth = strokeWidth;
-            this.dashLength = dashLength;
-        }
-
-        @Override
-        public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, @Nullable Paint.FontMetricsInt fm) {
-            return 0;
-        }
-
-        @Override
-        public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
-            int ypos = (top + bottom) / 2;
-            int c = paint.getColor();
-            float s = paint.getStrokeWidth();
-            PathEffect p = paint.getPathEffect();
-            paint.setColor(lineColor);
-            paint.setStrokeWidth(strokeWidth);
-            if (dashLength != 0)
-                paint.setPathEffect(new DashPathEffect(new float[]{dashLength, dashLength}, 0));
-            canvas.drawLine(0, ypos, canvas.getWidth(), ypos, paint);
-            paint.setColor(c);
-            paint.setStrokeWidth(s);
-            paint.setPathEffect(p);
-        }
-    }
-
-    public static class CustomTypefaceSpan extends TypefaceSpan {
-        private final Typeface newType;
-
-        public CustomTypefaceSpan(String family, Typeface type) {
-            super(family);
-            newType = type;
-        }
-
-        @Override
-        public void updateDrawState(TextPaint ds) {
-            applyCustomTypeFace(ds, newType);
-        }
-
-        @Override
-        public void updateMeasureState(TextPaint paint) {
-            applyCustomTypeFace(paint, newType);
-        }
-
-        private static void applyCustomTypeFace(Paint paint, Typeface tf) {
-            Typeface old = paint.getTypeface();
-            int oldStyle = (old == null ? 0 : old.getStyle());
-            int fake = oldStyle & ~tf.getStyle();
-            if ((fake & Typeface.BOLD) != 0)
-                paint.setFakeBoldText(true);
-            if ((fake & Typeface.ITALIC) != 0)
-                paint.setTextSkewX(-0.25f);
-            paint.setTypeface(tf);
-        }
     }
 }

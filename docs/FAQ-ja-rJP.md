@@ -2,7 +2,7 @@
 
 # FairEmail のサポート
 
-ご不明な点がございましたら、まずは下記のよくある質問をご確認ください。 [At the bottom](#user-content-get-support), you can find out how to ask other questions, request features, and report bugs.
+ご不明な点がございましたら、まずは下記のよくある質問をご確認ください。 [ページ下部](#user-content-get-support)では、他の質問をしたり、機能をリクエストしたり、バグを報告する方法を見つけることができます。
 
 Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [Ganz unten erfahren Sie](#user-content-get-support), wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
 
@@ -47,22 +47,22 @@ Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häuf
 
 ## How to ...?
 
-* Change the account name: Settings, tap Manual setup, tap Accounts, tap account
-* Change the swipe left/right target: Settings, tab page Behavior, Set swipe actions
-* Change password: Settings, tap Manual setup, tap Accounts, tap account, change password
-* Set a signature: Settings, tap Manual setup, tap Identities, tap identity, Edit signature.
-* Add CC and BCC addresses: tap the people's icon at the end of the subject
-* Go to the next/previous message on archive/delete: in the behavior settings disable *Automatically close conversations* and select *Go to next/previous conversation* for *On closing a conversation*
-* Add a folder to the unified inbox: long press the folder in the folder list and tick *Show in unified inbox*
-* Add a folder to the navigation menu: long press the folder in the folder list and tick *Show in navigation menu*
-* Load more messages: long press a folder in the folder list, select *Fetch more messages*
-* Delete a message, skipping trash: long press the trash icon
-* Delete an account/identity: Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, trash icon top right
-* Delete a folder: long press the folder in the folder list, Edit properties, trash icon top right
-* Undo send: Outbox, swipe the message in the list left or right
-* Store sent messages in the inbox: please [see this FAQ](#user-content-faq142)
-* Change system folders: Settings, tap Manual setup, tap Accounts, tap account, at the bottom
-* Export/import settings: Settings, navigation (left side) menu
+* アカウントの名前を変更する：設定 > 手動セットアップをタップする > アカウント(Accounts) をタップする > アカウントをタップする
+* 左に/右にすワイプする標的：設定 > 動作(Behavior)タブ > すワイプの行動
+* パスワードを変更する：設定 > 手動セットアップをタップする > アカウント(Accounts) をタップする > アカウント > パスワードを変更する
+* メールの署名をセットする：設定 > 手動セットアップをタップする > ユーザ情報(Identities) をタップする > アカウントをタップする > 署名を編集する
+* CCアドレスとBCCアドレスを追加する：件名の後にある人々のアイコンをタップする
+* アーカイブ/デリートに次/以前のメセージ：動作(Behavior)タブ > 「自動に会話を閉じる」を無効にする > 「会話を閉じる時」の下に「次/前の会話に移動」を選択する
+* 統合受信トレイフォルダーにフォルダーを追加する：フォルダーリストのフォルダーを長押しして「統合受信トレイに表示」をチェックする
+* ナビゲーションメニューにフォルダーを追加する：フォルダーリストのフォルダーを長押しして「ナビゲーションメニューに表示」をチェックする
+* さらにメセージをロードする：フォルダーリストのフォルダーを長押しして「さらにメッセージを取得」をチェックする
+* メッセージを削除してゴミ箱をスキップする：ゴミ箱のアイコンを長押しする
+* アカウント/ユーザ情報を削除する：設定 > 手動セットアップをタップする > アカウント/ユーザ情報(Accounts/Identities)をタップする > 右上にゴミ箱アイコンをタップする
+* フォルダーを削除する：フォルダーリストのフォルダーを長押しする > プロパティを編集 > 右上のゴミ箱アイコンをたっぷする
+* 送信を元に戻す：送信トレイ > メッセージを左か右かにスワイプする
+* 受信トイレに送信済みを保存する：[このFAQ](#user-content-faq142)を見てください
+* システムフォルダーを変更する：設定 > 手動のセットアップをタップする > アカウントをタップする > 下にアカウントをタップする
+* エクスポートやインポート設定：設定 > ナビゲーションの左手メニュー
 
 <h2><a name="known-problems"></a>Known problem</h2>
 
@@ -435,7 +435,7 @@ You can pin the certificate too, see above.
 
 *Empty password*
 
-Your username is likely easily guessed, so this is insecure.
+Your username is likely easily guessed, so this is pretty insecure, unless the SMTP server is available via a restricted local network or a VPN only.
 
 *Plain text connection*
 
@@ -680,7 +680,7 @@ Private keys are stored by Android and can be imported via the Android advanced 
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
 
-Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
+Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with asymmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You can long press on the send button to change the encryption method for an identity. If you use both PGP and S/MIME encryption for the same email address, it might be useful to copy the identity, so you can change the encryption method by selecting one of the two identities. You can long press an identity in the list of identities (via manual setup in the main setup screen) to copy an identity.
 
