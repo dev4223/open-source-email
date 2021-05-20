@@ -79,7 +79,6 @@
     <string name="title_notification_sending_failed">发送至 %1$s 失败</string>
     <string name="title_notification_redacted">已编辑：启用了生物识别或PIN身份验证</string>
     <string name="title_factor_minutes">%1$d分钟</string>
-    <string name="menu_exit">退出</string>
     <string name="menu_answers">模板</string>
     <string name="menu_operations">操作</string>
     <string name="menu_contacts">本地联系人</string>
@@ -811,7 +810,6 @@
     <string name="title_move_to_account">移动到 %1$s &#8230;</string>
     <string name="title_report_spam">视为垃圾邮件</string>
     <string name="title_delete_permanently">永久删除</string>
-    <string name="title_no_undo">此操作无法撤消！</string>
     <string name="title_snooze">打盹 &#8230;</string>
     <string name="title_archive">存档</string>
     <string name="title_reply">回复</string>
@@ -896,6 +894,7 @@
     <string name="title_subject">主题：</string>
     <string name="title_attachment">附件：</string>
     <string name="title_body_hint">您的邮件内容……</string>
+    <string name="title_body_hint_style">您可以选择要格式化的文本</string>
     <string name="title_discard">舍弃</string>
     <string name="title_save">保存</string>
     <string name="title_send">发送</string>
@@ -923,8 +922,8 @@
     <string name="title_style_list">列表</string>
     <string name="title_style_list_bullets">项目符号列表</string>
     <string name="title_style_list_numbered">编号列表</string>
-    <string name="title_style_list_level_increase" comment="title_style_list_level_increase&#10;Title for menu item to create sub lists&#10;">增加缩进</string>
-    <string name="title_style_list_level_decrease" comment="title_style_list_level_decrease&#10;Title for menu item to create sub lists&#10;">减少缩进</string>
+    <string name="title_style_list_level_increase">增加缩进</string>
+    <string name="title_style_list_level_decrease">减少缩进</string>
     <string name="title_style_font">字体</string>
     <string name="title_style_font_default">默认</string>
     <string name="title_style_blockquote">引用块</string>
@@ -1171,9 +1170,9 @@
     <string name="title_legend_synchronize_off">同步关闭</string>
     <string name="title_legend_synchronize_poll">定期同步</string>
     <string name="title_legend_disconnected">未连接</string>
-    <string name="title_legend_backoff">连接失败后等待</string>
     <string name="title_legend_connecting">正在连接</string>
     <string name="title_legend_connected">已连接</string>
+    <string name="title_legend_backoff">连接失败后等待</string>
     <string name="title_legend_executing">执行操作</string>
     <string name="title_legend_synchronizing">正在同步</string>
     <string name="title_legend_downloading">下载中</string>
@@ -1547,5 +1546,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>等宽字体</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

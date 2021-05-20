@@ -68,7 +68,9 @@ import android.text.style.CharacterStyle;
 import android.text.style.ImageSpan;
 import android.text.style.ParagraphStyle;
 import android.text.style.QuoteSpan;
+import android.text.style.RelativeSizeSpan;
 import android.text.style.URLSpan;
+import android.util.LogPrinter;
 import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -98,6 +100,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.constraintlayout.widget.Group;
@@ -107,6 +110,7 @@ import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.Lifecycle;
@@ -140,6 +144,8 @@ import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.Store;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
@@ -435,18 +441,7 @@ public class FragmentCompose extends FragmentBase {
                 int first = text.substring(0, last).lastIndexOf(',');
                 first = (first < 0 ? 0 : first + 1);
 
-                if (first == start && last + 1 == end) {
-                    String selected = et.getText().subSequence(start, end).toString();
-                    int gt = selected.lastIndexOf('<');
-                    int lt = selected.lastIndexOf('>');
-                    if (gt >= 0 && lt >= 0 && gt < lt) {
-                        et.setSelection(start + gt + 1, start + lt);
-                        return true;
-                    }
-                } else {
-                    et.setSelection(first, last + 1);
-                    return true;
-                }
+                et.setSelection(first, last + 1);
 
                 return false;
             }
@@ -524,6 +519,14 @@ public class FragmentCompose extends FragmentBase {
 
         setZoom();
 
+        SpannableStringBuilder hint = new SpannableStringBuilder();
+        hint.append(getString(R.string.title_body_hint));
+        hint.append("\n");
+        int pos = hint.length();
+        hint.append(getString(R.string.title_body_hint_style));
+        hint.setSpan(new RelativeSizeSpan(0.7f), pos, hint.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        etBody.setHint(hint);
+
         etBody.setInputContentListener(new EditTextCompose.IInputContentListener() {
             @Override
             public void onInputContent(Uri uri) {
@@ -582,6 +585,14 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             public void afterTextChanged(Editable text) {
+                LogPrinter lp = null;
+                if (BuildConfig.DEBUG &&
+                        (added != null || removed != null))
+                    lp = new LogPrinter(android.util.Log.INFO, "FairEmail");
+
+                if (lp != null)
+                    TextUtils.dumpSpans(text, new LogPrinter(android.util.Log.INFO, "FairEmail"), "---before>");
+
                 if (added != null)
                     try {
                         // break block quotes
@@ -590,8 +601,8 @@ public class FragmentCompose extends FragmentBase {
                         for (QuoteSpan span : spans) {
                             int s = text.getSpanStart(span);
                             int e = text.getSpanEnd(span);
-                            int f = text.getSpanFlags(span) | Spanned.SPAN_PARAGRAPH;
-                            Log.i("Span " + s + "..." + e + " added=" + added);
+                            int f = text.getSpanFlags(span);
+                            Log.i(span + " " + s + "..." + e + " added=" + added);
 
                             if (s > 0 && added - s > 0 && e - (added + 1) > 0 &&
                                     text.charAt(s - 1) == '\n' && text.charAt(added - 1) == '\n' &&
@@ -600,11 +611,11 @@ public class FragmentCompose extends FragmentBase {
 
                                 QuoteSpan q1 = StyleHelper.clone(span, QuoteSpan.class, etBody.getContext());
                                 text.setSpan(q1, s, added, f);
-                                Log.i("Span " + s + "..." + added);
+                                Log.i(span + " " + s + "..." + added);
 
                                 QuoteSpan q2 = StyleHelper.clone(span, QuoteSpan.class, etBody.getContext());
                                 text.setSpan(q2, added + 1, e, f);
-                                Log.i("Span " + (added + 1) + "..." + e);
+                                Log.i(span + " " + (added + 1) + "..." + e);
 
                                 text.removeSpan(span);
                             }
@@ -616,16 +627,16 @@ public class FragmentCompose extends FragmentBase {
                                 int s = text.getSpanStart(span);
                                 int e = text.getSpanEnd(span);
                                 int f = text.getSpanFlags(span);
-                                Log.i("Style span " + s + "..." + e + " start=" + added);
+                                Log.i(span + " " + s + "..." + e + " start=" + added);
 
                                 if (s <= added && added + 1 <= e) {
                                     CharacterStyle s1 = CharacterStyle.wrap(span);
                                     text.setSpan(s1, s, added, f);
-                                    Log.i("Style span " + s + "..." + added);
+                                    Log.i(span + " " + s + "..." + added);
 
                                     CharacterStyle s2 = CharacterStyle.wrap(span);
                                     text.setSpan(s2, added + 1, e, f);
-                                    Log.i("Style span " + (added + 1) + "..." + e);
+                                    Log.i(span + " " + (added + 1) + "..." + e);
 
                                     text.removeSpan(span);
                                 }
@@ -640,7 +651,7 @@ public class FragmentCompose extends FragmentBase {
                             int s = text.getSpanStart(span);
                             int e = text.getSpanEnd(span);
                             int f = text.getSpanFlags(span) | Spanned.SPAN_PARAGRAPH;
-                            Log.i("Span " + s + "..." + e + " added=" + added);
+                            Log.i(span + " " + s + "..." + e + " added=" + added);
 
                             if (s > 0 &&
                                     added + 1 > s && e > added + 1 &&
@@ -648,11 +659,11 @@ public class FragmentCompose extends FragmentBase {
                                 if (e - s > 2) {
                                     BulletSpan b1 = StyleHelper.clone(span, span.getClass(), etBody.getContext());
                                     text.setSpan(b1, s, added + 1, f);
-                                    Log.i("Span " + s + "..." + (added + 1));
+                                    Log.i(span + " " + s + "..." + (added + 1));
 
                                     BulletSpan b2 = StyleHelper.clone(b1, span.getClass(), etBody.getContext());
                                     text.setSpan(b2, added + 1, e, f);
-                                    Log.i("Span " + (added + 1) + "..." + e);
+                                    Log.i(span + " " + (added + 1) + "..." + e);
                                 }
 
                                 renum = true;
@@ -674,7 +685,7 @@ public class FragmentCompose extends FragmentBase {
                         for (ParagraphStyle p : ps) {
                             int start = text.getSpanStart(p);
                             int end = text.getSpanEnd(p);
-                            if (start == removed && end == removed + 1)
+                            if (start >= removed && end <= removed + 1)
                                 text.removeSpan(p);
                         }
 
@@ -682,6 +693,9 @@ public class FragmentCompose extends FragmentBase {
 
                     removed = null;
                 }
+
+                if (lp != null)
+                    TextUtils.dumpSpans(text, lp, "---after>");
             }
         });
 
@@ -1405,6 +1419,8 @@ public class FragmentCompose extends FragmentBase {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_compose, menu);
 
+        PopupMenuLifecycle.insertIcons(getContext(), menu);
+
         menu.findItem(R.id.menu_encrypt).setActionView(R.layout.action_button_text);
         ImageButton ib = menu.findItem(R.id.menu_encrypt).getActionView().findViewById(R.id.button);
         ib.setOnClickListener(new View.OnClickListener() {
@@ -1427,6 +1443,62 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
+        try (InputStream is = getContext().getAssets().open("deepl.json")) {
+            String json = Helper.readStream(is);
+            JSONArray jarray = new JSONArray(json);
+
+            String pkg = getContext().getPackageName();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+            List<Pair<String, String>> languages = new ArrayList<>();
+            Map<String, Integer> frequencies = new HashMap<>();
+            for (int i = 0; i < jarray.length(); i++) {
+                JSONObject jlanguage = jarray.getJSONObject(i);
+                String name = jlanguage.getString("name");
+                String target = jlanguage.getString("language");
+
+                Locale locale = Locale.forLanguageTag(target);
+                if (locale != null)
+                    name = locale.getDisplayName();
+
+                int frequency = prefs.getInt("translated_" + target, 0);
+                if (frequency > 0)
+                    name += " ★";
+
+                languages.add(new Pair<>(name, target));
+                frequencies.put(target, frequency);
+            }
+
+            Collator collator = Collator.getInstance(Locale.getDefault());
+            collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
+            Collections.sort(languages, new Comparator<Pair<String, String>>() {
+                @Override
+                public int compare(Pair<String, String> l1, Pair<String, String> l2) {
+                    int freq1 = frequencies.get(l1.second);
+                    int freq2 = frequencies.get(l2.second);
+
+                    if (freq1 == freq2)
+                        return collator.compare(l1.first, l2.first);
+                    else
+                        return -Integer.compare(freq1, freq2);
+                }
+            });
+
+            for (int i = 0; i < languages.size(); i++) {
+                Pair<String, String> lang = languages.get(i);
+                SubMenu smenu = menu.findItem(R.id.menu_translate).getSubMenu();
+                MenuItem item = smenu.add(R.id.group_translate, i + 1, i + 1, lang.first)
+                        .setIntent(new Intent().putExtra("target", lang.second));
+
+                String resname = "language_" + lang.second.toLowerCase().replace('-', '_');
+                int resid = getResources().getIdentifier(resname, "drawable", pkg);
+                if (resid > 0)
+                    item.setIcon(resid);
+            }
+        } catch (Throwable ex) {
+            Log.e(ex);
+        }
+
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -1442,6 +1514,8 @@ public class FragmentCompose extends FragmentBase {
                 state == State.LOADED && hasPermission(Manifest.permission.READ_CONTACTS));
         menu.findItem(R.id.menu_answer_insert).setEnabled(state == State.LOADED);
         menu.findItem(R.id.menu_answer_create).setEnabled(state == State.LOADED);
+        menu.findItem(R.id.menu_translate).setEnabled(state == State.LOADED);
+        menu.findItem(R.id.menu_translate).setVisible(getParagraph() != null && !BuildConfig.PLAY_STORE_RELEASE);
         menu.findItem(R.id.menu_clear).setEnabled(state == State.LOADED);
 
         int colorEncrypt = Helper.resolveColor(getContext(), R.attr.colorEncrypt);
@@ -1471,12 +1545,16 @@ public class FragmentCompose extends FragmentBase {
         boolean save_drafts = prefs.getBoolean("save_drafts", true);
         boolean send_dialog = prefs.getBoolean("send_dialog", true);
         boolean image_dialog = prefs.getBoolean("image_dialog", true);
+        String deepl_key = prefs.getString("deepl_key", null);
 
         menu.findItem(R.id.menu_save_drafts).setChecked(save_drafts);
         menu.findItem(R.id.menu_send_dialog).setChecked(send_dialog);
         menu.findItem(R.id.menu_image_dialog).setChecked(image_dialog);
         menu.findItem(R.id.menu_media).setChecked(media);
         menu.findItem(R.id.menu_compact).setChecked(compact);
+        SubMenu smenu = menu.findItem(R.id.menu_translate).getSubMenu();
+        for (int i = 1; i < smenu.size(); i++)
+            smenu.getItem(i).setEnabled(deepl_key != null);
 
         if (EntityMessage.PGP_SIGNONLY.equals(encrypt) ||
                 EntityMessage.SMIME_SIGNONLY.equals(encrypt))
@@ -1530,6 +1608,12 @@ public class FragmentCompose extends FragmentBase {
             return true;
         } else if (itemId == R.id.menu_answer_create) {
             onMenuAnswerCreate();
+            return true;
+        } else if (itemId == R.id.menu_translate_configure) {
+            onMenuTranslateConfigure();
+            return true;
+        } else if (item.getGroupId() == R.id.group_translate) {
+            onMenuTranslate(item.getIntent().getStringExtra("target"));
             return true;
         } else if (itemId == R.id.menu_clear) {
             StyleHelper.apply(R.id.menu_clear, getViewLifecycleOwner(), null, etBody);
@@ -1730,14 +1814,34 @@ public class FragmentCompose extends FragmentBase {
                 PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), vwAnchorMenu);
                 Menu main = popupMenu.getMenu();
 
+                List<EntityAnswer> favorites = new ArrayList<>();
                 List<String> groups = new ArrayList<>();
                 for (EntityAnswer answer : answers)
-                    if (answer.group != null && !groups.contains(answer.group))
+                    if (answer.favorite)
+                        favorites.add(answer);
+                    else if (answer.group != null && !groups.contains(answer.group))
                         groups.add(answer.group);
 
                 Collator collator = Collator.getInstance(Locale.getDefault());
                 collator.setStrength(Collator.SECONDARY); // Case insensitive, process accents etc
                 Collections.sort(groups, collator);
+
+                Collections.sort(answers, new Comparator<EntityAnswer>() {
+                    @Override
+                    public int compare(EntityAnswer a1, EntityAnswer a2) {
+                        if (!BuildConfig.DEBUG || a1.applied.equals(a2.applied))
+                            return collator.compare(a1.name, a2.name);
+                        else
+                            return -a1.applied.compareTo(a2.applied);
+                    }
+                });
+
+                Collections.sort(favorites, new Comparator<EntityAnswer>() {
+                    @Override
+                    public int compare(EntityAnswer a1, EntityAnswer a2) {
+                        return collator.compare(a1.name, a2.name);
+                    }
+                });
 
                 int order = 0;
 
@@ -1746,16 +1850,27 @@ public class FragmentCompose extends FragmentBase {
                     map.put(group, main.addSubMenu(Menu.NONE, order, order++, group));
 
                 for (EntityAnswer answer : answers) {
+                    if (answer.favorite)
+                        continue;
                     order++;
+
+                    String name = answer.name;
+                    if (BuildConfig.DEBUG && answer.applied > 0)
+                        name += " ★";
+
+                    MenuItem item;
                     if (answer.group == null)
-                        main.add(Menu.NONE, order, order++, answer.toString())
-                                .setIntent(new Intent().putExtra("id", answer.id));
+                        item = main.add(Menu.NONE, order, order++, name);
                     else {
                         SubMenu smenu = map.get(answer.group);
-                        smenu.add(Menu.NONE, smenu.size(), smenu.size() + 1, answer.toString())
-                                .setIntent(new Intent().putExtra("id", answer.id));
+                        item = smenu.add(Menu.NONE, smenu.size(), smenu.size() + 1, name);
                     }
+                    item.setIntent(new Intent().putExtra("id", answer.id));
                 }
+
+                for (EntityAnswer answer : favorites)
+                    main.add(Menu.NONE, order, order++, answer.toString())
+                            .setIntent(new Intent().putExtra("id", answer.id));
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
@@ -1770,8 +1885,28 @@ public class FragmentCompose extends FragmentBase {
                         }
 
                         long id = intent.getLongExtra("id", -1);
-                        for (EntityAnswer answer : answers)
-                            if (answer.id.equals(id)) {
+
+                        Bundle args = new Bundle();
+                        args.putLong("id", id);
+
+                        new SimpleTask<EntityAnswer>() {
+                            @Override
+                            protected EntityAnswer onExecute(Context context, Bundle args) throws Throwable {
+                                long id = args.getLong("id");
+
+                                DB db = DB.getInstance(context);
+                                EntityAnswer answer = db.answer().getAnswer(id);
+                                if (answer != null)
+                                    db.answer().applyAnswer(answer.id, new Date().getTime());
+
+                                return answer;
+                            }
+
+                            @Override
+                            protected void onExecuted(Bundle args, EntityAnswer answer) {
+                                if (answer == null)
+                                    return;
+
                                 if (etSubject.getText().length() == 0)
                                     etSubject.setText(answer.name);
 
@@ -1810,14 +1945,20 @@ public class FragmentCompose extends FragmentBase {
                                     }
 
                                     etBody.getText().insert(start, spanned);
-                                }
 
-                                return true;
+                                    int pos = getAutoPos(start, spanned.length());
+                                    if (pos >= 0)
+                                        etBody.setSelection(pos);
+                                }
                             }
 
-                        Log.e("Answer=" + id + " count=" + answers.size() + " not found");
+                            @Override
+                            protected void onException(Bundle args, Throwable ex) {
+                                Log.unexpectedError(getParentFragmentManager(), ex);
+                            }
+                        }.execute(FragmentCompose.this, args, "compose:answer");
 
-                        return false;
+                        return true;
                     }
                 });
 
@@ -1841,6 +1982,121 @@ public class FragmentCompose extends FragmentBase {
         FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment).addToBackStack("compose:answer");
         fragmentTransaction.commit();
+    }
+
+    private void onMenuTranslateConfigure() {
+        FragmentDialogDeepL fragment = new FragmentDialogDeepL();
+        fragment.show(getParentFragmentManager(), "deepl:configure");
+    }
+
+    private Pair<Integer, Integer> getParagraph() {
+        int start = etBody.getSelectionStart();
+        int end = etBody.getSelectionEnd();
+        Editable edit = etBody.getText();
+
+        if (start < 0 || end < 0)
+            return null;
+
+        if (start > end) {
+            int tmp = start;
+            start = end;
+            end = tmp;
+        }
+
+        // Expand selection at start
+        while (start > 0 && edit.charAt(start - 1) != '\n')
+            start--;
+
+        if (start == end && end < edit.length())
+            end++;
+
+        // Expand selection at end
+        while (end > 0 && end < edit.length() && edit.charAt(end - 1) != '\n')
+            end++;
+
+        // Trim start
+        while (start < edit.length() - 1 && edit.charAt(start) == '\n')
+            start++;
+
+        // Trim end
+        while (end > 1 && edit.charAt(end - 2) == '\n')
+            end--;
+
+        if (start < end)
+            return new Pair(start, end);
+
+        return null;
+    }
+
+    private void onMenuTranslate(String target) {
+        final Pair<Integer, Integer> paragraph = getParagraph();
+        if (paragraph == null)
+            return;
+
+        Editable edit = etBody.getText();
+        String text = edit.subSequence(paragraph.first, paragraph.second).toString();
+
+        Bundle args = new Bundle();
+        args.putString("target", target);
+        args.putString("text", text);
+
+        new SimpleTask<String>() {
+            @Override
+            protected void onPreExecute(Bundle args) {
+                ToastEx.makeText(getContext(), R.string.title_translating, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            protected String onExecute(Context context, Bundle args) throws Throwable {
+                String target = args.getString("target");
+                String text = args.getString("text");
+                return DeepL.translate(text, target, context);
+            }
+
+            @Override
+            protected void onExecuted(Bundle args, String translated) {
+                if (paragraph.second > edit.length())
+                    return;
+
+                FragmentActivity activity = getActivity();
+                if (activity == null)
+                    return;
+
+                Context context = getContext();
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+                // Insert translated text
+                StringBuilder sb = new StringBuilder("\n");
+                if (paragraph.second == edit.length() ||
+                        edit.charAt(paragraph.second) != '\n')
+                    sb.append('\n');
+                edit.insert(paragraph.second, sb + translated);
+                etBody.setSelection(paragraph.second + sb.length() + translated.length());
+
+                boolean small = prefs.getBoolean("deepl_small", false);
+                if (small) {
+                    RelativeSizeSpan[] spans = edit.getSpans(
+                            paragraph.first, paragraph.second, RelativeSizeSpan.class);
+                    for (RelativeSizeSpan span : spans)
+                        edit.removeSpan(span);
+                    edit.setSpan(new RelativeSizeSpan(HtmlHelper.FONT_SMALL),
+                            paragraph.first, paragraph.second,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
+                // Updated frequency
+                String key = "translated_" + args.getString("target");
+                int count = prefs.getInt(key, 0);
+                prefs.edit().putInt(key, count + 1).apply();
+
+                activity.invalidateOptionsMenu();
+            }
+
+            @Override
+            protected void onException(Bundle args, Throwable ex) {
+                Log.unexpectedError(getParentFragmentManager(), ex, false);
+            }
+        }.execute(this, args, "compose:translate");
     }
 
     private boolean onActionStyle(int action, View anchor) {
@@ -2267,12 +2523,16 @@ public class FragmentCompose extends FragmentBase {
 
             @Override
             protected void onException(Bundle args, Throwable ex) {
-                if (ex instanceof SecurityException) {
-                    pickRequest = requestCode;
-                    pickUri = uri;
-                    String permission = Manifest.permission.READ_CONTACTS;
-                    requestPermissions(new String[]{permission}, REQUEST_PERMISSION);
-                } else
+                if (ex instanceof SecurityException)
+                    try {
+                        pickRequest = requestCode;
+                        pickUri = uri;
+                        String permission = Manifest.permission.READ_CONTACTS;
+                        requestPermissions(new String[]{permission}, REQUEST_PERMISSION);
+                    } catch (Throwable ex1) {
+                        Log.unexpectedError(getParentFragmentManager(), ex1);
+                    }
+                else
                     Log.unexpectedError(getParentFragmentManager(), ex);
             }
         }.execute(this, args, "compose:picked");
@@ -3358,6 +3618,10 @@ public class FragmentCompose extends FragmentBase {
         args.putBoolean("formatted", formatted);
         args.putBoolean("interactive", getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED));
         args.putInt("focus", focus == null ? -1 : focus.getId());
+        if (focus instanceof EditText) {
+            args.putInt("start", ((EditText) focus).getSelectionStart());
+            args.putInt("end", ((EditText) focus).getSelectionEnd());
+        }
         args.putBoolean("ime", ime);
         args.putBundle("extras", extras);
 
@@ -3782,6 +4046,7 @@ public class FragmentCompose extends FragmentBase {
                                 ? db.answer().getStandardAnswer()
                                 : db.answer().getAnswer(answer));
                         if (a != null) {
+                            db.answer().applyAnswer(a.id, new Date().getTime());
                             data.draft.subject = a.name;
                             Document d = JsoupEx.parse(a.getText(null));
                             document.body().append(d.body().html());
@@ -3940,6 +4205,7 @@ public class FragmentCompose extends FragmentBase {
                                 if (receipt == null)
                                     texts = Helper.getStrings(context, ref.language, R.string.title_receipt_text);
                                 else {
+                                    db.answer().applyAnswer(receipt.id, new Date().getTime());
                                     texts = new String[0];
                                     Document d = JsoupEx.parse(receipt.getText(null));
                                     document.body().append(d.body().html());
@@ -3985,6 +4251,7 @@ public class FragmentCompose extends FragmentBase {
                             a = db.answer().getAnswer(answer);
 
                         if (a != null) {
+                            db.answer().applyAnswer(a.id, new Date().getTime());
                             Document d = JsoupEx.parse(a.getText(data.draft.to));
                             document.body().append(d.body().html());
                         }
@@ -5204,17 +5471,20 @@ public class FragmentCompose extends FragmentBase {
             Log.i("Loaded action id=" + draft.id +
                     " action=" + getActionName(action) + " encryption=" + needsEncryption);
 
-            int[] toPos = new int[]{etTo.getSelectionStart(), etTo.getSelectionEnd()};
-            int[] ccPos = new int[]{etCc.getSelectionStart(), etCc.getSelectionEnd()};
-            int[] bccPos = new int[]{etBcc.getSelectionStart(), etBcc.getSelectionEnd()};
+            int toPos = etTo.getSelectionStart();
+            int ccPos = etCc.getSelectionStart();
+            int bccPos = etBcc.getSelectionStart();
 
             etTo.setText(MessageHelper.formatAddressesCompose(draft.to));
             etCc.setText(MessageHelper.formatAddressesCompose(draft.cc));
             etBcc.setText(MessageHelper.formatAddressesCompose(draft.bcc));
 
-            etTo.setSelection(toPos[0], toPos[1]);
-            etCc.setSelection(ccPos[0], ccPos[1]);
-            etBcc.setSelection(bccPos[0], bccPos[1]);
+            if (toPos >= 0 && toPos <= etTo.getText().length())
+                etTo.setSelection(toPos);
+            if (ccPos >= 0 && ccPos <= etCc.getText().length())
+                etCc.setSelection(ccPos);
+            if (bccPos >= 0 && bccPos <= etBcc.getText().length())
+                etBcc.setSelection(bccPos);
 
             Bundle extras = args.getBundle("extras");
             boolean show = extras.getBoolean("show");
@@ -5243,7 +5513,11 @@ public class FragmentCompose extends FragmentBase {
                 showDraft(draft);
 
             } else if (action == R.id.action_save) {
-                setFocus(args.getInt("focus"), args.getBoolean("ime"));
+                setFocus(
+                        args.getInt("focus"),
+                        args.getInt("start", -1),
+                        args.getInt("end", -1),
+                        args.getBoolean("ime"));
 
             } else if (action == R.id.action_check) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -5458,8 +5732,8 @@ public class FragmentCompose extends FragmentBase {
                 final boolean show_images = args.getBoolean("show_images", false);
 
                 int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
-                int dp3 = Helper.dp2pixels(context, 3);
-                int dp6 = Helper.dp2pixels(context, 6);
+                int quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
+                int quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
 
                 DB db = DB.getInstance(context);
                 EntityMessage draft = db.message().getMessage(id);
@@ -5485,7 +5759,7 @@ public class FragmentCompose extends FragmentBase {
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
                         q = new QuoteSpan(colorPrimary);
                     else
-                        q = new QuoteSpan(colorPrimary, dp3, dp6);
+                        q = new QuoteSpan(colorPrimary, quoteStripe, quoteGap);
                     bodyBuilder.setSpan(q,
                             bodyBuilder.getSpanStart(quoteSpan),
                             bodyBuilder.getSpanEnd(quoteSpan),
@@ -5522,8 +5796,12 @@ public class FragmentCompose extends FragmentBase {
             @Override
             protected void onExecuted(Bundle args, Spanned[] text) {
                 etBody.setText(text[0]);
-                if (state != State.LOADED)
-                    etBody.setSelection(0);
+                if (state != State.LOADED) {
+                    int pos = getAutoPos(0, etBody.length());
+                    if (pos < 0)
+                        pos = 0;
+                    etBody.setSelection(pos);
+                }
                 grpBody.setVisibility(View.VISIBLE);
 
                 cbSignature.setChecked(draft.signature);
@@ -5546,7 +5824,7 @@ public class FragmentCompose extends FragmentBase {
                     return;
                 state = State.LOADED;
 
-                setFocus(null, true);
+                setFocus(null, -1, -1, true);
             }
 
             @Override
@@ -5556,7 +5834,7 @@ public class FragmentCompose extends FragmentBase {
         }.execute(this, args, "compose:show");
     }
 
-    private void setFocus(Integer v, boolean restore) {
+    private void setFocus(Integer v, int start, int end, boolean restore) {
         final View target;
         if (v != null)
             target = view.findViewById(v);
@@ -5570,10 +5848,16 @@ public class FragmentCompose extends FragmentBase {
         if (target == null)
             return;
 
+        int s = (start < end ? start : end);
+        int e = (start < end ? end : start);
+
         getMainHandler().post(new Runnable() {
             @Override
             public void run() {
                 try {
+                    if (target instanceof EditText && s >= 0)
+                        ((EditText) target).setSelection(s, e < 0 ? s : e);
+
                     target.requestFocus();
 
                     Context context = target.getContext();
@@ -5589,6 +5873,7 @@ public class FragmentCompose extends FragmentBase {
                         return;
 
                     imm.showSoftInput(target, InputMethodManager.SHOW_IMPLICIT);
+
                 } catch (Throwable ex) {
                     Log.e(ex);
                 }
@@ -5602,6 +5887,34 @@ public class FragmentCompose extends FragmentBase {
                 (grpSignature.getVisibility() == View.GONE &&
                         tvReference.getVisibility() == View.GONE);
         etBody.setPadding(0, 0, 0, pad ? Helper.dp2pixels(getContext(), 36) : 0);
+    }
+
+    private int getAutoPos(int start, int end) {
+        if (start > end || end == 0)
+            return -1;
+
+        CharSequence text = etBody.getText();
+        if (text == null)
+            return -1;
+
+        int lc = 0;
+        int nl = 0;
+        int pos = 0;
+        String[] lines = text.subSequence(start, end).toString().split("\n");
+        for (int i = 0; i < lines.length; i++) {
+            if (TextUtils.isEmpty(lines[i]))
+                nl++;
+            else {
+                lc++;
+                nl = 0;
+            }
+            if (lc > 1)
+                return -1;
+            if (nl > 2)
+                return start + pos - 1;
+            pos += lines[i].length() + 1;
+        }
+        return -1;
     }
 
     private AdapterView.OnItemSelectedListener identitySelected = new AdapterView.OnItemSelectedListener() {
@@ -6438,6 +6751,90 @@ public class FragmentCompose extends FragmentBase {
                     }
                 }.execute(this, args, "compose:snooze");
             }
+        }
+    }
+
+    public static class FragmentDialogDeepL extends FragmentDialogBase {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            final Context context = getContext();
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            String domain = prefs.getString("deepl_domain", null);
+            String key = prefs.getString("deepl_key", null);
+            boolean small = prefs.getBoolean("deepl_small", false);
+
+            View view = LayoutInflater.from(context).inflate(R.layout.dialog_deepl, null);
+            final ImageButton ibInfo = view.findViewById(R.id.ibInfo);
+            final EditText etDomain = view.findViewById(R.id.etDomain);
+            final EditText etKey = view.findViewById(R.id.etKey);
+            final CheckBox cbSmall = view.findViewById(R.id.cbSmall);
+            final TextView tvUsage = view.findViewById(R.id.tvUsage);
+
+            ibInfo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Helper.viewFAQ(v.getContext(), 167, true);
+                }
+            });
+
+            etDomain.setText(domain);
+            etKey.setText(key);
+            cbSmall.setChecked(small);
+
+            tvUsage.setVisibility(View.GONE);
+
+            if (!TextUtils.isEmpty(key)) {
+                Bundle args = new Bundle();
+                args.putString("key", key);
+
+                new SimpleTask<Integer[]>() {
+                    @Override
+                    protected Integer[] onExecute(Context context, Bundle args) throws Throwable {
+                        return DeepL.getUsage(context);
+                    }
+
+                    @Override
+                    protected void onExecuted(Bundle args, Integer[] usage) {
+                        tvUsage.setText(
+                                Helper.humanReadableByteCount(usage[0]) + "/" +
+                                        Helper.humanReadableByteCount(usage[1]));
+                        tvUsage.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    protected void onException(Bundle args, Throwable ex) {
+                        if (BuildConfig.DEBUG)
+                            Log.unexpectedError(getParentFragmentManager(), ex);
+                    }
+                }.execute(this, new Bundle(), "deepl:usage");
+            }
+
+            return new AlertDialog.Builder(context)
+                    .setView(view)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String domain = etDomain.getText().toString().trim();
+                            String key = etKey.getText().toString().trim();
+                            SharedPreferences.Editor editor = prefs.edit();
+                            if (TextUtils.isEmpty(key))
+                                editor
+                                        .remove("deepl_key")
+                                        .remove("deepl_domain");
+                            else {
+                                editor.putString("deepl_key", key);
+                                if (TextUtils.isEmpty(domain))
+                                    editor.remove("deepl_domain");
+                                else
+                                    editor.putString("deepl_domain", domain);
+                            }
+                            editor.putBoolean("deepl_small", cbSmall.isChecked());
+                            editor.apply();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .create();
         }
     }
 

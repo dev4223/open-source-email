@@ -90,7 +90,6 @@
     <string name="title_notification_sending_failed">Küldés nem sikerül erre a címre: %1$s</string>
     <string name="title_notification_redacted">A Biometrikus vagy PIN authentikáció aktiválva van</string>
     <string name="title_factor_minutes">%1$d perc</string>
-    <string name="menu_exit">Kilépés</string>
     <string name="menu_answers">Sablonok</string>
     <string name="menu_operations">Műveletek</string>
     <string name="menu_contacts">Helyi névjegyzék</string>
@@ -1138,9 +1137,9 @@
     <string name="title_legend_synchronize_off">Szinkronizálás kikapcsolva</string>
     <string name="title_legend_synchronize_poll">Szinkronizálás periodikusan</string>
     <string name="title_legend_disconnected">Lecsatlakozva</string>
-    <string name="title_legend_backoff">Várakozás hiba után</string>
     <string name="title_legend_connecting">Csatlakozás</string>
     <string name="title_legend_connected">Csatlakozva</string>
+    <string name="title_legend_backoff">Várakozás hiba után</string>
     <string name="title_legend_executing">Műveletek végrehajtása</string>
     <string name="title_legend_synchronizing">Szinkronizálás</string>
     <string name="title_legend_downloading">Letöltés</string>
@@ -1514,5 +1513,7 @@
         <item>Talpas</item>
         <item>Talpatlan</item>
         <item>Fix szélességű szöveg</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

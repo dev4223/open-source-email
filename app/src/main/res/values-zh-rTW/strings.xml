@@ -79,7 +79,6 @@
     <string name="title_notification_sending_failed">傳送給 %1$s 失敗。</string>
     <string name="title_notification_redacted">已編輯： 生物識別或者PIN認證已啟用。</string>
     <string name="title_factor_minutes">%1$d 分鐘</string>
-    <string name="menu_exit">離開</string>
     <string name="menu_answers">樣板</string>
     <string name="menu_operations">操作</string>
     <string name="menu_contacts">本機聯絡人</string>
@@ -1088,9 +1087,9 @@
     <string name="title_legend_synchronize_off">同步關閉</string>
     <string name="title_legend_synchronize_poll">週期性同步</string>
     <string name="title_legend_disconnected">斷線</string>
-    <string name="title_legend_backoff">失敗後等待</string>
     <string name="title_legend_connecting">連接中</string>
     <string name="title_legend_connected">已連接</string>
+    <string name="title_legend_backoff">失敗後等待</string>
     <string name="title_legend_executing">執行操作</string>
     <string name="title_legend_synchronizing">正在同步</string>
     <string name="title_legend_downloading">正在下載</string>
@@ -1462,5 +1461,7 @@
         <item>襯線</item>
         <item>無襯線字體</item>
         <item>等寬字體</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

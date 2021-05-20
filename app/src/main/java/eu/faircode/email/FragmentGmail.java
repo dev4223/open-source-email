@@ -83,7 +83,7 @@ public class FragmentGmail extends FragmentBase {
     @Override
     @Nullable
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        setSubtitle(R.string.title_setup_quick);
+        setSubtitle(R.string.title_setup_gmail);
         setHasOptionsMenu(true);
 
         view = (ViewGroup) inflater.inflate(R.layout.fragment_gmail, container, false);
@@ -109,7 +109,11 @@ public class FragmentGmail extends FragmentBase {
         btnGrant.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestPermissions(Helper.getOAuthPermissions(), ActivitySetup.REQUEST_CHOOSE_ACCOUNT);
+                try {
+                    requestPermissions(Helper.getOAuthPermissions(), ActivitySetup.REQUEST_CHOOSE_ACCOUNT);
+                } catch (Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                }
             }
         });
 

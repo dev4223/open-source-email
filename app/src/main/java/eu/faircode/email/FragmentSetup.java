@@ -51,6 +51,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.constraintlayout.widget.Group;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -91,7 +92,6 @@ public class FragmentSetup extends FragmentBase {
     private Button btnInbox;
 
     private Group grpManual;
-    private Group grpDoze;
     private Group grpBackgroundRestricted;
     private Group grpDataSaver;
 
@@ -157,7 +157,6 @@ public class FragmentSetup extends FragmentBase {
         btnInbox = view.findViewById(R.id.btnInbox);
 
         grpManual = view.findViewById(R.id.grpManual);
-        grpDoze = view.findViewById(R.id.grpDoze);
         grpBackgroundRestricted = view.findViewById(R.id.grpBackgroundRestricted);
         grpDataSaver = view.findViewById(R.id.grpDataSaver);
 
@@ -177,26 +176,37 @@ public class FragmentSetup extends FragmentBase {
         btnQuick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(getContext(), getViewLifecycleOwner(), btnQuick);
+                final Context context = getContext();
+                PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, getViewLifecycleOwner(), btnQuick);
+                Menu menu = popupMenu.getMenu();
 
                 int order = 1;
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_gmail, order++, R.string.title_setup_gmail);
+                String gmail = getString(R.string.title_setup_oauth, getString(R.string.title_setup_gmail));
+                menu.add(Menu.NONE, R.string.title_setup_gmail, order++, gmail);
 
-                for (EmailProvider provider : EmailProvider.loadProfiles(getContext()))
+                for (EmailProvider provider : EmailProvider.loadProfiles(context))
                     if (provider.oauth != null &&
-                            (provider.oauth.enabled || BuildConfig.DEBUG))
-                        popupMenu.getMenu()
+                            (provider.oauth.enabled || BuildConfig.DEBUG)) {
+                        MenuItem item = menu
                                 .add(Menu.NONE, -1, order++, getString(R.string.title_setup_oauth, provider.name))
                                 .setIntent(new Intent(ActivitySetup.ACTION_QUICK_OAUTH)
                                         .putExtra("id", provider.id)
                                         .putExtra("name", provider.name)
                                         .putExtra("askAccount", provider.oauth.askAccount));
+                        int resid = context.getResources()
+                                .getIdentifier("provider_" + provider.id, "drawable", context.getPackageName());
+                        if (resid != 0)
+                            item.setIcon(resid);
+                    }
 
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_other, order++, R.string.title_setup_other);
+                menu.add(Menu.NONE, R.string.title_setup_other, order++, R.string.title_setup_other)
+                        .setIcon(R.drawable.twotone_auto_fix_high_24);
 
                 SpannableString ss = new SpannableString(getString(R.string.title_setup_pop3));
                 ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
-                popupMenu.getMenu().add(Menu.NONE, R.string.title_setup_pop3, order++, ss);
+                menu.add(Menu.NONE, R.string.title_setup_pop3, order++, ss);
+
+                popupMenu.insertIcons(context);
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
@@ -326,9 +336,27 @@ public class FragmentSetup extends FragmentBase {
         btnPermissions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                btnPermissions.setEnabled(false);
-                String permission = Manifest.permission.READ_CONTACTS;
-                requestPermissions(new String[]{permission}, ActivitySetup.REQUEST_PERMISSION);
+                try {
+                    btnPermissions.setEnabled(false);
+                    String permission = Manifest.permission.READ_CONTACTS;
+                    requestPermissions(new String[]{permission}, ActivitySetup.REQUEST_PERMISSION);
+                } catch (Throwable ex) {
+                    Log.unexpectedError(getParentFragmentManager(), ex);
+                    /*
+                        android.content.ActivityNotFoundException: No Activity found to handle Intent { act=android.content.pm.action.REQUEST_PERMISSIONS pkg=com.google.android.packageinstaller (has extras) }
+                          at android.app.Instrumentation.checkStartActivityResult(Instrumentation.java:1805)
+                          at android.app.Instrumentation.execStartActivity(Instrumentation.java:1634)
+                          at android.app.Activity.startActivityForResult(Activity.java:4583)
+                          at android.app.Activity.requestPermissions(Activity.java:3850)
+                          at androidx.core.app.ActivityCompat.requestPermissions(SourceFile:11)
+                          at androidx.activity.ComponentActivity$2.onLaunch(SourceFile:13)
+                          at androidx.activity.result.ActivityResultRegistry$3.launch(SourceFile:2)
+                          at androidx.activity.result.ActivityResultLauncher.launch(SourceFile:1)
+                          at androidx.fragment.app.FragmentManager.launchRequestPermissions(SourceFile:4)
+                          at androidx.fragment.app.Fragment.requestPermissions(SourceFile:2)
+                          at eu.faircode.email.FragmentSetup$11.onClick(SourceFile:2)
+                     */
+                }
             }
         });
 
@@ -393,6 +421,14 @@ public class FragmentSetup extends FragmentBase {
         });
 
         // Initialize
+        if (!Helper.isDarkTheme(getContext())) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+            boolean beige = prefs.getBoolean("beige", true);
+            view.setBackgroundColor(ContextCompat.getColor(getContext(), beige
+                    ? R.color.lightColorBackground_cards_beige
+                    : R.color.lightColorBackground_cards));
+        }
+
         btnIdentity.setEnabled(false);
         tvNoComposable.setVisibility(View.GONE);
 
@@ -405,7 +441,6 @@ public class FragmentSetup extends FragmentBase {
 
         btnInbox.setEnabled(false);
 
-        grpDoze.setVisibility(Build.VERSION.SDK_INT < Build.VERSION_CODES.M ? View.GONE : View.VISIBLE);
         grpBackgroundRestricted.setVisibility(View.GONE);
         grpDataSaver.setVisibility(View.GONE);
 

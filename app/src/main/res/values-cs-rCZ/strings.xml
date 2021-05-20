@@ -113,7 +113,6 @@
     <string name="title_notification_sending_failed">Odesílání na %1$s se nezdařilo</string>
     <string name="title_notification_redacted">Revidováno: zapnuto biometrické či PIN ověření</string>
     <string name="title_factor_minutes">%1$d minut</string>
-    <string name="menu_exit">Ukončit</string>
     <string name="menu_answers">Šablony</string>
     <string name="menu_operations">Operace</string>
     <string name="menu_contacts">Lokální kontakty</string>
@@ -845,7 +844,6 @@
     <string name="title_move_to_account">Přesunout do %1$s &#8230;</string>
     <string name="title_report_spam">Považovat za nevyžádané</string>
     <string name="title_delete_permanently">Trvale smazat</string>
-    <string name="title_no_undo">Toto nelze vrátit zpět!</string>
     <string name="title_snooze">Odložit &#8230;</string>
     <string name="title_archive">Archiv</string>
     <string name="title_reply">Odpovědět</string>
@@ -957,6 +955,8 @@
     <string name="title_style_list">Seznam</string>
     <string name="title_style_list_bullets">Odrážky</string>
     <string name="title_style_list_numbered">Číslovaný</string>
+    <string name="title_style_list_level_increase">Zvětšit odsazení</string>
+    <string name="title_style_list_level_decrease">Zmenšit odsazení</string>
     <string name="title_style_font">Písmo</string>
     <string name="title_style_font_default">Výchozí</string>
     <string name="title_style_blockquote">Bloková citace</string>
@@ -1201,9 +1201,9 @@
     <string name="title_legend_synchronize_off">Synchronizace vypnuta</string>
     <string name="title_legend_synchronize_poll">Synchronizovat pravidelně</string>
     <string name="title_legend_disconnected">Odpojeno</string>
-    <string name="title_legend_backoff">Čekání po selhání</string>
     <string name="title_legend_connecting">Připojování</string>
     <string name="title_legend_connected">Připojeno</string>
+    <string name="title_legend_backoff">Čekání po selhání</string>
     <string name="title_legend_executing">Provádění operací</string>
     <string name="title_legend_synchronizing">Probíhá synchronizace</string>
     <string name="title_legend_downloading">Stahování</string>
@@ -1581,5 +1581,7 @@
         <item>Patkové</item>
         <item>Bezpatkové</item>
         <item>Neproporcionální</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

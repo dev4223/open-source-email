@@ -2,7 +2,7 @@
 
 # Suporte do FairEmail
 
-Se você tem uma pergunta, verifique primeiro as perguntas mais frequentes. [At the bottom](#user-content-get-support), you can find out how to ask other questions, request features, and report bugs.
+Se você tem uma pergunta, verifique primeiro as perguntas mais frequentes. [No final da página](#user-content-get-support), você pode descobrir como fazer outras perguntas, solicitar recursos, e relatar bugs.
 
 Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [Ganz unten erfahren Sie](#user-content-get-support), wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
 
@@ -435,7 +435,7 @@ You can pin the certificate too, see above.
 
 *Empty password*
 
-Your username is likely easily guessed, so this is insecure.
+Your username is likely easily guessed, so this is pretty insecure, unless the SMTP server is available via a restricted local network or a VPN only.
 
 *Plain text connection*
 
@@ -680,7 +680,7 @@ Private keys are stored by Android and can be imported via the Android advanced 
 
 Note that certificates can contains multiple keys for multiple purposes,  for example for authentication, encryption and signing. Android only imports the first key, so to import all the keys, the certificate must first be split. This is not very trivial and you are advised to ask the certificate supplier for support.
 
-Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
+Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this. S/MIME encryption is possible with asymmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time. You can long press on the send button to change the encryption method for an identity. If you use both PGP and S/MIME encryption for the same email address, it might be useful to copy the identity, so you can change the encryption method by selecting one of the two identities. You can long press an identity in the list of identities (via manual setup in the main setup screen) to copy an identity.
 

@@ -85,7 +85,6 @@
     <string name="title_notification_sending_failed">Sending til %1$s mislyktes</string>
     <string name="title_notification_redacted">Redigert: biometrisk eller PIN-autentisering aktivert</string>
     <string name="title_factor_minutes">%1$d minutter</string>
-    <string name="menu_exit">Avslutt</string>
     <string name="menu_answers">Maler</string>
     <string name="menu_operations">Aktiviteter</string>
     <string name="menu_contacts">Lokale kontakter</string>
@@ -1049,9 +1048,9 @@
     <string name="title_legend_synchronize_off">Synkronisering av</string>
     <string name="title_legend_synchronize_poll">Synkronisere periodisk</string>
     <string name="title_legend_disconnected">Frakoblet</string>
-    <string name="title_legend_backoff">Venter etter feil</string>
     <string name="title_legend_connecting">Kobler til</string>
     <string name="title_legend_connected">Tilkoblet</string>
+    <string name="title_legend_backoff">Venter etter feil</string>
     <string name="title_legend_executing">Utføre operasjoner</string>
     <string name="title_legend_synchronizing">Synkroniserer</string>
     <string name="title_legend_downloading">Laster ned</string>
@@ -1421,5 +1420,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Fastbredde-skrift</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

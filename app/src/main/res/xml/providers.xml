@@ -206,7 +206,7 @@
             starttls="false" />
         <smtp
             host="smtp.fastmail.com"
-            port="565"
+            port="465"
             starttls="false" />
         <!-- https://twitter.com/fastmail/status/569046903855271937 -->
     </provider>
@@ -807,7 +807,7 @@
     </provider>
     <provider
         name="Onet"
-        domain="onet\\.pl"
+        domain="op\\.pl,onet\\.pl,poczta\\.onet\\.pl,vp\\.pl,onet\\.eu,autograf\\.pl,buziaczek\\.pl,spoko\\.pl,poczta\\.onet\\.eu,onet\\.com\\.pl,amorki\\.pl,opoczta\\.pl"
         link="https://pomoc.poczta.onet.pl/baza-wiedzy/konfiguracja-poczty-na-urzadzeniach-mobilnych/">
         <imap
             host="imap.poczta.onet.pl"
@@ -858,10 +858,11 @@
             starttls="false" />
     </provider>
     <provider
-        name="Arcor.de/Vodafone.de"
+        name="Vodafone.de/Arcor"
         appPassword="true"
-        domain="arcor\\.de,vodafone\\.de,vodafonemail\\.de"
-        link="https://www.vodafone.de/hilfe/email/abrufen-senden.html#wie-lauten-die-server-einstellungen-fuer-vodafone-e-mail">
+        domain="arcor\\.de,vodafone\\.de,vodafonemail\\.de,nexgo\\.de"
+        link="https://www.vodafone.de/hilfe/email/abrufen-senden.html#wie-lauten-die-server-einstellungen-fuer-vodafone-e-mail"
+        partial="true">
         <imap
             host="imap.vodafonemail.de"
             port="993"

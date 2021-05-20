@@ -36,7 +36,7 @@ For authorizing:
 
 * Gmail / G suite, see [question 6](#user-content-faq6)
 * Outlook / Live / Hotmail, see [question 14](#user-content-faq14)
-* Office 365, see [question 14](#user-content-faq156)
+* Office 365, see [question 156](#user-content-faq156)
 * Microsoft Exchange, see [question 8](#user-content-faq8)
 * Yahoo, AOL and Sky, see [question 88](#user-content-faq88)
 * Apple iCloud, see [question 148](#user-content-faq148)
@@ -467,7 +467,7 @@ You can pin the certificate too, see above.
 
 *Empty password*
 
-Your username is likely easily guessed, so this is insecure.
+Your username is likely easily guessed, so this is pretty insecure, unless the SMTP server is available via a restricted local network or a VPN only.
 
 *Plain text connection*
 
@@ -539,6 +539,9 @@ This Google security check is triggered more often with *less secure apps* enabl
 Please see [this FAQ](#user-content-faq111) on why only on-device accounts can be used.
 
 Note that an app specific password is required when two factor authentication is enabled.
+After enabling two factor authentication there will be this error message:
+
+*[ALERT] Application-specific password required: https://support.google.com/mail/accounts/answer/185833 (Failure)*
 
 <br />
 
@@ -781,7 +784,7 @@ Android only imports the first key, so to import all the keys, the certificate m
 This is not very trivial and you are advised to ask the certificate supplier for support.
 
 Note that S/MIME signing with other algorithms than RSA is supported, but be aware that other email clients might not support this.
-S/MIME encryption is possible with symmetric algorithms only, which means in practice using RSA.
+S/MIME encryption is possible with asymmetric algorithms only, which means in practice using RSA.
 
 The default encryption method is PGP, but the last used encryption method will be remembered for the selected identity for the next time.
 You can long press on the send button to change the encryption method for an identity.
@@ -1136,6 +1139,8 @@ FairEmail will assume ISO-8859-1 (Latin1), which will in most cases result in sh
 
 The error *... Login Rate Limit Hit ...* means that there were too many login attempts with an incorrect password. Please double check your password or authenticate the account again with the quick setup wizard (OAuth only).
 
+The error *... NO mailbox selected READ-ONLY ...* indicates [this Zimbra problem](https://sebastian.marsching.com/wiki/Network/Zimbra#Mailbox_Selected_READ-ONLY_Error_in_Thunderbird).
+
 Please [see here](#user-content-faq4) for the errors *... Untrusted ... not in certificate ...*, *... Invalid security certificate (Can't verify identity of server) ...* or *... Trust anchor for certification path not found ...*
 
 Please [see here](#user-content-faq127) for the error *... Syntactically invalid HELO argument(s) ...*.
@@ -1216,6 +1221,8 @@ In case the permissions were revoked, you can start the Gmail quick setup wizard
 The eror *... ServiceDisabled ...* might be caused by enrolling in the [Advanced Protection Program](https://landing.google.com/advancedprotection/):
 "*To read your email, you can (must) use Gmail - You won’t be able to use your Google Account with some (all) apps & services that require access to sensitive data like your emails*",
 see [here](https://support.google.com/accounts/answer/7519408?hl=en&ref_topic=9264881).
+
+The error *... 334 ... OAUTH2 asked for more ...* probably means that the account needs to be authorized again, which you can do with the quick setup wizard in the settings.
 
 When in doubt, you can ask for [support](#user-content-support).
 
@@ -2135,7 +2142,8 @@ If you want to forward a message, consider to use the move action instead.
 This will be more reliable than forwarding as well because forwarded messages might be considered as spam.
 
 Since message headers are not downloaded and stored by default to save on battery and data usage and to save storage space
-it is not possible to preview which messages would match a header rule condition.
+it is by default not possible to preview which messages would match a header rule condition.
+You can enable downloading message headers in the connection settings and check headers conditions anyway (since version 1.1599).
 
 Some common header conditions (regex):
 
@@ -2666,6 +2674,7 @@ So, you don't have to disable this option if you don't have an EU SIM or are not
 
 Please [see here](https://github.com/leolin310148/ShortcutBadger#supported-launchers)
 for a list of launchers which can show the number of unread messages.
+Standard Android [does not support this](https://developer.android.com/training/notify-user/badges).
 
 Note that Nova Launcher requires Tesla Unread, which is [not supported anymore](https://forum.xda-developers.com/android/general/bad-news-tesla-unread-devoloper-t3920415).
 
@@ -3529,6 +3538,10 @@ please see [here](https://github.com/disconnectme/disconnect-tracking-protection
 Permanent deletion means that messages will *irreversibly* be lost, and to prevent this from happening accidentally, this always needs to be confirmed.
 Even with a confirmation, some very angry people who lost some of their messages through their own fault contacted me, which was a rather unpleasant experience :-(
 
+Note that the POP3 protocol can download messages from the inbox only.
+So, deleted messages cannot be uploaded to the inbox again.
+This means that messages can only be permanently deleted when using a POP3 account.
+
 Advanced: the IMAP delete flag in combination with the EXPUNGE command is not supportable
 because both email servers and not all people can handle this, risking unexpected loss of messages.
 A complicating factor is that not all email servers support [UID EXPUNGE](https://tools.ietf.org/html/rfc4315).
@@ -3668,6 +3681,19 @@ This is problematic because a message can be snoozed only after moving the messa
 
 To prevent these issues, snoozing is done locally on the device by hiding the message while it is snoozing.
 Unfortunately, it is not possible to hide messages on the email server too.
+
+<br />
+
+<a name="faq167"></a>
+**(167) How can I use DeepL?**
+
+1. [Subscribe to](https://www.deepl.com/pro#developer) the DeepL API Free plan (credit card required)
+1. [Copy](https://www.deepl.com/pro-account/plan) the authentication key
+1. In the overflow menu of the message composer select *Translate*, *Configure* and paste the key
+
+You might want to read the [privacy policy](https://www.deepl.com/privacy/) of DeepL.
+
+This feature requires an internet connection and is not available in the Play store version.
 
 <br />
 

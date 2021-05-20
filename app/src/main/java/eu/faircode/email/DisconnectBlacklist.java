@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -116,9 +117,14 @@ public class DisconnectBlacklist {
         connection.setRequestMethod("GET");
         connection.setReadTimeout(FETCH_TIMEOUT);
         connection.setConnectTimeout(FETCH_TIMEOUT);
+        connection.setRequestProperty("User-Agent", WebViewEx.getUserAgent(context));
         connection.connect();
 
         try {
+            int status = connection.getResponseCode();
+            if (status != HttpsURLConnection.HTTP_OK)
+                throw new FileNotFoundException("Error " + status + ":" + connection.getResponseMessage());
+
             String response = Helper.readStream(connection.getInputStream());
             Helper.writeText(file, response);
         } finally {

@@ -90,7 +90,6 @@
     <string name="title_notification_sending_failed">Falha ao enviar para %1$s</string>
     <string name="title_notification_redacted">Reformulado: autenticação biométrica ou PIN habilitado</string>
     <string name="title_factor_minutes">%1$d minutos</string>
-    <string name="menu_exit">Sair</string>
     <string name="menu_answers">Modelos</string>
     <string name="menu_operations">Operações</string>
     <string name="menu_contacts">Contatos locais</string>
@@ -806,7 +805,6 @@
     <string name="title_move_to_account">Mover para %1$s &#8230;</string>
     <string name="title_report_spam">Tratar como spam</string>
     <string name="title_delete_permanently">Apagar permanentemente</string>
-    <string name="title_no_undo">Isso não pode ser desfeito!</string>
     <string name="title_snooze">Adiar &#8230;</string>
     <string name="title_archive">Arquivar</string>
     <string name="title_reply">Responder</string>
@@ -1154,9 +1152,9 @@
     <string name="title_legend_synchronize_off">Sincronização desligada</string>
     <string name="title_legend_synchronize_poll">Sincronizar periodicamente</string>
     <string name="title_legend_disconnected">Desconectado</string>
-    <string name="title_legend_backoff">Aguardando após falha</string>
     <string name="title_legend_connecting">Conectando</string>
     <string name="title_legend_connected">Conectado</string>
+    <string name="title_legend_backoff">Aguardando após falha</string>
     <string name="title_legend_executing">Executando operações</string>
     <string name="title_legend_synchronizing">Sincronizando</string>
     <string name="title_legend_downloading">Baixando</string>
@@ -1532,5 +1530,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Monoespaçado</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

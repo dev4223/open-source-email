@@ -91,7 +91,6 @@
     <string name="title_notification_sending_failed">Det gick inte att skicka till %1$s</string>
     <string name="title_notification_redacted">Redigering: biometrisk autentisering eller PIN-kod aktiverad</string>
     <string name="title_factor_minutes">%1$d minuter</string>
-    <string name="menu_exit">Avsluta</string>
     <string name="menu_answers">Mallar</string>
     <string name="menu_operations">Åtgärder</string>
     <string name="menu_contacts">Lokala kontakter</string>
@@ -1171,9 +1170,9 @@
     <string name="title_legend_synchronize_off">Synkronisera av</string>
     <string name="title_legend_synchronize_poll">Synkronisera periodiskt</string>
     <string name="title_legend_disconnected">Frånkopplad</string>
-    <string name="title_legend_backoff">Väntar efter misslyckande</string>
     <string name="title_legend_connecting">Ansluter</string>
     <string name="title_legend_connected">Ansluten</string>
+    <string name="title_legend_backoff">Väntar efter misslyckande</string>
     <string name="title_legend_executing">Utför åtgärder</string>
     <string name="title_legend_synchronizing">Synkroniserar</string>
     <string name="title_legend_downloading">Hämtar</string>
@@ -1549,5 +1548,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Monospace</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

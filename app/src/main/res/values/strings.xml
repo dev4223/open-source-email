@@ -123,7 +123,6 @@
     <string name="title_title_description" translatable="false">%1$s: %2$s</string>
     <string name="title_factor_minutes">%1$d minutes</string>
 
-    <string name="menu_exit">Exit</string>
     <string name="menu_answers">Templates</string>
     <string name="menu_operations">Operations</string>
     <string name="menu_contacts">Local contacts</string>
@@ -176,7 +175,7 @@
     <string name="title_setup_account_identity_hint">You can configure the name, color and swipe actions in the account settings, and configure a signature in the identity settings</string>
     <string name="title_setup_accounts">Accounts</string>
     <string name="title_setup_identities">Identities</string>
-    <string name="title_setup_gmail" translatable="false">Gmail (OAuth)</string>
+    <string name="title_setup_gmail" translatable="false">Gmail</string>
     <string name="title_setup_oauth" translatable="false">%1$s (OAuth)</string>
     <string name="title_setup_other">Other provider</string>
     <string name="title_setup_pop3">POP3 account</string>
@@ -225,6 +224,7 @@
     <string name="title_setup_error">Error</string>
     <string name="title_setup_configuring">Configuring account &#8230;</string>
 
+    <string name="title_setup_close">Close settings</string>
     <string name="title_setup_export">Export settings</string>
     <string name="title_setup_import">Import settings</string>
     <string name="title_setup_export_do">The password is used to encrypt the settings and is required to import the settings again</string>
@@ -352,8 +352,8 @@
     <string name="title_advanced_validated">Require a validated (checked) connection</string>
     <string name="title_advanced_timeout">Connection timeout (seconds)</string>
     <string name="title_advanced_prefer_ip4">Prefer IPv4 over IPv6</string>
-    <string name="title_advanced_standalone_vpn" translatable="false">Standalone VPN (debug only)</string>
-    <string name="title_advanced_tcp_keep_alive" translatable="false">TCP keep alive (debug only)</string>
+    <string name="title_advanced_standalone_vpn" translatable="false">Standalone VPN</string>
+    <string name="title_advanced_tcp_keep_alive" translatable="false">TCP keep alive</string>
     <string name="title_advanced_ssl_harden">Harden SSL connections</string>
     <string name="title_advanced_manage_connectivity">Manage connectivity</string>
 
@@ -363,6 +363,7 @@
     <string name="title_advanced_caption_message">Message</string>
     <string name="title_advanced_caption_message_header">Message header</string>
     <string name="title_advanced_caption_message_body">Message body</string>
+    <string name="title_advanced_caption_debug" translatable="false">Debug</string>
 
     <string name="title_advanced_portrait2">Use two rows in portrait mode</string>
     <string name="title_advanced_landscape">Use two columns in landscape mode</string>
@@ -372,6 +373,7 @@
     <string name="title_advanced_cards_beige">Use beige background when using card style</string>
     <string name="title_advanced_cards_shadow">Use shadow for unread messages when using card style</string>
     <string name="title_advanced_date_header">Group by date</string>
+    <string name="title_advanced_date_bold">Show date in bold</string>
     <string name="title_advanced_threading">Conversation threading</string>
     <string name="title_advanced_threading_unread">Show number of unread messages in conversations</string>
     <string name="title_advanced_indentation">Left/right indent received/sent messages in conversations</string>
@@ -508,6 +510,7 @@
     <string name="title_advanced_secure">Hide from recent apps screen and prevent taking screenshots</string>
     <string name="title_advanced_pin">PIN</string>
     <string name="title_advanced_biometrics_timeout">Biometric authentication timeout</string>
+    <string name="title_advanced_generic_user_agent">Use generic browser user agent</string>
     <string name="title_advanced_safe_browsing" translatable="false">Google Safe browsing (Android 8+)</string>
     <string name="title_advanced_disconnect_blacklist" translatable="false">Disconnect\'s tracker protection lists</string>
     <string name="title_advanced_disconnect_auto_update">Automatically update lists weekly</string>
@@ -556,14 +559,14 @@
     <string name="title_advanced_log_info">Debug logging</string>
     <string name="title_advanced_debug">Debug mode</string>
     <string name="title_advanced_query_threads">Limit parallel database access</string>
-    <string name="title_advanced_wal" translatable="false">WAL (debug only)</string>
-    <string name="title_advanced_modseq" translatable="false">MODSEQ (debug only)</string>
-    <string name="title_advanced_expunge" translatable="false">EXPUNGE (debug only)</string>
-    <string name="title_advanced_auth_plain" translatable="false">PLAIN (debug only)</string>
-    <string name="title_advanced_auth_login" translatable="false">LOGIN (debug only)</string>
-    <string name="title_advanced_auth_ntlm" translatable="false">NTLM (debug only)</string>
-    <string name="title_advanced_auth_sasl" translatable="false">SASL (debug only)</string>
-    <string name="title_advanced_exact_alarms" translatable="false">Use exact timers (debug only)</string>
+    <string name="title_advanced_wal" translatable="false">WAL</string>
+    <string name="title_advanced_modseq" translatable="false">MODSEQ</string>
+    <string name="title_advanced_expunge" translatable="false">EXPUNGE</string>
+    <string name="title_advanced_auth_plain" translatable="false">PLAIN</string>
+    <string name="title_advanced_auth_login" translatable="false">LOGIN</string>
+    <string name="title_advanced_auth_ntlm" translatable="false">NTLM</string>
+    <string name="title_advanced_auth_sasl" translatable="false">SASL</string>
+    <string name="title_advanced_exact_alarms" translatable="false">Use exact timers</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s/%2$s Total: %3$s</string>
     <string name="title_advanced_memory_usage" translatable="false">Memory usage: %1$s/%2$s Native: %3$s</string>
@@ -947,7 +950,7 @@
     <string name="title_move_to_account">Move to %1$s &#8230;</string>
     <string name="title_report_spam">Treat as spam</string>
     <string name="title_delete_permanently">Delete permanently</string>
-    <string name="title_no_undo">This cannot be undone!</string>
+    <string name="title_no_undo">I understand this cannot be undone</string>
     <string name="title_snooze">Snooze &#8230;</string>
     <string name="title_archive">Archive</string>
     <string name="title_reply">Reply</string>
@@ -1043,6 +1046,7 @@
     <string name="title_subject">Subject:</string>
     <string name="title_attachment">Attachment:</string>
     <string name="title_body_hint">Your message</string>
+    <string name="title_body_hint_style">You can select text to format it</string>
     <string name="title_discard">Discard</string>
     <string name="title_save">Save</string>
     <string name="title_send">Send</string>
@@ -1103,6 +1107,11 @@
     <string name="title_insert_contact_group">Insert contact group</string>
     <string name="title_insert_template">Insert template</string>
     <string name="title_create_template">Create template</string>
+    <string name="title_translate">Translate</string>
+    <string name="title_translate_configure">Configure &#8230;</string>
+    <string name="title_translate_key">Enter key</string>
+    <string name="title_translating">Translating &#8230;</string>
+    <string name="title_translate_small">Use a small font for the source text</string>
     <string name="title_edit_plain_text">Edit as plain text</string>
     <string name="title_edit_formatted_text">Edit as reformatted text</string>
     <string name="title_select_certificate">Select public key</string>
@@ -1346,9 +1355,10 @@
     <string name="title_legend_synchronize_off">Synchronize off</string>
     <string name="title_legend_synchronize_poll">Synchronize periodically</string>
     <string name="title_legend_disconnected">Disconnected</string>
-    <string name="title_legend_backoff">Waiting after failure</string>
     <string name="title_legend_connecting">Connecting</string>
     <string name="title_legend_connected">Connected</string>
+    <string name="title_legend_backoff">Waiting after failure</string>
+    <string name="title_legend_quota">Mailbox almost full</string>
     <string name="title_legend_executing">Executing operations</string>
     <string name="title_legend_synchronizing">Synchronizing</string>
     <string name="title_legend_downloading">Downloading</string>
@@ -1870,13 +1880,16 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Monospace</item>
+        <item>Fantasy</item>
     </string-array>
 
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
     <string-array name="fontNameValues" translatable="false">
         <item>cursive</item>
         <item>serif</item>
         <item>sans-serif</item>
         <item>monospace</item>
+        <item>fantasy</item>
     </string-array>
 
     <string-array name="languageNames">

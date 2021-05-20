@@ -274,6 +274,12 @@ public class Log {
         }
     }
 
+    static void breadcrumb(String name, String key, String value) {
+        Map<String, String> crumb = new HashMap<>();
+        crumb.put(key, value);
+        breadcrumb(name, crumb);
+    }
+
     static void breadcrumb(String name, Map<String, String> crumb) {
         try {
             Map<String, Object> ocrumb = new HashMap<>();
@@ -836,6 +842,26 @@ public class Log {
                   at androidx.room.InvalidationTracker$1.checkUpdatedTable(SourceFile:417)
                   at androidx.room.InvalidationTracker$1.run(SourceFile:388)
                   at androidx.work.impl.utils.SerialExecutor$Task.run(SourceFile:91)
+             */
+            return false;
+
+        if (ex instanceof RuntimeException &&
+                ex.getCause() instanceof CursorWindowAllocationException)
+            /*
+                java.lang.RuntimeException: Exception while computing database live data.
+                  at androidx.room.RoomTrackingLiveData$1.run(SourceFile:10)
+                  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+                  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+                  at java.lang.Thread.run(Thread.java:764)
+                Caused by: io.requery.android.database.CursorWindowAllocationException: Cursor window allocation of 2048 kb failed.
+                  at io.requery.android.database.CursorWindow.<init>(SourceFile:7)
+                  at io.requery.android.database.CursorWindow.<init>(SourceFile:1)
+                  at io.requery.android.database.AbstractWindowedCursor.clearOrCreateWindow(SourceFile:2)
+                  at io.requery.android.database.sqlite.SQLiteCursor.fillWindow(SourceFile:1)
+                  at io.requery.android.database.sqlite.SQLiteCursor.getCount(SourceFile:2)
+                  at eu.faircode.email.DaoAttachment_Impl$14.call(SourceFile:16)
+                  at eu.faircode.email.DaoAttachment_Impl$14.call(SourceFile:1)
+                  at androidx.room.RoomTrackingLiveData$1.run(SourceFile:7)
              */
             return false;
 
@@ -1558,6 +1584,13 @@ public class Log {
                 size.x / density, size.y / density,
                 context.getResources().getConfiguration().isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_NORMAL)));
 
+        try {
+            int maxKeySize = javax.crypto.Cipher.getMaxAllowedKeyLength("AES");
+            sb.append(context.getString(R.string.title_advanced_aes_key_size, maxKeySize)).append("\r\n");
+        } catch (Throwable ex) {
+            sb.append(ex.toString()).append("\r\n");
+        }
+
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         boolean ignoring = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -1823,6 +1856,7 @@ public class Log {
             size += write(os, "Suitable=" + state.isSuitable() + "\r\n");
             size += write(os, "Unmetered=" + state.isUnmetered() + "\r\n");
             size += write(os, "Roaming=" + state.isRoaming() + "\r\n");
+            size += write(os, "Airplane=" + ConnectionHelper.airplaneMode(context) + "\r\n");
         }
 
         db.attachment().setDownloaded(attachment.id, size);

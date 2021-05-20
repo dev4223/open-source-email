@@ -91,7 +91,6 @@
     <string name="title_notification_sending_failed">Η αποστολή σε %1$s απέτυχε</string>
     <string name="title_notification_redacted">Αφαιρέθηκε: Ενεργοποίηση ταυτοποίησης με PIN ή βιομετρικά στοιχεια</string>
     <string name="title_factor_minutes">%1$d λεπτά</string>
-    <string name="menu_exit">Έξοδος</string>
     <string name="menu_answers">Πρότυπα</string>
     <string name="menu_operations">Δραστηριότητες</string>
     <string name="menu_contacts">Τοπικές επαφές</string>
@@ -182,6 +181,7 @@
     <string name="title_setup_still">Απομένουν να γίνουν</string>
     <string name="title_setup_error">Σφάλμα</string>
     <string name="title_setup_configuring">Ρύθμιση λογαριασμού &#8230;</string>
+    <string name="title_setup_close">Κλείσιμο ρυθμίσεων</string>
     <string name="title_setup_export">Εξαγωγή ρυθμίσεων</string>
     <string name="title_setup_import">Εισαγωγή ρυθμίσεων</string>
     <string name="title_setup_export_do">Ο κωδικός πρόσβασης χρησιμοποιείται για την κρυπτογράφηση των ρυθμίσεων και απαιτείται για την εκ νέου εισαγωγή των ρυθμίσεων</string>
@@ -309,6 +309,7 @@
     <string name="title_advanced_cards_beige">Χρήση μπεζ φόντου όταν χρησιμοποιείται το στιλ κάρτας</string>
     <string name="title_advanced_cards_shadow">Σκίαση μη αναγνωσμένων μηνυμάτων κατά τη χρήση στιλ κάρτας</string>
     <string name="title_advanced_date_header">Ομαδοποίηση κατά ημερομηνία</string>
+    <string name="title_advanced_date_bold">Προβολή ημερομηνίας με έντονους χαρακτήρες</string>
     <string name="title_advanced_threading">Ομαδοποίηση συζητήσεων σε νήματα</string>
     <string name="title_advanced_threading_unread">Προβολή αριθμού μη αναγνωσμένων μηνυμάτων στις συζητήσεις</string>
     <string name="title_advanced_indentation">Αριστερή/δεξιά εσοχή ειλημμένων/απεσταλμένων μηνυμάτων στις συζητήσεις</string>
@@ -821,7 +822,7 @@
     <string name="title_move_to_account">Μετακίνηση προς %1$s &#8230;</string>
     <string name="title_report_spam">Αντιμετώπιση ως ανεπιθύμητο</string>
     <string name="title_delete_permanently">Οριστική διαγραφή</string>
-    <string name="title_no_undo">Αυτή η ενέργεια δεν μπορεί να αναιρεθεί!</string>
+    <string name="title_no_undo">Κατανοώ ότι αυτό δεν μπορεί να αναιρεθεί</string>
     <string name="title_snooze">Αναβολή &#8230;</string>
     <string name="title_archive">Αρχειοθέτηση</string>
     <string name="title_reply">Απάντηση</string>
@@ -906,6 +907,7 @@
     <string name="title_subject">Θέμα:</string>
     <string name="title_attachment">Συνημμένο:</string>
     <string name="title_body_hint">Το μήνυμά σας</string>
+    <string name="title_body_hint_style">Μπορείτε να επιλέξετε κείμενο για να το μορφοποιήσετε</string>
     <string name="title_discard">Απόρριψη</string>
     <string name="title_save">Αποθήκευση</string>
     <string name="title_send">Αποστολή</string>
@@ -933,8 +935,8 @@
     <string name="title_style_list">Λίστα</string>
     <string name="title_style_list_bullets">Κουκκίδες</string>
     <string name="title_style_list_numbered">Αρίθμηση</string>
-    <string name="title_style_list_level_increase" comment="title_style_list_level_increase&#10;Title for menu item to create sub lists&#10;">Αύξηση εσοχής</string>
-    <string name="title_style_list_level_decrease" comment="title_style_list_level_decrease&#10;Title for menu item to create sub lists&#10;">Μείωση εσοχής</string>
+    <string name="title_style_list_level_increase">Αύξηση εσοχής</string>
+    <string name="title_style_list_level_decrease">Μείωση εσοχής</string>
     <string name="title_style_font">Γραμματοσειρά</string>
     <string name="title_style_font_default">Προεπιλογή</string>
     <string name="title_style_blockquote">Παράθεμα με εσοχή</string>
@@ -961,6 +963,9 @@
     <string name="title_insert_contact_group">Εισαγωγή ομάδας επαφών</string>
     <string name="title_insert_template">Εισαγωγή προτύπου</string>
     <string name="title_create_template">Δημιουργία προτύπου</string>
+    <string name="title_translate">Μετάφραση</string>
+    <string name="title_translate_key">Εισαγωγή κλειδιού</string>
+    <string name="title_translating">Μεταφράζεται &#8230;</string>
     <string name="title_edit_plain_text">Επεξεργασία ως απλό κείμενο</string>
     <string name="title_edit_formatted_text">Επεξεργασία ως αναμορφοποιημένο κείμενο</string>
     <string name="title_select_certificate">Επιλογή δημοσίου κλειδιού</string>
@@ -1181,9 +1186,10 @@
     <string name="title_legend_synchronize_off">Συγχρονισμός ανενεργός</string>
     <string name="title_legend_synchronize_poll">Περιοδικός συγχρονισμός</string>
     <string name="title_legend_disconnected">Αποσυνδέθηκε</string>
-    <string name="title_legend_backoff">Αναμονή μετά από μία αποτυχία σύνδεσης</string>
     <string name="title_legend_connecting">Γίνεται σύνδεση</string>
     <string name="title_legend_connected">Συνδέθηκε</string>
+    <string name="title_legend_backoff">Αναμονή μετά από μία αποτυχία σύνδεσης</string>
+    <string name="title_legend_quota">Γραμματοκιβώτιο σχεδόν γεμάτο</string>
     <string name="title_legend_executing">Δραστηριότητες σε εξέλιξη</string>
     <string name="title_legend_synchronizing">Γίνεται συγχρονισμός</string>
     <string name="title_legend_downloading">Κατεβαίνει/-ουν</string>
@@ -1559,5 +1565,7 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Σταθερού πλάτους</item>
+        <item>Fantasy</item>
     </string-array>
+    <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

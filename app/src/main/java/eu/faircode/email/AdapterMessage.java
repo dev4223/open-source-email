@@ -137,6 +137,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -188,6 +189,8 @@ import biweekly.util.ICalDate;
 
 import static android.app.Activity.RESULT_OK;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import static androidx.webkit.WebSettingsCompat.FORCE_DARK_OFF;
+import static androidx.webkit.WebSettingsCompat.FORCE_DARK_ON;
 
 public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHolder> {
     private Fragment parentFragment;
@@ -1860,6 +1863,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     ibHide.setImageResource(message.ui_snoozed == null ? R.drawable.twotone_visibility_off_24 : R.drawable.twotone_visibility_24);
                     ibSeen.setImageResource(message.ui_seen ? R.drawable.twotone_mail_24 : R.drawable.twotone_drafts_24);
                     ibTrash.setTag(delete);
+                    ibTrash.setImageResource(delete ? R.drawable.twotone_delete_forever_24 : R.drawable.twotone_delete_24);
+                    ibTrashBottom.setImageResource(delete ? R.drawable.twotone_delete_forever_24 : R.drawable.twotone_delete_24);
 
                     ibUndo.setVisibility(outbox ? View.VISIBLE : View.GONE);
                     ibRule.setVisibility(tools && button_rule && !outbox && !message.folderReadOnly ? View.VISIBLE : View.GONE);
@@ -2864,7 +2869,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                         return;
 
                     if (icalendar == null ||
-                            icalendar.getMethod() == null ||
                             icalendar.getEvents().size() == 0) {
                         clearCalendar();
                         grpCalendar.setVisibility(View.GONE);
@@ -2928,7 +2932,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                     tvAttendees.setVisibility(attendee.size() == 0 ? View.GONE : View.VISIBLE);
 
                     boolean canRespond =
-                            (icalendar.getMethod().isRequest() &&
+                            (icalendar.getMethod() != null &&
+                                    icalendar.getMethod().isRequest() &&
                                     organizer != null && organizer.getEmail() != null &&
                                     message.to != null && message.to.length > 0);
                     grpCalendarResponse.setVisibility(canRespond ? View.VISIBLE : View.GONE);
@@ -2987,7 +2992,9 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
                                 }
 
                                 int status;
-                                if (icalendar.getMethod().isRequest())
+                                if (icalendar.getMethod() == null)
+                                    status = CalendarContract.Events.STATUS_TENTATIVE;
+                                else if (icalendar.getMethod().isRequest())
                                     status = CalendarContract.Events.STATUS_TENTATIVE;
                                 else if (icalendar.getMethod().isCancel())
                                     status = CalendarContract.Events.STATUS_CANCELED;
@@ -4272,6 +4279,7 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             aargs.putString("question", context.getString(R.string.title_ask_delete));
             aargs.putString("remark", message.getRemark());
             aargs.putLong("id", message.id);
+            aargs.putInt("faq", 160);
             aargs.putBoolean("warning", true);
 
             FragmentDialogAsk ask = new FragmentDialogAsk();
@@ -4321,38 +4329,48 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             PopupMenuLifecycle popupMenu = new PopupMenuLifecycle(context, powner, ibMore);
             popupMenu.inflate(R.menu.popup_message_more);
 
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setTitle(message.ui_seen ? R.string.title_unseen : R.string.title_seen);
-            popupMenu.getMenu().findItem(R.id.menu_unseen).setEnabled(
-                    (message.uid != null && !message.folderReadOnly) || message.accountProtocol != EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_unseen)
+                    .setTitle(message.ui_seen ? R.string.title_unseen : R.string.title_seen)
+                    .setIcon(message.ui_seen ? R.drawable.twotone_drafts_24 : R.drawable.twotone_mail_24)
+                    .setEnabled((message.uid != null && !message.folderReadOnly) ||
+                            message.accountProtocol != EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_hide).setTitle(message.ui_snoozed == null ? R.string.title_hide : R.string.title_unhide);
+            popupMenu.getMenu().findItem(R.id.menu_hide)
+                    .setTitle(message.ui_snoozed == null ? R.string.title_hide : R.string.title_unhide)
+                    .setIcon(message.ui_snoozed == null ? R.drawable.twotone_visibility_off_24 : R.drawable.twotone_visibility_24);
 
-            popupMenu.getMenu().findItem(R.id.menu_flag_color).setEnabled(
-                    (message.uid != null && !message.folderReadOnly) || message.accountProtocol != EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_flag_color)
+                    .setEnabled((message.uid != null && !message.folderReadOnly) ||
+                            message.accountProtocol != EntityAccount.TYPE_IMAP);
 
             int i = (message.importance == null ? EntityMessage.PRIORITIY_NORMAL : message.importance);
             popupMenu.getMenu().findItem(R.id.menu_set_importance_low).setEnabled(!EntityMessage.PRIORITIY_LOW.equals(i));
             popupMenu.getMenu().findItem(R.id.menu_set_importance_normal).setEnabled(!EntityMessage.PRIORITIY_NORMAL.equals(i));
             popupMenu.getMenu().findItem(R.id.menu_set_importance_high).setEnabled(!EntityMessage.PRIORITIY_HIGH.equals(i));
 
-            popupMenu.getMenu().findItem(R.id.menu_move_to).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_move_to).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_move_to)
+                    .setEnabled(message.uid != null && !message.folderReadOnly)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_copy_to).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_copy_to).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_copy_to)
+                    .setEnabled(message.uid != null && !message.folderReadOnly)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
-            popupMenu.getMenu().findItem(R.id.menu_delete).setEnabled(message.uid == null || !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_delete).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_delete)
+                    .setEnabled(message.uid == null || !message.folderReadOnly)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+
+            popupMenu.getMenu().findItem(R.id.menu_resync)
+                    .setEnabled(message.uid != null)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
             popupMenu.getMenu().findItem(R.id.menu_search_in_text).setEnabled(message.content && !full);
 
-            popupMenu.getMenu().findItem(R.id.menu_resync).setEnabled(message.uid != null);
-            popupMenu.getMenu().findItem(R.id.menu_resync).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
-
             popupMenu.getMenu().findItem(R.id.menu_create_rule).setVisible(!message.folderReadOnly);
 
-            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setEnabled(message.uid != null && !message.folderReadOnly);
-            popupMenu.getMenu().findItem(R.id.menu_manage_keywords).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+            popupMenu.getMenu().findItem(R.id.menu_manage_keywords)
+                    .setEnabled(message.uid != null && !message.folderReadOnly)
+                    .setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
 
             popupMenu.getMenu().findItem(R.id.menu_share).setEnabled(message.content);
             popupMenu.getMenu().findItem(R.id.menu_pin).setVisible(pin);
@@ -4369,6 +4387,8 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             popupMenu.getMenu().findItem(R.id.menu_raw_save).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
             popupMenu.getMenu().findItem(R.id.menu_raw_send).setVisible(message.accountProtocol == EntityAccount.TYPE_IMAP);
+
+            popupMenu.insertIcons(context);
 
             popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -6957,11 +6977,14 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
             boolean overview_mode = prefs.getBoolean("overview_mode", false);
             boolean safe_browsing = prefs.getBoolean("safe_browsing", false);
+            boolean confirm_html = prefs.getBoolean("confirm_html", true);
+            boolean html_dark = prefs.getBoolean("html_dark", confirm_html);
 
             View view = inflater.inflate(R.layout.fragment_open_full, container, false);
             WebView wv = view.findViewById(R.id.wv);
 
             WebSettings settings = wv.getSettings();
+            settings.setUserAgentString(WebViewEx.getUserAgent(getContext(), wv));
             settings.setUseWideViewPort(true);
             settings.setLoadWithOverviewMode(overview_mode);
 
@@ -6976,6 +6999,11 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                 settings.setSafeBrowsingEnabled(safe_browsing);
+
+            if (html_dark &&
+                    WebViewEx.isFeatureSupported(WebViewFeature.FORCE_DARK))
+                WebSettingsCompat.setForceDark(settings,
+                        Helper.isDarkTheme(getContext()) ? FORCE_DARK_ON : FORCE_DARK_OFF);
 
             settings.setLoadsImagesAutomatically(true);
             settings.setBlockNetworkLoads(false);
