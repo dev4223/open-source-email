@@ -1,13 +1,14 @@
 <a name="top"></a>
 # FairEmail support
 
+[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_de.png" /> Deutsch](https://github.com/M66B/FairEmail/blob/master/docs/FAQ-de-rDE.md)<br />
+[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_fr.png" /> Français](https://github.com/M66B/FairEmail/blob/master/docs/FAQ-fr-rFR.md)<br />
+[<img src="https://github.com/M66B/FairEmail/raw/master/app/src/main/resExtra/drawable/language_es.png" /> Español](https://github.com/M66B/FairEmail/blob/master/docs/FAQ-es-rES.md)<br />
+[<img src="https://github.com/M66B/FairEmail/raw/master/images/outline_translate_black_24dp.png" /> Other languages](https://github.com/M66B/FairEmail/blob/master/docs/)
+
 If you have a question, please check the following frequently asked questions first.
 [At the bottom](#user-content-get-support),
 you can find out how to ask other questions, request features, and report bugs.
-
-Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ).
-[Ganz unten erfahren Sie](#user-content-get-support),
-wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
 
 ## Index
 
@@ -2275,6 +2276,7 @@ To enable/disable a specific account:
 ```
 
 Note that disabling an account will hide the account and all associated folders and messages.
+From version 1.1600 an account will be disabled/enabled by setting the account to manual/automatic sync, so the folders and messages keep being accessible.
 
 To set the poll interval:
 
@@ -2992,6 +2994,12 @@ For some background, see for [this Wikipedia article](https://en.wikipedia.org/w
 
 <br />
 
+*Translate button (version 1.1600+)*
+
+Please see [this FAQ](#user-content-faq167) about how to configure DeepL.
+
+<br />
+
 <a name="faq126"></a>
 **(126) Can message previews be sent to my wearable?**
 
@@ -3687,9 +3695,10 @@ Unfortunately, it is not possible to hide messages on the email server too.
 <a name="faq167"></a>
 **(167) How can I use DeepL?**
 
-1. [Subscribe to](https://www.deepl.com/pro#developer) the DeepL API Free plan (credit card required)
+1. Enable [experimental features](https://github.com/M66B/FairEmail/blob/master/FAQ.md#user-content-faq125) in the miscellaneous settings
+1. [Subscribe to](https://www.deepl.com/pro#developer) the DeepL API Free or Pro plan (credit card required)
 1. [Copy](https://www.deepl.com/pro-account/plan) the authentication key
-1. In the overflow menu of the message composer select *Translate*, *Configure* and paste the key
+1. In the message composer tap on the faint translate button (文A), select *Configure* and paste the key
 
 You might want to read the [privacy policy](https://www.deepl.com/privacy/) of DeepL.
 

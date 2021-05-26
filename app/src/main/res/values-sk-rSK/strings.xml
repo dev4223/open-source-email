@@ -70,12 +70,6 @@
         <item quantity="many">%1$d nových</item>
         <item quantity="other">%1$d nových</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Vybratá %1$d konverzácia</item>
-        <item quantity="few">Vybraté%1$d konverzácie</item>
-        <item quantity="many">Vybratých %1$d konverzácií</item>
-        <item quantity="other">Vybratých %1$d konverzácií</item>
-    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Presunúť %1$d správu?</item>
         <item quantity="few">Presunúť %1$d správy?</item>
@@ -1365,7 +1359,6 @@ Nastavenie vždy toto kompenzuje neustálym sledovaním zmien.</string>
     <string name="title_pro_feature">Toto je pro funkcia</string>
     <string name="title_pro_list">Zoznam pro funkcií</string>
     <string name="title_pro_purchase">Kúpiť</string>
-    <string name="title_pro_once">Len raz</string>
     <string name="title_pro_info">        Vývoj FairEmail zaberá tisícky hodín práce a aj napriek tomu je väčšina funkcií k dispozícii zdarma.
         FairEmail berie vaše súkromie vážne, nezobrazuje žiadne reklamy, ani nezískava prostriedky sledovaním a analyzovaním údajov o vás.
         S cieľom pre FairEmail zabezpečiť ďalší vývoj a dlhodobú podporu, niektoré unikátne a rozšírené vlastnosti nie sú zdarma.

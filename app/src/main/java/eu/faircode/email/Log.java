@@ -532,7 +532,7 @@ public class Log {
                             if (element instanceof Long)
                                 elements[i] = element.toString() + " (0x" + Long.toHexString((Long) element) + ")";
                             else
-                                elements[i] = (element == null ? null : element.toString());
+                                elements[i] = (element == null ? null : printableString(element.toString()));
                         }
                         value = TextUtils.join(",", elements);
                     } else
@@ -548,6 +548,22 @@ public class Log {
         }
 
         return result;
+    }
+
+    static String printableString(String value) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char kar = value.charAt(i);
+            if (kar == '\n')
+                result.append('|');
+            else if (kar == ' ')
+                result.append('_');
+            else if (!Helper.isPrintableChar(kar))
+                result.append('{').append(Integer.toHexString(kar)).append('}');
+            else
+                result.append(kar);
+        }
+        return result.toString();
     }
 
     static void logMemory(Context context, String message) {
@@ -721,6 +737,29 @@ public class Log {
                   at androidx.paging.DataSource$LoadCallbackHelper$1.run(SourceFile:324)
                   at android.os.Handler.handleCallback(Handler.java:789)
             */
+            return false;
+
+        if (ex instanceof IllegalArgumentException &&
+                "Can't interpolate between two incompatible pathData".equals(ex.getMessage()))
+            /*
+                java.lang.IllegalArgumentException: Can't interpolate between two incompatible pathData
+                  at android.animation.AnimatorInflater$PathDataEvaluator.evaluate(AnimatorInflater.java:265)
+                  at android.animation.AnimatorInflater$PathDataEvaluator.evaluate(AnimatorInflater.java:262)
+                  at android.animation.KeyframeSet.getValue(KeyframeSet.java:210)
+                  at android.animation.PropertyValuesHolder.calculateValue(PropertyValuesHolder.java:1018)
+                  at android.animation.ValueAnimator.animateValue(ValueAnimator.java:1341)
+                  at android.animation.ObjectAnimator.animateValue(ObjectAnimator.java:986)
+                  at android.animation.ValueAnimator.animateBasedOnTime(ValueAnimator.java:1258)
+                  at android.animation.ValueAnimator.doAnimationFrame(ValueAnimator.java:1306)
+                  at android.animation.AnimationHandler.doAnimationFrame(AnimationHandler.java:146)
+                  at android.animation.AnimationHandler.-wrap2(AnimationHandler.java)
+                  at android.animation.AnimationHandler$1.doFrame(AnimationHandler.java:54)
+                  at android.view.Choreographer$CallbackRecord.run(Choreographer.java:925)
+                  at android.view.Choreographer.doCallbacks(Choreographer.java:702)
+                  at android.view.Choreographer.doFrame(Choreographer.java:635)
+                  at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:913)
+                  at android.os.Handler.handleCallback(Handler.java:751)
+             */
             return false;
 
         if (ex instanceof IllegalMonitorStateException)
@@ -1082,6 +1121,30 @@ public class Log {
              */
         }
 
+        if (ex instanceof StringIndexOutOfBoundsException) {
+            for (StackTraceElement ste : stack)
+                if ("android.widget.Editor$SuggestionsPopupWindow".equals(ste.getClassName()) &&
+                        "highlightTextDifferences".equals(ste.getMethodName()))
+                    return false;
+            /*
+                Android 7.0 Samsung
+                java.lang.StringIndexOutOfBoundsException: length=175; regionStart=174; regionLength=7
+                  at java.lang.String.substring(String.java:1931)
+                  at android.widget.Editor$SuggestionsPopupWindow.highlightTextDifferences(Editor.java:4002)
+                  at android.widget.Editor$SuggestionsPopupWindow.updateSuggestions(Editor.java:3933)
+                  at android.widget.Editor$SuggestionsPopupWindow.show(Editor.java:3836)
+                  at android.widget.Editor.replace(Editor.java:428)
+                  at android.widget.Editor$3.run(Editor.java:2362)
+                  at android.os.Handler.handleCallback(Handler.java:751)
+                  at android.os.Handler.dispatchMessage(Handler.java:95)
+                  at android.os.Looper.loop(Looper.java:154)
+                  at android.app.ActivityThread.main(ActivityThread.java:6780)
+                  at java.lang.reflect.Method.invoke(Native Method)
+                  at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:1500)
+                  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1390)
+               */
+        }
+
         if (ex instanceof IllegalArgumentException &&
                 stack.length > 0 &&
                 "android.text.method.WordIterator".equals(stack[0].getClassName()) &&
@@ -1106,6 +1169,40 @@ public class Log {
                 at android.os.Handler.handleCallback(Handler.java:815)
              */
             return false;
+
+        if (ex instanceof IllegalArgumentException && ex.getCause() != null) {
+            for (StackTraceElement ste : ex.getCause().getStackTrace())
+                if ("android.view.textclassifier.TextClassifierImpl".equals(ste.getClassName()) &&
+                        "validateInput".equals(ste.getMethodName()))
+                    return false;
+            /*
+                java.lang.RuntimeException: An error occurred while executing doInBackground()
+                        at android.os.AsyncTask$3.done(AsyncTask.java:353)
+                        at java.util.concurrent.FutureTask.finishCompletion(FutureTask.java:383)
+                        at java.util.concurrent.FutureTask.setException(FutureTask.java:252)
+                        at java.util.concurrent.FutureTask.run(FutureTask.java:271)
+                        at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:245)
+                        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+                        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+                        at java.lang.Thread.run(Thread.java:764)
+                Caused by: java.lang.IllegalArgumentException
+                at com.android.internal.util.Preconditions.checkArgument(Preconditions.java:33)
+                        at android.view.textclassifier.TextClassifierImpl.validateInput(TextClassifierImpl.java:484)
+                        at android.view.textclassifier.TextClassifierImpl.classifyText(TextClassifierImpl.java:144)
+                        at android.widget.SelectionActionModeHelper$TextClassificationHelper.classifyText(SelectionActionModeHelper.java:465)
+                        at android.widget.SelectionActionModeHelper.-android_widget_SelectionActionModeHelper-mthref-1(SelectionActionModeHelper.java:83)
+                        at android.widget.-$Lambda$tTszxdFZ0V9nXhnBpPsqeBMO0fw$5.$m$0(Unknown:4)
+                        at android.widget.-$Lambda$tTszxdFZ0V9nXhnBpPsqeBMO0fw$5.get(Unknown)
+                        at android.widget.SelectionActionModeHelper$TextClassificationAsyncTask.doInBackground(SelectionActionModeHelper.java:366)
+                        at android.widget.SelectionActionModeHelper$TextClassificationAsyncTask.doInBackground(SelectionActionModeHelper.java:361)
+                        at android.os.AsyncTask$2.call(AsyncTask.java:333)
+                        at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+                        at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:245)
+                        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1162)
+                        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:636)
+                        at java.lang.Thread.run(Thread.java:764)
+             */
+        }
 
         if (ex instanceof NullPointerException &&
                 stack.length > 0 &&
@@ -1563,10 +1660,13 @@ public class Log {
         sb.append(String.format("Memory class: %d/%d MB/%s\r\n",
                 am.getMemoryClass(), am.getLargeMemoryClass(), Helper.humanReadableByteCount(mi.totalMem)));
 
+        long storage_available = Helper.getAvailableStorageSpace();
+        long storage_total = Helper.getTotalStorageSpace();
+        long storage_used = Helper.getSize(context.getFilesDir());
         sb.append(String.format("Storage space: %s/%s App: %s\r\n",
-                Helper.humanReadableByteCount(Helper.getAvailableStorageSpace()),
-                Helper.humanReadableByteCount(Helper.getTotalStorageSpace()),
-                Helper.humanReadableByteCount(Helper.getSize(context.getFilesDir()))));
+                Helper.humanReadableByteCount(storage_total - storage_available),
+                Helper.humanReadableByteCount(storage_total),
+                Helper.humanReadableByteCount(storage_used)));
 
         Runtime rt = Runtime.getRuntime();
         long hused = (rt.totalMemory() - rt.freeMemory()) / 1024L;

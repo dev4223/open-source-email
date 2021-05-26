@@ -70,12 +70,6 @@
         <item quantity="many">%1$d новых</item>
         <item quantity="other">%1$d новых</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Выбран %1$d диалог</item>
-        <item quantity="few">Выбрано %1$d диалога</item>
-        <item quantity="many">Выбрано %1$d диалогов</item>
-        <item quantity="other">Выбрано %1$d диалогов</item>
-    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Переместить %1$d сообщение?</item>
         <item quantity="few">Переместить %1$d сообщения?</item>
@@ -480,6 +474,7 @@
     <string name="title_advanced_manage_keys_hint">        Будут открыты настройки безопасности Android.
         Ключи и сертификаты обычно находятся в разделе \"Дополнительно\" - \"Шифрование и учётные данные\".
     </string>
+    <string name="title_advanced_power_menu">Добавить действия в меню питания Android</string>
     <string name="title_advanced_external_search">Разрешать другим приложениям искать в сообщениях</string>
     <string name="title_advanced_shortcuts">Показывать часто используемые контакты в меню \"Поделиться\" Android</string>
     <string name="title_advanced_fts">Создавать индекс поиска</string>
@@ -993,6 +988,7 @@
     <string name="title_translate_key">Введите ключ</string>
     <string name="title_translating">Перевод&#8230;</string>
     <string name="title_translate_small">Использовать мелкий шрифт для исходного текста</string>
+    <string name="title_translate_usage">Использование: %1$s / %2$s (%3$d %%)</string>
     <string name="title_edit_plain_text">Редактировать как простой текст</string>
     <string name="title_edit_formatted_text">Редактировать как исходный текст</string>
     <string name="title_select_certificate">Выбор публичного ключа</string>
@@ -1383,7 +1379,8 @@
     <string name="title_pro_feature">Это функция версии Pro</string>
     <string name="title_pro_list">Список функций Pro</string>
     <string name="title_pro_purchase">Купить</string>
-    <string name="title_pro_once">Только один раз</string>
+    <string name="title_pro_one_time">%1$s (разовая покупка)</string>
+    <string name="title_pro_no_play">Приложение Play Маркет не найдено</string>
     <string name="title_pro_info">        Разработка FairEmail занимает буквально тысячи часов и, несмотря на это, большинство функций являются бесплатными для использования.
         FairEmail серьёзно относится к вашей конфиденциальности, не показывает рекламу и не использует отслеживание или аналитику для монетизации.
         Чтобы сделать проект FairEmail устойчивым в долгосрочной перспективе, некоторые удобства и расширенные функции являются платными.
@@ -1419,6 +1416,10 @@
     <string name="title_widget_title_count">Количество новых сообщений</string>
     <string name="title_widget_title_list">Список сообщений</string>
     <string name="title_widget_title_sync">Синхронизация вкл/выкл</string>
+    <string name="title_power_menu_sync">Синхронизация</string>
+    <string name="title_power_menu_on">Вкл</string>
+    <string name="title_power_menu_off">Откл</string>
+    <string name="title_power_menu_on_off">Вкл/откл</string>
     <string name="title_widget_account">Учётная запись</string>
     <string name="title_widget_account_all">Все</string>
     <string name="title_widget_folder">Папка</string>

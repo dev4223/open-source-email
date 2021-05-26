@@ -56,10 +56,6 @@
         <item quantity="one">%1$d nuovo</item>
         <item quantity="other">%1$d nuovi</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">%1$d conversazione selezionata</item>
-        <item quantity="other">%1$d conversazioni selezionate</item>
-    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Spostare %1$d messaggio?</item>
         <item quantity="other">Spostare %1$d messaggi?</item>
@@ -1359,7 +1355,6 @@
     <string name="title_pro_feature">Questa è una funzionalità pro</string>
     <string name="title_pro_list">Elenco di funzionalità pro</string>
     <string name="title_pro_purchase">Acquista</string>
-    <string name="title_pro_once">Solo una volta</string>
     <string name="title_pro_info">        Sviluppare FairEmail ha letteralmente impiegato migliaio di ore e, nonostante ciò, gran parte delle funzionalità sono gratuite.
         FairEmail prende sul serio la tua privacy e non mostra annunci né usa il monitoraggio o le analisi per guadagnare denaro.
         Per mantenere e supportare FairEmail a lungo termine, alcune funzionalità convenzionali e avanzate non sono gratuite.
