@@ -56,10 +56,6 @@
         <item quantity="one">%1$d nytt</item>
         <item quantity="other">%1$d nya</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Vald %1$d konversation</item>
-        <item quantity="other">Valda %1$d konversationer</item>
-    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Flytta %1$d meddelande?</item>
         <item quantity="other">Flytta %1$d meddelanden?</item>
@@ -1339,7 +1335,6 @@
     <string name="title_pro_feature">Detta är en pro-funktion</string>
     <string name="title_pro_list">Lista över pro-funktioner</string>
     <string name="title_pro_purchase">Köp</string>
-    <string name="title_pro_once">Endast en gång</string>
     <string name="title_pro_info">        Att utveckla FairEmail tog bokstavligen tusentals timmar, trots att de flesta funktioner är fria att använda.
         FairEmail tar din integritet på allvar och visar inte annonser och använder inte spårning eller analys för att tjäna pengar.
         Att underhålla och stödja FairEmail i det långa loppet, vissa bekvämlighets- och avancerade funktioner är inte gratis att använda.

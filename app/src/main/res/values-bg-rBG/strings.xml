@@ -47,10 +47,6 @@
         <item quantity="one">%1$d ново</item>
         <item quantity="other">%1$d ново</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Маркиран %1$d разговор</item>
-        <item quantity="other">Маркирани %1$d разговори</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Изтъркай %1$d съобщение завинаги?</item>
         <item quantity="other">Изтъркай %1$d съобщения завинаги?</item>
@@ -1057,7 +1053,6 @@
     <string name="title_pro_feature">Това е pro функция</string>
     <string name="title_pro_list">Списък на pro функции</string>
     <string name="title_pro_purchase">Купувам</string>
-    <string name="title_pro_once">Само веднъж</string>
     <string name="title_pro_info">        Разработката на FairEmail отне буквално хиляди часове и, въпреки това, повечето от функциите са безплатни за използване.
         FairEmail взима сериозно поверителността ви и не показва реклами и не използва проследяване или анализи, за да печели пари.
         За да поддържате и поддържате FairEmail в дългосрочен план, някои удобства и разширени функции не са свободни за използване.

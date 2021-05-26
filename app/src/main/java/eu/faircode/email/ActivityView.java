@@ -41,7 +41,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -120,14 +119,15 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
     private int lastBackStackCount = 0;
     private Snackbar lastSnackbar = null;
 
-    static final int REQUEST_UNIFIED = 1;
-    static final int REQUEST_WHY = 2;
-    static final int REQUEST_ALERT = 3;
-    static final int REQUEST_THREAD = 4;
-    static final int REQUEST_OUTBOX = 5;
-    static final int REQUEST_ERROR = 6;
-    static final int REQUEST_UPDATE = 7;
-    static final int REQUEST_WIDGET = 8;
+    static final int PI_UNIFIED = 1;
+    static final int PI_WHY = 2;
+    static final int PI_ALERT = 3;
+    static final int PI_THREAD = 4;
+    static final int PI_OUTBOX = 5;
+    static final int PI_ERROR = 6;
+    static final int PI_UPDATE = 7;
+    static final int PI_WIDGET = 8;
+    static final int PI_POWER = 9;
 
     static final String ACTION_VIEW_FOLDERS = BuildConfig.APPLICATION_ID + ".VIEW_FOLDERS";
     static final String ACTION_VIEW_MESSAGES = BuildConfig.APPLICATION_ID + ".VIEW_MESSAGES";
@@ -1042,7 +1042,7 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
                 Intent update = new Intent(Intent.ACTION_VIEW, Uri.parse(info.html_url))
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 PendingIntent piUpdate = PendingIntentCompat.getActivity(
-                        ActivityView.this, REQUEST_UPDATE, update, PendingIntent.FLAG_UPDATE_CURRENT);
+                        ActivityView.this, PI_UPDATE, update, PendingIntent.FLAG_UPDATE_CURRENT);
                 builder.setContentIntent(piUpdate);
 
                 Intent manage = new Intent(ActivityView.this, ActivitySetup.class)
@@ -1553,17 +1553,17 @@ public class ActivityView extends ActivityBilling implements FragmentManager.OnB
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             View dview = inflater.inflate(R.layout.dialog_first, null);
-            Button btnBatteryInfo = dview.findViewById(R.id.btnBatteryInfo);
-            Button btnReformatInfo = dview.findViewById(R.id.btnReformatInfo);
+            ImageButton ibBatteryInfo = dview.findViewById(R.id.ibBatteryInfo);
+            ImageButton ibReformatInfo = dview.findViewById(R.id.ibReformatInfo);
 
-            btnBatteryInfo.setOnClickListener(new View.OnClickListener() {
+            ibBatteryInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Helper.viewFAQ(v.getContext(), 39);
                 }
             });
 
-            btnReformatInfo.setOnClickListener(new View.OnClickListener() {
+            ibReformatInfo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Helper.viewFAQ(v.getContext(), 35);

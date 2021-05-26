@@ -72,11 +72,6 @@
         <item quantity="other">%1$d new</item>
     </plurals>
 
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Selected %1$d conversation</item>
-        <item quantity="other">Selected %1$d conversations</item>
-    </plurals>
-
     <plurals name="title_moving_messages">
         <item quantity="one">Move %1$d message?</item>
         <item quantity="other">Move %1$d messages?</item>
@@ -536,6 +531,7 @@
     </string>
     <string name="title_advanced_aes_key_size" translatable="false">Max AES key size: %1$d</string>
 
+    <string name="title_advanced_power_menu">Add actions to the Android power menu</string>
     <string name="title_advanced_external_search">Allow other apps to search in messages</string>
     <string name="title_advanced_shortcuts">Show frequently used contacts in Android share menu</string>
     <string name="title_advanced_fts">Build search index</string>
@@ -567,6 +563,7 @@
     <string name="title_advanced_auth_ntlm" translatable="false">NTLM</string>
     <string name="title_advanced_auth_sasl" translatable="false">SASL</string>
     <string name="title_advanced_exact_alarms" translatable="false">Use exact timers</string>
+    <string name="title_advanced_test_iab" translatable="false">Test IAB</string>
     <string name="title_advanced_processors" translatable="false">Processors: %1$d</string>
     <string name="title_advanced_memory_class" translatable="false">Memory class: %1$s/%2$s Total: %3$s</string>
     <string name="title_advanced_memory_usage" translatable="false">Memory usage: %1$s/%2$s Native: %3$s</string>
@@ -1112,6 +1109,7 @@
     <string name="title_translate_key">Enter key</string>
     <string name="title_translating">Translating &#8230;</string>
     <string name="title_translate_small">Use a small font for the source text</string>
+    <string name="title_translate_usage">Usage: %1$s / %2$s (%3$d %%)</string>
     <string name="title_edit_plain_text">Edit as plain text</string>
     <string name="title_edit_formatted_text">Edit as reformatted text</string>
     <string name="title_select_certificate">Select public key</string>
@@ -1536,7 +1534,8 @@
     <string name="title_pro_feature">This is a pro feature</string>
     <string name="title_pro_list">List of pro features</string>
     <string name="title_pro_purchase">Buy</string>
-    <string name="title_pro_once">Only once</string>
+    <string name="title_pro_one_time">%1$s (one-time purchase)</string>
+    <string name="title_pro_no_play">Play Store was not found</string>
     <string name="title_pro_info">
         Developing FairEmail took literally thousands of hours and, despite that, most of the features are free to use.
         FairEmail takes your privacy seriously and doesn\'t show ads and doesn\'t use tracking or analytics to earn money.
@@ -1578,6 +1577,11 @@
     <string name="title_widget_title_count">New message count</string>
     <string name="title_widget_title_list">Message list</string>
     <string name="title_widget_title_sync">Sync on/off</string>
+
+    <string name="title_power_menu_sync">Synchronization</string>
+    <string name="title_power_menu_on">On</string>
+    <string name="title_power_menu_off">Off</string>
+    <string name="title_power_menu_on_off">On/Off</string>
 
     <string name="title_widget_account">Account</string>
     <string name="title_widget_account_all">All</string>

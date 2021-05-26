@@ -52,10 +52,6 @@
         <item quantity="one">%1$d ny</item>
         <item quantity="other">%1$d ny</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">Valgt %1$d samtale</item>
-        <item quantity="other">Valgte %1$d samtaler</item>
-    </plurals>
     <plurals name="title_moving_messages">
         <item quantity="one">Vil du flytte %1$d melding?</item>
         <item quantity="other">Vil du flytte %1$d meldinger?</item>
@@ -1214,7 +1210,6 @@
     <string name="title_pro_feature">Dette er en Pro-funksjon</string>
     <string name="title_pro_list">Liste over Pro funksjoner</string>
     <string name="title_pro_purchase">Kjøp</string>
-    <string name="title_pro_once">Bare en gang</string>
     <string name="title_pro_info">        Utviklingen av FairEmail tok, bokstavelig talt, tusenvis av timer, men til tross for dette er de fleste funksjonene gratis.
         FairEmail tar personvernet ditt alvorlig og viser hverken reklamer, eller bruker sporing og analytikk for å tjene penger.
         For å opprettholde og vedlikeholde FairEmail i det lange løp, er enkelte avanserte- og bekvemmelighetsfunksjoner ikke gratis.

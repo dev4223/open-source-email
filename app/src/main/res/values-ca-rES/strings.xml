@@ -51,10 +51,6 @@
         <item quantity="one">%1$d nou</item>
         <item quantity="other">%1$d noves</item>
     </plurals>
-    <plurals name="title_selected_conversations">
-        <item quantity="one">S\'han seleccionat %1$d conversa</item>
-        <item quantity="other">S\'han seleccionat %1$d converses</item>
-    </plurals>
     <plurals name="title_deleting_messages">
         <item quantity="one">Esborrar el missatge %1$d per sempre?</item>
         <item quantity="other">Esborrar els missatges %1$d per sempre?</item>
@@ -1089,7 +1085,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_pro_feature">Això es una característica Pro</string>
     <string name="title_pro_list">Llista de característiques Pro</string>
     <string name="title_pro_purchase">Comprar</string>
-    <string name="title_pro_once">Només un cop</string>
     <string name="title_pro_hint">Comprar característiques Pro et permet utilitzar tota la funcionalitat Pro actual i futura i mantindrà el desenvolupament de l\'aplicació</string>
     <string name="title_pro_pending">Compra pendent</string>
     <string name="title_pro_activated">Totes les característiques Pro estan activades</string>
