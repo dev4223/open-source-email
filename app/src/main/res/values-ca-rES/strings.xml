@@ -411,7 +411,6 @@ La creació i l\'ús de regles és una característica professional.    </string
     <string name="title_advanced_navbar_colorize_hint">Si això funciona depèn de la versió i la versió d\'Android</string>
     <string name="title_advanced_threading_hint">Agrupa missatges relacionats entre ells</string>
     <string name="title_advanced_gravatars_hint">Pot haver-hi un risc de privadesa</string>
-    <string name="title_advanced_name_email_hint">Quan estigui desactivat només es mostraran noms quan estiguin disponibles</string>
     <string name="title_advanced_preview_hint">Només disponible quan s\'ha descarregat el text del missatge</string>
     <string name="title_advanced_preview_issue">El desplaçament pot ser lent a causa d\'un error en algunes versions d\'Android quan el nombre de línies és superior a una</string>
     <string name="title_advanced_inline_hint">Les imatges en línia són imatges incloses al missatge</string>
@@ -1262,6 +1261,7 @@ La creació i l\'ús de regles és una característica professional.    </string
         <item>Sans-serif</item>
         <item>Monospace</item>
         <item>Fantasy</item>
+        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

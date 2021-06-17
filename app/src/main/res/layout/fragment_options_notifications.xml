@@ -531,11 +531,22 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:checked="true"
                     android:text="@string/title_advanced_notify_clear"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tvNotifyRemoveHint"
+                    app:switchPadding="12dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNotifySubtext"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:checked="true"
+                    android:text="@string/title_advanced_notify_subtext"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifyClear"
                     app:switchPadding="12dp" />
 
                 <androidx.appcompat.widget.SwitchCompat
@@ -547,7 +558,7 @@
                     android:text="@string/title_advanced_notify_preview"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/swNotifyClear"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifySubtext"
                     app:switchPadding="12dp" />
 
                 <eu.faircode.email.FixedTextView
@@ -608,6 +619,17 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/swNotifyPreviewOnly" />
 
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swNotifyTransliterate"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/title_advanced_notify_transliterate"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvNotifyPreviewOnlyHint"
+                    app:switchPadding="12dp" />
+
                 <ImageButton
                     android:id="@+id/ibLight"
                     android:layout_width="wrap_content"
@@ -616,7 +638,7 @@
                     android:contentDescription="@string/title_info"
                     android:tooltipText="@string/title_info"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvNotifyPreviewOnlyHint"
+                    app:layout_constraintTop_toBottomOf="@id/swNotifyTransliterate"
                     app:srcCompat="@drawable/baseline_wb_incandescent_24" />
 
                 <androidx.appcompat.widget.SwitchCompat

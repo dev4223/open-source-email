@@ -512,7 +512,6 @@
     <string name="title_advanced_threading_hint">Groepberjochten relatearre oan elkoar</string>
     <string name="title_advanced_highlight_hint">Berjochten wurde allinich op datum groepeare as se binne op tiid binne sorteare</string>
     <string name="title_advanced_gravatars_hint">D\'r kin in privacy risiko wêze</string>
-    <string name="title_advanced_name_email_hint">As útskeakele sille allinich nammen werjûn wurde as se beskikber binne</string>
     <string name="title_advanced_preview_hint">Allinich beskikber as berjochttekst is ynladen</string>
     <string name="title_advanced_preview_lines_hint">Maksimum %s karakters yn totaal</string>
     <string name="title_advanced_preview_issue">Scrollen kin stadich wêze fanwegen in flater yn guon Android-ferzjes as it oantal rigels mear dan ien is</string>
@@ -1563,6 +1562,7 @@
         <item>Sans-serif</item>
         <item>Monospace</item>
         <item>Fantasy</item>
+        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

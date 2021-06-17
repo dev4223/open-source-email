@@ -25,6 +25,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -220,6 +221,10 @@ public class EntityMessage implements Serializable {
     public Long ui_snoozed;
     @NonNull
     public Boolean ui_unsnoozed = false;
+    @NonNull
+    public Boolean show_images = false;
+    @NonNull
+    public Boolean show_full = false;
     public Integer color;
     public Integer revision; // compose
     public Integer revisions; // compose
@@ -320,6 +325,42 @@ public class EntityMessage implements Serializable {
         }
 
         return null;
+    }
+
+    static String collapsePrefixes(Context context, String language, String subject, boolean forward) {
+        List<Pair<String, Boolean>> prefixes = new ArrayList<>();
+        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply, ""))
+            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
+        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply_alt, ""))
+            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
+        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward, ""))
+            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
+        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward_alt, ""))
+            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
+
+        List<Boolean> scanned = new ArrayList<>();
+        subject = subject.trim();
+        while (true) {
+            boolean found = false;
+            for (Pair<String, Boolean> prefix : prefixes)
+                if (subject.toLowerCase().startsWith(prefix.first)) {
+                    found = true;
+                    int count = scanned.size();
+                    if (!prefix.second.equals(count == 0 ? forward : scanned.get(count - 1)))
+                        scanned.add(prefix.second);
+                    subject = subject.substring(prefix.first.length()).trim();
+                    break;
+                }
+            if (!found)
+                break;
+        }
+
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < scanned.size(); i++)
+            result.append(context.getString(scanned.get(i) ? R.string.title_subject_forward : R.string.title_subject_reply, ""));
+        result.append(subject);
+
+        return result.toString();
     }
 
     Element getReplyHeader(Context context, Document document, boolean separate, boolean extended) {
@@ -552,6 +593,8 @@ public class EntityMessage implements Serializable {
                     Objects.equals(this.ui_busy, other.ui_busy) &&
                     Objects.equals(this.ui_snoozed, other.ui_snoozed) &&
                     this.ui_unsnoozed.equals(other.ui_unsnoozed) &&
+                    this.show_images.equals(other.show_images) &&
+                    this.show_full.equals(other.show_full) &&
                     Objects.equals(this.color, other.color) &&
                     Objects.equals(this.revision, other.revision) &&
                     Objects.equals(this.revisions, other.revisions) &&

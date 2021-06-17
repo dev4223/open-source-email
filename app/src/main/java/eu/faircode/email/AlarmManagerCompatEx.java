@@ -23,6 +23,7 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.AlarmManagerCompat;
@@ -33,11 +34,27 @@ public class AlarmManagerCompatEx {
             @NonNull Context context, @NonNull AlarmManager am,
             int type, long trigger, @NonNull PendingIntent pi) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean exact_alarms = prefs.getBoolean("exact_alarms", false);
+        boolean exact_alarms = prefs.getBoolean("exact_alarms", true);
 
-        if (exact_alarms)
-            AlarmManagerCompat.setExactAndAllowWhileIdle(am, type, trigger, pi);
+        // https://developer.android.com/about/versions/12/behavior-changes-12#exact-alarm-permission
+        if (exact_alarms && canScheduleExactAlarms(context))
+            try {
+                AlarmManagerCompat.setExactAndAllowWhileIdle(am, type, trigger, pi);
+            } catch (SecurityException ex) {
+                Log.w(ex);
+                AlarmManagerCompat.setAndAllowWhileIdle(am, type, trigger, pi);
+            }
         else
             AlarmManagerCompat.setAndAllowWhileIdle(am, type, trigger, pi);
+    }
+
+    static boolean canScheduleExactAlarms(Context context) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R)
+            return true;
+        else {
+            //AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            //return am.canScheduleExactAlarms();
+            return true;
+        }
     }
 }

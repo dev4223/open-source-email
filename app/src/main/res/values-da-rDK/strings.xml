@@ -158,8 +158,10 @@
     <string name="title_setup_identity_what">Hvad er en identitet?</string>
     <string name="title_setup_permissions">Giv tilladelser</string>
     <string name="title_setup_permissions_remark">For at få tilgå kontaktoplysninger (valgfrit)</string>
+    <string name="title_setup_permissions_explanation">Kontakttilladelser kræves for at slå kontaktoplysninger op og foreslå kontaktpersoner</string>
     <string name="title_setup_doze">Deaktivér batterioptimering</string>
     <string name="title_setup_doze_remark">For at sende og modtage e-mail pålideligt</string>
+    <string name="title_setup_doze_explanation">Batterioptimeringer bør deaktiveres for appen for at sikre pålidelig baggrundsbeskedafsendelse og -modtagelse</string>
     <string name="title_setup_doze_hint">Selvom dette kan lyde selvmodsigende, vil deaktivering af batterioptimering for denne app resultere i lavere strømforbrug</string>
     <string name="title_setup_doze_instructions">Ændr i næste Android-dialog \"Ikke optimeret\" til \"Alle apps\", vælg denne app og \"Optimér ikke\"</string>
     <string name="title_setup_doze_battery">Højt strømforbrug?</string>
@@ -243,6 +245,7 @@
     <string name="title_advanced_sync_folders">Synkronisér mappeliste</string>
     <string name="title_advanced_sync_shared_folders">Synkronisér delte mappelister</string>
     <string name="title_advanced_subscriptions">Håndér mappeabonnementer</string>
+    <string name="title_advanced_check_authentication">Tjek beskedgodkendelse</string>
     <string name="title_advanced_check_mx">Tjek afsenderadresser ved beskedsynkroniseringer</string>
     <string name="title_advanced_tune_keep_alive">Justér automatisk hold i live intervallet</string>
     <string name="title_advanced_keyboard">Vis tastatur som standard</string>
@@ -411,6 +414,7 @@
     <string name="title_advanced_notify_action_snooze">Udsæt</string>
     <string name="title_advanced_notify_remove">Fjern nye beskednotifikationer ved tryk på notifikationen</string>
     <string name="title_advanced_notify_clear">Fjern nye beskednotifikationer ved visning af beskedliste</string>
+    <string name="title_advanced_notify_subtext">Vis konto- eller mappenavn som undertekst</string>
     <string name="title_advanced_wearable_preview">Send kun notifikationer med en beskedforhåndsvisning til wearables</string>
     <string name="title_advanced_notify_messaging">Benyt Android \'beskedstil\' notifikationsformat</string>
     <string name="title_advanced_biometrics_notify">Vis notifikationsindhold ved brug af biometrisk godkendelse</string>
@@ -422,6 +426,7 @@
     <string name="title_advanced_confirm_html">Vis som standard omformaterede beskeder</string>
     <string name="title_advanced_tracking">Forsøg på at genkend og deaktivere sporingsbilleder</string>
     <string name="title_advanced_hide_timezone">Send beskeder uden tidszonedata</string>
+    <string name="title_advanced_client_id">Send app-navn og -version til e-mailserver</string>
     <string name="title_advanced_display_hidden">Vis skjulte beskedtekster</string>
     <string name="title_advanced_incognito_keyboard">Benyt inkognitotastatur (Android 8+)</string>
     <string name="title_advanced_secure">Skjul fra seneste apps-skærm og forhindr skærmfotofunktion</string>
@@ -480,6 +485,7 @@
     <string name="title_advanced_sync_kept_hint">Dette vil overføre ekstra data og forbruge ekstra strøm, især hvis der er mange beskeder lagret på enheden</string>
     <string name="title_advanced_gmail_thread_hint">Dette gælder kun for nyligt modtagne beskeder og kan ødelægge eksisterende grupper</string>
     <string name="title_advanced_sync_folders_hint">Deaktivering af dette reducerer data- og strømforbruget noget, men deaktiverer også mappelisteopdatering</string>
+    <string name="title_advanced_check_authentication_hint">Dette vil tjekke resultaterne af DKIM-, SPF- og DMARC-godkendelser udført af e-mailserveren</string>
     <string name="title_advanced_lookup_mx_hint">Dette tjekker, om der findes DNS MX-poster</string>
     <string name="title_advanced_sync_delay_hint">Dette vil forøge beskedsynkroniseringstiden</string>
     <string name="title_advanced_suggest_names_hint">Hvis deaktiveret, bruges kun e-mailadresser ved valg af kontakter</string>
@@ -505,7 +511,7 @@
     <string name="title_advanced_threading_hint">Gruppér beskeder relateret til hinanden</string>
     <string name="title_advanced_highlight_hint">Temaets accentfarve benyttes til fremhævning</string>
     <string name="title_advanced_gravatars_hint">Der kan være en fortrolighedsrisiko</string>
-    <string name="title_advanced_name_email_hint">Når deaktiveret, vises kun navne, når de er tilgængelige</string>
+    <string name="title_advanced_name_email_hint">Navne vises kun, hvis tilgængelige</string>
     <string name="title_advanced_preview_hint">Kun tilgængelig, når beskedtekst er downloadet</string>
     <string name="title_advanced_preview_lines_hint">Maks. %s tegn i alt</string>
     <string name="title_advanced_preview_issue">Rulning kan, grundet en fejl i visse Android-versioner, være langsom, når antallet af linjer er flere end én</string>
@@ -773,6 +779,7 @@
     <string name="title_print_header">Udskriv header</string>
     <string name="title_print_images_remark">Download af billeder kan tage lidt tid</string>
     <string name="title_show_headers">Vis overskrifter</string>
+    <string name="title_share_as_html">Del som HTML</string>
     <string name="title_raw_save">Gem besked i råformat</string>
     <string name="title_raw_send">Send som vedhæftning</string>
     <string name="title_manage_keywords">Håndtér stikord</string>
@@ -843,6 +850,7 @@
     <string name="title_attachments_incomplete">Visse vedhæftninger eller billeder blev ikke downloadet og kunne ikke tilføjes</string>
     <string name="title_ask_save">Gem ændringer?</string>
     <string name="title_ask_delete">Slet besked permanent?</string>
+    <string name="title_ask_delete_accept">Det er forstået, at permanent beskedsletning er irreversibel</string>
     <string name="title_ask_delete_answer">Slet svarskabelon permanent?</string>
     <string name="title_ask_delete_rule">Slet regel permanent?</string>
     <string name="title_ask_discard">Kassér kladde?</string>
@@ -1029,6 +1037,8 @@
     <string name="title_search_with_encrypted">Krypteret (kun på enheden)</string>
     <string name="title_search_with_attachments">Med vedhæftninger (kun på enheden)</string>
     <string name="title_search_with_size">Beskedstørrelse over</string>
+    <string name="title_search_in_trash" comment="title_search_in_trash&#10;Title for option to enable/disable searching in the trash folder&#10;">I papirkurven</string>
+    <string name="title_search_in_junk" comment="title_search_in_junk&#10;Title for option to enable/disable searching in the spam folder&#10;">I Spam</string>
     <string name="title_search_with_before">Før</string>
     <string name="title_search_with_after">Efter</string>
     <string name="title_search_flag_unseen">ulæst</string>
@@ -1215,6 +1225,8 @@
     <string name="title_legend_view">Vis indhold</string>
     <string name="title_legend_hide">Skjul indhold</string>
     <string name="title_legend_download">Download indhold</string>
+    <string name="title_legend_original">Vis originalbesked</string>
+    <string name="title_legend_reformatted">Vis omformateret besked</string>
     <string name="title_legend_external_image">Pladsholder til eksternt billede</string>
     <string name="title_legend_embedded_image">Pladsholder til indlejret billede</string>
     <string name="title_legend_tracking_pixel">Sporingsbillede</string>
@@ -1276,6 +1288,7 @@
     <string name="title_hint_contact_actions">Langt tryk for valgmuligheder</string>
     <string name="title_hint_eml">Dette er en oversigt over indholdet af en råformatsbeskedfil. Gem den rå besked med Gem-ikonet i handlingsbjælken for at se alt indhold.</string>
     <string name="title_open_link">Åbn link</string>
+    <string name="title_image_link">Billed-link</string>
     <string name="title_different_link">Titlen og linkadressen er forskellige</string>
     <string name="title_tracking_link">Dette websted sporer dig muligvis</string>
     <string name="title_suspicious_link">Dette er et mistænkeligt link</string>
@@ -1302,6 +1315,8 @@
     <string name="title_fix">Ret</string>
     <string name="title_enable">Aktivér</string>
     <string name="title_enabled">Aktiveret</string>
+    <string name="title_disable">Deaktivér</string>
+    <string name="title_keep_current">Behold aktuelle</string>
     <string name="title_executing">Eksekverer</string>
     <string name="title_completed">Fuldført</string>
     <string name="title_default_changed">Standard ændret</string>
@@ -1550,6 +1565,12 @@
         <item>Sans-serif</item>
         <item>Monospatieret</item>
         <item>Fantasi</item>
+        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <string-array name="addressFormatNames">
+        <item>Kun navn</item>
+        <item>Kun e-mail</item>
+        <item>Navn eller e-mail</item>
+    </string-array>
 </resources>

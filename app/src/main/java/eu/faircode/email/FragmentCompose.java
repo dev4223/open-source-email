@@ -264,6 +264,8 @@ public class FragmentCompose extends FragmentBase {
     private AdapterAttachment adapter;
 
     private boolean prefix_once = false;
+    private boolean alt_re = false;
+    private boolean alt_fwd = false;
     private boolean monospaced = false;
     private String compose_font;
     private Integer encrypt = null;
@@ -320,6 +322,8 @@ public class FragmentCompose extends FragmentBase {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
         prefix_once = prefs.getBoolean("prefix_once", true);
+        alt_re = prefs.getBoolean("alt_re", true);
+        alt_fwd = prefs.getBoolean("alt_fwd", true);
         monospaced = prefs.getBoolean("monospaced", false);
         compose_font = prefs.getString("compose_font", monospaced ? "monospace" : "sans-serif");
         media = prefs.getBoolean("compose_media", true);
@@ -867,7 +871,7 @@ public class FragmentCompose extends FragmentBase {
             }
         });
 
-        etBody.setTypeface(Typeface.create(compose_font, Typeface.NORMAL));
+        etBody.setTypeface(StyleHelper.getTypeface(compose_font, getContext()));
         tvReference.setTypeface(monospaced ? Typeface.MONOSPACE : Typeface.DEFAULT);
 
         tvReference.setMovementMethod(new ArrowKeyMovementMethod() {
@@ -963,6 +967,11 @@ public class FragmentCompose extends FragmentBase {
         setHasOptionsMenu(true);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+
+        boolean cards = prefs.getBoolean("cards", true);
+        if (cards && !Helper.isDarkTheme(getContext()))
+            view.setBackgroundColor(Helper.resolveColor(getContext(), R.attr.colorCardBackground));
+
         //boolean beige = prefs.getBoolean("beige", true);
         //if (beige && !Helper.isDarkTheme(getContext()))
         //    view.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.lightColorBackground_cards_beige));
@@ -3659,7 +3668,7 @@ public class FragmentCompose extends FragmentBase {
 
             if (privacy && resize == 0)
                 try {
-                    ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+                    ExifInterface exif = new ExifInterface(file);
 
                     exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE_REF, null);
                     exif.setAttribute(ExifInterface.TAG_GPS_LATITUDE, null);
@@ -3718,6 +3727,14 @@ public class FragmentCompose extends FragmentBase {
         File file = attachment.getFile(context);
         if (file.exists() /* upload cancelled */ &&
                 ("image/jpeg".equals(attachment.type) || "image/png".equals(attachment.type))) {
+            ExifInterface exifSaved;
+            try {
+                exifSaved = new ExifInterface(file);
+            } catch (Throwable ex) {
+                Log.w(ex);
+                exifSaved = null;
+            }
+
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(file.getAbsolutePath(), options);
@@ -3759,6 +3776,33 @@ public class FragmentCompose extends FragmentBase {
 
                     DB db = DB.getInstance(context);
                     db.attachment().setDownloaded(attachment.id, file.length());
+
+                    if (exifSaved != null)
+                        try {
+                            ExifInterface exif = new ExifInterface(file);
+
+                            // Preserve time
+                            if (exifSaved.hasAttribute(ExifInterface.TAG_DATETIME_ORIGINAL))
+                                exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL,
+                                        exifSaved.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL));
+                            if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_DATESTAMP))
+                                exif.setAttribute(ExifInterface.TAG_GPS_DATESTAMP,
+                                        exifSaved.getAttribute(ExifInterface.TAG_GPS_DATESTAMP));
+
+                            // Preserve location
+                            double[] latlong = exifSaved.getLatLong();
+                            if (latlong != null)
+                                exif.setLatLong(latlong[0], latlong[1]);
+
+                            // Preserve altitude
+                            if (exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE) &&
+                                    exifSaved.hasAttribute(ExifInterface.TAG_GPS_ALTITUDE_REF))
+                                exif.setAltitude(exifSaved.getAltitude(0));
+
+                            exif.saveAttributes();
+                        } catch (Throwable ex) {
+                            Log.w(ex);
+                        }
                 }
             }
         }
@@ -4075,8 +4119,11 @@ public class FragmentCompose extends FragmentBase {
                         String subject = (ref.subject == null ? "" : ref.subject);
                         if ("reply".equals(action) || "reply_all".equals(action)) {
                             if (prefix_once)
-                                subject = collapsePrefixes(context, ref.language, subject, false);
-                            data.draft.subject = Helper.getString(context, ref.language, R.string.title_subject_reply, subject);
+                                subject = EntityMessage.collapsePrefixes(context, ref.language, subject, false);
+                            data.draft.subject = Helper.getString(context,
+                                    ref.language,
+                                    alt_re ? R.string.title_subject_reply_alt : R.string.title_subject_reply,
+                                    subject);
 
                             String t = args.getString("text");
                             if (t != null) {
@@ -4091,8 +4138,11 @@ public class FragmentCompose extends FragmentBase {
                             }
                         } else if ("forward".equals(action)) {
                             if (prefix_once)
-                                subject = collapsePrefixes(context, ref.language, subject, true);
-                            data.draft.subject = Helper.getString(context, ref.language, R.string.title_subject_forward, subject);
+                                subject = EntityMessage.collapsePrefixes(context, ref.language, subject, true);
+                            data.draft.subject = Helper.getString(context,
+                                    ref.language,
+                                    alt_fwd ? R.string.title_subject_forward_alt : R.string.title_subject_forward,
+                                    subject);
                         } else if ("editasnew".equals(action)) {
                             if (ref.from != null && ref.from.length == 1) {
                                 String from = ((InternetAddress) ref.from[0]).getAddress();
@@ -4262,17 +4312,7 @@ public class FragmentCompose extends FragmentBase {
                                     // Limit number of nested block quotes
                                     boolean quote_limit = prefs.getBoolean("quote_limit", true);
                                     if (quote_limit)
-                                        for (Element bq : d.select("blockquote")) {
-                                            int level = 1;
-                                            Element parent = bq.parent();
-                                            while (parent != null) {
-                                                if ("blockquote".equals(parent.tagName()))
-                                                    level++;
-                                                parent = parent.parent();
-                                            }
-                                            if (level >= MAX_QUOTE_LEVEL)
-                                                bq.html("&#8230;");
-                                        }
+                                        HtmlHelper.quoteLimit(d, MAX_QUOTE_LEVEL);
                                 }
                             } else {
                                 // Selected text
@@ -4607,7 +4647,37 @@ public class FragmentCompose extends FragmentBase {
                             if (attachments == null)
                                 attachments = new ArrayList<>();
 
-                            adapter.set(attachments);
+                            List<EntityAttachment> a = new ArrayList<>(attachments);
+                            rvAttachment.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (adapter != null)
+                                            adapter.set(a);
+                                    } catch (Throwable ex) {
+                                        Log.e(ex);
+                                        /*
+                                            java.lang.IllegalStateException: Cannot call this method while RecyclerView is computing a layout or scrolling androidx.recyclerview.widget.RecyclerView{f9baa84 VFED..... ........ 0,245-720,1445 #7f0a03fd app:id/rvAttachment}, adapter:eu.faircode.email.AdapterAttachment@954026d, layout:androidx.recyclerview.widget.LinearLayoutManager@ed06ea2, context:eu.faircode.email.ActivityCompose@d14c627
+                                              at androidx.recyclerview.widget.RecyclerView.assertNotInLayoutOrScroll(SourceFile:3)
+                                              at androidx.recyclerview.widget.RecyclerView$RecyclerViewDataObserver.onItemRangeChanged(SourceFile:1)
+                                              at androidx.recyclerview.widget.RecyclerView$AdapterDataObservable.notifyItemRangeChanged(SourceFile:2)
+                                              at androidx.recyclerview.widget.RecyclerView$Adapter.notifyItemRangeChanged(SourceFile:3)
+                                              at androidx.recyclerview.widget.AdapterListUpdateCallback.onChanged(SourceFile:1)
+                                              at androidx.recyclerview.widget.BatchingListUpdateCallback.dispatchLastEvent(SourceFile:2)
+                                              at androidx.recyclerview.widget.DiffUtil$DiffResult.dispatchUpdatesTo(SourceFile:36)
+                                              at eu.faircode.email.AdapterAttachment.set(SourceFile:6)
+                                              at eu.faircode.email.FragmentCompose$38$3.onChanged(SourceFile:3)
+                                              at eu.faircode.email.FragmentCompose$38$3.onChanged(SourceFile:1)
+                                              at androidx.lifecycle.LiveData.considerNotify(SourceFile:6)
+                                              at androidx.lifecycle.LiveData.dispatchingValue(SourceFile:8)
+                                              at androidx.lifecycle.LiveData.setValue(SourceFile:4)
+                                              at androidx.lifecycle.LiveData$1.run(SourceFile:5)
+                                              at android.os.Handler.handleCallback(Handler.java:751)
+                                         */
+                                    }
+                                }
+                            });
+
                             grpAttachments.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
 
                             boolean downloading = false;
@@ -5557,42 +5627,6 @@ public class FragmentCompose extends FragmentBase {
         getActivity().invalidateOptionsMenu();
     }
 
-    private static String collapsePrefixes(Context context, String language, String subject, boolean forward) {
-        List<Pair<String, Boolean>> prefixes = new ArrayList<>();
-        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply, ""))
-            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
-        for (String re : Helper.getStrings(context, language, R.string.title_subject_reply_alt, ""))
-            prefixes.add(new Pair<>(re.trim().toLowerCase(), false));
-        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward, ""))
-            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
-        for (String fwd : Helper.getStrings(context, language, R.string.title_subject_forward_alt, ""))
-            prefixes.add(new Pair<>(fwd.trim().toLowerCase(), true));
-
-        List<Boolean> scanned = new ArrayList<>();
-        subject = subject.trim();
-        while (true) {
-            boolean found = false;
-            for (Pair<String, Boolean> prefix : prefixes)
-                if (subject.toLowerCase().startsWith(prefix.first)) {
-                    found = true;
-                    int count = scanned.size();
-                    if (!prefix.second.equals(count == 0 ? forward : scanned.get(count - 1)))
-                        scanned.add(prefix.second);
-                    subject = subject.substring(prefix.first.length()).trim();
-                    break;
-                }
-            if (!found)
-                break;
-        }
-
-        StringBuilder result = new StringBuilder();
-        for (int i = 0; i < scanned.size(); i++)
-            result.append(context.getString(scanned.get(i) ? R.string.title_subject_forward : R.string.title_subject_reply, ""));
-        result.append(subject);
-
-        return result.toString();
-    }
-
     private static void addSignature(Context context, Document document, EntityMessage message, EntityIdentity identity) {
         if (!message.signature ||
                 identity == null || TextUtils.isEmpty(identity.signature))
@@ -5782,8 +5816,15 @@ public class FragmentCompose extends FragmentBase {
             @Override
             public void run() {
                 try {
-                    if (target instanceof EditText && s >= 0)
-                        ((EditText) target).setSelection(s, e < 0 ? s : e);
+                    if (target instanceof EditText) {
+                        EditText et = (EditText) target;
+                        int len = et.length();
+                        if (s >= 0 && s <= len && e <= len)
+                            if (e < 0)
+                                et.setSelection(s);
+                            else
+                                et.setSelection(s, e);
+                    }
 
                     target.requestFocus();
 
@@ -6200,7 +6241,7 @@ public class FragmentCompose extends FragmentBase {
             final int send_delayed = prefs.getInt("send_delayed", 0);
             final boolean send_dialog = prefs.getBoolean("send_dialog", true);
             final boolean send_archive = prefs.getBoolean("send_archive", false);
-            final boolean name_email = prefs.getBoolean("name_email", false);
+            final MessageHelper.AddressFormat email_format = MessageHelper.getAddressFormat(getContext());
 
             final int[] encryptValues = getResources().getIntArray(R.array.encryptValues);
             final int[] sendDelayedValues = getResources().getIntArray(R.array.sendDelayedValues);
@@ -6510,10 +6551,10 @@ public class FragmentCompose extends FragmentBase {
                     Address[] tos = t.toArray(new Address[0]);
 
                     if (extra == 0)
-                        tvTo.setText(MessageHelper.formatAddresses(tos, name_email, false));
+                        tvTo.setText(MessageHelper.formatAddresses(tos, email_format, false));
                     else
                         tvTo.setText(getString(R.string.title_name_plus,
-                                MessageHelper.formatAddresses(tos, name_email, false), extra));
+                                MessageHelper.formatAddresses(tos, email_format, false), extra));
                     tvTo.setTextColor(Helper.resolveColor(context,
                             to + extra > RECIPIENTS_WARNING ? R.attr.colorWarning : android.R.attr.textColorPrimary));
                     if (draft.identityColor != null && draft.identityColor != Color.TRANSPARENT)

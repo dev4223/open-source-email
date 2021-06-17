@@ -150,12 +150,16 @@
     <string name="title_setup_free">このアプリは無料で使用できますか？</string>
     <string name="title_setup_permissions">アクセス許可を付与</string>
     <string name="title_setup_permissions_remark">連絡先情報にアクセスします(オプション)</string>
+    <string name="title_setup_permissions_explanation">連絡先情報を検索し、連絡先を提案するには連絡先の権限が必要です</string>
     <string name="title_setup_doze">バッテリーの最適化を無効にする</string>
     <string name="title_setup_doze_remark">確実にメールを送受信するために必要です</string>
+    <string name="title_setup_doze_explanation">バックグラウンドでのメッセージの送受信を確実に行うには、アプリのバッテリー最適化を無効にする必要があります</string>
     <string name="title_setup_doze_hint">矛盾していると思われるかもしれませんが、このアプリのバッテリー最適化をオフにするとバッテリー使用量が少なくなります</string>
     <string name="title_setup_doze_instructions">次のAndroidダイアログで「最適化されていないアプリ」を「すべてのアプリ」に変更し、このアプリを選択して「最適化しない」を選択します。</string>
     <string name="title_setup_doze_battery">電池消費量が多いですか？</string>
     <string name="title_setup_doze_stopped">同期が停止しましたか？</string>
+    <string name="title_setup_doze_device">これはおそらくこのデバイスに必要です</string>
+    <string name="title_setup_doze_android">このAndroidバージョンには必須です</string>
     <string name="title_setup_background">バックグラウンドの制限は有効です</string>
     <string name="title_setup_data">データセーバーが有効になっています</string>
     <string name="title_setup_advanced_options">上級者向けオプションを表示</string>
@@ -236,6 +240,7 @@
     <string name="title_advanced_sync_folders">フォルダーリストの同期</string>
     <string name="title_advanced_sync_shared_folders">共有フォルダリストを同期</string>
     <string name="title_advanced_subscriptions">購読したフォルダーの管理</string>
+    <string name="title_advanced_check_authentication">メッセージ認証を確認</string>
     <string name="title_advanced_check_reply_domain">メッセージの同期時に返信アドレスを確認</string>
     <string name="title_advanced_check_mx">メッセージの同期時に送信者のメールアドレスを確認</string>
     <string name="title_advanced_tune_keep_alive">キープアライブ間隔を自動的に調整します</string>
@@ -407,6 +412,7 @@
     <string name="title_advanced_notify_action_snooze">スヌーズ</string>
     <string name="title_advanced_notify_remove">通知をタップすると新着メッセージ通知を削除</string>
     <string name="title_advanced_notify_clear">メッセージリスト表示時に新着メッセージ通知を削除</string>
+    <string name="title_advanced_notify_subtext">アカウントまたはフォルダ名を隠して表示</string>
     <string name="title_advanced_wearable_preview">プレビュー付き通知のみウェアラブルに送信</string>
     <string name="title_advanced_notify_messaging">Androidの「メッセージ形式」の通知形式を使用する</string>
     <string name="title_advanced_biometrics_notify">生体認証を使用時、通知コンテンツを表示</string>
@@ -418,6 +424,7 @@
     <string name="title_advanced_confirm_html">デフォルトで再フォーマットされたメッセージを表示</string>
     <string name="title_advanced_tracking">トラッキング画像の認識と無効化を試みます</string>
     <string name="title_advanced_hide_timezone">タイムゾーンデータ無しでメッセージを送信</string>
+    <string name="title_advanced_client_id">アプリ名とバージョンをメールサーバーに送信</string>
     <string name="title_advanced_display_hidden">非表示のメッセージテキストを表示</string>
     <string name="title_advanced_incognito_keyboard">シークレットキーボードを使用 (Android 8+)</string>
     <string name="title_advanced_secure">最近使ったアプリから非表示にしスクリーンショット撮影から守る</string>
@@ -476,6 +483,7 @@
     <string name="title_advanced_sync_kept_hint">特に大量のメッセージがデバイスに保存されている場合、多くのデータが転送され電池消費が増えます</string>
     <string name="title_advanced_gmail_thread_hint">これは新しく受信したメッセージにのみ適用され、既存のグループを壊す可能性があります</string>
     <string name="title_advanced_sync_folders_hint">これを無効にするとデータと電池の使用量が多少減りますが、フォルダーのリストの更新も無効になります</string>
+    <string name="title_advanced_check_authentication_hint">メールサーバーで実行されたDKIM、SPF、DMARC認証の結果を確認します</string>
     <string name="title_advanced_check_reply_hint">送信者のドメイン名と返信先のアドレスが同じかどうかを確認します</string>
     <string name="title_advanced_lookup_mx_hint">DNS MXレコードが存在するかどうか確認</string>
     <string name="title_advanced_sync_delay_hint">メッセージの同期が遅くなります</string>
@@ -503,7 +511,7 @@
     <string name="title_advanced_threading_hint">互いに関連するグループメッセージ</string>
     <string name="title_advanced_highlight_hint">テーマのアクセントカラーに強調表示を使用します</string>
     <string name="title_advanced_gravatars_hint">プライバシーリスクが有るかもしれません</string>
-    <string name="title_advanced_name_email_hint">無効にすると利用可能な場合にのみ名前が表示されます</string>
+    <string name="title_advanced_name_email_hint">名前は利用可能な場合にのみ表示されます</string>
     <string name="title_advanced_preview_hint">メッセージテキストがダウンロードされた場合にのみ使用可能</string>
     <string name="title_advanced_preview_lines_hint">合計 %s 文字</string>
     <string name="title_advanced_preview_issue">行数が複数の場合、一部のAndroidバージョンバグの為スクロールが遅くなる可能性が有ります</string>
@@ -776,6 +784,7 @@
     <string name="title_print_images">画像を印刷</string>
     <string name="title_print_images_remark">画像のダウンロードに時間がかかる場合があります</string>
     <string name="title_show_headers">ヘッダーを表示</string>
+    <string name="title_share_as_html">HTMLで共有</string>
     <string name="title_raw_save">素のメッセージを保存</string>
     <string name="title_raw_send">添付ファイルとして送信</string>
     <string name="title_manage_keywords">キーワードを管理</string>
@@ -850,6 +859,7 @@
     <string name="title_attachments_incomplete">一部の添付ファイル又は画像がダウンロードされず、追加出来ませんでした</string>
     <string name="title_ask_save">変更内容を保存しますか？</string>
     <string name="title_ask_delete">メッセージを完全に削除しますか？</string>
+    <string name="title_ask_delete_accept">メッセージを完全に削除すると元に戻せないことを理解しています</string>
     <string name="title_ask_delete_answer">返信テンプレートを完全に削除しますか？</string>
     <string name="title_ask_delete_rule">ルールを完全に削除しますか？</string>
     <string name="title_ask_discard">下書きを破棄しますか？</string>
@@ -1041,6 +1051,8 @@
     <string name="title_search_with_encrypted">暗号化(デバイスのみ)</string>
     <string name="title_search_with_attachments">添付ファイル付き(デバイスのみ)</string>
     <string name="title_search_with_size">メッセージサイズより大きい</string>
+    <string name="title_search_in_trash" comment="title_search_in_trash&#10;Title for option to enable/disable searching in the trash folder&#10;">ごみ箱内</string>
+    <string name="title_search_in_junk" comment="title_search_in_junk&#10;Title for option to enable/disable searching in the spam folder&#10;">迷惑メール内</string>
     <string name="title_search_with_before">前へ</string>
     <string name="title_search_with_after">後で</string>
     <string name="title_search_flag_unseen">未読</string>
@@ -1227,6 +1239,8 @@
     <string name="title_legend_view">コンテンツを見る</string>
     <string name="title_legend_hide">コンテンツを隠す</string>
     <string name="title_legend_download">コンテンツをダウンロードする</string>
+    <string name="title_legend_original">元のメッセージを表示</string>
+    <string name="title_legend_reformatted">再フォーマットされたメッセージを表示</string>
     <string name="title_legend_external_image">外部画像プレースホルダー</string>
     <string name="title_legend_embedded_image">埋め込み画像プレースホルダー</string>
     <string name="title_legend_tracking_pixel">アナティリスク追跡画像</string>
@@ -1288,6 +1302,7 @@
     <string name="title_hint_contact_actions">長押しでオプションへ</string>
     <string name="title_hint_eml">これは素のメッセージファイルの内容の要約です。全てのコンテンツを表示するにはアクションバーの保存アイコンで素のメッセージを保存します</string>
     <string name="title_open_link">リンクを開く</string>
+    <string name="title_image_link">画像のリンク</string>
     <string name="title_different_link">タイトルとリンクアドレスが異なります</string>
     <string name="title_tracking_link">このウェブサイトはあなたを追跡するかもしれません</string>
     <string name="title_suspicious_link">これは不審なリンクです</string>
@@ -1314,6 +1329,8 @@
     <string name="title_fix">修正する</string>
     <string name="title_enable">有効にする</string>
     <string name="title_enabled">有効化</string>
+    <string name="title_disable">無効</string>
+    <string name="title_keep_current">今の状態を維持</string>
     <string name="title_executing">実行中</string>
     <string name="title_completed">完成しました</string>
     <string name="title_default_changed">デフォルトの変更</string>
@@ -1561,6 +1578,12 @@
         <item>サンセリフ</item>
         <item>等幅フォント</item>
         <item>ファンタジー</item>
+        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
+    <string-array name="addressFormatNames">
+        <item>名前のみ</item>
+        <item>メールのみ</item>
+        <item>名前とメール</item>
+    </string-array>
 </resources>

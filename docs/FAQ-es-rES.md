@@ -2,9 +2,9 @@
 
 # Soporte de FairEmail
 
-Si tienes alguna pregunta, por favor comprueba primero las preguntas frecuentes siguientes. [At the bottom](#user-content-get-support), you can find out how to ask other questions, request features, and report bugs.
+Si tienes alguna pregunta, por favor comprueba primero las preguntas frecuentes siguientes. [En la parte inferior](#user-content-get-support), puede averiguar cómo hacer otras preguntas, solicitar características, y reportar errores.
 
-Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [Ganz unten erfahren Sie](#user-content-get-support), wie Sie weitere Fragen stellen, Funktionen anfordern und Fehler melden können.
+Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die nachstehenden häufig gestellten Fragen (FAQ). [En la parte inferior](#user-content-get-support) encontrará cómo hacer preguntas, solicitar funciones y notificar errores.
 
 ## Índice
 
@@ -57,14 +57,14 @@ Preguntas relacionadas:
 * Añadir una carpeta al menú de navegación: mantenga presionada la carpeta en la lista de carpetas y marque *Mostrar en el menú de navegación*
 * Cargar más mensajes: mantenga presionado una carpeta en la lista de carpetas, seleccione *Obtener más mensajes*
 * Eliminar un mensaje, omitiendo la papelera: mantenga presionado el icono de la papelera
-* Delete an account/identity: Settings, tap Manual setup, tap Accounts/Identities, tap the account/identity, trash icon top right
-* Delete a folder: long press the folder in the folder list, Edit properties, trash icon top right
-* Undo send: Outbox, swipe the message in the list left or right
+* Eliminar una cuenta/identidad: Configuración, toque Configuración Manual, toque Cuentas/Identidades, toque la cuenta/identidad, ícono Eliminar arriba a la derecha
+* Eliminar una carpeta: mantenga presionada la carpeta en la lista de carpetas, Editar propiedades, icono de papelera arriba a la derecha
+* Deshacer enviar: Bandeja de salida, desliza el mensaje en la lista a la izquierda o derecha
 * Guardar mensajes enviados en la bandeja de entrada: por favor [vea estas Preguntas Frecuentes](#user-content-faq142)
-* Change system folders: Settings, tap Manual setup, tap Accounts, tap account, at the bottom
-* Export/import settings: Settings, navigation (left side) menu
+* Cambiar carpetas del sistema: Configuración, toque Configuración manual, toque Cuentas, toque cuenta, en la parte inferior
+* Exportar/importar ajustes: Configuración, menú de navegación (izquierda)
 
-<h2><a name="known-problems"></a>Known problem</h2>
+<h2><a name="known-problems"></a>Problema conocido</h2>
 
 * ~~Un [error en Android 5.1 y 6](https://issuetracker.google.com/issues/37054851) hace que las aplicaciones muestren a veces un formato de hora incorrecto. Cambiar la configuración de Android *Usar formato de 24 horas* podría resolver temporalmente el problema. Una solución fue añadida.~~
 * ~~~Un [error en Google Drive](https://issuetracker.google.com/issues/126362828) hace que los archivos exportados a Google Drive estén vacíos. Google ha corregido esto.~~
@@ -83,7 +83,7 @@ Preguntas relacionadas:
 * Un [error en Android 6.0](https://issuetracker.google.com/issues/37068143) causa un error con *... Offset inválido: ... El rango válido es ...* cuando el texto está seleccionado y se toca fuera del texto seleccionado. Este error ha sido corregido en Android 6.0.1.
 * Los enlaces internos (anchor) no funcionarán porque los mensajes originales se muestran en una WebView embebida en una vista de desplazamiento (la lista de conversaciones). Esta es una limitación de Android que no se puede arreglar o eludir.
 * La detección de idioma [ya no funciona](https://issuetracker.google.com/issues/173337263) en dispositivos Pixel con (¿actualizado a?) Android 11
-* A [bug in OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causes invalid PGP signatures when using a hardware token.
+* Un [error en OpenKeychain](https://github.com/open-keychain/open-keychain/issues/2688) causa firmas PGP inválidas al usar un token de hardware.
 
 <h2><a name="planned-features"></a>Características planificadas</h2>
 
@@ -261,7 +261,7 @@ El diseño está basado en muchas discusiones y si lo deseas puedes unirte a la 
 * [(135) ¿Por qué se muestran mensajes basura y borradores en las conversaciones?](#user-content-faq135)
 * [(136) ¿Cómo puedo eliminar una cuenta/identidad/carpeta?](#user-content-faq136)
 * [(137) ¿Cómo puedo reiniciar 'No preguntar de nuevo'?](#user-content-faq137)
-* [(138) Can you add calendar/contact/tasks/notes management?](#user-content-faq138)
+* [(138) ¿Puedes añadir gestión de calendario/contactos/tareas/notas?](#user-content-faq138)
 * [(139) ¿Cómo arreglo 'El usuario está autenticado pero no conectado'?](#user-content-faq139)
 * [(140) ¿Por qué el texto del mensaje contiene caracteres extraños?](#user-content-faq140)
 * [(141) ¿Cómo puedo arreglar 'Una carpeta de borradores es necesaria para enviar mensajes'?](#user-content-faq141)
@@ -288,15 +288,15 @@ El diseño está basado en muchas discusiones y si lo deseas puedes unirte a la 
 * [(162) ¿Se admite el sistema IMAP NOTIFY?](#user-content-faq162)
 * [(163) ¿Qué es la clasificación de mensajes?](#user-content-faq163)
 * [(164) ¿Puedes añadir temas personalizables?](#user-content-faq164)
-* [(165) Is Android Auto supported?](#user-content-faq165)
-* [(166) Can I snooze a message across multiple devices?](#user-content-faq166)
+* [(165) ¿Es compatible con Android Auto?](#user-content-faq165)
+* [(166) ¿Puedo posponer un mensaje en varios dispositivos?](#user-content-faq166)
 
-[I have another question.](#user-content-support)
+[Tengo otra pregunta.](#user-content-support)
 
 <a name="faq1"></a>
-**(1) Which permissions are needed and why?**
+**(1) ¿Qué permisos son necesarios y por qué?**
 
-The following Android permissions are needed:
+Se necesitan los siguientes permisos de Android:
 
 * *tiene acceso a la red completa* (INTERNET): para enviar y recibir correo electrónico
 * *ver conexiones de red* (ACCESS_NETWORK_STATE): para monitorizar los cambios de conectividad a Internet
@@ -304,13 +304,13 @@ The following Android permissions are needed:
 * *servicio de primer plano* (FOREGROUND_SERVICE): para ejecutar un servicio de primer plano en Android 9 Pie y posterior, ver también la siguiente pregunta
 * *evitar que el dispositivo duerme* (WAKE_LOCK): para mantener el dispositivo despierto mientras sincroniza los mensajes
 * *facturación in-app* (BILLING): para permitir compras en la app
-* *schedule exact alarm* (SCHEDULE_EXACT_ALARM): to use exact alarm scheduling (Android 12 and later)
-* Optional: *read your contacts* (READ_CONTACTS): to auto complete addresses, to show contact photos and [to pick contacts](https://developer.android.com/guide/components/intents-common#PickContactDat)
-* Optional: *read the contents of your SD card* (READ_EXTERNAL_STORAGE): to accept files from other, outdated apps, see also [this FAQ](#user-content-faq49)
-* Optional: *use fingerprint hardware* (USE_FINGERPRINT) and use *biometric hardware* (USE_BIOMETRIC): to use biometric authentication
-* Optional: *find accounts on the device* (GET_ACCOUNTS): to select an account when using the Gmail quick setup
-* Android 5.1 Lollipop and before: *use accounts on the device* (USE_CREDENTIALS): to select an account when using the Gmail quick setup (not requested on later Android versions)
-* Android 5.1 Lollipop and before: *Read profile* (READ_PROFILE): to read your name when using the Gmail quick setup (not requested on later Android versions)
+* *programar alarma exacta* (SCHEDULE_EXACT_ALARM): para utilizar la programación exacta de alarmas (Android 12 y posterior)
+* Opcional: *leer sus contactos* (READ_CONTACTS): para autocompletar direcciones, mostrar fotos de contacto y [ seleccionar contactos](https://developer.android.com/guide/components/intents-common#PickContactDat)
+* Opcional: *lee el contenido de tu tarjeta SD* (READ_EXTERNAL_STORAGE): para aceptar archivos de otras aplicaciones desactualizadas, consulte también [estas Preguntas Frecuentes](#user-content-faq49)
+* Opcional: *usar hardware de huella dactilar* (USE_FINGERPRINT) y usar *hardware biométrico* (USE_BIOMETRIC): para usar autenticación biométrica
+* Opcional: *encontrar cuentas en el dispositivo* (GET_ACCOUNTS) para seleccionar una cuenta cuando se utiliza la configuración rápida de Gmail
+* Android 5.1 Lollipop y anteriores: *usar cuentas en el dispositivo* (USE_CREDENTIALS): para seleccionar una cuenta al usar la configuración rápida de Gmail (no solicitada en versiones posteriores de Android)
+* Android 5.1 Lollipop y anteriores: *Leer perfil* (READ_PROFILE): para leer su nombre cuando utilice la configuración rápida de Gmail (no solicitada en versiones posteriores de Android)
 
 [Permisos opcionales](https://developer.android.com/training/permissions/requesting) son compatibles sólo en Android 6 Marshmallow y posteriores. En versiones anteriores de Android se le pedirá que conceda los permisos opcionales para instalar FairEmail.
 
@@ -340,7 +340,7 @@ FairEmail mantendrá una lista de direcciones de las que recibe y a las que env�
 <a name="faq2"></a>
 **(2) ¿Por qué se muestra una notificación permanente?**
 
-Una notificación permanente de baja prioridad con el número de cuentas monitoreadas y el número de operaciones pendientes (ver la siguiente pregunta) se muestra para evitar que Android mate el servicio que se encarga de recibir correo electrónico continuamente. This was [already necessary](https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)), but with the introduction of [doze mode](https://developer.android.com/training/monitoring-device-state/doze-standby) in Android 6 Marshmallow this is more than ever necessary. Doze mode will stop all apps when the screen is off for some time, unless the app did start a foreground service, which requires showing a status bar notification.
+Una notificación permanente de baja prioridad con el número de cuentas monitoreadas y el número de operaciones pendientes (ver la siguiente pregunta) se muestra para evitar que Android mate el servicio que se encarga de recibir correo electrónico continuamente. Esto [ya era necesario](https://developer.android.com/reference/android/app/Service.html#startForeground(int,%20android.app.Notification)), pero con la introducción de [modo doze](https://developer.android.com/training/monitoring-device-state/doze-standby) en Android 6 Marshmallow esto es más necesario que nunca. El modo Doze detendrá todas las aplicaciones cuando la pantalla esté apagada por algún tiempo a menos que la aplicación inicie un servicio de primer plano, lo que requiere mostrar una notificación en la barra de estado.
 
 Most, if not all, other email apps don't show a notification with the "side effect" that new messages are often not or late being reported and that messages are not or late being sent.
 

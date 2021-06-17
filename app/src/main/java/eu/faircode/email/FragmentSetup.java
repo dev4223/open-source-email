@@ -31,6 +31,7 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -62,6 +63,7 @@ import java.util.List;
 public class FragmentSetup extends FragmentBase {
     private ViewGroup view;
 
+    private TextView tvNoInternet;
     private ImageButton ibHelp;
     private Button btnQuick;
     private TextView tvQuickNew;
@@ -127,6 +129,7 @@ public class FragmentSetup extends FragmentBase {
 
         // Get controls
 
+        tvNoInternet = view.findViewById(R.id.tvNoInternet);
         ibHelp = view.findViewById(R.id.ibHelp);
         btnQuick = view.findViewById(R.id.btnQuick);
         tvQuickNew = view.findViewById(R.id.tvQuickNew);
@@ -206,6 +209,10 @@ public class FragmentSetup extends FragmentBase {
                 ss.setSpan(new RelativeSizeSpan(0.9f), 0, ss.length(), 0);
                 menu.add(Menu.NONE, R.string.title_setup_pop3, order++, ss);
 
+                menu.add(Menu.NONE, R.string.menu_faq, order++, R.string.menu_faq)
+                        .setIcon(R.drawable.twotone_support_24)
+                        .setVisible(false);
+
                 popupMenu.insertIcons(context);
 
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -235,6 +242,9 @@ public class FragmentSetup extends FragmentBase {
                             return true;
                         } else if (itemId == R.string.title_setup_pop3) {
                             lbm.sendBroadcast(new Intent(ActivitySetup.ACTION_QUICK_POP3));
+                            return true;
+                        } else if (itemId == R.string.menu_faq) {
+                            Helper.view(getContext(), Helper.getSupportUri(getContext()), false);
                             return true;
                         }
 
@@ -429,6 +439,7 @@ public class FragmentSetup extends FragmentBase {
                     : R.color.lightColorBackground_cards));
         }
 
+        tvNoInternet.setVisibility(View.GONE);
         btnIdentity.setEnabled(false);
         tvNoComposable.setVisibility(View.GONE);
 
@@ -517,6 +528,11 @@ public class FragmentSetup extends FragmentBase {
     public void onResume() {
         super.onResume();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            cm.registerDefaultNetworkCallback(networkCallback);
+        }
+
         // Doze
         Boolean ignoring = Helper.isIgnoringOptimizations(getContext());
 
@@ -554,6 +570,16 @@ public class FragmentSetup extends FragmentBase {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            ConnectivityManager cm = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            cm.unregisterNetworkCallback(networkCallback);
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         for (int i = 0; i < permissions.length; i++)
             if (Manifest.permission.READ_CONTACTS.equals(permissions[i]))
@@ -570,6 +596,28 @@ public class FragmentSetup extends FragmentBase {
         tvPermissionsDone.setCompoundDrawablesWithIntrinsicBounds(granted ? check : null, null, null, null);
         btnPermissions.setEnabled(!granted);
     }
+
+    private ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
+        @Override
+        public void onAvailable(Network network) {
+            view.post(new Runnable() {
+                @Override
+                public void run() {
+                    tvNoInternet.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        @Override
+        public void onLost(@NonNull Network network) {
+            view.post(new Runnable() {
+                @Override
+                public void run() {
+                    tvNoInternet.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+    };
 
     public static class FragmentDialogDoze extends FragmentDialogBase {
         @NonNull
