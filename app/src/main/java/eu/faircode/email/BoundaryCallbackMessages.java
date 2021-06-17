@@ -119,20 +119,13 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     @Override
     public void onZeroItemsLoaded() {
         Log.i("Boundary zero loaded");
-        queue_load(state, null);
+        queue_load(state);
     }
 
     @Override
     public void onItemAtEndLoaded(@NonNull final TupleMessageEx itemAtEnd) {
-        Long id = (itemAtEnd == null ? null : itemAtEnd.id); // fall-safe
-
-        if (state.end != null && state.end.equals(id)) {
-            Log.i("Boundary at same end=" + id);
-            return;
-        }
-
-        Log.i("Boundary at end=" + id);
-        queue_load(state, id);
+        Log.i("Boundary at end id=" + itemAtEnd.id);
+        queue_load(state);
     }
 
     void retry() {
@@ -142,20 +135,20 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 close(state, true);
             }
         });
-        queue_load(state, null);
+        queue_load(state);
     }
 
-    private void queue_load(final State state, Long end) {
-        state.end = end;
+    private void queue_load(final State state) {
+        if (state.queued > 1) {
+            Log.i("Boundary queued =" + state.queued);
+            return;
+        }
+        state.queued++;
+        Log.i("Boundary queued +" + state.queued);
 
         executor.submit(new Runnable() {
             @Override
             public void run() {
-                if (end != null && state.end != null && !state.end.equals(end)) {
-                    Log.i("Boundary end=" + state.end + "/" + end);
-                    return;
-                }
-
                 Helper.gc();
 
                 int free = Log.getFreeMemMb();
@@ -163,7 +156,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 crumb.put("free", Integer.toString(free));
                 Log.breadcrumb("Boundary run", crumb);
 
-                Log.i("Boundary run end=" + state.end + "/" + end + " free=" + free);
+                Log.i("Boundary run free=" + free);
 
                 int found = 0;
                 try {
@@ -203,6 +196,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                             }
                         });
                 } finally {
+                    state.queued--;
+                    Log.i("Boundary queued -" + state.queued);
                     Helper.gc();
 
                     crumb.put("free", Integer.toString(Log.getFreeMemMb()));
@@ -229,12 +224,30 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 " index=" + state.index +
                 " matches=" + (state.matches == null ? null : state.matches.size()));
 
+        long[] exclude = new long[0];
+        if (folder == null) {
+            List<Long> folders = new ArrayList<>();
+            if (!criteria.in_trash) {
+                List<EntityFolder> trash = db.folder().getFoldersByType(EntityFolder.TRASH);
+                if (trash != null)
+                    for (EntityFolder folder : trash)
+                        folders.add(folder.id);
+            }
+            if (!criteria.in_junk) {
+                List<EntityFolder> junk = db.folder().getFoldersByType(EntityFolder.JUNK);
+                if (junk != null)
+                    for (EntityFolder folder : junk)
+                        folders.add(folder.id);
+            }
+            exclude = Helper.toLongArray(folders);
+        }
+
         int found = 0;
 
         if (criteria.fts && criteria.query != null) {
             if (state.ids == null) {
                 SQLiteDatabase sdb = FtsDbHelper.getInstance(context);
-                state.ids = FtsDbHelper.match(sdb, account, folder, criteria);
+                state.ids = FtsDbHelper.match(sdb, account, folder, exclude, criteria);
                 EntityLog.log(context, "Boundary FTS " +
                         " account=" + account +
                         " folder=" + folder +
@@ -246,8 +259,9 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 db.beginTransaction();
 
                 for (; state.index < state.ids.size() && found < pageSize && !state.destroyed; state.index++) {
-                    found++;
-                    db.message().setMessageFound(state.ids.get(state.index));
+                    long id = state.ids.get(state.index);
+                    found += db.message().setMessageFound(id);
+                    Log.i("Boundary matched=" + id + " found=" + found);
                 }
                 db.setTransactionSuccessful();
 
@@ -262,7 +276,7 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
             if (state.matches == null ||
                     (state.matches.size() > 0 && state.index >= state.matches.size())) {
                 state.matches = db.message().matchMessages(
-                        account, folder,
+                        account, folder, exclude,
                         criteria.query == null ? null : "%" + criteria.query + "%",
                         criteria.in_senders,
                         criteria.in_recipients,
@@ -326,9 +340,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 }
 
                 if (matched) {
-                    found++;
-                    Log.i("Boundary matched=" + match.id);
-                    db.message().setMessageFound(match.id);
+                    found += db.message().setMessageFound(match.id);
+                    Log.i("Boundary matched=" + match.id + " found=" + found);
                 }
             }
         }
@@ -449,12 +462,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                                             " folder=" + folder +
                                             " search=" + criteria);
 
-                                    if (protocol.supportsUtf8())
-                                        try {
-                                            return search(true, browsable.keywords, protocol, state);
-                                        } catch (Throwable ex) {
-                                            EntityLog.log(context, ex.toString());
-                                        }
+                                    try {
+                                        return search(true, browsable.keywords, protocol, state);
+                                    } catch (Throwable ex) {
+                                        EntityLog.log(context, ex.toString());
+                                    }
 
                                     return search(false, browsable.keywords, protocol, state);
                                 }
@@ -537,16 +549,18 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     long uid = state.ifolder.getUID(isub[j]);
                     Log.i("Boundary server sync uid=" + uid);
                     EntityMessage message = db.message().getMessageByUid(browsable.id, uid);
-                    if (message == null) {
+                    if (message == null)
                         message = Core.synchronizeMessage(context,
                                 account, browsable,
                                 (IMAPStore) state.iservice.getStore(), state.ifolder, (MimeMessage) isub[j],
                                 true, true,
                                 rules, astate, null);
-                        found++;
-                    }
-                    if (message != null && criteria != null /* browsed */)
-                        db.message().setMessageFound(message.id);
+                    if (message != null) // SQLiteConstraintException
+                        if (criteria == null)
+                            found++; // browsed
+                        else
+                            found += db.message().setMessageFound(message.id);
+                    Log.i("Boundary matched=" + (message == null ? null : message.id) + " found=" + found);
                 } catch (MessageRemovedException ex) {
                     Log.w(browsable.name + " boundary server", ex);
                 } catch (FolderClosedException ex) {
@@ -648,11 +662,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
     }
 
     private static class State {
+        int queued = 0;
         boolean destroyed = false;
         boolean error = false;
         int index = 0;
         int offset = 0;
-        Long end = null;
         List<Long> ids = null;
         List<TupleMatch> matches = null;
 
@@ -662,11 +676,11 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
 
         void reset() {
             Log.i("Boundary reset");
+            queued = 0;
             destroyed = false;
             error = false;
             index = 0;
             offset = 0;
-            end = null;
             ids = null;
             matches = null;
             iservice = null;
@@ -696,6 +710,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
         boolean with_notes;
         String[] with_types;
         Integer with_size = null;
+        boolean in_trash = true;
+        boolean in_junk = true;
         Long after = null;
         Long before = null;
 
@@ -708,7 +724,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                 if (!utf8) {
                     search = search
                             .replace("ß", "ss") // Eszett
-                            .replace("ĳ", "ij");
+                            .replace("ĳ", "ij")
+                            .replace("ø", "o");
                     search = Normalizer
                             .normalize(search, Normalizer.Form.NFKD)
                             .replaceAll("[^\\p{ASCII}]", "");
@@ -896,6 +913,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                         this.with_notes == other.with_notes &&
                         Arrays.equals(this.with_types, other.with_types) &&
                         Objects.equals(this.with_size, other.with_size) &&
+                        this.in_trash == other.in_trash &&
+                        this.in_junk == other.in_junk &&
                         Objects.equals(this.after, other.after) &&
                         Objects.equals(this.before, other.before));
             } else
@@ -923,6 +942,8 @@ public class BoundaryCallbackMessages extends PagedList.BoundaryCallback<TupleMe
                     " w/notes=" + with_notes +
                     " type=" + (with_types == null ? null : TextUtils.join(",", with_types)) +
                     " size=" + with_size +
+                    " trash=" + in_trash +
+                    " junk=" + in_junk +
                     " after=" + (after == null ? "" : new Date(after)) +
                     " before=" + (before == null ? "" : new Date(before));
         }

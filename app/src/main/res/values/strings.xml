@@ -202,12 +202,16 @@
     <string name="title_setup_free">Is this app free to use?</string>
     <string name="title_setup_permissions">Grant permissions</string>
     <string name="title_setup_permissions_remark">To access contact information (optional)</string>
+    <string name="title_setup_permissions_explanation">Contact permissions are required to look up contact info and to suggest contacts</string>
     <string name="title_setup_doze">Disable battery optimizations</string>
     <string name="title_setup_doze_remark">To reliably send and receive email</string>
+    <string name="title_setup_doze_explanation">Battery optimizations should be disabled for the app to ensure reliable sending and receiving of messages in the background</string>
     <string name="title_setup_doze_hint">Although this may sound contradictory, turning off battery optimizations for this app will result in less battery usage</string>
     <string name="title_setup_doze_instructions">In the next Android dialog change "Not optimized" to "All apps", select this app and select "Don\'t optimize"</string>
     <string name="title_setup_doze_battery">High battery usage?</string>
     <string name="title_setup_doze_stopped">Sync stopped?</string>
+    <string name="title_setup_doze_device">This is probably required for this device</string>
+    <string name="title_setup_doze_android">This is required for this Android version</string>
     <string name="title_setup_background">Background restrictions are enabled</string>
     <string name="title_setup_data">Data saver is enabled</string>
     <string name="title_setup_advanced_options">Show advanced options</string>
@@ -301,6 +305,7 @@
     <string name="title_advanced_sync_folders">Synchronize folder list</string>
     <string name="title_advanced_sync_shared_folders">Synchronize shared folder lists</string>
     <string name="title_advanced_subscriptions">Manage folder subscriptions</string>
+    <string name="title_advanced_check_authentication">Check message authentication</string>
     <string name="title_advanced_check_reply_domain">Check reply address on synchronizing messages</string>
     <string name="title_advanced_check_mx">Check sender email addresses on synchronizing messages</string>
     <string name="title_advanced_tune_keep_alive">Automatically tune the keep-alive interval</string>
@@ -471,6 +476,7 @@
     <string name="title_advanced_notify_preview">Show message preview in notifications</string>
     <string name="title_advanced_notify_preview_all">Preview all text</string>
     <string name="title_advanced_notify_preview_only">Show notifications with a preview text only</string>
+    <string name="title_advanced_notify_transliterate" translatable="false">Transliterate</string>
     <string name="title_advanced_notify_actions">Notification actions</string>
     <string name="title_advanced_notify_action_trash">Trash</string>
     <string name="title_advanced_notify_action_junk">Spam</string>
@@ -484,6 +490,7 @@
     <string name="title_advanced_notify_action_snooze">Snooze</string>
     <string name="title_advanced_notify_remove">Remove new message notification on tapping on notification</string>
     <string name="title_advanced_notify_clear">Remove new message notifications on viewing message list</string>
+    <string name="title_advanced_notify_subtext">Show account or folder name as subtext</string>
     <string name="title_advanced_wearable_preview">Only send notifications with a message preview to wearables</string>
     <string name="title_advanced_notify_messaging">Use Android \'messaging style\' notification format</string>
     <string name="title_advanced_biometrics_notify">Show notification content when using biometric authentication</string>
@@ -500,6 +507,7 @@
     <string name="title_advanced_confirm_html">Show reformatted messages by default</string>
     <string name="title_advanced_tracking">Attempt to recognize and disable tracking images</string>
     <string name="title_advanced_hide_timezone">Send messages without timezone data</string>
+    <string name="title_advanced_client_id">Send app name and version to email server</string>
     <string name="title_advanced_display_hidden">Display hidden message texts</string>
     <string name="title_advanced_incognito_keyboard">Use incognito keyboard (Android 8+)</string>
     <string name="title_advanced_secure">Hide from recent apps screen and prevent taking screenshots</string>
@@ -583,6 +591,7 @@
     <string name="title_advanced_sync_kept_hint">This will transfer extra data and consume extra battery power, especially if a lot of messages are stored on the device</string>
     <string name="title_advanced_gmail_thread_hint">This only applies to newly received messages and can break existing groups</string>
     <string name="title_advanced_sync_folders_hint">Disabling this will reduce data and battery usage somewhat, but will disable updating the list of folders too</string>
+    <string name="title_advanced_check_authentication_hint">This will check the results of DKIM, SPF and DMARC authentication as performed by the email server</string>
     <string name="title_advanced_check_reply_hint">This will check if the domain name of the sender and the reply address are the same</string>
     <string name="title_advanced_lookup_mx_hint">This will check if DNS MX records exist</string>
     <string name="title_advanced_sync_delay_hint">This will slow down synchronizing messages</string>
@@ -614,7 +623,7 @@
     <string name="title_advanced_threading_hint">Group messages related to each other</string>
     <string name="title_advanced_highlight_hint">The accent color of the theme will be used for highlighting</string>
     <string name="title_advanced_gravatars_hint">There might be a privacy risk</string>
-    <string name="title_advanced_name_email_hint">When disabled only names will be shown when available</string>
+    <string name="title_advanced_name_email_hint">Names will only be shown when available</string>
     <string name="title_advanced_preview_hint">Only available when message text has been downloaded</string>
     <string name="title_advanced_preview_lines_hint">Maximum %s characters in total</string>
     <string name="title_advanced_preview_issue">Scrolling can be slow due to a bug in some Android versions when the number of lines is more than one</string>
@@ -911,6 +920,7 @@
     <string name="title_print_images">Print images</string>
     <string name="title_print_images_remark">Downloading images might take some time</string>
     <string name="title_show_headers">Show headers</string>
+    <string name="title_share_as_html">Share as HTML</string>
     <string name="title_raw_save">Save raw message</string>
     <string name="title_raw_send">Send as attachment</string>
     <string name="title_manage_keywords">Manage keywords</string>
@@ -992,6 +1002,7 @@
     <string name="title_attachments_incomplete">Some attachments or images were not downloaded and could not be added</string>
     <string name="title_ask_save">Save changes?</string>
     <string name="title_ask_delete">Delete message permanently?</string>
+    <string name="title_ask_delete_accept">I understand that permanently deleting messages is irreversible</string>
     <string name="title_ask_delete_answer">Delete reply template permanently?</string>
     <string name="title_ask_delete_rule">Delete rule permanently?</string>
     <string name="title_ask_discard">Discard draft?</string>
@@ -1201,6 +1212,8 @@
     <string name="title_search_with_encrypted">Encrypted (on device only)</string>
     <string name="title_search_with_attachments">With attachments (on device only)</string>
     <string name="title_search_with_size">Message size larger than</string>
+    <string name="title_search_in_trash">In trash</string>
+    <string name="title_search_in_junk">In spam</string>
     <string name="title_search_with_before">Before</string>
     <string name="title_search_with_after">After</string>
     <string name="title_search_flag_unseen">unread</string>
@@ -1405,6 +1418,8 @@
     <string name="title_legend_view">View content</string>
     <string name="title_legend_hide">Hide content</string>
     <string name="title_legend_download">Download content</string>
+    <string name="title_legend_original">View original message</string>
+    <string name="title_legend_reformatted">View reformatted message</string>
     <string name="title_legend_external_image">External image placeholder</string>
     <string name="title_legend_embedded_image">Embedded image placeholder</string>
     <string name="title_legend_tracking_pixel">Tracking image</string>
@@ -1472,6 +1487,7 @@
     <string name="title_hint_eml">This is a summary of the content of a raw message file. Save the raw message with the save icon in the action bar to view all content.</string>
 
     <string name="title_open_link">Open link</string>
+    <string name="title_image_link">Image link</string>
     <string name="title_different_link">The title and the link address are different</string>
     <string name="title_tracking_link">This website might track you</string>
     <string name="title_suspicious_link">This is a suspicious link</string>
@@ -1498,6 +1514,8 @@
     <string name="title_fix">Fix</string>
     <string name="title_enable">Enable</string>
     <string name="title_enabled">Enabled</string>
+    <string name="title_disable">Disable</string>
+    <string name="title_keep_current">Keep current</string>
     <string name="title_executing">Executing</string>
     <string name="title_completed">Completed</string>
     <string name="title_default_changed">Default changed</string>
@@ -1884,7 +1902,8 @@
         <item>Serif</item>
         <item>Sans-serif</item>
         <item>Monospace</item>
-        <item>Fantasy</item>
+        <item>Fantasy</item>-
+        <item>OpenDyslexic</item>
     </string-array>
 
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
@@ -1894,6 +1913,13 @@
         <item>sans-serif</item>
         <item>monospace</item>
         <item>fantasy</item>
+        <item>comic sans</item>
+    </string-array>
+
+    <string-array name="addressFormatNames">
+        <item>Name only</item>
+        <item>Email only</item>
+        <item>Name and email</item>
     </string-array>
 
     <string-array name="languageNames">

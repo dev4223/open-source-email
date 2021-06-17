@@ -80,9 +80,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -129,6 +126,8 @@ import javax.mail.search.OrTerm;
 import javax.mail.search.ReceivedDateTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SentDateTerm;
+
+import me.leolin.shortcutbadger.ShortcutBadger;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 import static androidx.core.app.NotificationCompat.DEFAULT_LIGHTS;
@@ -1086,6 +1085,18 @@ class Core {
                         newuid = found;
                     else if (!newuid.equals(found)) {
                         Log.w(folder.name + " Added=" + newuid + " found=" + found);
+                        try {
+                            Message iprev = ifolder.getMessageByUID(Math.min(newuid, found));
+                            if (iprev != null) {
+                                iprev.setFlag(Flags.Flag.DELETED, true);
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+                                boolean perform_expunge = prefs.getBoolean("perform_expunge", true);
+                                if (perform_expunge)
+                                    ifolder.expunge();
+                            }
+                        } catch (MessagingException ex) {
+                            Log.w(ex);
+                        }
                         newuid = Math.max(newuid, found);
                     }
             } catch (MessagingException ex) {
@@ -3304,20 +3315,17 @@ class Core {
             if (message.avatar == null && notify_known && pro)
                 message.ui_ignored = true;
 
-            boolean check_reply_domain = prefs.getBoolean("check_reply_domain", true);
-            if (check_reply_domain) {
-                // For contact forms
-                boolean self = false;
-                if (identity != null && message.from != null)
-                    for (Address from : message.from)
-                        if (identity.sameAddress(from) || identity.similarAddress(from)) {
-                            self = true;
-                            break;
-                        }
-                if (!self) {
-                    String warning = message.checkReplyDomain(context);
-                    message.reply_domain = (warning == null);
-                }
+            // For contact forms
+            boolean self = false;
+            if (identity != null && message.from != null)
+                for (Address from : message.from)
+                    if (identity.sameAddress(from) || identity.similarAddress(from)) {
+                        self = true;
+                        break;
+                    }
+            if (!self) {
+                String warning = message.checkReplyDomain(context);
+                message.reply_domain = (warning == null);
             }
 
             boolean check_mx = prefs.getBoolean("check_mx", false);
@@ -3334,49 +3342,6 @@ class Core {
                     Log.e(folder.name, ex);
                     message.warning = Log.formatThrowable(ex, false);
                 }
-
-            boolean check_spam = prefs.getBoolean("check_spam", false);
-            if (check_spam) {
-                String host = helper.getReceivedFromHost();
-                if (host != null) {
-                    try {
-                        InetAddress addr = InetAddress.getByName(host);
-                        Log.i("Received from " + host + "=" + addr);
-
-                        StringBuilder lookup = new StringBuilder();
-                        if (addr instanceof Inet4Address) {
-                            List<String> a = Arrays.asList(addr.getHostAddress().split("\\."));
-                            Collections.reverse(a);
-                            lookup.append(TextUtils.join(".", a)).append('.');
-                        } else if (addr instanceof Inet6Address) {
-                            StringBuilder sb = new StringBuilder();
-                            byte[] a = addr.getAddress();
-                            for (int i = 0; i < 8; i++)
-                                sb.append(String.format("%02x",
-                                        ((a[i << 1] << 8) & 0xff00) | (a[(i << 1) + 1] & 0xff)));
-                            sb.reverse();
-                            for (char kar : sb.toString().toCharArray())
-                                lookup.append(kar).append('.');
-                        }
-
-                        lookup.append("zen.spamhaus.org");
-
-                        try {
-                            InetAddress.getByName(lookup.toString());
-                            if (message.warning == null)
-                                message.warning = lookup.toString();
-                            else
-                                message.warning += ", " + lookup;
-                        } catch (UnknownHostException ignore) {
-                            // Not blocked
-                        }
-                    } catch (UnknownHostException ex) {
-                        Log.w(ex);
-                    } catch (Throwable ex) {
-                        Log.w(folder.name, ex);
-                    }
-                }
-            }
 
             try {
                 db.beginTransaction();
@@ -3887,6 +3852,7 @@ class Core {
         DB db = DB.getInstance(context);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean badge = prefs.getBoolean("badge", true);
         boolean notify_background_only = prefs.getBoolean("notify_background_only", false);
         boolean notify_summary = prefs.getBoolean("notify_summary", false);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
@@ -3924,6 +3890,7 @@ class Core {
                 if (channelId != null) {
                     NotificationChannel channel = nm.getNotificationChannel(channelId);
                     if (channel != null && channel.getImportance() == NotificationManager.IMPORTANCE_NONE) {
+                        db.message().setMessageUiIgnored(message.id, true);
                         Log.i("Notify disabled=" + message.id + " channel=" + channelId);
                         continue;
                     }
@@ -4072,6 +4039,9 @@ class Core {
                             " sort=" + notification.getSortKey());
                     try {
                         nm.notify(tag, 1, notification);
+                        // https://github.com/leolin310148/ShortcutBadger/wiki/Xiaomi-Device-Support
+                        if (id == 0 && badge && Helper.isXiaomi())
+                            ShortcutBadger.applyNotification(context, notification, current);
                     } catch (Throwable ex) {
                         Log.w(ex);
                     }
@@ -4103,10 +4073,11 @@ class Core {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean notify_newest_first = prefs.getBoolean("notify_newest_first", false);
-        boolean name_email = prefs.getBoolean("name_email", false);
+        MessageHelper.AddressFormat email_format = MessageHelper.getAddressFormat(context);
         boolean prefer_contact = prefs.getBoolean("prefer_contact", false);
         boolean flags = prefs.getBoolean("flags", true);
         boolean notify_messaging = prefs.getBoolean("notify_messaging", false);
+        boolean notify_subtext = prefs.getBoolean("notify_subtext", true);
         boolean notify_preview = prefs.getBoolean("notify_preview", true);
         boolean notify_preview_all = prefs.getBoolean("notify_preview_all", false);
         boolean wearable_preview = prefs.getBoolean("wearable_preview", false);
@@ -4222,10 +4193,11 @@ class Core {
                     builder.setColor(color);
                     builder.setColorized(true);
                 }
-                if (amessage.folderUnified)
-                    builder.setSubText(amessage.accountName);
-                else
-                    builder.setSubText(amessage.accountName + " · " + amessage.getFolderName(context));
+                if (notify_subtext)
+                    if (amessage.folderUnified && !EntityFolder.INBOX.equals(amessage.folderType))
+                        builder.setSubText(amessage.accountName);
+                    else
+                        builder.setSubText(amessage.accountName + " · " + amessage.getFolderName(context));
             }
 
             Notification pub = builder.build();
@@ -4241,7 +4213,7 @@ class Core {
                     StringBuilder sb = new StringBuilder();
                     for (EntityMessage message : messages) {
                         Address[] afrom = messageFrom.get(message.id);
-                        String from = MessageHelper.formatAddresses(afrom, name_email, false);
+                        String from = MessageHelper.formatAddresses(afrom, email_format, false);
                         sb.append("<strong>").append(Html.escapeHtml(from)).append("</strong>");
                         if (!TextUtils.isEmpty(message.subject))
                             sb.append(": ").append(Html.escapeHtml(message.subject));
@@ -4342,8 +4314,8 @@ class Core {
 
             if (notify_messaging) {
                 // https://developer.android.com/training/cars/messaging
-                String meName = MessageHelper.formatAddresses(message.to, name_email, false);
-                String youName = MessageHelper.formatAddresses(message.from, name_email, false);
+                String meName = MessageHelper.formatAddresses(message.to, email_format, false);
+                String youName = MessageHelper.formatAddresses(message.from, email_format, false);
 
                 // Names cannot be empty
                 if (TextUtils.isEmpty(meName))
@@ -4383,12 +4355,13 @@ class Core {
                 setLightAndSound(mbuilder, light, sound);
 
             Address[] afrom = messageFrom.get(message.id);
-            String from = MessageHelper.formatAddresses(afrom, name_email, false);
+            String from = MessageHelper.formatAddresses(afrom, email_format, false);
             mbuilder.setContentTitle(from);
-            if (message.folderUnified && !EntityFolder.INBOX.equals(message.folderType))
-                mbuilder.setSubText(message.accountName + " · " + message.getFolderName(context));
-            else
-                mbuilder.setSubText(message.accountName);
+            if (notify_subtext)
+                if (message.folderUnified && !EntityFolder.INBOX.equals(message.folderType))
+                    mbuilder.setSubText(message.accountName + " · " + message.getFolderName(context));
+                else
+                    mbuilder.setSubText(message.accountName);
 
             DB db = DB.getInstance(context);
 
@@ -4609,12 +4582,11 @@ class Core {
                 // Wearables
                 StringBuilder sb = new StringBuilder();
                 if (!TextUtils.isEmpty(message.subject))
-                    sb.append(message.subject);
-                if (wearable_preview) {
-                    if (sb.length() != 0)
+                    sb.append(TextHelper.transliterate(context, message.subject));
+                if (wearable_preview && !TextUtils.isEmpty(preview)) {
+                    if (sb.length() > 0)
                         sb.append(" - ");
-                    if (!TextUtils.isEmpty(preview))
-                        sb.append(preview);
+                    sb.append(TextHelper.transliterate(context, preview));
                 }
                 if (sb.length() > 0)
                     mbuilder.setContentText(sb.toString());
@@ -4639,7 +4611,7 @@ class Core {
                 }
             } else {
                 if (!TextUtils.isEmpty(message.subject))
-                    mbuilder.setContentText(message.subject);
+                    mbuilder.setContentText(TextHelper.transliterate(context, message.subject));
             }
 
             if (info[0].hasPhoto())
@@ -5057,7 +5029,7 @@ class Core {
                                 groupNotifying.put(group, new ArrayList<>());
 
                             if (id > 0) {
-                                Log.i("Notify restore " + tag + " id=" + id);
+                                EntityLog.log(context, "Notify restore " + tag + " id=" + id);
                                 groupNotifying.get(group).add(id);
                             }
                         }

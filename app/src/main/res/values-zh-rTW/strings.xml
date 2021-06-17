@@ -470,7 +470,6 @@
     <string name="title_advanced_threading_hint">彼此相關的群組訊息</string>
     <string name="title_advanced_highlight_hint">主題的強調色將用於突出顯示</string>
     <string name="title_advanced_gravatars_hint">可能存在隱私風險</string>
-    <string name="title_advanced_name_email_hint">禁用時，僅顯示名稱（如果可用）</string>
     <string name="title_advanced_preview_hint">僅在消息文本已被下載時可用</string>
     <string name="title_advanced_preview_lines_hint">總計最多 %s 字元</string>
     <string name="title_advanced_preview_issue">由於某些Android版本中的錯誤，當行數超過一時，滾動可能會變慢</string>
@@ -1458,6 +1457,7 @@
         <item>無襯線字體</item>
         <item>等寬字體</item>
         <item>Fantasy</item>
+        <item>OpenDyslexic</item>
     </string-array>
     <!-- https://www.w3.org/TR/css-fonts-4/#generic-font-families -->
 </resources>

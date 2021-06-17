@@ -54,7 +54,6 @@ import android.util.Patterns;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.util.PatternsCompat;
 import androidx.preference.PreferenceManager;
@@ -90,12 +89,15 @@ import org.w3c.dom.css.CSSRuleList;
 import org.w3c.dom.css.CSSStyleSheet;
 import org.w3c.dom.stylesheets.MediaList;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -107,6 +109,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeUtility;
 
 import static androidx.core.text.HtmlCompat.TO_HTML_PARAGRAPH_LINES_INDIVIDUAL;
 import static org.w3c.css.sac.Condition.SAC_CLASS_CONDITION;
@@ -682,8 +688,7 @@ public class HtmlHelper {
                             if (element.parent() != null && !display_hidden) {
                                 Float s = getFontSize(value, 1.0f);
                                 if (s != null && s == 0) {
-                                    if (!"table".equals(element.tagName()) ||
-                                            !"fixed".equals(kv.get("table-layout"))) {
+                                    if (!"table".equals(element.tagName())) {
                                         Log.i("Removing no height/width " + element.tagName());
                                         element.remove();
                                     }
@@ -1026,10 +1031,22 @@ public class HtmlHelper {
             if (alt.length() > MAX_ALT)
                 alt = alt.substring(0, MAX_ALT) + "…";
 
-            if (!show_images && !(inline_images && isInline) && !TextUtils.isEmpty(alt))
-                if (TextUtils.isEmpty(tracking))
-                    img.appendText("[" + alt + "]");
-                else {
+            if (!show_images && !(inline_images && isInline))
+                if (TextUtils.isEmpty(tracking)) {
+                    if (TextUtils.isEmpty(alt)) {
+                        boolean linked = false;
+                        Element p = img.parent();
+                        while (p != null && !linked)
+                            if ("a".equals(p.tagName()))
+                                linked = true;
+                            else
+                                p = p.parent();
+                        if (linked)
+                            alt = context.getString(R.string.title_image_link);
+                    }
+                    if (!TextUtils.isEmpty(alt))
+                        img.appendText("[" + alt + "]");
+                } else if (!TextUtils.isEmpty(alt)) {
                     Element a = document.createElement("a");
                     a.attr("href", tracking);
                     a.text("[" + alt + "]");
@@ -1147,7 +1164,7 @@ public class HtmlHelper {
                             }
 
                             boolean email = group.contains("@") && !group.contains(":");
-                            Log.d("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
+                            Log.i("Web url=" + group + " " + start + "..." + end + "/" + text.length() +
                                     " linked=" + linked + " email=" + email + " count=" + links);
 
                             if (linked)
@@ -1951,17 +1968,66 @@ public class HtmlHelper {
     }
 
     static Spanned highlightHeaders(Context context, String headers) {
-        int colorAccent = Helper.resolveColor(context, android.R.attr.textColorLink);
         SpannableStringBuilder ssb = new SpannableStringBuilder(headers);
+        int textColorLink = Helper.resolveColor(context, android.R.attr.textColorLink);
+
         int index = 0;
         for (String line : headers.split("\n")) {
             if (line.length() > 0 && !Character.isWhitespace(line.charAt(0))) {
                 int colon = line.indexOf(':');
                 if (colon > 0)
-                    ssb.setSpan(new ForegroundColorSpan(colorAccent), index, index + colon, 0);
+                    ssb.setSpan(new ForegroundColorSpan(textColorLink), index, index + colon, 0);
             }
             index += line.length() + 1;
         }
+
+        try {
+            // https://datatracker.ietf.org/doc/html/rfc2821#section-4.4
+            final List<String> words = Collections.unmodifiableList(Arrays.asList(
+                    "from", "by", "via", "with", "id", "for"));
+            final DateFormat DTF = Helper.getDateTimeInstance(context, DateFormat.SHORT, DateFormat.MEDIUM);
+
+            ByteArrayInputStream bis = new ByteArrayInputStream(headers.getBytes());
+            String[] received = new InternetHeaders(bis).getHeader("Received");
+            if (received.length > 0) {
+                ssb.append('\n');
+                for (int i = received.length - 1; i >= 0; i--) {
+                    String h = MimeUtility.unfold(received[i]);
+
+                    int semi = h.lastIndexOf(';');
+                    Date date = null;
+                    if (semi > 0) {
+                        MailDateFormat mdf = new MailDateFormat();
+                        date = mdf.parse(h, new ParsePosition(semi + 1));
+                        h = h.substring(0, semi);
+                    }
+
+                    int s = ssb.length();
+                    ssb.append('#').append(Integer.toString(received.length - i));
+                    if (date != null)
+                        ssb.append(' ').append(DTF.format(date));
+                    ssb.setSpan(new StyleSpan(Typeface.BOLD), s, ssb.length(), 0);
+                    ssb.append('\n');
+
+                    int j = 0;
+                    String[] w = h.split("\\s+");
+                    while (j < w.length) {
+                        if (j > 0)
+                            ssb.append(' ');
+
+                        s = ssb.length();
+                        ssb.append(w[j]);
+                        if (words.contains(w[j].toLowerCase(Locale.ROOT)))
+                            ssb.setSpan(new ForegroundColorSpan(textColorLink), s, ssb.length(), 0);
+                        j++;
+                    }
+                    ssb.append("\n\n");
+                }
+            }
+        } catch (Throwable ex) {
+            Log.w(ex);
+        }
+
         return ssb;
     }
 
@@ -1976,6 +2042,20 @@ public class HtmlHelper {
                 aspace.remove();
             } else
                 aspace.replaceWith(new TextNode(" "));
+        }
+    }
+
+    static void quoteLimit(Document d, int maxLevel) {
+        for (Element bq : d.select("blockquote")) {
+            int level = 1;
+            Element parent = bq.parent();
+            while (parent != null) {
+                if ("blockquote".equals(parent.tagName()))
+                    level++;
+                parent = parent.parent();
+            }
+            if (level >= maxLevel)
+                bq.html("&#8230;");
         }
     }
 
@@ -2245,11 +2325,7 @@ public class HtmlHelper {
                                         }
                                     break;
                                 case "font-family":
-                                    String face = value.toLowerCase(Locale.ROOT);
-                                    if ("fairemail".equals(face)) {
-                                        Typeface typeface = ResourcesCompat.getFont(context, R.font.fantasy);
-                                        setSpan(ssb, new CustomTypefaceSpan(face, typeface), start, ssb.length());
-                                    } else if ("wingdings".equals(face)) {
+                                    if ("wingdings".equalsIgnoreCase(value)) {
                                         for (int i = start; i < ssb.length(); i++) {
                                             int kar = ssb.charAt(i);
                                             if (kar >= 0x20 && kar < 0x20 + WINGDING_TO_UNICODE.length) {
@@ -2260,7 +2336,7 @@ public class HtmlHelper {
                                             }
                                         }
                                     } else
-                                        setSpan(ssb, new TypefaceSpan(face), start, ssb.length());
+                                        setSpan(ssb, StyleHelper.getTypefaceSpan(value, context), start, ssb.length());
                                     break;
                                 case "text-decoration":
                                     if ("line-through".equals(value))
@@ -2355,7 +2431,7 @@ public class HtmlHelper {
                                 setSpan(ssb, new StyleSpan(Typeface.BOLD), start, ssb.length());
                                 break;
                             case "hr":
-                                // Suppress succesive lines
+                                // Suppress successive lines
                                 LineSpan[] lines = ssb.getSpans(0, ssb.length(), LineSpan.class);
                                 int last = -1;
                                 if (lines != null)
@@ -2497,7 +2573,7 @@ public class HtmlHelper {
                                 setSpan(ssb, new UnderlineSpan(), start, ssb.length());
                                 break;
                             default:
-                                Log.e("Unknown tag=" + element.tagName());
+                                Log.w("Unknown tag=" + element.tagName());
                         }
 
                         if (monospaced_pre &&

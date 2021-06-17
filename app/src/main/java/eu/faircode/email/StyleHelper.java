@@ -49,6 +49,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.preference.PreferenceManager;
 
@@ -57,8 +58,10 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class StyleHelper {
     static boolean apply(int action, LifecycleOwner owner, View anchor, EditText etBody, Object... args) {
@@ -92,13 +95,13 @@ public class StyleHelper {
                 StyleSpan[] spans = edit.getSpans(start, end, StyleSpan.class);
                 for (StyleSpan span : spans)
                     if (span.getStyle() == style) {
-                        has = true;
                         int s = edit.getSpanStart(span);
                         int e = edit.getSpanEnd(span);
                         int f = edit.getSpanFlags(span);
                         edit.removeSpan(span);
-                        splitSpan(edit, start, end, s, e, f, true,
-                                new StyleSpan(style), new StyleSpan(style));
+                        if (splitSpan(edit, start, end, s, e, f, true,
+                                new StyleSpan(style), new StyleSpan(style)))
+                            has = true;
                     }
 
                 if (!has)
@@ -114,13 +117,13 @@ public class StyleHelper {
                 boolean has = false;
                 UnderlineSpan[] spans = edit.getSpans(start, end, UnderlineSpan.class);
                 for (UnderlineSpan span : spans) {
-                    has = true;
                     int s = edit.getSpanStart(span);
                     int e = edit.getSpanEnd(span);
                     int f = edit.getSpanFlags(span);
                     edit.removeSpan(span);
-                    splitSpan(edit, start, end, s, e, f, true,
-                            new UnderlineSpan(), new UnderlineSpan());
+                    if (splitSpan(edit, start, end, s, e, f, true,
+                            new UnderlineSpan(), new UnderlineSpan()))
+                        has = true;
                 }
 
                 if (!has)
@@ -153,7 +156,7 @@ public class StyleHelper {
                 SubMenu smenu = popupMenu.getMenu().findItem(R.id.menu_style_font).getSubMenu();
                 for (int i = 0; i < fontNameNames.length; i++) {
                     SpannableStringBuilder ssb = new SpannableStringBuilder(fontNameNames[i]);
-                    ssb.setSpan(new TypefaceSpan(fontNameValues[i]), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    ssb.setSpan(getTypefaceSpan(fontNameValues[i], context), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     smenu.add(R.id.group_style_font, i, 0, ssb);
                 }
                 smenu.add(R.id.group_style_font, fontNameNames.length, 0, R.string.title_style_font_default);
@@ -410,11 +413,12 @@ public class StyleHelper {
                             int f = edit.getSpanFlags(span);
                             edit.removeSpan(span);
                             splitSpan(edit, start, end, s, e, f, false,
-                                    new TypefaceSpan(span.getFamily()), new TypefaceSpan(span.getFamily()));
+                                    getTypefaceSpan(span.getFamily(), context),
+                                    getTypefaceSpan(span.getFamily(), context));
                         }
 
                         if (face != null)
-                            edit.setSpan(new TypefaceSpan(face), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            edit.setSpan(getTypefaceSpan(face, context), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                         etBody.setText(edit);
                         etBody.setSelection(start, end);
@@ -436,7 +440,6 @@ public class StyleHelper {
                         boolean has = false;
                         QuoteSpan[] spans = edit.getSpans(paragraph.first, paragraph.second, QuoteSpan.class);
                         for (QuoteSpan span : spans) {
-                            has = true;
                             int s = edit.getSpanStart(span);
                             int e = edit.getSpanEnd(span);
                             int f = edit.getSpanFlags(span);
@@ -454,7 +457,8 @@ public class StyleHelper {
                             else
                                 q2 = new QuoteSpan(span.getColor(), span.getStripeWidth(), span.getGapWidth());
 
-                            splitSpan(edit, paragraph.first, paragraph.second, s, e, f, false, q1, q2);
+                            if (splitSpan(edit, paragraph.first, paragraph.second, s, e, f, false, q1, q2))
+                                has = true;
                         }
 
                         if (!has) {
@@ -478,13 +482,13 @@ public class StyleHelper {
                         boolean has = false;
                         StrikethroughSpan[] spans = edit.getSpans(start, end, StrikethroughSpan.class);
                         for (StrikethroughSpan span : spans) {
-                            has = true;
                             int s = edit.getSpanStart(span);
                             int e = edit.getSpanEnd(span);
                             int f = edit.getSpanFlags(span);
                             edit.removeSpan(span);
-                            splitSpan(edit, start, end, s, e, f, true,
-                                    new StrikethroughSpan(), new StrikethroughSpan());
+                            if (splitSpan(edit, start, end, s, e, f, true,
+                                    new StrikethroughSpan(), new StrikethroughSpan()))
+                                has = true;
                         }
 
                         if (!has)
@@ -533,10 +537,15 @@ public class StyleHelper {
 
                 String url = (String) args[0];
 
-                List<Object> spans = new ArrayList<>();
-                for (Object span : edit.getSpans(start, end, Object.class)) {
-                    if (!(span instanceof URLSpan))
+                List<CharacterStyle> spans = new ArrayList<>();
+                Map<CharacterStyle, Pair<Integer, Integer>> ranges = new HashMap<>();
+                Map<CharacterStyle, Integer> flags = new HashMap<>();
+                for (CharacterStyle span : edit.getSpans(start, end, CharacterStyle.class)) {
+                    if (!(span instanceof URLSpan)) {
                         spans.add(span);
+                        ranges.put(span, new Pair<>(edit.getSpanStart(span), edit.getSpanEnd(span)));
+                        flags.put(span, edit.getSpanFlags(span));
+                    }
                     edit.removeSpan(span);
                 }
 
@@ -551,8 +560,11 @@ public class StyleHelper {
                 }
 
                 // Restore other spans
-                for (Object span : spans)
-                    edit.setSpan(span, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                for (CharacterStyle span : spans)
+                    edit.setSpan(span,
+                            ranges.get(span).first,
+                            ranges.get(span).second,
+                            flags.get(span));
 
                 etBody.setText(edit);
                 etBody.setSelection(end, end);
@@ -577,15 +589,15 @@ public class StyleHelper {
         }
     }
 
-    static void splitSpan(Editable edit, int start, int end, int s, int e, int f, boolean extend, Object span1, Object span2) {
+    static boolean splitSpan(Editable edit, int start, int end, int s, int e, int f, boolean extend, Object span1, Object span2) {
         if (start < 0 || end < 0) {
             Log.e(span1 + " invalid selection=" + start + "..." + end);
-            return;
+            return false;
         }
 
         if (s < 0 || e < 0) {
             Log.e(span1 + " not attached=" + s + "..." + e);
-            return;
+            return false;
         }
 
         if (s > e) {
@@ -600,21 +612,34 @@ public class StyleHelper {
                 edit.setSpan(span1, start, e, f);
             else
                 edit.setSpan(span1, end, e, f);
+            return true;
         } else if (start < e && end > e && start > s) {
             // overlap after
             if (extend)
                 edit.setSpan(span1, s, end, f);
             else
                 edit.setSpan(span1, s, start, f);
+            return true;
         } else if (start < s && end > e) {
             // overlap all
-            if (extend)
+            if (extend) {
                 edit.setSpan(span1, start, end, f);
-        } else if (start > s && end < e) {
+                return true;
+            }
+        } else if (start >= s && end <= e) {
+            if (start == s && end == e)
+                return true;
+
             // overlap inner
-            edit.setSpan(span1, s, start, f);
-            edit.setSpan(span2, end, e, f);
+            if (s < start)
+                edit.setSpan(span1, s, start, f);
+            if (end < e)
+                edit.setSpan(span2, end, e, f);
+            if (s < start || end < e)
+                return true;
         }
+
+        return false;
     }
 
     static void setSpan(Editable edit, Object span, int start, int end, int flags, Context context) {
@@ -749,6 +774,31 @@ public class StyleHelper {
                 }
             }
         }
+    }
+
+    static TypefaceSpan getTypefaceSpan(String family, Context context) {
+        String faces = family.toLowerCase(Locale.ROOT);
+        if (faces.contains("comic sans"))
+            family = "comic sans ms, sans-serif";
+        return new CustomTypefaceSpan(family, getTypeface(family, context));
+    }
+
+    static Typeface getTypeface(String family, Context context) {
+        String faces = family.toLowerCase(Locale.ROOT);
+
+        if (faces.equals("fairemail"))
+            return ResourcesCompat.getFont(context, R.font.fantasy);
+
+        if (faces.contains("comic sans"))
+            return ResourcesCompat.getFont(context, R.font.opendyslexic);
+
+        for (String face : faces.split(",")) {
+            face = face.trim().replace("\"", "");
+            Typeface tf = Typeface.create(face, Typeface.NORMAL);
+            if (!tf.equals(Typeface.DEFAULT))
+                return tf;
+        }
+        return Typeface.DEFAULT;
     }
 
     //TextUtils.dumpSpans(text, new LogPrinter(android.util.Log.INFO, "FairEmail"), "afterTextChanged ");

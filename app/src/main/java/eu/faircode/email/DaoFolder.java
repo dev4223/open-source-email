@@ -226,6 +226,9 @@ public interface DaoFolder {
             " WHERE account = :account AND type = :type")
     EntityFolder getFolderByType(long account, String type);
 
+    @Query("SELECT * FROM folder WHERE type = :type")
+    List<EntityFolder> getFoldersByType(String type);
+
     @Query("SELECT folder.* FROM folder" +
             " JOIN account ON account.id = folder.account" +
             " WHERE account.synchronize" +
@@ -325,10 +328,9 @@ public interface DaoFolder {
 
     @Query("UPDATE folder" +
             " SET sync_days = :sync_days, keep_days = :keep_days" +
-            " WHERE account = :account" +
-            " AND type = '" + EntityFolder.USER + "'" +
-            " AND (NOT (sync_days IS :sync_days) OR NOT (keep_days IS :keep_days))")
-    int setFolderProperties(long account, int sync_days, int keep_days);
+            " WHERE id = :id" +
+            " AND NOT (sync_days IS :sync_days AND keep_days IS :keep_days)")
+    int setFolderProperties(long id, int sync_days, int keep_days);
 
     @Query("UPDATE folder SET keywords = :keywords WHERE id = :id AND NOT (keywords IS :keywords)")
     int setFolderKeywords(long id, String keywords);

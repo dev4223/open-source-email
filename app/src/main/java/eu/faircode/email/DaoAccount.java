@@ -149,7 +149,7 @@ public interface DaoAccount {
     int setAccountPassword(long id, String password);
 
     @Query("UPDATE account SET last_connected = :last_connected WHERE id = :id AND NOT (last_connected IS :last_connected)")
-    int setAccountConnected(long id, long last_connected);
+    int setAccountConnected(long id, Long last_connected);
 
     @Query("UPDATE account SET backoff_until = :backoff_until WHERE id = :id AND NOT (backoff_until IS :backoff_until)")
     int setAccountBackoff(long id, Long backoff_until);
@@ -183,6 +183,12 @@ public interface DaoAccount {
 
     @Query("UPDATE account SET max_size = :max_size WHERE id = :id AND NOT (max_size IS :max_size)")
     int setAccountMaxSize(long id, Long max_size);
+
+    @Query("UPDATE account" +
+            " SET capability_idle = :idle, capability_utf8 = :utf8" +
+            " WHERE id = :id" +
+            " AND NOT (capability_idle IS :idle AND capability_utf8 IS :utf8)")
+    int setAccountCapabilities(long id, Boolean idle, Boolean utf8);
 
     @Query("UPDATE account SET warning = :warning WHERE id = :id AND NOT (warning IS :warning)")
     int setAccountWarning(long id, String warning);

@@ -4,7 +4,7 @@
 
 Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die folgenden häufig gestellten Fragen. [Am Ende der Seite](#user-content-get-support) erfahren Sie, wie Sie weitere Fragen stellen, Funktionen anfragen und Fehler melden können.
 
-Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die folgenden häufig gestellten Fragen. [Am Ende der Seite](#user-content-get-support) erfahren Sie, wie Sie weitere Fragen stellen, Funktionen anfragen und Fehler melden können.
+Wenn Sie eine Frage haben, überprüfen Sie bitte zuerst die folgenden häufig gestellten Fragen. (FAQ) [Am Ende der Seite](#user-content-get-support) erfahren Sie, wie Sie weitere Fragen stellen, Funktionen anfragen und Fehler melden können.
 
 ## Übersicht
 
@@ -67,8 +67,8 @@ Zur Autorisierung:
 <h2><a name="known-problems"></a>Bekannte Probleme</h2>
 
 * ~~Ein [Fehler in Android 5.1 und 6](https://issuetracker.google.com/issues/37054851) führt dazu, dass Apps manchmal ein falsches Zeitformat anzeigen. Das Ein/Ausschalten des *24-Stunden-Formats* in den Android Einstellungen könnte das Problem vorübergehend beheben. Eine vorübergehende Lösung wurde hinzugefügt.~~
-* ~~Ein [Bug in Google Drive](https://issuetracker.google.com/issues/126362828) bewirkt, dass die nach Google Drive exportierten Dateien leer sind. Google hat dies repariert.~~
-* ~~Ein [Bug in AndroidX](https://issuetracker.google.com/issues/78495471) lässt FairEmail bei langem Drücken oder Wischen gelegentlich abstürzen. Google hat dies repariert.~~
+* ~~Ein [Fehler in Google Drive](https://issuetracker.google.com/issues/126362828) bewirkt, dass die nach Google Drive exportierten Dateien leer sind. Google hat dies repariert.~~
+* ~~Ein [Fehler in AndroidX](https://issuetracker.google.com/issues/78495471) lässt FairEmail bei langem Drücken oder Wischen gelegentlich abstürzen. Google hat dies repariert.~~
 * ~~Ein [Fehler im AndroidX ROOM](https://issuetracker.google.com/issues/138441698) verursacht manchmal einen Absturz mit "*… Ausnahme beim Berechnen der Datenbank Live-Daten ... Konnte Zeile ...*" nicht lesen. Ein Workaround wurde hinzugefügt.~~
 * Ein [Bug im Android](https://issuetracker.google.com/issues/119872129) verursacht manchmal einen FairEmail-Absturz mit "*... Fehlerhafte Benachrichtigung ...*" auf einigen Geräten nach dem Aktualisieren von FairEmail und dem Tippen auf eine Benachrichtigung.
 * Ein [Bug in Android](https://issuetracker.google.com/issues/62427912) verursacht manchmal einen Absturz mit "*... ActivityRecord nicht gefunden für ...*" nach dem Update von FairEmail. Eine Neuinstallation ([quelle](https://stackoverflow.com/questions/46309428/android-activitythread-reportsizeconfigurations-causes-app-to-freeze-with-black)) könnte das Problem beheben.
@@ -209,7 +209,7 @@ Das Design basiert auf vielen Diskussionen und wenn du möchtest, kannst du auch
 * [(82) Was ist ein Nachverfolgungsbild?](#user-content-faq82)
 * [(84) Wozu gibt es lokale Kontakte?](#user-content-faq84)
 * [(85) Warum ist eine Identität nicht verfügbar?](#user-content-faq85)
-* [~~(86) Was sind »zusätzliche Privatsphärefunktionen«?~~](#user-content-faq86)
+* [~~(86) Was sind »zusätzliche Privatsphärenfunktionen«?~~](#user-content-faq86)
 * [(87) Was bedeutet »ungültige Anmeldedaten«?](#user-content-faq87)
 * [(88) Wie kann ich ein Yahoo-, AOL- oder Sky-Konto verwenden?](#user-content-faq88)
 * [(89) Wie kann ich Nur-Text-Nachrichten senden?](#user-content-faq89)
@@ -1252,15 +1252,15 @@ Wenn das Gerät mit einer PIN, einem Muster oder einem Passwort gesichert ist, k
 <br />
 
 <a name="faq39"></a>
-**(39) Wie kann ich den Akkuverbrauch von FairEmail reduzieren?**
+**(39) Wie kann ich den Akkuverbrauch von FairEmail verringern?**
 
-Aktuelle Android-Versionen melden *App-Nutzung* standardmäßig als Prozentsatz in den Android Batterie-Einstellungen. **Verwirrenderweise ist *App-Nutzung* nicht identisch mit *Akkuverbrauch* und steht nicht einmal in direktem Zusammenhang mit dem Akkuverbrauch!** Die App-Nutzung (während der Verwendung) ist sehr hoch, da FairEmail einen Vordergrund-Service nutzt, der von Android als konstante App-Nutzung angesehen wird. Dies bedeutet jedoch nicht, dass FairEmail ständig Akkuleistung verbraucht. Der tatsächliche Akkuverbrauch kann durch die Navigation auf diesem Bildschirm gesehen werden:
+Aktuelle Android-Versionen melden die *App-Nutzung* standardmäßig als Prozentsatz in den Android-Akkueinstellungen. **Verwirrenderweise ist die *App-Nutzung* nicht identisch mit dem *Akkuverbrauch* und steht nicht einmal im direkten Zusammenhang mit dem Akkuverbrauch!** Die App-Nutzung (während der Verwendung) ist sehr hoch, da FairEmail einen Vordergrunddienst nutzt, der von Android als konstante App-Nutzung angesehen wird. Dies bedeutet jedoch nicht, dass FairEmail ständig Akkuleistung verbraucht. Der tatsächliche Akkuverbrauch kann auf folgendem Bildschirm gesehen werden:
 
-*Android-Einstellungen* -> *Batterie* -> Drei-Punkte-Menü -> *Akkuverbrauch* -> Drei-Punkte-Menü -> *Geräteverbrauch anzeigen*
+*Android-Einstellungen* → *Akku* → Drei-Punkte-Menü → *Akkunutzung* → Drei-Punkte-Menü → *Geräteverbrauch anzeigen*
 
-In der Regel sollte der Akkuverbrauch unter oder in jedem Fall nicht viel höher sein als *Mobilfunkstandby*. Wenn dies nicht der Fall ist, aktivieren Sie bitte *Automatische Optimierung* in den Empfangseinstellungen. Wenn dies nicht hilft, bitten wir [um Unterstützung](https://contact.faircode.eu/?product=fairemailsupport).
+In der Regel sollte der Akkuverbrauch kleiner oder in jedem Fall nicht viel höher sein als *Mobilfunknetz-Standby*. Wenn dies nicht der Fall ist, aktivieren Sie bitte *»Automatische Optimierung«* in den Empfangseinstellungen. Wenn das nicht hilft, bitten [fragen Sie nach Unterstützung](https://contact.faircode.eu/?product=fairemailsupport).
 
-Es ist unvermeidlich, dass das Synchronisieren von Nachrichten Batteriestrom benötigt, da es Netzwerkzugriff und Zugriff auf die Nachrichtendatenbank erfordert.
+Es ist unvermeidlich, dass das Synchronisieren von Nachrichten Akkustrom benötigt, da es Netzwerkzugriff und Zugriff auf die Nachrichtendatenbank erfordert.
 
 Wenn Sie den Akkuverbrauch von FairEmail mit einem anderen E-Mail-Client vergleichen, stellen Sie bitte sicher, dass der andere E-Mail-Client ähnlich eingerichtet ist. Zum Beispiel ist es kein fairer Vergleich, stetige Synchronisation (Push-Nachrichten) und (seltenere) periodische Überprüfungen nach neuen Nachrichten zu vergleichen.
 
@@ -1947,7 +1947,7 @@ Local contact information is based on names and addresses found in incoming and 
 
 The main use of the local contacts storage is to offer auto completion when no contacts permission has been granted to FairEmail.
 
-Another use is to generate [shortcuts](#user-content-faq31) on recent Android versions to quickly send a message to frequently contacted people. This is also why the number of times contacted and the last time contacted is being recorded and why you can make a contact a favorite or exclude it from favorites by long pressing it.
+Eine weitere Verwendung ist die Erzeugung von [Verknüpfungen](#user-content-faq31) für aktuelle Android-Versionen, um schnell eine Nachricht an häufig kontaktierte Personen zu senden. This is also why the number of times contacted and the last time contacted is being recorded and why you can make a contact a favorite or exclude it from favorites by long pressing it.
 
 The list of contacts is sorted on number of times contacted and the last time contacted.
 
@@ -1969,9 +1969,9 @@ FairEmail will try to select the best identity based on the *to* address of the 
 <br />
 
 <a name="faq86"></a>
-**~~(86) What are 'extra privacy features'?~~**
+**~~(86) Was sind »zusätzliche Privatsphärenfunktionen«?~~**
 
-~~The advanced option *extra privacy features* enables:~~
+~~Die erweiterte Option *zusätzliche Privatsphärenfunktionen* aktiviert:~~
 
 * ~~Suche nach dem Besitzer der IP-Adresse eines Link~~
 * ~~Erkennung und Entfernung von [Verfolgungsbildern](#user-content-faq82)~~
@@ -2052,11 +2052,11 @@ Recent versions of FairEmail can filter spam to a certain extend using a message
 
 Of course you can report messages as spam with FairEmail, which will move the reported messages to the spam folder and train the spam filter of the provider, which is how it is supposed to work. This can be done automatically with [filter rules](#user-content-faq71) too. Blocking the sender will create a filter rule to automatically move future messages of the same sender into the spam folder.
 
-Note that the POP3 protocol gives access to the inbox only. So, it is won't be possible to report spam for POP3 accounts.
+Beachten Sie, dass das POP3-Protokoll nur Zugriff auf den Posteingang gewährt. Es ist also nicht möglich, Spam für POP3-Konten zu melden.
 
-Note that you should not delete spam messages, also not from the spam folder, because the email server uses the messages in the spam folder to "learn" what spam messages are.
+Beachten Sie, dass Sie Spam-Nachrichten nicht löschen sollten, auch nicht aus dem Spam-Ordner. E-Mail-Server nutzen die Nachrichten im Spam-Ordner, um die Erkennung von zukünftigen Spam-Nachrichten zu trainieren.
 
-If you receive a lot of spam messages in your inbox, the best you can do is to contact the email provider to ask if spam filtering can be improved.
+Wenn Sie viele Spam-Nachrichten in Ihrem Posteingang erhalten, sollten Sie den E-Mail-Anbieter kontaktieren und anfragen, ob dessen Spam-Filter verbessert werden könnte.
 
 Also, FairEmail can show a small red warning flag when DKIM, SPF or [DMARC](https://en.wikipedia.org/wiki/DMARC) authentication failed on the receiving server. You can enable/disable [authentication verification](https://en.wikipedia.org/wiki/Email_authentication) in the display settings.
 
@@ -2071,7 +2071,7 @@ If legitimate messages are failing authentication, you should notify the sender 
 <a name="faq93"></a>
 **(93) Can you allow installation/data storage on external storage media (sdcard)?**
 
-FairEmail uses services and alarms, provides widgets and listens for the boot completed event to be started on device start, so it is not possible to store the app on external storage media, like an sdcard. See also [here](https://developer.android.com/guide/topics/data/install-location).
+FairEmail uses services and alarms, provides widgets and listens for the boot completed event to be started on device start, so it is not possible to store the app on external storage media, like an sdcard. Siehe auch [hier](https://developer.android.com/guide/topics/data/install-location).
 
 Messages, attachments, etc stored on external storage media, like an sdcard, can be accessed by other apps and is therefore not safe. See [here](https://developer.android.com/training/data-storage) for the details.
 
@@ -2084,7 +2084,7 @@ If you need to save on storage space, you can limit the number of days messages 
 <a name="faq94"></a>
 **(94) What does the red/orange stripe at the end of the header mean?**
 
-The red/orange stripe at the left side of the header means that the DKIM, SPF or DMARC authentication failed. See also [this FAQ](#user-content-faq92).
+The red/orange stripe at the left side of the header means that the DKIM, SPF or DMARC authentication failed. Siehe auch [diese F&A](#user-content-faq92).
 
 <br />
 
@@ -2095,7 +2095,7 @@ For privacy and security reasons FairEmail does not have permissions to directly
 
 If an app is listed depends on if the app implements a [document provider](https://developer.android.com/guide/topics/providers/document-provider). If the app is not listed, you might need to ask the developer of the app to add support for the Storage Access Framework.
 
-Android Q will make it harder and maybe even impossible to directly access files, see [here](https://developer.android.com/preview/privacy/scoped-storage) and [here](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) for more details.
+Android Q macht es schwieriger und vielleicht sogar unmöglich, direkt auf Dateien zuzugreifen, siehe [hier](https://developer.android.com/preview/privacy/scoped-storage) und [hier](https://www.xda-developers.com/android-q-storage-access-framework-scoped-storage/) für weitere Details.
 
 <br />
 
@@ -2449,7 +2449,7 @@ Send a [Delivery Status Notification](https://tools.ietf.org/html/rfc3464) (=har
 
 Hard bounces will mostly be processed automatically because they affect the reputation of the email provider. The bounce address (=*Return-Path* header) is mostly very specific, so the email server can determine the sending account.
 
-Für einige Hintergründe siehe [diesen Wikipedia Artikel](https://en.wikipedia.org/wiki/Bounce_message).
+Für einige Hintergründe siehe [diesen Wikipedia-Artikel](https://en.wikipedia.org/wiki/Bounce_message).
 
 <br />
 
@@ -2995,18 +2995,18 @@ The theme colors are based on the color circle of [Johannes Itten](https://en.wi
 <br />
 
 <a name="faq165"></a>
-**(165) Is Android Auto supported?**
+**(165) Wird Android Auto unterstützt?**
 
-Yes, Android Auto is supported, but only with the GitHub version, please [see here](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-83801249) about why.
+Ja, Android Auto wird unterstützt, aber nur mit der GitHub-Version, bitte [hier nachsehen](https://forum.xda-developers.com/t/app-5-0-fairemail-fully-featured-open-source-privacy-oriented-email-app.3824168/post-83801249) warum.
 
-For notification (messaging) support you'll need to enable the following notification options:
+Für die Unterstützung von Benachrichtigungen (Meldungen) müssen Sie die folgenden Benachrichtigungsoptionen aktivieren:
 
-* *Use Android 'messaging style' notification format*
-* Notification actions: *Direct reply* and (mark as) *Read*
+* *Benachrichtigungsformat im Android-Nachrichtenstil verwenden*
+* Benachrichtigungsaktionen: *direkte Antwort* und (markieren als) *gelesen*
 
-You can enable other notification actions too, if you like, but they are not supported by Android Auto.
+Wenn Sie möchten, können Sie auch andere Benachrichtigungsaktionen aktivieren, aber diese werden von Android Auto nicht unterstützt.
 
-The developers guide is [here](https://developer.android.com/training/cars/messaging).
+Die Anleitung für Entwickler ist [hier](https://developer.android.com/training/cars/messaging).
 
 <br />
 
