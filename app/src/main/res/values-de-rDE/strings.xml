@@ -767,7 +767,6 @@
     <string name="title_folder_user">Benutzer</string>
     <string name="title_folder_user_only">Nur Benutzerordner</string>
     <string name="title_folder_primary">Ordner primäres Konto</string>
-    <string name="title_folder_thread">%1$s | Thread</string>
     <string name="title_folders_unified">Sammeleingangsordner</string>
     <string name="title_folder_local_drafts">Lokale Entwürfe</string>
     <string name="title_no_folders">Keine Ordner</string>

@@ -942,8 +942,6 @@ public class AdapterMessage extends RecyclerView.Adapter<AdapterMessage.ViewHold
             ibFlagged.setVisibility(View.GONE);
             ibAvatar.setVisibility(View.GONE);
             ibAuth.setVisibility(View.GONE);
-            ivPriorityHigh.setVisibility(View.GONE);
-            ivPriorityLow.setVisibility(View.GONE);
             ivImportance.setVisibility(View.GONE);
             ivSigned.setVisibility(View.GONE);
             ivEncrypted.setVisibility(View.GONE);

@@ -16,7 +16,7 @@
         android:textColor="?attr/colorUnread"
         android:textIsSelectable="true"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paddingAddressBottom" />
+        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvSizeEx"
@@ -28,7 +28,7 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textIsSelectable="true"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/paddingAddressBottom" />
+        app:layout_constraintTop_toBottomOf="@id/paddingAddressBottom" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvSubjectEx"

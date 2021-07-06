@@ -377,12 +377,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
-        android:labelFor="@+id/tvSizeEx"
+        android:labelFor="@+id/tvLanguage"
         android:text="@string/title_language"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSent" />
+        app:layout_constraintTop_toBottomOf="@id/tvStored" />
 
     <eu.faircode.email.FixedTextView
         android:id="@+id/tvLanguage"
@@ -395,7 +395,7 @@
         android:textIsSelectable="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/barrier_addresses"
-        app:layout_constraintTop_toBottomOf="@id/tvSent" />
+        app:layout_constraintTop_toBottomOf="@id/tvStored" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrier_addresses"
