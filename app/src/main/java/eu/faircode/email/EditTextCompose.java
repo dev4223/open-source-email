@@ -26,11 +26,14 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.QuoteSpan;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
@@ -63,6 +66,19 @@ public class EditTextCompose extends FixedEditText {
     public EditTextCompose(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         Helper.setKeyboardIncognitoMode(this, context);
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        return new SavedState(superState, this.raw);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        SavedState savedState = (SavedState) state;
+        super.onRestoreInstanceState(savedState.getSuperState());
+        setRaw(savedState.getRaw());
     }
 
     @Override
@@ -135,6 +151,7 @@ public class EditTextCompose extends FixedEditText {
                     html = h;
 
                 final int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+                final int colorBlockquote = Helper.resolveColor(context, R.attr.colorBlockquote, colorPrimary);
                 final int quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
                 final int quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
 
@@ -160,9 +177,9 @@ public class EditTextCompose extends FixedEditText {
                                 for (QuoteSpan span : spans) {
                                     QuoteSpan q;
                                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                        q = new QuoteSpan(colorPrimary);
+                                        q = new QuoteSpan(colorBlockquote);
                                     else
-                                        q = new QuoteSpan(colorPrimary, quoteStripe, quoteGap);
+                                        q = new QuoteSpan(colorBlockquote, quoteStripe, quoteGap);
                                     ssb.setSpan(q,
                                             ssb.getSpanStart(span),
                                             ssb.getSpanEnd(span),
@@ -269,5 +286,39 @@ public class EditTextCompose extends FixedEditText {
 
     interface ISelection {
         void onSelected(boolean selection);
+    }
+
+    static class SavedState extends View.BaseSavedState {
+        private boolean raw;
+
+        private SavedState(Parcelable superState, boolean raw) {
+            super(superState);
+            this.raw = raw;
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            raw = (in.readInt() != 0);
+        }
+
+        public boolean getRaw() {
+            return this.raw;
+        }
+
+        @Override
+        public void writeToParcel(Parcel destination, int flags) {
+            super.writeToParcel(destination, flags);
+            destination.writeInt(raw ? 1 : 0);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Creator<SavedState>() {
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
     }
 }

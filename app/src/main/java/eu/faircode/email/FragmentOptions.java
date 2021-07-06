@@ -29,6 +29,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.SpannableStringBuilder;
@@ -81,11 +83,38 @@ public class FragmentOptions extends FragmentBase {
             R.layout.fragment_options_misc
     };
 
+    private static final int[] PAGE_TITLES = {
+            R.string.title_advanced_section_main,
+            R.string.title_advanced_section_synchronize,
+            R.string.title_advanced_section_send,
+            R.string.title_advanced_section_connection,
+            R.string.title_advanced_section_display,
+            R.string.title_advanced_section_behavior,
+            R.string.title_advanced_section_privacy,
+            R.string.title_advanced_section_encryption,
+            R.string.title_advanced_section_notifications,
+            R.string.title_advanced_section_misc
+    };
+
+    private static final int[] PAGE_ICONS = {
+            R.drawable.twotone_home_24,
+            R.drawable.twotone_sync_24,
+            R.drawable.twotone_send_24,
+            R.drawable.twotone_cloud_24,
+            R.drawable.twotone_monitor_24,
+            R.drawable.twotone_psychology_24,
+            R.drawable.twotone_account_circle_24,
+            R.drawable.twotone_lock_24,
+            R.drawable.twotone_notifications_24,
+            R.drawable.twotone_more_24
+    };
+
     static String[] OPTIONS_RESTART = new String[]{
             "first", "app_support", "notify_archive", "message_swipe", "message_select", "folder_actions", "folder_sync",
             "subscriptions", "check_authentication", "check_reply_domain",
             "send_pending",
-            "portrait2", "landscape", "landscape3", "startup", "cards", "beige", "shadow_unread",
+            "portrait2", "landscape", "landscape3", "startup",
+            "cards", "beige", "tabular_card_bg", "shadow_unread",
             "indentation", "date", "date_bold", "threading", "threading_unread",
             "highlight_unread", "highlight_color", "color_stripe",
             "avatars", "gravatars", "favicons", "generated_icons", "identicons", "circular", "saturation", "brightness", "threshold",
@@ -94,7 +123,7 @@ public class FragmentOptions extends FragmentBase {
             "keywords_header", "labels_header", "flags", "flags_background", "preview", "preview_italic", "preview_lines",
             "message_zoom", "overview_mode", "addresses", "button_extra", "attachments_alt", "thumbnails",
             "contrast", "monospaced", "monospaced_pre",
-            "text_color", "text_size", "text_font", "text_align", "text_separators",
+            "background_color", "text_color", "text_size", "text_font", "text_align", "text_separators",
             "collapse_quotes", "image_placeholders", "inline_images",
             "seekbar", "actionbar", "actionbar_color", "navbar_colorize",
             "autoscroll", "swipenav", "swipe_close", "swipe_move", "autoexpand", "autoclose", "onclose",
@@ -172,6 +201,19 @@ public class FragmentOptions extends FragmentBase {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         TabLayout tabLayout = view.findViewById(R.id.tab_layout);
         tabLayout.setupWithViewPager(pager);
+
+        final Context context = getContext();
+        int colorAccent = Helper.resolveColor(context, R.attr.colorAccent);
+        for (int i = 0; i < tabLayout.getTabCount(); i++) {
+            Drawable d = context.getDrawable(PAGE_ICONS[i]);
+            d.setColorFilter(colorAccent, PorterDuff.Mode.SRC_ATOP);
+            SpannableStringBuilder title = new SpannableStringBuilder(getString(PAGE_TITLES[i]));
+            if (i > 0)
+                title.setSpan(new RelativeSizeSpan(0.85f), 0, title.length(), 0);
+            tabLayout.getTabAt(i)
+                    .setIcon(d)
+                    .setText(title);
+        }
 
         String tab = getActivity().getIntent().getStringExtra("tab");
         if ("connection".equals(tab))
@@ -259,7 +301,7 @@ public class FragmentOptions extends FragmentBase {
                         views = new View[TAB_PAGES.length];
                         LayoutInflater inflater = LayoutInflater.from(searchView.getContext());
                         for (int tab = 0; tab < TAB_PAGES.length; tab++) {
-                            titles[tab] = adapter.getPageTitle(tab).toString();
+                            titles[tab] = getString(PAGE_TITLES[tab]);
                             views[tab] = inflater.inflate(TAB_PAGES[tab], null);
                         }
                     }
@@ -345,7 +387,7 @@ public class FragmentOptions extends FragmentBase {
         }
     }
 
-    static void reset(Context context, String[] options) {
+    static void reset(Context context, String[] options, Runnable confirmed) {
         new AlertDialog.Builder(context)
                 .setTitle(R.string.title_setup_defaults)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -356,6 +398,9 @@ public class FragmentOptions extends FragmentBase {
                         for (String option : options)
                             editor.remove(option);
                         editor.apply();
+
+                        if (confirmed != null)
+                            confirmed.run();
 
                         ToastEx.makeText(context, R.string.title_setup_done, Toast.LENGTH_LONG).show();
                     }
@@ -454,45 +499,6 @@ public class FragmentOptions extends FragmentBase {
                     return new FragmentOptionsNotifications();
                 case 9:
                     return new FragmentOptionsMisc();
-                default:
-                    throw new IllegalArgumentException();
-            }
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            CharSequence title = getTitle(position);
-            if (position == 0)
-                return title;
-
-            SpannableStringBuilder ssb = new SpannableStringBuilder(title);
-            ssb.setSpan(new RelativeSizeSpan(0.85f), 0, ssb.length(), 0);
-            return ssb;
-        }
-
-        @NonNull
-        private CharSequence getTitle(int position) {
-            switch (position) {
-                case 0:
-                    return getString(R.string.title_advanced_section_main);
-                case 1:
-                    return getString(R.string.title_advanced_section_synchronize);
-                case 2:
-                    return getString(R.string.title_advanced_section_send);
-                case 3:
-                    return getString(R.string.title_advanced_section_connection);
-                case 4:
-                    return getString(R.string.title_advanced_section_display);
-                case 5:
-                    return getString(R.string.title_advanced_section_behavior);
-                case 6:
-                    return getString(R.string.title_advanced_section_privacy);
-                case 7:
-                    return getString(R.string.title_advanced_section_encryption);
-                case 8:
-                    return getString(R.string.title_advanced_section_notifications);
-                case 9:
-                    return getString(R.string.title_advanced_section_misc);
                 default:
                     throw new IllegalArgumentException();
             }

@@ -870,7 +870,7 @@ class Core {
             throw new IllegalArgumentException("keyword/uid");
 
         if (!ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
-            if ("$Forwarded".equals(keyword) && false) {
+            if (MessageHelper.FLAG_FORWARDED.equals(keyword) && false) {
                 JSONArray janswered = new JSONArray();
                 janswered.put(true);
                 onAnswered(context, janswered, folder, message, ifolder);
@@ -1031,10 +1031,21 @@ class Core {
 
             imessage.saveChanges();
 
-            imessage.setFlag(Flags.Flag.SEEN, message.ui_seen);
-            imessage.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
-            imessage.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
-            imessage.setFlag(Flags.Flag.DELETED, message.ui_deleted);
+            if (flags.contains(Flags.Flag.SEEN))
+                imessage.setFlag(Flags.Flag.SEEN, message.ui_seen);
+            if (flags.contains(Flags.Flag.ANSWERED))
+                imessage.setFlag(Flags.Flag.ANSWERED, message.ui_answered);
+            if (flags.contains(Flags.Flag.FLAGGED))
+                imessage.setFlag(Flags.Flag.FLAGGED, message.ui_flagged);
+            if (flags.contains(Flags.Flag.DELETED))
+                imessage.setFlag(Flags.Flag.DELETED, message.ui_deleted);
+
+            if (flags.contains(Flags.Flag.USER)) {
+                if (message.isForwarded()) {
+                    Flags fwd = new Flags(MessageHelper.FLAG_FORWARDED);
+                    imessage.setFlags(new Flags(fwd), true);
+                }
+            }
         }
 
         db.message().setMessageRaw(message.id, true);
@@ -1257,6 +1268,13 @@ class Core {
                 // Remove star
                 if (unflag && imessage.isSet(Flags.Flag.FLAGGED) && flags.contains(Flags.Flag.FLAGGED))
                     imessage.setFlag(Flags.Flag.FLAGGED, false);
+
+                // Mark not spam
+                if (EntityFolder.JUNK.equals(folder.type)
+                        && ifolder.getPermanentFlags().contains(Flags.Flag.USER)) {
+                    Flags notJunk = new Flags(MessageHelper.FLAG_NOT_JUNK);
+                    imessage.setFlags(notJunk, true);
+                }
             }
 
             // https://tools.ietf.org/html/rfc6851
@@ -1307,9 +1325,9 @@ class Core {
                         if (uid == null)
                             throw new IllegalArgumentException("move: uid not found");
 
-                        if (draft) {
+                        if (draft || duplicate) {
                             Message icopy = itarget.getMessageByUID(uid);
-                            if (icopy != null)
+                            if (icopy == null)
                                 throw new IllegalArgumentException("move: gone uid=" + uid);
 
                             // Mark read
@@ -2265,33 +2283,37 @@ class Core {
         try {
             db.folder().setFolderSyncState(folder.id, "syncing");
 
+            // Get capabilities
             Map<String, String> caps = istore.capabilities();
+            boolean hasUidl = caps.containsKey("UIDL");
             EntityLog.log(context, folder.name + " POP capabilities= " + caps.keySet());
 
+            // Get messages
             Message[] imessages = ifolder.getMessages();
-            int max;
-            if (account.max_messages == null)
-                max = imessages.length;
-            else
-                max = Math.min(imessages.length, Math.max(account.max_messages * 2, 100));
-            EntityLog.log(context, folder.name + " POP messages=" + imessages.length +
-                    " max=" + max + "/" + account.max_messages);
+            List<TupleUidl> ids = db.message().getUidls(folder.id);
+            int max = (account.max_messages == null
+                    ? imessages.length
+                    : Math.min(imessages.length, account.max_messages));
 
-            boolean hasUidl = caps.containsKey("UIDL");
+            EntityLog.log(context, folder.name + " POP" +
+                    " device=" + ids.size() +
+                    " server=" + imessages.length +
+                    " max=" + max + "/" + account.max_messages +
+                    " uidl=" + hasUidl);
+
+            // Index IDs
+            Map<String, String> uidlMsgId = new HashMap<>();
+            for (TupleUidl id : ids) {
+                if (id.uidl != null && id.msgid != null)
+                    uidlMsgId.put(id.uidl, id.msgid);
+            }
+
+            // Fetch UIDLs
             if (hasUidl) {
                 FetchProfile ifetch = new FetchProfile();
                 ifetch.add(UIDFolder.FetchProfileItem.UID); // This will fetch all UIDs
                 ifolder.fetch(imessages, ifetch);
             }
-
-            List<TupleUidl> ids = db.message().getUidls(folder.id);
-            EntityLog.log(context, folder.name + " POP existing=" + ids.size() + " uidl=" + hasUidl);
-
-            // Index UIDLs
-            Map<String, String> uidlMsgId = new HashMap<>();
-            for (TupleUidl id : ids)
-                if (id.uidl != null && id.msgid != null)
-                    uidlMsgId.put(id.uidl, id.msgid);
 
             if (!account.leave_on_device) {
                 if (hasUidl) {
@@ -2333,7 +2355,8 @@ class Core {
                 }
             }
 
-            for (int i = imessages.length - max; i < imessages.length; i++) {
+            boolean _new = true;
+            for (int i = imessages.length - 1; i >= imessages.length - max; i--) {
                 Message imessage = imessages[i];
                 try {
                     if (!state.isRunning())
@@ -2356,6 +2379,7 @@ class Core {
                             if (TextUtils.isEmpty(msgid))
                                 msgid = uidl;
                         } else {
+                            _new = false;
                             Log.i(folder.name + " POP having uidl=" + uidl);
                             continue;
                         }
@@ -2372,6 +2396,7 @@ class Core {
                         }
 
                         if (db.message().countMessageByMsgId(folder.id, msgid) > 0) {
+                            _new = false;
                             Log.i(folder.name + " POP having msgid=" + msgid);
                             continue;
                         }
@@ -2383,8 +2408,6 @@ class Core {
                     }
 
                     try {
-                        Log.i(folder.name + " POP sync=" + uidl + "/" + msgid);
-
                         Long sent = helper.getSent();
                         Long received = helper.getReceivedHeader();
                         if (received == null)
@@ -2392,7 +2415,9 @@ class Core {
                         if (received == null)
                             received = 0L;
 
-                        boolean seen = (received <= account.created);
+                        boolean seen = (!_new || received <= account.created);
+                        Log.i(folder.name + " POP sync=" + uidl + "/" + msgid +
+                                " new=" + _new + " seen=" + seen);
 
                         String[] authentication = helper.getAuthentication();
                         MessageHelper.MessageParts parts = helper.getMessageParts();
@@ -3152,6 +3177,7 @@ class Core {
         // Find message by Message-ID (slow, headers required)
         // - messages in inbox have same id as message sent to self
         // - messages in archive have same id as original
+        boolean have = false;
         Integer color = null;
         String notes = null;
         Integer notes_color = null;
@@ -3164,6 +3190,9 @@ class Core {
                 Log.i(folder.name + " found as id=" + dup.id + "/" + dup.uid +
                         " folder=" + dfolder.type + ":" + dup.folder + "/" + folder.type + ":" + folder.id +
                         " msgid=" + dup.msgid + " thread=" + dup.thread);
+
+                if (!EntityFolder.JUNK.equals(dfolder.type))
+                    have = true;
 
                 if (dup.folder.equals(folder.id)) {
                     String thread = helper.getThreadId(context, account.id, uid);
@@ -3332,6 +3361,7 @@ class Core {
                         self = true;
                         break;
                     }
+
             if (!self) {
                 String warning = message.checkReplyDomain(context);
                 message.reply_domain = (warning == null);
@@ -3340,8 +3370,9 @@ class Core {
             boolean check_mx = prefs.getBoolean("check_mx", false);
             if (check_mx)
                 try {
-                    Address[] addresses = (message.reply == null || message.reply.length == 0
-                            ? message.from : message.reply);
+                    Address[] addresses =
+                            (message.reply == null || message.reply.length == 0
+                                    ? message.from : message.reply);
                     DnsHelper.checkMx(context, addresses);
                     message.mx = true;
                 } catch (UnknownHostException ex) {
@@ -3353,22 +3384,19 @@ class Core {
                 }
 
             boolean check_blocklist = prefs.getBoolean("check_blocklist", false);
-            if (check_blocklist) {
-                List<Address> senders = new ArrayList<>();
-                if (message.from != null)
-                    senders.addAll(Arrays.asList(message.from));
-                if (message.reply != null)
-                    senders.addAll(Arrays.asList(message.reply));
-                boolean blocklist = false;
-                for (Address sender : senders) {
-                    String email = ((InternetAddress) sender).getAddress();
-                    if (DnsBlockList.isJunk(email)) {
-                        blocklist = true;
-                        break;
-                    }
+            if (check_blocklist &&
+                    !have &&
+                    !EntityFolder.isOutgoing(folder.type) &&
+                    !EntityFolder.ARCHIVE.equals(folder.type) &&
+                    !EntityFolder.TRASH.equals(folder.type) &&
+                    !EntityFolder.JUNK.equals(folder.type) &&
+                    !Arrays.asList(message.keywords).contains(MessageHelper.FLAG_NOT_JUNK))
+                try {
+                    message.blocklist = DnsBlockList.isJunk(
+                            context, imessage.getHeader("Received"));
+                } catch (Throwable ex) {
+                    Log.w(folder.name, ex);
                 }
-                message.blocklist = blocklist;
-            }
 
             try {
                 db.beginTransaction();
@@ -4247,18 +4275,20 @@ class Core {
                     builder.setSound(null);
             }
 
-            if (pro && group != 0 && messages.size() > 0) {
+            if (group != 0 && messages.size() > 0) {
                 TupleMessageEx amessage = messages.get(0);
                 Integer color = getColor(amessage);
-                if (color != null) {
+                if (pro && color != null) {
                     builder.setColor(color);
                     builder.setColorized(true);
                 }
-                if (notify_subtext)
-                    if (amessage.folderUnified && !EntityFolder.INBOX.equals(amessage.folderType))
+
+                // Disabled to show number of new messages
+                if (notify_subtext && false)
+                    if (group < 0) // folder
+                        builder.setSubText(amessage.accountName + " - " + amessage.getFolderName(context));
+                    else if (group > 0) // account
                         builder.setSubText(amessage.accountName);
-                    else
-                        builder.setSubText(amessage.accountName + " · " + amessage.getFolderName(context));
             }
 
             Notification pub = builder.build();
@@ -4419,10 +4449,10 @@ class Core {
             String from = MessageHelper.formatAddresses(afrom, email_format, false);
             mbuilder.setContentTitle(from);
             if (notify_subtext)
-                if (message.folderUnified && !EntityFolder.INBOX.equals(message.folderType))
-                    mbuilder.setSubText(message.accountName + " · " + message.getFolderName(context));
-                else
+                if (message.folderUnified && EntityFolder.INBOX.equals(message.folderType))
                     mbuilder.setSubText(message.accountName);
+                else
+                    mbuilder.setSubText(message.accountName + " - " + message.getFolderName(context));
 
             DB db = DB.getInstance(context);
 
@@ -4554,6 +4584,8 @@ class Core {
                 actionReply.addRemoteInput(input.build())
                         .setAllowGeneratedReplies(false);
                 mbuilder.addAction(actionReply.build());
+
+                wactions.add(actionReply.build());
             }
 
             if (notify_flag) {

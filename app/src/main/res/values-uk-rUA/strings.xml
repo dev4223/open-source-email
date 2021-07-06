@@ -86,12 +86,14 @@
     </string>
     <string name="title_junk_filter">Використовувати локальний фільтр спаму</string>
     <string name="title_junk_filter_hint">Це може збільшити використання заряду акумулятора та неправильно позначати повідомлення як спам</string>
+    <string name="title_junk_blocklist">Використовувати списки спам-блоків</string>
     <string name="title_notification_sending">Надсилання повідомлень</string>
     <string name="title_notification_waiting">Очікування з\'єднання з інтернетом</string>
     <string name="title_notification_idle">Бездіяльність</string>
     <string name="title_notification_failed">\'%1$s\' не вдалося</string>
     <string name="title_notification_alert">\'%1$s\' Попередження від сервера</string>
     <string name="title_notification_sending_left">Залишилось спроб: %1$d</string>
+    <string name="title_notification_sending_retry">Буде повторна спроба відправлення при зміні підключення до Інтернету або при перевірці пошти</string>
     <string name="title_notification_sending_failed">Відправлення до %1$s не вдалося</string>
     <string name="title_notification_redacted">Змінено: біометрична або автентифікація за допомогою PIN-коду ввімкнена</string>
     <string name="title_factor_minutes">%1$d хвилин</string>
@@ -115,6 +117,7 @@
     <string name="title_agree">Я погоджуюся</string>
     <string name="title_disagree">Не погоджуюся</string>
     <string name="title_version">Версія: %1$s</string>
+    <string name="title_privacy_policy">Політика конфіденційності</string>
     <string name="title_list_accounts">Облікові записи</string>
     <string name="title_list_identities">Особисті дані</string>
     <string name="title_edit_account">Редагувати обліковий запис</string>
@@ -161,6 +164,7 @@
     <string name="title_setup_no_inbox">Вхідних повідомлень не знайдено</string>
     <string name="title_setup_advanced_protection">Коли прийнято до програми розширеного захисту – неможливо використати сторонні додатки для роботи з електронною поштою. Це обмеження, накладене Google.</string>
     <string name="title_setup_quick_success">Обліковий запис успішно додано</string>
+    <string name="title_setup_quick_configure">Щоб відредагувати назву, колір, дії проведення пальцем, і так далі</string>
     <string name="title_setup_manage">Керування</string>
     <string name="title_setup_grant">Надати</string>
     <string name="title_setup_grant_again">Надати необхідні дозволи</string>
@@ -262,6 +266,7 @@
     <string name="title_advanced_check_authentication">Перевірка автентичності повідомлення</string>
     <string name="title_advanced_check_reply_domain">Перевіряти адреси електронної пошти для відповіді при синхронізації повідомлень</string>
     <string name="title_advanced_check_mx">Перевіряти адреси електронної пошти відправника при синхронізації повідомлень</string>
+    <string name="title_advanced_check_blocklist">Перевірте, чи ім\'я домену відправника знаходиться у списку спаму</string>
     <string name="title_advanced_tune_keep_alive">Автоматично налаштовувати інтервал активності</string>
     <string name="title_advanced_keyboard">Показувати клавіатуру за замовчуванням</string>
     <string name="title_advanced_keyboard_no_fullscreen">Заборонити повноекранну клавіатуру</string>
@@ -315,7 +320,8 @@
     <string name="title_advanced_landscape3">Показувати меню навігації в ландшафтному режимі за замовчуванням</string>
     <string name="title_advanced_startup">Показувати на стартовому екрані</string>
     <string name="title_advanced_cards">Використовувати стиль картки замість табличного стилю</string>
-    <string name="title_advanced_cards_beige">Використовувати бежевий фон при використанні стилю картки</string>
+    <string name="title_advanced_cards_beige">Використовувати бежевий фон під час використання стилю карт (тільки для світлої теми)</string>
+    <string name="title_advanced_tabular_background">Використовувати колір картки як тло під час використання табличного стилю</string>
     <string name="title_advanced_cards_shadow">Використовувати тінь для непрочитаних повідомлень під час використання стилю картки</string>
     <string name="title_advanced_date_header">Групувати за датою</string>
     <string name="title_advanced_date_bold">Показувати дату в жирному шрифті</string>
@@ -437,6 +443,7 @@
     <string name="title_advanced_biometrics_notify">Показувати вміст сповіщень під час використання біометричної аутентифікації</string>
     <string name="title_advanced_light">Використовувати індикатор сповіщень</string>
     <string name="title_advanced_sound">Виберіть звук сповіщення</string>
+    <string name="title_advanced_notify_screen_on">Коротке увімкнення екрану для нових повідомлень</string>
     <string name="title_advanced_confirm_links">Підтвердити відкриття посилань</string>
     <string name="title_advanced_browse_links">Делегувати відкриття посилань до Android</string>
     <string name="title_advanced_confirm_images">Підтвердити показ зображень</string>
@@ -479,6 +486,7 @@
     <string name="title_advanced_class_min_difference">Мінімальна різниця у класі: %1$s %%</string>
     <string name="title_advanced_language">Мова</string>
     <string name="title_advanced_language_system">Системи</string>
+    <string name="title_advanced_deepl">Інтеграція з DeepL</string>
     <string name="title_advanced_watchdog">Періодично перевіряти, чи ще активнний додатк FairEmail</string>
     <string name="title_advanced_updates">Перевірити наявність оновлень з GitHub</string>
     <string name="title_advanced_check_weekly">Щотижнева перевірка замість щоденної</string>
@@ -523,7 +531,6 @@
     <string name="title_advanced_browse_hint">Завантажувати більше повідомлень при прокручуванні вниз</string>
     <string name="title_advanced_layout_hint">Перемикання на більш компактний макет і зміну розміру тексту повідомлень можна зробити у верхньому меню панелі повідомлень</string>
     <string name="title_advanced_startup_hint">Довго натисніть будь-яку теку в списку тек щоб додати або видалити її зі списку об\'єднаних тек</string>
-    <string name="title_advanced_beige_hint">Лише світлі теми</string>
     <string name="title_advanced_date_hint">Повідомлення групуються тільки за датою при сортуванні їх за часом</string>
     <string name="title_advanced_navbar_colorize_hint">В цілому робота залежить від версії Android та її модифікації</string>
     <string name="title_advanced_split_hint">Це розділить екран на частини</string>
@@ -851,6 +858,7 @@
     <string name="title_move_undo">Переміщення до %1$s (%2$d)</string>
     <string name="title_open_with">Відкрити за допомогою</string>
     <string name="title_authentication_failed">%1$s автентифікація не вдалася</string>
+    <string name="title_on_blocklist">У списку блокування спаму</string>
     <string name="title_receipt_subject">Повідомлення про перегляд: %1$s</string>
     <string name="title_receipt_text">Це повідомлення буде показано лише з інформацією про прочитання. Немає гарантії, що отримувач прочитав повідомлення вмісту.</string>
     <string name="title_no_answers">Шаблони відповідей не визначені</string>
@@ -985,6 +993,7 @@
     <string name="title_translating">Переклад &#8230;</string>
     <string name="title_translate_small">Використовувати малий шрифт для початкового тексту</string>
     <string name="title_translate_usage">Використання: %1$s / %2$s (%3$d %%)</string>
+    <string name="title_translate_tap">Торкніться тексту для перекладу</string>
     <string name="title_edit_plain_text">Редагувати як звичайний текст</string>
     <string name="title_edit_formatted_text">Редагувати як переформатований текст</string>
     <string name="title_select_certificate">Виберіть відкритий ключ</string>
@@ -1048,6 +1057,12 @@
     <string name="title_signature_store">Збереження</string>
     <string name="title_search">Пошук</string>
     <string name="title_search_for_hint">Введіть текст</string>
+    <string name="title_search_hint">        Спочатку пошук виконується на пристрої.
+        Для також для пошуку на сервері, натисніть кнопку \'пошук знову\'.
+    </string>
+    <string name="title_search_index_hint">Індексований пошук швидкий, але тільки за пошуком цілого слова.
+        Параметри нижче повинні продовжувати пошук з поштового сервера.
+    </string>
     <string name="title_search_text_hint">Пошук тексту в повідомленнях, при великій кількості повідомлень, може не працювати на деяких серверах</string>
     <string name="title_search_size_hint">Пошук повідомлень за розміром, при великій кількості повідомлень, може не працювати на деяких серверах</string>
     <string name="title_search_more">Більше опцій</string>

@@ -30,6 +30,7 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.AlignmentSpan;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.BulletSpan;
 import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
@@ -181,6 +182,8 @@ public class StyleHelper {
                             int itemId = item.getItemId();
                             if (groupId == R.id.group_style_size) {
                                 return setSize(item);
+                            } else if (itemId == R.id.menu_style_background) {
+                                return setBackground(item);
                             } else if (itemId == R.id.menu_style_color) {
                                 return setColor(item);
                             } else if (groupId == R.id.group_style_font) {
@@ -238,6 +241,59 @@ public class StyleHelper {
                         return true;
                     }
 
+                    private boolean setBackground(MenuItem item) {
+                        Helper.hideKeyboard(etBody);
+
+                        Context context = etBody.getContext();
+                        int editTextColor = Helper.resolveColor(context, android.R.attr.editTextColor);
+
+                        ColorPickerDialogBuilder builder = ColorPickerDialogBuilder
+                                .with(context)
+                                .setTitle(R.string.title_background)
+                                .showColorEdit(true)
+                                .setColorEditTextColor(editTextColor)
+                                .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
+                                .density(6)
+                                //.lightnessSliderOnly()
+                                .setPositiveButton(android.R.string.ok, new ColorPickerClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                                        _setBackground(selectedColor);
+                                    }
+                                })
+                                .setNegativeButton(R.string.title_reset, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        _setBackground(null);
+                                    }
+                                });
+
+                        builder.build().show();
+
+                        return true;
+                    }
+
+                    private void _setBackground(Integer color) {
+                        Log.breadcrumb("style", "action", "background");
+
+                        BackgroundColorSpan spans[] = edit.getSpans(start, end, BackgroundColorSpan.class);
+                        for (BackgroundColorSpan span : spans) {
+                            int s = edit.getSpanStart(span);
+                            int e = edit.getSpanEnd(span);
+                            int f = edit.getSpanFlags(span);
+                            edit.removeSpan(span);
+                            splitSpan(edit, start, end, s, e, f, false,
+                                    new BackgroundColorSpan(span.getBackgroundColor()),
+                                    new BackgroundColorSpan(span.getBackgroundColor()));
+                        }
+
+                        if (color != null)
+                            edit.setSpan(new BackgroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                        etBody.setText(edit);
+                        etBody.setSelection(start, end);
+                    }
+
                     private boolean setColor(MenuItem item) {
                         Helper.hideKeyboard(etBody);
 
@@ -251,7 +307,7 @@ public class StyleHelper {
                                 .setColorEditTextColor(editTextColor)
                                 .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
                                 .density(6)
-                                .lightnessSliderOnly()
+                                //.lightnessSliderOnly()
                                 .setPositiveButton(android.R.string.ok, new ColorPickerClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
@@ -295,6 +351,9 @@ public class StyleHelper {
                         Log.breadcrumb("style", "action", "alignment");
 
                         Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        if (paragraph == null)
+                            return false;
+
                         int s = paragraph.first;
                         int e = paragraph.second;
 
@@ -365,6 +424,9 @@ public class StyleHelper {
                         float textSize = Helper.getTextSize(context, 0) * message_zoom / 100f;
 
                         Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        if (paragraph == null)
+                            return false;
+
                         int s = paragraph.first;
                         int e = paragraph.second;
 
@@ -433,43 +495,20 @@ public class StyleHelper {
                         Context context = etBody.getContext();
 
                         int colorPrimary = Helper.resolveColor(context, R.attr.colorPrimary);
+                        final int colorBlockquote = Helper.resolveColor(context, R.attr.colorBlockquote, colorPrimary);
                         int quoteGap = context.getResources().getDimensionPixelSize(R.dimen.quote_gap_size);
                         int quoteStripe = context.getResources().getDimensionPixelSize(R.dimen.quote_stripe_width);
 
                         Pair<Integer, Integer> paragraph = ensureParagraph(edit, start, end);
+                        if (paragraph == null)
+                            return false;
 
-                        boolean has = false;
-                        QuoteSpan[] spans = edit.getSpans(paragraph.first, paragraph.second, QuoteSpan.class);
-                        for (QuoteSpan span : spans) {
-                            int s = edit.getSpanStart(span);
-                            int e = edit.getSpanEnd(span);
-                            int f = edit.getSpanFlags(span);
-                            edit.removeSpan(span);
-
-                            QuoteSpan q1;
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                q1 = new QuoteSpan(span.getColor());
-                            else
-                                q1 = new QuoteSpan(span.getColor(), span.getStripeWidth(), span.getGapWidth());
-
-                            QuoteSpan q2;
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                q2 = new QuoteSpan(span.getColor());
-                            else
-                                q2 = new QuoteSpan(span.getColor(), span.getStripeWidth(), span.getGapWidth());
-
-                            if (splitSpan(edit, paragraph.first, paragraph.second, s, e, f, false, q1, q2))
-                                has = true;
-                        }
-
-                        if (!has) {
-                            QuoteSpan q;
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-                                q = new QuoteSpan(colorPrimary);
-                            else
-                                q = new QuoteSpan(colorPrimary, quoteStripe, quoteGap);
-                            edit.setSpan(q, paragraph.first, paragraph.second, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-                        }
+                        QuoteSpan q;
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
+                            q = new QuoteSpan(colorBlockquote);
+                        else
+                            q = new QuoteSpan(colorBlockquote, quoteStripe, quoteGap);
+                        edit.setSpan(q, paragraph.first, paragraph.second, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
 
                         etBody.setText(edit);
                         etBody.setSelection(paragraph.first, paragraph.second);
@@ -649,6 +688,8 @@ public class StyleHelper {
         else if (span instanceof QuoteSpan) {
             ParagraphStyle ps = (ParagraphStyle) span;
             Pair<Integer, Integer> p = ensureParagraph(edit, start, end);
+            if (p == null)
+                return;
             edit.setSpan(clone(span, ps.getClass(), context), p.first, p.second, flags);
         }
     }

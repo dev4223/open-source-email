@@ -24,7 +24,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -49,8 +48,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
-import androidx.core.content.ContextCompat;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -64,6 +61,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -77,6 +76,7 @@ import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.Session;
+import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMessage;
 
 public class ActivityEML extends ActivityBase {
@@ -197,14 +197,7 @@ public class ActivityEML extends ActivityBase {
         });
 
         // Initialize
-        if (!Helper.isDarkTheme(this)) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            boolean beige = prefs.getBoolean("beige", true);
-            view.setBackgroundColor(ContextCompat.getColor(this, beige
-                    ? R.color.lightColorBackground_cards_beige
-                    : R.color.lightColorBackground_cards));
-        }
-
+        FragmentDialogTheme.setBackground(this, view, false);
         vSeparatorAttachments.setVisibility(View.GONE);
         grpReady.setVisibility(View.GONE);
 
@@ -421,6 +414,35 @@ public class ActivityEML extends ActivityBase {
                     ssb.append("Size: ")
                             .append(size > 0 ? Helper.humanReadableByteCount(size) : "?")
                             .append('\n');
+
+                    if (!part.isMimeType("multipart/*")) {
+                        Object content = part.getContent();
+                        if (content instanceof String) {
+                            String text = (String) content;
+                            Charset detected = CharsetHelper.detect(text);
+
+                            String charset;
+                            try {
+                                ContentType ct = new ContentType(part.getContentType());
+                                charset = ct.getParameter("charset");
+                            } catch (Throwable ignored) {
+                                charset = null;
+                            }
+                            if (charset == null)
+                                charset = StandardCharsets.ISO_8859_1.name();
+
+                            Charset cs = Charset.forName(charset);
+                            boolean isUtf8 = CharsetHelper.isUTF8(text.getBytes(cs));
+
+                            for (int i = 0; i < level; i++)
+                                ssb.append("  ");
+
+                            ssb.append("Detected: ")
+                                    .append(detected == null ? "?" : detected.toString())
+                                    .append(" isUTF8=").append(Boolean.toString(isUtf8))
+                                    .append('\n');
+                        }
+                    }
 
                     ssb.append('\n');
 

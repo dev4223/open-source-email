@@ -78,12 +78,14 @@
     </string>
     <string name="title_junk_filter">Usar filtro de spam local</string>
     <string name="title_junk_filter_hint">Esto puede aumentar el uso de la batería y marcar incorrectamente mensajes como spam</string>
+    <string name="title_junk_blocklist">Usar listas de bloqueo de spam</string>
     <string name="title_notification_sending">Enviando mensajes</string>
     <string name="title_notification_waiting">Esperando conexión adecuada</string>
     <string name="title_notification_idle">Inactivo</string>
     <string name="title_notification_failed">\'%1$s\' falló</string>
     <string name="title_notification_alert">Alerta del servidor \'%1$s\'</string>
     <string name="title_notification_sending_left">Intentos restantes: %1$d</string>
+    <string name="title_notification_sending_retry">El envío se reintentará en los cambios de conexión a Internet o tirando hacia abajo en la bandeja de salida</string>
     <string name="title_notification_sending_failed">El envío a %1$s falló</string>
     <string name="title_notification_redacted">Redactado: autenticación biométrica o PIN habilitada</string>
     <string name="title_factor_minutes">%1$d minutos</string>
@@ -107,6 +109,7 @@
     <string name="title_agree">Acepto</string>
     <string name="title_disagree">Rechazo</string>
     <string name="title_version">Versión %1$s</string>
+    <string name="title_privacy_policy">Política de Privacidad</string>
     <string name="title_list_accounts">Cuentas</string>
     <string name="title_list_identities">Identidades</string>
     <string name="title_edit_account">Editar cuenta</string>
@@ -153,6 +156,7 @@
     <string name="title_setup_no_inbox">Bandeja de entrada no encontrada</string>
     <string name="title_setup_advanced_protection">Al inscribirse en el programa de protección avanzada no es posible utilizar una aplicación de correo electrónico de terceros. Esta es una restricción impuesta por Google.</string>
     <string name="title_setup_quick_success">Una cuenta se ha añadido correctamente</string>
+    <string name="title_setup_quick_configure">Para editar el nombre, color, acciones de deslizamiento, etc</string>
     <string name="title_setup_manage">Administrar</string>
     <string name="title_setup_grant">Conceder</string>
     <string name="title_setup_grant_again">Otorgar permisos requeridos</string>
@@ -254,6 +258,7 @@
     <string name="title_advanced_check_authentication">Comprobar autenticación de mensaje</string>
     <string name="title_advanced_check_reply_domain">Comprobar direcciones de respuesta al sincronizar mensajes</string>
     <string name="title_advanced_check_mx">Compruebe las direcciones de correo electrónico de remitentes al sincronizar mensajes</string>
+    <string name="title_advanced_check_blocklist">Comprobar si el nombre de dominio del remitente está en una lista de bloqueo de spam</string>
     <string name="title_advanced_tune_keep_alive">Ajustar automáticamente el intervalo de keep-alive</string>
     <string name="title_advanced_keyboard">Mostrar teclado por defecto</string>
     <string name="title_advanced_keyboard_no_fullscreen">Evitar teclado de pantalla completa</string>
@@ -307,7 +312,8 @@
     <string name="title_advanced_landscape3">Mostrar el menú de navegación en modo apaisado por defecto</string>
     <string name="title_advanced_startup">Mostrar en pantalla de inicio</string>
     <string name="title_advanced_cards">Usar estilo de tarjeta en lugar del estilo tabular</string>
-    <string name="title_advanced_cards_beige">Usar fondo beige al usar el estilo de tarjeta</string>
+    <string name="title_advanced_cards_beige">Usar fondo beige al utilizar el estilo de la tarjeta (solo temas claros)</string>
+    <string name="title_advanced_tabular_background">Usar el color de la tarjeta como color de fondo al utilizar el estilo tabular</string>
     <string name="title_advanced_cards_shadow">Usar sombra para mensajes no leídos al usar estilo de tarjeta</string>
     <string name="title_advanced_date_header">Agrupar por fecha</string>
     <string name="title_advanced_date_bold">Mostrar fecha en negrita</string>
@@ -353,6 +359,7 @@
     <string name="title_advanced_monospaced">Usar fuente monoespaciada para el texto del mensaje por defecto</string>
     <string name="title_advanced_monospaced_pre">Usar fuente monoespaciada para texto preformateado</string>
     <string name="title_advanced_text_color">Usar colores de texto</string>
+    <string name="title_advanced_background_color">Usar colores de fondo</string>
     <string name="title_advanced_text_size">Usar tamaños de texto</string>
     <string name="title_advanced_text_font">Usar fuentes</string>
     <string name="title_advanced_text_align">Usar alineación de texto</string>
@@ -429,6 +436,7 @@
     <string name="title_advanced_biometrics_notify">Mostrar contenido de notificación al usar autenticación biométrica</string>
     <string name="title_advanced_light">Usar luz de notificación</string>
     <string name="title_advanced_sound">Seleccionar sonido de notificación</string>
+    <string name="title_advanced_notify_screen_on">Activar brevemente la pantalla para notificaciones de mensajes nuevos</string>
     <string name="title_advanced_confirm_links">Confirmar abrir enlaces</string>
     <string name="title_advanced_browse_links">Delegar apertura de enlaces a Android</string>
     <string name="title_advanced_confirm_images">Confirmar mostrar imágenes</string>
@@ -471,6 +479,7 @@
     <string name="title_advanced_class_min_difference">Diferencia mínima de la clase: %1$s %%</string>
     <string name="title_advanced_language">Idioma</string>
     <string name="title_advanced_language_system">Sistema</string>
+    <string name="title_advanced_deepl">Integración con DeepL</string>
     <string name="title_advanced_watchdog">Comprobar periódicamente si FairEmail sigue activo</string>
     <string name="title_advanced_updates">Comprobar actualizaciones de GitHub</string>
     <string name="title_advanced_check_weekly">Comprobar semanalmente en lugar de diariamente</string>
@@ -516,7 +525,6 @@
     <string name="title_advanced_browse_hint">Obtener más mensajes al desplazarse hacia abajo</string>
     <string name="title_advanced_layout_hint">Cambiar a un diseño más compacto y cambiar el tamaño del texto del mensaje puede hacerse en el menú de la barra de acción superior en la vista de mensaje</string>
     <string name="title_advanced_startup_hint">Mantenga pulsada una carpeta de la lista para agregarla o quitarla de la lista de carpetas unificadas</string>
-    <string name="title_advanced_beige_hint">Sólo temas claros</string>
     <string name="title_advanced_date_hint">Los mensajes sólo se agrupan por fecha si se ordenan por antigüedad</string>
     <string name="title_advanced_navbar_colorize_hint">Que esto funcione dependerá de la versión y variante de Android</string>
     <string name="title_advanced_split_hint">Esto dividirá la pantalla en partes</string>
@@ -844,6 +852,7 @@
     <string name="title_move_undo">Moviendo a %1$s (%2$d)</string>
     <string name="title_open_with">Abrir con</string>
     <string name="title_authentication_failed">La autenticación %1$s falló</string>
+    <string name="title_on_blocklist">En lista de bloqueo de spam</string>
     <string name="title_receipt_subject">Confirmación de lectura: %1$s</string>
     <string name="title_receipt_text">Esta confirmación de lectura sólo afirma que el mensaje fue mostrado. No hay garantía de que el destinatario haya leído el contenido del mensaje.</string>
     <string name="title_no_answers">No hay plantillas de respuesta definidas</string>
@@ -978,6 +987,7 @@
     <string name="title_translating">Traduciendo &#8230;</string>
     <string name="title_translate_small">Usar una fuente pequeña para el texto fuente</string>
     <string name="title_translate_usage">Uso: %1$s / %2$s (%3$d %%)</string>
+    <string name="title_translate_tap">Toque el texto para traducirlo</string>
     <string name="title_edit_plain_text">Editar como texto plano</string>
     <string name="title_edit_formatted_text">Editar como texto con formato</string>
     <string name="title_select_certificate">Seleccionar clave pública</string>
