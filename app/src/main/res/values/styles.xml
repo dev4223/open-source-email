@@ -366,7 +366,6 @@
         <item name="colorWarning">@color/colorError</item>
 
         <item name="colorSeparator">@color/blackColorSeparator</item>
-        <item name="android:windowBackground">@drawable/black_background</item>
 
         <item name="android:windowBackground">@drawable/background_black</item>
         <item name="colorDrawerBackground">@color/black</item>
